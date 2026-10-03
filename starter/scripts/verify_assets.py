@@ -8,6 +8,7 @@ ROOT = Path(__file__).resolve().parents[1]
 ASSETS = ROOT / 'assets/vpet'
 manifest = json.loads((ASSETS / 'manifest.json').read_text())
 animations = json.loads((ASSETS / 'animations.json').read_text())
+available = json.loads((ASSETS / 'available-animations.json').read_text())
 errors = []
 expected = set()
 for entry in manifest['files']:
@@ -37,6 +38,17 @@ for sequence in animations['sequences']:
             errors.append(f'Invalid catalog frame: {frame["path"]}')
 if catalog_paths != expected:
     errors.append('Catalog frames do not match manifest')
+
+bundled_sequences = {sequence['path'] for sequence in animations['sequences']}
+available_sequences = {sequence['path'] for sequence in available['sequences']}
+if len(bundled_sequences) != len(animations['sequences']) or len(available_sequences) != len(available['sequences']):
+    errors.append('Duplicate animation sequence')
+if bundled_sequences & available_sequences:
+    errors.append('Available animations overlap bundled sequences')
+if len(available_sequences) != available['missing_sequence_count'] or sum(s['frame_count'] for s in available['sequences']) != available['missing_frame_count']:
+    errors.append('Available animation count mismatch')
+if sum(s['size_bytes'] for s in available['sequences']) != available['missing_size_bytes']:
+    errors.append('Available animation size mismatch')
 
 if errors:
     raise SystemExit('\n'.join(errors))

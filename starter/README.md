@@ -4,6 +4,8 @@ A small starting repository for a desktop pet that reacts to Claude Code and Cod
 
 The first asset pack contains **180 original PNG frames in 20 animation sequences (21.85 MiB)**. They cover idle, thinking, reading, working, waiting for input, tool errors, turn completion, sleeping, startup, and closing. [animations.json](assets/vpet/animations.json) maps each state to its sequences and records frame durations. [manifest.json](assets/vpet/manifest.json) records every file's size and SHA-256 hash.
 
+[available-animations.json](assets/vpet/available-animations.json) catalogs the **538 remaining sequences and 5,318 frames** from the original character pack. Each entry gives its upstream folder, category, frame count, size, and timing status. These are references for future work; their PNG files are not included here. To add one later, copy that sequence from the upstream VPet tree, add it to the bundled animation map and manifest, and retain the artwork notices.
+
 This folder is ready to become its own repository:
 
 ```bash
