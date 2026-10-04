@@ -16,8 +16,8 @@
 class EventTests : public QObject {
     Q_OBJECT
     const qint64 now = 1700000000000;
-    pet::Event event(QString kind, int seq = 1) {
-        return {"claude", "session", QString::number(seq), kind, "tool", {}, "/project", {}, now + seq};
+    pet::Event event(QString kind, int seq = 1, QString tool = "tool") {
+        return {"claude", "session", QString::number(seq), kind, tool, {}, "/project", {}, now + seq};
     }
 private slots:
     void replay() {
@@ -85,15 +85,39 @@ private slots:
         QVERIFY(state.apply(event("attention", 2), now + 2));
         QVERIFY(state.apply(event("attention", 3), now + 3));
         QCOMPARE(state.pending()[0].count, 2);
-        QVERIFY(state.apply(event("error", 4), now + 4));
+        // Another call failing or finishing does not answer the request.
+        QVERIFY(state.apply(event("error", 4, "other"), now + 4));
         QCOMPARE(state.aggregate(now), "attention");
-        QVERIFY(state.apply(event("tool_end", 5), now + 5));
+        QVERIFY(state.apply(event("tool_end", 5, "other"), now + 5));
         QCOMPARE(state.aggregate(now), "attention");
         QVERIFY(state.apply(event("prompt", 6), now + 6));
         QCOMPARE(state.aggregate(now), "thinking");
         QVERIFY(state.apply(event("error", 7), now + 7));
         QCOMPARE(state.aggregate(now), "error");
         state.expire(now + 5000); QCOMPARE(state.aggregate(now), "thinking");
+    }
+    void attentionResolvedByItsCall() {
+        pet::Sessions state;
+        // An approval request without a call ID belongs to the call that just started.
+        QVERIFY(state.apply(event("tool_start", 1, "run"), now + 1));
+        QVERIFY(state.apply(event("attention", 2, {}), now + 2));
+        QCOMPARE(state.aggregate(now), "attention"); QCOMPARE(state.unresolvedAttention(), 1);
+        QVERIFY(state.apply(event("tool_end", 3, "run"), now + 3));
+        QCOMPARE(state.aggregate(now), "thinking"); QCOMPARE(state.unresolvedAttention(), 0);
+        QVERIFY(state.pending().isEmpty());
+        // A question asked through a tool is answered when that call ends.
+        QVERIFY(state.apply(event("attention", 4, "ask"), now + 4));
+        QVERIFY(state.apply(event("tool_end", 5, "ask"), now + 5));
+        QCOMPARE(state.aggregate(now), "thinking");
+        // A failed approved call reports the error.
+        QVERIFY(state.apply(event("tool_start", 6, "fail"), now + 6));
+        QVERIFY(state.apply(event("attention", 7, {}), now + 7));
+        QVERIFY(state.apply(event("error", 8, "fail"), now + 8));
+        QCOMPARE(state.aggregate(now), "error");
+        // Without a running call, the request waits for the next observable event.
+        QVERIFY(state.apply(event("attention", 9, {}), now + 9));
+        QVERIFY(state.apply(event("tool_end", 10, "fail"), now + 10));
+        QCOMPARE(state.aggregate(now), "attention");
     }
     void boundsAndValidation() {
         pet::Sessions state;

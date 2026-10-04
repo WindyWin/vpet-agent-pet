@@ -1,8 +1,10 @@
 # Provider integrations (M4)
 
 The C++ hook adapters and integration manager ship in the same executable as the
-pet. They require no shell scripts, Python, Node, display server, transcript
-reader, or running client process discovery. Start the pet separately.
+pet. They require no shell scripts, Python, Node, display server, or running
+client process discovery. The only file they read is the tail of a Codex session
+rollout, to learn a finished shell command's status (see below). Start the pet
+separately.
 
 ## Setup
 
@@ -83,13 +85,18 @@ Codex hosted tools can lack tool hooks. There is no universal input-request even
 | SubagentStart / SubagentStop | Create/remove a child using agent_id and parent session_id |
 | Claude PostToolUseFailure | Error with failed tool removed; is_interrupt maps to inactive |
 | Claude Notification | Attention for permission_prompt (approval), idle_prompt and elicitation_dialog (input) only |
+| Codex PreToolUse `Bash` | Reading when every command segment starts with a read-only program (`cat`, `rg`, `ls`, `sed -n`, `git diff`...), otherwise working |
+| Codex PreToolUse `view_image` | Reading |
+| Codex PreToolUse `request_user_input` (Plan mode question) | Attention (reason input) until that call's PostToolUse |
+| Codex PostToolUse `Bash` whose rollout status is `failed` | Error with failed tool removed |
 | Codex PostToolUse with structured isError=true or nonzero numeric exit_code | Error with failed tool removed |
 | Codex Interrupt | Inactive, never finished |
 | Unknown event or notification | Silent no-op |
 
 A callback carrying `agent_id` uses that child identity; a child Stop cannot
 finish its parent's turn. Concurrent tools retain their own IDs. Unknown tool
-names are treated as working, without examining arguments. Tool failure text,
+names are treated as working, without examining arguments, except that a Codex
+`Bash` command line is classified in memory (see below). Tool failure text,
 prompt text, tool arguments/results, assistant messages, and transcript paths
 never enter the normalized envelope. Raw input is parsed only in memory, bounded
 at 1 MiB; oversized callbacks are dropped. The normalized datagram stays at 8 KiB.
@@ -101,12 +108,31 @@ invocations cannot be reliably deduplicated. Timestamps are receipt times becaus
 the supported contract has no common event timestamp. Delayed callbacks cannot
 be reliably reordered across processes. No content is hashed for identity.
 
-Failure detection is deliberately limited to the typed fields above. Codex
-text-only shell failures remain a gap, as do general Claude interruptions without
-a failure callback, unsupported input requests, and tool paths that omit hooks.
-Attention persists through tool completion when no explicit resolution is known;
-it clears on a new tool start, prompt, interruption, stop, or session end. This
-can retain attention after approval until a subsequent observable event.
+Failure detection is deliberately limited to the typed fields above. General
+Claude interruptions without a failure callback, unsupported input requests, and
+tool paths that omit hooks remain gaps.
+
+Attention ends when the call that raised it finishes: the call named by the
+request's tool ID, or, for a request without one (Codex `PermissionRequest`), the
+call that started most recently and is still running. It also clears on a new
+tool start, prompt, interruption, stop, or session end.
+
+### What Codex exposes (captured from Codex CLI 0.156.0)
+
+Every shell command arrives as `tool_name: "Bash"` with
+`tool_input.command`, and its `PostToolUse` `tool_response` is the plain output
+string, with no exit code. Codex writes each finished command to the session
+rollout (`transcript_path`) as an `item_completed` `CommandExecution` with
+`status` `completed` or `failed` before it runs `PostToolUse`. The hook reads at
+most the last 512 KiB of that file, finds the line for this `tool_use_id` and
+keeps only its status; when the line is missing, the call ends normally. The
+command line is classified in memory for reading/working and is never forwarded.
+
+`PermissionRequest` fires only when Codex actually asks (Ask for approval, or
+a command that needs escalation); Full Access never asks. It carries no
+`tool_use_id` and follows the `PreToolUse` of the command it is about.
+`request_user_input` works only in Plan mode; elsewhere Codex refuses the call
+without a `PostToolUse`, so its brief attention ends at the turn's next event. `Interrupt` fires on Esc during a turn.
 
 ## Coverage and acceptance record
 

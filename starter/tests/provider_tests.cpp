@@ -53,6 +53,56 @@ private slots:
         auto large = payload("UserPromptSubmit"); large["prompt"] = QString(20000, 'x');
         QVERIFY(!pet::normalizeHook("codex", large, now).isEmpty());
     }
+    void codexSignals() {
+        // Shapes captured from Codex CLI 0.156.0: every shell call is "Bash", the
+        // output is a plain string, and approvals/questions lack a tool name of their own.
+        auto bash = [&](QString command, QString call = "call") {
+            auto in = payload("PreToolUse", call); in["tool_name"] = "Bash"; in["tool_input"] = QJsonObject{{"command", command}};
+            return pet::normalizeHook("codex", in, now);
+        };
+        for (const auto &command : {"ls -la", "rg -n foo src | head -20", "sed -n '1,80p' a.cpp", "cd src && git diff --stat",
+                                    "cat a.txt; wc -l b.txt", "find . -name '*.h'", "rg foo 2>/dev/null"})
+            QVERIFY2(bash(command)["activity"] == "reading", command);
+        for (const auto &command : {"cmake --build build", "sed -i 's/a/b/' x", "cat a > b", "rm -rf build", "ls && make",
+                                    "echo $(rm x)", "find . -delete", "python3 -c 'print(1)'", ""})
+            QVERIFY2(bash(command)["activity"] == "working", command);
+        // Claude keeps tool-name classification; its Bash is always working.
+        auto claude = payload("PreToolUse", "call"); claude["tool_name"] = "Bash"; claude["tool_input"] = QJsonObject{{"command", "ls"}};
+        QCOMPARE(pet::normalizeHook("claude", claude, now)["activity"], "working");
+        auto image = payload("PreToolUse", "img"); image["tool_name"] = "view_image";
+        QCOMPARE(pet::normalizeHook("codex", image, now)["activity"], "reading");
+
+        auto ask = payload("PreToolUse", "ask"); ask["tool_name"] = "request_user_input";
+        auto asked = pet::normalizeHook("codex", ask, now);
+        QCOMPARE(asked["kind"], "attention"); QCOMPARE(asked["reason"], "input"); QCOMPARE(asked["tool_id"], "ask");
+        ask["hook_event_name"] = "PostToolUse"; ask["tool_response"] = "{\"answers\":{}}";
+        QCOMPARE(pet::normalizeHook("codex", ask, now)["kind"], "tool_end");
+        QCOMPARE(pet::normalizeHook("claude", payload("PreToolUse", "x"), now)["kind"], "tool_start");
+
+        // Exit status comes from the session rollout, read by call ID.
+        QTemporaryDir temp; QVERIFY(temp.isValid());
+        const auto rollout = temp.path() + "/rollout.jsonl";
+        QFile file(rollout); QVERIFY(file.open(QIODevice::WriteOnly));
+        auto line = [&](QString id, QString status) {
+            const QJsonObject item{{"type", "CommandExecution"}, {"id", id}, {"status", status}, {"stdout", "PRIVATE"}};
+            file.write(QJsonDocument(QJsonObject{{"type", "event_msg"}, {"payload", QJsonObject{{"type", "item_completed"}, {"item", item}}}}).toJson(QJsonDocument::Compact) + "\n");
+        };
+        line("ok", "completed"); line("bad", "failed"); file.write("not json\n"); file.close();
+        auto post = [&](QString call) {
+            auto in = payload("PostToolUse", call); in["tool_name"] = "Bash"; in["tool_response"] = "PRIVATE"; in["transcript_path"] = rollout;
+            return in;
+        };
+        QCOMPARE(pet::codexCommandStatus(post("ok")), "completed");
+        QCOMPARE(pet::codexCommandStatus(post("bad")), "failed");
+        QCOMPARE(pet::codexCommandStatus(post("missing")), QString());
+        auto missing = post("bad"); missing["transcript_path"] = temp.path() + "/absent.jsonl";
+        QCOMPARE(pet::codexCommandStatus(missing), QString());
+        auto failed = pet::normalizeHook("codex", post("bad"), now, pet::codexCommandStatus(post("bad")));
+        QCOMPARE(failed["kind"], "error"); QCOMPARE(failed["tool_id"], "bad");
+        QVERIFY(!QJsonDocument(failed).toJson().contains("PRIVATE"));
+        QCOMPARE(pet::normalizeHook("codex", post("ok"), now, "completed")["kind"], "tool_end");
+        QCOMPARE(pet::normalizeHook("codex", post("bad"), now)["kind"], "tool_end"); // unknown status
+    }
     void concurrentAndChildren() {
         for (const auto &provider : {QString("claude"), QString("codex")}) {
             pet::Sessions sessions; qint64 stamp = now;

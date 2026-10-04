@@ -76,18 +76,25 @@ bool Sessions::apply(const Event &e, qint64 now) {
     if (e.kind != "session_start" && e.kind != "tool_end") s.activityUntil = 0;
     if (e.kind == "session_start") { /* Metadata refresh only for existing sessions. */ }
     else if (e.kind == "prompt") { s.tools.clear(); s.state = "thinking"; }
-    else if (e.kind == "tool_start") { s.tools[e.tool] = e.activity.isEmpty() ? "working" : e.activity; s.state = toolState(s); }
+    else if (e.kind == "tool_start") { s.tools[e.tool] = e.activity.isEmpty() ? "working" : e.activity; s.lastTool = e.tool; s.state = toolState(s); }
     else if (e.kind == "tool_end") {
         s.tools.remove(e.tool);
+        // The call that asked for approval or input finished, so it was answered.
+        if (s.state == "attention" && e.tool == s.attentionTool) s.state = toolState(s);
         if (s.state != "attention" && s.state != "inactive" && s.state != "turn-finished" && (isNew || s.state != "idle")) {
             const auto next = toolState(s);
             if (next == "thinking" && (s.state == "working" || s.state == "reading")) s.activityUntil = now + activityHoldMs;
             else s.state = next;
         }
     }
-    else if (e.kind == "attention") s.state = "attention";
+    else if (e.kind == "attention") {
+        // A request without its own call ID belongs to the call that just started.
+        s.attentionTool = !e.tool.isEmpty() ? e.tool : s.tools.contains(s.lastTool) ? s.lastTool : QString();
+        s.state = "attention";
+    }
     else if (e.kind == "error") {
         if (!e.tool.isEmpty()) s.tools.remove(e.tool);
+        if (s.state == "attention" && !e.tool.isEmpty() && e.tool == s.attentionTool) s.state = toolState(s);
         if (s.state != "attention") {
             if (!e.tool.isEmpty()) s.resume = toolState(s);
             else if (s.state != "error") s.resume = held ? "thinking" : s.state;
@@ -96,7 +103,7 @@ bool Sessions::apply(const Event &e, qint64 now) {
     }
     else if (e.kind == "turn_finished") { s.tools.clear(); s.state = "turn-finished"; s.reactionUntil = now + 4000; }
     else if (e.kind == "interrupt") { s.tools.clear(); s.state = "inactive"; }
-    if (s.state != "attention") dismiss(k, "attention");
+    if (s.state != "attention") { dismiss(k, "attention"); s.attentionTool.clear(); }
     if (e.kind == "attention" || e.kind == "error" || e.kind == "turn_finished") {
         auto it = std::find_if(alerts_.begin(), alerts_.end(), [&](const Alert &a) { return a.session == k && a.kind == e.kind; });
         if (it != alerts_.end()) {

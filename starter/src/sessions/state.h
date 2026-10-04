@@ -14,6 +14,7 @@ struct Event {
 };
 struct Session {
     QString provider, id, parent, project, state = "idle", resume = "idle";
+    QString lastTool, attentionTool; // Most recent call; the call awaiting approval/input.
     QMap<QString, QString> tools;
     qint64 timestamp = 0, seen = 0, reactionUntil = 0, activityUntil = 0;
 };

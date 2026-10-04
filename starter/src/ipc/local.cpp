@@ -111,7 +111,8 @@ int eventCommand(const QStringList &args) {
     if (!doc.isObject()) { error = "Expected normalized JSON event"; return fail(); }
     auto object = doc.object();
     if (hook) {
-        object = normalizeHook(provider, object, QDateTime::currentMSecsSinceEpoch());
+        object = normalizeHook(provider, object, QDateTime::currentMSecsSinceEpoch(),
+                               provider == "codex" ? codexCommandStatus(object) : QString());
         if (object.isEmpty()) return 0;
     }
     if (!provider.isEmpty()) {
