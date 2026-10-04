@@ -1,4 +1,5 @@
 #include "desktop/pet_window.h"
+#include "desktop/session_playback.h"
 #include <QApplication>
 #include <QDir>
 #include <QFile>
@@ -36,6 +37,18 @@ void writeCatalog(const QString &root, const QJsonObject &catalog) {
 class PrototypeTests : public QObject {
     Q_OBJECT
 private slots:
+    void sessionAnimationMapping() {
+        pet::Player player;
+        const QStringList states{"attention", "error", "turn-finished", "working", "reading", "thinking", "idle", "inactive"};
+        for (const auto &state : states) {
+            const auto animation = pet::sessionAnimation(state);
+            QVERIFY2(player.select(animation, true), qPrintable(player.error()));
+            QCOMPARE(player.state(), animation);
+            player.beginDrag(); player.select(animation); player.endDrag();
+            QCOMPARE(player.requestedState(), animation);
+        }
+    }
+
     void playbackUsesBundledTiming() {
         pet::Player player;
         QVERIFY(!player.pixmap().isNull()); QVERIFY(player.pixmap().hasAlphaChannel());

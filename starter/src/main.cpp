@@ -1,4 +1,7 @@
 #include "desktop/pet_window.h"
+#include "ipc/local.h"
+#include "desktop/session_playback.h"
+#include <QDateTime>
 #include <QApplication>
 #include <QCommandLineParser>
 #include <QDebug>
@@ -7,13 +10,17 @@
 #include <cstdio>
 
 int main(int argc, char **argv) {
+    if (argc > 1 && (QString::fromLocal8Bit(argv[1]) == "hook" || QString::fromLocal8Bit(argv[1]) == "emit")) {
+        QCoreApplication app(argc, argv);
+        return pet::eventCommand(app.arguments());
+    }
     // XWayland is the prototype default; native Wayland is opt-in for testing.
     if (qEnvironmentVariableIsEmpty("QT_QPA_PLATFORM") && !qEnvironmentVariableIsEmpty("DISPLAY"))
         qputenv("QT_QPA_PLATFORM", "xcb");
     QApplication app(argc, argv);
     app.setQuitOnLastWindowClosed(false);
     app.setApplicationName("agent-pet");
-    app.setApplicationVersion("0.2.0");
+    app.setApplicationVersion("0.3.0");
     QCommandLineParser parser;
     parser.setApplicationDescription("Agent Pet animation and desktop controls");
     parser.addHelpOption();
@@ -30,6 +37,33 @@ int main(int argc, char **argv) {
             std::fprintf(stderr, "%s\n", qPrintable(window.player().error()));
             return 1;
         }
+        pet::Sessions sessions;
+        pet::Receiver receiver;
+        QString lastAggregate;
+        bool observed = false;
+        auto update = [&] {
+            if (!observed || window.player().requestedState() == "closing") return;
+            const auto now = QDateTime::currentMSecsSinceEpoch();
+            sessions.expire(now);
+            const auto state = sessions.aggregate(now);
+            const auto animation = pet::sessionAnimation(state);
+            if (state != lastAggregate || (!window.player().isDragging() && state != "error" && state != "turn-finished" && window.player().requestedState() != animation)) {
+                window.player().select(animation, state == "attention" || state == "error");
+                lastAggregate = state;
+            }
+        };
+        receiver.received = [&](const pet::Event &event) {
+            if (sessions.apply(event, QDateTime::currentMSecsSinceEpoch())) { observed = true; update(); }
+        };
+        QString receiverError;
+        if (!parser.isSet("smoke-test") && !receiver.start(receiverError)) {
+            std::fprintf(stderr, "%s\n", qPrintable(receiverError));
+            return 1;
+        }
+        QTimer sessionTimer;
+        sessionTimer.setInterval(250);
+        QObject::connect(&sessionTimer, &QTimer::timeout, &window, update);
+        sessionTimer.start();
         window.show();
         if (parser.isSet("preview")) window.showPreview();
         if (parser.isSet("settings")) window.showSettings();

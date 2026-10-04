@@ -1,0 +1,13 @@
+[
+  {"provider":"claude","session_id":"a","kind":"tool_start","tool_id":"read","activity":"reading","project_path":"/projects/demo","expect":"reading"},
+  {"provider":"claude","session_id":"a","kind":"tool_start","tool_id":"write","expect":"working"},
+  {"provider":"codex","session_id":"a","kind":"prompt","expect":"working"},
+  {"provider":"claude","session_id":"child","parent_id":"a","kind":"attention","expect":"attention"},
+  {"provider":"claude","session_id":"a","kind":"tool_end","tool_id":"write","expect":"attention"},
+  {"provider":"claude","session_id":"child","kind":"turn_finished","expect":"turn-finished"},
+  {"provider":"claude","session_id":"child","kind":"session_end","expect":"reading"},
+  {"provider":"claude","session_id":"a","kind":"tool_end","tool_id":"read","expect":"thinking"},
+  {"provider":"claude","session_id":"a","kind":"interrupt","expect":"thinking"},
+  {"provider":"codex","session_id":"a","kind":"session_end","expect":"inactive"},
+  {"provider":"claude","session_id":"a","kind":"session_end","expect":"idle"}
+]

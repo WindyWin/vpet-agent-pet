@@ -14,9 +14,9 @@ python3 scripts/verify_assets.py
 git init
 ```
 
-The asset verifier uses only Python's standard library and works from any current directory. The M2 animation and desktop controls are implemented; agent hooks are planned. See [PLAN.md](PLAN.md) and the [architecture and validation record](docs/architecture.md).
+The asset verifier uses only Python's standard library and works from any current directory. M3 local events and session tracking are implemented alongside the M2 animation and desktop controls. Provider adapters remain planned for M4. See [PLAN.md](PLAN.md) and the [architecture and validation record](docs/architecture.md).
 
-## Build and run the M2 prototype
+## Build and run
 
 From this directory, install CMake 3.22+, Ninja, a C++17 compiler and Qt 6.5+
 Widgets/Test and X11 development packages, then run:
@@ -47,16 +47,30 @@ The default uses X11/XWayland when DISPLAY is available. For a development-only
 native Wayland check: `QT_QPA_PLATFORM=wayland ./build/agent-pet`.
 Native Wayland placement and stacking support remain unverified.
 
+## Local events
+
+The pet now accepts normalized local events, tracks concurrent sessions and
+active tools, and selects the aggregate animation. `hook` and `emit` work without
+a display. For a running pet, try:
+
+```bash
+printf '%s\n' '{"version":1,"provider":"claude","session_id":"demo","kind":"prompt"}' | ./build/agent-pet emit
+```
+
+See [the event protocol](docs/events.md) for all events, identity fallbacks,
+ordering, limits, expiry, and command behavior. Raw Claude/Codex hook adapters
+and integration setup are M4; visible alert controls are M5.
+
 ## Package and verify
 
 Python 3, `qmake6`, `ldd` and `patchelf` are build-time packaging tools:
 
 ```bash
 python3 scripts/package.py
-./dist/agent-pet-m2/bin/agent-pet --smoke-test
+./dist/agent-pet-m3/bin/agent-pet --smoke-test
 ```
 
-The output is `dist/agent-pet-m2/` and `dist/agent-pet-m2.tar.gz`. Use a new
+The output is `dist/agent-pet-m3/` and `dist/agent-pet-m3.tar.gz`. Use a new
 `--output` directory on subsequent runs. Copy/extract the entire directory to
 another location and run `bin/agent-pet`; no separate Qt or interpreter is needed.
 The package targets a compatible Linux host ABI, not every distribution.
@@ -65,7 +79,7 @@ For a filesystem-isolated headless check (requires bubblewrap and permitted user
 namespaces), run:
 
 ```bash
-python3 scripts/check_isolated.py dist/agent-pet-m2
+python3 scripts/check_isolated.py dist/agent-pet-m3
 ```
 
 This mounts only the package and host glibc libraries. It verifies idle/thinking,

@@ -10,7 +10,7 @@ recovery and quit controls. CMake/CTest and a relocatable Linux prototype packag
 are available. Copied-package XWayland and filesystem-isolated runtime smoke
 checks pass. Native X11 and manual desktop acceptance remain open; see
 [architecture and evidence](docs/architecture.md) and [build commands](README.md).
-Provider/session/IPC directories reserve boundaries for later milestones.
+Provider payload adapters are reserved for M4; session state and IPC are implemented in M3.
 
 M2 implemented 2026-10-04: all 23 bundled sequences and 215 frames now play through
 the catalog-defined phases. The original `Raise/` animation plays during native
@@ -21,6 +21,12 @@ transition, resource-error and settings tests pass, as do the real XWayland drag
 and isolated package checks. The user visually confirmed the result. See
 [architecture and evidence](docs/architecture.md). Native X11 and native Wayland
 are still untested as full desktop sessions.
+
+M3 implemented 2026-10-04: versioned normalized events, private bounded Unix
+transport, headless hook/emit commands, bounded session/tool tracking, deduplication,
+ordering, expiry and aggregate playback. Deterministic replay and transport tests
+cover the policies in [events.md](docs/events.md). Provider adapters remain M4,
+and visible alert controls remain M5.
 
 1. Build a transparent, draggable desktop window and play the bundled `idle` sequence using frame durations from `assets/vpet/animations.json`. Test X11 and XWayland behavior before choosing a Linux package format.
 2. Add an animation controller that can start a sequence, hold its middle loop, play its ending, and return to idle. Keep decoded images in a bounded cache. The JSON state map has separate folders for each A/B/C phase.

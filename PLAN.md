@@ -17,7 +17,7 @@ The self-contained [starter repository](starter/README.md) also includes a small
 - [x] Prepare the smaller standalone starter pack and verifier.
 - [x] Choose the desktop shell and establish the application scaffold.
 - [x] Implement animation playback and desktop controls.
-- [ ] Implement local events and session state management.
+- [x] Implement local events and session state management.
 - [ ] Implement and validate both provider integrations.
 - [ ] Implement compact pet alerts and minimal settings.
 - [ ] Package and validate the first Linux release.
@@ -145,17 +145,25 @@ Implemented 2026-10-04 in `starter/`. Asset verification, frame/transition/setti
 
 ### M3 — Local events and session state
 
-- [ ] Document a versioned event envelope with provider, session identity, event identity, event kind, timestamp, and optional tool/parent identity.
-- [ ] Include the project path when available for alert labels; use provider plus session identity to distinguish concurrent sessions.
-- [ ] Define how adapters handle events whose provider payload lacks an identifier.
-- [ ] Implement a private local receiver with bounded payload sizes and validation.
-- [ ] Implement the packaged `agent-pet hook` and `agent-pet emit` commands.
-- [ ] Ensure hook callbacks produce no stdout and have bounded execution time when the UI is absent or unresponsive.
-- [ ] Track overlapping tool calls, multiple sessions, and child sessions independently.
-- [ ] Handle duplicate and late events, interruption, session end, and stale-session expiry.
-- [ ] Define aggregate attention priority, pending-alert selection, and return-to-idle behavior.
-- [ ] Add deterministic event replay fixtures without prompt text or tool output.
-- [ ] Upsert sessions from non-start events; bound in-memory state and wait for fresh events after restart without replaying old alerts.
+Implemented 2026-10-04 in `starter/`. Normalized protocol, private Unix datagram
+receiver, headless hook/emit commands, bounded session/tool state and pending
+alerts, aggregate playback, replay fixtures and transport tests pass. Packaged
+headless callbacks took about 10 ms with the UI absent; isolated package smoke
+passed. See [protocol and policies](starter/docs/events.md) and
+[validation evidence](starter/docs/architecture.md). Provider payload adapters
+and live-client validation remain M4; alert presentation remains M5.
+
+- [x] Document a versioned event envelope with provider, session identity, event identity, event kind, timestamp, and optional tool/parent identity.
+- [x] Include the project path when available for alert labels; use provider plus session identity to distinguish concurrent sessions.
+- [x] Define how adapters handle events whose provider payload lacks an identifier.
+- [x] Implement a private local receiver with bounded payload sizes and validation.
+- [x] Implement the packaged `agent-pet hook` and `agent-pet emit` commands.
+- [x] Ensure hook callbacks produce no stdout and have bounded execution time when the UI is absent or unresponsive.
+- [x] Track overlapping tool calls, multiple sessions, and child sessions independently.
+- [x] Handle duplicate and late events, interruption, session end, and stale-session expiry.
+- [x] Define aggregate attention priority, pending-alert selection, and return-to-idle behavior.
+- [x] Add deterministic event replay fixtures without prompt text or tool output.
+- [x] Upsert sessions from non-start events; bound in-memory state and wait for fresh events after restart without replaying old alerts.
 
 **Complete when:** replay demonstrates correct state transitions for concurrent sessions and tools, duplicate or late callbacks do not overwrite newer activity, and callbacks finish promptly with the UI closed. A stopped turn must never be presented as verified success.
 
@@ -226,9 +234,8 @@ Set measurable callback-latency, memory, and idle-CPU targets during the prototy
 
 ## Immediate next steps
 
-1. Verify the starter pack and create the desktop prototype within `starter/`.
-2. Record the window and package results, then choose the shell in `docs/architecture.md`.
-3. Implement the smallest working flow: launch → idle → manually selected thinking → idle → quit.
-4. Use that flow to complete M1 before adding provider hooks.
+1. Implement M4 provider adapters using supported client versions and sanitized payloads.
+2. Validate integration setup and observed coverage in real Claude Code and Codex sessions.
+3. Build M5 alert presentation on the M3 pending-alert and session-state APIs.
 
 The first release is complete when another user can install it, receive pet reactions and identifiable attention and turn-finished alerts from supported connected sessions across local hosts using only the distributed package. Coverage limitations are visible; terminal navigation is not required.
