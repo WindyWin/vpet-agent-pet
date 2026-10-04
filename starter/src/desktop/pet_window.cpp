@@ -1,5 +1,6 @@
 #include "pet_window.h"
 #include "drag_monitor.h"
+#include "ipc/autostart.h"
 #include "providers/integrations.h"
 #include "version.h"
 #include <QApplication>
@@ -414,6 +415,16 @@ QWidget *PetWindow::startupSettings(QWidget *parent) {
                           "Needs a graphical session; SSH and container sessions do not start it.");
     layout->addRow(autostart);
     connect(autostart, &QCheckBox::toggled, this, &PetWindow::setAutostart);
+    auto *login = new QCheckBox("Start Agent Pet at &login", box);
+    login->setChecked(loginStartEnabled());
+    login->setToolTip("Starts the pet whenever you log in to your desktop, even before an agent session.");
+    layout->addRow(login);
+    connect(login, &QCheckBox::toggled, this, [login](bool enabled) {
+        QString error;
+        if (setLoginStart(enabled, QCoreApplication::applicationFilePath(), &error)) return;
+        QSignalBlocker blocker(login); login->setChecked(!enabled);
+        QMessageBox::warning(login, "Agent Pet", "Cannot change start at login: " + error);
+    });
     auto *idle = new QComboBox(box); idle->setAccessibleName("When no sessions remain");
     idle->addItem("Keep the pet running", int(IdlePolicy::Keep));
     idle->addItem("Hide the pet (tray icon stays)", int(IdlePolicy::Hide));

@@ -1,6 +1,11 @@
 #include "autostart.h"
 #include "settings/preferences.h"
+#include <QCoreApplication>
+#include <QDir>
 #include <QFile>
+#include <QFileInfo>
+#include <QSaveFile>
+#include <QStandardPaths>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <algorithm>
@@ -69,11 +74,54 @@ bool autostartPet(const QByteArray &event, const QString &kind, const QString &p
     if (!store.load().autostart || !store.error().isEmpty()) return false;
     return launch(executable, {"--autostarted", "--launch-event", QString::fromUtf8(event)});
 }
+QString loginEntryPath(const QString &directory) {
+    const auto base = directory.isEmpty() ? QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation) + "/autostart" : directory;
+    return base + "/agent-pet.desktop";
+}
+bool loginStartEnabled(const QString &directory) { return QFile::exists(loginEntryPath(directory)); }
+// Desktop Entry Exec quoting: double quotes, with \ " ` $ escaped, then each backslash doubled at string level.
+static QString desktopExec(const QString &executable) {
+    QString quoted;
+    for (const QChar c : executable) {
+        if (c == '%') quoted += "%%";
+        else if (c == '\\' || c == '"' || c == '`' || c == '$') quoted += QString("\\\\") + c;
+        else quoted += c;
+    }
+    return "\"" + quoted + "\"";
+}
+bool setLoginStart(bool enabled, const QString &executable, QString *error, const QString &directory) {
+    const auto path = loginEntryPath(directory);
+    auto fail = [&](const QString &message) { if (error) *error = message; return false; };
+    if (!enabled) return !QFile::exists(path) || QFile::remove(path) || fail("Cannot remove " + path);
+    if (!QDir().mkpath(QFileInfo(path).absolutePath())) return fail("Cannot create " + QFileInfo(path).absolutePath());
+    QSaveFile file(path);
+    if (!file.open(QIODevice::WriteOnly)) return fail(file.errorString());
+    const auto bytes = ("[Desktop Entry]\nType=Application\nName=Agent Pet\nComment=Start the Agent Pet desktop companion at login\n"
+                        "Exec=" + desktopExec(executable) + "\nIcon=agent-pet\nTerminal=false\nX-GNOME-Autostart-enabled=true\n").toUtf8();
+    if (file.write(bytes) != bytes.size() || !file.commit()) return fail(file.errorString());
+    return true;
+}
+static int loginCommand(const QStringList &args) {
+    const auto operation = args.value(3);
+    if (args.size() != 4 || (operation != "enable" && operation != "disable" && operation != "status")) {
+        std::fprintf(stderr, "Usage: agent-pet autostart login enable|disable|status\n"); return 1;
+    }
+    QString error;
+    if (operation != "status" && !setLoginStart(operation == "enable", QCoreApplication::applicationFilePath(), &error)) {
+        std::fprintf(stderr, "%s\n", qPrintable(error)); return 1;
+    }
+    const QJsonObject report{{"start_at_login", loginStartEnabled()}, {"entry", loginEntryPath()}};
+    const auto output = QJsonDocument(report).toJson();
+    std::fwrite(output.constData(), 1, output.size(), stdout);
+    return 0;
+}
 int autostartCommand(const QStringList &args) {
+    if (args.value(2) == "login") return loginCommand(args);
     const auto operation = args.value(2);
     QString error;
     auto fail = [&] { std::fprintf(stderr, "%s\n", qPrintable(error)); return 1; };
-    const QString usage = "Usage: agent-pet autostart enable|disable|status [--when-idle keep|hide|quit]";
+    const QString usage = "Usage: agent-pet autostart enable|disable|status [--when-idle keep|hide|quit]\n"
+                          "       agent-pet autostart login enable|disable|status";
     if (operation != "enable" && operation != "disable" && operation != "status") { error = usage; return fail(); }
     bool setPolicy = false;
     IdlePolicy policy = IdlePolicy::Keep;

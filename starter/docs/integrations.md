@@ -69,9 +69,11 @@ forwards its launch event to that pet and exits silently, so concurrent session
 starts launch one pet and lose no events. Without a display (SSH, containers)
 nothing is launched. `agent-pet autostart enable|disable|status [--when-idle
 keep|hide|quit]` changes only `preferences.json`, never client hook files.
-systemd socket activation and login autostart (`~/.config/autostart`) were
-considered and not used: one starts a pet with no desktop session at hand, the
-other runs it whether or not an agent is in use.
+systemd socket activation was considered and not used: it starts a pet with no
+desktop session at hand. Starting at login (`agent-pet autostart login
+enable|disable|status`) is a separate opt-in that writes
+`~/.config/autostart/agent-pet.desktop`; it runs the pet whether or not an agent
+is in use, so it is off by default.
 
 ## Contract and version baseline
 

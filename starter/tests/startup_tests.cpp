@@ -262,6 +262,19 @@ private slots:
         QCOMPARE(run({"hook", "--provider", "claude"}, env, start).code, 0);
         QTest::qWait(500); QCOMPARE(testPets().size(), 1);
     }
+    void loginEntryRoundTrip() {
+        QTemporaryDir dir;
+        const auto autostartDir = dir.path() + "/autostart";
+        QVERIFY(!pet::loginStartEnabled(autostartDir));
+        QVERIFY(pet::setLoginStart(true, "/opt/My Apps/agent-pet", nullptr, autostartDir));
+        QVERIFY(pet::loginStartEnabled(autostartDir));
+        QFile file(pet::loginEntryPath(autostartDir));
+        QVERIFY(file.open(QIODevice::ReadOnly));
+        QVERIFY(file.readAll().contains("Exec=\"/opt/My Apps/agent-pet\"\n"));
+        QVERIFY(pet::setLoginStart(false, {}, nullptr, autostartDir));
+        QVERIFY(!pet::loginStartEnabled(autostartDir));
+        QVERIFY(pet::setLoginStart(false, {}, nullptr, autostartDir)); // Disabling twice is fine.
+    }
 };
 QTEST_GUILESS_MAIN(StartupTests)
 #include "startup_tests.moc"
