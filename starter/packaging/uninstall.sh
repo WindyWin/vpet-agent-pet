@@ -30,7 +30,7 @@ fi
 
 if [ "$interactive" = 1 ]; then
     . "$prefix/share/agent-pet/tui.sh"
-    tui_init "Agent Pet uninstaller"
+    tui_init "Agent Pet uninstaller" "$prefix/share/agent-pet"
     on() { if [ "$1" = 1 ]; then echo on; else echo off; fi; }
     set -- hooks "Remove Agent Pet hooks from Claude Code and Codex" "$(on $((1 - keep_integrations)))" \
            settings "Delete settings ($data_home/agent-pet)" "$(on $purge)"

@@ -1,0 +1,5 @@
+# Used by install.sh and uninstall.sh when they run dialog and no ~/.dialogrc or DIALOGRC exists.
+# dialog's default blue theme can render unreadably on terminals with custom palettes, so draw
+# with the terminal's own foreground and background: bold, reverse and underline only.
+use_colors = OFF
+use_shadow = OFF

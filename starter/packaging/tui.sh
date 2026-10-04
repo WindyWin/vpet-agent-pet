@@ -3,6 +3,7 @@
 # AGENT_PET_UI=whiptail|dialog|plain overrides the choice (plain is used for tests).
 # Answers are returned in REPLY. Cancel or end of input exits before anything changes.
 
+# tui_init TITLE SHARE_DIR — SHARE_DIR holds this file and dialogrc.
 tui_init() {
     tui_title=$1
     tui=${AGENT_PET_UI:-}
@@ -18,6 +19,16 @@ tui_init() {
         whiptail|dialog|plain) ;;
         *) echo "AGENT_PET_UI must be whiptail, dialog or plain" >&2; exit 2 ;;
     esac
+    # Lists show labels only; the tags are internal.
+    if [ "$tui" = dialog ]; then tui_notags=--no-tags; else tui_notags=--notags; fi
+    # The default blue themes can be unreadable on terminals with custom palettes. Unless the
+    # user has chosen colors, draw with the terminal's own foreground and background.
+    if [ "$tui" = dialog ] && [ -z "${DIALOGRC:-}" ] && [ ! -f "$HOME/.dialogrc" ] && [ -f "$2/dialogrc" ]; then
+        DIALOGRC=$2/dialogrc; export DIALOGRC
+    fi
+    if [ "$tui" = whiptail ] && [ -z "${NEWT_COLORS:-}${NEWT_COLORS_FILE:-}" ]; then
+        NEWT_MONO=1; export NEWT_MONO
+    fi
 }
 
 tui_cancel() {
@@ -92,7 +103,9 @@ tui_checklist() {
         REPLY=${REPLY# }
         return
     fi
-    tui_widget --separate-output --checklist "$prompt" $(($# / 3 + 9)) 74 $(($# / 3)) "$@"
+    tui_widget --separate-output $tui_notags --checklist "$prompt
+
+Up/Down moves, Space checks or unchecks [*], Tab switches to Ok/Cancel, Enter confirms." $(($# / 3 + 11)) 74 $(($# / 3)) "$@"
     REPLY=$(printf '%s\n' "$REPLY" | tr -d '"' | tr '\n' ' ')
     REPLY=${REPLY% }
 }
@@ -101,7 +114,9 @@ tui_checklist() {
 tui_menu() {
     prompt=$1; default=$2; shift 2
     if [ "$tui" != plain ]; then
-        tui_widget --default-item "$default" --menu "$prompt" $(($# / 2 + 8)) 74 $(($# / 2)) "$@"
+        tui_widget --default-item "$default" $tui_notags --menu "$prompt
+
+Up/Down chooses, Enter confirms." $(($# / 2 + 10)) 74 $(($# / 2)) "$@"
         return
     fi
     echo "$prompt"

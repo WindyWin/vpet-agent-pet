@@ -108,7 +108,7 @@ change() {
 
 if [ "$interactive" = 1 ]; then
     . "$source_dir/share/agent-pet/tui.sh"
-    tui_init "Agent Pet installer"
+    tui_init "Agent Pet installer" "$source_dir/share/agent-pet"
     # Offer the existing installation that the command link points to, if any.
     existing=$(readlink "$HOME/.local/bin/agent-pet" 2>/dev/null || true)
     existing=${existing%/bin/agent-pet}
