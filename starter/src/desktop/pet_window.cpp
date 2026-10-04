@@ -1,6 +1,7 @@
 #include "pet_window.h"
 #include "drag_monitor.h"
 #include "providers/integrations.h"
+#include "version.h"
 #include <QApplication>
 #include <QCheckBox>
 #include <QCloseEvent>
@@ -311,12 +312,14 @@ void PetWindow::showAbout() {
     auto *dialog = new QDialog(this); dialog->setAttribute(Qt::WA_DeleteOnClose);
     dialog->setWindowTitle("About Agent Pet — artwork and terms"); dialog->resize(560, 440);
     auto *layout = new QVBoxLayout(dialog);
-    auto *credits = new QLabel("<b>Agent Pet " + QCoreApplication::applicationVersion().toHtmlEscaped() + "</b><br>Artwork: VUP-Simulator team, via "
-                               "<a href='https://github.com/LorisYounger/VPet'>LorisYounger/VPet</a>.", dialog);
+    auto *credits = new QLabel(QString("<b>Agent Pet %1</b> (revision %2, Qt %3)<br>"
+                                       "Application code: MIT License. Artwork: VUP-Simulator team, via "
+                                       "<a href='https://github.com/LorisYounger/VPet'>LorisYounger/VPet</a>, under its own terms below.")
+                                   .arg(QString(AGENT_PET_VERSION).toHtmlEscaped(), QString(AGENT_PET_REVISION).toHtmlEscaped(), qVersion()), dialog);
     credits->setOpenExternalLinks(true); credits->setTextInteractionFlags(Qt::TextBrowserInteraction); layout->addWidget(credits);
     auto *terms = new QTextBrowser(dialog); terms->setAccessibleName("Artwork terms and third-party notices");
     QString text;
-    for (const auto &path : {":/THIRD_PARTY_NOTICES.md", ":/licenses/VPET-ARTWORK-TERMS.md"}) {
+    for (const auto &path : {":/THIRD_PARTY_NOTICES.md", ":/licenses/VPET-ARTWORK-TERMS.md", ":/LICENSE"}) {
         QFile file(path);
         if (file.open(QIODevice::ReadOnly)) text += QString::fromUtf8(file.readAll()) + "\n\n";
     }

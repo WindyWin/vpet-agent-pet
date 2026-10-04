@@ -1,0 +1,84 @@
+name: Build and package
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  linux:
+    # Ubuntu 22.04 sets the glibc 2.35 baseline for the released binary.
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        working-directory: starter
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify assets
+        run: |
+          python3 scripts/verify_assets.py
+          python3 ../scripts/assets.py verify
+
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ninja-build patchelf bubblewrap \
+            desktop-file-utils libgl-dev libegl-dev libx11-dev libxtst-dev \
+            libxkbcommon-x11-0 libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 \
+            libxcb-randr0 libxcb-render-util0 libxcb-shape0 libxcb-xinerama0 libxcb-xkb1
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: "6.5.3"
+          cache: true
+
+      - name: Build
+        run: |
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_LIBDIR=lib \
+            -DAGENT_PET_REVISION="${GITHUB_SHA::12}"
+          cmake --build build
+
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
+
+      - name: Package
+        run: |
+          QMAKE="$QT_ROOT_DIR/bin/qmake" python3 scripts/package.py
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            test -d "dist/agent-pet-${GITHUB_REF_NAME#v}-linux-x86_64" || { echo "Tag does not match project() version"; exit 1; }
+          fi
+          ls -l dist
+
+      - name: Check isolated package
+        run: python3 scripts/check_isolated.py dist/agent-pet-*-linux-x86_64
+
+      - name: Check install, upgrade and uninstall
+        run: python3 scripts/check_install.py dist/agent-pet-*-linux-x86_64.tar.gz
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: agent-pet-linux-x86_64
+          path: starter/dist/*.tar.gz
+          if-no-files-found: error
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: linux
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: agent-pet-linux-x86_64
+      - uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          files: "*.tar.gz"

@@ -1,6 +1,7 @@
 #include "desktop/monitor.h"
 #include "ipc/local.h"
 #include "providers/integrations.h"
+#include "version.h"
 #include <QApplication>
 #include <QCommandLineParser>
 #include <QDebug>
@@ -9,6 +10,11 @@
 #include <cstdio>
 
 int main(int argc, char **argv) {
+    // Answer without a display so install scripts can report versions headlessly.
+    if (argc == 2 && QString::fromLocal8Bit(argv[1]) == "--version") {
+        std::printf("agent-pet %s (%s)\n", AGENT_PET_VERSION, AGENT_PET_REVISION);
+        return 0;
+    }
     if (argc > 1 && QString::fromLocal8Bit(argv[1]) == "integration") {
         QCoreApplication app(argc, argv);
         return pet::integrationCommand(app.arguments());
@@ -23,7 +29,7 @@ int main(int argc, char **argv) {
     QApplication app(argc, argv);
     app.setQuitOnLastWindowClosed(false);
     app.setApplicationName("agent-pet");
-    app.setApplicationVersion("0.5.0");
+    app.setApplicationVersion(AGENT_PET_VERSION);
     QCommandLineParser parser;
     parser.setApplicationDescription("Agent Pet animation and desktop controls");
     parser.addHelpOption();
