@@ -76,7 +76,7 @@ Codex hosted tools can lack tool hooks. There is no universal input-request even
 | SessionStart | Refresh/create idle session metadata |
 | UserPromptSubmit | Thinking; starts a new observed turn |
 | PreToolUse | Track tool ID; known reading tools select reading, others working |
-| PostToolUse | Remove that tool and resume remaining activity |
+| PostToolUse | Remove that tool; the last tool's activity is held 4 s before thinking resumes |
 | PermissionRequest | Attention (reason approval); never return an approval decision |
 | Stop | Turn finished, without claiming success |
 | SessionEnd | Remove session and its alerts |
