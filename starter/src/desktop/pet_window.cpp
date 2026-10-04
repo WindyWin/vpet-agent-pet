@@ -22,12 +22,23 @@
 #include <QSignalBlocker>
 #include <QShortcut>
 #include <QSpinBox>
+#include <QStandardItemModel>
 #include <QTextBrowser>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QWindow>
 
 namespace pet {
+// The persistent attention badge, drawn on the pet and on the tray icon.
+static void drawBadge(QPainter &painter, const QRect &badge, const QColor &color, const QString &text) {
+    painter.save();
+    painter.setRenderHint(QPainter::Antialiasing);
+    painter.setPen(QPen(Qt::white, 2)); painter.setBrush(color);
+    painter.drawEllipse(badge);
+    auto font = painter.font(); font.setBold(true); font.setPixelSize(badge.height() * 3 / 5); painter.setFont(font);
+    painter.drawText(badge, Qt::AlignCenter, text);
+    painter.restore();
+}
 PetWindow::PetWindow(QWidget *parent, const QString &path, bool persist)
     : QWidget(parent), player_(this), store_(path), menu_(this), tray_(this), persist_(persist) {
     const auto preferences = persist_ ? store_.load() : Preferences{};
@@ -39,10 +50,15 @@ PetWindow::PetWindow(QWidget *parent, const QString &path, bool persist)
     setToolTip("Click for running sessions · Drag to move · Right-click for controls · Esc to quit");
     setPetSize(preferences.size);
     muted_ = preferences.muted; sound_ = preferences.sound; bubbles_ = qBound(0, preferences.bubbles, 2);
+    autostart_ = preferences.autostart; presence_.setPolicy(preferences.whenIdle);
     connect(&player_, &Player::changed, this, qOverload<>(&PetWindow::update));
     connect(&player_, &Player::completed, this, [this](const QString &state) {
         if (quitting_ && state == "closing") qApp->quit();
     });
+    showAction_ = menu_.addAction("Show pet");
+    showAction_->setCheckable(true); showAction_->setChecked(true);
+    connect(showAction_, &QAction::toggled, this, [this](bool shown) { setPetHidden(!shown); });
+    menu_.addSeparator();
     auto *states = menu_.addMenu("Preview state");
     for (const auto &state : player_.states())
         states->addAction(state, this, [this, state] { if (!quitting_) player_.select(state); });
@@ -62,13 +78,16 @@ PetWindow::PetWindow(QWidget *parent, const QString &path, bool persist)
     menu_.addSeparator();
     menu_.addAction("About and artwork terms…", this, &PetWindow::showAbout);
     menu_.addAction("Quit", this, &PetWindow::requestQuit);
-    tray_.setIcon(QIcon(player_.pixmap()));
-    tray_.setToolTip("Agent Pet — right-click for controls");
+    trayBase_ = player_.pixmap();
+    updateTrayIcon();
+    tray_.setToolTip("Agent Pet — idle");
     tray_.setContextMenu(&menu_);
     connect(&tray_, &QSystemTrayIcon::activated, this, [this](auto reason) {
-        if (reason == QSystemTrayIcon::Trigger || reason == QSystemTrayIcon::DoubleClick) recover();
+        if (reason != QSystemTrayIcon::Trigger) return;
+        if (presence_.canHide()) setPetHidden(!petHidden());
+        else recover();
     });
-    if (QSystemTrayIcon::isSystemTrayAvailable()) tray_.show();
+    setTrayAvailable(QSystemTrayIcon::isSystemTrayAvailable());
     recoveryTimer_.setSingleShot(true);
     connect(&recoveryTimer_, &QTimer::timeout, this, [this] { setClickThrough(false); });
     dragTimer_.setInterval(40);
@@ -137,7 +156,7 @@ void PetWindow::setClickThrough(bool enabled) {
     const QSignalBlocker blocker(clickAction_);
     clickAction_->setChecked(enabled);
     const auto position = pos();
-    setWindowFlag(Qt::WindowTransparentForInput, enabled); show(); move(position);
+    setWindowFlag(Qt::WindowTransparentForInput, enabled); showAfterFlagChange(position);
     if (enabled) recoveryTimer_.start(Preferences::recoveryMs);
     else recoveryTimer_.stop();
 }
@@ -145,7 +164,7 @@ void PetWindow::setOnTop(bool enabled) {
     const QSignalBlocker blocker(onTopAction_);
     onTopAction_->setChecked(enabled);
     const auto position = pos();
-    setWindowFlag(Qt::WindowStaysOnTopHint, enabled); show(); move(position);
+    setWindowFlag(Qt::WindowStaysOnTopHint, enabled); showAfterFlagChange(position);
     if (ready_) saveTimer_.start();
 }
 void PetWindow::setAttention(int sessions) {
@@ -173,17 +192,110 @@ void PetWindow::setBubbles(int level) {
     bubbles_ = level; emit notificationsChanged();
     if (ready_) saveTimer_.start();
 }
+void PetWindow::showAfterFlagChange(QPoint position) {
+    // Changing window flags hides the window; a hidden pet stays hidden until shown.
+    if (!petHidden()) { show(); move(position); }
+}
 void PetWindow::recover() {
+    applyPresence(presence_.setUserHidden(false));
     setClickThrough(false);
     move(Preferences::visiblePosition({-1000000, -1000000}, size(), screenAreas()));
     show(); raise();
 }
-bool PetWindow::savePreferences() {
+void PetWindow::setTrayAvailable(bool available) {
+    presence_.setTrayAvailable(available);
+    showAction_->setEnabled(available);
+    showAction_->setToolTip(available ? QString() : "Hiding needs a system tray to show the pet again");
+    tray_.setVisible(available);
+    if (!available) applyPresence(presence_.setUserHidden(false));
+}
+void PetWindow::setPetHidden(bool hidden) {
+    if (quitting_) return;
+    applyPresence(presence_.setUserHidden(hidden));
+    const QSignalBlocker blocker(showAction_);
+    showAction_->setChecked(!petHidden()); // Refused without a tray.
+}
+void PetWindow::applyPresence(Presence::Action action) {
+    if (action == Presence::Action::Quit) { requestQuit(); return; }
+    if (action == Presence::Action::None) return;
+    const bool hidden = action == Presence::Action::Hide;
+    {
+        const QSignalBlocker blocker(showAction_);
+        showAction_->setChecked(!hidden);
+    }
+    if (hidden) {
+        endDrag();
+        if (clickThrough_) setClickThrough(false);
+        hide();
+        player_.setPaused(true); // Nobody sees it; sessions keep driving its state.
+    } else {
+        const auto position = pos();
+        show(); move(position); raise();
+        player_.setPaused(false);
+        constrainPosition();
+    }
+    emit presenceChanged();
+}
+void PetWindow::updatePresence(int sessions, qint64 now) {
+    if (quitting_) return;
+    // The idle policy may have changed from the command line since it was read.
+    if (presence_.idleDeadline() && now >= presence_.idleDeadline()) refreshStartup();
+    applyPresence(presence_.update(sessions, now));
+}
+void PetWindow::setStatus(int sessions, int attention, int errors) {
+    QString text = sessions == 0 ? QString("Agent Pet — idle")
+                                 : QString("Agent Pet — %1 session%2").arg(sessions).arg(sessions == 1 ? "" : "s");
+    if (attention > 0) text += QString(" · %1 need%2 attention").arg(attention).arg(attention == 1 ? "s" : "");
+    if (errors > 0) text += QString(" · %1 tool error%2").arg(errors).arg(errors == 1 ? "" : "s");
+    if (tray_.toolTip() != text) tray_.setToolTip(text);
+    // Redraw only on a change: every icon update is a D-Bus round trip on desktop trays.
+    const int badge = qBound(0, attention, 9);
+    if (badge == trayAttention_ && (errors > 0) == trayError_) return;
+    trayAttention_ = badge; trayError_ = errors > 0;
+    updateTrayIcon();
+}
+void PetWindow::updateTrayIcon() {
+    constexpr int size = 64;
+    QPixmap icon(size, size); icon.fill(Qt::transparent);
+    QPainter painter(&icon);
+    painter.setRenderHint(QPainter::SmoothPixmapTransform); painter.setRenderHint(QPainter::Antialiasing);
+    if (!trayBase_.isNull()) {
+        const auto scaled = trayBase_.size().scaled(size, size, Qt::KeepAspectRatio);
+        painter.drawPixmap(QRect(QPoint((size - scaled.width()) / 2, (size - scaled.height()) / 2), scaled), trayBase_);
+    } else {
+        painter.setBrush(QColor("#fff2cf")); painter.setPen(QColor("#453324"));
+        painter.drawRoundedRect(QRect(8, 8, size - 16, size - 16), 12, 12);
+    }
+    // Tray icons are tiny: the dot takes the top-right corner, larger than on the pet.
+    const QRect badge(size * 9 / 16, 1, size * 7 / 16 - 1, size * 7 / 16 - 1);
+    if (trayAttention_ > 0) drawBadge(painter, badge, QColor("#d9480f"), trayAttention_ > 1 ? QString::number(trayAttention_) : "!");
+    else if (trayError_) drawBadge(painter, badge, QColor("#c92a2a"), "!");
+    painter.end();
+    tray_.setIcon(QIcon(icon));
+}
+void PetWindow::refreshStartup() {
+    if (!persist_) return;
+    const auto preferences = store_.load();
+    autostart_ = preferences.autostart; presence_.setPolicy(preferences.whenIdle);
+}
+void PetWindow::setAutostart(bool enabled) {
+    autostart_ = enabled;
+    writePreferences([enabled](Preferences &preferences) { preferences.autostart = enabled; });
+}
+void PetWindow::setWhenIdle(IdlePolicy policy) {
+    presence_.setPolicy(policy);
+    writePreferences([policy](Preferences &preferences) { preferences.whenIdle = policy; });
+}
+bool PetWindow::savePreferences() { return writePreferences([](Preferences &) {}); }
+bool PetWindow::writePreferences(const std::function<void(Preferences &)> &change) {
     if (!persist_ || !ready_) return true;
-    Preferences preferences;
+    // Start from the file: `agent-pet autostart` may have changed the startup keys meanwhile.
+    auto preferences = store_.load();
     preferences.size = width(); preferences.position = pos(); preferences.hasPosition = true;
     preferences.onTop = windowFlags().testFlag(Qt::WindowStaysOnTopHint);
     preferences.muted = muted_; preferences.sound = sound_; preferences.bubbles = bubbles_;
+    change(preferences);
+    autostart_ = preferences.autostart; presence_.setPolicy(preferences.whenIdle);
     return store_.save(preferences);
 }
 void PetWindow::moveEvent(QMoveEvent *event) {
@@ -207,11 +319,7 @@ void PetWindow::paintEvent(QPaintEvent *) {
         // Persistent attention badge: stays until the observed request resolves.
         const int diameter = qMax(26, width() / 8);
         const QRect badge(width() * 3 / 4 - diameter / 2, height() / 8, diameter, diameter);
-        painter.setRenderHint(QPainter::Antialiasing);
-        painter.setPen(QPen(Qt::white, 2)); painter.setBrush(QColor("#d9480f"));
-        painter.drawEllipse(badge);
-        auto font = painter.font(); font.setBold(true); font.setPixelSize(diameter * 3 / 5); painter.setFont(font);
-        painter.drawText(badge, Qt::AlignCenter, attention_ > 1 ? QString::number(qMin(attention_, 9)) : "!");
+        drawBadge(painter, badge, QColor("#d9480f"), attention_ > 1 ? QString::number(qMin(attention_, 9)) : "!");
     }
 }
 void PetWindow::requestQuit() {
@@ -221,6 +329,7 @@ void PetWindow::requestQuit() {
     if (settingsDialog_) settingsDialog_->close();
     if (previewDialog_) previewDialog_->close();
     menu_.setEnabled(false);
+    if (petHidden()) { qApp->quit(); return; } // No one would see the closing animation.
     player_.setPaused(false);
     if (!player_.select("closing", true) || player_.stopped()) { qApp->quit(); return; }
     // A broken shutdown asset must never prevent exit.
@@ -275,6 +384,7 @@ void PetWindow::showSettings() {
     bubbles->setCurrentIndex(bubbles_); bubbles->setAccessibleName("Show alert bubbles");
     layout->addRow("Show &bubbles", bubbles);
     connect(bubbles, &QComboBox::currentIndexChanged, this, &PetWindow::setBubbles);
+    layout->addRow(startupSettings(dialog));
     layout->addRow(integrationSettings(dialog));
     auto *recover = new QPushButton("&Recover position and input", dialog); layout->addRow(recover);
     connect(recover, &QPushButton::clicked, this, &PetWindow::recover);
@@ -294,8 +404,34 @@ void PetWindow::showSettings() {
     connect(buttons, &QDialogButtonBox::rejected, dialog, &QDialog::close);
     layout->addRow(buttons); dialog->show();
 }
+QWidget *PetWindow::startupSettings(QWidget *parent) {
+    refreshStartup();
+    auto *box = new QGroupBox("Startup", parent); box->setObjectName("startup");
+    auto *layout = new QFormLayout(box);
+    auto *autostart = new QCheckBox("&Autostart on agent session start", box);
+    autostart->setChecked(autostart_);
+    autostart->setToolTip("When a connected agent starts a session and no pet is running, its hook launches the pet.\n"
+                          "Needs a graphical session; SSH and container sessions do not start it.");
+    layout->addRow(autostart);
+    connect(autostart, &QCheckBox::toggled, this, &PetWindow::setAutostart);
+    auto *idle = new QComboBox(box); idle->setAccessibleName("When no sessions remain");
+    idle->addItem("Keep the pet running", int(IdlePolicy::Keep));
+    idle->addItem("Hide the pet (tray icon stays)", int(IdlePolicy::Hide));
+    idle->addItem("Quit Agent Pet", int(IdlePolicy::Quit));
+    if (auto *model = qobject_cast<QStandardItemModel *>(idle->model()); model && !presence_.canHide()) {
+        model->item(1)->setEnabled(false); // Without a tray nothing could show it again; it keeps running.
+        model->item(1)->setToolTip("Needs a system tray");
+    }
+    idle->setCurrentIndex(qMax(0, idle->findData(int(whenIdle()))));
+    layout->addRow("When no sessions &remain", idle);
+    connect(idle, &QComboBox::currentIndexChanged, this, [this, idle] { setWhenIdle(IdlePolicy(idle->currentData().toInt())); });
+    auto *note = new QLabel("Applies two minutes after the last session ends; a new session cancels it. "
+                            "A pet hidden this way returns with the next session.", box);
+    note->setWordWrap(true); layout->addRow(note);
+    return box;
+}
 QWidget *PetWindow::integrationSettings(QWidget *parent) {
-    auto *box = new QGroupBox("Agent integrations", parent);
+    auto *box = new QGroupBox("Agent integrations", parent); box->setObjectName("integrations");
     auto *layout = new QFormLayout(box);
     for (const QString provider : {"claude", "codex"}) {
         auto *row = new QWidget(box); auto *rowLayout = new QHBoxLayout(row); rowLayout->setContentsMargins(0, 0, 0, 0);

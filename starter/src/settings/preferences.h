@@ -1,4 +1,5 @@
 #pragma once
+#include "sessions/presence.h"
 #include <QPoint>
 #include <QRect>
 #include <QSize>
@@ -18,6 +19,10 @@ struct Preferences {
     // Which alerts pop a bubble. Pet animation and badge react to everything regardless.
     enum Bubbles { RequestsOnly = 0, RequestsAndErrors = 1, AllAlerts = 2 };
     int bubbles = RequestsAndErrors;
+    // Startup keys. `agent-pet autostart` edits them without a display, possibly
+    // while a pet runs, so the pet re-reads them before each save.
+    bool autostart = false; // Hook launches the pet on a session start when none is running.
+    IdlePolicy whenIdle = IdlePolicy::Keep;
     static QPoint visiblePosition(QPoint position, QSize size, const QVector<QRect> &screens);
 };
 class PreferencesStore {

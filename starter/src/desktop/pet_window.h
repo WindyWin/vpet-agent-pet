@@ -7,6 +7,7 @@
 #include <QPointer>
 #include <QSystemTrayIcon>
 #include <QWidget>
+#include <functional>
 
 namespace pet {
 class PetWindow : public QWidget {
@@ -35,6 +36,20 @@ public:
     void setBubbles(int level);
     int bubbles() const { return bubbles_; }
     bool quitting() const { return quitting_; }
+    // Hidden: the window is gone but monitoring, alerts and the tray icon keep running.
+    bool petHidden() const { return presence_.hidden(); }
+    void setPetHidden(bool hidden); // Tray click or "Show pet"; ignored without a tray.
+    void setTrayAvailable(bool available); // Detected at startup; replaceable for tests.
+    Presence &presence() { return presence_; }
+    void updatePresence(int sessions, qint64 now);
+    // Tray tooltip and icon dot: top-level sessions, sessions needing the user, recent tool errors.
+    void setStatus(int sessions, int attention, int errors);
+    QString statusText() const { return tray_.toolTip(); }
+    bool trayAlert() const { return trayAttention_ > 0 || trayError_; }
+    void setAutostart(bool enabled);
+    bool autostart() const { return autostart_; }
+    void setWhenIdle(IdlePolicy policy);
+    IdlePolicy whenIdle() const { return presence_.policy(); }
     QVector<QRect> screenAreas() const;
     // Global rectangle around the character itself, excluding the sprite's transparent margins.
     QRect figure() const;
@@ -43,6 +58,7 @@ signals:
     void moved();
     void notificationsChanged();
     void quitRequested();
+    void presenceChanged(); // The pet was hidden or shown.
     void sessionsRequested(); // A click on the pet (press and release without moving it), or the menu.
 protected:
     bool event(QEvent *) override;
@@ -55,19 +71,30 @@ protected:
     void mouseReleaseEvent(QMouseEvent *) override;
 private:
     void endDrag(bool released = false);
+    void applyPresence(Presence::Action action);
+    void showAfterFlagChange(QPoint position);
+    // Reads the startup keys, which `agent-pet autostart` may change while the pet runs.
+    void refreshStartup();
+    bool writePreferences(const std::function<void(Preferences &)> &change);
+    void updateTrayIcon();
     void showAbout();
     void watchScreen(QScreen *screen);
     QWidget *integrationSettings(QWidget *parent);
+    QWidget *startupSettings(QWidget *parent);
     Player player_;
     PreferencesStore store_;
     QMenu menu_;
     QSystemTrayIcon tray_;
     QTimer recoveryTimer_, dragTimer_, saveTimer_;
     QPointer<QDialog> settingsDialog_, previewDialog_;
-    QAction *clickAction_ = nullptr, *onTopAction_ = nullptr, *muteAction_ = nullptr;
+    QAction *clickAction_ = nullptr, *onTopAction_ = nullptr, *muteAction_ = nullptr, *showAction_ = nullptr;
+    Presence presence_;
+    QPixmap trayBase_;
+    int trayAttention_ = 0; // Badge shown on the tray icon; -1 forces a redraw.
+    bool trayError_ = false;
     QPoint dragOffset_;
     bool fallbackDrag_ = false, dragging_ = false, clickThrough_ = false;
-    bool persist_ = true, ready_ = false, quitting_ = false, muted_ = false, sound_ = false;
+    bool persist_ = true, ready_ = false, quitting_ = false, muted_ = false, sound_ = false, autostart_ = false;
     int attention_ = 0, bubbles_ = Preferences::RequestsAndErrors;
     QPoint pressPosition_;
     QElapsedTimer pressTimer_;

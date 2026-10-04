@@ -1,6 +1,8 @@
 #include "local.h"
+#include "autostart.h"
 #include "providers/adapters.h"
 #include "providers/host.h"
+#include <QCoreApplication>
 #include <QDateTime>
 #include <QDir>
 #include <QFile>
@@ -68,7 +70,7 @@ bool Receiver::start(QString &error) {
     });
     return true;
 }
-static bool sendEvent(const QByteArray &data, QString &error) {
+bool sendEvent(const QByteArray &data, QString &error) {
     const auto path = endpoint(error); if (path.isEmpty()) return false;
     const int fd = socket(AF_UNIX, SOCK_DGRAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0);
     if (fd < 0) { error = "Cannot create sender"; return false; }
@@ -126,7 +128,13 @@ int eventCommand(const QStringList &args) {
     if (!object.contains("timestamp_ms")) object["timestamp_ms"] = QDateTime::currentMSecsSinceEpoch();
     data = QJsonDocument(object).toJson(QJsonDocument::Compact);
     Event event;
-    if (!Event::parse(data, event, error) || !sendEvent(data, error)) return fail();
+    if (!Event::parse(data, event, error)) return fail();
+    if (!sendEvent(data, error)) {
+        // No pet is listening. A session start may launch one, which applies this event.
+        if (hook) autostartPet(data, event.kind, {}, QProcessEnvironment::systemEnvironment(),
+                               QCoreApplication::applicationFilePath(), launchDetached);
+        return fail();
+    }
     return 0;
 }
 }

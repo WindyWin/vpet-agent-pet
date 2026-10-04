@@ -167,7 +167,7 @@ private slots:
     void preferencesAndMonitorRecovery() {
         QTemporaryDir directory; const auto path = directory.path() + "/data/preferences.json";
         pet::PreferencesStore store(path); pet::Preferences prefs;
-        prefs.size = 300; prefs.position = {-1800, 100}; prefs.onTop = false; QVERIFY(store.save(prefs));
+        prefs.size = 300; prefs.position = {-1800, 100}; prefs.hasPosition = true; prefs.onTop = false; QVERIFY(store.save(prefs));
         pet::PreferencesStore reloaded(path); const auto result = reloaded.load();
         QCOMPARE(result.size, 300); QCOMPARE(result.position, prefs.position); QVERIFY(!result.onTop);
         const QVector<QRect> dual{{0, 0, 1920, 1080}, {-1920, 0, 1920, 1080}};
@@ -296,7 +296,7 @@ private slots:
 
         window.showSettings();
         auto *dialog = window.findChild<QDialog*>(); QVERIFY(dialog);
-        auto *integrations = dialog->findChild<QGroupBox*>(); QVERIFY(integrations); // Setup and coverage.
+        auto *integrations = dialog->findChild<QGroupBox*>("integrations"); QVERIFY(integrations); // Setup and coverage.
         int notEnabled = 0;
         for (auto *label : integrations->findChildren<QLabel*>()) notEnabled += label->text().startsWith("Not enabled\n");
         QCOMPARE(notEnabled, 2);
@@ -310,6 +310,93 @@ private slots:
         window.requestQuit();
         QVERIFY(!monitor.active()); QVERIFY(!monitor.bubble().isVisible());
         QVERIFY(!monitor.apply(event("c3d4", "attention"), now + seq));
+    }
+    void trayHideAndStatus() {
+        QTemporaryDir directory;
+        pet::PetWindow window(nullptr, directory.path() + "/preferences.json"); window.show();
+        pet::Monitor monitor(window);
+        const qint64 now = QDateTime::currentMSecsSinceEpoch(); qint64 seq = 0;
+        auto event = [&](QString session, QString kind, QString reason = {}) {
+            ++seq; return pet::Event{"claude", session, QString::number(seq), kind, {}, {}, "/work/" + session, {}, now + seq, reason};
+        };
+        window.setTrayAvailable(false); // Nothing could show it again: hiding is refused.
+        window.setPetHidden(true); QVERIFY(!window.petHidden()); QVERIFY(window.isVisible());
+        window.setTrayAvailable(true);
+        QCOMPARE(window.statusText(), "Agent Pet — idle"); QVERIFY(!window.trayAlert());
+        QVERIFY(monitor.apply(event("one", "prompt"), now + seq));
+        QCOMPARE(window.statusText(), "Agent Pet — 1 session");
+        QVERIFY(monitor.apply(event("two", "attention", "approval"), now + seq));
+        QCOMPARE(window.statusText(), "Agent Pet — 2 sessions · 1 needs attention"); QVERIFY(window.trayAlert());
+        QVERIFY(monitor.bubble().isVisible());
+        QSignalSpy changed(&window, &pet::PetWindow::presenceChanged);
+        monitor.toggleSessions(); QVERIFY(monitor.sessionList().isVisible());
+        window.setPetHidden(true);
+        QVERIFY(window.petHidden()); QVERIFY(!window.isVisible()); QCOMPARE(changed.size(), 1);
+        QVERIFY(!monitor.bubble().isVisible()); QVERIFY(!monitor.sessionList().isVisible());
+        QVERIFY(monitor.active()); // Monitoring continues while hidden.
+        // New alerts go to the tray instead of a bubble.
+        QVERIFY(monitor.apply(event("three", "error"), now + seq)); QVERIFY(!monitor.bubble().isVisible());
+        QCOMPARE(window.statusText(), "Agent Pet — 3 sessions · 1 needs attention · 1 tool error");
+        window.setOnTop(false); window.setClickThrough(true); QVERIFY(!window.isVisible()); // Flag changes keep it hidden.
+        window.setClickThrough(false);
+        // A user-hidden pet stays hidden when sessions start.
+        QVERIFY(monitor.apply(event("four", "session_start"), now + seq)); QVERIFY(window.petHidden());
+        window.setPetHidden(false);
+        QVERIFY(window.isVisible()); QVERIFY(monitor.bubble().isVisible()); QCOMPARE(changed.size(), 2);
+        window.setPetHidden(true); window.recover(); QVERIFY(!window.petHidden()); QVERIFY(window.isVisible());
+        for (const auto *session : {"one", "two", "three", "four"}) QVERIFY(monitor.apply(event(session, "session_end"), now + seq));
+        QCOMPARE(window.statusText(), "Agent Pet — idle"); QVERIFY(!window.trayAlert());
+        window.setPetHidden(true); window.requestQuit(); QVERIFY(!monitor.active()); // Quits at once while hidden.
+    }
+    void idlePolicyHidesAndQuits() {
+        QTemporaryDir directory; const auto path = directory.path() + "/preferences.json";
+        pet::PetWindow window(nullptr, path); window.show();
+        pet::Monitor monitor(window);
+        window.setTrayAvailable(true);
+        const qint64 now = QDateTime::currentMSecsSinceEpoch(), grace = pet::Presence::idleGraceMs; qint64 seq = 0;
+        auto event = [&](QString kind) { ++seq; return pet::Event{"claude", "s", QString::number(seq), kind, {}, {}, "/work/s", {}, now + seq}; };
+        window.setWhenIdle(pet::IdlePolicy::Hide);
+        QCOMPARE(pet::PreferencesStore(path).load().whenIdle, pet::IdlePolicy::Hide);
+        monitor.update(now + 3 * grace); QVERIFY(!window.petHidden()); // Never saw a session.
+        QVERIFY(monitor.apply(event("session_start"), now + seq));
+        QVERIFY(monitor.apply(event("session_end"), now + seq));
+        const qint64 deadline = window.presence().idleDeadline();
+        QVERIFY(deadline > now); QVERIFY(deadline <= now + seq + grace);
+        monitor.update(deadline - 1); QVERIFY(!window.petHidden());
+        monitor.update(deadline); QVERIFY(window.petHidden()); QVERIFY(!window.isVisible());
+        QVERIFY(monitor.apply(event("session_start"), now + seq)); // Auto-hidden: back with the next session.
+        QVERIFY(!window.petHidden()); QVERIFY(window.isVisible());
+        // `agent-pet autostart` changed the file meanwhile: read before acting and kept on save.
+        auto external = pet::PreferencesStore(path).load();
+        external.autostart = true; external.whenIdle = pet::IdlePolicy::Quit;
+        QVERIFY(pet::PreferencesStore(path).save(external));
+        window.setPetSize(200); QVERIFY(window.savePreferences());
+        auto saved = pet::PreferencesStore(path).load();
+        QVERIFY(saved.autostart); QCOMPARE(saved.whenIdle, pet::IdlePolicy::Quit); QCOMPARE(saved.size, 200);
+        QVERIFY(window.autostart());
+        window.setWhenIdle(pet::IdlePolicy::Hide);
+        external = pet::PreferencesStore(path).load(); external.whenIdle = pet::IdlePolicy::Quit;
+        QVERIFY(pet::PreferencesStore(path).save(external));
+        QCOMPARE(window.whenIdle(), pet::IdlePolicy::Hide);
+        QVERIFY(monitor.apply(event("session_end"), now + seq));
+        QVERIFY(window.presence().idleDeadline());
+        monitor.update(window.presence().idleDeadline()); // The file now says quit.
+        QVERIFY(window.quitting()); QVERIFY(!monitor.active());
+    }
+    void startupSettingsGroup() {
+        QTemporaryDir directory; const auto path = directory.path() + "/preferences.json";
+        pet::PetWindow window(nullptr, path); window.show();
+        window.setTrayAvailable(false);
+        window.showSettings();
+        auto *dialog = window.findChild<QDialog*>(); QVERIFY(dialog);
+        auto *startup = dialog->findChild<QGroupBox*>("startup"); QVERIFY(startup);
+        auto *autostart = startup->findChild<QCheckBox*>(); QVERIFY(autostart); QVERIFY(!autostart->isChecked());
+        auto *idle = startup->findChild<QComboBox*>(); QVERIFY(idle); QCOMPARE(idle->count(), 3);
+        autostart->setChecked(true); idle->setCurrentIndex(2);
+        QVERIFY(window.autostart()); QCOMPARE(window.whenIdle(), pet::IdlePolicy::Quit);
+        const auto saved = pet::PreferencesStore(path).load();
+        QVERIFY(saved.autostart); QCOMPARE(saved.whenIdle, pet::IdlePolicy::Quit);
+        dialog->close(); QCoreApplication::processEvents();
     }
 };
 QTEST_MAIN(PrototypeTests)

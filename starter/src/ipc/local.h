@@ -14,6 +14,8 @@ private:
     int socket_ = -1, lock_ = -1;
     QByteArray path_;
 };
+// Sends one normalized event datagram to the running pet.
+bool sendEvent(const QByteArray &data, QString &error);
 // These commands use QCoreApplication only and require no display server.
 int eventCommand(const QStringList &args);
 }
