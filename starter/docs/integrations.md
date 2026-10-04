@@ -106,10 +106,10 @@ Codex hosted tools can lack tool hooks. There is no universal input-request even
 | Stop | Turn finished, without claiming success |
 | SessionEnd | Remove session and its alerts |
 | SubagentStart / SubagentStop | Create/remove a child using agent_id and parent session_id |
-| Claude PostToolUseFailure | Error with failed tool removed; is_interrupt maps to inactive |
+| Claude PostToolUseFailure | Error with failed tool removed; is_interrupt maps to interrupt (idle) |
 | Claude Notification | Attention for permission_prompt (approval), idle_prompt and elicitation_dialog (input) only |
 | Codex PostToolUse with structured isError=true or nonzero numeric exit_code | Error with failed tool removed |
-| Codex Interrupt | Inactive, never finished |
+| Codex Interrupt | Idle, never finished; stale tool callbacks ignored until the next prompt |
 | Unknown event or notification | Silent no-op |
 
 A callback carrying `agent_id` uses that child identity; a child Stop cannot

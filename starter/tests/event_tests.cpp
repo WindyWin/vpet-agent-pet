@@ -38,6 +38,22 @@ private slots:
         QVERIFY(state.apply(event("tool_end"), now + 1));
         QCOMPARE(state.aggregate(now), "thinking");
     }
+    void interruptReturnsToIdle() {
+        pet::Sessions state;
+        QVERIFY(state.apply(event("prompt", 1), now + 1));
+        QVERIFY(state.apply(event("tool_start", 2), now + 2)); QCOMPARE(state.aggregate(now + 2), "working");
+        QVERIFY(state.apply(event("interrupt", 3), now + 3)); QCOMPARE(state.aggregate(now + 3), "idle");
+        QVERIFY(state.records().first().tools.isEmpty());
+        // Late callbacks of the interrupted turn cannot revive it.
+        QVERIFY(!state.apply(event("tool_start", 4), now + 4));
+        QVERIFY(!state.apply(event("tool_end", 5), now + 5));
+        QVERIFY(!state.apply(event("error", 6), now + 6));
+        state.expire(now + 10000); QCOMPARE(state.aggregate(now + 10000), "idle");
+        QVERIFY(state.pending().isEmpty());
+        // A new prompt resumes normal tracking.
+        QVERIFY(state.apply(event("prompt", 7), now + 7)); QCOMPARE(state.aggregate(now + 7), "thinking");
+        QVERIFY(state.apply(event("tool_start", 8), now + 8)); QCOMPARE(state.aggregate(now + 8), "working");
+    }
     void activityHold() {
         pet::Sessions state;
         auto tool = [&](QString kind, QString id, int seq) { auto e = event(kind, seq); e.tool = id; e.activity = "working"; return e; };

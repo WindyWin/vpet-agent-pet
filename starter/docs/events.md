@@ -96,7 +96,7 @@ messages; oversized datagrams and invalid envelopes are dropped.
 - Duplicate event IDs are ignored within the bounded deduplication window. Older
   timestamps are ignored for the entire session, including late tool callbacks;
   equal timestamps use receiver order, except tool callbacks cannot overwrite a
-  just-finished/interrupted turn. Adapters should use source timestamps when
+  just-finished turn. Adapters should use source timestamps when
   available. No distributed ordering can be reconstructed from missing metadata.
   A dropped late completion can leave a tool recorded until prompt/stop/expiry.
 - Session end removes the record and alerts and retains a bounded timestamp
@@ -105,7 +105,8 @@ messages; oversized datagrams and invalid envelopes are dropped.
 - Errors with a tool ID remove the failed tool. Errors react for up to 4 seconds
   then resume the remaining activity; finished
   turns react for up to 4 seconds then become idle. The animation's own one-shot
-  may finish sooner. Interrupt clears tools and becomes inactive, never finished.
+  may finish sooner. Interrupt clears tools and becomes idle, never finished; later
+  tool callbacks and errors from the interrupted turn are ignored until the next prompt.
 - After 30 minutes without an accepted event, records and their alerts expire.
   This is memory reclamation, not evidence of success or disconnection. Fresh
   events can recreate a record. No records or alerts are persisted or replayed
