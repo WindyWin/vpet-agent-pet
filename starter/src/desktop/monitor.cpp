@@ -4,6 +4,7 @@
 #include <QApplication>
 #include <QDateTime>
 #include <QToolTip>
+#include <algorithm>
 
 namespace pet {
 Monitor::Monitor(PetWindow &window) : hostActive(hostFocus::active), bringForward(hostFocus::focus), window_(window) {
@@ -21,13 +22,21 @@ Monitor::Monitor(PetWindow &window) : hostActive(hostFocus::active), bringForwar
     connect(&window_, &PetWindow::notificationsChanged, this, &Monitor::refreshAlerts);
     connect(&window_, &PetWindow::sessionsRequested, this, &Monitor::toggleSessions);
     connect(&window_, &PetWindow::quitRequested, this, &Monitor::stop);
+    connect(&window_, &PetWindow::presenceChanged, this, [this] {
+        if (window_.petHidden()) list_.hide();
+        refreshAlerts();
+    });
 }
-bool Monitor::listen(QString &error) {
-    auto receiver = std::make_unique<Receiver>();
+// Subagents fold into their parent, as in the running-sessions list.
+static int topLevelSessions(const Sessions &sessions) {
+    const auto &records = sessions.records();
+    return int(std::count_if(records.begin(), records.end(), [&](const Session &s) {
+        return s.parent.isEmpty() || !records.contains(s.provider + QChar(0x1f) + s.parent);
+    }));
+}
+void Monitor::listen(std::unique_ptr<Receiver> receiver) {
     receiver->received = [this](const Event &event) { apply(event, QDateTime::currentMSecsSinceEpoch()); };
-    if (!receiver->start(error)) return false;
     receiver_ = std::move(receiver);
-    return true;
 }
 bool Monitor::apply(const Event &event, qint64 now) {
     if (!active_ || !sessions_.apply(event, now)) return false;
@@ -39,7 +48,11 @@ void Monitor::update(qint64 now) {
     sessions_.expire(now);
     refreshAlerts();
     if (list_.isVisible()) list_.present(sessionRows(sessions_, now));
-    if (!observed_ || window_.player().requestedState() == "closing") return;
+    int errors = 0;
+    for (const auto &alert : sessions_.pending()) errors += alert.kind == "error";
+    window_.setStatus(topLevelSessions(sessions_), sessions_.unresolvedAttention(), errors);
+    window_.updatePresence(sessions_.records().size(), now); // May hide, show or quit the pet.
+    if (!active_ || !observed_ || window_.player().requestedState() == "closing") return;
     const auto state = sessions_.aggregate(now);
     const auto animation = sessionAnimation(state);
     if (state != lastAggregate_ || (!window_.player().isDragging() && state != "error" && state != "turn-finished" &&
@@ -72,6 +85,8 @@ void Monitor::refreshAlerts() {
     const auto *alert = queue_.current();
     if (!alert || window_.muted() || !active_) { bubble_.hide(); return; }
     if (raised && window_.sound()) QApplication::beep();
+    // A hidden pet keeps its alerts in the tray icon and tooltip instead of a bubble.
+    if (window_.petHidden()) { bubble_.hide(); return; }
     bubble_.present(describe(*alert, visible), alert->kind, queue_.more());
     bubble_.place(window_.figure(), window_.screenAreas());
     if (!bubble_.isVisible()) bubble_.show();

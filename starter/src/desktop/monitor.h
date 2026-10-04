@@ -16,7 +16,8 @@ class Monitor : public QObject {
     Q_OBJECT
 public:
     explicit Monitor(PetWindow &window);
-    bool listen(QString &error);
+    // Takes a receiver that already holds the single-instance lock.
+    void listen(std::unique_ptr<Receiver> receiver);
     bool apply(const Event &event, qint64 now);
     void update(qint64 now);
     void stop();

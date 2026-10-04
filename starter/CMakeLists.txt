@@ -18,12 +18,13 @@ list(APPEND pet_resources assets/vpet/animations.json THIRD_PARTY_NOTICES.md LIC
 qt_add_library(pet_ui STATIC
     src/animation/player.cpp src/desktop/pet_window.cpp
     src/desktop/drag_monitor.cpp src/desktop/alert_bubble.cpp src/desktop/monitor.cpp
-    src/desktop/host_focus.cpp src/desktop/session_list.cpp
-    src/settings/preferences.cpp)
+    src/desktop/host_focus.cpp src/desktop/session_list.cpp)
 target_include_directories(pet_ui PUBLIC src "${CMAKE_CURRENT_BINARY_DIR}/generated")
 target_link_libraries(pet_ui PUBLIC Qt6::Widgets pet_events PRIVATE Qt6::DBus X11::X11)
 qt_add_resources(pet_ui pet_assets PREFIX "/" FILES ${pet_resources})
-qt_add_library(pet_events STATIC src/sessions/state.cpp src/sessions/alerts.cpp src/ipc/local.cpp
+# Headless code shared by the pet and its display-free commands (hook, integration, autostart).
+qt_add_library(pet_events STATIC src/sessions/state.cpp src/sessions/alerts.cpp src/sessions/presence.cpp
+    src/ipc/local.cpp src/ipc/autostart.cpp src/settings/preferences.cpp
     src/providers/adapters.cpp src/providers/integrations.cpp src/providers/host.cpp)
 target_include_directories(pet_events PUBLIC src)
 target_link_libraries(pet_events PUBLIC Qt6::Core)
@@ -34,6 +35,7 @@ install(TARGETS agent-pet RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(FILES THIRD_PARTY_NOTICES.md LICENSE NOTICE DESTINATION ${CMAKE_INSTALL_DATADIR}/agent-pet)
 install(FILES packaging/agent-pet.png DESTINATION ${CMAKE_INSTALL_DATADIR}/icons/hicolor/256x256/apps)
 install(FILES packaging/agent-pet.desktop.in DESTINATION ${CMAKE_INSTALL_DATADIR}/agent-pet)
+install(FILES packaging/tui.sh DESTINATION ${CMAKE_INSTALL_DATADIR}/agent-pet) # Prompts for install.sh and uninstall.sh
 install(PROGRAMS packaging/install.sh packaging/uninstall.sh DESTINATION .)
 install(FILES packaging/INSTALL.txt DESTINATION .)
 install(DIRECTORY licenses DESTINATION ${CMAKE_INSTALL_DATADIR}/agent-pet)
@@ -55,6 +57,11 @@ if(BUILD_TESTING)
     qt_add_executable(alert-tests tests/alert_tests.cpp)
     target_link_libraries(alert-tests PRIVATE pet_events Qt6::Test)
     add_test(NAME alerts COMMAND alert-tests)
+    qt_add_executable(startup-tests tests/startup_tests.cpp)
+    target_link_libraries(startup-tests PRIVATE pet_events Qt6::Test)
+    target_compile_definitions(startup-tests PRIVATE APP_PATH="$<TARGET_FILE:agent-pet>")
+    add_dependencies(startup-tests agent-pet)
+    add_test(NAME startup COMMAND startup-tests)
     qt_add_executable(prototype-tests tests/prototype_tests.cpp)
     target_link_libraries(prototype-tests PRIVATE pet_ui Qt6::Test)
     add_test(NAME prototype COMMAND prototype-tests)

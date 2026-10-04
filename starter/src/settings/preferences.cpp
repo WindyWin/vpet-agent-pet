@@ -41,21 +41,28 @@ Preferences PreferencesStore::load() {
         const double n = value.toDouble(low - 1.0);
         return value.isDouble() && std::isfinite(n) && n == std::floor(n) && n >= low && n <= high;
     };
+    // A file created by `agent-pet autostart` before the pet ever ran has no position yet.
+    const bool position = object.contains("x") || object.contains("y");
+    IdlePolicy whenIdle = IdlePolicy::Keep;
     if (parse.error != QJsonParseError::NoError || object["version"].toInt() != 1
         || !integer(object["size"], 160, 320) || !object["on_top"].isBool()
-        || !integer(object["x"], -1000000, 1000000) || !integer(object["y"], -1000000, 1000000)
-        // Notification keys were added in M5; files written earlier omit them.
+        || (position && (!integer(object["x"], -1000000, 1000000) || !integer(object["y"], -1000000, 1000000)))
+        // Notification keys were added in M5 and startup keys later; earlier files omit them.
         || (object.contains("muted") && !object["muted"].isBool()) || (object.contains("sound") && !object["sound"].isBool())
-        || (object.contains("bubbles") && !integer(object["bubbles"], 0, 2))) {
+        || (object.contains("bubbles") && !integer(object["bubbles"], 0, 2))
+        || (object.contains("autostart") && !object["autostart"].isBool())
+        || (object.contains("when_idle") && !parseIdlePolicy(object["when_idle"].toString(), whenIdle))) {
         writable_ = false; error_ = "Invalid preferences; using defaults and preserving the file."; return result;
     }
     result.size = object["size"].toInt();
-    result.position = {object["x"].toInt(), object["y"].toInt()};
-    result.hasPosition = true;
+    if (position) result.position = {object["x"].toInt(), object["y"].toInt()};
+    result.hasPosition = position;
     result.onTop = object["on_top"].toBool();
     result.muted = object["muted"].toBool();
     result.sound = object["sound"].toBool();
     result.bubbles = object["bubbles"].toInt(Preferences::RequestsAndErrors);
+    result.autostart = object["autostart"].toBool();
+    result.whenIdle = whenIdle;
     return result;
 }
 bool PreferencesStore::save(const Preferences &preferences) {
@@ -65,9 +72,10 @@ bool PreferencesStore::save(const Preferences &preferences) {
     }
     QSaveFile file(path_);
     if (!file.open(QIODevice::WriteOnly)) { error_ = file.errorString(); return false; }
-    const QJsonObject object{{"version", 1}, {"size", preferences.size}, {"on_top", preferences.onTop},
-                             {"x", preferences.position.x()}, {"y", preferences.position.y()},
-                             {"muted", preferences.muted}, {"sound", preferences.sound}, {"bubbles", preferences.bubbles}};
+    QJsonObject object{{"version", 1}, {"size", preferences.size}, {"on_top", preferences.onTop},
+                       {"muted", preferences.muted}, {"sound", preferences.sound}, {"bubbles", preferences.bubbles},
+                       {"autostart", preferences.autostart}, {"when_idle", idlePolicyName(preferences.whenIdle)}};
+    if (preferences.hasPosition) { object["x"] = preferences.position.x(); object["y"] = preferences.position.y(); }
     const auto bytes = QJsonDocument(object).toJson();
     if (file.write(bytes) != bytes.size() || !file.commit()) { error_ = file.errorString(); return false; }
     error_.clear(); return true;

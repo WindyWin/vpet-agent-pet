@@ -3,12 +3,16 @@ Agent Pet for Linux (x86_64)
 
 Install or upgrade for the current user:
 
-    ./install.sh                      # installs to ~/.local/opt/agent-pet
-    ./install.sh --prefix "/opt/My Apps/agent-pet"
+    ./install.sh                      # asks: location, menu entry, command link,
+                                      # Claude Code / Codex hooks, autostart
+    ./install.sh --yes                # no questions; installs to ~/.local/opt/agent-pet
+    ./install.sh --prefix "/opt/My Apps/agent-pet" --claude --autostart
 
 This adds "Agent Pet" to the application menu and a ~/.local/bin/agent-pet
 link. Run the same command from a newer package to upgrade; settings and
 enabled integrations are kept. Quit and restart a running pet afterwards.
+Without questions, hooks and autostart change only with --claude, --codex
+and --autostart [--when-idle keep|hide|quit].
 
 Connect an agent (preview first; only Agent Pet's own hook entries change):
 
@@ -18,9 +22,16 @@ Connect an agent (preview first; only Agent Pet's own hook entries change):
 Use --provider codex for Codex, or the pet's right-click Settings window.
 Restart the agent client and submit a new prompt to see the pet react.
 
+Start the pet automatically when an agent session starts:
+
+    ~/.local/opt/agent-pet/bin/agent-pet autostart enable --when-idle hide
+
+Click the tray icon to hide or show the pet; it keeps monitoring while hidden.
+
 Remove:
 
-    ~/.local/opt/agent-pet/uninstall.sh [--keep-integrations] [--purge-settings]
+    ~/.local/opt/agent-pet/uninstall.sh      # asks what else to remove
+    ~/.local/opt/agent-pet/uninstall.sh --yes [--keep-integrations] [--purge-settings]
 
 Uninstall removes only Agent Pet's hook entries; other hooks and settings in
 those files are left as they were.

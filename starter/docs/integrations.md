@@ -48,6 +48,31 @@ handler has a one-second client timeout and runs synchronously to reduce event
 reordering. The callback itself reads for at most 150 ms, sends once, and exits
 zero silently, even on invalid input or an unavailable monitor.
 
+### Autostart
+
+When the send fails because no pet is listening, and only for a `session_start`
+event, the hook reads `preferences.json`. If `autostart` is true and `DISPLAY` or
+`WAYLAND_DISPLAY` is set, it launches the pet and still exits zero silently.
+The launch is fully detached (double fork and `setsid`, working directory `/`,
+stdin/stdout/stderr on `/dev/null`, no other inherited descriptors), so the
+client never waits on the pet. It runs the same executable as the hook (the
+installed path from the hook command), never a `PATH` lookup:
+
+```text
+agent-pet --autostarted --launch-event '<normalized event JSON>'
+```
+
+The pet validates the launch event like any datagram and applies it once it is
+listening, so the session that triggered the launch is not lost. With
+`--autostarted`, a pet that finds another one holding the single-instance lock
+forwards its launch event to that pet and exits silently, so concurrent session
+starts launch one pet and lose no events. Without a display (SSH, containers)
+nothing is launched. `agent-pet autostart enable|disable|status [--when-idle
+keep|hide|quit]` changes only `preferences.json`, never client hook files.
+systemd socket activation and login autostart (`~/.config/autostart`) were
+considered and not used: one starts a pet with no desktop session at hand, the
+other runs it whether or not an agent is in use.
+
 ## Contract and version baseline
 
 Official references inspected 2026-10-04:

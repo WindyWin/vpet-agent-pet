@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
-"""Install, upgrade and uninstall a release tarball under a throwaway HOME in a path with spaces."""
+"""Install, upgrade and uninstall a release tarball under a throwaway HOME in a path with spaces,
+non-interactively and through the installer's plain prompts."""
 import argparse
 import json
 import os
 from pathlib import Path
 import shutil
+import signal
 import subprocess
 import tarfile
 import tempfile
+import time
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("tarball", type=Path)
@@ -103,3 +106,111 @@ with tempfile.TemporaryDirectory(prefix="agent pet check ") as temporary:
     assert not prefix.exists() and not preferences.parent.exists()
     assert json.loads(claude.read_text()) == seeded
 print("Install, upgrade, integrations and uninstall from a path with spaces: passed")
+
+# Interactive installer in plain-prompt mode, answered from a script, in a fresh HOME.
+# Only Claude Code is present, so the checklist offers: menu entry, command link,
+# Claude Code and autostart. PATH excludes any real claude or codex command.
+with tempfile.TemporaryDirectory(prefix="agent pet tui ") as temporary:
+    root = Path(temporary)
+    home = root / "home"
+    (home / ".claude").mkdir(parents=True)
+    runtime = root / "runtime"
+    runtime.mkdir(mode=0o700)
+    env = {"HOME": str(home), "PATH": "/usr/bin:/bin", "LANG": "C.UTF-8", "AGENT_PET_UI": "plain",
+           "QT_QPA_PLATFORM": "offscreen", "XDG_RUNTIME_DIR": str(runtime)}
+    with tarfile.open(args.tarball) as archive:
+        archive.extractall(root / "Downloads", filter="data")
+    package = next((root / "Downloads").iterdir())
+    prefix = root / "Apps" / "agent-pet"
+    app = prefix / "bin/agent-pet"
+    link = home / ".local/bin/agent-pet"
+    claude = home / ".claude/settings.json"
+    preferences = home / ".local/share/agent-pet/preferences.json"
+
+    def answer(command, *answers, code=0):
+        result = subprocess.run(command, env=env, text=True, capture_output=True, timeout=60,
+                                input="".join(line + "\n" for line in answers))
+        if result.returncode != code:
+            raise SystemExit(f"{command} exited {result.returncode}, expected {code}:\n{result.stdout}{result.stderr}")
+        return result
+
+    def autostart():
+        return json.loads(subprocess.run([str(app), "autostart", "status"], env=env, text=True,
+                                         capture_output=True, check=True).stdout)
+
+    # Cancelling at the summary changes nothing.
+    answer([str(package / "install.sh"), "--interactive"], str(prefix), "", "", "", "", "n", code=1)
+    assert not prefix.exists() and not link.exists() and not claude.exists()
+    # Fresh install: keep the defaults, turn on autostart and hide when idle.
+    result = answer([str(package / "install.sh"), "--interactive"], str(prefix), "", "", "", "y", "2", "")
+    print(result.stdout.strip().splitlines()[-1])
+    assert "Connected Claude Code" in result.stdout and "Autostart on agent session start: on" in result.stdout
+    assert "Claude Code hooks: enable" in result.stdout and "Codex" not in result.stdout, result.stdout
+    assert "~/.local/bin is not on your PATH" in result.stderr
+    assert link.resolve() == app.resolve()
+    commands = owned(json.loads(claude.read_text()), "claude")
+    assert commands and all(command.startswith(f"'{app}' hook") for command in commands), commands
+    assert not (home / ".codex").exists()
+    assert autostart() == {"autostart": True, "when_idle": "hide", "preferences": str(preferences), "changed": False}
+
+    # Autostart from the installed package: a session start launches the pet detached.
+    if not args.skip_launch:
+        launch = dict(env, WAYLAND_DISPLAY="agent-pet-check")
+        hook = subprocess.run(f"\"{app}\" hook --provider claude | cat", shell=True, env=launch, text=True,
+                              capture_output=True, timeout=5,
+                              input=json.dumps({"session_id": "check", "hook_event_name": "SessionStart"}))
+        assert hook.returncode == 0 and not hook.stdout and not hook.stderr, hook
+        probe = json.dumps({"version": 1, "provider": "claude", "session_id": "check", "kind": "prompt"})
+
+        def executable(pid):
+            try:
+                return os.readlink(f"/proc/{pid}/exe")
+            except OSError:  # Another user's process, or gone.
+                return None
+
+        def pets():
+            return [int(pid) for pid in os.listdir("/proc") if pid.isdigit() and executable(pid) == str(app.resolve())]
+        try:
+            deadline = time.monotonic() + 20
+            while subprocess.run([str(app), "emit"], env=env, input=probe, text=True, capture_output=True).returncode:
+                assert time.monotonic() < deadline, "autostarted pet never started listening"
+                time.sleep(0.2)
+            assert len(pets()) == 1, pets()
+        finally:  # Never leave a detached pet behind, even when a check fails.
+            for pid in pets():
+                os.kill(pid, signal.SIGTERM)
+            deadline = time.monotonic() + 10
+            while pets():
+                assert time.monotonic() < deadline, "autostarted pet did not stop"
+                time.sleep(0.1)
+        print("Hook autostarted the installed pet")
+
+    # Upgrade: the checklist starts from what is set up; unchecking Claude Code removes its hooks.
+    # The location defaults to the installation behind the command link.
+    result = answer([str(package / "install.sh"), "--interactive"], "", "", "", "n", "", "", "")
+    print(result.stdout.strip().splitlines()[-1])
+    assert "Claude Code hooks: remove" in result.stdout and "Removed Agent Pet hooks for Claude Code" in result.stdout
+    assert not owned(json.loads(claude.read_text()), "claude")
+    assert autostart()["autostart"] and autostart()["when_idle"] == "hide"
+    # Upgrade again, unchecking autostart.
+    answer([str(package / "install.sh"), "--interactive"], "", "", "", "", "n", "")
+    assert not autostart()["autostart"]
+
+    # Non-interactive installs leave hooks and autostart alone unless asked.
+    before = (claude.read_bytes(), preferences.read_bytes())
+    answer([str(package / "install.sh"), "--prefix", str(prefix)])
+    assert (claude.read_bytes(), preferences.read_bytes()) == before
+    answer([str(package / "install.sh"), "--prefix", str(prefix), "--claude", "--autostart", "--when-idle", "quit"])
+    assert owned(json.loads(claude.read_text()), "claude")
+    assert autostart()["autostart"] and autostart()["when_idle"] == "quit"
+    refused = answer([str(package / "install.sh"), "--prefix", str(prefix), "--when-idle", "hide"], code=2)
+    assert "--autostart" in refused.stderr
+
+    # Interactive uninstall: remove hooks (default on), delete settings (default off: turn on),
+    # keep the command link (default on: turn off).
+    answer([str(prefix / "uninstall.sh"), "--interactive"], "", "y", "n", "")
+    assert not prefix.exists() and not preferences.parent.exists()
+    assert not owned(json.loads(claude.read_text()), "claude")
+    assert link.is_symlink(), "an unchecked command link stays"
+    link.unlink()
+print("Interactive install, upgrade, autostart and uninstall (plain prompts): passed")

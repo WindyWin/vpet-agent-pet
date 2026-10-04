@@ -1,13 +1,26 @@
 #include "desktop/monitor.h"
+#include "ipc/autostart.h"
 #include "ipc/local.h"
 #include "providers/integrations.h"
 #include "version.h"
 #include <QApplication>
 #include <QCommandLineParser>
+#include <QDateTime>
 #include <QDebug>
+#include <QElapsedTimer>
+#include <QThread>
 #include <QTimer>
 #include <exception>
 #include <cstdio>
+#include <memory>
+
+// An autostarted pet that lost the single-instance race hands its event to the
+// winner. The winner holds the lock just before binding, so retry briefly.
+static void forwardLaunchEvent(const QByteArray &data) {
+    QElapsedTimer elapsed; elapsed.start();
+    QString error;
+    while (!pet::sendEvent(data, error) && elapsed.elapsed() < 2000) QThread::msleep(50);
+}
 
 int main(int argc, char **argv) {
     // Answer without a display so install scripts can report versions headlessly.
@@ -19,12 +32,18 @@ int main(int argc, char **argv) {
         QCoreApplication app(argc, argv);
         return pet::integrationCommand(app.arguments());
     }
+    if (argc > 1 && QString::fromLocal8Bit(argv[1]) == "autostart") {
+        QCoreApplication app(argc, argv);
+        app.setApplicationName("agent-pet"); // Selects the preferences directory.
+        return pet::autostartCommand(app.arguments());
+    }
     if (argc > 1 && (QString::fromLocal8Bit(argv[1]) == "hook" || QString::fromLocal8Bit(argv[1]) == "emit")) {
         // Hooks run inside agent clients and must stay silent; Qt diagnostics
         // (for example the non-UTF-8 locale warning) would leak into them.
         if (QString::fromLocal8Bit(argv[1]) == "hook")
             qInstallMessageHandler([](QtMsgType, const QMessageLogContext &, const QString &) {});
         QCoreApplication app(argc, argv);
+        app.setApplicationName("agent-pet");
         return pet::eventCommand(app.arguments());
     }
     // XWayland is the prototype default; native Wayland is opt-in for testing.
@@ -43,20 +62,36 @@ int main(int argc, char **argv) {
     parser.addOption({"settings", "Open desktop settings"});
     parser.addOption({"no-persist", "Do not read or write preferences (testing)"});
     parser.addOption({"smoke-test", "Exercise playback, input recovery and shutdown; exit after about 20 seconds"});
+    // Used by `agent-pet hook` when autostart is enabled; not meant to be typed.
+    parser.addOption({"autostarted", "Launched by an agent hook: exit silently if a pet is already running"});
+    parser.addOption({"launch-event", "Normalized event to apply once listening", "json"});
     parser.process(app);
+    const bool autostarted = parser.isSet("autostarted");
+    // The launch event is validated like any datagram; an invalid one is dropped.
+    const auto launchData = parser.value("launch-event").toUtf8();
+    pet::Event launchEvent; QString launchError;
+    const bool hasLaunchEvent = parser.isSet("launch-event") && pet::Event::parse(launchData, launchEvent, launchError);
     try {
+        // Take the single-instance lock before any window or tray icon appears.
+        std::unique_ptr<pet::Receiver> receiver;
+        if (!parser.isSet("smoke-test")) {
+            receiver = std::make_unique<pet::Receiver>();
+            QString receiverError;
+            if (!receiver->start(receiverError)) {
+                if (!autostarted) { std::fprintf(stderr, "%s\n", qPrintable(receiverError)); return 1; }
+                if (hasLaunchEvent) forwardLaunchEvent(launchData);
+                return 0;
+            }
+        }
         pet::PetWindow window(nullptr, {}, !parser.isSet("smoke-test") && !parser.isSet("no-persist"));
         if (!window.player().select(parser.value("state"), true)) {
             std::fprintf(stderr, "%s\n", qPrintable(window.player().error()));
             return 1;
         }
         pet::Monitor monitor(window);
-        QString receiverError;
-        if (!parser.isSet("smoke-test") && !monitor.listen(receiverError)) {
-            std::fprintf(stderr, "%s\n", qPrintable(receiverError));
-            return 1;
-        }
+        if (receiver) monitor.listen(std::move(receiver));
         window.show();
+        if (hasLaunchEvent) monitor.apply(launchEvent, QDateTime::currentMSecsSinceEpoch());
         if (parser.isSet("preview")) window.showPreview();
         if (parser.isSet("settings")) window.showSettings();
         if (parser.isSet("smoke-test")) {
