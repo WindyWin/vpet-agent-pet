@@ -75,9 +75,13 @@ bool Sessions::apply(const Event &e, qint64 now) {
     else if (e.kind == "tool_start") { s.tools[e.tool] = e.activity.isEmpty() ? "working" : e.activity; s.state = toolState(s); }
     else if (e.kind == "tool_end") { s.tools.remove(e.tool); if (s.state != "attention" && s.state != "inactive" && s.state != "turn-finished" && (isNew || s.state != "idle")) s.state = toolState(s); }
     else if (e.kind == "attention") s.state = "attention";
-    else if (e.kind == "error" && s.state != "attention") {
-        if (s.state != "error") s.resume = s.state;
-        s.state = "error"; s.reactionUntil = now + 4000;
+    else if (e.kind == "error") {
+        if (!e.tool.isEmpty()) s.tools.remove(e.tool);
+        if (s.state != "attention") {
+            if (!e.tool.isEmpty()) s.resume = toolState(s);
+            else if (s.state != "error") s.resume = s.state;
+            s.state = "error"; s.reactionUntil = now + 4000;
+        }
     }
     else if (e.kind == "turn_finished") { s.tools.clear(); s.state = "turn-finished"; s.reactionUntil = now + 4000; }
     else if (e.kind == "interrupt") { s.tools.clear(); s.state = "inactive"; }

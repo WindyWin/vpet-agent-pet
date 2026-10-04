@@ -126,7 +126,7 @@ private slots:
             QCOMPARE(run({"emit", "--provider", "claude"}, payload), 0);
             QTRY_COMPARE(received, 1);
             // Fill the queue while this thread deliberately does not drain it.
-            for (int i = 0; i < 20; ++i) QCOMPARE(run({"hook", "--provider", "claude"}, payload), 0);
+            for (int i = 0; i < 20; ++i) QCOMPARE(run({"hook", "--provider", "claude"}, R"({"session_id":"s","hook_event_name":"UserPromptSubmit"})"), 0);
             QCOMPARE(run({"hook", "--provider", "claude"}, "malformed"), 0);
         }
         { pet::Receiver restarted; QString error; QVERIFY(restarted.start(error)); }

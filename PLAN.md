@@ -169,13 +169,18 @@ and live-client validation remain M4; alert presentation remains M5.
 
 ### M4 — Provider adapters and integration management
 
-- [ ] Verify hook support and payloads against the official documentation for the client versions being supported; record those versions.
+Implementation added 2026-10-04 in `starter/`: provider normalization and integration
+management with automated contract and transport checks. Installed target versions
+are Claude Code 2.1.289 and Codex CLI 0.156.0. Live-client acceptance remains open;
+see [setup, limitations and evidence](starter/docs/integrations.md).
+
+- [x] Verify hook support and payloads against the official documentation for the client versions being supported; record those versions.
 - [ ] Collect sanitized fixtures for each supported lifecycle, tool, permission, failure, and interruption event.
-- [ ] Implement Claude Code and Codex normalization separately from animation behavior.
-- [ ] Map unsupported or unknown events to a safe no-op and document any observable gaps.
-- [ ] Add preview, enable, inspect, and disable operations for this app's integration entries.
-- [ ] Preserve unrelated settings and hooks; make repeated enable/disable operations idempotent.
-- [ ] Handle malformed configuration without overwriting it and quote executable paths containing spaces.
+- [x] Implement Claude Code and Codex normalization separately from animation behavior.
+- [x] Map unsupported or unknown events to a safe no-op and document any observable gaps.
+- [x] Add preview, enable, inspect, and disable operations for this app's integration entries.
+- [x] Preserve unrelated settings and hooks; make repeated enable/disable operations idempotent.
+- [x] Handle malformed configuration without overwriting it and quote executable paths containing spaces.
 - [ ] Exercise real sessions in both clients, including concurrent tools and child-session completion.
 - [ ] Validate coverage in supported terminal/editor hosts, including VS Code's integrated terminal, without requiring window focus or terminal control.
 - [ ] Test already-running clients, missed SessionStart, app restart, and integration changes; document when client restart is required.
@@ -234,7 +239,7 @@ Set measurable callback-latency, memory, and idle-CPU targets during the prototy
 
 ## Immediate next steps
 
-1. Implement M4 provider adapters using supported client versions and sanitized payloads.
+1. Capture sanitized live payloads and finish M4 client/host acceptance checks.
 2. Validate integration setup and observed coverage in real Claude Code and Codex sessions.
 3. Build M5 alert presentation on the M3 pending-alert and session-state APIs.
 

@@ -14,7 +14,7 @@ python3 scripts/verify_assets.py
 git init
 ```
 
-The asset verifier uses only Python's standard library and works from any current directory. M3 local events and session tracking are implemented alongside the M2 animation and desktop controls. Provider adapters remain planned for M4. See [PLAN.md](PLAN.md) and the [architecture and validation record](docs/architecture.md).
+The asset verifier uses only Python's standard library and works from any current directory. M3 local events and session tracking are implemented alongside the M2 animation and desktop controls. M4 provider adapters and integration setup are implemented; live-client acceptance remains open. See [PLAN.md](PLAN.md) and the [architecture and validation record](docs/architecture.md).
 
 ## Build and run
 
@@ -58,8 +58,24 @@ printf '%s\n' '{"version":1,"provider":"claude","session_id":"demo","kind":"prom
 ```
 
 See [the event protocol](docs/events.md) for all events, identity fallbacks,
-ordering, limits, expiry, and command behavior. Raw Claude/Codex hook adapters
-and integration setup are M4; visible alert controls are M5.
+ordering, limits, expiry, and command behavior. See [integration setup and coverage](docs/integrations.md) for raw Claude/Codex
+hooks and preview/enable/inspect/disable commands. Visible alert controls are M5.
+
+## Provider setup
+
+Preview the exact configuration before enabling either integration:
+
+```bash
+./build/agent-pet integration preview --provider claude
+./build/agent-pet integration enable --provider claude
+./build/agent-pet integration inspect --provider claude
+./build/agent-pet integration disable --provider claude
+```
+
+Use `--provider codex` for Codex. Register from a permanent executable location.
+Review new Codex hooks in `/hooks`; restart the client and submit a fresh turn to
+verify setup. Use `--config /tmp/pet-test/settings.json` for disposable setup tests.
+See [supported mappings and pending live acceptance](docs/integrations.md).
 
 ## Package and verify
 
@@ -67,10 +83,10 @@ Python 3, `qmake6`, `ldd` and `patchelf` are build-time packaging tools:
 
 ```bash
 python3 scripts/package.py
-./dist/agent-pet-m3/bin/agent-pet --smoke-test
+./dist/agent-pet-m4/bin/agent-pet --smoke-test
 ```
 
-The output is `dist/agent-pet-m3/` and `dist/agent-pet-m3.tar.gz`. Use a new
+The output is `dist/agent-pet-m4/` and `dist/agent-pet-m4.tar.gz`. Use a new
 `--output` directory on subsequent runs. Copy/extract the entire directory to
 another location and run `bin/agent-pet`; no separate Qt or interpreter is needed.
 The package targets a compatible Linux host ABI, not every distribution.
@@ -79,7 +95,7 @@ For a filesystem-isolated headless check (requires bubblewrap and permitted user
 namespaces), run:
 
 ```bash
-python3 scripts/check_isolated.py dist/agent-pet-m3
+python3 scripts/check_isolated.py dist/agent-pet-m4
 ```
 
 This mounts only the package and host glibc libraries. It verifies idle/thinking,

@@ -20,7 +20,7 @@ def run(*args):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--build", type=Path, default=ROOT / "build")
-    parser.add_argument("--output", type=Path, default=ROOT / "dist/agent-pet-m3")
+    parser.add_argument("--output", type=Path, default=ROOT / "dist/agent-pet-m4")
     args = parser.parse_args()
     output = args.output.resolve()
     if output.exists():
@@ -76,7 +76,7 @@ def main():
         common = Path("/usr/share/licenses/common")
         if common.is_dir():
             shutil.copytree(common, notices / "common", symlinks=False)
-    manifest = {"format": "private M3 prototype", "libraries": sorted(sources),
+    manifest = {"format": "private M4 prototype", "libraries": sorted(sources),
                 "host_libraries": sorted(system), "distro_packages": sorted(packages),
                 "qt_version": run("qmake6", "-query", "QT_VERSION")}
     (output / "share/agent-pet/runtime-manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")

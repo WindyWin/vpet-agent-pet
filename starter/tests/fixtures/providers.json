@@ -1,0 +1,485 @@
+[
+  {
+    "provider": "claude",
+    "input": {
+      "session_id": "sample-session",
+      "cwd": "/projects/example",
+      "transcript_path": "/PRIVATE/transcript",
+      "prompt": "PRIVATE",
+      "tool_input": {
+        "command": "PRIVATE"
+      },
+      "last_assistant_message": "PRIVATE",
+      "hook_event_name": "SessionStart"
+    },
+    "kind": "session_start"
+  },
+  {
+    "provider": "claude",
+    "input": {
+      "session_id": "sample-session",
+      "cwd": "/projects/example",
+      "transcript_path": "/PRIVATE/transcript",
+      "prompt": "PRIVATE",
+      "tool_input": {
+        "command": "PRIVATE"
+      },
+      "last_assistant_message": "PRIVATE",
+      "hook_event_name": "UserPromptSubmit"
+    },
+    "kind": "prompt"
+  },
+  {
+    "provider": "claude",
+    "input": {
+      "session_id": "sample-session",
+      "cwd": "/projects/example",
+      "transcript_path": "/PRIVATE/transcript",
+      "prompt": "PRIVATE",
+      "tool_input": {
+        "command": "PRIVATE"
+      },
+      "last_assistant_message": "PRIVATE",
+      "hook_event_name": "PreToolUse",
+      "tool_use_id": "call-1",
+      "tool_name": "Read"
+    },
+    "kind": "tool_start"
+  },
+  {
+    "provider": "claude",
+    "input": {
+      "session_id": "sample-session",
+      "cwd": "/projects/example",
+      "transcript_path": "/PRIVATE/transcript",
+      "prompt": "PRIVATE",
+      "tool_input": {
+        "command": "PRIVATE"
+      },
+      "last_assistant_message": "PRIVATE",
+      "hook_event_name": "PostToolUse",
+      "tool_use_id": "call-1",
+      "tool_name": "Read"
+    },
+    "kind": "tool_end"
+  },
+  {
+    "provider": "claude",
+    "input": {
+      "session_id": "sample-session",
+      "cwd": "/projects/example",
+      "transcript_path": "/PRIVATE/transcript",
+      "prompt": "PRIVATE",
+      "tool_input": {
+        "command": "PRIVATE"
+      },
+      "last_assistant_message": "PRIVATE",
+      "hook_event_name": "PermissionRequest"
+    },
+    "kind": "attention"
+  },
+  {
+    "provider": "claude",
+    "input": {
+      "session_id": "sample-session",
+      "cwd": "/projects/example",
+      "transcript_path": "/PRIVATE/transcript",
+      "prompt": "PRIVATE",
+      "tool_input": {
+        "command": "PRIVATE"
+      },
+      "last_assistant_message": "PRIVATE",
+      "hook_event_name": "Stop"
+    },
+    "kind": "turn_finished"
+  },
+  {
+    "provider": "claude",
+    "input": {
+      "session_id": "sample-session",
+      "cwd": "/projects/example",
+      "transcript_path": "/PRIVATE/transcript",
+      "prompt": "PRIVATE",
+      "tool_input": {
+        "command": "PRIVATE"
+      },
+      "last_assistant_message": "PRIVATE",
+      "hook_event_name": "SessionEnd"
+    },
+    "kind": "session_end"
+  },
+  {
+    "provider": "claude",
+    "input": {
+      "session_id": "sample-session",
+      "cwd": "/projects/example",
+      "transcript_path": "/PRIVATE/transcript",
+      "prompt": "PRIVATE",
+      "tool_input": {
+        "command": "PRIVATE"
+      },
+      "last_assistant_message": "PRIVATE",
+      "hook_event_name": "SubagentStart",
+      "agent_id": "child-session"
+    },
+    "kind": "prompt"
+  },
+  {
+    "provider": "claude",
+    "input": {
+      "session_id": "sample-session",
+      "cwd": "/projects/example",
+      "transcript_path": "/PRIVATE/transcript",
+      "prompt": "PRIVATE",
+      "tool_input": {
+        "command": "PRIVATE"
+      },
+      "last_assistant_message": "PRIVATE",
+      "hook_event_name": "SubagentStop",
+      "agent_id": "child-session"
+    },
+    "kind": "session_end"
+  },
+  {
+    "provider": "claude",
+    "input": {
+      "session_id": "sample-session",
+      "cwd": "/projects/example",
+      "transcript_path": "/PRIVATE/transcript",
+      "prompt": "PRIVATE",
+      "tool_input": {
+        "command": "PRIVATE"
+      },
+      "last_assistant_message": "PRIVATE",
+      "hook_event_name": "PostToolUseFailure",
+      "tool_use_id": "call-1",
+      "is_interrupt": false,
+      "error": "PRIVATE"
+    },
+    "kind": "error"
+  },
+  {
+    "provider": "claude",
+    "input": {
+      "session_id": "sample-session",
+      "cwd": "/projects/example",
+      "transcript_path": "/PRIVATE/transcript",
+      "prompt": "PRIVATE",
+      "tool_input": {
+        "command": "PRIVATE"
+      },
+      "last_assistant_message": "PRIVATE",
+      "hook_event_name": "PostToolUseFailure",
+      "tool_use_id": "call-2",
+      "is_interrupt": true
+    },
+    "kind": "interrupt"
+  },
+  {
+    "provider": "claude",
+    "input": {
+      "session_id": "sample-session",
+      "cwd": "/projects/example",
+      "transcript_path": "/PRIVATE/transcript",
+      "prompt": "PRIVATE",
+      "tool_input": {
+        "command": "PRIVATE"
+      },
+      "last_assistant_message": "PRIVATE",
+      "hook_event_name": "Notification",
+      "notification_type": "permission_prompt"
+    },
+    "kind": "attention"
+  },
+  {
+    "provider": "claude",
+    "input": {
+      "session_id": "sample-session",
+      "cwd": "/projects/example",
+      "transcript_path": "/PRIVATE/transcript",
+      "prompt": "PRIVATE",
+      "tool_input": {
+        "command": "PRIVATE"
+      },
+      "last_assistant_message": "PRIVATE",
+      "hook_event_name": "Notification",
+      "notification_type": "idle_prompt"
+    },
+    "kind": "attention"
+  },
+  {
+    "provider": "claude",
+    "input": {
+      "session_id": "sample-session",
+      "cwd": "/projects/example",
+      "transcript_path": "/PRIVATE/transcript",
+      "prompt": "PRIVATE",
+      "tool_input": {
+        "command": "PRIVATE"
+      },
+      "last_assistant_message": "PRIVATE",
+      "hook_event_name": "Notification",
+      "notification_type": "elicitation_dialog"
+    },
+    "kind": "attention"
+  },
+  {
+    "provider": "claude",
+    "input": {
+      "session_id": "sample-session",
+      "cwd": "/projects/example",
+      "transcript_path": "/PRIVATE/transcript",
+      "prompt": "PRIVATE",
+      "tool_input": {
+        "command": "PRIVATE"
+      },
+      "last_assistant_message": "PRIVATE",
+      "hook_event_name": "Notification",
+      "notification_type": "auth_success"
+    },
+    "kind": ""
+  },
+  {
+    "provider": "claude",
+    "input": {
+      "session_id": "sample-session",
+      "cwd": "/projects/example",
+      "transcript_path": "/PRIVATE/transcript",
+      "prompt": "PRIVATE",
+      "tool_input": {
+        "command": "PRIVATE"
+      },
+      "last_assistant_message": "PRIVATE",
+      "hook_event_name": "Interrupt"
+    },
+    "kind": ""
+  },
+  {
+    "provider": "codex",
+    "input": {
+      "session_id": "sample-session",
+      "cwd": "/projects/example",
+      "transcript_path": "/PRIVATE/transcript",
+      "prompt": "PRIVATE",
+      "tool_input": {
+        "command": "PRIVATE"
+      },
+      "last_assistant_message": "PRIVATE",
+      "hook_event_name": "SessionStart"
+    },
+    "kind": "session_start"
+  },
+  {
+    "provider": "codex",
+    "input": {
+      "session_id": "sample-session",
+      "cwd": "/projects/example",
+      "transcript_path": "/PRIVATE/transcript",
+      "prompt": "PRIVATE",
+      "tool_input": {
+        "command": "PRIVATE"
+      },
+      "last_assistant_message": "PRIVATE",
+      "hook_event_name": "UserPromptSubmit"
+    },
+    "kind": "prompt"
+  },
+  {
+    "provider": "codex",
+    "input": {
+      "session_id": "sample-session",
+      "cwd": "/projects/example",
+      "transcript_path": "/PRIVATE/transcript",
+      "prompt": "PRIVATE",
+      "tool_input": {
+        "command": "PRIVATE"
+      },
+      "last_assistant_message": "PRIVATE",
+      "hook_event_name": "PreToolUse",
+      "tool_use_id": "call-1",
+      "tool_name": "Read"
+    },
+    "kind": "tool_start"
+  },
+  {
+    "provider": "codex",
+    "input": {
+      "session_id": "sample-session",
+      "cwd": "/projects/example",
+      "transcript_path": "/PRIVATE/transcript",
+      "prompt": "PRIVATE",
+      "tool_input": {
+        "command": "PRIVATE"
+      },
+      "last_assistant_message": "PRIVATE",
+      "hook_event_name": "PostToolUse",
+      "tool_use_id": "call-1",
+      "tool_name": "Read"
+    },
+    "kind": "tool_end"
+  },
+  {
+    "provider": "codex",
+    "input": {
+      "session_id": "sample-session",
+      "cwd": "/projects/example",
+      "transcript_path": "/PRIVATE/transcript",
+      "prompt": "PRIVATE",
+      "tool_input": {
+        "command": "PRIVATE"
+      },
+      "last_assistant_message": "PRIVATE",
+      "hook_event_name": "PermissionRequest"
+    },
+    "kind": "attention"
+  },
+  {
+    "provider": "codex",
+    "input": {
+      "session_id": "sample-session",
+      "cwd": "/projects/example",
+      "transcript_path": "/PRIVATE/transcript",
+      "prompt": "PRIVATE",
+      "tool_input": {
+        "command": "PRIVATE"
+      },
+      "last_assistant_message": "PRIVATE",
+      "hook_event_name": "Stop"
+    },
+    "kind": "turn_finished"
+  },
+  {
+    "provider": "codex",
+    "input": {
+      "session_id": "sample-session",
+      "cwd": "/projects/example",
+      "transcript_path": "/PRIVATE/transcript",
+      "prompt": "PRIVATE",
+      "tool_input": {
+        "command": "PRIVATE"
+      },
+      "last_assistant_message": "PRIVATE",
+      "hook_event_name": "SessionEnd"
+    },
+    "kind": "session_end"
+  },
+  {
+    "provider": "codex",
+    "input": {
+      "session_id": "sample-session",
+      "cwd": "/projects/example",
+      "transcript_path": "/PRIVATE/transcript",
+      "prompt": "PRIVATE",
+      "tool_input": {
+        "command": "PRIVATE"
+      },
+      "last_assistant_message": "PRIVATE",
+      "hook_event_name": "SubagentStart",
+      "agent_id": "child-session"
+    },
+    "kind": "prompt"
+  },
+  {
+    "provider": "codex",
+    "input": {
+      "session_id": "sample-session",
+      "cwd": "/projects/example",
+      "transcript_path": "/PRIVATE/transcript",
+      "prompt": "PRIVATE",
+      "tool_input": {
+        "command": "PRIVATE"
+      },
+      "last_assistant_message": "PRIVATE",
+      "hook_event_name": "SubagentStop",
+      "agent_id": "child-session"
+    },
+    "kind": "session_end"
+  },
+  {
+    "provider": "codex",
+    "input": {
+      "session_id": "sample-session",
+      "cwd": "/projects/example",
+      "transcript_path": "/PRIVATE/transcript",
+      "prompt": "PRIVATE",
+      "tool_input": {
+        "command": "PRIVATE"
+      },
+      "last_assistant_message": "PRIVATE",
+      "hook_event_name": "Interrupt"
+    },
+    "kind": "interrupt"
+  },
+  {
+    "provider": "codex",
+    "input": {
+      "session_id": "sample-session",
+      "cwd": "/projects/example",
+      "transcript_path": "/PRIVATE/transcript",
+      "prompt": "PRIVATE",
+      "tool_input": {
+        "command": "PRIVATE"
+      },
+      "last_assistant_message": "PRIVATE",
+      "hook_event_name": "PostToolUse",
+      "tool_use_id": "call-1",
+      "tool_response": {
+        "isError": true,
+        "content": "PRIVATE"
+      }
+    },
+    "kind": "error"
+  },
+  {
+    "provider": "codex",
+    "input": {
+      "session_id": "sample-session",
+      "cwd": "/projects/example",
+      "transcript_path": "/PRIVATE/transcript",
+      "prompt": "PRIVATE",
+      "tool_input": {
+        "command": "PRIVATE"
+      },
+      "last_assistant_message": "PRIVATE",
+      "hook_event_name": "PostToolUse",
+      "tool_use_id": "call-2",
+      "tool_response": {
+        "exit_code": 1,
+        "output": "PRIVATE"
+      }
+    },
+    "kind": "error"
+  },
+  {
+    "provider": "codex",
+    "input": {
+      "session_id": "sample-session",
+      "cwd": "/projects/example",
+      "transcript_path": "/PRIVATE/transcript",
+      "prompt": "PRIVATE",
+      "tool_input": {
+        "command": "PRIVATE"
+      },
+      "last_assistant_message": "PRIVATE",
+      "hook_event_name": "PostToolUse",
+      "tool_use_id": "call-3",
+      "tool_response": "Error: PRIVATE"
+    },
+    "kind": "tool_end"
+  },
+  {
+    "provider": "codex",
+    "input": {
+      "session_id": "sample-session",
+      "cwd": "/projects/example",
+      "transcript_path": "/PRIVATE/transcript",
+      "prompt": "PRIVATE",
+      "tool_input": {
+        "command": "PRIVATE"
+      },
+      "last_assistant_message": "PRIVATE",
+      "hook_event_name": "Notification"
+    },
+    "kind": ""
+  }
+]

@@ -16,9 +16,9 @@ resources, so moving the executable cannot break sprite lookup.
 | `src/desktop` | Transparent pet, context/tray menu, drag, scale, input and quit |
 | `src/animation` | Catalog validation, phased playback and bounded decoded-frame cache |
 | `src/settings` | Validated, atomic preference storage in the user data directory |
-| `src/sessions` | Reserved for M3 state management; currently documentation only |
-| `src/ipc` | Reserved for M3 private transport; currently documentation only |
-| `src/providers` | Reserved for M4 adapters; currently documentation only |
+| `src/sessions` | Bounded session/tool state, ordering, aggregate activity and alerts |
+| `src/ipc` | Private Unix transport and headless hook/emit commands |
+| `src/providers` | Claude/Codex normalization and integration configuration management |
 
 The catalog defines eleven display states: idle, thinking, reading, working,
 needs_input, tool_error, turn_finished, sleeping, starting, closing and dragging.
@@ -196,3 +196,28 @@ Validation on the existing EndeavourOS development host with Qt 6.11.2:
 M3 does not establish live Claude/Codex hook coverage: raw provider adapters,
 client versions and integration configuration belong to M4. Visible alert
 controls belong to M5. No new native X11/Wayland desktop acceptance is claimed.
+
+## M4 implementation evidence — 2026-10-04
+
+Provider adapters and headless integration management are implemented in
+`src/providers`. The setup guide and explicit live-acceptance gaps are in
+[integrations.md](integrations.md). Version probes returned Claude Code 2.1.289
+and Codex CLI 0.156.0; the official hook references were checked on this date.
+
+- Release CMake build passed. CTest passed all three suites (`providers`, `events`,
+  `prototype`), including 30 synthetic provider contract cases, concurrent tools,
+  child isolation, failed-tool cleanup, large raw payloads, ownership-aware setup
+  round trips, malformed-file preservation and actual shell path quoting.
+- Socket tests require execution outside the restricted sandbox; their first
+  sandbox run failed to bind sockets, and the permitted run passed in about 5 s.
+- Asset verification passed: 215 PNGs, 23 sequences, 27,345,411 bytes.
+- `python3 scripts/package.py` produced `dist/agent-pet-m4.tar.gz` with 61 bundled
+  libraries. The copied package launched at `/opt/Agent Pet` in filesystem
+  isolation, decoded idle/thinking, recovered input and shut down normally.
+  Packaged Claude/Codex silent callbacks, configuration preview and enable also
+  passed inside that namespace. The expected fontconfig warning was nonfatal.
+
+No user client hook configuration was installed during implementation. Synthetic
+fixtures and subprocess tests do not certify real client/host behavior. Captured
+live payloads, real concurrent/child sessions, VS Code integrated terminal tests,
+and existing-client configuration reload behavior remain M4 acceptance work.

@@ -1,9 +1,8 @@
 # Local events (M3, protocol version 1)
 
 The desktop monitors normalized events for the current user. M3 supplies the
-transport and state engine. Provider-specific payload parsing, configuration
-installation and live client validation belong to M4. Do not register this hook
-command directly against raw Claude/Codex payloads yet.
+transport and state engine. M4 adds [provider adapters and integration setup](integrations.md).
+`hook` accepts raw provider payloads; `emit` accepts this normalized protocol.
 
 ## Envelope
 
@@ -32,7 +31,7 @@ optional and is scoped to the same provider. If an event ID is unavailable, the
 command generates a UUID per invocation. This cannot deduplicate independently
 retried invocations; adapters should supply a stable delivery ID when possible.
 Missing timestamps are stamped at callback receipt. These fallback policies do
-not infer provider coverage; real payload mappings are an M4 deliverable.
+not infer provider coverage; see the M4 mapping and acceptance record.
 
 ## Commands and transport
 
@@ -40,10 +39,12 @@ Start `agent-pet`, then send a development event:
 
 ```bash
 printf '%s\n' '{"version":1,"provider":"claude","session_id":"demo","kind":"prompt","project_path":"/projects/demo"}' | ./build/agent-pet emit
-printf '%s\n' '{"version":1,"session_id":"demo","kind":"attention"}' | ./build/agent-pet hook --provider claude
+printf '%s\n' '{"session_id":"demo","hook_event_name":"PermissionRequest"}' | ./build/agent-pet hook --provider claude
 ```
 
-Both commands read stdin through EOF; they fill missing event IDs/timestamps.
+Both commands read stdin through EOF. `emit` fills missing IDs/timestamps;
+`hook` creates a sanitized envelope using the provider adapter. Raw hook input
+is capped at 1 MiB; normalized emit input and outgoing datagrams at 8 KiB.
 `hook` always returns zero, with no stdout or stderr, including malformed input,
 a closed monitor or a full queue. `emit` returns nonzero with stderr on rejection
 or failed delivery. Successful delivery means the kernel accepted the datagram;
@@ -83,7 +84,8 @@ messages; oversized datagrams and invalid envelopes are dropped.
 - Session end removes the record and alerts and retains a bounded timestamp
   tombstone. A strictly newer event may observe that identity again. Events more
   than 60 seconds in the future or 30 minutes in the past are rejected.
-- Errors react for up to 4 seconds then resume the previous activity; finished
+- Errors with a tool ID remove the failed tool. Errors react for up to 4 seconds
+  then resume the remaining activity; finished
   turns react for up to 4 seconds then become idle. The animation's own one-shot
   may finish sooner. Interrupt clears tools and becomes inactive, never finished.
 - After 30 minutes without an accepted event, records and their alerts expire.

@@ -1,5 +1,6 @@
 #include "desktop/pet_window.h"
 #include "ipc/local.h"
+#include "providers/integrations.h"
 #include "desktop/session_playback.h"
 #include <QDateTime>
 #include <QApplication>
@@ -10,6 +11,10 @@
 #include <cstdio>
 
 int main(int argc, char **argv) {
+    if (argc > 1 && QString::fromLocal8Bit(argv[1]) == "integration") {
+        QCoreApplication app(argc, argv);
+        return pet::integrationCommand(app.arguments());
+    }
     if (argc > 1 && (QString::fromLocal8Bit(argv[1]) == "hook" || QString::fromLocal8Bit(argv[1]) == "emit")) {
         QCoreApplication app(argc, argv);
         return pet::eventCommand(app.arguments());
@@ -20,7 +25,7 @@ int main(int argc, char **argv) {
     QApplication app(argc, argv);
     app.setQuitOnLastWindowClosed(false);
     app.setApplicationName("agent-pet");
-    app.setApplicationVersion("0.3.0");
+    app.setApplicationVersion("0.4.0");
     QCommandLineParser parser;
     parser.setApplicationDescription("Agent Pet animation and desktop controls");
     parser.addHelpOption();

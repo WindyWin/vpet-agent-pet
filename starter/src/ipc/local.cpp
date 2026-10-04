@@ -1,4 +1,5 @@
 #include "local.h"
+#include "providers/adapters.h"
 #include <QDateTime>
 #include <QDir>
 #include <QFile>
@@ -84,11 +85,13 @@ int eventCommand(const QStringList &args) {
     QString provider;
     for (int i = 2; i < args.size(); ++i) {
         if (args[i] == "--provider" && i + 1 < args.size() && provider.isEmpty()) provider = args[++i];
-        else { error = "Usage: agent-pet hook --provider claude|codex, or agent-pet emit [--provider claude|codex]; read normalized JSON from stdin"; return fail(); }
+        else if (hook && args[i] == "--registration" && args.value(i + 1) == "agent-pet-v1") ++i;
+        else { error = "Usage: agent-pet hook --provider claude|codex, or agent-pet emit [--provider claude|codex]; hook reads provider JSON; emit reads normalized JSON"; return fail(); }
     }
     if ((hook && provider.isEmpty()) || (!provider.isEmpty() && provider != "claude" && provider != "codex")) {
         error = "Expected provider claude or codex"; return fail();
     }
+    const int inputLimit = hook ? 1024 * 1024 : 8192;
     QByteArray data;
     QElapsedTimer deadline; deadline.start();
     while (deadline.elapsed() < 150) {
@@ -101,12 +104,16 @@ int eventCommand(const QStringList &args) {
         if (size == 0) break;
         if (size < 0) { error = "Cannot read event"; return fail(); }
         data.append(buffer, size);
-        if (data.size() > 8192) { error = "Event exceeds 8192 bytes"; return fail(); }
+        if (data.size() > inputLimit) { error = "Input exceeds size limit"; return fail(); }
     }
     if (deadline.elapsed() >= 150) { error = "Timed out reading event"; return fail(); }
     auto doc = QJsonDocument::fromJson(data);
     if (!doc.isObject()) { error = "Expected normalized JSON event"; return fail(); }
     auto object = doc.object();
+    if (hook) {
+        object = normalizeHook(provider, object, QDateTime::currentMSecsSinceEpoch());
+        if (object.isEmpty()) return 0;
+    }
     if (!provider.isEmpty()) {
         if (object.contains("provider") && object.value("provider").toString() != provider) { error = "Provider mismatch"; return fail(); }
         object["provider"] = provider;
