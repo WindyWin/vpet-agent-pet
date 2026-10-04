@@ -1,0 +1,21 @@
+Use case: compositing / ui-mockup.
+Composite the supplied transparent character sprite into a polished realistic desktop UI concept for Agent Pet. Preserve the character's exact visual identity: long silver-gray hair, golden eyes, L hair clip, white pink-striped sweater, red short skirt, white socks; use the supplied sprite as the small desktop pet, not a redesigned mascot. Do not include the source image's black preview background.
+
+Create a wide landscape high-resolution screenshot-style composition of a quiet Linux desktop with muted twilight mountain-and-lake wallpaper. The product is ONLY a small floating pet plus compact alert and context menu, NO dashboard, NO application window, NO session browser, NO timeline, NO charts, NO sidebar. The desktop has generous empty space. Crop the view to the lower-right portion of a desktop so that the actual pet and controls are easily legible, not lost in a giant wallpaper. Pet about 250 pixels high near lower right; clean flat sprite, no 3D.
+
+Above and slightly left of pet, one compact rounded charcoal notification bubble with fine amber border, amber bell icon, readable warm-white text:
+"Needs approval"
+"fcis-web · Claude Code · b72c"
+small muted "Waiting for your confirmation"
+bottom row "2 more alerts" and two modest buttons "Next" and "Dismiss".
+Small amber attention badge near pet. No Open session, Details, Approve, terminal navigation, or conversation text.
+
+To the left of pet show a small open right-click context menu with header "Agent Pet", fine separators, and simple aligned menu entries:
+"Mute alerts" with toggle
+"Sound" with toggle
+"Pet size" with submenu chevron
+"Reset position"
+"Integrations..."
+"About"
+"Quit"
+This menu is compact and secondary, no large settings screen. A slim desktop panel at bottom can show a tray bell icon and clock, but no Windows logo or Mac dock. Use charcoal menus, ivory text, restrained amber attention accents, fine borders, softly rounded corners, realistic small shadows, professional desktop visual hierarchy. Show exactly one notification bubble; the remaining alerts are represented by the pending count. No invented branding, no title banner, no explanatory annotations or marketing text. This is the complete product design target: pet, actionable next/dismiss alert, and minimal context menu.
