@@ -35,6 +35,7 @@ install(TARGETS agent-pet RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(FILES THIRD_PARTY_NOTICES.md LICENSE NOTICE DESTINATION ${CMAKE_INSTALL_DATADIR}/agent-pet)
 install(FILES packaging/agent-pet.png DESTINATION ${CMAKE_INSTALL_DATADIR}/icons/hicolor/256x256/apps)
 install(FILES packaging/agent-pet.desktop.in DESTINATION ${CMAKE_INSTALL_DATADIR}/agent-pet)
+install(FILES packaging/tui.sh DESTINATION ${CMAKE_INSTALL_DATADIR}/agent-pet) # Prompts for install.sh and uninstall.sh
 install(PROGRAMS packaging/install.sh packaging/uninstall.sh DESTINATION .)
 install(FILES packaging/INSTALL.txt DESTINATION .)
 install(DIRECTORY licenses DESTINATION ${CMAKE_INSTALL_DATADIR}/agent-pet)

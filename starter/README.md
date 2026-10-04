@@ -32,8 +32,10 @@ ctest --test-dir build --output-on-failure
 Left-drag to move; the original Raise animation plays while dragging and returns
 to the prior state on release. Right-click for animation preview, settings,
 always-on-top, temporary click-through, recovery, artwork terms and Quit. A tray
-menu appears on supported desktops. Click-through automatically ends after 15
-seconds. Space switches idle/thinking and Escape quits when the pet has focus.
+icon appears on supported desktops: left-click hides or shows the pet (it keeps
+monitoring while hidden), its tooltip shows session status and its icon carries
+the attention badge. Click-through automatically ends after 15 seconds. Space
+switches idle/thinking and Escape quits when the pet has focus.
 
 `./build/agent-pet --preview` opens the developer preview, where every bundled
 state can be selected. It shows the active sequence, phase, frame duration,
@@ -42,6 +44,9 @@ transition history and decoded-frame cache use; you can pause and step frames.
 window. Size, position and always-on-top are saved in the user's application data
 directory and restored on restart. Click-through always starts disabled. Closing
 settings or preview leaves the pet running. About shows the bundled artwork terms.
+Settings → Startup (or `agent-pet autostart enable [--when-idle keep|hide|quit]`)
+lets a connected agent's session start launch the pet, and chooses whether it
+stays, hides or quits once no sessions remain; see [install guide](docs/install.md#autostart).
 
 The default uses X11/XWayland when DISPLAY is available. For a development-only
 native Wayland check: `QT_QPA_PLATFORM=wayland ./build/agent-pet`.

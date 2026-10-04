@@ -13,11 +13,11 @@ resources, so moving the executable cannot break sprite lookup.
 
 | Directory | Responsibility |
 | --- | --- |
-| `src/desktop` | Transparent pet, alert toast, running-sessions list, host focus, attention badge, context/tray menu, drag, scale, input and quit |
+| `src/desktop` | Transparent pet, alert toast, running-sessions list, host focus, attention badge, context/tray menu, tray status and hiding, drag, scale, input and quit |
 | `src/animation` | Catalog validation, phased playback and bounded decoded-frame cache |
 | `src/settings` | Validated, atomic preference storage in the user data directory |
-| `src/sessions` | Bounded session/tool state, ordering, aggregate activity, alerts and alert labels |
-| `src/ipc` | Private Unix transport and headless hook/emit commands |
+| `src/sessions` | Bounded session/tool state, ordering, aggregate activity, alerts and alert labels, and the widget-free show/hide/idle rules (`presence`) |
+| `src/ipc` | Private Unix transport, headless hook/emit commands, and hook-side autostart with the `autostart` command |
 | `src/providers` | Claude/Codex normalization and integration configuration management |
 
 The catalog defines eleven display states: idle, thinking, reading, working,
@@ -47,7 +47,10 @@ memory.
 
 `PreferencesStore` writes `preferences.json` atomically under Qt's
 `AppDataLocation`; malformed files are preserved and defaults are used. Size,
-position and on-top survive restart. Off-screen positions are brought inside an
+position and on-top survive restart. The startup keys `autostart` and
+`when_idle` may be written by the display-free `agent-pet autostart` command
+while a pet runs, so the pet re-reads the file before every save instead of
+overwriting them; the hook reads `autostart` without linking any GUI code. Off-screen positions are brought inside an
 available monitor; screen geometry changes trigger recovery. No session state is
 persisted. The settings window remains open only on request and closing it keeps
 the pet running.
