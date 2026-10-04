@@ -51,7 +51,7 @@ private slots:
     void releaseMetadataIsEmbedded() {
         // The About view and release packages rely on these embedded resources.
         QVERIFY(QString(AGENT_PET_VERSION).count('.') == 2);
-        for (const auto *path : {":/LICENSE", ":/THIRD_PARTY_NOTICES.md", ":/licenses/VPET-ARTWORK-TERMS.md"}) {
+        for (const auto *path : {":/LICENSE", ":/NOTICE", ":/THIRD_PARTY_NOTICES.md", ":/licenses/VPET-ARTWORK-TERMS.md"}) {
             QFile file(path);
             QVERIFY2(file.open(QIODevice::ReadOnly) && file.size() > 0, path);
         }

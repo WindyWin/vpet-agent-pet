@@ -28,7 +28,7 @@ those files are left as they were.
 Requirements: an x86_64 Linux desktop with X11 or XWayland and glibc 2.35
 or newer. Qt and other libraries are bundled.
 
-License: application code is MIT (share/agent-pet/LICENSE). The pet artwork is
+License: application code is Apache-2.0 (share/agent-pet/LICENSE, NOTICE). The pet artwork is
 by the VUP-Simulator team and keeps its own terms; see
 share/agent-pet/THIRD_PARTY_NOTICES.md and share/agent-pet/licenses/.
 Bundled runtime library notices are in share/agent-pet/runtime-licenses/.

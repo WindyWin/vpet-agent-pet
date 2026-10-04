@@ -14,7 +14,7 @@ configure_file(src/version.h.in "${CMAKE_CURRENT_BINARY_DIR}/generated/version.h
 # Embed the selected pack: development and installed binaries use identical paths.
 file(GLOB_RECURSE pet_resources CONFIGURE_DEPENDS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
     "assets/vpet/vup/*.png" "licenses/*")
-list(APPEND pet_resources assets/vpet/animations.json THIRD_PARTY_NOTICES.md LICENSE)
+list(APPEND pet_resources assets/vpet/animations.json THIRD_PARTY_NOTICES.md LICENSE NOTICE)
 qt_add_library(pet_ui STATIC
     src/animation/player.cpp src/desktop/pet_window.cpp
     src/desktop/drag_monitor.cpp src/desktop/alert_bubble.cpp src/desktop/monitor.cpp
@@ -30,7 +30,7 @@ qt_add_executable(agent-pet src/main.cpp)
 target_link_libraries(agent-pet PRIVATE pet_ui pet_events)
 set_target_properties(agent-pet PROPERTIES INSTALL_RPATH "$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
 install(TARGETS agent-pet RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
-install(FILES THIRD_PARTY_NOTICES.md LICENSE DESTINATION ${CMAKE_INSTALL_DATADIR}/agent-pet)
+install(FILES THIRD_PARTY_NOTICES.md LICENSE NOTICE DESTINATION ${CMAKE_INSTALL_DATADIR}/agent-pet)
 install(FILES packaging/agent-pet.png DESTINATION ${CMAKE_INSTALL_DATADIR}/icons/hicolor/256x256/apps)
 install(FILES packaging/agent-pet.desktop.in DESTINATION ${CMAKE_INSTALL_DATADIR}/agent-pet)
 install(PROGRAMS packaging/install.sh packaging/uninstall.sh DESTINATION .)

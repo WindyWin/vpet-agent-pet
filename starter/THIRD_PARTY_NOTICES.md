@@ -14,4 +14,4 @@ Preserve this notice, the artwork terms, and the upstream link when distributing
 
 ## Agent Pet application code
 
-Agent Pet's original application code is under the MIT License (`LICENSE`). That license does not apply to the artwork, the icon, or the upstream documents in `licenses/`.
+Agent Pet's original application code is under the Apache License 2.0 (`LICENSE`, with `NOTICE`). That license does not apply to the artwork, the icon, or the upstream documents in `licenses/`.

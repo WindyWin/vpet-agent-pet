@@ -92,10 +92,10 @@ The installed version is shown by `agent-pet --version` and in **About**.
 
 ## Licenses
 
-Agent Pet's application code is under the MIT License (`share/agent-pet/LICENSE`).
+Agent Pet's application code is under the Apache License 2.0 (`share/agent-pet/LICENSE` and `NOTICE`).
 The pet artwork, and the application icon cropped from it, are by the
 VUP-Simulator team via [LorisYounger/VPet](https://github.com/LorisYounger/VPet)
 and keep their own terms (`share/agent-pet/THIRD_PARTY_NOTICES.md` and
-`share/agent-pet/licenses/`); they are not MIT. Bundled Qt and system libraries
+`share/agent-pet/licenses/`); they are not Apache-2.0. Bundled Qt and system libraries
 keep their own licenses, collected under `share/agent-pet/runtime-licenses/` and
 listed in `share/agent-pet/runtime-manifest.json`.

@@ -263,7 +263,7 @@ Hook commands use the stable installed path, and uninstall disables only
 handlers matching Agent Pet's own command grammar (inspect first, so a missing
 client config is never created). The version comes from CMake `project()` via a
 generated `version.h`, shown by `--version` (headless) and About, with the
-source revision, Qt version, MIT application license and artwork terms.
+source revision, Qt version, Apache-2.0 application license and artwork terms.
 
 Asset optimization was measured and not done. The extracted package is 103 MiB
 (tar.gz 55 MiB): artwork embedded in the executable is 26 MiB, bundled libraries
