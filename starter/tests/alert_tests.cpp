@@ -166,6 +166,23 @@ private slots:
         QVERIFY(pet::hostContext({}, {}).isEmpty());
         QVERIFY(pet::processAncestors(QCoreApplication::applicationPid()).startsWith(QCoreApplication::applicationPid()));
     }
+    void herdrAttachedClientIdentity() {
+        QProcessEnvironment env;
+        env.insert("HOME", "/home/test");
+        QCOMPARE(pet::herdrClientSocket(env, {}), "/home/test/.config/herdr/herdr.sock");
+        env.insert("HERDR_SESSION", "work");
+        QCOMPARE(pet::herdrClientSocket(env, {}), "/home/test/.config/herdr/sessions/work/herdr.sock");
+        env.insert("HERDR_SOCKET_PATH", "/tmp/custom.sock");
+        QCOMPARE(pet::herdrClientSocket(env, {}), "/tmp/custom.sock");
+        env.insert("XDG_CONFIG_HOME", "/config");
+        QCOMPARE(pet::herdrClientSocket(env, {"--session", "other"}), "/config/herdr/sessions/other/herdr.sock");
+        QCOMPARE(pet::herdrClientSocket(env, {"session", "attach", "work.2"}), "/config/herdr/sessions/work.2/herdr.sock");
+        QCOMPARE(pet::herdrClientSocket(env, {"--session=default"}), "/config/herdr/herdr.sock");
+        QVERIFY(pet::herdrClientSocket(env, {"server"}).isEmpty());
+        QVERIFY(pet::herdrClientSocket(env, {"tab", "focus", "t_1"}).isEmpty());
+        QVERIFY(pet::herdrClientSocket(env, {"--remote", "example"}).isEmpty());
+        QVERIFY(pet::herdrClientSocket(env, {"--session", ".."}).isEmpty());
+    }
     void chooseHostWindow() {
         const QVector<pet::HostWindow> windows{{11, 500, "notes — other — Visual Studio Code"},
                                                {12, 500, "main.cpp — abc-web — Visual Studio Code"},

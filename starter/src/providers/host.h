@@ -25,6 +25,8 @@ struct HostCommand {
 // External commands that select the session's tab or pane before the window is
 // raised. Fields are validated; nothing passes through a shell.
 QVector<HostCommand> hostCommands(const QString &host, const QString &target);
+// API socket used by a local Herdr UI invocation; empty for commands/remotes.
+QString herdrClientSocket(const QProcessEnvironment &environment, const QStringList &arguments);
 struct KonsoleTarget { QString service, window; int session = -1; };
 bool konsoleTarget(const QString &target, KonsoleTarget &out);
 

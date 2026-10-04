@@ -1,4 +1,5 @@
 #include "desktop/pet_window.h"
+#include "desktop/host_focus.h"
 #include <QApplication>
 #include <QCursor>
 #include <QSignalSpy>
@@ -9,6 +10,26 @@
 class DesktopTests : public QObject {
     Q_OBJECT
 private slots:
+    void waylandFocusRestoresWindow() {
+        if (QGuiApplication::platformName() != "wayland") QSKIP("Requires native Wayland on KDE Plasma 6");
+        QWidget target, other;
+        target.setWindowTitle("agent-pet-focus-regression");
+        other.setWindowTitle("other-test-window");
+        target.show(); other.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&target));
+        QVERIFY(QTest::qWaitForWindowExposed(&other));
+        target.showMinimized();
+        QTest::qWait(200);
+        pet::Session session;
+        session.host = "terminal";
+        session.hostPids = QString::number(QCoreApplication::applicationPid());
+        session.project = "/tmp/agent-pet-focus-regression";
+        QVERIFY(pet::hostFocus::focus(session));
+        QTRY_VERIFY(target.isActiveWindow());
+        QVERIFY(!target.isMinimized());
+        session.hostPids = "2147483647";
+        QVERIFY(!pet::hostFocus::focus(session));
+    }
     void nativeDragReleasesAndRestores() {
         if (QGuiApplication::platformName() != "xcb") QSKIP("Requires X11/XWayland and XTest");
         struct Pointer {

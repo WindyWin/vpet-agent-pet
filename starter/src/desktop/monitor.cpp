@@ -89,7 +89,7 @@ bool Monitor::focusSession(const QString &key) {
     if (it == sessions_.records().end() || !bringForward || !bringForward(*it)) {
         QToolTip::showText(window_.figure().center(), it != sessions_.records().end() && it->host.isEmpty()
             ? "This session started before Agent Pet could see its terminal. Its next event will fix that."
-            : "Could not find this session's window. It may be closed, or on native Wayland.");
+            : "Could not focus this session's window. Check that its terminal is attached. Wayland focus requires KDE Plasma 6.");
         return false;
     }
     // Going there answers its bubbles; a pending request keeps the badge until it resolves.

@@ -4,10 +4,9 @@
 
 namespace pet {
 // Brings an agent's terminal or editor forward: selects its Konsole tab, tmux pane
-// or herdr pane, then activates its X11 window. Native Wayland cannot raise other
-// applications' windows, so there only the tab/pane selection happens.
+// or herdr pane, then activates its X11 window or uses KDE Plasma 6's KWin API.
 namespace hostFocus {
-// False when nothing could be selected or raised for this session.
+// False when the window could not be raised, even if its tab/pane was selected.
 bool focus(const Session &session);
 // True when the session's window is the active X11 window (the user is already there).
 bool active(const Session &session);

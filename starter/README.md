@@ -87,8 +87,10 @@ their parent. Click a row to go to that session.
 switches to the session's tab over D-Bus, tmux selects the pane, herdr runs
 `herdr tab focus` and `herdr agent focus`, and on X11/XWayland the window that
 owns the agent's parent processes is activated (VS Code windows are told apart
-by the project name in their title). Native Wayland cannot raise other
-applications' windows, so there only the tab/pane switch happens. Sessions that
+by the project name in their title). Detached Herdr sessions are matched to
+their attached terminal clients. On KDE Plasma 6, KWin scripting also raises
+native Wayland windows; other Wayland compositors are not supported. Open keeps
+the alert visible if it cannot raise a window. Sessions that
 started before this version appear without a host until their next event.
 
 An orange badge stays on the pet while any observed session waits for approval
