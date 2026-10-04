@@ -103,7 +103,9 @@ tui_checklist() {
         REPLY=${REPLY# }
         return
     fi
-    tui_widget --separate-output $tui_notags --checklist "$prompt" $(($# / 3 + 9)) 74 $(($# / 3)) "$@"
+    tui_widget --separate-output $tui_notags --checklist "$prompt
+
+Up/Down moves, Space checks or unchecks [*], Tab switches to Ok/Cancel, Enter confirms." $(($# / 3 + 11)) 74 $(($# / 3)) "$@"
     REPLY=$(printf '%s\n' "$REPLY" | tr -d '"' | tr '\n' ' ')
     REPLY=${REPLY% }
 }
@@ -112,7 +114,9 @@ tui_checklist() {
 tui_menu() {
     prompt=$1; default=$2; shift 2
     if [ "$tui" != plain ]; then
-        tui_widget --default-item "$default" $tui_notags --menu "$prompt" $(($# / 2 + 8)) 74 $(($# / 2)) "$@"
+        tui_widget --default-item "$default" $tui_notags --menu "$prompt
+
+Up/Down chooses, Enter confirms." $(($# / 2 + 10)) 74 $(($# / 2)) "$@"
         return
     fi
     echo "$prompt"
