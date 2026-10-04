@@ -1,0 +1,67 @@
+cmake_minimum_required(VERSION 3.22)
+project(AgentPet VERSION 0.6.0 LANGUAGES CXX)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+find_package(Qt6 6.5 REQUIRED COMPONENTS Widgets DBus)
+find_package(X11 REQUIRED)
+qt_standard_project_setup()
+include(GNUInstallDirs)
+
+# Release builds pass -DAGENT_PET_REVISION=<git commit>; local builds say "local".
+set(AGENT_PET_REVISION "local" CACHE STRING "Source revision shown in About")
+configure_file(src/version.h.in "${CMAKE_CURRENT_BINARY_DIR}/generated/version.h" @ONLY)
+
+# Embed the selected pack: development and installed binaries use identical paths.
+file(GLOB_RECURSE pet_resources CONFIGURE_DEPENDS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
+    "assets/vpet/vup/*.png" "licenses/*")
+list(APPEND pet_resources assets/vpet/animations.json THIRD_PARTY_NOTICES.md LICENSE NOTICE)
+qt_add_library(pet_ui STATIC
+    src/animation/player.cpp src/desktop/pet_window.cpp
+    src/desktop/drag_monitor.cpp src/desktop/alert_bubble.cpp src/desktop/monitor.cpp
+    src/desktop/host_focus.cpp src/desktop/session_list.cpp
+    src/settings/preferences.cpp)
+target_include_directories(pet_ui PUBLIC src "${CMAKE_CURRENT_BINARY_DIR}/generated")
+target_link_libraries(pet_ui PUBLIC Qt6::Widgets pet_events PRIVATE Qt6::DBus X11::X11)
+qt_add_resources(pet_ui pet_assets PREFIX "/" FILES ${pet_resources})
+qt_add_library(pet_events STATIC src/sessions/state.cpp src/sessions/alerts.cpp src/ipc/local.cpp
+    src/providers/adapters.cpp src/providers/integrations.cpp src/providers/host.cpp)
+target_include_directories(pet_events PUBLIC src)
+target_link_libraries(pet_events PUBLIC Qt6::Core)
+qt_add_executable(agent-pet src/main.cpp)
+target_link_libraries(agent-pet PRIVATE pet_ui pet_events)
+set_target_properties(agent-pet PROPERTIES INSTALL_RPATH "$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
+install(TARGETS agent-pet RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(FILES THIRD_PARTY_NOTICES.md LICENSE NOTICE DESTINATION ${CMAKE_INSTALL_DATADIR}/agent-pet)
+install(FILES packaging/agent-pet.png DESTINATION ${CMAKE_INSTALL_DATADIR}/icons/hicolor/256x256/apps)
+install(FILES packaging/agent-pet.desktop.in DESTINATION ${CMAKE_INSTALL_DATADIR}/agent-pet)
+install(PROGRAMS packaging/install.sh packaging/uninstall.sh DESTINATION .)
+install(FILES packaging/INSTALL.txt DESTINATION .)
+install(DIRECTORY licenses DESTINATION ${CMAKE_INSTALL_DATADIR}/agent-pet)
+# scripts/package.py copies only the required plugins and their library closure.
+
+include(CTest)
+if(BUILD_TESTING)
+    find_package(Qt6 REQUIRED COMPONENTS Test)
+    qt_add_executable(provider-tests tests/provider_tests.cpp)
+    target_link_libraries(provider-tests PRIVATE pet_events Qt6::Test)
+    target_compile_definitions(provider-tests PRIVATE PROVIDER_FIXTURE_PATH="${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/providers.json" APP_PATH="$<TARGET_FILE:agent-pet>")
+    add_dependencies(provider-tests agent-pet)
+    add_test(NAME providers COMMAND provider-tests)
+    qt_add_executable(event-tests tests/event_tests.cpp)
+    target_link_libraries(event-tests PRIVATE pet_events Qt6::Test)
+    target_compile_definitions(event-tests PRIVATE FIXTURE_PATH="${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/concurrent.json" APP_PATH="$<TARGET_FILE:agent-pet>")
+    add_dependencies(event-tests agent-pet)
+    add_test(NAME events COMMAND event-tests)
+    qt_add_executable(alert-tests tests/alert_tests.cpp)
+    target_link_libraries(alert-tests PRIVATE pet_events Qt6::Test)
+    add_test(NAME alerts COMMAND alert-tests)
+    qt_add_executable(prototype-tests tests/prototype_tests.cpp)
+    target_link_libraries(prototype-tests PRIVATE pet_ui Qt6::Test)
+    add_test(NAME prototype COMMAND prototype-tests)
+    set_tests_properties(prototype PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+    # Explicitly invoked desktop test: it moves the real pointer on X11/XWayland.
+    if(TARGET X11::Xtst)
+        qt_add_executable(desktop-tests tests/desktop_tests.cpp)
+        target_link_libraries(desktop-tests PRIVATE pet_ui Qt6::Test X11::X11 X11::Xtst)
+    endif()
+endif()

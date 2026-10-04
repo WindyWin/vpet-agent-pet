@@ -1,0 +1,34 @@
+Agent Pet for Linux (x86_64)
+============================
+
+Install or upgrade for the current user:
+
+    ./install.sh                      # installs to ~/.local/opt/agent-pet
+    ./install.sh --prefix "/opt/My Apps/agent-pet"
+
+This adds "Agent Pet" to the application menu and a ~/.local/bin/agent-pet
+link. Run the same command from a newer package to upgrade; settings and
+enabled integrations are kept. Quit and restart a running pet afterwards.
+
+Connect an agent (preview first; only Agent Pet's own hook entries change):
+
+    ~/.local/opt/agent-pet/bin/agent-pet integration preview --provider claude
+    ~/.local/opt/agent-pet/bin/agent-pet integration enable --provider claude
+
+Use --provider codex for Codex, or the pet's right-click Settings window.
+Restart the agent client and submit a new prompt to see the pet react.
+
+Remove:
+
+    ~/.local/opt/agent-pet/uninstall.sh [--keep-integrations] [--purge-settings]
+
+Uninstall removes only Agent Pet's hook entries; other hooks and settings in
+those files are left as they were.
+
+Requirements: an x86_64 Linux desktop with X11 or XWayland and glibc 2.35
+or newer. Qt and other libraries are bundled.
+
+License: application code is Apache-2.0 (share/agent-pet/LICENSE, NOTICE). The pet artwork is
+by the VUP-Simulator team and keeps its own terms; see
+share/agent-pet/THIRD_PARTY_NOTICES.md and share/agent-pet/licenses/.
+Bundled runtime library notices are in share/agent-pet/runtime-licenses/.

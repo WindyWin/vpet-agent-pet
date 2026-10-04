@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Version=1.4
+Name=Agent Pet
+GenericName=Desktop pet
+Comment=A desktop pet that reacts to Claude Code and Codex sessions
+Exec=@EXEC@
+Icon=agent-pet
+Terminal=false
+Categories=Utility;
+Keywords=pet;claude;codex;agent;
+StartupNotify=false

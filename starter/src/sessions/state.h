@@ -1,0 +1,55 @@
+#pragma once
+#include <QJsonObject>
+#include <QMap>
+#include <QSet>
+#include <QString>
+#include <QVector>
+
+namespace pet {
+struct Event {
+    QString provider, session, id, kind, tool, parent, project, activity;
+    qint64 timestamp = 0;
+    QString reason; // attention only: "approval" or "input"; empty when unknown
+    // Where the agent runs, captured by the hook so the pet can bring it forward.
+    // Identifiers only: see Host in providers/host.h.
+    QString host, hostPids, hostWindow, hostTarget;
+    static bool parse(const QByteArray &data, Event &event, QString &error);
+};
+struct Session {
+    QString provider, id, parent, project, state = "idle", resume = "idle";
+    QString reason; // Reason of the current attention request, if any.
+    QString host, hostPids, hostWindow, hostTarget;
+    QMap<QString, QString> tools;
+    qint64 timestamp = 0, seen = 0, reactionUntil = 0, activityUntil = 0;
+};
+struct Alert {
+    QString session, kind, project, provider, id, reason;
+    qint64 created = 0;
+    int count = 1;
+    quint64 serial = 0; // Increases whenever this alert is created or aggregated.
+    qint64 expires = 0; // Informational alerts fade on their own; 0 keeps the alert until resolved.
+};
+class Sessions {
+public:
+    static constexpr int maxSessions = 256, maxTools = 128, maxAlerts = 64, maxEvents = 4096;
+    static constexpr qint64 expiryMs = 30 * 60 * 1000;
+    // Finished turns and tool errors are reports, not requests: they fade so the
+    // bubble does not pile up. Attention stays until the session resolves it.
+    static constexpr qint64 finishedAlertMs = 6000, errorAlertMs = 10000;
+    // Tool calls are often shorter than an animation phase; the last activity is
+    // held this long after its tool ends so back-to-back tools read as one stretch.
+    static constexpr qint64 activityHoldMs = 4000;
+    bool apply(const Event &event, qint64 now);
+    void expire(qint64 now);
+    QString aggregate(qint64 now) const;
+    QVector<Alert> pending() const;
+    void dismiss(const QString &session, const QString &kind);
+    int unresolvedAttention() const; // Sessions waiting on the user, regardless of dismissal.
+    const QMap<QString, Session> &records() const { return sessions_; }
+private:
+    QMap<QString, Session> sessions_;
+    QMap<QString, qint64> ended_, events_;
+    QVector<Alert> alerts_;
+    quint64 serial_ = 0;
+};
+}

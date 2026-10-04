@@ -1,0 +1,1120 @@
+{
+  "schema_version": 1,
+  "asset_root": "assets/vpet/vup",
+  "states": {
+    "idle": [
+      "Default/Nomal/1"
+    ],
+    "thinking": [
+      "Think/Nomal/A",
+      "Think/Nomal/B",
+      "Think/Nomal/C"
+    ],
+    "reading": [
+      "WORK/Study/A_Nomal",
+      "WORK/Study/B_1_Nomal",
+      "WORK/Study/C_Nomal"
+    ],
+    "working": [
+      "WORK/WorkONE/A_Nomal",
+      "WORK/WorkONE/B_1_Nomal",
+      "WORK/WorkONE/C_Nomal"
+    ],
+    "needs_input": [
+      "Say/Serious/A",
+      "Say/Serious/B",
+      "Say/Serious/C"
+    ],
+    "tool_error": [
+      "Switch/Down/Nomal"
+    ],
+    "turn_finished": [
+      "LevelUP/Nomal"
+    ],
+    "sleeping": [
+      "Sleep/A_Nomal",
+      "Sleep/B_Nomal",
+      "Sleep/C_Nomal"
+    ],
+    "starting": [
+      "StartUP/Nomal"
+    ],
+    "closing": [
+      "Shutdown/Nomal_1"
+    ],
+    "dragging": [
+      "Raise/Raised_Static/A_Nomal",
+      "Raise/Raised_Dynamic/Nomal/1",
+      "Raise/Raised_Static/C_Nomal"
+    ]
+  },
+  "sequences": [
+    {
+      "state": "idle",
+      "path": "Default/Nomal/1",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/Default/Nomal/1/_000_250.png",
+          "duration_ms": 250
+        },
+        {
+          "path": "assets/vpet/vup/Default/Nomal/1/_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Default/Nomal/1/_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Default/Nomal/1/_003_375.png",
+          "duration_ms": 375
+        },
+        {
+          "path": "assets/vpet/vup/Default/Nomal/1/_004_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Default/Nomal/1/_005_250.png",
+          "duration_ms": 250
+        },
+        {
+          "path": "assets/vpet/vup/Default/Nomal/1/_006_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Default/Nomal/1/_007_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 1500
+    },
+    {
+      "state": "thinking",
+      "path": "Think/Nomal/A",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/Think/Nomal/A/_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Think/Nomal/A/_001_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 250
+    },
+    {
+      "state": "thinking",
+      "path": "Think/Nomal/B",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/Think/Nomal/B/_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Think/Nomal/B/_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Think/Nomal/B/_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Think/Nomal/B/_003_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Think/Nomal/B/_004_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Think/Nomal/B/_005_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Think/Nomal/B/_006_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Think/Nomal/B/_007_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Think/Nomal/B/_008_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 1125
+    },
+    {
+      "state": "thinking",
+      "path": "Think/Nomal/C",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/Think/Nomal/C/_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Think/Nomal/C/_001_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 250
+    },
+    {
+      "state": "reading",
+      "path": "WORK/Study/A_Nomal",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/WORK/Study/A_Nomal/reading1A_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/Study/A_Nomal/reading1A_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/Study/A_Nomal/reading1A_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/Study/A_Nomal/reading1A_003_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/Study/A_Nomal/reading1A_004_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/Study/A_Nomal/reading1A_005_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/Study/A_Nomal/reading1A_006_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/Study/A_Nomal/reading1A_007_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/Study/A_Nomal/reading1A_008_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/Study/A_Nomal/reading1A_009_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/Study/A_Nomal/reading1A_010_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/Study/A_Nomal/reading1A_011_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 1500
+    },
+    {
+      "state": "reading",
+      "path": "WORK/Study/B_1_Nomal",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/WORK/Study/B_1_Nomal/reading1B_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/Study/B_1_Nomal/reading1B_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/Study/B_1_Nomal/reading1B_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/Study/B_1_Nomal/reading1B_003_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/Study/B_1_Nomal/reading1B_004_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/Study/B_1_Nomal/reading1B_005_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/Study/B_1_Nomal/reading1B_006_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/Study/B_1_Nomal/reading1B_007_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/Study/B_1_Nomal/reading1B_008_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/Study/B_1_Nomal/reading1B_009_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/Study/B_1_Nomal/reading1B_010_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 1375
+    },
+    {
+      "state": "reading",
+      "path": "WORK/Study/C_Nomal",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/WORK/Study/C_Nomal/\u770b\u4e66\u9000\u51faC_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/Study/C_Nomal/\u770b\u4e66\u9000\u51faC_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/Study/C_Nomal/\u770b\u4e66\u9000\u51faC_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/Study/C_Nomal/\u770b\u4e66\u9000\u51faC_003_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/Study/C_Nomal/\u770b\u4e66\u9000\u51faC_004_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/Study/C_Nomal/\u770b\u4e66\u9000\u51faC_005_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/Study/C_Nomal/\u770b\u4e66\u9000\u51faC_006_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/Study/C_Nomal/\u770b\u4e66\u9000\u51faC_007_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/Study/C_Nomal/\u770b\u4e66\u9000\u51faC_008_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/Study/C_Nomal/\u770b\u4e66\u9000\u51faC_009_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/Study/C_Nomal/\u770b\u4e66\u9000\u51faC_010_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 1375
+    },
+    {
+      "state": "working",
+      "path": "WORK/WorkONE/A_Nomal",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/WORK/WorkONE/A_Nomal/write_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/WorkONE/A_Nomal/write_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/WorkONE/A_Nomal/write_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/WorkONE/A_Nomal/write_003_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/WorkONE/A_Nomal/write_004_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/WorkONE/A_Nomal/write_005_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/WorkONE/A_Nomal/write_006_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/WorkONE/A_Nomal/write_007_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/WorkONE/A_Nomal/write_008_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/WorkONE/A_Nomal/write_009_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 1250
+    },
+    {
+      "state": "working",
+      "path": "WORK/WorkONE/B_1_Nomal",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/WORK/WorkONE/B_1_Nomal/writeB_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/WorkONE/B_1_Nomal/writeB_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/WorkONE/B_1_Nomal/writeB_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/WorkONE/B_1_Nomal/writeB_003_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/WorkONE/B_1_Nomal/writeB_004_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/WorkONE/B_1_Nomal/writeB_005_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/WorkONE/B_1_Nomal/writeB_006_500.png",
+          "duration_ms": 500
+        },
+        {
+          "path": "assets/vpet/vup/WORK/WorkONE/B_1_Nomal/writeB_007_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/WorkONE/B_1_Nomal/writeB_008_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/WorkONE/B_1_Nomal/writeB_009_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 1625
+    },
+    {
+      "state": "working",
+      "path": "WORK/WorkONE/C_Nomal",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/WORK/WorkONE/C_Nomal/\u5199\u5b57\u9000\u51faC_000_250.png",
+          "duration_ms": 250
+        },
+        {
+          "path": "assets/vpet/vup/WORK/WorkONE/C_Nomal/\u5199\u5b57\u9000\u51faC_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/WorkONE/C_Nomal/\u5199\u5b57\u9000\u51faC_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/WorkONE/C_Nomal/\u5199\u5b57\u9000\u51faC_003_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/WorkONE/C_Nomal/\u5199\u5b57\u9000\u51faC_004_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/WorkONE/C_Nomal/\u5199\u5b57\u9000\u51faC_005_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/WorkONE/C_Nomal/\u5199\u5b57\u9000\u51faC_006_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/WorkONE/C_Nomal/\u5199\u5b57\u9000\u51faC_007_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/WorkONE/C_Nomal/\u5199\u5b57\u9000\u51faC_008_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/WorkONE/C_Nomal/\u5199\u5b57\u9000\u51faC_009_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 1375
+    },
+    {
+      "state": "needs_input",
+      "path": "Say/Serious/A",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/Say/Serious/A/\u8bf4\u8bdd\u524d\u62b1\u80f8_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Say/Serious/A/\u8bf4\u8bdd\u524d\u62b1\u80f8_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Say/Serious/A/\u8bf4\u8bdd\u524d\u62b1\u80f8_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Say/Serious/A/\u8bf4\u8bdd\u524d\u62b1\u80f8_003_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 500
+    },
+    {
+      "state": "needs_input",
+      "path": "Say/Serious/B",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/Say/Serious/B/\u8bf4\u8bdd\u554a\u5427\u554a\u5427_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Say/Serious/B/\u8bf4\u8bdd\u554a\u5427\u554a\u5427_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Say/Serious/B/\u8bf4\u8bdd\u554a\u5427\u554a\u5427_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Say/Serious/B/\u8bf4\u8bdd\u554a\u5427\u554a\u5427_003_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 500
+    },
+    {
+      "state": "needs_input",
+      "path": "Say/Serious/C",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/Say/Serious/C/\u653e\u4e0b\u62b1\u80f8_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Say/Serious/C/\u653e\u4e0b\u62b1\u80f8_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Say/Serious/C/\u653e\u4e0b\u62b1\u80f8_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Say/Serious/C/\u653e\u4e0b\u62b1\u80f8_003_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 500
+    },
+    {
+      "state": "tool_error",
+      "path": "Switch/Down/Nomal",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/Switch/Down/Nomal/_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Switch/Down/Nomal/_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Switch/Down/Nomal/_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Switch/Down/Nomal/_003_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Switch/Down/Nomal/_004_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Switch/Down/Nomal/_005_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Switch/Down/Nomal/_006_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Switch/Down/Nomal/_007_625.png",
+          "duration_ms": 625
+        },
+        {
+          "path": "assets/vpet/vup/Switch/Down/Nomal/_008_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Switch/Down/Nomal/_009_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Switch/Down/Nomal/_010_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Switch/Down/Nomal/_011_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Switch/Down/Nomal/_012_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Switch/Down/Nomal/_013_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 2250
+    },
+    {
+      "state": "turn_finished",
+      "path": "LevelUP/Nomal",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/LevelUP/Nomal/\u666e\u901a\u5347\u7ea7_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/LevelUP/Nomal/\u666e\u901a\u5347\u7ea7_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/LevelUP/Nomal/\u666e\u901a\u5347\u7ea7_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/LevelUP/Nomal/\u666e\u901a\u5347\u7ea7_003_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/LevelUP/Nomal/\u666e\u901a\u5347\u7ea7_004_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/LevelUP/Nomal/\u666e\u901a\u5347\u7ea7_005_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/LevelUP/Nomal/\u666e\u901a\u5347\u7ea7_006_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/LevelUP/Nomal/\u666e\u901a\u5347\u7ea7_007_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/LevelUP/Nomal/\u666e\u901a\u5347\u7ea7_008_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/LevelUP/Nomal/\u666e\u901a\u5347\u7ea7_009_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/LevelUP/Nomal/\u666e\u901a\u5347\u7ea7_010_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/LevelUP/Nomal/\u666e\u901a\u5347\u7ea7_011_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/LevelUP/Nomal/\u666e\u901a\u5347\u7ea7_012_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/LevelUP/Nomal/\u666e\u901a\u5347\u7ea7_013_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/LevelUP/Nomal/\u666e\u901a\u5347\u7ea7_014_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/LevelUP/Nomal/\u666e\u901a\u5347\u7ea7_015_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/LevelUP/Nomal/\u666e\u901a\u5347\u7ea7_016_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/LevelUP/Nomal/\u666e\u901a\u5347\u7ea7_017_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/LevelUP/Nomal/\u666e\u901a\u5347\u7ea7_018_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/LevelUP/Nomal/\u666e\u901a\u5347\u7ea7_019_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/LevelUP/Nomal/\u666e\u901a\u5347\u7ea7_020_500.png",
+          "duration_ms": 500
+        },
+        {
+          "path": "assets/vpet/vup/LevelUP/Nomal/\u666e\u901a\u5347\u7ea7_021_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/LevelUP/Nomal/\u666e\u901a\u5347\u7ea7_022_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/LevelUP/Nomal/\u666e\u901a\u5347\u7ea7_023_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/LevelUP/Nomal/\u666e\u901a\u5347\u7ea7_024_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/LevelUP/Nomal/\u666e\u901a\u5347\u7ea7_025_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 3625
+    },
+    {
+      "state": "sleeping",
+      "path": "Sleep/A_Nomal",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/Sleep/A_Nomal/\u8eba\u4e0b_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Sleep/A_Nomal/\u8eba\u4e0b_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Sleep/A_Nomal/\u8eba\u4e0b_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Sleep/A_Nomal/\u8eba\u4e0b_003_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 500
+    },
+    {
+      "state": "sleeping",
+      "path": "Sleep/B_Nomal",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/Sleep/B_Nomal/\u7761\u89c9\u5faa\u73af_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Sleep/B_Nomal/\u7761\u89c9\u5faa\u73af_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Sleep/B_Nomal/\u7761\u89c9\u5faa\u73af_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Sleep/B_Nomal/\u7761\u89c9\u5faa\u73af_003_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Sleep/B_Nomal/\u7761\u89c9\u5faa\u73af_004_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Sleep/B_Nomal/\u7761\u89c9\u5faa\u73af_005_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 750
+    },
+    {
+      "state": "sleeping",
+      "path": "Sleep/C_Nomal",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/Sleep/C_Nomal/\u8d77\u5e8a_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Sleep/C_Nomal/\u8d77\u5e8a_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Sleep/C_Nomal/\u8d77\u5e8a_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Sleep/C_Nomal/\u8d77\u5e8a_003_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Sleep/C_Nomal/\u8d77\u5e8a_004_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Sleep/C_Nomal/\u8d77\u5e8a_005_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Sleep/C_Nomal/\u8d77\u5e8a_006_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 875
+    },
+    {
+      "state": "starting",
+      "path": "StartUP/Nomal",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/StartUP/Nomal/\u542f\u52a8\u52a8\u753b\u4e8c_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/StartUP/Nomal/\u542f\u52a8\u52a8\u753b\u4e8c_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/StartUP/Nomal/\u542f\u52a8\u52a8\u753b\u4e8c_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/StartUP/Nomal/\u542f\u52a8\u52a8\u753b\u4e8c_003_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/StartUP/Nomal/\u542f\u52a8\u52a8\u753b\u4e8c_004_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/StartUP/Nomal/\u542f\u52a8\u52a8\u753b\u4e8c_005_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/StartUP/Nomal/\u542f\u52a8\u52a8\u753b\u4e8c_006_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/StartUP/Nomal/\u542f\u52a8\u52a8\u753b\u4e8c_007_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/StartUP/Nomal/\u542f\u52a8\u52a8\u753b\u4e8c_008_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/StartUP/Nomal/\u542f\u52a8\u52a8\u753b\u4e8c_009_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/StartUP/Nomal/\u542f\u52a8\u52a8\u753b\u4e8c_010_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/StartUP/Nomal/\u542f\u52a8\u52a8\u753b\u4e8c_011_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/StartUP/Nomal/\u542f\u52a8\u52a8\u753b\u4e8c_012_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/StartUP/Nomal/\u542f\u52a8\u52a8\u753b\u4e8c_013_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 1750
+    },
+    {
+      "state": "closing",
+      "path": "Shutdown/Nomal_1",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/Shutdown/Nomal_1/\u7ed3\u675f\u52a8\u753b\u8868\u60c52_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Shutdown/Nomal_1/\u7ed3\u675f\u52a8\u753b\u8868\u60c52_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Shutdown/Nomal_1/\u7ed3\u675f\u52a8\u753b\u8868\u60c52_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Shutdown/Nomal_1/\u7ed3\u675f\u52a8\u753b\u8868\u60c52_003_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Shutdown/Nomal_1/\u7ed3\u675f\u52a8\u753b\u8868\u60c52_004_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Shutdown/Nomal_1/\u7ed3\u675f\u52a8\u753b\u8868\u60c52_005_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Shutdown/Nomal_1/\u7ed3\u675f\u52a8\u753b\u8868\u60c52_006_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Shutdown/Nomal_1/\u7ed3\u675f\u52a8\u753b\u8868\u60c52_007_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Shutdown/Nomal_1/\u7ed3\u675f\u52a8\u753b\u8868\u60c52_008_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Shutdown/Nomal_1/\u7ed3\u675f\u52a8\u753b\u8868\u60c52_009_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Shutdown/Nomal_1/\u7ed3\u675f\u52a8\u753b\u8868\u60c52_010_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Shutdown/Nomal_1/\u7ed3\u675f\u52a8\u753b\u8868\u60c52_011_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 1500
+    },
+    {
+      "state": "dragging",
+      "path": "Raise/Raised_Static/A_Nomal",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/Raise/Raised_Static/A_Nomal/\u88ab\u63d0\u8d77\u6765_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Raise/Raised_Static/A_Nomal/\u88ab\u63d0\u8d77\u6765_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Raise/Raised_Static/A_Nomal/\u88ab\u63d0\u8d77\u6765_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Raise/Raised_Static/A_Nomal/\u88ab\u63d0\u8d77\u6765_003_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Raise/Raised_Static/A_Nomal/\u88ab\u63d0\u8d77\u6765_004_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Raise/Raised_Static/A_Nomal/\u88ab\u63d0\u8d77\u6765_005_625.png",
+          "duration_ms": 625
+        }
+      ],
+      "duration_ms": 1250
+    },
+    {
+      "state": "dragging",
+      "path": "Raise/Raised_Dynamic/Nomal/1",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/Raise/Raised_Dynamic/Nomal/1/\u6447\u6643_000_500.png",
+          "duration_ms": 500
+        },
+        {
+          "path": "assets/vpet/vup/Raise/Raised_Dynamic/Nomal/1/\u6447\u6643_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Raise/Raised_Dynamic/Nomal/1/\u6447\u6643_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Raise/Raised_Dynamic/Nomal/1/\u6447\u6643_003_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Raise/Raised_Dynamic/Nomal/1/\u6447\u6643_004_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Raise/Raised_Dynamic/Nomal/1/\u6447\u6643_005_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Raise/Raised_Dynamic/Nomal/1/\u6447\u6643_006_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Raise/Raised_Dynamic/Nomal/1/\u6447\u6643_007_375.png",
+          "duration_ms": 375
+        }
+      ],
+      "duration_ms": 1625
+    },
+    {
+      "state": "dragging",
+      "path": "Raise/Raised_Static/C_Nomal",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/Raise/Raised_Static/C_Nomal/FLA_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Raise/Raised_Static/C_Nomal/FLA_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Raise/Raised_Static/C_Nomal/FLA_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Raise/Raised_Static/C_Nomal/FLA_003_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Raise/Raised_Static/C_Nomal/FLA_004_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Raise/Raised_Static/C_Nomal/FLA_005_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Raise/Raised_Static/C_Nomal/FLA_006_500.png",
+          "duration_ms": 500
+        },
+        {
+          "path": "assets/vpet/vup/Raise/Raised_Static/C_Nomal/FLB_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Raise/Raised_Static/C_Nomal/FLB_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Raise/Raised_Static/C_Nomal/FLB_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Raise/Raised_Static/C_Nomal/FLB_003_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Raise/Raised_Static/C_Nomal/FLB_004_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Raise/Raised_Static/C_Nomal/FLB_005_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Raise/Raised_Static/C_Nomal/FLB_006_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Raise/Raised_Static/C_Nomal/FLB_007_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Raise/Raised_Static/C_Nomal/FLB_008_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Raise/Raised_Static/C_Nomal/FLB_009_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Raise/Raised_Static/C_Nomal/FLB_010_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Raise/Raised_Static/C_Nomal/FLB_011_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Raise/Raised_Static/C_Nomal/FLB_012_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Raise/Raised_Static/C_Nomal/FLB_013_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 3000
+    }
+  ],
+  "playback": {
+    "idle": {
+      "mode": "loop",
+      "after": "idle"
+    },
+    "thinking": {
+      "mode": "phased",
+      "after": "idle"
+    },
+    "reading": {
+      "mode": "phased",
+      "after": "idle"
+    },
+    "working": {
+      "mode": "phased",
+      "after": "idle"
+    },
+    "needs_input": {
+      "mode": "phased",
+      "after": "idle"
+    },
+    "tool_error": {
+      "mode": "once",
+      "after": "previous"
+    },
+    "turn_finished": {
+      "mode": "once",
+      "after": "idle"
+    },
+    "sleeping": {
+      "mode": "phased",
+      "after": "idle"
+    },
+    "starting": {
+      "mode": "once",
+      "after": "idle"
+    },
+    "closing": {
+      "mode": "once",
+      "after": "stop"
+    },
+    "dragging": {
+      "mode": "phased",
+      "after": "idle"
+    }
+  }
+}
