@@ -38,6 +38,34 @@ private slots:
         QVERIFY(state.apply(event("tool_end"), now + 1));
         QCOMPARE(state.aggregate(now), "thinking");
     }
+    void answeredConfirmationClearsAttention() {
+        auto tool = [&](QString kind, QString id, int seq) { auto e = event(kind, seq); e.tool = id; return e; };
+        auto attention = [&](int seq) { auto e = event("attention", seq); e.tool.clear(); e.reason = "approval"; return e; };
+        pet::Sessions state;
+        // Approved: the tool runs and completes, then the turn ends.
+        QVERIFY(state.apply(tool("tool_start", "t1", 1), now + 1));
+        QVERIFY(state.apply(attention(2), now + 2)); QCOMPARE(state.aggregate(now + 2), "attention");
+        QCOMPARE(state.pending().size(), 1);
+        QVERIFY(state.apply(tool("tool_end", "t1", 3), now + 3)); QCOMPARE(state.aggregate(now + 3), "thinking");
+        QVERIFY(state.pending().isEmpty());
+        QVERIFY(state.apply(event("turn_finished", 4), now + 4)); state.expire(now + 5000); QCOMPARE(state.aggregate(now + 5000), "idle");
+        // Rejected: no completion callback; the next observable event resolves it.
+        QVERIFY(state.apply(event("prompt", 5), now + 6));
+        QVERIFY(state.apply(tool("tool_start", "t2", 6), now + 7));
+        QVERIFY(state.apply(attention(7), now + 8)); QCOMPARE(state.aggregate(now + 8), "attention");
+        QVERIFY(state.apply(event("turn_finished", 8), now + 9)); QCOMPARE(state.aggregate(now + 9), "turn-finished");
+        QVERIFY(state.pending().size() == 1); // finished report only
+        // Rejected, then the agent continues with another tool.
+        QVERIFY(state.apply(event("prompt", 9), now + 10));
+        QVERIFY(state.apply(tool("tool_start", "t3", 10), now + 11));
+        QVERIFY(state.apply(attention(11), now + 12));
+        QVERIFY(state.apply(tool("tool_start", "t4", 12), now + 13)); QCOMPARE(state.aggregate(now + 13), "working");
+        // Another session's attention is untouched by unrelated tool ends.
+        pet::Sessions other;
+        QVERIFY(other.apply(tool("tool_start", "a", 1), now + 1));
+        QVERIFY(other.apply(attention(2), now + 2));
+        QVERIFY(other.apply(tool("tool_end", "unrelated", 3), now + 3)); QCOMPARE(other.aggregate(now + 3), "attention");
+    }
     void interruptReturnsToIdle() {
         pet::Sessions state;
         QVERIFY(state.apply(event("prompt", 1), now + 1));
@@ -103,7 +131,8 @@ private slots:
         QCOMPARE(state.pending()[0].count, 2);
         QVERIFY(state.apply(event("error", 4), now + 4));
         QCOMPARE(state.aggregate(now), "attention");
-        QVERIFY(state.apply(event("tool_end", 5), now + 5));
+        auto unrelated = event("tool_end", 5); unrelated.tool = "other"; // Not the tool awaiting an answer.
+        QVERIFY(state.apply(unrelated, now + 5));
         QCOMPARE(state.aggregate(now), "attention");
         QVERIFY(state.apply(event("prompt", 6), now + 6));
         QCOMPARE(state.aggregate(now), "thinking");

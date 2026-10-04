@@ -90,8 +90,11 @@ messages; oversized datagrams and invalid envelopes are dropped.
 - Tool IDs are tracked independently. Working tools outrank reading tools;
   finishing the last tool holds its activity for 4 s, then resumes thinking, so
   short back-to-back tool calls show as one working stretch instead of a flicker
-  the animation never reaches. Prompt begins a new turn and clears old tools. Attention persists through tool-end callbacks and alert dismissal;
-  prompt, tool-start, interruption, completion or end resolves it. An error while
+  the animation never reaches. Prompt begins a new turn and clears old tools. Attention persists through alert dismissal and the completion of unrelated
+  tools. The tool awaiting an answer (the attention event's tool, or for Codex
+  permission requests, which carry none, the tools already started) completing
+  means it was approved: attention clears to the remaining activity. A rejection
+  emits no callback; prompt, tool-start, interruption, completion or end resolves it. An error while
   waiting does not clear attention.
 - Duplicate event IDs are ignored within the bounded deduplication window. Older
   timestamps are ignored for the entire session, including late tool callbacks;

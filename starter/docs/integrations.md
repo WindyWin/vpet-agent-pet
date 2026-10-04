@@ -131,9 +131,9 @@ be reliably reordered across processes. No content is hashed for identity.
 Failure detection is deliberately limited to the typed fields above. Codex
 text-only shell failures remain a gap, as do general Claude interruptions without
 a failure callback, unsupported input requests, and tool paths that omit hooks.
-Attention persists through tool completion when no explicit resolution is known;
-it clears on a new tool start, prompt, interruption, stop, or session end. This
-can retain attention after approval until a subsequent observable event.
+Attention clears when the tool that was waiting completes (approval), or on a new
+tool start, prompt, interruption, stop, or session end. A rejected request emits
+no hook of its own, so attention then lasts until the next of those events.
 
 ## Coverage and acceptance record
 
