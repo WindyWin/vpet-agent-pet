@@ -64,8 +64,10 @@ bool Sessions::apply(const Event &e, qint64 now) {
     if (sessions_.contains(k)) {
         const auto &existing = sessions_[k];
         if (e.timestamp < existing.timestamp) return false;
-        if (e.timestamp == existing.timestamp && (existing.state == "turn-finished" || existing.state == "inactive") &&
+        if (e.timestamp == existing.timestamp && existing.state == "turn-finished" &&
             (e.kind == "tool_start" || e.kind == "tool_end")) return false;
+        // Late callbacks of an interrupted turn must not revive it; only a new prompt does.
+        if (existing.interrupted && (e.kind == "tool_start" || e.kind == "tool_end" || e.kind == "error")) return false;
     }
     events_[eventKey] = now;
     trimOldest(events_, maxEvents);
@@ -85,7 +87,7 @@ bool Sessions::apply(const Event &e, qint64 now) {
     const bool held = s.activityUntil != 0; // Showing a finished tool's activity.
     if (e.kind != "session_start" && e.kind != "tool_end") s.activityUntil = 0;
     if (e.kind == "session_start") { /* Metadata refresh only for existing sessions. */ }
-    else if (e.kind == "prompt") { s.tools.clear(); s.state = "thinking"; }
+    else if (e.kind == "prompt") { s.tools.clear(); s.state = "thinking"; s.interrupted = false; }
     else if (e.kind == "tool_start") { s.tools[e.tool] = e.activity.isEmpty() ? "working" : e.activity; s.state = toolState(s); }
     else if (e.kind == "tool_end") {
         s.tools.remove(e.tool);
@@ -105,7 +107,7 @@ bool Sessions::apply(const Event &e, qint64 now) {
         }
     }
     else if (e.kind == "turn_finished") { s.tools.clear(); s.state = "turn-finished"; s.reactionUntil = now + 4000; }
-    else if (e.kind == "interrupt") { s.tools.clear(); s.state = "inactive"; }
+    else if (e.kind == "interrupt") { s.tools.clear(); s.state = "idle"; s.interrupted = true; }
     if (s.state != "attention") { s.reason.clear(); dismiss(k, "attention"); }
     if (e.kind == "attention" || e.kind == "error" || e.kind == "turn_finished") {
         const qint64 expires = e.kind == "turn_finished" ? now + finishedAlertMs : e.kind == "error" ? now + errorAlertMs : 0;

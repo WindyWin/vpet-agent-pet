@@ -8,6 +8,6 @@
   {"provider":"claude","session_id":"child","kind":"session_end","expect":"reading"},
   {"provider":"claude","session_id":"a","kind":"tool_end","tool_id":"read","expect":"reading"},
   {"provider":"claude","session_id":"a","kind":"interrupt","expect":"thinking"},
-  {"provider":"codex","session_id":"a","kind":"session_end","expect":"inactive"},
+  {"provider":"codex","session_id":"a","kind":"session_end","expect":"idle"},
   {"provider":"claude","session_id":"a","kind":"session_end","expect":"idle"}
 ]
