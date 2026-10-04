@@ -2,6 +2,7 @@
 #include "animation/player.h"
 #include "settings/preferences.h"
 #include <QDialog>
+#include <QElapsedTimer>
 #include <QMenu>
 #include <QPointer>
 #include <QSystemTrayIcon>
@@ -31,14 +32,18 @@ public:
     bool muted() const { return muted_; }
     void setSound(bool enabled);
     bool sound() const { return sound_; }
+    void setBubbles(int level);
+    int bubbles() const { return bubbles_; }
     bool quitting() const { return quitting_; }
     QVector<QRect> screenAreas() const;
     // Global rectangle around the character itself, excluding the sprite's transparent margins.
-    QRect figure() const { return geometry().adjusted(width() / 4, 0, -width() / 4, 0); }
+    QRect figure() const;
+    QPoint nativePos() const; // Position as the display server reports it.
 signals:
     void moved();
     void notificationsChanged();
     void quitRequested();
+    void sessionsRequested(); // A click on the pet (press and release without moving it), or the menu.
 protected:
     bool event(QEvent *) override;
     void closeEvent(QCloseEvent *) override;
@@ -49,7 +54,7 @@ protected:
     void mouseMoveEvent(QMouseEvent *) override;
     void mouseReleaseEvent(QMouseEvent *) override;
 private:
-    void endDrag();
+    void endDrag(bool released = false);
     void showAbout();
     void watchScreen(QScreen *screen);
     QWidget *integrationSettings(QWidget *parent);
@@ -63,6 +68,8 @@ private:
     QPoint dragOffset_;
     bool fallbackDrag_ = false, dragging_ = false, clickThrough_ = false;
     bool persist_ = true, ready_ = false, quitting_ = false, muted_ = false, sound_ = false;
-    int attention_ = 0;
+    int attention_ = 0, bubbles_ = Preferences::RequestsAndErrors;
+    QPoint pressPosition_;
+    QElapsedTimer pressTimer_;
 };
 }

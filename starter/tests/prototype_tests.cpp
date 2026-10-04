@@ -4,6 +4,7 @@
 #include "version.h"
 #include <QApplication>
 #include <QCheckBox>
+#include <QComboBox>
 #include <QDateTime>
 #include <QGroupBox>
 #include <QDir>
@@ -207,6 +208,49 @@ private slots:
         legacy.write(R"({"version":1,"size":200,"on_top":true,"x":10,"y":20,"muted":"yes"})"); legacy.close();
         pet::PreferencesStore invalid(path); QVERIFY(!invalid.load().muted); QVERIFY(!invalid.save(prefs));
     }
+    void focusSessionListAndQuietHosts() {
+        QTemporaryDir directory;
+        pet::PetWindow window(nullptr, directory.path() + "/preferences.json"); window.show();
+        pet::Monitor monitor(window);
+        QStringList focused, looking;
+        monitor.bringForward = [&](const pet::Session &s) { focused << s.id; return s.host != "terminal"; };
+        monitor.hostActive = [&](const pet::Session &s) { return looking.contains(s.id); };
+        const qint64 now = QDateTime::currentMSecsSinceEpoch(); qint64 seq = 0;
+        auto event = [&](QString session, QString kind, QString host = "konsole", QString reason = {}) {
+            ++seq; pet::Event e{"claude", session, QString::number(seq), kind, {}, {}, "/work/" + session, {}, now + seq, reason};
+            e.host = host; e.hostPids = "4242"; return e;
+        };
+        // Clicking the bubble brings the session forward and clears the bubble, not the request.
+        QVERIFY(monitor.apply(event("web", "attention", "konsole", "approval"), now + seq));
+        QVERIFY(monitor.bubble().isVisible());
+        emit monitor.bubble().focusRequested();
+        QCOMPARE(focused, QStringList{"web"}); QVERIFY(!monitor.bubble().isVisible()); QCOMPARE(window.attention(), 1);
+        // No bubble for the window the user is already looking at.
+        looking << "api";
+        QVERIFY(monitor.apply(event("api", "error", "vscode"), now + seq));
+        QVERIFY(!monitor.bubble().isVisible());
+        QVERIFY(monitor.apply(event("cli", "error", "terminal"), now + seq));
+        QVERIFY(monitor.bubble().isVisible());
+        QVERIFY(!monitor.focusSession(monitor.queue().current()->session)); // Unfindable window: stays.
+        QVERIFY(monitor.bubble().isVisible());
+        // A plain click on the pet opens the session list; most urgent first.
+        QSignalSpy clicks(&window, &pet::PetWindow::sessionsRequested);
+        QTest::mousePress(&window, Qt::LeftButton, {}, window.rect().center());
+        QTest::mouseRelease(&window, Qt::LeftButton, {}, window.rect().center());
+        QTRY_COMPARE(clicks.size(), 1);
+        QVERIFY(monitor.sessionList().isVisible());
+        QCOMPARE(monitor.sessionList().rowCount(), 3);
+        QVERIFY(monitor.sessionList().rowText(0).startsWith("web — Needs approval\nClaude Code · web · Konsole"));
+        QVERIFY(monitor.sessionList().rowText(1).contains(" — Tool error"));
+        focused.clear(); monitor.sessionList().activateRow(0);
+        QCOMPARE(focused, QStringList{"web"}); QVERIFY(!monitor.sessionList().isVisible());
+        monitor.toggleSessions(); QVERIFY(monitor.sessionList().isVisible());
+        monitor.toggleSessions(); QVERIFY(!monitor.sessionList().isVisible());
+        // Reports fade on their own; requests stay.
+        monitor.update(now + seq + pet::Sessions::errorAlertMs + 1000);
+        QVERIFY(!monitor.bubble().isVisible()); QCOMPARE(window.attention(), 1);
+        window.requestQuit(); QVERIFY(!monitor.sessionList().isVisible());
+    }
     void bubblePlacementNearEdges() {
         const QRect screen(0, 0, 1920, 1080); const QSize bubble(300, 90);
         auto inside = [&](QPoint p) { return screen.contains(QRect(p, bubble)); };
@@ -227,15 +271,19 @@ private slots:
         auto event = [&](QString session, QString kind, QString reason = {}) {
             ++seq; return pet::Event{"claude", session, QString::number(seq), kind, {}, {}, "/work/fcis-web", {}, now + seq, reason};
         };
+        // Default bubbles: requests and errors. A finished turn only animates the pet.
         QVERIFY(monitor.apply(event("b72c9", "turn_finished"), now + seq));
+        QVERIFY(!monitor.bubble().isVisible());
+        window.setBubbles(pet::Preferences::AllAlerts);
         QVERIFY(monitor.bubble().isVisible()); QCOMPARE(monitor.bubble().title(), "Turn finished");
         QVERIFY(monitor.apply(event("a1b2", "attention", "approval"), now + seq));
         QCOMPARE(monitor.bubble().title(), "Needs approval");
         QCOMPARE(monitor.bubble().label(), "fcis-web · Claude Code · a1b2");
-        QCOMPARE(monitor.bubble().footer(), "1 more alert"); QCOMPARE(window.attention(), 1);
+        QCOMPARE(monitor.bubble().footer(), "+1"); QCOMPARE(window.attention(), 1);
         QCOMPARE(window.player().requestedState(), "needs_input");
-        // The bubble sits beside the character without covering it.
+        // The bubble is one compact line beside the character, without covering it.
         QVERIFY(!monitor.bubble().geometry().intersects(window.figure()));
+        QVERIFY(monitor.bubble().height() < 48);
 
         window.setMuted(true); QVERIFY(!monitor.bubble().isVisible()); QCOMPARE(window.attention(), 1);
         window.setMuted(false); QVERIFY(monitor.bubble().isVisible());
@@ -244,6 +292,7 @@ private slots:
         QCOMPARE(window.attention(), 1); // Dismissal never resolves the request.
         emit monitor.bubble().dismissRequested(); QVERIFY(!monitor.bubble().isVisible());
         QCOMPARE(monitor.sessions().aggregate(now), "attention");
+        window.setBubbles(pet::Preferences::RequestsAndErrors);
 
         window.showSettings();
         auto *dialog = window.findChild<QDialog*>(); QVERIFY(dialog);
@@ -252,6 +301,7 @@ private slots:
         for (auto *label : integrations->findChildren<QLabel*>()) notEnabled += label->text().startsWith("Not enabled\n");
         QCOMPARE(notEnabled, 2);
         auto boxes = dialog->findChildren<QCheckBox*>(); QVERIFY(boxes.size() >= 3);
+        QVERIFY(!dialog->findChildren<QComboBox*>().isEmpty()); // Bubble level.
         dialog->close(); QCoreApplication::processEvents();
         QVERIFY(monitor.active());
         QVERIFY(monitor.apply(event("a1b2", "prompt"), now + seq)); QCOMPARE(window.attention(), 0);

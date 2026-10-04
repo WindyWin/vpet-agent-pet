@@ -61,16 +61,35 @@ See [the event protocol](docs/events.md) for all events, identity fallbacks,
 ordering, limits, expiry, and command behavior. See [integration setup and coverage](docs/integrations.md) for raw Claude/Codex
 hooks and preview/enable/inspect/disable commands.
 
-## Alerts
+## Alerts and running sessions
 
-Approval/input requests, tool errors and finished turns raise a compact bubble
-beside the pet, for example `Needs approval` / `fcis-web · Claude Code · a1b2`.
-Hover the project for its full path. When several projects share a folder name,
-the parent folder is added. The footer shows how many alerts are pending; Next
-cycles them and Dismiss hides the shown one. Repeated alerts from the same
-session and reason are counted (`×2`) rather than queued again. A new request
-that outranks the shown alert takes its place. Reply in the agent's own
-terminal or editor; Agent Pet never answers a request.
+Approval/input requests and tool errors raise a one-line toast beside the pet,
+for example `● Needs approval  fcis-web  +2  Open  ×`. Hover it for the
+provider, short session ID and full project path. When several projects share a
+folder name, the parent folder is added. Click the toast or **Open** to bring
+the agent's terminal or editor forward; **×** dismisses it; **+N** opens the
+session list. Repeated alerts from the same session and reason are counted
+(`×2`). A new request that outranks the shown alert takes its place. Reply in
+the agent's own terminal or editor; Agent Pet never answers a request.
+
+To keep the toast quiet: tool errors fade after 10 seconds and finished turns
+after 6 (only requests wait for you); no toast appears for a session whose
+window is already active; and Settings → Show bubbles chooses between requests
+only, requests and errors (default), or finished turns too. The pet animates
+every event regardless.
+
+Click the pet (or right-click → Running sessions…) for a small list of observed
+sessions, most urgent first: project, status (Needs approval, Working,
+Thinking, Idle · 3 min…), provider, short ID and host. Subagents fold into
+their parent. Click a row to go to that session.
+
+"Go to session" uses identifiers the hook records from its environment: Konsole
+switches to the session's tab over D-Bus, tmux selects the pane, herdr runs
+`herdr tab focus` and `herdr agent focus`, and on X11/XWayland the window that
+owns the agent's parent processes is activated (VS Code windows are told apart
+by the project name in their title). Native Wayland cannot raise other
+applications' windows, so there only the tab/pane switch happens. Sessions that
+started before this version appear without a host until their next event.
 
 An orange badge stays on the pet while any observed session waits for approval
 or input, even after its alert is dismissed. It clears on that session's next

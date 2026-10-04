@@ -28,15 +28,16 @@ Deliver a transparent, draggable pet with idle, thinking, reading, working, atte
 
 Agent Pet is a passive desktop companion for supported, connected agent clients across this machine. Users continue interacting with agents in their existing terminals/editors. The product UI consists of the floating pet, compact alert bubbles, and minimal settings/tray controls.
 
-The [pet-only design](docs/design/README.md) defines the complete product interface: pet, alert bubble, attention badge, and context/tray menu.
+The [pet-only design](docs/design/README.md) defines the complete product interface: pet, alert toast, running-sessions list, attention badge, and context/tray menu.
 
 #### Pet and notifications
 
 - React to aggregate session activity internally. Prioritize approval/input requests and errors, then finished turns, then ordinary working/idle animation.
 - Show compact alerts identifying the project, provider, short session ID, and reason, such as `fcis-web · Claude Code · b72c — Needs approval`. Include a project-path tooltip when available to disambiguate identical project names.
-- Use a bounded alert queue with duplicate aggregation. Show one current bubble and a pending count; a small next control cycles pending alerts.
+- Use a bounded alert queue with duplicate aggregation. Show one compact, single-line toast with a pending count that opens the running-sessions list.
 - Provide dismissal, mute, and optional sound. Dismissing an alert removes it from the visible queue without resolving the underlying session state. A small attention badge can persist while an observed request remains unresolved.
-- Alerts provide Next and Dismiss controls. Users respond to agent requests in their existing host application.
+- Alerts provide Open and Dismiss controls. Open brings the session's terminal/editor forward (Konsole tab, tmux/herdr pane, X11 window); users respond to agent requests there. Errors and finished turns fade on their own, a session whose window is active raises no toast, and a setting picks which alert kinds pop up.
+- Clicking the pet shows a small list of running sessions with their status; clicking a row brings that session forward.
 - Minimal settings/tray controls cover size, position, notifications, integration setup/coverage, artwork attribution, and quit. Closing settings keeps monitoring active; quitting stops it. An always-running service is deferred.
 
 #### Coverage and existing sessions

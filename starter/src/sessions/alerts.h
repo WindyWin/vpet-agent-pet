@@ -7,6 +7,7 @@ struct AlertText {
     QString title;   // "Needs approval", "Needs input", "Tool error", "Turn finished"
     QString label;   // "fcis-web · Claude Code · b72c"
     QString tooltip; // Full project path, or an explicit "unavailable" note.
+    QString name;    // "fcis-web": the short form shown in the bubble itself.
 };
 QString providerName(const QString &provider);
 // Shortest prefix (at least 4 characters) not shared with another session of the same provider.
@@ -15,6 +16,20 @@ QString shortSessionId(const QString &provider, const QString &id, const QVector
 // alert uses the same basename for a different path.
 QString projectName(const QString &path, const QVector<Alert> &context);
 AlertText describe(const Alert &alert, const QVector<Alert> &context);
+
+// One line of the running-sessions list. Subagent sessions fold into their parent.
+struct SessionRow {
+    QString key;     // Sessions::records() key
+    QString name;    // "fcis-web"
+    QString detail;  // "Claude Code · b72c · Konsole"
+    QString status;  // "Needs approval", "Working", "Idle · 3 min"
+    QString state;   // Session state, for the status colour
+    QString tooltip; // Project path
+    int children = 0;
+};
+// Sorted: waiting on the user, then errors, then active, then idle and stopped.
+QVector<SessionRow> sessionRows(const Sessions &sessions, qint64 now);
+QString alertTitle(const Alert &alert); // "Needs approval", "Turn finished", ...
 
 // Presentation cursor over Sessions::pending(). It holds no alert data, so a
 // restarted monitor starts empty and resolved alerts disappear on the next sync.

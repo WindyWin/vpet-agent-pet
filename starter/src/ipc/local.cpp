@@ -1,5 +1,6 @@
 #include "local.h"
 #include "providers/adapters.h"
+#include "providers/host.h"
 #include <QDateTime>
 #include <QDir>
 #include <QFile>
@@ -113,6 +114,8 @@ int eventCommand(const QStringList &args) {
     if (hook) {
         object = normalizeHook(provider, object, QDateTime::currentMSecsSinceEpoch());
         if (object.isEmpty()) return 0;
+        const auto host = hostContext(QProcessEnvironment::systemEnvironment(), processAncestors(getppid()));
+        for (auto it = host.begin(); it != host.end(); ++it) object[it.key()] = it.value();
     }
     if (!provider.isEmpty()) {
         if (object.contains("provider") && object.value("provider").toString() != provider) { error = "Provider mismatch"; return fail(); }

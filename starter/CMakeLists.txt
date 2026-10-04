@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.22)
 project(AgentPet VERSION 0.6.0 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-find_package(Qt6 6.5 REQUIRED COMPONENTS Widgets)
+find_package(Qt6 6.5 REQUIRED COMPONENTS Widgets DBus)
 find_package(X11 REQUIRED)
 qt_standard_project_setup()
 include(GNUInstallDirs)
@@ -18,12 +18,13 @@ list(APPEND pet_resources assets/vpet/animations.json THIRD_PARTY_NOTICES.md LIC
 qt_add_library(pet_ui STATIC
     src/animation/player.cpp src/desktop/pet_window.cpp
     src/desktop/drag_monitor.cpp src/desktop/alert_bubble.cpp src/desktop/monitor.cpp
+    src/desktop/host_focus.cpp src/desktop/session_list.cpp
     src/settings/preferences.cpp)
 target_include_directories(pet_ui PUBLIC src "${CMAKE_CURRENT_BINARY_DIR}/generated")
-target_link_libraries(pet_ui PUBLIC Qt6::Widgets pet_events PRIVATE X11::X11)
+target_link_libraries(pet_ui PUBLIC Qt6::Widgets pet_events PRIVATE Qt6::DBus X11::X11)
 qt_add_resources(pet_ui pet_assets PREFIX "/" FILES ${pet_resources})
 qt_add_library(pet_events STATIC src/sessions/state.cpp src/sessions/alerts.cpp src/ipc/local.cpp
-    src/providers/adapters.cpp src/providers/integrations.cpp)
+    src/providers/adapters.cpp src/providers/integrations.cpp src/providers/host.cpp)
 target_include_directories(pet_events PUBLIC src)
 target_link_libraries(pet_events PUBLIC Qt6::Core)
 qt_add_executable(agent-pet src/main.cpp)

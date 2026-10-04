@@ -14,7 +14,8 @@ One UTF-8 JSON object per Unix datagram, at most 8192 bytes:
 
 Required fields: `version` (integer 1), `provider` (`claude` or `codex`),
 `session_id`, `event_id`, `kind`, and positive integer Unix `timestamp_ms`.
-Optional fields: `tool_id`, `parent_id`, `project_path`, `activity`, `reason`.
+Optional fields: `tool_id`, `parent_id`, `project_path`, `activity`, `reason`,
+and the host fields below.
 `tool_start` and `tool_end` require `tool_id`; activity is `reading` or `working`
 (default working). `reason` is allowed only on `attention` and is `approval` or
 `input`; without it alerts say "Needs attention". Strings are limited to 256 UTF-16 units, except project paths
@@ -33,6 +34,21 @@ command generates a UUID per invocation. This cannot deduplicate independently
 retried invocations; adapters should supply a stable delivery ID when possible.
 Missing timestamps are stamped at callback receipt. These fallback policies do
 not infer provider coverage; see the M4 mapping and acceptance record.
+
+### Host fields
+
+`hook` adds where the agent runs, so the pet can bring it forward. These are
+identifiers from the hook's environment and `/proc`, never titles or content:
+
+| Field | Value |
+| --- | --- |
+| `host` | `konsole`, `herdr`, `tmux`, `vscode` or `terminal` (innermost multiplexer wins) |
+| `host_pids` | Up to 16 ancestor process IDs, nearest first, comma-separated |
+| `host_window` | `$WINDOWID` when the terminal exports it (decimal X11 window) |
+| `host_target` | Konsole `service\|/Windows/N\|/Sessions/M`; herdr `tab\|pane\|socket`; tmux `socket\|%pane` |
+
+Values are validated again before use and passed to D-Bus or to `tmux`/`herdr`
+as separate arguments, never through a shell.
 
 ## Commands and transport
 
@@ -110,19 +126,32 @@ then error, then finished, with FIFO ordering within each priority. Dismissal
 removes the alert only, and never clears session attention. Resolving attention,
 ending a session or expiry clears its relevant alerts.
 
-## Alert presentation (M5)
+## Alert presentation
 
 `AlertQueue` (`src/sessions/alerts.h`) is a cursor over the pending queue and
-holds no alert data. It shows the highest-priority alert, keeps the user's Next
-position, and switches only when a newly raised or re-raised alert outranks the
-one shown. Dismiss hides the shown alert and moves to the one after it. Labels
-are `project · provider · short ID`: the project is the path's last component
-(with its parent folder appended when another pending alert has the same name
-for a different path, or "Unknown project"); the short ID is the shortest prefix
-of at least four characters not shared with another pending session of the same
-provider. Aggregated repeats show `(×N)`. The badge counts sessions whose state
-is attention, so dismissal never clears it. Mute hides the bubble only; sound
-is a system beep when an alert is raised or re-raised while not muted.
+holds no alert data. It shows the highest-priority alert and switches only when
+a newly raised or re-raised alert outranks the one shown. Dismiss hides the
+shown alert and moves to the one after it. Labels are `project · provider ·
+short ID`: the project is the path's last component (with its parent folder
+appended when another pending alert has the same name for a different path, or
+"Unknown project"); the short ID is the shortest prefix of at least four
+characters not shared with another pending session of the same provider.
+Aggregated repeats show `(×N)`. The badge counts sessions whose state is
+attention, so dismissal never clears it. Mute hides the bubble only; sound is a
+system beep when a shown alert is raised or re-raised while not muted.
+
+Finished-turn alerts expire 6 seconds after they are raised and error alerts
+after 10 seconds; attention alerts stay until resolved. The `bubbles`
+preference (0 requests only, 1 requests and errors, default, 2 everything)
+filters which alerts reach the toast. A newly raised alert whose session window
+is the active X11 window is dismissed on arrival. Bringing a session forward
+from the toast or the session list dismisses that session's alerts; attention
+itself remains until the session resolves it.
+
+`sessionRows()` builds the running-sessions list from session records:
+subagents fold into their parent (whose status shows the busiest child), and
+rows sort attention, error, working, reading, thinking, finished, idle, stopped,
+then most recently seen first.
 
 ## Verification
 

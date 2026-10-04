@@ -15,6 +15,9 @@ struct Preferences {
     bool onTop = true;
     bool muted = false; // Hides alert bubbles; the attention badge stays visible.
     bool sound = false; // Optional system beep for newly raised alerts.
+    // Which alerts pop a bubble. Pet animation and badge react to everything regardless.
+    enum Bubbles { RequestsOnly = 0, RequestsAndErrors = 1, AllAlerts = 2 };
+    int bubbles = RequestsAndErrors;
     static QPoint visiblePosition(QPoint position, QSize size, const QVector<QRect> &screens);
 };
 class PreferencesStore {

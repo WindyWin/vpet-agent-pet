@@ -36,9 +36,9 @@ PetWindow::PetWindow(QWidget *parent, const QString &path, bool persist)
     setWindowFlag(Qt::WindowStaysOnTopHint, preferences.onTop);
     setAttribute(Qt::WA_TranslucentBackground);
     setAccessibleName("Agent Pet");
-    setToolTip("Drag to move · Right-click for controls · Esc to quit");
+    setToolTip("Click for running sessions · Drag to move · Right-click for controls · Esc to quit");
     setPetSize(preferences.size);
-    muted_ = preferences.muted; sound_ = preferences.sound;
+    muted_ = preferences.muted; sound_ = preferences.sound; bubbles_ = qBound(0, preferences.bubbles, 2);
     connect(&player_, &Player::changed, this, qOverload<>(&PetWindow::update));
     connect(&player_, &Player::completed, this, [this](const QString &state) {
         if (quitting_ && state == "closing") qApp->quit();
@@ -46,6 +46,7 @@ PetWindow::PetWindow(QWidget *parent, const QString &path, bool persist)
     auto *states = menu_.addMenu("Preview state");
     for (const auto &state : player_.states())
         states->addAction(state, this, [this, state] { if (!quitting_) player_.select(state); });
+    menu_.addAction("Running sessions…", this, &PetWindow::sessionsRequested);
     muteAction_ = menu_.addAction("Mute alerts");
     muteAction_->setCheckable(true); muteAction_->setChecked(muted_);
     connect(muteAction_, &QAction::toggled, this, &PetWindow::setMuted);
@@ -73,7 +74,9 @@ PetWindow::PetWindow(QWidget *parent, const QString &path, bool persist)
     dragTimer_.setInterval(40);
     connect(&dragTimer_, &QTimer::timeout, this, [this] {
         const auto native = nativeLeftButtonDown();
-        if (!(native.has_value() ? *native : bool(QApplication::mouseButtons() & Qt::LeftButton))) endDrag();
+        if (!(native.has_value() ? *native : bool(QApplication::mouseButtons() & Qt::LeftButton))) endDrag(true);
+        // Lift the pet only once it moves, so a click opens the session list without the drop animation.
+        else if (!player_.isDragging() && nativePos() != pressPosition_) player_.beginDrag();
     });
     saveTimer_.setSingleShot(true); saveTimer_.setInterval(250);
     connect(&saveTimer_, &QTimer::timeout, this, &PetWindow::savePreferences);
@@ -103,6 +106,14 @@ QVector<QRect> PetWindow::screenAreas() const {
     for (auto *screen : QApplication::screens())
         if (screen != QApplication::primaryScreen()) areas.append(screen->availableGeometry());
     return areas;
+}
+QRect PetWindow::figure() const {
+    // Ask the display server: some window managers leave Qt's cached position stale.
+    return QRect(nativePos(), size()).adjusted(width() / 4, 0, -width() / 4, 0);
+}
+QPoint PetWindow::nativePos() const {
+    const auto origin = isVisible() ? nativeWindowOrigin(winId()) : std::nullopt;
+    return origin.value_or(pos());
 }
 void PetWindow::watchScreen(QScreen *screen) {
     connect(screen, &QScreen::availableGeometryChanged, this, [this] { constrainPosition(); });
@@ -156,6 +167,12 @@ void PetWindow::setSound(bool enabled) {
     sound_ = enabled; emit notificationsChanged();
     if (ready_) saveTimer_.start();
 }
+void PetWindow::setBubbles(int level) {
+    level = qBound(0, level, 2);
+    if (level == bubbles_) return;
+    bubbles_ = level; emit notificationsChanged();
+    if (ready_) saveTimer_.start();
+}
 void PetWindow::recover() {
     setClickThrough(false);
     move(Preferences::visiblePosition({-1000000, -1000000}, size(), screenAreas()));
@@ -166,7 +183,7 @@ bool PetWindow::savePreferences() {
     Preferences preferences;
     preferences.size = width(); preferences.position = pos(); preferences.hasPosition = true;
     preferences.onTop = windowFlags().testFlag(Qt::WindowStaysOnTopHint);
-    preferences.muted = muted_; preferences.sound = sound_;
+    preferences.muted = muted_; preferences.sound = sound_; preferences.bubbles = bubbles_;
     return store_.save(preferences);
 }
 void PetWindow::moveEvent(QMoveEvent *event) {
@@ -214,21 +231,28 @@ void PetWindow::contextMenuEvent(QContextMenuEvent *event) { menu_.popup(event->
 void PetWindow::mousePressEvent(QMouseEvent *event) {
     if (event->button() != Qt::LeftButton || quitting_) return;
     dragging_ = true;
+    pressPosition_ = nativePos(); pressTimer_.start();
     dragOffset_ = event->globalPosition().toPoint() - pos();
-    player_.beginDrag();
     fallbackDrag_ = !windowHandle()->startSystemMove();
     dragTimer_.start();
 }
 void PetWindow::mouseMoveEvent(QMouseEvent *event) {
-    if (dragging_ && fallbackDrag_ && (event->buttons() & Qt::LeftButton))
+    if (dragging_ && fallbackDrag_ && (event->buttons() & Qt::LeftButton)) {
+        player_.beginDrag();
         move(event->globalPosition().toPoint() - dragOffset_);
+    }
 }
-void PetWindow::endDrag() {
+void PetWindow::endDrag(bool released) {
     if (!dragging_) return;
     dragging_ = false; fallbackDrag_ = false; dragTimer_.stop();
     player_.endDrag(); constrainPosition();
+    // Every press starts a move, so a short press that left the pet in place is a click.
+    // Wait for the window manager to release its move grab: a popup opened while it
+    // holds the pointer cannot take its own grab and closes at once.
+    if (released && nativePos() == pressPosition_ && pressTimer_.isValid() && pressTimer_.elapsed() < 500)
+        QTimer::singleShot(150, this, &PetWindow::sessionsRequested);
 }
-void PetWindow::mouseReleaseEvent(QMouseEvent *event) { if (event->button() == Qt::LeftButton) endDrag(); }
+void PetWindow::mouseReleaseEvent(QMouseEvent *event) { if (event->button() == Qt::LeftButton) endDrag(true); }
 
 void PetWindow::showSettings() {
     if (settingsDialog_) { settingsDialog_->show(); settingsDialog_->raise(); return; }
@@ -246,6 +270,11 @@ void PetWindow::showSettings() {
     connect(muteAction_, &QAction::toggled, mute, &QCheckBox::setChecked);
     auto *sound = new QCheckBox("Play a &sound for new alerts", dialog); sound->setChecked(sound_); layout->addRow(sound);
     connect(sound, &QCheckBox::toggled, this, &PetWindow::setSound);
+    auto *bubbles = new QComboBox(dialog);
+    bubbles->addItems({"Only when a session needs me", "When a session needs me or a tool fails", "Also when a turn finishes"});
+    bubbles->setCurrentIndex(bubbles_); bubbles->setAccessibleName("Show alert bubbles");
+    layout->addRow("Show &bubbles", bubbles);
+    connect(bubbles, &QComboBox::currentIndexChanged, this, &PetWindow::setBubbles);
     layout->addRow(integrationSettings(dialog));
     auto *recover = new QPushButton("&Recover position and input", dialog); layout->addRow(recover);
     connect(recover, &QPushButton::clicked, this, &PetWindow::recover);

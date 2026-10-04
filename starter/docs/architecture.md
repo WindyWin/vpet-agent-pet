@@ -13,7 +13,7 @@ resources, so moving the executable cannot break sprite lookup.
 
 | Directory | Responsibility |
 | --- | --- |
-| `src/desktop` | Transparent pet, alert bubble, attention badge, context/tray menu, drag, scale, input and quit |
+| `src/desktop` | Transparent pet, alert toast, running-sessions list, host focus, attention badge, context/tray menu, drag, scale, input and quit |
 | `src/animation` | Catalog validation, phased playback and bounded decoded-frame cache |
 | `src/settings` | Validated, atomic preference storage in the user data directory |
 | `src/sessions` | Bounded session/tool state, ordering, aggregate activity, alerts and alert labels |

@@ -45,7 +45,8 @@ Preferences PreferencesStore::load() {
         || !integer(object["size"], 160, 320) || !object["on_top"].isBool()
         || !integer(object["x"], -1000000, 1000000) || !integer(object["y"], -1000000, 1000000)
         // Notification keys were added in M5; files written earlier omit them.
-        || (object.contains("muted") && !object["muted"].isBool()) || (object.contains("sound") && !object["sound"].isBool())) {
+        || (object.contains("muted") && !object["muted"].isBool()) || (object.contains("sound") && !object["sound"].isBool())
+        || (object.contains("bubbles") && !integer(object["bubbles"], 0, 2))) {
         writable_ = false; error_ = "Invalid preferences; using defaults and preserving the file."; return result;
     }
     result.size = object["size"].toInt();
@@ -54,6 +55,7 @@ Preferences PreferencesStore::load() {
     result.onTop = object["on_top"].toBool();
     result.muted = object["muted"].toBool();
     result.sound = object["sound"].toBool();
+    result.bubbles = object["bubbles"].toInt(Preferences::RequestsAndErrors);
     return result;
 }
 bool PreferencesStore::save(const Preferences &preferences) {
@@ -65,7 +67,7 @@ bool PreferencesStore::save(const Preferences &preferences) {
     if (!file.open(QIODevice::WriteOnly)) { error_ = file.errorString(); return false; }
     const QJsonObject object{{"version", 1}, {"size", preferences.size}, {"on_top", preferences.onTop},
                              {"x", preferences.position.x()}, {"y", preferences.position.y()},
-                             {"muted", preferences.muted}, {"sound", preferences.sound}};
+                             {"muted", preferences.muted}, {"sound", preferences.sound}, {"bubbles", preferences.bubbles}};
     const auto bytes = QJsonDocument(object).toJson();
     if (file.write(bytes) != bytes.size() || !file.commit()) { error_ = file.errorString(); return false; }
     error_.clear(); return true;

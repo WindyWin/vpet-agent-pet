@@ -1,41 +1,49 @@
 #include "alert_bubble.h"
 #include <QHBoxLayout>
+#include <QMouseEvent>
 #include <QPainter>
-#include <QVBoxLayout>
 
 namespace pet {
 AlertBubble::AlertBubble(QWidget *parent) : QWidget(parent) {
-    setWindowFlags(Qt::Tool | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::WindowDoesNotAcceptFocus);
+    // Unmanaged like a tooltip, so window managers neither re-place it nor list it.
+    setWindowFlags(Qt::Tool | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::WindowDoesNotAcceptFocus |
+                   Qt::X11BypassWindowManagerHint);
     setAttribute(Qt::WA_TranslucentBackground);
     setAttribute(Qt::WA_ShowWithoutActivating);
     setAccessibleName("Agent Pet alert");
-    auto *layout = new QVBoxLayout(this);
-    layout->setContentsMargins(14, 10, 14, 10); layout->setSpacing(4);
+    setCursor(Qt::PointingHandCursor);
+    auto *layout = new QHBoxLayout(this);
+    layout->setContentsMargins(26, 6, 8, 6); layout->setSpacing(8);
     title_ = new QLabel(this); title_->setStyleSheet("color:#453324; font-weight:600;");
-    label_ = new QLabel(this); label_->setStyleSheet("color:#453324;");
-    label_->setTextFormat(Qt::PlainText); title_->setTextFormat(Qt::PlainText);
-    layout->addWidget(title_); layout->addWidget(label_);
-    auto *footer = new QHBoxLayout; footer->setSpacing(8);
-    more_ = new QLabel(this); more_->setStyleSheet("color:#7a6450;");
-    next_ = new QPushButton("&Next", this); dismiss_ = new QPushButton("&Dismiss", this);
-    for (auto *button : {next_, dismiss_}) {
-        button->setFlat(true); button->setCursor(Qt::PointingHandCursor);
-        button->setStyleSheet("QPushButton{color:#8a4b12; font-weight:600; border:0; padding:0 2px;}"
+    name_ = new QLabel(this); name_->setStyleSheet("color:#6b5643;");
+    title_->setTextFormat(Qt::PlainText); name_->setTextFormat(Qt::PlainText);
+    layout->addWidget(title_); layout->addWidget(name_);
+    more_ = new QPushButton(this); open_ = new QPushButton("Open", this); dismiss_ = new QPushButton("×", this);
+    more_->setStyleSheet("QPushButton{color:#8a4b12; background:#f3e3c3; border:0; border-radius:8px; padding:1px 7px; font-weight:600;}"
+                         "QPushButton:hover{background:#ecd3a5;}");
+    for (auto *button : {open_, dismiss_})
+        button->setStyleSheet("QPushButton{color:#8a4b12; font-weight:600; border:0; padding:0 3px;}"
                               "QPushButton:hover{text-decoration:underline;}");
-    }
-    next_->setAccessibleName("Next alert"); dismiss_->setAccessibleName("Dismiss alert");
-    footer->addWidget(more_); footer->addStretch(); footer->addWidget(next_); footer->addWidget(dismiss_);
-    layout->addLayout(footer);
-    connect(next_, &QPushButton::clicked, this, &AlertBubble::nextRequested);
+    dismiss_->setStyleSheet(dismiss_->styleSheet() + "QPushButton{font-size:15px;}");
+    for (auto *button : {more_, open_, dismiss_}) { button->setFlat(true); button->setCursor(Qt::PointingHandCursor); }
+    more_->setAccessibleName("Show running sessions"); more_->setToolTip("Show running sessions");
+    open_->setAccessibleName("Open the agent's terminal or editor"); open_->setToolTip("Bring the agent's terminal or editor forward");
+    dismiss_->setAccessibleName("Dismiss alert"); dismiss_->setToolTip("Dismiss");
+    layout->addWidget(more_); layout->addWidget(open_); layout->addWidget(dismiss_);
+    connect(more_, &QPushButton::clicked, this, &AlertBubble::listRequested);
+    connect(open_, &QPushButton::clicked, this, &AlertBubble::focusRequested);
     connect(dismiss_, &QPushButton::clicked, this, &AlertBubble::dismissRequested);
 }
-void AlertBubble::present(const AlertText &text, int more) {
+void AlertBubble::present(const AlertText &text, const QString &kind, int more) {
     title_->setText(text.title);
-    label_->setText(text.label); label_->setToolTip(text.tooltip);
-    more_->setText(more == 0 ? QString() : more == 1 ? "1 more alert" : QString("%1 more alerts").arg(more));
-    next_->setVisible(more > 0);
+    name_->setText(fontMetrics().elidedText(text.name, Qt::ElideMiddle, 180));
+    label_ = text.label;
+    setToolTip(text.label + "\n" + text.tooltip);
+    more_->setText(QString("+%1").arg(more)); more_->setVisible(more > 0);
+    accent_ = kind == "attention" ? QColor("#d9480f") : kind == "error" ? QColor("#c92a2a") : QColor("#2b8a3e");
     setAccessibleDescription(text.title + ": " + text.label);
     adjustSize();
+    update();
 }
 QPoint AlertBubble::placement(const QRect &pet, QSize bubble, const QRect &screen) {
     constexpr int gap = 8;
@@ -53,10 +61,16 @@ void AlertBubble::place(const QRect &pet, const QVector<QRect> &screens) {
     for (const auto &area : screens) if (area.contains(pet.center())) { screen = area; break; }
     move(placement(pet, size(), screen));
 }
+void AlertBubble::mouseReleaseEvent(QMouseEvent *event) {
+    if (event->button() == Qt::LeftButton && rect().contains(event->position().toPoint())) emit focusRequested();
+}
 void AlertBubble::paintEvent(QPaintEvent *) {
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
-    painter.setPen(QPen(QColor("#453324"), 1.5)); painter.setBrush(QColor("#fff7e3"));
-    painter.drawRoundedRect(QRectF(rect()).adjusted(1, 1, -1, -1), 12, 12);
+    const QRectF body = QRectF(rect()).adjusted(1, 1, -1, -1);
+    painter.setPen(QPen(QColor("#453324"), 1.2)); painter.setBrush(QColor("#fff7e3"));
+    painter.drawRoundedRect(body, body.height() / 2, body.height() / 2);
+    painter.setPen(Qt::NoPen); painter.setBrush(accent_);
+    painter.drawEllipse(QPointF(14, body.center().y()), 5, 5);
 }
 }

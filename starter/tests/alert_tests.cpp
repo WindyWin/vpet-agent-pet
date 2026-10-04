@@ -1,4 +1,5 @@
 #include "sessions/alerts.h"
+#include "providers/host.h"
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QTest>
@@ -94,6 +95,86 @@ private slots:
         QVERIFY(apply(state, event("codex", "x", "error")));
         state.expire(now + seq + pet::Sessions::expiryMs);
         queue.sync(state.pending()); QVERIFY(queue.empty());
+    }
+    void reportsFadeRequestsStay() {
+        pet::Sessions state;
+        QVERIFY(apply(state, event("claude", "a", "turn_finished")));
+        QVERIFY(apply(state, event("claude", "b", "error")));
+        QVERIFY(apply(state, event("claude", "c", "attention", {}, "input")));
+        state.expire(now + seq + pet::Sessions::finishedAlertMs);
+        QCOMPARE(state.pending().size(), 2);
+        state.expire(now + seq + pet::Sessions::errorAlertMs);
+        QCOMPARE(state.pending().size(), 1); QCOMPARE(state.pending().first().kind, "attention");
+        QCOMPARE(state.unresolvedAttention(), 1);
+    }
+    void hostFieldsAndSessionRows() {
+        pet::Event e; QString error;
+        QJsonObject o{{"version", 1}, {"provider", "claude"}, {"session_id", "s"}, {"event_id", "1"}, {"kind", "prompt"},
+                      {"timestamp_ms", 1700000000000.0}, {"host", "konsole"}, {"host_pids", "12,7"}, {"host_window", "8388617"},
+                      {"host_target", "org.kde.konsole-12|/Windows/1|/Sessions/3"}};
+        QVERIFY2(pet::Event::parse(QJsonDocument(o).toJson(), e, error), qPrintable(error));
+        QCOMPARE(e.host, "konsole"); QCOMPARE(e.hostPids, "12,7"); QCOMPARE(e.hostWindow, "8388617");
+        o["host"] = "xterm"; QVERIFY(!pet::Event::parse(QJsonDocument(o).toJson(), e, error));
+        o["host"] = "terminal"; o["host_pids"] = "1;rm"; QVERIFY(!pet::Event::parse(QJsonDocument(o).toJson(), e, error));
+        o["host_pids"] = "12"; o["host_window"] = "0x1"; QVERIFY(!pet::Event::parse(QJsonDocument(o).toJson(), e, error));
+
+        pet::Sessions state;
+        auto hosted = [&](QString id, QString kind, QString host, QString parent = {}) {
+            auto ev = event("claude", id, kind, "/work/" + id); ev.host = host; ev.parent = parent; return ev;
+        };
+        QVERIFY(apply(state, hosted("idle", "turn_finished", "vscode")));
+        QVERIFY(apply(state, hosted("busy", "prompt", "herdr")));
+        QVERIFY(apply(state, hosted("main", "prompt", "konsole")));
+        QVERIFY(apply(state, hosted("helper", "attention", "konsole", "main")));
+        state.expire(now + seq + 5000); // The finished reaction returns to idle.
+        const auto rows = pet::sessionRows(state, now + seq + 5000);
+        QCOMPARE(rows.size(), 3); // The subagent folds into its parent.
+        QCOMPARE(rows[0].name, "main"); QCOMPARE(rows[0].status, "Needs attention");
+        QCOMPARE(rows[0].detail, "Claude Code · main · Konsole · 1 subagent");
+        QCOMPARE(rows[1].name, "busy"); QCOMPARE(rows[1].status, "Thinking"); QVERIFY(rows[1].detail.endsWith("herdr"));
+        QCOMPARE(rows[2].name, "idle"); QCOMPARE(rows[2].status, "Idle"); QCOMPARE(rows[2].tooltip, "/work/idle");
+        QCOMPARE(pet::sessionRows(state, now + seq + 5000 + 3 * 60000)[2].status, "Idle · 3 min");
+    }
+    void hostCaptureAndTargets() {
+        QProcessEnvironment env;
+        env.insert("KONSOLE_DBUS_SERVICE", "org.kde.konsole-42"); env.insert("KONSOLE_DBUS_WINDOW", "/Windows/1");
+        env.insert("KONSOLE_DBUS_SESSION", "/Sessions/5"); env.insert("WINDOWID", "6291463");
+        auto host = pet::hostContext(env, {300, 200, 100});
+        QCOMPARE(host["host"].toString(), "konsole"); QCOMPARE(host["host_pids"].toString(), "300,200,100");
+        QCOMPARE(host["host_window"].toString(), "6291463");
+        pet::KonsoleTarget konsole;
+        QVERIFY(pet::konsoleTarget(host["host_target"].toString(), konsole));
+        QCOMPARE(konsole.service, "org.kde.konsole-42"); QCOMPARE(konsole.window, "/Windows/1"); QCOMPARE(konsole.session, 5);
+        QVERIFY(!pet::konsoleTarget("org.kde.konsole-42|/Windows/1|/Sessions/5;x", konsole));
+        env.insert("TMUX", "/tmp/tmux-1000/default,1234,0"); env.insert("TMUX_PANE", "%7");
+        host = pet::hostContext(env, {300});
+        QCOMPARE(host["host"].toString(), "tmux"); // The innermost multiplexer wins.
+        auto commands = pet::hostCommands("tmux", host["host_target"].toString());
+        QCOMPARE(commands.size(), 2);
+        QCOMPARE(commands[1].arguments, (QStringList{"-S", "/tmp/tmux-1000/default", "select-pane", "-t", "%7"}));
+        QVERIFY(pet::hostCommands("tmux", "/tmp/s|%7; rm").isEmpty());
+        env.insert("HERDR_PANE_ID", "p_3"); env.insert("HERDR_TAB_ID", "t_2"); env.insert("HERDR_SOCKET_PATH", "/run/user/1/herdr.sock");
+        host = pet::hostContext(env, {});
+        QCOMPARE(host["host"].toString(), "herdr"); QVERIFY(!host.contains("host_pids"));
+        commands = pet::hostCommands("herdr", host["host_target"].toString());
+        QCOMPARE(commands.size(), 2);
+        QCOMPARE(commands[0].arguments, (QStringList{"tab", "focus", "t_2"}));
+        QCOMPARE(commands[1].arguments, (QStringList{"agent", "focus", "p_3"}));
+        QCOMPARE(commands[1].environment.value("HERDR_SOCKET_PATH"), "/run/user/1/herdr.sock");
+        QProcessEnvironment code; code.insert("TERM_PROGRAM", "vscode");
+        QCOMPARE(pet::hostContext(code, {9})["host"].toString(), "vscode");
+        QVERIFY(pet::hostContext({}, {}).isEmpty());
+        QVERIFY(pet::processAncestors(QCoreApplication::applicationPid()).startsWith(QCoreApplication::applicationPid()));
+    }
+    void chooseHostWindow() {
+        const QVector<pet::HostWindow> windows{{11, 500, "notes — other — Visual Studio Code"},
+                                               {12, 500, "main.cpp — fcis-web — Visual Studio Code"},
+                                               {21, 600, "~ : bash — Konsole"}, {22, 600, "fcis-web : claude — Konsole"}};
+        QCOMPARE(pet::chooseWindow({}, "900,500,1", "/work/fcis-web", windows), 12ULL); // Title names the project.
+        QCOMPARE(pet::chooseWindow({}, "900,500,1", "/work/unknown", windows), 11ULL);
+        QCOMPARE(pet::chooseWindow("21", "900,600", "/work/fcis-web", windows), 21ULL); // $WINDOWID wins.
+        QCOMPARE(pet::chooseWindow("99", "900,600", "/work/fcis-web", windows), 22ULL);
+        QCOMPARE(pet::chooseWindow({}, "900", "/work/fcis-web", windows), 0ULL);
     }
     void restartAndBounds() {
         pet::Sessions state;
