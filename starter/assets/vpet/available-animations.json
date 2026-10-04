@@ -6,9 +6,9 @@
   "source_commit": "6358445aa54587f9cd524264eaf17ef97bc826a8",
   "source_root": "VPet-Simulator.Windows/mod/0000_core/pet/vup",
   "bundled_catalog": "assets/vpet/animations.json",
-  "missing_sequence_count": 535,
-  "missing_frame_count": 5283,
-  "missing_size_bytes": 743618382,
+  "missing_sequence_count": 520,
+  "missing_frame_count": 5171,
+  "missing_size_bytes": 727493629,
   "sequences": [
     {
       "path": "BDay/A",
@@ -80,24 +80,6 @@
       "frame_count": 20,
       "total_duration_ms": 3000,
       "size_bytes": 1768686,
-      "timing_valid": true
-    },
-    {
-      "path": "Default/Nomal/2",
-      "category": "Default",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Default/Nomal/2",
-      "frame_count": 8,
-      "total_duration_ms": 1500,
-      "size_bytes": 1392369,
-      "timing_valid": true
-    },
-    {
-      "path": "Default/Nomal/3",
-      "category": "Default",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Default/Nomal/3",
-      "frame_count": 8,
-      "total_duration_ms": 1500,
-      "size_bytes": 1365289,
       "timing_valid": true
     },
     {
@@ -317,33 +299,6 @@
       "timing_valid": true
     },
     {
-      "path": "IDEL/Boring/A_Nomal",
-      "category": "IDEL",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/IDEL/Boring/A_Nomal",
-      "frame_count": 1,
-      "total_duration_ms": 125,
-      "size_bytes": 137851,
-      "timing_valid": true
-    },
-    {
-      "path": "IDEL/Boring/B_Nomal",
-      "category": "IDEL",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/IDEL/Boring/B_Nomal",
-      "frame_count": 10,
-      "total_duration_ms": 2750,
-      "size_bytes": 1377442,
-      "timing_valid": true
-    },
-    {
-      "path": "IDEL/Boring/C_Nomal",
-      "category": "IDEL",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/IDEL/Boring/C_Nomal",
-      "frame_count": 1,
-      "total_duration_ms": 125,
-      "size_bytes": 137851,
-      "timing_valid": true
-    },
-    {
       "path": "IDEL/Bubbles/A",
       "category": "IDEL",
       "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/IDEL/Bubbles/A",
@@ -407,15 +362,6 @@
       "timing_valid": true
     },
     {
-      "path": "IDEL/Meow/Nomal/1",
-      "category": "IDEL",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/IDEL/Meow/Nomal/1",
-      "frame_count": 17,
-      "total_duration_ms": 2875,
-      "size_bytes": 2447906,
-      "timing_valid": true
-    },
-    {
       "path": "IDEL/Meow/Nomal/2",
       "category": "IDEL",
       "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/IDEL/Meow/Nomal/2",
@@ -470,39 +416,12 @@
       "timing_valid": true
     },
     {
-      "path": "IDEL/Squat/A_Nomal",
-      "category": "IDEL",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/IDEL/Squat/A_Nomal",
-      "frame_count": 6,
-      "total_duration_ms": 875,
-      "size_bytes": 749197,
-      "timing_valid": true
-    },
-    {
       "path": "IDEL/Squat/A_PoorCondition",
       "category": "IDEL",
       "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/IDEL/Squat/A_PoorCondition",
       "frame_count": 7,
       "total_duration_ms": 875,
       "size_bytes": 1026358,
-      "timing_valid": true
-    },
-    {
-      "path": "IDEL/Squat/B_Nomal/1",
-      "category": "IDEL",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/IDEL/Squat/B_Nomal/1",
-      "frame_count": 8,
-      "total_duration_ms": 3000,
-      "size_bytes": 918852,
-      "timing_valid": true
-    },
-    {
-      "path": "IDEL/Squat/B_Nomal/2",
-      "category": "IDEL",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/IDEL/Squat/B_Nomal/2",
-      "frame_count": 8,
-      "total_duration_ms": 3000,
-      "size_bytes": 916425,
       "timing_valid": true
     },
     {
@@ -540,15 +459,6 @@
       "total_duration_ms": null,
       "size_bytes": 992792,
       "timing_valid": false
-    },
-    {
-      "path": "IDEL/Squat/C_Nomal",
-      "category": "IDEL",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/IDEL/Squat/C_Nomal",
-      "frame_count": 5,
-      "total_duration_ms": 625,
-      "size_bytes": 704857,
-      "timing_valid": true
     },
     {
       "path": "IDEL/Squat/C_PoorCondition",
@@ -812,33 +722,6 @@
       "timing_valid": true
     },
     {
-      "path": "IDEL/aside/Nomal/A",
-      "category": "IDEL",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/IDEL/aside/Nomal/A",
-      "frame_count": 1,
-      "total_duration_ms": 125,
-      "size_bytes": 151363,
-      "timing_valid": true
-    },
-    {
-      "path": "IDEL/aside/Nomal/B",
-      "category": "IDEL",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/IDEL/aside/Nomal/B",
-      "frame_count": 10,
-      "total_duration_ms": 1250,
-      "size_bytes": 1485760,
-      "timing_valid": true
-    },
-    {
-      "path": "IDEL/aside/Nomal/B_2",
-      "category": "IDEL",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/IDEL/aside/Nomal/B_2",
-      "frame_count": 10,
-      "total_duration_ms": 1250,
-      "size_bytes": 1428964,
-      "timing_valid": true
-    },
-    {
       "path": "IDEL/aside/Nomal/B_3",
       "category": "IDEL",
       "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/IDEL/aside/Nomal/B_3",
@@ -854,15 +737,6 @@
       "frame_count": 10,
       "total_duration_ms": 1250,
       "size_bytes": 1463411,
-      "timing_valid": true
-    },
-    {
-      "path": "IDEL/aside/Nomal/C",
-      "category": "IDEL",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/IDEL/aside/Nomal/C",
-      "frame_count": 1,
-      "total_duration_ms": 125,
-      "size_bytes": 151363,
       "timing_valid": true
     },
     {
@@ -953,15 +827,6 @@
       "frame_count": 18,
       "total_duration_ms": 2250,
       "size_bytes": 2773849,
-      "timing_valid": true
-    },
-    {
-      "path": "IDEL/yawning/Nomal",
-      "category": "IDEL",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/IDEL/yawning/Nomal",
-      "frame_count": 18,
-      "total_duration_ms": 2250,
-      "size_bytes": 2759264,
       "timing_valid": true
     },
     {

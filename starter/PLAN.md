@@ -40,6 +40,13 @@ unresolved requests independently of dismissal. Mute, optional sound and
 integration status/enable/disable live in settings and the context menu.
 Replay, queue and offscreen window tests pass; see [M5 evidence](docs/architecture.md).
 
+Idle animation, phase 1 of the animation epic ([issue 12](https://github.com/WindyWin/vpet-agent-pet/issues/12)),
+implemented 2026-10-04: weighted idle variants, one-shot fidgets chosen by idle time,
+a rare pool, dozing off after ten quiet minutes, and an Off / Subtle / Lively setting
+(default Subtle). Automated tests pass; pacing still needs a look on a real desktop.
+Mood, touch reactions, easter eggs and walking are later phases of that issue.
+See [the notes](docs/architecture.md#idle-animation).
+
 1. Build a transparent, draggable desktop window and play the bundled `idle` sequence using frame durations from `assets/vpet/animations.json`. Test X11 and XWayland behavior before choosing a Linux package format.
 2. Add an animation controller that can start a sequence, hold its middle loop, play its ending, and return to idle. Keep decoded images in a bounded cache. The JSON state map has separate folders for each A/B/C phase.
 3. Add a small local event receiver and a packaged `agent-pet hook` command. The command reads hook JSON from stdin, extracts normalized event/session metadata and project path when available, sends them through a private local channel, and exits quickly even when the UI is closed. Exclude prompt text, tool arguments, and output. Create records on any supported event, including when SessionStart was missed.

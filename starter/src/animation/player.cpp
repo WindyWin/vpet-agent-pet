@@ -19,7 +19,8 @@ Player::Player(QObject *parent, const QString &root) : QObject(parent) {
     timer_.setSingleShot(true);
     timer_.setTimerType(Qt::PreciseTimer);
     connect(&timer_, &QTimer::timeout, this, &Player::advance);
-    if (load(root)) enter("idle");
+    // The first idle is always the catalog's own entry; variants start with the second pass.
+    if (load(root)) { variants_ = false; enter("idle"); variants_ = true; }
 }
 bool Player::load(const QString &root) {
     QFile file(QDir(root).filePath("assets/vpet/animations.json"));
@@ -54,23 +55,69 @@ bool Player::load(const QString &root) {
     }
     const auto states = catalog["states"].toObject();
     const auto playback = catalog["playback"].toObject();
+    constexpr int maxWeight = 1000;
     for (auto it = states.begin(); it != states.end(); ++it) {
-        Animation animation;
+        Choice primary;
         for (const auto &value : it.value().toArray()) {
             auto id = value.toString();
             if (!sequences_.contains(id)) return invalid("Unknown sequence for " + it.key());
-            animation.sequences.append(id);
+            primary.sequences.append(id);
         }
         const auto policy = playback[it.key()].toObject();
+        Animation animation;
         animation.mode = policy["mode"].toString();
         animation.after = policy["after"].toString();
+        // `weight` ranks the entry against the state's variants; `loops` ends a phased state by
+        // itself after that many passes of its loop phase.
+        primary.weight = policy.contains("weight") ? policy["weight"].toInt(0) : 1;
+        animation.loops = policy["loops"].toInt(0);
         if ((animation.mode != "phased" && animation.mode != "loop" && animation.mode != "once")
-            || animation.sequences.size() != (animation.mode == "phased" ? 3 : 1)
-            || !QStringList{"idle", "previous", "stop"}.contains(animation.after))
+            || primary.sequences.size() != (animation.mode == "phased" ? 3 : 1)
+            || !QStringList{"idle", "previous", "stop"}.contains(animation.after)
+            || primary.weight < 1 || primary.weight > maxWeight
+            || (policy.contains("loops") && (animation.mode != "phased" || animation.loops < 1 || animation.loops > 100)))
             return invalid("Invalid playback policy for " + it.key());
+        animation.choices.append(primary);
         animations_.insert(it.key(), animation);
     }
     if (!animations_.contains("idle") || animations_["idle"].mode != "loop") return invalid("Missing idle loop.");
+    const auto variants = catalog["variants"].toObject();
+    for (auto it = variants.begin(); it != variants.end(); ++it) {
+        if (!animations_.contains(it.key()) || it.value().toArray().isEmpty())
+            return invalid("Variants for an unknown or empty state: " + it.key());
+        auto &animation = animations_[it.key()];
+        const int phases = animation.choices.first().sequences.size();
+        for (const auto &value : it.value().toArray()) {
+            Choice choice;
+            choice.weight = value.toObject()["weight"].toInt(0);
+            for (const auto &id : value.toObject()["sequences"].toArray()) {
+                if (!sequences_.contains(id.toString())) return invalid("Unknown variant sequence for " + it.key());
+                choice.sequences.append(id.toString());
+            }
+            if (choice.sequences.size() != phases || choice.weight < 1 || choice.weight > maxWeight)
+                return invalid("Invalid variant for " + it.key());
+            animation.choices.append(choice);
+        }
+    }
+    const auto ambient = catalog["ambient"].toObject();
+    if (ambient.contains("sleep_after_s")) {
+        sleepAfterS_ = ambient["sleep_after_s"].toInt(0);
+        if (sleepAfterS_ < 60 || sleepAfterS_ > 86400) return invalid("Invalid ambient sleep delay.");
+    }
+    for (const auto &value : ambient["fidgets"].toArray()) {
+        const auto object = value.toObject();
+        Fidget fidget{object["state"].toString(), object["weight"].toInt(0), object["min_idle_s"].toInt(0),
+                      object["rare"].toBool()};
+        const auto found = animations_.constFind(fidget.state);
+        // A fidget must end by itself and hand back to idle, so nothing has to wait for it.
+        const bool endsItself = found != animations_.constEnd() && found->after == "idle"
+            && (found->mode == "once" || (found->mode == "phased" && found->loops > 0));
+        if (!endsItself || fidget.state == "idle" || fidgetStates_.contains(fidget.state)
+            || fidget.weight < 1 || fidget.weight > maxWeight || fidget.minIdleS < 0 || fidget.minIdleS > 86400)
+            return invalid("Invalid ambient fidget: " + fidget.state);
+        fidgets_.append(fidget);
+        fidgetStates_.insert(fidget.state);
+    }
     return true;
 }
 QString Player::phase() const {
@@ -82,6 +129,7 @@ QString Player::phase() const {
 QString Player::resumeTarget() const {
     if (dragActive_) return dragResume_;
     if (!pending_.isEmpty()) return pending_;
+    if (isFidget(state_)) return "idle"; // Decoration is never worth coming back to.
     return animations_.value(state_).mode == "once" ? previous_ : state_;
 }
 bool Player::select(const QString &state, bool interrupt) {
@@ -94,6 +142,8 @@ bool Player::select(const QString &state, bool interrupt) {
         return true;
     }
     if (state == state_ && pending_.isEmpty() && !stopped_) return true;
+    // A fidget is decoration: anything else replaces it at once instead of waiting out its exit.
+    if (isFidget(state_)) interrupt = true;
     // Update a queued transition without restarting the outgoing exit sequence.
     if (!interrupt && animations_.value(state_).mode == "phased" && !stopped_) {
         pending_ = state;
@@ -118,15 +168,30 @@ void Player::endDrag() {
     dragActive_ = false;
     select(dragResume_);
 }
+QStringList Player::choose(const QString &state) {
+    const auto &choices = animations_[state].choices;
+    if (!variants_ || choices.size() == 1) return choices.first().sequences;
+    int total = 0;
+    for (const auto &choice : choices) total += choice.weight;
+    int roll = qBound(0, random_(total), total - 1);
+    for (const auto &choice : choices) {
+        if (roll < choice.weight) return choice.sequences;
+        roll -= choice.weight;
+    }
+    return choices.first().sequences;
+}
 void Player::enter(const QString &state) {
     state_ = state;
     stopped_ = false;
+    chosen_ = choose(state);
+    loopCount_ = 0;
+    emit entered(state);
     enterSequence(0);
 }
 void Player::enterSequence(int phase) {
     timer_.stop();
     phase_ = phase;
-    sequence_ = animations_.value(state_).sequences.value(phase);
+    sequence_ = chosen_.value(phase);
     index_ = 0;
     pixmap_ = {};
     cache_.clear();
@@ -136,9 +201,10 @@ void Player::advance() {
     timer_.stop();
     if (stopped_ || !sequences_.contains(sequence_)) return;
     if (++index_ < sequences_[sequence_].size()) { display(); return; }
-    const auto animation = animations_[state_];
+    const auto &animation = animations_[state_];
     if (animation.mode == "phased") {
         if (phase_ == 0) { enterSequence(1); return; }
+        if (phase_ == 1 && animation.loops > 0 && ++loopCount_ >= animation.loops) { enterSequence(2); return; }
         if (phase_ == 2) {
             auto target = pending_.isEmpty() ? QString("idle") : pending_;
             pending_.clear();
@@ -158,8 +224,15 @@ void Player::advance() {
         emit completed(finished);
         return;
     }
+    // Another pass of a loop. An idle loop may switch variant here, between two identical first frames,
+    // and with variants off this is where it returns to the catalog's own entry.
+    if (animation.mode == "loop" && animation.choices.size() > 1) {
+        chosen_ = choose(state_);
+        sequence_ = chosen_.value(0);
+    }
     index_ = 0;
     display();
+    if (animation.mode == "loop") emit looped(state_); // Last: a listener may select a new state.
 }
 void Player::display() {
     const auto &frame = sequences_[sequence_].at(index_);

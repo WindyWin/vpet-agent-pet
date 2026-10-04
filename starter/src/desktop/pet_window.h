@@ -1,4 +1,5 @@
 #pragma once
+#include "animation/ambient.h"
 #include "animation/player.h"
 #include "settings/preferences.h"
 #include <QDialog>
@@ -16,6 +17,9 @@ public:
     explicit PetWindow(QWidget *parent = nullptr, const QString &preferencesPath = {}, bool persist = true);
     ~PetWindow() override;
     Player &player() { return player_; }
+    Ambient &ambient() { return ambient_; }
+    void setAmbientLevel(int level); // Preferences::Ambient; persisted.
+    int ambientLevel() const { return int(ambient_.level()); }
     void setPetSize(int pixels);
     void setClickThrough(bool enabled);
     bool clickThrough() const { return clickThrough_; }
@@ -82,6 +86,7 @@ private:
     QWidget *integrationSettings(QWidget *parent);
     QWidget *startupSettings(QWidget *parent);
     Player player_;
+    Ambient ambient_;
     PreferencesStore store_;
     QMenu menu_;
     QSystemTrayIcon tray_;
