@@ -15,7 +15,7 @@ struct Event {
 struct Session {
     QString provider, id, parent, project, state = "idle", resume = "idle";
     QMap<QString, QString> tools;
-    qint64 timestamp = 0, seen = 0, reactionUntil = 0;
+    qint64 timestamp = 0, seen = 0, reactionUntil = 0, activityUntil = 0;
 };
 struct Alert {
     QString session, kind, project, provider, id, reason;
@@ -27,6 +27,9 @@ class Sessions {
 public:
     static constexpr int maxSessions = 256, maxTools = 128, maxAlerts = 64, maxEvents = 4096;
     static constexpr qint64 expiryMs = 30 * 60 * 1000;
+    // Tool calls are often shorter than an animation phase; the last activity is
+    // held this long after its tool ends so back-to-back tools read as one stretch.
+    static constexpr qint64 activityHoldMs = 4000;
     bool apply(const Event &event, qint64 now);
     void expire(qint64 now);
     QString aggregate(qint64 now) const;

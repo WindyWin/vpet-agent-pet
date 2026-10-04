@@ -72,16 +72,25 @@ bool Sessions::apply(const Event &e, qint64 now) {
     s.provider = e.provider; s.id = e.session; s.timestamp = e.timestamp; s.seen = now;
     if (!e.parent.isEmpty()) s.parent = e.parent;
     if (!e.project.isEmpty()) s.project = e.project;
+    const bool held = s.activityUntil != 0; // Showing a finished tool's activity.
+    if (e.kind != "session_start" && e.kind != "tool_end") s.activityUntil = 0;
     if (e.kind == "session_start") { /* Metadata refresh only for existing sessions. */ }
     else if (e.kind == "prompt") { s.tools.clear(); s.state = "thinking"; }
     else if (e.kind == "tool_start") { s.tools[e.tool] = e.activity.isEmpty() ? "working" : e.activity; s.state = toolState(s); }
-    else if (e.kind == "tool_end") { s.tools.remove(e.tool); if (s.state != "attention" && s.state != "inactive" && s.state != "turn-finished" && (isNew || s.state != "idle")) s.state = toolState(s); }
+    else if (e.kind == "tool_end") {
+        s.tools.remove(e.tool);
+        if (s.state != "attention" && s.state != "inactive" && s.state != "turn-finished" && (isNew || s.state != "idle")) {
+            const auto next = toolState(s);
+            if (next == "thinking" && (s.state == "working" || s.state == "reading")) s.activityUntil = now + activityHoldMs;
+            else s.state = next;
+        }
+    }
     else if (e.kind == "attention") s.state = "attention";
     else if (e.kind == "error") {
         if (!e.tool.isEmpty()) s.tools.remove(e.tool);
         if (s.state != "attention") {
             if (!e.tool.isEmpty()) s.resume = toolState(s);
-            else if (s.state != "error") s.resume = s.state;
+            else if (s.state != "error") s.resume = held ? "thinking" : s.state;
             s.state = "error"; s.reactionUntil = now + 4000;
         }
     }
@@ -109,6 +118,10 @@ void Sessions::expire(qint64 now) {
             alerts_.erase(std::remove_if(alerts_.begin(), alerts_.end(), [&](const Alert &a) { return a.session == k; }), alerts_.end());
             it = sessions_.erase(it);
         } else {
+            if (it->activityUntil && now >= it->activityUntil) {
+                if (it->tools.isEmpty() && (it->state == "working" || it->state == "reading")) it->state = "thinking";
+                it->activityUntil = 0;
+            }
             if (it->reactionUntil && now >= it->reactionUntil) {
                 if (it->state == "error") it->state = it->tools.isEmpty() ? it->resume : toolState(*it);
                 else if (it->state == "turn-finished") it->state = "idle";
