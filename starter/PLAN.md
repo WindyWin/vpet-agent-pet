@@ -12,10 +12,15 @@ checks pass. Native X11 and manual desktop acceptance remain open; see
 [architecture and evidence](docs/architecture.md) and [build commands](README.md).
 Provider/session/IPC directories reserve boundaries for later milestones.
 
-User confirmed transparency and always-on-top behavior on the current desktop
-(2026-10-04). TODO for M2: import the original `Raise/` dragging animation, play it
-during dragging, and restore the prior state on completion, including native
-system moves. Dedicated dragging animation is intentionally deferred.
+M2 implemented 2026-10-04: all 23 bundled sequences and 215 frames now play through
+the catalog-defined phases. The original `Raise/` animation plays during native
+XWayland drags and returns to the prior state. The decoded cache is bounded at
+8 MiB; a developer preview, persistent size/position/on-top settings, monitor
+recovery, settings, quit and artwork terms are available. Automated frame,
+transition, resource-error and settings tests pass, as do the real XWayland drag
+and isolated package checks. The user visually confirmed the result. See
+[architecture and evidence](docs/architecture.md). Native X11 and native Wayland
+are still untested as full desktop sessions.
 
 1. Build a transparent, draggable desktop window and play the bundled `idle` sequence using frame durations from `assets/vpet/animations.json`. Test X11 and XWayland behavior before choosing a Linux package format.
 2. Add an animation controller that can start a sequence, hold its middle loop, play its ending, and return to idle. Keep decoded images in a bounded cache. The JSON state map has separate folders for each A/B/C phase.

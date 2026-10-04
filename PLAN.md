@@ -16,7 +16,7 @@ The self-contained [starter repository](starter/README.md) also includes a small
 - [x] Add full-archive verification and animation catalog tooling.
 - [x] Prepare the smaller standalone starter pack and verifier.
 - [x] Choose the desktop shell and establish the application scaffold.
-- [ ] Implement animation playback and desktop controls.
+- [x] Implement animation playback and desktop controls.
 - [ ] Implement local events and session state management.
 - [ ] Implement and validate both provider integrations.
 - [ ] Implement compact pet alerts and minimal settings.
@@ -129,15 +129,17 @@ Implemented 2026-10-04 in `starter/`: C++17 / Qt 6 Widgets prototype, CMake buil
 
 ### M2 — Animation engine and desktop controls
 
-- [ ] Add the original dragging animation from the `Raise/` asset sequences; import selected frames into the starter pack and restore the previous state when dragging ends (including native system moves).
-- [ ] Load `assets/vpet/animations.json` through application-owned resource resolution.
-- [ ] Preserve sequence identifiers and each frame's duration; handle missing or invalid resources without crashing.
-- [ ] Implement start/loop/end playback, one-shot reactions, interruption, and return to idle.
-- [ ] Define the state-to-animation mapping for all first-release states.
-- [ ] Bound the decoded-frame cache and release frames when sequences change.
-- [ ] Add a developer preview that can select states and inspect their transitions.
-- [ ] Persist size and position in the user's data directory; recover windows placed outside the current monitor layout.
-- [ ] Add accessible settings, quit, and artwork attribution controls.
+Implemented 2026-10-04 in `starter/`. Asset verification, frame/transition/settings tests, XWayland pointer drag, and isolated package smoke passed. The user visually confirmed the result. See [M2 evidence](starter/docs/architecture.md). Native Wayland and a native X11 session remain outside the tested desktop set.
+
+- [x] Add the original dragging animation from the `Raise/` asset sequences; import selected frames into the starter pack and restore the previous state when dragging ends (including native system moves).
+- [x] Load `assets/vpet/animations.json` through application-owned resource resolution.
+- [x] Preserve sequence identifiers and each frame's duration; handle missing or invalid resources without crashing.
+- [x] Implement start/loop/end playback, one-shot reactions, interruption, and return to idle.
+- [x] Define the state-to-animation mapping for all first-release states.
+- [x] Bound the decoded-frame cache and release frames when sequences change.
+- [x] Add a developer preview that can select states and inspect their transitions.
+- [x] Persist size and position in the user's data directory; recover windows placed outside the current monitor layout.
+- [x] Add accessible settings, quit, and artwork attribution controls.
 
 **Complete when:** every included state can be previewed, timing and transitions match the catalog, settings survive restart, and repeated state changes stay within a documented cache bound.
 

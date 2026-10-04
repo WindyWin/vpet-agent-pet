@@ -1,4 +1,4 @@
-# M1 desktop prototype
+# Desktop architecture and validation
 
 Decision recorded 2026-10-04: C++17, Qt 6 Widgets, CMake and Ninja.
 Develop in this starter directory. No original VPet installation is used.
@@ -6,7 +6,7 @@ Develop in this starter directory. No original VPet installation is used.
 Qt provides translucent top-level windows, native move requests, input-transparent
 windows and tray menus with a small native application layer. The prototype uses
 software QWidget painting, without a browser or language interpreter at runtime.
-The selected 180-frame artwork pack, catalog and artwork terms are embedded as Qt
+The selected 215-frame artwork pack, catalog and artwork terms are embedded as Qt
 resources, so moving the executable cannot break sprite lookup.
 
 ## Boundaries
@@ -14,22 +14,43 @@ resources, so moving the executable cannot break sprite lookup.
 | Directory | Responsibility |
 | --- | --- |
 | `src/desktop` | Transparent pet, context/tray menu, drag, scale, input and quit |
-| `src/animation` | Catalog lookup and timed idle / held-thinking loops |
-| `src/settings` | Prototype defaults; persistence deferred to M2 |
+| `src/animation` | Catalog validation, phased playback and bounded decoded-frame cache |
+| `src/settings` | Validated, atomic preference storage in the user data directory |
 | `src/sessions` | Reserved for M3 state management; currently documentation only |
 | `src/ipc` | Reserved for M3 private transport; currently documentation only |
 | `src/providers` | Reserved for M4 adapters; currently documentation only |
 
-M1 loops `Default/Nomal/1` and `Think/Nomal/B` using each frame's duration.
-Start/end transitions and all other state playback belong to M2. The player owns
-one current pixmap; Qt may additionally use its default pixmap cache. There is no
-unbounded application frame cache. Settings and agent sessions are not persisted.
+The catalog defines eleven display states: idle, thinking, reading, working,
+needs_input, tool_error, turn_finished, sleeping, starting, closing and dragging.
+`idle` loops; the activity states and dragging use start → held loop → end;
+starting, error, finished and closing are one-shot sequences. Error returns to
+the previous activity, finished/starting return to idle, and closing holds its
+last frame until the application exits. Ordinary state changes finish an active
+end sequence. Urgent changes interrupt it immediately. The preview can select
+all states, pause, step frames and show the active sequence, phase and timing.
 
-TODO (M2): add the original dragging animation from the `Raise/` sequences listed
-in `assets/vpet/available-animations.json`. Import the selected frames and update
-the manifest/catalog, then connect playback to drag start and completion (including
-native system moves) and restore the previous state afterward. Dragging currently
-keeps the selected idle/thinking animation; dedicated drag playback is deferred.
+The 35 unmodified `Raise/` frames imported for dragging were checked against the
+full archive's SHA-256 manifest. `Raise/Raised_Static/A_Nomal` starts the lift,
+`Raise/Raised_Dynamic/Nomal/1` loops while the button is held, and
+`Raise/Raised_Static/C_Nomal` lowers the pet before returning to the prior state.
+On X11/XWayland a pointer query detects release even if the compositor consumes
+the widget's mouse release event. Native Wayland still needs direct testing.
+
+The current pixmap and an 8 MiB `QCache` hold decoded frames for the active
+sequence. A sequence change clears the cache. Source dimensions above 2048 px
+are rejected; images are scaled to at most 640 px before entering the cache.
+A decode error stops the bad sequence and falls back to idle; if idle is broken,
+a visible text placeholder and controls remain. Catalog paths, durations and
+playback policies are validated before playback. This is a cache bound, not a
+guarantee on process RSS, which also includes Qt, source decoding and graphics
+memory.
+
+`PreferencesStore` writes `preferences.json` atomically under Qt's
+`AppDataLocation`; malformed files are preserved and defaults are used. Size,
+position and on-top survive restart. Off-screen positions are brought inside an
+available monitor; screen geometry changes trigger recovery. No session state is
+persisted. The settings window remains open only on request and closing it keeps
+the pet running.
 
 ## Window behavior
 
@@ -38,15 +59,15 @@ uses `QWindow::startSystemMove`, with coordinate movement as a fallback. Right-c
 opens controls. Space switches preview state, Menu opens controls and Escape quits
 while the pet has focus. These are local shortcuts, not global desktop bindings.
 
-Click-through is deliberately a 15-second lease in this prototype. A single-shot
+Click-through remains a 15-second lease. A single-shot
 timer restores input whether or not a tray exists. The tray menu can immediately
 recover input and position, or quit. The context menu also quits. Closing the pet
-quits; closing About does not. Position recovery moves to the primary screen's
-lower right on X11/XWayland. Settings persistence and monitor-change handling are M2.
+quits; closing About does not. Position recovery moves to the primary screen's lower right. Saved positions
+are clamped to an available monitor on startup and layout changes.
 
 When DISPLAY is set, the default backend is `xcb`, including under Wayland through
 XWayland. Set `QT_QPA_PLATFORM=wayland` explicitly for native Wayland experiments
-using a development Qt installation. The M1 package includes xcb and offscreen
+using a development Qt installation. The M2 package includes xcb and offscreen
 plugins only; it does not claim native Wayland support.
 
 Qt documents compositor requirements for [translucent windows](https://doc.qt.io/qt-6/qwidget.html#creating-translucent-windows).
@@ -82,7 +103,22 @@ other distros need a corresponding notice collector and a complete distribution
 license/source-offer review before publishing. The original-code license remains
 the owner's decision. Qt and transitive dependencies retain their own licenses.
 
-## Validation evidence (2026-10-04)
+## M2 validation evidence (2026-10-04)
+
+The 215-frame asset verifier and automated playback/settings tests pass. The
+user also confirmed the M2 desktop appearance. The
+XWayland desktop test used XTest to drag the real window 90 by 50 pixels; it
+observed the drag animation, actual window movement, release detection, and return
+to working. Captured pet and preview windows are saved under `/tmp` for visual
+inspection. A native X11 session and native Wayland behavior have not been checked.
+
+The current packaged prototype is `dist/agent-pet-0.2.0-m2.tar.gz` (115 MiB
+extracted) with artwork, notices and private Qt dependencies. Isolated runtime
+checking passed in bubblewrap with only the package plus the host loader, libc
+and libm visible. The package remains a development
+artifact built against this host's glibc.
+
+## M1 validation evidence (2026-10-04)
 
 Host: EndeavourOS x86_64, KDE Wayland with XWayland, Intel i5-12450HX (12 logical
 CPUs), GCC 16.2.1, Qt 6.11.2, glibc 2.44.
@@ -106,7 +142,7 @@ automatic recovery before exiting after 17 seconds. Programmatic flag checks do
 not prove compositor behavior. M1's native X11 and manual interaction acceptance
 gates remain open; do not mark the entire milestone complete on these tests alone.
 
-Provisional M2 performance targets on this hardware: under 80 MiB peak RSS and
+M2 performance targets recorded at the start of implementation: under 80 MiB peak RSS and
 under 5% of one core during a steady 60-second idle animation at 240 px, measured
 on the real desktop. The mixed smoke baseline does not establish that idle target.
 For M3, target hook callback p95 under 50 ms and a 200 ms hard transport deadline,

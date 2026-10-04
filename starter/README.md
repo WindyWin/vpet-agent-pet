@@ -2,9 +2,9 @@
 
 A small starting repository for a desktop pet that reacts to Claude Code and Codex activity. The sprite files are bundled here, so development can proceed without a local VPet installation.
 
-The first asset pack contains **180 original PNG frames in 20 animation sequences (21.85 MiB)**. They cover idle, thinking, reading, working, waiting for input, tool errors, turn completion, sleeping, startup, and closing. [animations.json](assets/vpet/animations.json) maps each state to its sequences and records frame durations. [manifest.json](assets/vpet/manifest.json) records every file's size and SHA-256 hash.
+The current asset pack contains **215 original PNG frames in 23 animation sequences (26.08 MiB)**. They cover idle, thinking, reading, working, waiting for input, tool errors, turn completion, sleeping, startup, closing, and the original dragging animation. [animations.json](assets/vpet/animations.json) maps each state to its sequences and records frame durations. [manifest.json](assets/vpet/manifest.json) records every file's size and SHA-256 hash.
 
-[available-animations.json](assets/vpet/available-animations.json) catalogs the **538 remaining sequences and 5,318 frames** from the original character pack. Each entry gives its upstream folder, category, frame count, size, and timing status. These are references for future work; their PNG files are not included here. To add one later, copy that sequence from the upstream VPet tree, add it to the bundled animation map and manifest, and retain the artwork notices.
+[available-animations.json](assets/vpet/available-animations.json) catalogs the **535 remaining sequences and 5,283 frames** from the original character pack. Each entry gives its upstream folder, category, frame count, size, and timing status. These are references for future work; their PNG files are not included here. To add one later, copy that sequence from the upstream VPet tree, add it to the bundled animation map and manifest, and retain the artwork notices.
 
 This folder is ready to become its own repository:
 
@@ -14,12 +14,12 @@ python3 scripts/verify_assets.py
 git init
 ```
 
-The asset verifier uses only Python's standard library and works from any current directory. The M1 desktop prototype is implemented; agent hooks are planned. See [PLAN.md](PLAN.md) and the [architecture and validation record](docs/architecture.md).
+The asset verifier uses only Python's standard library and works from any current directory. The M2 animation and desktop controls are implemented; agent hooks are planned. See [PLAN.md](PLAN.md) and the [architecture and validation record](docs/architecture.md).
 
-## Build and run the M1 prototype
+## Build and run the M2 prototype
 
 From this directory, install CMake 3.22+, Ninja, a C++17 compiler and Qt 6.5+
-Widgets/Test development packages, then run:
+Widgets/Test and X11 development packages, then run:
 
 ```bash
 python3 scripts/verify_assets.py
@@ -29,10 +29,19 @@ ctest --test-dir build --output-on-failure
 ./build/agent-pet
 ```
 
-Left-drag to move. Right-click for Idle/Thinking, size, always-on-top, temporary
-click-through, recovery, About and Quit. A tray menu appears on supported desktops.
-Click-through automatically ends after 15 seconds. Space switches animation and
-Escape quits when the pet has focus. `--state thinking` starts with thinking.
+Left-drag to move; the original Raise animation plays while dragging and returns
+to the prior state on release. Right-click for animation preview, settings,
+always-on-top, temporary click-through, recovery, artwork terms and Quit. A tray
+menu appears on supported desktops. Click-through automatically ends after 15
+seconds. Space switches idle/thinking and Escape quits when the pet has focus.
+
+`./build/agent-pet --preview` opens the developer preview, where every bundled
+state can be selected. It shows the active sequence, phase, frame duration,
+transition history and decoded-frame cache use; you can pause and step frames.
+`--state thinking` starts with another state. `--settings` opens the settings
+window. Size, position and always-on-top are saved in the user's application data
+directory and restored on restart. Click-through always starts disabled. Closing
+settings or preview leaves the pet running. About shows the bundled artwork terms.
 
 The default uses X11/XWayland when DISPLAY is available. For a development-only
 native Wayland check: `QT_QPA_PLATFORM=wayland ./build/agent-pet`.
@@ -44,10 +53,10 @@ Python 3, `qmake6`, `ldd` and `patchelf` are build-time packaging tools:
 
 ```bash
 python3 scripts/package.py
-./dist/agent-pet-m1/bin/agent-pet --smoke-test
+./dist/agent-pet-m2/bin/agent-pet --smoke-test
 ```
 
-The output is `dist/agent-pet-m1/` and `dist/agent-pet-m1.tar.gz`. Use a new
+The output is `dist/agent-pet-m2/` and `dist/agent-pet-m2.tar.gz`. Use a new
 `--output` directory on subsequent runs. Copy/extract the entire directory to
 another location and run `bin/agent-pet`; no separate Qt or interpreter is needed.
 The package targets a compatible Linux host ABI, not every distribution.
@@ -56,13 +65,20 @@ For a filesystem-isolated headless check (requires bubblewrap and permitted user
 namespaces), run:
 
 ```bash
-python3 scripts/check_isolated.py dist/agent-pet-m1
+python3 scripts/check_isolated.py dist/agent-pet-m2
 ```
 
 This mounts only the package and host glibc libraries. It verifies idle/thinking,
-control changes and 15-second recovery, then exits after 17 seconds. It does not
+control changes and 15-second recovery, then plays shutdown and exits after about 19 seconds. It does not
 replace the desktop interaction checklist in [architecture.md](docs/architecture.md).
-M1 still needs native X11 and manual desktop acceptance evidence before completion.
+The XWayland drag test runs separately because it moves the real pointer:
+
+```bash
+QT_QPA_PLATFORM=xcb ./build/desktop-tests
+```
+
+Run it only when the desktop is free. Native X11 and broader manual acceptance
+evidence remain open. See the M2 record in [architecture.md](docs/architecture.md).
 
 ## Artwork and publishing
 

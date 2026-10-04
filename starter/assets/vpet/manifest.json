@@ -3,8 +3,8 @@
   "upstream": "https://github.com/LorisYounger/VPet",
   "source_commit": "6358445aa54587f9cd524264eaf17ef97bc826a8",
   "source_note": "Selected unmodified files from local checkout; per-file hashes identify copied bytes, including any local changes.",
-  "file_count": 180,
-  "total_bytes": 22916615,
+  "file_count": 215,
+  "total_bytes": 27345411,
   "files": [
     {
       "path": "assets/vpet/vup/Default/Nomal/1/_000_250.png",
@@ -905,6 +905,181 @@
       "path": "assets/vpet/vup/Shutdown/Nomal_1/\u7ed3\u675f\u52a8\u753b\u8868\u60c52_011_125.png",
       "bytes": 11966,
       "sha256": "66b6a133bec4533f976caca70d018364a6bf8970cc57ab740c254816ea5c6121"
+    },
+    {
+      "path": "assets/vpet/vup/Raise/Raised_Dynamic/Nomal/1/\u6447\u6643_000_500.png",
+      "bytes": 138099,
+      "sha256": "a521b843e09fe3215dc4d5fa1dee02399b06b8fea9f097ee6a3087db6c6b5ffd"
+    },
+    {
+      "path": "assets/vpet/vup/Raise/Raised_Dynamic/Nomal/1/\u6447\u6643_001_125.png",
+      "bytes": 182235,
+      "sha256": "9cf148603de124b41e4b892fb26bf471a3dda047c54e48c34fc6dda7414a8c1e"
+    },
+    {
+      "path": "assets/vpet/vup/Raise/Raised_Dynamic/Nomal/1/\u6447\u6643_002_125.png",
+      "bytes": 191870,
+      "sha256": "a26680283cacf84b68245d6a8af9c42b87125a20e6f45cfa46a9b8d2feb78517"
+    },
+    {
+      "path": "assets/vpet/vup/Raise/Raised_Dynamic/Nomal/1/\u6447\u6643_003_125.png",
+      "bytes": 169037,
+      "sha256": "998b3102924eb66cf67884e95f839836c2ef52c79fd2accf0e97fe665a8d70fa"
+    },
+    {
+      "path": "assets/vpet/vup/Raise/Raised_Dynamic/Nomal/1/\u6447\u6643_004_125.png",
+      "bytes": 182269,
+      "sha256": "4bf57a84be2622972785baf5b3e63ac2f15053d398b04066ef362477d073142e"
+    },
+    {
+      "path": "assets/vpet/vup/Raise/Raised_Dynamic/Nomal/1/\u6447\u6643_005_125.png",
+      "bytes": 166468,
+      "sha256": "69d7cf8dd322e0d05cbe75a0804aece20c523f62a24ca854f28d78a50948adc1"
+    },
+    {
+      "path": "assets/vpet/vup/Raise/Raised_Dynamic/Nomal/1/\u6447\u6643_006_125.png",
+      "bytes": 179241,
+      "sha256": "82544ff3b054c0c58b1ddf8568e0ac76a8c998e769d0ac26e287968120d60318"
+    },
+    {
+      "path": "assets/vpet/vup/Raise/Raised_Dynamic/Nomal/1/\u6447\u6643_007_375.png",
+      "bytes": 138099,
+      "sha256": "a521b843e09fe3215dc4d5fa1dee02399b06b8fea9f097ee6a3087db6c6b5ffd"
+    },
+    {
+      "path": "assets/vpet/vup/Raise/Raised_Static/A_Nomal/\u88ab\u63d0\u8d77\u6765_000_125.png",
+      "bytes": 142919,
+      "sha256": "a1ef0fed3dbb7fee46058d0051ae2e6aa84d26d12cd15d8c20dcd7ba9ea3d665"
+    },
+    {
+      "path": "assets/vpet/vup/Raise/Raised_Static/A_Nomal/\u88ab\u63d0\u8d77\u6765_001_125.png",
+      "bytes": 139951,
+      "sha256": "7ee2e18df01219f8213b898050dffe0f23189c76902140e7417d5c109ca77b0d"
+    },
+    {
+      "path": "assets/vpet/vup/Raise/Raised_Static/A_Nomal/\u88ab\u63d0\u8d77\u6765_002_125.png",
+      "bytes": 144233,
+      "sha256": "2625a681ecb50d6cb7d005832b7d30ab75d3400203b7e7818d12cded27a21230"
+    },
+    {
+      "path": "assets/vpet/vup/Raise/Raised_Static/A_Nomal/\u88ab\u63d0\u8d77\u6765_003_125.png",
+      "bytes": 139951,
+      "sha256": "7ee2e18df01219f8213b898050dffe0f23189c76902140e7417d5c109ca77b0d"
+    },
+    {
+      "path": "assets/vpet/vup/Raise/Raised_Static/A_Nomal/\u88ab\u63d0\u8d77\u6765_004_125.png",
+      "bytes": 140378,
+      "sha256": "4391dc31812c25ae7054f5956a39fe351d5b9d14923583b39d658a77016daa55"
+    },
+    {
+      "path": "assets/vpet/vup/Raise/Raised_Static/A_Nomal/\u88ab\u63d0\u8d77\u6765_005_625.png",
+      "bytes": 139951,
+      "sha256": "7ee2e18df01219f8213b898050dffe0f23189c76902140e7417d5c109ca77b0d"
+    },
+    {
+      "path": "assets/vpet/vup/Raise/Raised_Static/C_Nomal/FLA_000_125.png",
+      "bytes": 107829,
+      "sha256": "42ffd07bc3398079216feed60421534efab4dcdb38ad19e30c5f84fc4a63c1bb"
+    },
+    {
+      "path": "assets/vpet/vup/Raise/Raised_Static/C_Nomal/FLA_001_125.png",
+      "bytes": 110014,
+      "sha256": "2d376d83d6a0c8485ba1e71048089c2180074d5ea2edc1efb15afc018208d0e9"
+    },
+    {
+      "path": "assets/vpet/vup/Raise/Raised_Static/C_Nomal/FLA_002_125.png",
+      "bytes": 107694,
+      "sha256": "64d7780c2c596738f30af2c9619871623a2b4370e6e242c95ebfa127e5a0afba"
+    },
+    {
+      "path": "assets/vpet/vup/Raise/Raised_Static/C_Nomal/FLA_003_125.png",
+      "bytes": 105243,
+      "sha256": "43dad729a84e53bbaed2fbc1bef8f51df3209916bf0947d906fecfd7440e432d"
+    },
+    {
+      "path": "assets/vpet/vup/Raise/Raised_Static/C_Nomal/FLA_004_125.png",
+      "bytes": 92043,
+      "sha256": "ebd38c057bbda992380f8d83e088c8c016abee64e55b4ae3b3fffe2c0ea5f6fb"
+    },
+    {
+      "path": "assets/vpet/vup/Raise/Raised_Static/C_Nomal/FLA_005_125.png",
+      "bytes": 98853,
+      "sha256": "cbc3390b8d38e2fbe62e907c090db919b8268d065fa42e4658f087c740d4fcbd"
+    },
+    {
+      "path": "assets/vpet/vup/Raise/Raised_Static/C_Nomal/FLA_006_500.png",
+      "bytes": 92043,
+      "sha256": "ebd38c057bbda992380f8d83e088c8c016abee64e55b4ae3b3fffe2c0ea5f6fb"
+    },
+    {
+      "path": "assets/vpet/vup/Raise/Raised_Static/C_Nomal/FLB_000_125.png",
+      "bytes": 82698,
+      "sha256": "2931399b8d0e2b3f67daf065585399bafedda665b1ca97ed903499e2b74c0ffe"
+    },
+    {
+      "path": "assets/vpet/vup/Raise/Raised_Static/C_Nomal/FLB_001_125.png",
+      "bytes": 92831,
+      "sha256": "372bd4762dbb8e048f28fa8388622d3ba7243ba47d2f6cfe08ce31888e9c1603"
+    },
+    {
+      "path": "assets/vpet/vup/Raise/Raised_Static/C_Nomal/FLB_002_125.png",
+      "bytes": 93049,
+      "sha256": "549a46aa44961bf97e79909f3f3ae46d2a536b109a68e0c15bfa5814d038a427"
+    },
+    {
+      "path": "assets/vpet/vup/Raise/Raised_Static/C_Nomal/FLB_003_125.png",
+      "bytes": 96763,
+      "sha256": "f647b6c539c9c799ad124c5bccbfd072469d8d0d93fb21ab299aa7c6a260b95e"
+    },
+    {
+      "path": "assets/vpet/vup/Raise/Raised_Static/C_Nomal/FLB_004_125.png",
+      "bytes": 101692,
+      "sha256": "b7cf7f60c05c1b29bcff47e1ea44239fead1a7a9abe83311ff54090c900387b1"
+    },
+    {
+      "path": "assets/vpet/vup/Raise/Raised_Static/C_Nomal/FLB_005_125.png",
+      "bytes": 94210,
+      "sha256": "bf9e10634b56756fc2ed88230dce59de4e53e52cb4205f8be82cd797e9404c94"
+    },
+    {
+      "path": "assets/vpet/vup/Raise/Raised_Static/C_Nomal/FLB_006_125.png",
+      "bytes": 115360,
+      "sha256": "e39445f5e8454065584e36e72c89bd09dfb7ec59bbc80d61c85eadc8f2057ef7"
+    },
+    {
+      "path": "assets/vpet/vup/Raise/Raised_Static/C_Nomal/FLB_007_125.png",
+      "bytes": 120231,
+      "sha256": "815d2dd2b3ea687a9a787501cdcab4a9aa5e60d5467ae113fc63c23a448627f5"
+    },
+    {
+      "path": "assets/vpet/vup/Raise/Raised_Static/C_Nomal/FLB_008_125.png",
+      "bytes": 97093,
+      "sha256": "5c373d8d09d1631dc9930b0141673c426f0470e67a707cd0c6d4a8e1e8682b9a"
+    },
+    {
+      "path": "assets/vpet/vup/Raise/Raised_Static/C_Nomal/FLB_009_125.png",
+      "bytes": 129816,
+      "sha256": "2b42b4fa1c14710f44fe54725396f8f9cf3097e05b060b1cf6e9492fb96b69d2"
+    },
+    {
+      "path": "assets/vpet/vup/Raise/Raised_Static/C_Nomal/FLB_010_125.png",
+      "bytes": 107363,
+      "sha256": "2d5fcc653a586b223f3a166263ed6288a2dc1211fc2dbd75a90baad9e23a5a14"
+    },
+    {
+      "path": "assets/vpet/vup/Raise/Raised_Static/C_Nomal/FLB_011_125.png",
+      "bytes": 102630,
+      "sha256": "6885e65950adb9c3c3f0a9d79e6414bc1ce56ef035cb5f0014ff674e9b0e937d"
+    },
+    {
+      "path": "assets/vpet/vup/Raise/Raised_Static/C_Nomal/FLB_012_125.png",
+      "bytes": 146541,
+      "sha256": "5e57828564a829b08f02fff9bd3239c7336746eed158ed3d9ad7f557f8c36ffd"
+    },
+    {
+      "path": "assets/vpet/vup/Raise/Raised_Static/C_Nomal/FLB_013_125.png",
+      "bytes": 140099,
+      "sha256": "8a350aeee6bbb0ced668cfccf38090416d6e0f953cbc5ec98da0914189eab803"
     }
   ]
 }

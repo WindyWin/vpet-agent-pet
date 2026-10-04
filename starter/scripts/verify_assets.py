@@ -40,6 +40,18 @@ if catalog_paths != expected:
     errors.append('Catalog frames do not match manifest')
 
 bundled_sequences = {sequence['path'] for sequence in animations['sequences']}
+for state, paths in animations['states'].items():
+    policy = animations.get('playback', {}).get(state, {})
+    mode = policy.get('mode')
+    if mode not in ('phased', 'loop', 'once') or len(paths) != (3 if mode == 'phased' else 1):
+        errors.append(f'Invalid playback mode or phases: {state}')
+    if policy.get('after') not in ('idle', 'previous', 'stop'):
+        errors.append(f'Invalid completion behavior: {state}')
+    if any(path not in bundled_sequences for path in paths):
+        errors.append(f'Unknown state sequence: {state}')
+if {path for paths in animations['states'].values() for path in paths} != bundled_sequences:
+    errors.append('State map does not cover the bundled sequences')
+
 available_sequences = {sequence['path'] for sequence in available['sequences']}
 if len(bundled_sequences) != len(animations['sequences']) or len(available_sequences) != len(available['sequences']):
     errors.append('Duplicate animation sequence')

@@ -6,9 +6,9 @@
   "source_commit": "6358445aa54587f9cd524264eaf17ef97bc826a8",
   "source_root": "VPet-Simulator.Windows/mod/0000_core/pet/vup",
   "bundled_catalog": "assets/vpet/animations.json",
-  "missing_sequence_count": 538,
-  "missing_frame_count": 5318,
-  "missing_size_bytes": 748047178,
+  "missing_sequence_count": 535,
+  "missing_frame_count": 5283,
+  "missing_size_bytes": 743618382,
   "sequences": [
     {
       "path": "BDay/A",
@@ -2189,15 +2189,6 @@
       "timing_valid": true
     },
     {
-      "path": "Raise/Raised_Dynamic/Nomal/1",
-      "category": "Raise",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Raise/Raised_Dynamic/Nomal/1",
-      "frame_count": 8,
-      "total_duration_ms": 1625,
-      "size_bytes": 1347318,
-      "timing_valid": true
-    },
-    {
       "path": "Raise/Raised_Dynamic/Nomal/2",
       "category": "Raise",
       "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Raise/Raised_Dynamic/Nomal/2",
@@ -2240,15 +2231,6 @@
       "frame_count": 5,
       "total_duration_ms": 625,
       "size_bytes": 745919,
-      "timing_valid": true
-    },
-    {
-      "path": "Raise/Raised_Static/A_Nomal",
-      "category": "Raise",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Raise/Raised_Static/A_Nomal",
-      "frame_count": 6,
-      "total_duration_ms": 1250,
-      "size_bytes": 847383,
       "timing_valid": true
     },
     {
@@ -2321,15 +2303,6 @@
       "frame_count": 3,
       "total_duration_ms": 375,
       "size_bytes": 252552,
-      "timing_valid": true
-    },
-    {
-      "path": "Raise/Raised_Static/C_Nomal",
-      "category": "Raise",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Raise/Raised_Static/C_Nomal",
-      "frame_count": 21,
-      "total_duration_ms": 3000,
-      "size_bytes": 2234095,
       "timing_valid": true
     },
     {

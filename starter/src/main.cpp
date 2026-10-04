@@ -13,18 +13,26 @@ int main(int argc, char **argv) {
     QApplication app(argc, argv);
     app.setQuitOnLastWindowClosed(false);
     app.setApplicationName("agent-pet");
-    app.setApplicationVersion("0.1.0");
+    app.setApplicationVersion("0.2.0");
     QCommandLineParser parser;
-    parser.setApplicationDescription("Agent Pet M1 desktop prototype");
+    parser.setApplicationDescription("Agent Pet animation and desktop controls");
     parser.addHelpOption();
     parser.addVersionOption();
-    parser.addOption({"state", "Initial preview: idle or thinking", "state", "idle"});
-    parser.addOption({"smoke-test", "Exercise both states and controls, then exit after 17 seconds"});
+    parser.addOption({"state", "Initial animation state (default: starting)", "state", "starting"});
+    parser.addOption({"preview", "Open the developer animation preview"});
+    parser.addOption({"settings", "Open desktop settings"});
+    parser.addOption({"no-persist", "Do not read or write preferences (testing)"});
+    parser.addOption({"smoke-test", "Exercise playback, input recovery and shutdown; exit after about 19 seconds"});
     parser.process(app);
     try {
-        pet::PetWindow window;
-        window.player().select(parser.value("state"));
+        pet::PetWindow window(nullptr, {}, !parser.isSet("smoke-test") && !parser.isSet("no-persist"));
+        if (!window.player().select(parser.value("state"), true)) {
+            std::fprintf(stderr, "%s\n", qPrintable(window.player().error()));
+            return 1;
+        }
         window.show();
+        if (parser.isSet("preview")) window.showPreview();
+        if (parser.isSet("settings")) window.showSettings();
         if (parser.isSet("smoke-test")) {
             std::printf("Platform: %s; Qt: %s\n", qPrintable(app.platformName()), qVersion());
             std::fflush(stdout);
@@ -36,7 +44,8 @@ int main(int argc, char **argv) {
                 window.setOnTop(true);
                 window.recover();
                 std::printf("Idle/thinking decoded; automatic input recovery: %s\n", recovered ? "passed" : "FAILED");
-                app.exit(recovered ? 0 : 1);
+                if (!recovered || !window.player().error().isEmpty()) app.exit(1);
+                else window.requestQuit();
             });
         }
         return app.exec();
