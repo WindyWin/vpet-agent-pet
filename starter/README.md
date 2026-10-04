@@ -19,7 +19,7 @@ The asset verifier uses only Python's standard library and works from any curren
 ## Build and run
 
 From this directory, install CMake 3.22+, Ninja, a C++17 compiler and Qt 6.5+
-Widgets/Test and X11 development packages, then run:
+Widgets/Test/Network, libarchive and X11 development packages, then run:
 
 ```bash
 python3 scripts/verify_assets.py
@@ -51,6 +51,14 @@ stays, hides or quits once no sessions remain; see [install guide](docs/install.
 The default uses X11/XWayland when DISPLAY is available. For a development-only
 native Wayland check: `QT_QPA_PLATFORM=wayland ./build/agent-pet`.
 Native Wayland placement and stacking support remain unverified.
+
+## Updates
+
+**Settings → Updates** offers daily release notifications, automatic downloads,
+and optional installation on the next normal launch. Notify only is the default.
+Updates preserve settings and hooks and restore the previous version if startup
+fails. Development builds offer notifications and manual downloads.
+See [update behavior and recovery](docs/install.md#update-notifications-and-automatic-updates).
 
 ## Local events
 

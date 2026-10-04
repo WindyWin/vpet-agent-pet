@@ -293,3 +293,45 @@ desktop-entry Version 1.5 (now 1.4).
 
 Not covered here: a real desktop launch from the menu, other distributions, and
 live Claude/Codex sessions with the installed package.
+
+
+## Application updates
+
+`src/updates/release.*` validates stable release metadata, exact repository asset
+URLs, platform selection and SHA-256 digests. `controller.*` owns asynchronous
+Qt Network requests, bounded daily checks, persisted update preferences, UI and
+pending downloads. Hook, emit, integration and autostart commands return before
+constructing this service. Requests use TLS verification, size limits and idle
+timeouts; package downloads permit HTTPS redirects to GitHub's asset CDN.
+
+`agent-pet-updater` uses libarchive for bounded extraction, rejects links and
+traversal, probes the staged executable, preserves the install receipt, and uses
+Linux directory exchange for replacement. The update lock excludes competing
+GUI starts; the existing IPC receiver lock excludes a running monitor during
+replacement. A journal and per-transaction marker distinguish crashes before
+and after the exchange. The newly launched GUI acknowledges readiness after its
+window and monitor have started; failure restores the old directory. The helper
+waits for the child to exit after committing so QProcess ownership does not kill
+the updated app. Settings and external integrations are never rewritten by the
+helper. Filesystem/power-loss guarantees remain those of the host filesystem;
+the recovery tests exercise process interruption around the directory exchange.
+
+Release bundles include the helper, libarchive, Qt TLS plugins and OpenSSL's
+runtime closure, including Qt distributions that dynamically load OpenSSL.
+`--check-update-runtime` checks TLS backend availability without a display or
+network request and is included in isolated-package validation. CI installs
+libarchive/OpenSSL development packages. Publishing the existing draft release
+makes it discoverable; the app accepts only matching stable-version assets with
+GitHub-provided SHA-256 digests for installation.
+
+Validation: `update-tests` covers version ordering, metadata/URL/architecture
+validation, checksum mismatch, offline checks, throttling, skipped versions,
+cancellation and failed download writes,
+automatic downloads, active-session restart blocking, and interrupted-exchange
+recovery. `scripts/check_update.py` runs the real helper against disposable
+packages to test unsafe archives, failed startup rollback, successful replacement
+and receipt/settings preservation. A disposable release-style build also passed automatic installation at the next
+launch and readiness acknowledgement from the actual updated GUI (offscreen).
+Isolated-package HTTPS runtime, install/upgrade/autostart/uninstall checks, and all
+seven CTest suites passed locally. Actual GitHub release rollout and desktop
+interaction remain manual acceptance checks.

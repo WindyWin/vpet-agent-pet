@@ -140,6 +140,54 @@ Interactively, the checklist starts from the current setup: connected clients,
 autostart and the when-idle choice are pre-selected, and unchecking one disables
 it.
 
+## Update notifications and automatic updates
+
+Open **Settings → Updates** or **Updates…** from the pet/tray menu.
+Checks run 15 seconds after launch and at most once per day, using published
+stable releases from `WindyWin/vpet-agent-pet` on GitHub. **Check now** checks
+immediately. Turn off **Check automatically once a day** to use manual checks.
+Network failures during background checks do not interrupt the pet.
+
+Choose one of three modes:
+
+| Mode | Behavior |
+| --- | --- |
+| **Notify only** (default) | A menu indicator shows the available version; choose Download update or open the release page. |
+| **Download automatically** | Downloads and verifies the package, then waits for **Restart and update**. |
+| **Install automatically on next launch** | Downloads and verifies the package, then installs during the next normal launch. |
+
+**Later / Close** leaves the update available. **Skip this version** suppresses
+that version and discards its pending package; **Check now** shows it again.
+The update window shows the installed version, last successful check, download
+progress, and release-page link. Updates never replace agent approval bubbles.
+Downloads can be cancelled or retried; interrupted downloads restart from zero.
+
+Only installed release builds can download/install from inside the app. Local
+builds (revision `local`) and copies run directly from an extracted archive
+support notifications and the manual download link. Older releases without a
+GitHub SHA-256 asset digest also require manual download.
+
+Automatic updates never force a running pet to restart. Session-triggered
+launches postpone automatic installation so monitoring starts immediately.
+**Restart and update** waits until no observed agent sessions remain.
+
+The helper verifies the package again, rejects unsafe archive paths and links,
+extracts beside the existing installation, and atomically switches directories.
+The executable path, installer receipt, hooks, desktop/menu choices and settings
+are preserved. If the new app cannot start and acknowledge readiness within
+30 seconds, the previous version is restored. A recovery journal handles an
+interrupted replacement at the next normal launch. Installation requires a
+writable installation and parent directory and a filesystem supporting Linux
+`renameat2(RENAME_EXCHANGE)`; otherwise the existing installation is kept.
+Allow space for the downloaded archive plus both unpacked versions.
+
+Update state and pending downloads live in
+`~/.local/share/agent-pet/updates/` (or `$XDG_DATA_HOME/agent-pet/updates/`).
+`result.txt` records the last installation result. Update checks send no session,
+project, or agent data. They contact GitHub over HTTPS; downloads are matched
+against GitHub's SHA-256 asset digest. This trusts the repository's release
+account and HTTPS metadata, without a separate publisher signing key.
+
 ## Uninstall
 
 ```bash

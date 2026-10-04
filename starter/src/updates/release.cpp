@@ -1,0 +1,68 @@
+#include "release.h"
+#include "version.h"
+#include <QCoreApplication>
+#include <QCryptographicHash>
+#include <QDir>
+#include <QFile>
+#include <QFileInfo>
+#include <QJsonArray>
+#include <QRegularExpression>
+#include <QStandardPaths>
+#include <QVersionNumber>
+namespace pet::updates {
+static const QRegularExpression versionPattern("^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$");
+bool newer(const QString &candidate, const QString &installed) {
+    return versionPattern.match(candidate).hasMatch() && versionPattern.match(installed).hasMatch()
+        && QVersionNumber::compare(QVersionNumber::fromString(candidate), QVersionNumber::fromString(installed)) > 0;
+}
+QJsonObject Release::json() const {
+    return {{"version", version}, {"digest", digest}, {"page", page.toString()}, {"download", download.toString()}, {"size", size}};
+}
+bool parseRelease(const QJsonObject &object, const QString &architecture, Release &release, QString &error) {
+    release = {};
+    QString tag = object["tag_name"].toString();
+    QString version = tag.startsWith('v') ? tag.mid(1) : tag;
+    if (!object.contains("draft") || !object.contains("prerelease") || object["draft"].toBool(true)
+        || object["prerelease"].toBool(true) || !versionPattern.match(version).hasMatch()) {
+        error = "No supported stable release was returned."; return false;
+    }
+    const QString base = "https://github.com/WindyWin/vpet-agent-pet/releases/";
+    release.version = version;
+    release.page = QUrl(base + "tag/" + tag);
+    const QString name = "agent-pet-" + version + "-linux-" + architecture + ".tar.gz";
+    for (const auto &entry : object["assets"].toArray()) {
+        const auto asset = entry.toObject();
+        if (asset["name"].toString() != name) continue;
+        const QUrl url(asset["browser_download_url"].toString());
+        const QString expected = base + "download/" + tag + "/" + name;
+        if (url.toString() != expected || asset["state"].toString() != "uploaded") continue;
+        release.size = asset["size"].toInteger();
+        release.digest = asset["digest"].toString();
+        if (release.size <= 0 || release.size > MaxArchive) continue;
+        release.download = url;
+        // Missing digests still allow release notifications and manual download.
+        if (!QRegularExpression("^sha256:[0-9a-f]{64}$").match(release.digest).hasMatch()) release.digest.clear();
+        return true;
+    }
+    error = "This release has no compatible Linux package."; return false;
+}
+bool verifiedArchive(const QString &path, const QString &digest, QString &error) {
+    if (!QRegularExpression("^sha256:[0-9a-f]{64}$").match(digest).hasMatch()) { error = "Release has no SHA-256 digest."; return false; }
+    QFile file(path);
+    if (!file.open(QIODevice::ReadOnly) || file.size() <= 0 || file.size() > MaxArchive) { error = "Cannot read update package."; return false; }
+    QCryptographicHash hash(QCryptographicHash::Sha256);
+    if (!hash.addData(&file) || hash.result().toHex() != digest.mid(7).toLatin1()) { error = "Update checksum does not match the release."; return false; }
+    return true;
+}
+QString dataDirectory() { return QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/updates"; }
+QString installedPrefix() {
+    if (QStringLiteral(AGENT_PET_REVISION) == "local") return {};
+    const QString prefix = QFileInfo(QCoreApplication::applicationFilePath()).absoluteDir().absoluteFilePath("..");
+    const QString canonical = QFileInfo(prefix).canonicalFilePath();
+    QFile receipt(canonical + "/.agent-pet-install");
+    if (!receipt.open(QIODevice::ReadOnly) || receipt.size() > 65536 || !QFileInfo(canonical).isWritable()) return {};
+    if (!receipt.readAll().split('\n').contains(("prefix=" + canonical).toUtf8())) return {};
+    if (!QFileInfo(canonical + "/bin/agent-pet-updater").isExecutable()) return {};
+    return canonical;
+}
+}

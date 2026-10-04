@@ -29,7 +29,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends ninja-build patchelf bubblewrap \
-            desktop-file-utils libgl-dev libegl-dev libx11-dev libxtst-dev \
+            desktop-file-utils libarchive-dev libssl-dev libgl-dev libegl-dev libx11-dev libxtst-dev \
             libxkbcommon-x11-0 libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 \
             libxcb-randr0 libxcb-render-util0 libxcb-shape0 libxcb-xinerama0 libxcb-xkb1
 

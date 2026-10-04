@@ -1,3 +1,7 @@
+#include "updates/controller.h"
+#include <QSaveFile>
+#include <QSslSocket>
+#include <QRegularExpression>
 #include "desktop/monitor.h"
 #include "ipc/autostart.h"
 #include "ipc/local.h"
@@ -23,6 +27,12 @@ static void forwardLaunchEvent(const QByteArray &data) {
 }
 
 int main(int argc, char **argv) {
+    if (argc == 2 && QString::fromLocal8Bit(argv[1]) == "--check-update-runtime") {
+        QCoreApplication app(argc, argv);
+        const bool available = QSslSocket::supportsSsl();
+        std::printf("Update HTTPS runtime: %s\n", available ? "available" : "unavailable");
+        return available ? 0 : 1;
+    }
     // Answer without a display so install scripts can report versions headlessly.
     if (argc == 2 && QString::fromLocal8Bit(argv[1]) == "--version") {
         std::printf("agent-pet %s (%s)\n", AGENT_PET_VERSION, AGENT_PET_REVISION);
@@ -46,6 +56,10 @@ int main(int argc, char **argv) {
         app.setApplicationName("agent-pet");
         return pet::eventCommand(app.arguments());
     }
+    {
+        QCoreApplication startup(argc, argv); startup.setApplicationName("agent-pet");
+        if (pet::updates::prepareStartup(startup.arguments())) return 0;
+    }
     // XWayland is the prototype default; native Wayland is opt-in for testing.
     if (qEnvironmentVariableIsEmpty("QT_QPA_PLATFORM") && !qEnvironmentVariableIsEmpty("DISPLAY"))
         qputenv("QT_QPA_PLATFORM", "xcb");
@@ -65,6 +79,7 @@ int main(int argc, char **argv) {
     // Used by `agent-pet hook` when autostart is enabled; not meant to be typed.
     parser.addOption({"autostarted", "Launched by an agent hook: exit silently if a pet is already running"});
     parser.addOption({"launch-event", "Normalized event to apply once listening", "json"});
+    parser.addOption({"update-health", "Internal update startup acknowledgement", "token"});
     parser.process(app);
     const bool autostarted = parser.isSet("autostarted");
     // The launch event is validated like any datagram; an invalid one is dropped.
@@ -90,7 +105,23 @@ int main(int argc, char **argv) {
         }
         pet::Monitor monitor(window);
         if (receiver) monitor.listen(std::move(receiver));
+        std::unique_ptr<pet::updates::Controller> updates;
+        if (!parser.isSet("smoke-test") && !parser.isSet("no-persist")) {
+            updates = std::make_unique<pet::updates::Controller>();
+            updates->sessionsActive = [&monitor] { return !monitor.sessions().records().isEmpty(); };
+            window.setUpdates(updates.get());
+            QObject::connect(updates.get(), &pet::updates::Controller::restartRequested, &window, &pet::PetWindow::requestQuit);
+            updates->start();
+        }
         window.show();
+        const QString health = parser.value("update-health");
+        if (QRegularExpression("^[0-9a-f-]{36}$").match(health).hasMatch()) {
+            QTimer::singleShot(2000, &window, [&window, health] {
+                if (window.quitting() || !window.player().error().isEmpty()) return;
+                QSaveFile file(pet::updates::dataDirectory() + "/health-" + health);
+                if (file.open(QIODevice::WriteOnly)) { file.write("ready"); file.commit(); }
+            });
+        }
         if (hasLaunchEvent) monitor.apply(launchEvent, QDateTime::currentMSecsSinceEpoch());
         if (parser.isSet("preview")) window.showPreview();
         if (parser.isSet("settings")) window.showSettings();
