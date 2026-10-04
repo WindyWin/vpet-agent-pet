@@ -91,13 +91,17 @@ bool Sessions::apply(const Event &e, qint64 now) {
     else if (e.kind == "tool_start") { s.tools[e.tool] = e.activity.isEmpty() ? "working" : e.activity; s.state = toolState(s); }
     else if (e.kind == "tool_end") {
         s.tools.remove(e.tool);
-        if (s.state != "attention" && s.state != "inactive" && s.state != "turn-finished" && (isNew || s.state != "idle")) {
+        // A tool that was waiting on an answer has run, so the user answered.
+        if (s.state == "attention" && s.attentionTools.contains(e.tool)) s.state = toolState(s);
+        else if (s.state != "attention" && s.state != "inactive" && s.state != "turn-finished" && (isNew || s.state != "idle")) {
             const auto next = toolState(s);
             if (next == "thinking" && (s.state == "working" || s.state == "reading")) s.activityUntil = now + activityHoldMs;
             else s.state = next;
         }
     }
-    else if (e.kind == "attention") { s.state = "attention"; s.reason = e.reason; }
+    else if (e.kind == "attention") { s.state = "attention"; s.reason = e.reason;
+        // Codex permission requests carry no tool identity: the pending tools are those already started.
+        s.attentionTools = e.tool.isEmpty() ? QSet<QString>(s.tools.keyBegin(), s.tools.keyEnd()) : QSet<QString>{e.tool}; }
     else if (e.kind == "error") {
         if (!e.tool.isEmpty()) s.tools.remove(e.tool);
         if (s.state != "attention") {
@@ -108,7 +112,7 @@ bool Sessions::apply(const Event &e, qint64 now) {
     }
     else if (e.kind == "turn_finished") { s.tools.clear(); s.state = "turn-finished"; s.reactionUntil = now + 4000; }
     else if (e.kind == "interrupt") { s.tools.clear(); s.state = "idle"; s.interrupted = true; }
-    if (s.state != "attention") { s.reason.clear(); dismiss(k, "attention"); }
+    if (s.state != "attention") { s.reason.clear(); s.attentionTools.clear(); dismiss(k, "attention"); }
     if (e.kind == "attention" || e.kind == "error" || e.kind == "turn_finished") {
         const qint64 expires = e.kind == "turn_finished" ? now + finishedAlertMs : e.kind == "error" ? now + errorAlertMs : 0;
         auto it = std::find_if(alerts_.begin(), alerts_.end(), [&](const Alert &a) { return a.session == k && a.kind == e.kind; });

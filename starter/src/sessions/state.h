@@ -18,6 +18,7 @@ struct Event {
 struct Session {
     QString provider, id, parent, project, state = "idle", resume = "idle";
     QString reason; // Reason of the current attention request, if any.
+    QSet<QString> attentionTools; // Tools awaiting the user's answer; the first to finish resolves the attention.
     bool interrupted = false; // Set by an interrupt; tool callbacks of that turn are stale until the next prompt.
     QString host, hostPids, hostWindow, hostTarget;
     QMap<QString, QString> tools;
