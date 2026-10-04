@@ -30,7 +30,11 @@ with tempfile.TemporaryDirectory(prefix="agent pet check ") as temporary:
     env = {"HOME": str(home), "PATH": os.environ["PATH"], "LANG": "C.UTF-8",
            "QT_QPA_PLATFORM": "offscreen", "XDG_RUNTIME_DIR": str(root / "runtime")}
     (root / "runtime").mkdir(mode=0o700)
-    run = lambda *command, **kw: subprocess.run(command, env=env, text=True, capture_output=True, check=True, timeout=60, **kw)
+    def run(*command):
+        result = subprocess.run(command, env=env, text=True, capture_output=True, timeout=60)
+        if result.returncode:
+            raise SystemExit(f"{command} failed ({result.returncode}):\n{result.stdout}{result.stderr}")
+        return result
 
     with tarfile.open(args.tarball) as archive:
         archive.extractall(root / "Downloads", filter="data")
