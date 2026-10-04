@@ -11,7 +11,7 @@ import tempfile
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("tarball", type=Path)
-parser.add_argument("--skip-launch", action="store_true", help="Skip the 19-second offscreen smoke test")
+parser.add_argument("--skip-launch", action="store_true", help="Skip the 20-second offscreen smoke test")
 args = parser.parse_args()
 
 UNRELATED = {"type": "command", "command": "/usr/bin/true unrelated-hook", "timeout": 5}
