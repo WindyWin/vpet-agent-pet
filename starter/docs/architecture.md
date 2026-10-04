@@ -282,6 +282,11 @@ from the installed path, in-place upgrade (stale files removed, preferences and
 hook files byte-identical), uninstall (unrelated Claude settings restored exactly,
 no Codex handlers left, preferences kept) and `--purge-settings`.
 
-Not covered here: the CI run on Ubuntu 22.04 with Qt 6.5.3 (first run is on the
-PR), a real desktop launch from the menu, other distributions, and live
-Claude/Codex sessions with the installed package.
+CI on Ubuntu 22.04 with Qt 6.5.3 passed the same steps from a clean checkout. It
+first exposed a smoke-test timer race (coarse timers may drift 5%; the check now
+uses a precise timer at 18 s), a Qt non-UTF-8 locale warning on hook stderr (Qt
+messages are now dropped for `hook`), and `desktop-file-validate` 0.26 rejecting
+desktop-entry Version 1.5 (now 1.4).
+
+Not covered here: a real desktop launch from the menu, other distributions, and
+live Claude/Codex sessions with the installed package.
