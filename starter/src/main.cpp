@@ -20,6 +20,10 @@ int main(int argc, char **argv) {
         return pet::integrationCommand(app.arguments());
     }
     if (argc > 1 && (QString::fromLocal8Bit(argv[1]) == "hook" || QString::fromLocal8Bit(argv[1]) == "emit")) {
+        // Hooks run inside agent clients and must stay silent; Qt diagnostics
+        // (for example the non-UTF-8 locale warning) would leak into them.
+        if (QString::fromLocal8Bit(argv[1]) == "hook")
+            qInstallMessageHandler([](QtMsgType, const QMessageLogContext &, const QString &) {});
         QCoreApplication app(argc, argv);
         return pet::eventCommand(app.arguments());
     }
