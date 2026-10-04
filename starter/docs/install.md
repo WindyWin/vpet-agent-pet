@@ -57,7 +57,7 @@ Any option, `--yes`, or a stdin that is not a terminal (scripts, CI) installs
 without questions and leaves agent hooks and autostart alone. Opt in with
 `--claude`, `--codex` and `--autostart [--when-idle keep|hide|quit]`. Add
 `--interactive` to be asked anyway, with the other options as the defaults.
-`AGENT_PET_UI=whiptail|dialog|plain` picks the prompt style.
+`AGENT_PET_UI=whiptail|dialog|plain` picks the prompt style. The prompts draw with your terminal's own colors unless you have a `~/.dialogrc` (or set `DIALOGRC` / `NEWT_COLORS`).
 
 Start the pet from the application menu or with `agent-pet`. Right-click the pet
 for Settings, About, Mute alerts and Quit.
