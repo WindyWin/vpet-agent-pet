@@ -12,14 +12,14 @@ bundle = args.bundle.resolve()
 manifest = json.loads((bundle / "share/agent-pet/runtime-manifest.json").read_text())
 command = ["bwrap", "--unshare-all", "--die-with-parent", "--new-session",
            "--ro-bind", str(bundle), "/opt/Agent Pet", "--proc", "/proc", "--dev", "/dev",
-           "--tmpfs", "/tmp", "--dir", "/home/test", "--dir", "/usr/lib",
-           "--symlink", "usr/lib", "/lib", "--symlink", "usr/lib", "/lib64",
+           "--tmpfs", "/tmp", "--dir", "/home/test",
            "--clearenv", "--setenv", "HOME", "/home/test",
            "--setenv", "QT_QPA_PLATFORM", "offscreen",
            "--setenv", "QT_LOGGING_RULES", "*.debug=false",
            "--chdir", "/tmp"]
-for name in manifest["host_libraries"]:
-    command += ["--ro-bind", str((Path("/usr/lib") / name).resolve()), "/usr/lib/" + name]
+# Expose only host glibc/loader files, at the paths the package was linked against.
+for path in manifest["host_library_paths"].values():
+    command += ["--ro-bind", str(Path(path).resolve()), path]
 binary = ["/opt/Agent Pet/bin/agent-pet"]
 subprocess.run(command + binary + ["--smoke-test"], check=True, timeout=30)
 # Exercise packaged headless entry points without a display, interpreter, client,

@@ -1,6 +1,7 @@
 #include "desktop/monitor.h"
 #include "desktop/pet_window.h"
 #include "desktop/session_playback.h"
+#include "version.h"
 #include <QApplication>
 #include <QCheckBox>
 #include <QDateTime>
@@ -46,6 +47,14 @@ private slots:
         // Settings inspect integration files; keep them away from the real client configuration.
         qputenv("CLAUDE_CONFIG_DIR", QFile::encodeName(clients.path() + "/claude"));
         qputenv("CODEX_HOME", QFile::encodeName(clients.path() + "/codex"));
+    }
+    void releaseMetadataIsEmbedded() {
+        // The About view and release packages rely on these embedded resources.
+        QVERIFY(QString(AGENT_PET_VERSION).count('.') == 2);
+        for (const auto *path : {":/LICENSE", ":/NOTICE", ":/THIRD_PARTY_NOTICES.md", ":/licenses/VPET-ARTWORK-TERMS.md"}) {
+            QFile file(path);
+            QVERIFY2(file.open(QIODevice::ReadOnly) && file.size() > 0, path);
+        }
     }
     void sessionAnimationMapping() {
         pet::Player player;

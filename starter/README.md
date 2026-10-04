@@ -14,7 +14,7 @@ python3 scripts/verify_assets.py
 git init
 ```
 
-The asset verifier uses only Python's standard library and works from any current directory. M3 local events and session tracking are implemented alongside the M2 animation and desktop controls. M4 provider adapters and integration setup are implemented; live-client acceptance remains open. M5 alerts and minimal settings are implemented. See [PLAN.md](PLAN.md) and the [architecture and validation record](docs/architecture.md).
+The asset verifier uses only Python's standard library and works from any current directory. M3 local events and session tracking are implemented alongside the M2 animation and desktop controls. M4 provider adapters and integration setup are implemented; live-client acceptance remains open. M5 alerts and minimal settings are implemented. M6 adds the release package, installer and CI. See [PLAN.md](PLAN.md) and the [architecture and validation record](docs/architecture.md).
 
 ## Build and run
 
@@ -102,28 +102,36 @@ See [supported mappings and pending live acceptance](docs/integrations.md).
 
 ## Package and verify
 
-Python 3, `qmake6`, `ldd` and `patchelf` are build-time packaging tools:
+Release users should follow [docs/install.md](docs/install.md) (install, integration
+setup, upgrade, troubleshooting and removal). To build the package yourself,
+Python 3, `qmake6` (or `QMAKE=/path/to/qmake`), `ldd` and `patchelf` are needed:
 
 ```bash
 python3 scripts/package.py
-./dist/agent-pet-m5/bin/agent-pet --smoke-test
+./dist/agent-pet-0.6.0-linux-x86_64/bin/agent-pet --smoke-test
 ```
 
-The output is `dist/agent-pet-m5/` and `dist/agent-pet-m5.tar.gz`. Use a new
-`--output` directory on subsequent runs. Copy/extract the entire directory to
-another location and run `bin/agent-pet`; no separate Qt or interpreter is needed.
-The package targets a compatible Linux host ABI, not every distribution.
+The output is `dist/agent-pet-VERSION-linux-ARCH/` and the matching `.tar.gz`,
+with `install.sh`, `uninstall.sh`, the desktop launcher and icon, notices and a
+runtime library manifest. The version comes from `project()` in CMakeLists.txt;
+`-DAGENT_PET_REVISION=<commit>` records the source revision shown by
+`agent-pet --version` and About. Output directories must be new.
 
-For a filesystem-isolated headless check (requires bubblewrap and permitted user
-namespaces), run:
+Two checks exercise the package without a display:
 
 ```bash
-python3 scripts/check_isolated.py dist/agent-pet-m5
+python3 scripts/check_isolated.py dist/agent-pet-0.6.0-linux-x86_64
+python3 scripts/check_install.py dist/agent-pet-0.6.0-linux-x86_64.tar.gz
 ```
 
-This mounts only the package and host glibc libraries. It verifies idle/thinking,
-control changes and 15-second recovery, then plays shutdown and exits after about 19 seconds. It does not
-replace the desktop interaction checklist in [architecture.md](docs/architecture.md).
+`check_isolated.py` (bubblewrap, user namespaces) mounts only the package and
+host glibc/loader, then runs the smoke test, both hook commands and integration
+setup. `check_install.py` installs into a path with spaces under a throwaway
+HOME, enables both integrations next to an unrelated hook, upgrades in place and
+uninstalls, checking that settings survive upgrades and only Agent Pet's hook
+entries are removed. The smoke test verifies idle/thinking, control changes and
+15-second recovery, then plays shutdown; it does not replace the desktop
+interaction checklist in [architecture.md](docs/architecture.md).
 The XWayland drag test runs separately because it moves the real pointer:
 
 ```bash
@@ -131,7 +139,11 @@ QT_QPA_PLATFORM=xcb ./build/desktop-tests
 ```
 
 Run it only when the desktop is free. Native X11 and broader manual acceptance
-evidence remain open. See the M2 record in [architecture.md](docs/architecture.md).
+evidence remain open.
+
+CI ([.github/workflows/release.yml](../.github/workflows/release.yml)) runs all of
+the above from a clean checkout on Ubuntu 22.04 with Qt 6.5.3, uploads the
+tarball, and attaches it to a draft GitHub release for `v*` tags.
 
 ## Artwork and publishing
 
@@ -139,4 +151,4 @@ Artwork credit: **VUP-Simulator team**, via [LorisYounger/VPet](https://github.c
 
 The upstream terms require source attribution and a link for noncommercial use and require the authorization information to accompany distributions. They list extra conditions for commercial use, including contacting the rights holder. Git itself adds no license and does not change those terms. A public repository containing these sprites is a distribution, so keep the notices and this credit in the repository. If the app shows the sprites to users, carry the credit into its About screen and release package as well.
 
-No license has been selected for the new Agent Pet application code. Choose one before inviting reuse or contributions, and state clearly that it applies to your original code while the bundled artwork keeps its separate terms. The upstream Apache-2.0 license copied in `licenses/` is for VPet code and does not grant an Apache-2.0 license to the sprites or future Agent Pet code.
+Agent Pet's original application code is released under the [Apache License 2.0](LICENSE) (see also [NOTICE](NOTICE)). It does not cover the bundled artwork, the icon cropped from it, or anything under `licenses/`: the artwork keeps its separate upstream terms. The upstream VPet Apache-2.0 license copied in `licenses/` covers VPet's code only; neither it nor Agent Pet's license grants rights to the sprites.

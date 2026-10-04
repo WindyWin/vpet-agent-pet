@@ -205,14 +205,20 @@ compositor remain manual checks. See [M5 evidence](starter/docs/architecture.md)
 
 ### M6 — Linux packaging and release
 
-- [ ] Package the executable, hook entry point, starter asset pack, catalog, desktop launcher, icon, and required runtime dependencies.
-- [ ] Optimize selected assets only if measured size or playback performance justifies it; preserve timing, visual quality, and provenance.
-- [ ] Include version metadata, third-party notices, artwork terms, and an About view.
-- [ ] Select and document a license for original application code before publishing.
-- [ ] Add clean-checkout CI for asset verification, application checks, and package generation.
-- [ ] Test installation and launch from a path with spaces on a machine without VPet or separately installed development runtimes.
-- [ ] Verify upgrade behavior preserves settings and uninstall removes only app-owned integration entries.
-- [ ] Write installation, integration setup, troubleshooting, and removal instructions.
+Implemented 2026-10-04 in `starter/` and `.github/workflows/release.yml`: a
+relocatable x86_64 tarball with a per-user installer, built on Ubuntu 22.04
+(glibc 2.35 baseline). Isolated-runtime and install/upgrade/uninstall checks
+pass locally; a clean-machine desktop run and other distributions remain open.
+See [install guide](starter/docs/install.md) and [M6 evidence](starter/docs/architecture.md).
+
+- [x] Package the executable, hook entry point, starter asset pack, catalog, desktop launcher, icon, and required runtime dependencies.
+- [x] Optimize selected assets only if measured size or playback performance justifies it; preserve timing, visual quality, and provenance. (Measured; not justified.)
+- [x] Include version metadata, third-party notices, artwork terms, and an About view.
+- [x] Select and document a license for original application code before publishing. (Apache-2.0, chosen by the owner.)
+- [x] Add clean-checkout CI for asset verification, application checks, and package generation.
+- [ ] Test installation and launch from a path with spaces on a machine without VPet or separately installed development runtimes. (Automated: path with spaces under a throwaway HOME, runtime isolated to the package and glibc; a real clean desktop remains.)
+- [x] Verify upgrade behavior preserves settings and uninstall removes only app-owned integration entries.
+- [x] Write installation, integration setup, troubleshooting, and removal instructions.
 
 **Complete when:** another user can install the generated package, enable either integration, observe the required states, restart the app with settings retained, and remove it without damaging unrelated hooks.
 
@@ -237,15 +243,16 @@ Set measurable callback-latency, memory, and idle-CPU targets during the prototy
 | Open decision | Resolve by | Evidence needed |
 | --- | --- | --- |
 | Desktop shell and language | M1 | Window behavior, resource use, build complexity, and packaged launch. |
-| Supported Linux environments and package format | M1, confirm in M6 | X11/XWayland checks and clean-environment installation. |
+| Supported Linux environments and package format | M1, confirmed in M6 | Relocatable x86_64 tarball with per-user `install.sh`, glibc 2.35+ and X11/XWayland. Clean-desktop installation on more distributions still to record. |
 | Event ordering, identity, and stale-session policy | M3 | Actual provider payloads and concurrent-session replay cases. |
 | Supported client versions and event coverage | M4 | Official references plus captured, sanitized fixtures and live checks. |
-| Original application code license | Before publication | Project owner's license choice, recorded separately from artwork terms. |
+| Original application code license | Before publication | Resolved: Apache-2.0 in `starter/LICENSE` and `starter/NOTICE`, separate from artwork terms. |
 
 ## Immediate next steps
 
 1. Capture sanitized live payloads and finish M4 client/host acceptance checks.
 2. Validate integration setup and observed coverage in real Claude Code and Codex sessions, now visible through M5 alerts.
-3. Review M5 alerts on a real desktop (placement, sound, mute) and start M6 packaging.
+3. Review M5 alerts on a real desktop (placement, sound, mute).
+4. Install the M6 package on a clean desktop, enable both integrations, and tag the first release.
 
 The first release is complete when another user can install it, receive pet reactions and identifiable attention and turn-finished alerts from supported connected sessions across local hosts using only the distributed package. Coverage limitations are visible; terminal navigation is not required.

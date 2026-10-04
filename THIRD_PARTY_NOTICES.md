@@ -13,3 +13,11 @@ The notice requires source attribution and an upstream link, includes additional
 The upstream Apache-2.0 code license is preserved as [VPET-CODE-LICENSE.txt](licenses/VPET-CODE-LICENSE.txt) for provenance. This import contains artwork and metadata; it does not import the VPet renderer. Do not describe the bundled artwork as Apache-2.0 solely because the upstream code uses that license.
 
 Release packages must include this notice and the artwork terms. Include source attribution and the upstream link in the application's About view.
+
+## Agent Pet application icon
+
+`starter/packaging/agent-pet.png` (installed as the `agent-pet` icon) is a cropped, resized copy of the idle frame `Default/Nomal/1/_000_250.png` and is covered by the artwork terms above, not by the application code license.
+
+## Agent Pet application code
+
+Agent Pet's original application code is under the Apache License 2.0 (`starter/LICENSE`, with `starter/NOTICE`). That license does not apply to the artwork, the icon, or the upstream documents in `licenses/`.
