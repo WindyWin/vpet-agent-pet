@@ -38,6 +38,26 @@ private slots:
         QVERIFY(state.apply(event("tool_end"), now + 1));
         QCOMPARE(state.aggregate(now), "thinking");
     }
+    void activityHold() {
+        pet::Sessions state;
+        auto tool = [&](QString kind, QString id, int seq) { auto e = event(kind, seq); e.tool = id; e.activity = "working"; return e; };
+        QVERIFY(state.apply(event("prompt", 1), now + 1));
+        QVERIFY(state.apply(tool("tool_start", "a", 2), now + 2));
+        QVERIFY(state.apply(tool("tool_end", "a", 3), now + 3));
+        QCOMPARE(state.aggregate(now), "working"); // A brief tool stays visible.
+        state.expire(now + 3 + pet::Sessions::activityHoldMs - 1); QCOMPARE(state.aggregate(now), "working");
+        QVERIFY(state.apply(tool("tool_start", "b", 1000), now + 1000)); // Next tool continues the stretch.
+        QVERIFY(state.apply(tool("tool_end", "b", 1001), now + 1001));
+        state.expire(now + 1001 + pet::Sessions::activityHoldMs); QCOMPARE(state.aggregate(now), "thinking");
+        QVERIFY(state.apply(tool("tool_start", "c", 9000), now + 9000));
+        QVERIFY(state.apply(tool("tool_end", "c", 9001), now + 9001));
+        QVERIFY(state.apply(event("error", 9002), now + 9002)); // Toolless error resumes thinking, not the held tool.
+        state.expire(now + 9002 + 4000); QCOMPARE(state.aggregate(now), "thinking");
+        QVERIFY(state.apply(tool("tool_start", "d", 20000), now + 20000));
+        QVERIFY(state.apply(tool("tool_end", "d", 20001), now + 20001));
+        QVERIFY(state.apply(event("turn_finished", 20002), now + 20002));
+        QCOMPARE(state.aggregate(now), "turn-finished");
+    }
     void orderingAndRecovery() {
         pet::Sessions state;
         QVERIFY(state.apply(event("prompt", 3), now + 3));

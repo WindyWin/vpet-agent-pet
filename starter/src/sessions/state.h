@@ -20,7 +20,7 @@ struct Session {
     QString reason; // Reason of the current attention request, if any.
     QString host, hostPids, hostWindow, hostTarget;
     QMap<QString, QString> tools;
-    qint64 timestamp = 0, seen = 0, reactionUntil = 0;
+    qint64 timestamp = 0, seen = 0, reactionUntil = 0, activityUntil = 0;
 };
 struct Alert {
     QString session, kind, project, provider, id, reason;
@@ -36,6 +36,9 @@ public:
     // Finished turns and tool errors are reports, not requests: they fade so the
     // bubble does not pile up. Attention stays until the session resolves it.
     static constexpr qint64 finishedAlertMs = 6000, errorAlertMs = 10000;
+    // Tool calls are often shorter than an animation phase; the last activity is
+    // held this long after its tool ends so back-to-back tools read as one stretch.
+    static constexpr qint64 activityHoldMs = 4000;
     bool apply(const Event &event, qint64 now);
     void expire(qint64 now);
     QString aggregate(qint64 now) const;
