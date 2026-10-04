@@ -98,6 +98,18 @@ session ends (a new session cancels it): **keep** the pet running, **hide** it
 **quit** (the next session starts it again when autostart is on). It only applies
 after the pet has seen a session.
 
+### Start at login
+
+Separately, the pet can start whenever you log in to your desktop, before any
+agent session. It is off by default. Turn it on with **Settings → Startup →
+Start Agent Pet at login** or:
+
+```bash
+agent-pet autostart login enable   # writes ~/.config/autostart/agent-pet.desktop
+agent-pet autostart login status
+agent-pet autostart login disable
+```
+
 ## Connect Claude Code or Codex
 
 Open **Settings** from the pet's menu and press **Enable** next to Claude Code or
