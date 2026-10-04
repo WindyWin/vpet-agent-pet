@@ -76,7 +76,8 @@
       "last_assistant_message": "PRIVATE",
       "hook_event_name": "PermissionRequest"
     },
-    "kind": "attention"
+    "kind": "attention",
+    "reason": "approval"
   },
   {
     "provider": "claude",
@@ -189,7 +190,8 @@
       "hook_event_name": "Notification",
       "notification_type": "permission_prompt"
     },
-    "kind": "attention"
+    "kind": "attention",
+    "reason": "approval"
   },
   {
     "provider": "claude",
@@ -205,7 +207,8 @@
       "hook_event_name": "Notification",
       "notification_type": "idle_prompt"
     },
-    "kind": "attention"
+    "kind": "attention",
+    "reason": "input"
   },
   {
     "provider": "claude",
@@ -221,7 +224,8 @@
       "hook_event_name": "Notification",
       "notification_type": "elicitation_dialog"
     },
-    "kind": "attention"
+    "kind": "attention",
+    "reason": "input"
   },
   {
     "provider": "claude",
@@ -331,7 +335,8 @@
       "last_assistant_message": "PRIVATE",
       "hook_event_name": "PermissionRequest"
     },
-    "kind": "attention"
+    "kind": "attention",
+    "reason": "approval"
   },
   {
     "provider": "codex",

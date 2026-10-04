@@ -4,7 +4,7 @@ A standalone desktop companion that animates in response to Claude Code and Code
 
 **For a new public repository, use [starter/](starter/).** It is a self-contained 23 MB selection of the needed sprites with its own manifest, notices, and plan. Initialize Git inside `starter/` to keep the 749 MB archive outside that repository.
 
-Status: M3 local events and session tracking, plus M2 animation and desktop controls, are implemented in [starter/](starter/README.md), including the original dragging animation, persistent settings and a development package. XWayland has been tested; native X11 and native Wayland remain open. M4 provider adapters and integration management are implemented with automated checks; live-client acceptance remains open. Alert controls (M5) and release installers remain planned.
+Status: M3 local events and session tracking, plus M2 animation and desktop controls, are implemented in [starter/](starter/README.md), including the original dragging animation, persistent settings and a development package. XWayland has been tested; native X11 and native Wayland remain open. M4 provider adapters and integration management are implemented with automated checks; live-client acceptance remains open. M5 alerts (bubble with Next/Dismiss, attention badge, mute, optional sound and integration settings) are implemented. Release installers (M6) remain planned.
 
 This directory is the new project root and can be moved into its own repository. The bundled artwork is a real copy. Development and future releases must resolve assets relative to this project or the installed application's resources, without requiring an existing VPet installation or command.
 

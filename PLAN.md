@@ -19,7 +19,7 @@ The self-contained [starter repository](starter/README.md) also includes a small
 - [x] Implement animation playback and desktop controls.
 - [x] Implement local events and session state management.
 - [ ] Implement and validate both provider integrations.
-- [ ] Implement compact pet alerts and minimal settings.
+- [x] Implement compact pet alerts and minimal settings.
 - [ ] Package and validate the first Linux release.
 
 ### First-release scope
@@ -189,12 +189,17 @@ see [setup, limitations and evidence](starter/docs/integrations.md).
 
 ### M5 — Pet notifications and minimal settings
 
-- [ ] Add compact alerts for supported approval/input requests, errors, and finished turns, identified by project, provider, and short session ID.
-- [ ] Implement a bounded pending-alert queue, duplicate aggregation, pending count, and next/dismiss controls.
-- [ ] Keep underlying attention state independent of alert dismissal; define the attention badge and animation priority for concurrent sessions.
-- [ ] Add mute and optional sound, and expose integration setup/coverage in minimal settings.
-- [ ] Verify closing settings preserves monitoring, while explicit quit stops it.
-- [ ] Replay concurrent sessions, ambiguous project names, missed/late events, and application restart; verify alert identity, priority, and reset behavior.
+Implemented 2026-10-04 in `starter/`. Alert queue/label logic, offscreen window,
+badge, mute and quit tests pass, and the real app showed the bubble and badge for
+`emit`ted events under Xvfb. Sound audibility and visual review on a real desktop
+compositor remain manual checks. See [M5 evidence](starter/docs/architecture.md).
+
+- [x] Add compact alerts for supported approval/input requests, errors, and finished turns, identified by project, provider, and short session ID.
+- [x] Implement a bounded pending-alert queue, duplicate aggregation, pending count, and next/dismiss controls.
+- [x] Keep underlying attention state independent of alert dismissal; define the attention badge and animation priority for concurrent sessions.
+- [x] Add mute and optional sound, and expose integration setup/coverage in minimal settings.
+- [x] Verify closing settings preserves monitoring, while explicit quit stops it.
+- [x] Replay concurrent sessions, ambiguous project names, missed/late events, and application restart; verify alert identity, priority, and reset behavior.
 
 **Complete when:** the pet tells the user which observed session needs attention and why through compact alerts, while normal work remains in the original terminal/editor. The entire interaction uses the pet, alert bubble, and context/tray menu.
 
@@ -240,7 +245,7 @@ Set measurable callback-latency, memory, and idle-CPU targets during the prototy
 ## Immediate next steps
 
 1. Capture sanitized live payloads and finish M4 client/host acceptance checks.
-2. Validate integration setup and observed coverage in real Claude Code and Codex sessions.
-3. Build M5 alert presentation on the M3 pending-alert and session-state APIs.
+2. Validate integration setup and observed coverage in real Claude Code and Codex sessions, now visible through M5 alerts.
+3. Review M5 alerts on a real desktop (placement, sound, mute) and start M6 packaging.
 
 The first release is complete when another user can install it, receive pet reactions and identifiable attention and turn-finished alerts from supported connected sessions across local hosts using only the distributed package. Coverage limitations are visible; terminal navigation is not required.

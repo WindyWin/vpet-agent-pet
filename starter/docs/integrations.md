@@ -24,6 +24,12 @@ test, and `--executable /absolute/path/to/agent-pet` to register another install
 Enable requires an existing executable. After moving an installation, enable
 again from its new location, then review the updated client hook definitions.
 
+The pet's Settings window shows the same inspect result for each provider
+(Enabled, Not enabled or Partial, plus the configuration path) and offers
+Enable/Disable buttons after a confirmation naming the file and hook command.
+They run the same operation as the command line, registering the running
+executable, so launch the pet from its permanent location before enabling.
+
 Defaults are `$CLAUDE_CONFIG_DIR/settings.json` (otherwise
 `~/.claude/settings.json`) and `$CODEX_HOME/hooks.json` (otherwise
 `~/.codex/hooks.json`). No TOML, permissions, feature flags, or trust records are
@@ -71,12 +77,12 @@ Codex hosted tools can lack tool hooks. There is no universal input-request even
 | UserPromptSubmit | Thinking; starts a new observed turn |
 | PreToolUse | Track tool ID; known reading tools select reading, others working |
 | PostToolUse | Remove that tool and resume remaining activity |
-| PermissionRequest | Attention; never return an approval decision |
+| PermissionRequest | Attention (reason approval); never return an approval decision |
 | Stop | Turn finished, without claiming success |
 | SessionEnd | Remove session and its alerts |
 | SubagentStart / SubagentStop | Create/remove a child using agent_id and parent session_id |
 | Claude PostToolUseFailure | Error with failed tool removed; is_interrupt maps to inactive |
-| Claude Notification | Attention for permission_prompt, idle_prompt, elicitation_dialog only |
+| Claude Notification | Attention for permission_prompt (approval), idle_prompt and elicitation_dialog (input) only |
 | Codex PostToolUse with structured isError=true or nonzero numeric exit_code | Error with failed tool removed |
 | Codex Interrupt | Inactive, never finished |
 | Unknown event or notification | Silent no-op |

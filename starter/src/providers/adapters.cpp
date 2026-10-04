@@ -64,6 +64,13 @@ QJsonObject normalizeHook(const QString &provider, const QJsonObject &in, qint64
         if (tool.isEmpty()) return {}; // No invented identity for overlapping tools.
         out["tool_id"] = tool;
     } else if (kind == "attention" && !tool.isEmpty()) out["tool_id"] = tool;
+    if (kind == "attention") {
+        // Only documented signals: permission requests need approval; idle and
+        // elicitation prompts wait for input. Anything else stays unspecified.
+        const auto type = in.value("notification_type").toString();
+        if (name == "PermissionRequest" || type == "permission_prompt") out["reason"] = "approval";
+        else if (type == "idle_prompt" || type == "elicitation_dialog") out["reason"] = "input";
+    }
     if (kind == "tool_start") {
         const QSet<QString> reading{"Read", "Grep", "Glob", "WebFetch", "WebSearch", "read_file", "list_dir"};
         out["activity"] = reading.contains(in.value("tool_name").toString()) ? "reading" : "working";

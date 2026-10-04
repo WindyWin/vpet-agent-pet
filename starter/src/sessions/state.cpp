@@ -9,7 +9,7 @@ bool Event::parse(const QByteArray &data, Event &e, QString &error) {
     const auto doc = QJsonDocument::fromJson(data);
     if (!doc.isObject()) { error = "Expected a JSON object"; return false; }
     const auto o = doc.object();
-    const QSet<QString> fields{"version", "provider", "session_id", "event_id", "kind", "timestamp_ms", "tool_id", "parent_id", "project_path", "activity"};
+    const QSet<QString> fields{"version", "provider", "session_id", "event_id", "kind", "timestamp_ms", "tool_id", "parent_id", "project_path", "activity", "reason"};
     for (auto it = o.begin(); it != o.end(); ++it) {
         if (!fields.contains(it.key())) { error = "Unknown event field"; return false; }
         if (it.key() != "version" && it.key() != "timestamp_ms" &&
@@ -25,11 +25,13 @@ bool Event::parse(const QByteArray &data, Event &e, QString &error) {
     }
     e = {o.value("provider").toString(), o.value("session_id").toString(), o.value("event_id").toString(),
          o.value("kind").toString(), o.value("tool_id").toString(), o.value("parent_id").toString(),
-         o.value("project_path").toString(), o.value("activity").toString(), static_cast<qint64>(stamp)};
+         o.value("project_path").toString(), o.value("activity").toString(), static_cast<qint64>(stamp),
+         o.value("reason").toString()};
     const QSet<QString> kinds{"session_start", "prompt", "tool_start", "tool_end", "attention", "error", "turn_finished", "interrupt", "session_end"};
     if ((e.provider != "claude" && e.provider != "codex") || e.session.isEmpty() || e.id.isEmpty() || !kinds.contains(e.kind) ||
         ((e.kind == "tool_start" || e.kind == "tool_end") && e.tool.isEmpty()) ||
-        (!e.activity.isEmpty() && e.activity != "reading" && e.activity != "working")) {
+        (!e.activity.isEmpty() && e.activity != "reading" && e.activity != "working") ||
+        (!e.reason.isEmpty() && (e.kind != "attention" || (e.reason != "approval" && e.reason != "input")))) {
         error = "Missing identity or unsupported event kind/activity"; return false;
     }
     return true;
@@ -88,10 +90,13 @@ bool Sessions::apply(const Event &e, qint64 now) {
     if (s.state != "attention") dismiss(k, "attention");
     if (e.kind == "attention" || e.kind == "error" || e.kind == "turn_finished") {
         auto it = std::find_if(alerts_.begin(), alerts_.end(), [&](const Alert &a) { return a.session == k && a.kind == e.kind; });
-        if (it != alerts_.end()) it->count = std::min(it->count + 1, 1000000);
-        else {
+        if (it != alerts_.end()) {
+            it->count = std::min(it->count + 1, 1000000); it->serial = ++serial_;
+            if (!s.project.isEmpty()) it->project = s.project;
+            if (!e.reason.isEmpty()) it->reason = e.reason;
+        } else {
             if (alerts_.size() == maxAlerts) alerts_.removeFirst();
-            alerts_.append({k, e.kind, s.project, e.provider, e.session, now, 1});
+            alerts_.append({k, e.kind, s.project, e.provider, e.session, e.reason, now, 1, ++serial_});
         }
     }
     return true;
@@ -125,6 +130,9 @@ QVector<Alert> Sessions::pending() const {
     auto rank = [](const QString &kind) { return kind == "attention" ? 0 : kind == "error" ? 1 : 2; };
     std::stable_sort(result.begin(), result.end(), [&](const Alert &a, const Alert &b) { return rank(a.kind) < rank(b.kind); });
     return result;
+}
+int Sessions::unresolvedAttention() const {
+    return int(std::count_if(sessions_.begin(), sessions_.end(), [](const Session &s) { return s.state == "attention"; }));
 }
 void Sessions::dismiss(const QString &session, const QString &kind) {
     alerts_.erase(std::remove_if(alerts_.begin(), alerts_.end(), [&](const Alert &a) { return a.session == session && a.kind == kind; }), alerts_.end());

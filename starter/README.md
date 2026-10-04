@@ -14,7 +14,7 @@ python3 scripts/verify_assets.py
 git init
 ```
 
-The asset verifier uses only Python's standard library and works from any current directory. M3 local events and session tracking are implemented alongside the M2 animation and desktop controls. M4 provider adapters and integration setup are implemented; live-client acceptance remains open. See [PLAN.md](PLAN.md) and the [architecture and validation record](docs/architecture.md).
+The asset verifier uses only Python's standard library and works from any current directory. M3 local events and session tracking are implemented alongside the M2 animation and desktop controls. M4 provider adapters and integration setup are implemented; live-client acceptance remains open. M5 alerts and minimal settings are implemented. See [PLAN.md](PLAN.md) and the [architecture and validation record](docs/architecture.md).
 
 ## Build and run
 
@@ -59,7 +59,30 @@ printf '%s\n' '{"version":1,"provider":"claude","session_id":"demo","kind":"prom
 
 See [the event protocol](docs/events.md) for all events, identity fallbacks,
 ordering, limits, expiry, and command behavior. See [integration setup and coverage](docs/integrations.md) for raw Claude/Codex
-hooks and preview/enable/inspect/disable commands. Visible alert controls are M5.
+hooks and preview/enable/inspect/disable commands.
+
+## Alerts
+
+Approval/input requests, tool errors and finished turns raise a compact bubble
+beside the pet, for example `Needs approval` / `fcis-web · Claude Code · a1b2`.
+Hover the project for its full path. When several projects share a folder name,
+the parent folder is added. The footer shows how many alerts are pending; Next
+cycles them and Dismiss hides the shown one. Repeated alerts from the same
+session and reason are counted (`×2`) rather than queued again. A new request
+that outranks the shown alert takes its place. Reply in the agent's own
+terminal or editor; Agent Pet never answers a request.
+
+An orange badge stays on the pet while any observed session waits for approval
+or input, even after its alert is dismissed. It clears on that session's next
+prompt, tool start, interruption, stop or end. Right-click → Mute alerts hides
+bubbles (the badge remains). Settings also offer an optional sound for new
+alerts and show each integration's status with Enable/Disable buttons that
+merge only Agent Pet's hook entries. Closing settings keeps monitoring; Quit
+stops it. Alerts live only in memory and are not replayed after restart.
+
+```bash
+printf '%s\n' '{"version":1,"provider":"claude","session_id":"a1b2c3","kind":"attention","reason":"approval","project_path":"/projects/demo"}' | ./build/agent-pet emit
+```
 
 ## Provider setup
 
@@ -83,10 +106,10 @@ Python 3, `qmake6`, `ldd` and `patchelf` are build-time packaging tools:
 
 ```bash
 python3 scripts/package.py
-./dist/agent-pet-m4/bin/agent-pet --smoke-test
+./dist/agent-pet-m5/bin/agent-pet --smoke-test
 ```
 
-The output is `dist/agent-pet-m4/` and `dist/agent-pet-m4.tar.gz`. Use a new
+The output is `dist/agent-pet-m5/` and `dist/agent-pet-m5.tar.gz`. Use a new
 `--output` directory on subsequent runs. Copy/extract the entire directory to
 another location and run `bin/agent-pet`; no separate Qt or interpreter is needed.
 The package targets a compatible Linux host ABI, not every distribution.
@@ -95,7 +118,7 @@ For a filesystem-isolated headless check (requires bubblewrap and permitted user
 namespaces), run:
 
 ```bash
-python3 scripts/check_isolated.py dist/agent-pet-m4
+python3 scripts/check_isolated.py dist/agent-pet-m5
 ```
 
 This mounts only the package and host glibc libraries. It verifies idle/thinking,

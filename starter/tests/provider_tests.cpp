@@ -31,6 +31,7 @@ private slots:
             const auto row = value.toObject();
             const auto result = pet::normalizeHook(row["provider"].toString(), row["input"].toObject(), now);
             QCOMPARE(result["kind"].toString(), row["kind"].toString());
+            QCOMPARE(result["reason"].toString(), row["reason"].toString());
             if (!result.isEmpty()) {
                 pet::Event e; QString error;
                 QVERIFY2(pet::Event::parse(QJsonDocument(result).toJson(), e, error), qPrintable(error));

@@ -1,6 +1,10 @@
+#include "desktop/monitor.h"
 #include "desktop/pet_window.h"
 #include "desktop/session_playback.h"
 #include <QApplication>
+#include <QCheckBox>
+#include <QDateTime>
+#include <QGroupBox>
 #include <QDir>
 #include <QFile>
 #include <QImage>
@@ -36,7 +40,13 @@ void writeCatalog(const QString &root, const QJsonObject &catalog) {
 }
 class PrototypeTests : public QObject {
     Q_OBJECT
+    QTemporaryDir clients;
 private slots:
+    void initTestCase() {
+        // Settings inspect integration files; keep them away from the real client configuration.
+        qputenv("CLAUDE_CONFIG_DIR", QFile::encodeName(clients.path() + "/claude"));
+        qputenv("CODEX_HOME", QFile::encodeName(clients.path() + "/codex"));
+    }
     void sessionAnimationMapping() {
         pet::Player player;
         const QStringList states{"attention", "error", "turn-finished", "working", "reading", "thinking", "idle", "inactive"};
@@ -175,6 +185,72 @@ private slots:
         pet::PetWindow restored(nullptr, path); QCOMPARE(restored.width(), 300); QCOMPARE(restored.pos(), saved);
         QVERIFY(!restored.windowFlags().testFlag(Qt::WindowStaysOnTopHint)); QVERIFY(!restored.clickThrough());
         restored.setPetSize(1); QCOMPARE(restored.width(), 160);
+    }
+    void notificationPreferences() {
+        QTemporaryDir directory; const auto path = directory.path() + "/preferences.json";
+        QFile legacy(path); QVERIFY(legacy.open(QIODevice::WriteOnly));
+        legacy.write(R"({"version":1,"size":200,"on_top":true,"x":10,"y":20})"); legacy.close();
+        pet::PreferencesStore store(path); auto prefs = store.load();
+        QCOMPARE(prefs.size, 200); QVERIFY(!prefs.muted); QVERIFY(!prefs.sound);
+        prefs.muted = true; prefs.sound = true; QVERIFY(store.save(prefs));
+        const auto reloaded = pet::PreferencesStore(path).load(); QVERIFY(reloaded.muted); QVERIFY(reloaded.sound);
+        QVERIFY(legacy.open(QIODevice::WriteOnly));
+        legacy.write(R"({"version":1,"size":200,"on_top":true,"x":10,"y":20,"muted":"yes"})"); legacy.close();
+        pet::PreferencesStore invalid(path); QVERIFY(!invalid.load().muted); QVERIFY(!invalid.save(prefs));
+    }
+    void bubblePlacementNearEdges() {
+        const QRect screen(0, 0, 1920, 1080); const QSize bubble(300, 90);
+        auto inside = [&](QPoint p) { return screen.contains(QRect(p, bubble)); };
+        const QRect middle(800, 400, 240, 240), right(1680, 400, 240, 240), corner(1680, 0, 240, 240);
+        QCOMPARE(pet::AlertBubble::placement(middle, bubble, screen), QPoint(1048, 448));
+        const auto left = pet::AlertBubble::placement(right, bubble, screen);
+        QCOMPARE(left, QPoint(1372, 448)); QVERIFY(inside(left));
+        QVERIFY(inside(pet::AlertBubble::placement(corner, bubble, screen)));
+        const QRect wide(0, 400, 1900, 240); // No side fits: above.
+        QCOMPARE(pet::AlertBubble::placement(wide, bubble, screen).y(), 400 - 8 - 90);
+        QVERIFY(inside(pet::AlertBubble::placement({-500, -500, 240, 240}, bubble, screen)));
+    }
+    void monitorAlertsBadgeAndQuit() {
+        QTemporaryDir directory;
+        pet::PetWindow window(nullptr, directory.path() + "/preferences.json"); window.show();
+        pet::Monitor monitor(window);
+        const qint64 now = QDateTime::currentMSecsSinceEpoch(); qint64 seq = 0;
+        auto event = [&](QString session, QString kind, QString reason = {}) {
+            ++seq; return pet::Event{"claude", session, QString::number(seq), kind, {}, {}, "/work/fcis-web", {}, now + seq, reason};
+        };
+        QVERIFY(monitor.apply(event("b72c9", "turn_finished"), now + seq));
+        QVERIFY(monitor.bubble().isVisible()); QCOMPARE(monitor.bubble().title(), "Turn finished");
+        QVERIFY(monitor.apply(event("a1b2", "attention", "approval"), now + seq));
+        QCOMPARE(monitor.bubble().title(), "Needs approval");
+        QCOMPARE(monitor.bubble().label(), "fcis-web · Claude Code · a1b2");
+        QCOMPARE(monitor.bubble().footer(), "1 more alert"); QCOMPARE(window.attention(), 1);
+        QCOMPARE(window.player().requestedState(), "needs_input");
+        // The bubble sits beside the character without covering it.
+        QVERIFY(!monitor.bubble().geometry().intersects(window.figure()));
+
+        window.setMuted(true); QVERIFY(!monitor.bubble().isVisible()); QCOMPARE(window.attention(), 1);
+        window.setMuted(false); QVERIFY(monitor.bubble().isVisible());
+        emit monitor.bubble().dismissRequested();
+        QCOMPARE(monitor.bubble().title(), "Turn finished"); QCOMPARE(monitor.bubble().footer(), QString());
+        QCOMPARE(window.attention(), 1); // Dismissal never resolves the request.
+        emit monitor.bubble().dismissRequested(); QVERIFY(!monitor.bubble().isVisible());
+        QCOMPARE(monitor.sessions().aggregate(now), "attention");
+
+        window.showSettings();
+        auto *dialog = window.findChild<QDialog*>(); QVERIFY(dialog);
+        auto *integrations = dialog->findChild<QGroupBox*>(); QVERIFY(integrations); // Setup and coverage.
+        int notEnabled = 0;
+        for (auto *label : integrations->findChildren<QLabel*>()) notEnabled += label->text().startsWith("Not enabled\n");
+        QCOMPARE(notEnabled, 2);
+        auto boxes = dialog->findChildren<QCheckBox*>(); QVERIFY(boxes.size() >= 3);
+        dialog->close(); QCoreApplication::processEvents();
+        QVERIFY(monitor.active());
+        QVERIFY(monitor.apply(event("a1b2", "prompt"), now + seq)); QCOMPARE(window.attention(), 0);
+        QVERIFY(monitor.apply(event("c3d4", "error"), now + seq)); QVERIFY(monitor.bubble().isVisible());
+
+        window.requestQuit();
+        QVERIFY(!monitor.active()); QVERIFY(!monitor.bubble().isVisible());
+        QVERIFY(!monitor.apply(event("c3d4", "attention"), now + seq));
     }
 };
 QTEST_MAIN(PrototypeTests)

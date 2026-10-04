@@ -13,6 +13,8 @@ struct Preferences {
     QPoint position;
     bool hasPosition = false;
     bool onTop = true;
+    bool muted = false; // Hides alert bubbles; the attention badge stays visible.
+    bool sound = false; // Optional system beep for newly raised alerts.
     static QPoint visiblePosition(QPoint position, QSize size, const QVector<QRect> &screens);
 };
 class PreferencesStore {

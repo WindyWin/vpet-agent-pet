@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
-project(AgentPet VERSION 0.4.0 LANGUAGES CXX)
+project(AgentPet VERSION 0.5.0 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(Qt6 6.5 REQUIRED COMPONENTS Widgets)
@@ -13,11 +13,12 @@ file(GLOB_RECURSE pet_resources CONFIGURE_DEPENDS RELATIVE "${CMAKE_CURRENT_SOUR
 list(APPEND pet_resources assets/vpet/animations.json THIRD_PARTY_NOTICES.md)
 qt_add_library(pet_ui STATIC
     src/animation/player.cpp src/desktop/pet_window.cpp
-    src/desktop/drag_monitor.cpp src/settings/preferences.cpp)
+    src/desktop/drag_monitor.cpp src/desktop/alert_bubble.cpp src/desktop/monitor.cpp
+    src/settings/preferences.cpp)
 target_include_directories(pet_ui PUBLIC src)
-target_link_libraries(pet_ui PUBLIC Qt6::Widgets PRIVATE X11::X11)
+target_link_libraries(pet_ui PUBLIC Qt6::Widgets pet_events PRIVATE X11::X11)
 qt_add_resources(pet_ui pet_assets PREFIX "/" FILES ${pet_resources})
-qt_add_library(pet_events STATIC src/sessions/state.cpp src/ipc/local.cpp
+qt_add_library(pet_events STATIC src/sessions/state.cpp src/sessions/alerts.cpp src/ipc/local.cpp
     src/providers/adapters.cpp src/providers/integrations.cpp)
 target_include_directories(pet_events PUBLIC src)
 target_link_libraries(pet_events PUBLIC Qt6::Core)
@@ -42,6 +43,9 @@ if(BUILD_TESTING)
     target_compile_definitions(event-tests PRIVATE FIXTURE_PATH="${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/concurrent.json" APP_PATH="$<TARGET_FILE:agent-pet>")
     add_dependencies(event-tests agent-pet)
     add_test(NAME events COMMAND event-tests)
+    qt_add_executable(alert-tests tests/alert_tests.cpp)
+    target_link_libraries(alert-tests PRIVATE pet_events Qt6::Test)
+    add_test(NAME alerts COMMAND alert-tests)
     qt_add_executable(prototype-tests tests/prototype_tests.cpp)
     target_link_libraries(prototype-tests PRIVATE pet_ui Qt6::Test)
     add_test(NAME prototype COMMAND prototype-tests)

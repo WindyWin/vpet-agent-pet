@@ -71,29 +71,21 @@ bool mergeIntegration(const QJsonObject &input, const QString &provider, const Q
     if (!hooks.isEmpty() || input.contains("hooks")) output["hooks"] = hooks;
     return true;
 }
-int integrationCommand(const QStringList &args) {
-    QString provider, path, executable = QCoreApplication::applicationFilePath(), error;
-    const auto operation = args.value(2);
-    auto fail = [&] { std::fprintf(stderr, "%s\n", qPrintable(error)); return 1; };
-    for (int i = 3; i < args.size(); ++i) {
-        const auto option = args[i];
-        if (i + 1 >= args.size()) { error = "Missing option value"; return fail(); }
-        if (option == "--provider" && provider.isEmpty()) provider = args[++i];
-        else if (option == "--config" && path.isEmpty()) path = args[++i];
-        else if (option == "--executable") executable = args[++i];
-        else { error = "Unknown integration option"; return fail(); }
-    }
+QString integrationConfigPath(const QString &provider) {
+    const auto root = qEnvironmentVariable(provider == "claude" ? "CLAUDE_CONFIG_DIR" : "CODEX_HOME",
+                                           QDir::homePath() + (provider == "claude" ? "/.claude" : "/.codex"));
+    return root + (provider == "claude" ? "/settings.json" : "/hooks.json");
+}
+bool runIntegration(const QString &operation, const QString &provider, QString path, const QString &executable,
+                    QJsonObject &report, QString &error) {
+    auto fail = [] { return false; };
     if (!QStringList{"preview", "inspect", "enable", "disable"}.contains(operation) || hookEvents(provider).isEmpty()) {
         error = "Usage: agent-pet integration preview|inspect|enable|disable --provider claude|codex [--config PATH] [--executable PATH]"; return fail();
     }
     if (operation == "enable" && (!QFileInfo(executable).isFile() || !QFileInfo(executable).isExecutable())) {
         error = "Hook executable does not exist or is not executable"; return fail();
     }
-    if (path.isEmpty()) {
-        const auto root = qEnvironmentVariable(provider == "claude" ? "CLAUDE_CONFIG_DIR" : "CODEX_HOME",
-                                               QDir::homePath() + (provider == "claude" ? "/.claude" : "/.codex"));
-        path = root + (provider == "claude" ? "/settings.json" : "/hooks.json");
-    }
+    if (path.isEmpty()) path = integrationConfigPath(provider);
     path = QFileInfo(path).absoluteFilePath();
     const bool write = operation == "enable" || operation == "disable";
     if (QFileInfo(path).isSymLink()) { error = "Refusing a symlink configuration; specify its real path"; return fail(); }
@@ -114,7 +106,7 @@ int integrationCommand(const QStringList &args) {
     }
     QJsonObject output; int owned = 0;
     if (!mergeIntegration(input, provider, executable, operation != "disable", output, owned, error)) return fail();
-    QJsonObject report{{"provider", provider}, {"config", path}, {"owned_handlers", owned},
+    report = QJsonObject{{"provider", provider}, {"config", path}, {"owned_handlers", owned},
                        {"expected_handlers", hookEvents(provider).size()},
                        {"coverage", "Local observed sessions only. Restart the client after setup; verify in /hooks. Silent sessions and remote/container hosts are not discovered."}};
     if (provider == "codex") report["setup"] = "Review and trust these definitions in Codex /hooks. features.hooks and managed policy can prevent execution. Agent Pet does not change trust or policy.";
@@ -144,6 +136,21 @@ int integrationCommand(const QStringList &args) {
         if (saved.write(data) != data.size() || !saved.commit()) { error = "Cannot save configuration"; return fail(); }
     }
     report["changed"] = write && input != output;
+    return true;
+}
+int integrationCommand(const QStringList &args) {
+    QString provider, path, executable = QCoreApplication::applicationFilePath(), error;
+    auto fail = [&] { std::fprintf(stderr, "%s\n", qPrintable(error)); return 1; };
+    for (int i = 3; i < args.size(); ++i) {
+        const auto option = args[i];
+        if (i + 1 >= args.size()) { error = "Missing option value"; return fail(); }
+        if (option == "--provider" && provider.isEmpty()) provider = args[++i];
+        else if (option == "--config" && path.isEmpty()) path = args[++i];
+        else if (option == "--executable") executable = args[++i];
+        else { error = "Unknown integration option"; return fail(); }
+    }
+    QJsonObject report;
+    if (!runIntegration(args.value(2), provider, path, executable, report, error)) return fail();
     const auto result = QJsonDocument(report).toJson();
     std::fwrite(result.constData(), 1, result.size(), stdout);
     return 0;

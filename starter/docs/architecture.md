@@ -13,10 +13,10 @@ resources, so moving the executable cannot break sprite lookup.
 
 | Directory | Responsibility |
 | --- | --- |
-| `src/desktop` | Transparent pet, context/tray menu, drag, scale, input and quit |
+| `src/desktop` | Transparent pet, alert bubble, attention badge, context/tray menu, drag, scale, input and quit |
 | `src/animation` | Catalog validation, phased playback and bounded decoded-frame cache |
 | `src/settings` | Validated, atomic preference storage in the user data directory |
-| `src/sessions` | Bounded session/tool state, ordering, aggregate activity and alerts |
+| `src/sessions` | Bounded session/tool state, ordering, aggregate activity, alerts and alert labels |
 | `src/ipc` | Private Unix transport and headless hook/emit commands |
 | `src/providers` | Claude/Codex normalization and integration configuration management |
 
@@ -221,3 +221,34 @@ No user client hook configuration was installed during implementation. Synthetic
 fixtures and subprocess tests do not certify real client/host behavior. Captured
 live payloads, real concurrent/child sessions, VS Code integrated terminal tests,
 and existing-client configuration reload behavior remain M4 acceptance work.
+
+## M5 implementation evidence — 2026-10-04
+
+`Monitor` (`src/desktop/monitor.cpp`) now owns the receiver, session state and
+alert presentation that `main.cpp` previously wired inline. It feeds aggregate
+playback, the badge and an `AlertBubble`: a separate frameless, non-activating
+top-level window placed right of the character, else left, above or below,
+clamped to the pet's screen and moved with the pet. The pet's Quit emits
+`quitRequested`, which stops the timer, closes the socket and hides the bubble;
+closing settings or preview does not touch the monitor. Mute and sound are new
+optional keys in `preferences.json`; files written before M5 still load.
+
+Validation in a cloud Ubuntu 24.04 container with Qt 6.4.2 (the build
+requirement stays Qt 6.5; the temporary local override was not committed):
+
+- CTest passed all four suites (`providers`, `events`, `alerts`, `prototype`).
+  `alerts` replays concurrent sessions across providers, folder-name
+  collisions, short-ID collisions, preemption versus a kept Next position,
+  dismissal with attention retained, missed/late/ended/expired sessions,
+  restart and the 64-alert bound. `prototype` runs an offscreen pet with the
+  monitor: bubble text and footer, badge count, mute, dismissal, settings
+  close with continued monitoring, quit stopping monitoring, edge placement
+  and preference compatibility. Provider fixtures now assert attention reasons.
+- The real binary under Xvfb received three `emit`ted events and showed
+  "Needs approval / fcis-web (work) · Claude Code · a1b2 / 2 more alerts" with
+  the badge, beside the character.
+- `--smoke-test` passed offscreen; asset verification passed (215 PNGs).
+
+Not covered here: audible sound, a compositor-backed desktop (Xvfb has no
+translucency), native X11/Wayland, and packaging (`qmake6`/`patchelf` were not
+installed). Live-client acceptance from M4 is still open.

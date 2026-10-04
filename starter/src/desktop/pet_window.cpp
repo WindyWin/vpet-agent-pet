@@ -1,5 +1,6 @@
 #include "pet_window.h"
 #include "drag_monitor.h"
+#include "providers/integrations.h"
 #include <QApplication>
 #include <QCheckBox>
 #include <QCloseEvent>
@@ -8,6 +9,9 @@
 #include <QDialogButtonBox>
 #include <QFile>
 #include <QFormLayout>
+#include <QGroupBox>
+#include <QJsonObject>
+#include <QMessageBox>
 #include <QLabel>
 #include <QMouseEvent>
 #include <QPainter>
@@ -18,6 +22,7 @@
 #include <QShortcut>
 #include <QSpinBox>
 #include <QTextBrowser>
+#include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QWindow>
 
@@ -32,6 +37,7 @@ PetWindow::PetWindow(QWidget *parent, const QString &path, bool persist)
     setAccessibleName("Agent Pet");
     setToolTip("Drag to move · Right-click for controls · Esc to quit");
     setPetSize(preferences.size);
+    muted_ = preferences.muted; sound_ = preferences.sound;
     connect(&player_, &Player::changed, this, qOverload<>(&PetWindow::update));
     connect(&player_, &Player::completed, this, [this](const QString &state) {
         if (quitting_ && state == "closing") qApp->quit();
@@ -39,6 +45,9 @@ PetWindow::PetWindow(QWidget *parent, const QString &path, bool persist)
     auto *states = menu_.addMenu("Preview state");
     for (const auto &state : player_.states())
         states->addAction(state, this, [this, state] { if (!quitting_) player_.select(state); });
+    muteAction_ = menu_.addAction("Mute alerts");
+    muteAction_->setCheckable(true); muteAction_->setChecked(muted_);
+    connect(muteAction_, &QAction::toggled, this, &PetWindow::setMuted);
     menu_.addAction("Settings…", this, &PetWindow::showSettings);
     menu_.addAction("Animation preview…", this, &PetWindow::showPreview);
     onTopAction_ = menu_.addAction("Always on top");
@@ -107,6 +116,7 @@ void PetWindow::setPetSize(int pixels) {
     setFixedSize(size, size);
     player_.setRenderSize(qRound(size * devicePixelRatioF()));
     if (ready_) constrainPosition();
+    emit moved();
 }
 void PetWindow::setClickThrough(bool enabled) {
     if (quitting_) return;
@@ -126,6 +136,25 @@ void PetWindow::setOnTop(bool enabled) {
     setWindowFlag(Qt::WindowStaysOnTopHint, enabled); show(); move(position);
     if (ready_) saveTimer_.start();
 }
+void PetWindow::setAttention(int sessions) {
+    sessions = qMax(0, sessions);
+    if (sessions == attention_) return;
+    attention_ = sessions;
+    setAccessibleDescription(sessions ? QString("%1 session(s) waiting for you").arg(sessions) : QString());
+    update();
+}
+void PetWindow::setMuted(bool muted) {
+    const QSignalBlocker blocker(muteAction_);
+    muteAction_->setChecked(muted);
+    if (muted == muted_) return;
+    muted_ = muted; emit notificationsChanged();
+    if (ready_) saveTimer_.start();
+}
+void PetWindow::setSound(bool enabled) {
+    if (enabled == sound_) return;
+    sound_ = enabled; emit notificationsChanged();
+    if (ready_) saveTimer_.start();
+}
 void PetWindow::recover() {
     setClickThrough(false);
     move(Preferences::visiblePosition({-1000000, -1000000}, size(), screenAreas()));
@@ -136,11 +165,13 @@ bool PetWindow::savePreferences() {
     Preferences preferences;
     preferences.size = width(); preferences.position = pos(); preferences.hasPosition = true;
     preferences.onTop = windowFlags().testFlag(Qt::WindowStaysOnTopHint);
+    preferences.muted = muted_; preferences.sound = sound_;
     return store_.save(preferences);
 }
 void PetWindow::moveEvent(QMoveEvent *event) {
     QWidget::moveEvent(event);
     if (ready_) saveTimer_.start();
+    emit moved();
 }
 void PetWindow::paintEvent(QPaintEvent *) {
     QPainter painter(this);
@@ -154,10 +185,21 @@ void PetWindow::paintEvent(QPaintEvent *) {
     }
     const auto size = player_.pixmap().size().scaled(this->size(), Qt::KeepAspectRatio);
     painter.drawPixmap(QRect(QPoint((width() - size.width()) / 2, (height() - size.height()) / 2), size), player_.pixmap());
+    if (attention_ > 0) {
+        // Persistent attention badge: stays until the observed request resolves.
+        const int diameter = qMax(26, width() / 8);
+        const QRect badge(width() * 3 / 4 - diameter / 2, height() / 8, diameter, diameter);
+        painter.setRenderHint(QPainter::Antialiasing);
+        painter.setPen(QPen(Qt::white, 2)); painter.setBrush(QColor("#d9480f"));
+        painter.drawEllipse(badge);
+        auto font = painter.font(); font.setBold(true); font.setPixelSize(diameter * 3 / 5); painter.setFont(font);
+        painter.drawText(badge, Qt::AlignCenter, attention_ > 1 ? QString::number(qMin(attention_, 9)) : "!");
+    }
 }
 void PetWindow::requestQuit() {
     if (quitting_) { qApp->quit(); return; }
     endDrag(); setClickThrough(false); savePreferences(); quitting_ = true;
+    emit quitRequested(); // Monitoring stops here; closing settings never reaches this.
     if (settingsDialog_) settingsDialog_->close();
     if (previewDialog_) previewDialog_->close();
     menu_.setEnabled(false);
@@ -198,13 +240,19 @@ void PetWindow::showSettings() {
     auto *top = new QCheckBox("Always on &top", dialog); top->setChecked(onTopAction_->isChecked()); layout->addRow(top);
     connect(top, &QCheckBox::toggled, this, &PetWindow::setOnTop);
     connect(onTopAction_, &QAction::toggled, top, &QCheckBox::setChecked);
+    auto *mute = new QCheckBox("&Mute alert bubbles (badge stays visible)", dialog); mute->setChecked(muted_); layout->addRow("Alerts", mute);
+    connect(mute, &QCheckBox::toggled, this, &PetWindow::setMuted);
+    connect(muteAction_, &QAction::toggled, mute, &QCheckBox::setChecked);
+    auto *sound = new QCheckBox("Play a &sound for new alerts", dialog); sound->setChecked(sound_); layout->addRow(sound);
+    connect(sound, &QCheckBox::toggled, this, &PetWindow::setSound);
+    layout->addRow(integrationSettings(dialog));
     auto *recover = new QPushButton("&Recover position and input", dialog); layout->addRow(recover);
     connect(recover, &QPushButton::clicked, this, &PetWindow::recover);
     auto *about = new QPushButton("Artwork &credits and terms", dialog); layout->addRow(about);
     connect(about, &QPushButton::clicked, this, &PetWindow::showAbout);
     auto *status = new QLabel(dialog); status->setWordWrap(true); status->setTextInteractionFlags(Qt::TextSelectableByMouse);
     const auto updateStatus = [this, status] {
-        status->setText(store_.error().isEmpty() ? "Size and position are saved automatically. Agent integrations are planned."
+        status->setText(store_.error().isEmpty() ? "Preferences are saved automatically. Closing this window keeps monitoring; Quit stops it."
                                                : store_.error() + "\n" + store_.path());
     };
     updateStatus(); layout->addRow(status);
@@ -216,11 +264,54 @@ void PetWindow::showSettings() {
     connect(buttons, &QDialogButtonBox::rejected, dialog, &QDialog::close);
     layout->addRow(buttons); dialog->show();
 }
+QWidget *PetWindow::integrationSettings(QWidget *parent) {
+    auto *box = new QGroupBox("Agent integrations", parent);
+    auto *layout = new QFormLayout(box);
+    for (const QString provider : {"claude", "codex"}) {
+        auto *row = new QWidget(box); auto *rowLayout = new QHBoxLayout(row); rowLayout->setContentsMargins(0, 0, 0, 0);
+        auto *status = new QLabel(row); status->setWordWrap(true); status->setTextInteractionFlags(Qt::TextSelectableByMouse);
+        auto *toggle = new QPushButton(row);
+        rowLayout->addWidget(status, 1); rowLayout->addWidget(toggle);
+        const auto refresh = [provider, status, toggle] {
+            QJsonObject report; QString error;
+            if (!runIntegration("inspect", provider, {}, QCoreApplication::applicationFilePath(), report, error)) {
+                status->setText(error + "\n" + integrationConfigPath(provider)); toggle->setEnabled(false); return;
+            }
+            const int owned = report["owned_handlers"].toInt(), expected = report["expected_handlers"].toInt();
+            QString text = owned == expected ? "Enabled" : owned == 0 ? "Not enabled" : QString("Partial (%1 of %2 hooks)").arg(owned).arg(expected);
+            if (report.contains("warning")) text += " · " + report["warning"].toString();
+            status->setText(text + "\n" + report["config"].toString());
+            status->setToolTip(report["setup"].toString());
+            toggle->setText(owned ? "Disable" : "Enable"); toggle->setEnabled(true);
+            toggle->setProperty("enable", owned == 0);
+        };
+        refresh();
+        connect(toggle, &QPushButton::clicked, box, [this, provider, toggle, refresh] {
+            const bool enable = toggle->property("enable").toBool();
+            const auto executable = QCoreApplication::applicationFilePath();
+            const auto question = enable
+                ? QString("Add Agent Pet hooks to %1?\n\nHook command: %2\nOther settings and hooks are preserved. "
+                          "Register from a permanent install location, then restart the client.").arg(integrationConfigPath(provider), executable)
+                : QString("Remove only Agent Pet hooks from %1?").arg(integrationConfigPath(provider));
+            if (QMessageBox::question(this, "Agent integrations", question) != QMessageBox::Yes) return;
+            QJsonObject report; QString error;
+            if (!runIntegration(enable ? "enable" : "disable", provider, {}, executable, report, error))
+                QMessageBox::warning(this, "Agent integrations", error);
+            refresh();
+        });
+        layout->addRow(provider == "claude" ? "Claude Code" : "Codex", row);
+    }
+    auto *coverage = new QLabel("Covers sessions on this machine that send events after setup. Restart the client "
+                                "after enabling; silent, remote and container sessions are not discovered. "
+                                "Reply to requests in the agent's own terminal or editor.", box);
+    coverage->setWordWrap(true); layout->addRow(coverage);
+    return box;
+}
 void PetWindow::showAbout() {
     auto *dialog = new QDialog(this); dialog->setAttribute(Qt::WA_DeleteOnClose);
     dialog->setWindowTitle("About Agent Pet — artwork and terms"); dialog->resize(560, 440);
     auto *layout = new QVBoxLayout(dialog);
-    auto *credits = new QLabel("<b>Agent Pet 0.2.0</b><br>Artwork: VUP-Simulator team, via "
+    auto *credits = new QLabel("<b>Agent Pet " + QCoreApplication::applicationVersion().toHtmlEscaped() + "</b><br>Artwork: VUP-Simulator team, via "
                                "<a href='https://github.com/LorisYounger/VPet'>LorisYounger/VPet</a>.", dialog);
     credits->setOpenExternalLinks(true); credits->setTextInteractionFlags(Qt::TextBrowserInteraction); layout->addWidget(credits);
     auto *terms = new QTextBrowser(dialog); terms->setAccessibleName("Artwork terms and third-party notices");

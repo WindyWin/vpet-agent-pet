@@ -14,9 +14,10 @@ One UTF-8 JSON object per Unix datagram, at most 8192 bytes:
 
 Required fields: `version` (integer 1), `provider` (`claude` or `codex`),
 `session_id`, `event_id`, `kind`, and positive integer Unix `timestamp_ms`.
-Optional fields: `tool_id`, `parent_id`, `project_path`, `activity`.
+Optional fields: `tool_id`, `parent_id`, `project_path`, `activity`, `reason`.
 `tool_start` and `tool_end` require `tool_id`; activity is `reading` or `working`
-(default working). Strings are limited to 256 UTF-16 units, except project paths
+(default working). `reason` is allowed only on `attention` and is `approval` or
+`input`; without it alerts say "Needs attention". Strings are limited to 256 UTF-16 units, except project paths
 (2048); control characters and unknown fields are rejected. No prompt, tool
 arguments, output, or raw provider payload is retained or transmitted.
 
@@ -107,8 +108,21 @@ The pending queue aggregates alerts by session and reason, saturating counts at
 1,000,000. At capacity the oldest alert is evicted. Selection sorts attention,
 then error, then finished, with FIFO ordering within each priority. Dismissal
 removes the alert only, and never clears session attention. Resolving attention,
-ending a session or expiry clears its relevant alerts. Queue presentation,
-Next/Dismiss controls and the persistent attention badge belong to M5.
+ending a session or expiry clears its relevant alerts.
+
+## Alert presentation (M5)
+
+`AlertQueue` (`src/sessions/alerts.h`) is a cursor over the pending queue and
+holds no alert data. It shows the highest-priority alert, keeps the user's Next
+position, and switches only when a newly raised or re-raised alert outranks the
+one shown. Dismiss hides the shown alert and moves to the one after it. Labels
+are `project · provider · short ID`: the project is the path's last component
+(with its parent folder appended when another pending alert has the same name
+for a different path, or "Unknown project"); the short ID is the shortest prefix
+of at least four characters not shared with another pending session of the same
+provider. Aggregated repeats show `(×N)`. The badge counts sessions whose state
+is attention, so dismissal never clears it. Mute hides the bubble only; sound
+is a system beep when an alert is raised or re-raised while not muted.
 
 ## Verification
 

@@ -20,7 +20,7 @@ def run(*args):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--build", type=Path, default=ROOT / "build")
-    parser.add_argument("--output", type=Path, default=ROOT / "dist/agent-pet-m4")
+    parser.add_argument("--output", type=Path, default=ROOT / "dist/agent-pet-m5")
     args = parser.parse_args()
     output = args.output.resolve()
     if output.exists():

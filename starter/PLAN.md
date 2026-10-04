@@ -25,13 +25,20 @@ are still untested as full desktop sessions.
 M3 implemented 2026-10-04: versioned normalized events, private bounded Unix
 transport, headless hook/emit commands, bounded session/tool tracking, deduplication,
 ordering, expiry and aggregate playback. Deterministic replay and transport tests
-cover the policies in [events.md](docs/events.md). Provider adapters are implemented in M4, and visible alert controls remain M5.
+cover the policies in [events.md](docs/events.md). Provider adapters are implemented in M4, and visible alert controls in M5.
 
 M4 implementation added 2026-10-04: separate provider mappings, headless integration
 preview/enable/inspect/disable, ownership-aware JSON merging, atomic writes and
 contract/transport tests. Target versions: Claude Code 2.1.289 and Codex CLI
 0.156.0. Live sessions, captured fixtures and terminal/editor coverage are still
 required before marking M4 complete. See [integration evidence](docs/integrations.md).
+
+M5 implemented 2026-10-04: a compact alert bubble beside the pet names the
+project, provider, short session ID and reason (needs approval/input, tool error,
+turn finished), with a pending count and Next/Dismiss. A persistent badge marks
+unresolved requests independently of dismissal. Mute, optional sound and
+integration status/enable/disable live in settings and the context menu.
+Replay, queue and offscreen window tests pass; see [M5 evidence](docs/architecture.md).
 
 1. Build a transparent, draggable desktop window and play the bundled `idle` sequence using frame durations from `assets/vpet/animations.json`. Test X11 and XWayland behavior before choosing a Linux package format.
 2. Add an animation controller that can start a sequence, hold its middle loop, play its ending, and return to idle. Keep decoded images in a bounded cache. The JSON state map has separate folders for each A/B/C phase.
