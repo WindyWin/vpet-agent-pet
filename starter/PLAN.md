@@ -4,6 +4,19 @@ Build a standalone desktop pet with assets loaded from this repository and later
 
 Scope revised 2026-10-04: a passive local session monitor with an animated pet, compact attention notifications, and minimal settings. Users keep working in their existing terminals/editors; Agent Pet does not launch, focus, resume, embed, or control those sessions.
 
+M1 implementation (2026-10-04): the C++17 / Qt 6 prototype now plays bundled idle
+and thinking animations and provides drag, size, on-top, timed click-through,
+recovery and quit controls. CMake/CTest and a relocatable Linux prototype packager
+are available. Copied-package XWayland and filesystem-isolated runtime smoke
+checks pass. Native X11 and manual desktop acceptance remain open; see
+[architecture and evidence](docs/architecture.md) and [build commands](README.md).
+Provider/session/IPC directories reserve boundaries for later milestones.
+
+User confirmed transparency and always-on-top behavior on the current desktop
+(2026-10-04). TODO for M2: import the original `Raise/` dragging animation, play it
+during dragging, and restore the prior state on completion, including native
+system moves. Dedicated dragging animation is intentionally deferred.
+
 1. Build a transparent, draggable desktop window and play the bundled `idle` sequence using frame durations from `assets/vpet/animations.json`. Test X11 and XWayland behavior before choosing a Linux package format.
 2. Add an animation controller that can start a sequence, hold its middle loop, play its ending, and return to idle. Keep decoded images in a bounded cache. The JSON state map has separate folders for each A/B/C phase.
 3. Add a small local event receiver and a packaged `agent-pet hook` command. The command reads hook JSON from stdin, extracts normalized event/session metadata and project path when available, sends them through a private local channel, and exits quickly even when the UI is closed. Exclude prompt text, tool arguments, and output. Create records on any supported event, including when SessionStart was missed.

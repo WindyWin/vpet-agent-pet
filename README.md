@@ -4,7 +4,7 @@ A standalone desktop companion that animates in response to Claude Code and Code
 
 **For a new public repository, use [starter/](starter/).** It is a self-contained 23 MB selection of the needed sprites with its own manifest, notices, and plan. Initialize Git inside `starter/` to keep the 749 MB archive outside that repository.
 
-Status: project preparation and asset import complete. The desktop app, hook adapters, and application installers are planned; they are not implemented yet.
+Status: the M1 Qt desktop prototype and relocatable development package are implemented in [starter/](starter/README.md). Native X11 and manual desktop acceptance checks remain open. Hook adapters and release installers are planned.
 
 This directory is the new project root and can be moved into its own repository. The bundled artwork is a real copy. Development and future releases must resolve assets relative to this project or the installed application's resources, without requiring an existing VPet installation or command.
 

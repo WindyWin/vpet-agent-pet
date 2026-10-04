@@ -14,7 +14,55 @@ python3 scripts/verify_assets.py
 git init
 ```
 
-The asset verifier uses only Python's standard library and works from any current directory. The desktop application and agent hooks are still to be built; see [PLAN.md](PLAN.md).
+The asset verifier uses only Python's standard library and works from any current directory. The M1 desktop prototype is implemented; agent hooks are planned. See [PLAN.md](PLAN.md) and the [architecture and validation record](docs/architecture.md).
+
+## Build and run the M1 prototype
+
+From this directory, install CMake 3.22+, Ninja, a C++17 compiler and Qt 6.5+
+Widgets/Test development packages, then run:
+
+```bash
+python3 scripts/verify_assets.py
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_LIBDIR=lib
+cmake --build build -j 4
+ctest --test-dir build --output-on-failure
+./build/agent-pet
+```
+
+Left-drag to move. Right-click for Idle/Thinking, size, always-on-top, temporary
+click-through, recovery, About and Quit. A tray menu appears on supported desktops.
+Click-through automatically ends after 15 seconds. Space switches animation and
+Escape quits when the pet has focus. `--state thinking` starts with thinking.
+
+The default uses X11/XWayland when DISPLAY is available. For a development-only
+native Wayland check: `QT_QPA_PLATFORM=wayland ./build/agent-pet`.
+Native Wayland placement and stacking support remain unverified.
+
+## Package and verify
+
+Python 3, `qmake6`, `ldd` and `patchelf` are build-time packaging tools:
+
+```bash
+python3 scripts/package.py
+./dist/agent-pet-m1/bin/agent-pet --smoke-test
+```
+
+The output is `dist/agent-pet-m1/` and `dist/agent-pet-m1.tar.gz`. Use a new
+`--output` directory on subsequent runs. Copy/extract the entire directory to
+another location and run `bin/agent-pet`; no separate Qt or interpreter is needed.
+The package targets a compatible Linux host ABI, not every distribution.
+
+For a filesystem-isolated headless check (requires bubblewrap and permitted user
+namespaces), run:
+
+```bash
+python3 scripts/check_isolated.py dist/agent-pet-m1
+```
+
+This mounts only the package and host glibc libraries. It verifies idle/thinking,
+control changes and 15-second recovery, then exits after 17 seconds. It does not
+replace the desktop interaction checklist in [architecture.md](docs/architecture.md).
+M1 still needs native X11 and manual desktop acceptance evidence before completion.
 
 ## Artwork and publishing
 

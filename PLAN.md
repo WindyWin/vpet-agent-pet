@@ -15,7 +15,7 @@ The self-contained [starter repository](starter/README.md) also includes a small
 - [x] Import original artwork, metadata, provenance, and notices.
 - [x] Add full-archive verification and animation catalog tooling.
 - [x] Prepare the smaller standalone starter pack and verifier.
-- [ ] Choose the desktop shell and establish the application scaffold.
+- [x] Choose the desktop shell and establish the application scaffold.
 - [ ] Implement animation playback and desktop controls.
 - [ ] Implement local events and session state management.
 - [ ] Implement and validate both provider integrations.
@@ -115,18 +115,21 @@ Complete these milestones in order. Check items only when their deliverables exi
 
 ### M1 — Desktop prototype and technology decision
 
-- [ ] Run `python3 scripts/verify_assets.py` in `starter/` to establish the asset baseline.
-- [ ] Prototype a transparent, borderless window with bundled idle and thinking frames.
+Implemented 2026-10-04 in `starter/`: C++17 / Qt 6 Widgets prototype, CMake build, relocatable Linux package, and isolated runtime smoke check. See [architecture and evidence](starter/docs/architecture.md). Native X11 and manual desktop behavior checks remain open. Session/provider/IPC boundaries are reserved modules for later milestones.
+
+- [x] Run `python3 scripts/verify_assets.py` in `starter/` to establish the asset baseline.
+- [x] Prototype a transparent, borderless window with bundled idle and thinking frames.
 - [ ] Exercise dragging, always-on-top behavior, scaling, click-through, and a reliable quit/recovery control.
 - [ ] Test X11 and XWayland; record native Wayland limitations separately.
-- [ ] Produce a minimal packaged prototype and check its runtime dependencies on a clean environment.
-- [ ] Record the chosen shell, language, build commands, and packaging approach in `docs/architecture.md`.
-- [ ] Scaffold the app with separate modules for desktop UI, animation, session state, provider adapters, IPC, and settings.
+- [x] Produce a minimal packaged prototype and check its runtime dependencies on a clean environment.
+- [x] Record the chosen shell, language, build commands, and packaging approach in `docs/architecture.md`.
+- [x] Scaffold the app with separate modules for desktop UI, animation, session state, provider adapters, IPC, and settings.
 
 **Complete when:** a copied prototype launches outside its checkout, displays idle and thinking animations, and supports dragging and quitting without an existing VPet installation. The technology decision includes evidence from the window and packaging checks.
 
 ### M2 — Animation engine and desktop controls
 
+- [ ] Add the original dragging animation from the `Raise/` asset sequences; import selected frames into the starter pack and restore the previous state when dragging ends (including native system moves).
 - [ ] Load `assets/vpet/animations.json` through application-owned resource resolution.
 - [ ] Preserve sequence identifiers and each frame's duration; handle missing or invalid resources without crashing.
 - [ ] Implement start/loop/end playback, one-shot reactions, interruption, and return to idle.
