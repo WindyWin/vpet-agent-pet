@@ -40,6 +40,9 @@ void Monitor::listen(std::unique_ptr<Receiver> receiver) {
 }
 bool Monitor::apply(const Event &event, qint64 now) {
     if (!active_ || !sessions_.apply(event, now)) return false;
+    // Only accepted events count: duplicates and stale callbacks of an interrupted turn are dropped above.
+    if (event.kind == "turn_finished") window_.mood().finished(now);
+    else if (event.kind == "error") window_.mood().failed(now);
     observed_ = true; update(now);
     return true;
 }
@@ -52,6 +55,7 @@ void Monitor::update(qint64 now) {
     for (const auto &alert : sessions_.pending()) errors += alert.kind == "error";
     window_.setStatus(topLevelSessions(sessions_), sessions_.unresolvedAttention(), errors);
     window_.updatePresence(sessions_.records().size(), now); // May hide, show or quit the pet.
+    window_.mood().refresh(now);
     if (!active_ || !observed_ || window_.player().requestedState() == "closing") return;
     const auto state = sessions_.aggregate(now);
     const auto animation = sessionAnimation(state);
@@ -59,7 +63,9 @@ void Monitor::update(qint64 now) {
     const auto showing = animation == "idle" && window_.ambient().resting() ? animation : window_.player().requestedState();
     if (state != lastAggregate_ || (!window_.player().isDragging() && state != "error" && state != "turn-finished" &&
                                     showing != animation)) {
-        window_.player().select(animation, state == "attention" || state == "error");
+        // A turn that just finished is celebrated in one of several ways, or with a treat when one is due.
+        const bool celebrate = state == "turn-finished" && lastAggregate_ != state;
+        window_.player().select(celebrate ? window_.mood().celebrate() : animation, state == "attention" || state == "error");
         lastAggregate_ = state;
     }
 }

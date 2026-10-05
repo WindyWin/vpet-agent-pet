@@ -67,6 +67,25 @@
     ],
     "fidget_meow": [
       "IDEL/Meow/Nomal/1"
+    ],
+    "cheer_shining": [
+      "Say/Shining/A",
+      "Say/Shining/B_1",
+      "Say/Shining/C"
+    ],
+    "cheer_shy": [
+      "Say/Shy/A",
+      "Say/Shy/B",
+      "Say/Shy/C"
+    ],
+    "snack_hungry": [
+      "Switch/Hunger/Nomal"
+    ],
+    "snack_thirsty": [
+      "Switch/Thirsty/Nomal"
+    ],
+    "milestone": [
+      "LevelUP/Happy"
     ]
   },
   "sequences": [
@@ -1643,6 +1662,903 @@
         }
       ],
       "duration_ms": 2875
+    },
+    {
+      "state": "idle",
+      "path": "Default/Happy/1",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/Default/Happy/1/\u5faa\u73afA_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Default/Happy/1/\u5faa\u73afA_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Default/Happy/1/\u5faa\u73afA_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Default/Happy/1/\u5faa\u73afA_003_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Default/Happy/1/\u5faa\u73afA_004_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Default/Happy/1/\u5faa\u73afA_005_250.png",
+          "duration_ms": 250
+        },
+        {
+          "path": "assets/vpet/vup/Default/Happy/1/\u5faa\u73afA_006_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Default/Happy/1/\u5faa\u73afA_007_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Default/Happy/1/\u5faa\u73afA_008_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Default/Happy/1/\u5faa\u73afA_009_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Default/Happy/1/\u5faa\u73afA_010_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Default/Happy/1/\u5faa\u73afA_011_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Default/Happy/1/\u5faa\u73afA_012_250.png",
+          "duration_ms": 250
+        }
+      ],
+      "duration_ms": 1875
+    },
+    {
+      "state": "idle",
+      "path": "Default/PoorCondition/1",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/Default/PoorCondition/1/_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Default/PoorCondition/1/_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Default/PoorCondition/1/_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Default/PoorCondition/1/_003_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Default/PoorCondition/1/_004_375.png",
+          "duration_ms": 375
+        },
+        {
+          "path": "assets/vpet/vup/Default/PoorCondition/1/_005_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Default/PoorCondition/1/_006_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Default/PoorCondition/1/_007_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Default/PoorCondition/1/_008_500.png",
+          "duration_ms": 500
+        },
+        {
+          "path": "assets/vpet/vup/Default/PoorCondition/1/_009_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Default/PoorCondition/1/_010_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Default/PoorCondition/1/_011_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Default/PoorCondition/1/_012_375.png",
+          "duration_ms": 375
+        },
+        {
+          "path": "assets/vpet/vup/Default/PoorCondition/1/_013_375.png",
+          "duration_ms": 375
+        },
+        {
+          "path": "assets/vpet/vup/Default/PoorCondition/1/_014_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Default/PoorCondition/1/_015_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Default/PoorCondition/1/_016_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 3250
+    },
+    {
+      "state": "fidget_aside",
+      "path": "IDEL/aside/Happy/A",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/IDEL/aside/Happy/A/_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/aside/Happy/A/_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/aside/Happy/A/_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/aside/Happy/A/_003_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/aside/Happy/A/_004_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 625
+    },
+    {
+      "state": "fidget_aside",
+      "path": "IDEL/aside/Happy/B",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/IDEL/aside/Happy/B/_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/aside/Happy/B/_001_500.png",
+          "duration_ms": 500
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/aside/Happy/B/_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/aside/Happy/B/_003_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/aside/Happy/B/_004_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/aside/Happy/B/_005_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/aside/Happy/B/_006_1125.png",
+          "duration_ms": 1125
+        }
+      ],
+      "duration_ms": 2250
+    },
+    {
+      "state": "fidget_aside",
+      "path": "IDEL/aside/Happy/C",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/IDEL/aside/Happy/C/_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/aside/Happy/C/_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/aside/Happy/C/_002_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 375
+    },
+    {
+      "state": "fidget_aside",
+      "path": "IDEL/aside/PoorCondition/A",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/IDEL/aside/PoorCondition/A/_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/aside/PoorCondition/A/_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/aside/PoorCondition/A/_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/aside/PoorCondition/A/_003_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/aside/PoorCondition/A/_004_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/aside/PoorCondition/A/_005_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 750
+    },
+    {
+      "state": "fidget_aside",
+      "path": "IDEL/aside/PoorCondition/B",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/IDEL/aside/PoorCondition/B/_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/aside/PoorCondition/B/_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/aside/PoorCondition/B/_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/aside/PoorCondition/B/_003_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/aside/PoorCondition/B/_004_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 625
+    },
+    {
+      "state": "fidget_aside",
+      "path": "IDEL/aside/PoorCondition/C",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/IDEL/aside/PoorCondition/C/_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/aside/PoorCondition/C/_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/aside/PoorCondition/C/_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/aside/PoorCondition/C/_003_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 500
+    },
+    {
+      "state": "fidget_yawn",
+      "path": "IDEL/yawning/Happy",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/IDEL/yawning/Happy/\u5f00\u5fc3\u54c8\u6b20_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/yawning/Happy/\u5f00\u5fc3\u54c8\u6b20_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/yawning/Happy/\u5f00\u5fc3\u54c8\u6b20_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/yawning/Happy/\u5f00\u5fc3\u54c8\u6b20_003_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/yawning/Happy/\u5f00\u5fc3\u54c8\u6b20_004_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/yawning/Happy/\u5f00\u5fc3\u54c8\u6b20_005_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/yawning/Happy/\u5f00\u5fc3\u54c8\u6b20_006_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/yawning/Happy/\u5f00\u5fc3\u54c8\u6b20_007_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/yawning/Happy/\u5f00\u5fc3\u54c8\u6b20_008_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/yawning/Happy/\u5f00\u5fc3\u54c8\u6b20_009_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/yawning/Happy/\u5f00\u5fc3\u54c8\u6b20_010_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/yawning/Happy/\u5f00\u5fc3\u54c8\u6b20_011_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/yawning/Happy/\u5f00\u5fc3\u54c8\u6b20_012_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/yawning/Happy/\u5f00\u5fc3\u54c8\u6b20_013_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/yawning/Happy/\u5f00\u5fc3\u54c8\u6b20_014_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/yawning/Happy/\u5f00\u5fc3\u54c8\u6b20_015_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/yawning/Happy/\u5f00\u5fc3\u54c8\u6b20_016_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/yawning/Happy/\u5f00\u5fc3\u54c8\u6b20_017_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 2250
+    },
+    {
+      "state": "fidget_yawn",
+      "path": "IDEL/yawning/PoorCondition",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/IDEL/yawning/PoorCondition/\u4e0d\u5f00\u54c8\u6b20_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/yawning/PoorCondition/\u4e0d\u5f00\u54c8\u6b20_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/yawning/PoorCondition/\u4e0d\u5f00\u54c8\u6b20_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/yawning/PoorCondition/\u4e0d\u5f00\u54c8\u6b20_003_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/yawning/PoorCondition/\u4e0d\u5f00\u54c8\u6b20_004_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/yawning/PoorCondition/\u4e0d\u5f00\u54c8\u6b20_005_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/yawning/PoorCondition/\u4e0d\u5f00\u54c8\u6b20_006_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/yawning/PoorCondition/\u4e0d\u5f00\u54c8\u6b20_007_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/yawning/PoorCondition/\u4e0d\u5f00\u54c8\u6b20_008_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/yawning/PoorCondition/\u4e0d\u5f00\u54c8\u6b20_009_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/yawning/PoorCondition/\u4e0d\u5f00\u54c8\u6b20_010_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/yawning/PoorCondition/\u4e0d\u5f00\u54c8\u6b20_011_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/yawning/PoorCondition/\u4e0d\u5f00\u54c8\u6b20_012_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/yawning/PoorCondition/\u4e0d\u5f00\u54c8\u6b20_013_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/yawning/PoorCondition/\u4e0d\u5f00\u54c8\u6b20_014_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/yawning/PoorCondition/\u4e0d\u5f00\u54c8\u6b20_015_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/yawning/PoorCondition/\u4e0d\u5f00\u54c8\u6b20_016_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/yawning/PoorCondition/\u4e0d\u5f00\u54c8\u6b20_017_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 2250
+    },
+    {
+      "state": "cheer_shining",
+      "path": "Say/Shining/A",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/Say/Shining/A/talkstar_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Say/Shining/A/talkstar_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Say/Shining/A/talkstar_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Say/Shining/A/talkstar_003_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Say/Shining/A/talkstar_004_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Say/Shining/A/talkstar_005_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Say/Shining/A/talkstar_006_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 875
+    },
+    {
+      "state": "cheer_shining",
+      "path": "Say/Shining/B_1",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/Say/Shining/B_1/talkwink_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Say/Shining/B_1/talkwink_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Say/Shining/B_1/talkwink_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Say/Shining/B_1/talkwink_003_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Say/Shining/B_1/talkwink_004_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Say/Shining/B_1/talkwink_005_250.png",
+          "duration_ms": 250
+        }
+      ],
+      "duration_ms": 875
+    },
+    {
+      "state": "cheer_shining",
+      "path": "Say/Shining/C",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/Say/Shining/C/talkstar_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Say/Shining/C/talkstar_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Say/Shining/C/talkstar_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Say/Shining/C/talkstar_003_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 500
+    },
+    {
+      "state": "cheer_shy",
+      "path": "Say/Shy/A",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/Say/Shy/A/_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Say/Shy/A/_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Say/Shy/A/_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Say/Shy/A/_003_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Say/Shy/A/_004_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 625
+    },
+    {
+      "state": "cheer_shy",
+      "path": "Say/Shy/B",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/Say/Shy/B/_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Say/Shy/B/_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Say/Shy/B/_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Say/Shy/B/_003_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Say/Shy/B/_004_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 625
+    },
+    {
+      "state": "cheer_shy",
+      "path": "Say/Shy/C",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/Say/Shy/C/_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Say/Shy/C/_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Say/Shy/C/_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Say/Shy/C/_003_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Say/Shy/C/_004_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Say/Shy/C/_005_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Say/Shy/C/_006_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 875
+    },
+    {
+      "state": "snack_hungry",
+      "path": "Switch/Hunger/Nomal",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/Switch/Hunger/Nomal/E_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Switch/Hunger/Nomal/E_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Switch/Hunger/Nomal/E_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Switch/Hunger/Nomal/E_003_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Switch/Hunger/Nomal/E_004_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Switch/Hunger/Nomal/E_005_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Switch/Hunger/Nomal/E_006_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Switch/Hunger/Nomal/E_007_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Switch/Hunger/Nomal/E_008_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Switch/Hunger/Nomal/E_009_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Switch/Hunger/Nomal/Nomal_010_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Switch/Hunger/Nomal/Nomal_011_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Switch/Hunger/Nomal/Nomal_012_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Switch/Hunger/Nomal/Nomal_013_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Switch/Hunger/Nomal/Nomal_014_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Switch/Hunger/Nomal/Nomal_015_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Switch/Hunger/Nomal/Nomal_016_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Switch/Hunger/Nomal/Nomal_017_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Switch/Hunger/Nomal/Nomal_018_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 2375
+    },
+    {
+      "state": "snack_thirsty",
+      "path": "Switch/Thirsty/Nomal",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/Switch/Thirsty/Nomal/_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Switch/Thirsty/Nomal/_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Switch/Thirsty/Nomal/_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Switch/Thirsty/Nomal/_003_500.png",
+          "duration_ms": 500
+        },
+        {
+          "path": "assets/vpet/vup/Switch/Thirsty/Nomal/_004_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Switch/Thirsty/Nomal/_005_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Switch/Thirsty/Nomal/_006_375.png",
+          "duration_ms": 375
+        },
+        {
+          "path": "assets/vpet/vup/Switch/Thirsty/Nomal/_007_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Switch/Thirsty/Nomal/_008_750.png",
+          "duration_ms": 750
+        },
+        {
+          "path": "assets/vpet/vup/Switch/Thirsty/Nomal/_009_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Switch/Thirsty/Nomal/_010_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Switch/Thirsty/Nomal/_011_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Switch/Thirsty/Nomal/_012_250.png",
+          "duration_ms": 250
+        }
+      ],
+      "duration_ms": 3000
+    },
+    {
+      "state": "milestone",
+      "path": "LevelUP/Happy",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/LevelUP/Happy/\u5f00\u5fc3\u5347\u7ea7_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/LevelUP/Happy/\u5f00\u5fc3\u5347\u7ea7_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/LevelUP/Happy/\u5f00\u5fc3\u5347\u7ea7_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/LevelUP/Happy/\u5f00\u5fc3\u5347\u7ea7_003_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/LevelUP/Happy/\u5f00\u5fc3\u5347\u7ea7_004_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/LevelUP/Happy/\u5f00\u5fc3\u5347\u7ea7_005_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/LevelUP/Happy/\u5f00\u5fc3\u5347\u7ea7_006_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/LevelUP/Happy/\u5f00\u5fc3\u5347\u7ea7_007_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/LevelUP/Happy/\u5f00\u5fc3\u5347\u7ea7_008_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/LevelUP/Happy/\u5f00\u5fc3\u5347\u7ea7_009_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/LevelUP/Happy/\u5f00\u5fc3\u5347\u7ea7_010_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/LevelUP/Happy/\u5f00\u5fc3\u5347\u7ea7_011_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/LevelUP/Happy/\u5f00\u5fc3\u5347\u7ea7_012_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/LevelUP/Happy/\u5f00\u5fc3\u5347\u7ea7_013_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/LevelUP/Happy/\u5f00\u5fc3\u5347\u7ea7_014_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/LevelUP/Happy/\u5f00\u5fc3\u5347\u7ea7_015_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/LevelUP/Happy/\u5f00\u5fc3\u5347\u7ea7_016_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/LevelUP/Happy/\u5f00\u5fc3\u5347\u7ea7_017_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/LevelUP/Happy/\u5f00\u5fc3\u5347\u7ea7_018_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/LevelUP/Happy/\u5f00\u5fc3\u5347\u7ea7_019_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/LevelUP/Happy/\u5f00\u5fc3\u5347\u7ea7_020_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/LevelUP/Happy/\u5f00\u5fc3\u5347\u7ea7_021_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/LevelUP/Happy/\u5f00\u5fc3\u5347\u7ea7_022_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/LevelUP/Happy/\u5f00\u5fc3\u5347\u7ea7_023_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/LevelUP/Happy/\u5f00\u5fc3\u5347\u7ea7_024_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/LevelUP/Happy/\u5f00\u5fc3\u5347\u7ea7_025_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/LevelUP/Happy/\u5f00\u5fc3\u5347\u7ea7_026_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/LevelUP/Happy/\u5f00\u5fc3\u5347\u7ea7_027_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/LevelUP/Happy/\u5f00\u5fc3\u5347\u7ea7_028_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 3625
     }
   ],
   "playback": {
@@ -1713,6 +2629,28 @@
     "fidget_meow": {
       "mode": "once",
       "after": "idle"
+    },
+    "cheer_shining": {
+      "mode": "phased",
+      "after": "idle",
+      "loops": 2
+    },
+    "cheer_shy": {
+      "mode": "phased",
+      "after": "idle",
+      "loops": 2
+    },
+    "snack_hungry": {
+      "mode": "once",
+      "after": "idle"
+    },
+    "snack_thirsty": {
+      "mode": "once",
+      "after": "idle"
+    },
+    "milestone": {
+      "mode": "once",
+      "after": "idle"
     }
   },
   "variants": {
@@ -1747,6 +2685,96 @@
           "IDEL/Squat/B_Nomal/2",
           "IDEL/Squat/C_Nomal"
         ],
+        "weight": 1
+      }
+    ]
+  },
+  "moods": {
+    "happy": {
+      "idle": [
+        {
+          "sequences": [
+            "Default/Happy/1"
+          ],
+          "weight": 1
+        }
+      ],
+      "fidget_aside": [
+        {
+          "sequences": [
+            "IDEL/aside/Happy/A",
+            "IDEL/aside/Happy/B",
+            "IDEL/aside/Happy/C"
+          ],
+          "weight": 1
+        }
+      ],
+      "fidget_yawn": [
+        {
+          "sequences": [
+            "IDEL/yawning/Happy"
+          ],
+          "weight": 1
+        }
+      ]
+    },
+    "poor": {
+      "idle": [
+        {
+          "sequences": [
+            "Default/PoorCondition/1"
+          ],
+          "weight": 1
+        }
+      ],
+      "fidget_aside": [
+        {
+          "sequences": [
+            "IDEL/aside/PoorCondition/A",
+            "IDEL/aside/PoorCondition/B",
+            "IDEL/aside/PoorCondition/C"
+          ],
+          "weight": 1
+        }
+      ],
+      "fidget_yawn": [
+        {
+          "sequences": [
+            "IDEL/yawning/PoorCondition"
+          ],
+          "weight": 1
+        }
+      ]
+    }
+  },
+  "reactions": {
+    "turn_finished": [
+      {
+        "state": "turn_finished",
+        "weight": 2
+      },
+      {
+        "state": "cheer_shining",
+        "weight": 1
+      },
+      {
+        "state": "cheer_shy",
+        "weight": 1
+      }
+    ],
+    "snack": [
+      {
+        "state": "snack_hungry",
+        "weight": 1
+      },
+      {
+        "state": "snack_thirsty",
+        "weight": 1
+      }
+    ],
+    "milestone": [
+      {
+        "state": "milestone",
         "weight": 1
       }
     ]

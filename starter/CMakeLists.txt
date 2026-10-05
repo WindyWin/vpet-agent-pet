@@ -17,7 +17,7 @@ file(GLOB_RECURSE pet_resources CONFIGURE_DEPENDS RELATIVE "${CMAKE_CURRENT_SOUR
     "assets/vpet/vup/*.png" "licenses/*")
 list(APPEND pet_resources assets/vpet/animations.json THIRD_PARTY_NOTICES.md LICENSE NOTICE)
 qt_add_library(pet_ui STATIC
-    src/animation/player.cpp src/animation/ambient.cpp src/desktop/pet_window.cpp
+    src/animation/player.cpp src/animation/ambient.cpp src/animation/mood.cpp src/desktop/pet_window.cpp
     src/desktop/drag_monitor.cpp src/desktop/alert_bubble.cpp src/desktop/monitor.cpp
     src/desktop/host_focus.cpp src/desktop/session_list.cpp src/updates/controller.cpp)
 target_include_directories(pet_ui PUBLIC src "${CMAKE_CURRENT_BINARY_DIR}/generated")

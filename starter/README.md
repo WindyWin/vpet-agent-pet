@@ -2,9 +2,9 @@
 
 A small starting repository for a desktop pet that reacts to Claude Code and Codex activity. The sprite files are bundled here, so development can proceed without a local VPet installation.
 
-The current asset pack contains **327 original PNG frames in 38 animation sequences (41.46 MiB)**. They cover idle (with two alternate loops and a few idle fidgets), thinking, reading, working, waiting for input, tool errors, turn completion, sleeping, startup, closing, and the original dragging animation. [animations.json](assets/vpet/animations.json) maps each state to its sequences, records frame durations, and lists the idle variants and fidgets. [manifest.json](assets/vpet/manifest.json) records every file's size and SHA-256 hash.
+The current asset pack contains **518 original PNG frames in 57 animation sequences (70.25 MiB)**. They cover idle (with two alternate loops, a few idle fidgets, and happy and droopy moods), thinking, reading, working, waiting for input, tool errors, several ways to celebrate a finished turn, sleeping, startup, closing, and the original dragging animation. [animations.json](assets/vpet/animations.json) maps each state to its sequences, records frame durations, and lists the idle variants, fidgets, mood art and reactions. [manifest.json](assets/vpet/manifest.json) records every file's size and SHA-256 hash.
 
-[available-animations.json](assets/vpet/available-animations.json) catalogs the **520 remaining sequences and 5,171 frames** from the original character pack. Each entry gives its upstream folder, category, frame count, size, and timing status. These are references for future work; their PNG files are not included here. To add one later, run `python3 scripts/add_sequences.py IDEL/yawning/Nomal …` against a copy of the upstream VPet tree (`--source`; the full archive next to this folder is the default). It copies the frames, updates the manifest and both catalogs, and leaves you to map the sequences in `animations.json`, which `scripts/verify_assets.py` then checks. Retain the artwork notices.
+[available-animations.json](assets/vpet/available-animations.json) catalogs the **501 remaining sequences and 4,980 frames** from the original character pack. Each entry gives its upstream folder, category, frame count, size, and timing status. These are references for future work; their PNG files are not included here. To add one later, run `python3 scripts/add_sequences.py IDEL/yawning/Nomal …` against a copy of the upstream VPet tree (`--source`; the full archive next to this folder is the default). It copies the frames, updates the manifest and both catalogs, and leaves you to map the sequences in `animations.json`, which `scripts/verify_assets.py` then checks. Retain the artwork notices.
 
 This folder is ready to become its own repository:
 
@@ -51,7 +51,7 @@ stays, hides or quits once no sessions remain; see [install guide](docs/install.
 ## Idle animation
 
 While nothing needs the pet it no longer repeats one loop forever. Settings → **Idle
-animation** chooses how much it does on its own: **Off** (always the plain idle loop),
+animation** chooses how much it does on its own: **Off** (no fidgets or alternate loops),
 **Subtle** (the default: a fidget about once a minute) or **Lively** (every 15–25
 seconds). Fidgets are short one-shots (a glance aside, boredom, a yawn, a crouch, and
 now and then a rare meow). The bigger ones wait for more idle time, and a fidget avoids
@@ -61,6 +61,18 @@ animation. Any agent activity, error, alert or drag replaces a fidget at once, a
 hidden pet does nothing. Preview any fidget from the right-click menu → Preview state
 (`fidget_*`). The catalog sections behind this are described in
 [the architecture notes](docs/architecture.md#idle-animation).
+
+## Mood
+
+The pet also keeps a mood from what your agents do. A run of finished turns makes it
+happy, which shows in its idle loop and in some fidgets; repeated tool errors make it
+droopy. With no news it drifts back to neutral within a few minutes. A finished turn
+is celebrated in one of three ways. After a long productive stretch (twenty finished
+turns without a half-hour break) its tummy rumbles or it looks thirsty, a hint to take
+a break, and every hundredth finished turn gets a bigger celebration. Settings →
+**Mood** chooses **Off** (always neutral), **Cheerful only** (never droopy) or **Full**
+(the default). Preview the reactions from Preview state (`cheer_*`, `snack_*`,
+`milestone`); see [the architecture notes](docs/architecture.md#mood).
 
 The default uses X11/XWayland when DISPLAY is available. For a development-only
 native Wayland check: `QT_QPA_PLATFORM=wayland ./build/agent-pet`.

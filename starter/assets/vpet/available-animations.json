@@ -6,9 +6,9 @@
   "source_commit": "6358445aa54587f9cd524264eaf17ef97bc826a8",
   "source_root": "VPet-Simulator.Windows/mod/0000_core/pet/vup",
   "bundled_catalog": "assets/vpet/animations.json",
-  "missing_sequence_count": 520,
-  "missing_frame_count": 5171,
-  "missing_size_bytes": 727493629,
+  "missing_sequence_count": 501,
+  "missing_frame_count": 4980,
+  "missing_size_bytes": 697303002,
   "sequences": [
     {
       "path": "BDay/A",
@@ -35,15 +35,6 @@
       "frame_count": 4,
       "total_duration_ms": 500,
       "size_bytes": 588632,
-      "timing_valid": true
-    },
-    {
-      "path": "Default/Happy/1",
-      "category": "Default",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Default/Happy/1",
-      "frame_count": 13,
-      "total_duration_ms": 1875,
-      "size_bytes": 2173803,
       "timing_valid": true
     },
     {
@@ -80,15 +71,6 @@
       "frame_count": 20,
       "total_duration_ms": 3000,
       "size_bytes": 1768686,
-      "timing_valid": true
-    },
-    {
-      "path": "Default/PoorCondition/1",
-      "category": "Default",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Default/PoorCondition/1",
-      "frame_count": 17,
-      "total_duration_ms": 3250,
-      "size_bytes": 2779387,
       "timing_valid": true
     },
     {
@@ -623,24 +605,6 @@
       "timing_valid": true
     },
     {
-      "path": "IDEL/aside/Happy/A",
-      "category": "IDEL",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/IDEL/aside/Happy/A",
-      "frame_count": 5,
-      "total_duration_ms": 625,
-      "size_bytes": 818700,
-      "timing_valid": true
-    },
-    {
-      "path": "IDEL/aside/Happy/B",
-      "category": "IDEL",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/IDEL/aside/Happy/B",
-      "frame_count": 7,
-      "total_duration_ms": 2250,
-      "size_bytes": 1075695,
-      "timing_valid": true
-    },
-    {
       "path": "IDEL/aside/Happy/B_2",
       "category": "IDEL",
       "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/IDEL/aside/Happy/B_2",
@@ -713,15 +677,6 @@
       "timing_valid": true
     },
     {
-      "path": "IDEL/aside/Happy/C",
-      "category": "IDEL",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/IDEL/aside/Happy/C",
-      "frame_count": 3,
-      "total_duration_ms": 375,
-      "size_bytes": 498305,
-      "timing_valid": true
-    },
-    {
       "path": "IDEL/aside/Nomal/B_3",
       "category": "IDEL",
       "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/IDEL/aside/Nomal/B_3",
@@ -740,24 +695,6 @@
       "timing_valid": true
     },
     {
-      "path": "IDEL/aside/PoorCondition/A",
-      "category": "IDEL",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/IDEL/aside/PoorCondition/A",
-      "frame_count": 6,
-      "total_duration_ms": 750,
-      "size_bytes": 839417,
-      "timing_valid": true
-    },
-    {
-      "path": "IDEL/aside/PoorCondition/B",
-      "category": "IDEL",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/IDEL/aside/PoorCondition/B",
-      "frame_count": 5,
-      "total_duration_ms": 625,
-      "size_bytes": 736351,
-      "timing_valid": true
-    },
-    {
       "path": "IDEL/aside/PoorCondition/B_2",
       "category": "IDEL",
       "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/IDEL/aside/PoorCondition/B_2",
@@ -773,15 +710,6 @@
       "frame_count": 3,
       "total_duration_ms": 1000,
       "size_bytes": 439491,
-      "timing_valid": true
-    },
-    {
-      "path": "IDEL/aside/PoorCondition/C",
-      "category": "IDEL",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/IDEL/aside/PoorCondition/C",
-      "frame_count": 4,
-      "total_duration_ms": 500,
-      "size_bytes": 634629,
       "timing_valid": true
     },
     {
@@ -818,33 +746,6 @@
       "frame_count": 30,
       "total_duration_ms": 3750,
       "size_bytes": 4193417,
-      "timing_valid": true
-    },
-    {
-      "path": "IDEL/yawning/Happy",
-      "category": "IDEL",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/IDEL/yawning/Happy",
-      "frame_count": 18,
-      "total_duration_ms": 2250,
-      "size_bytes": 2773849,
-      "timing_valid": true
-    },
-    {
-      "path": "IDEL/yawning/PoorCondition",
-      "category": "IDEL",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/IDEL/yawning/PoorCondition",
-      "frame_count": 18,
-      "total_duration_ms": 2250,
-      "size_bytes": 2763192,
-      "timing_valid": true
-    },
-    {
-      "path": "LevelUP/Happy",
-      "category": "LevelUP",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/LevelUP/Happy",
-      "frame_count": 29,
-      "total_duration_ms": 3625,
-      "size_bytes": 4886040,
       "timing_valid": true
     },
     {
@@ -2225,24 +2126,6 @@
       "timing_valid": true
     },
     {
-      "path": "Say/Shining/A",
-      "category": "Say",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Say/Shining/A",
-      "frame_count": 7,
-      "total_duration_ms": 875,
-      "size_bytes": 914185,
-      "timing_valid": true
-    },
-    {
-      "path": "Say/Shining/B_1",
-      "category": "Say",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Say/Shining/B_1",
-      "frame_count": 6,
-      "total_duration_ms": 875,
-      "size_bytes": 918208,
-      "timing_valid": true
-    },
-    {
       "path": "Say/Shining/B_2",
       "category": "Say",
       "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Say/Shining/B_2",
@@ -2261,33 +2144,6 @@
       "timing_valid": true
     },
     {
-      "path": "Say/Shining/C",
-      "category": "Say",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Say/Shining/C",
-      "frame_count": 4,
-      "total_duration_ms": 500,
-      "size_bytes": 480650,
-      "timing_valid": true
-    },
-    {
-      "path": "Say/Shy/A",
-      "category": "Say",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Say/Shy/A",
-      "frame_count": 5,
-      "total_duration_ms": 625,
-      "size_bytes": 793864,
-      "timing_valid": true
-    },
-    {
-      "path": "Say/Shy/B",
-      "category": "Say",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Say/Shy/B",
-      "frame_count": 5,
-      "total_duration_ms": 625,
-      "size_bytes": 791539,
-      "timing_valid": true
-    },
-    {
       "path": "Say/Shy/B_2",
       "category": "Say",
       "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Say/Shy/B_2",
@@ -2303,15 +2159,6 @@
       "frame_count": 5,
       "total_duration_ms": 625,
       "size_bytes": 787068,
-      "timing_valid": true
-    },
-    {
-      "path": "Say/Shy/C",
-      "category": "Say",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Say/Shy/C",
-      "frame_count": 7,
-      "total_duration_ms": 875,
-      "size_bytes": 1110031,
       "timing_valid": true
     },
     {
@@ -3152,30 +2999,12 @@
       "timing_valid": true
     },
     {
-      "path": "Switch/Hunger/Nomal",
-      "category": "Switch",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Switch/Hunger/Nomal",
-      "frame_count": 19,
-      "total_duration_ms": 2375,
-      "size_bytes": 3191952,
-      "timing_valid": true
-    },
-    {
       "path": "Switch/Hunger/PoorCondition",
       "category": "Switch",
       "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Switch/Hunger/PoorCondition",
       "frame_count": 19,
       "total_duration_ms": 2375,
       "size_bytes": 3153720,
-      "timing_valid": true
-    },
-    {
-      "path": "Switch/Thirsty/Nomal",
-      "category": "Switch",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Switch/Thirsty/Nomal",
-      "frame_count": 13,
-      "total_duration_ms": 3000,
-      "size_bytes": 2010830,
       "timing_valid": true
     },
     {

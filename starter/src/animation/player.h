@@ -17,6 +17,8 @@ struct Animation { QVector<Choice> choices; QString mode; QString after; int loo
 // An ambient one-shot that may play while the pet idles. `minIdleS` gates it behind idle time;
 // a rare fidget is drawn separately, with a small fixed chance.
 struct Fidget { QString state; int weight = 1; int minIdleS = 0; bool rare = false; };
+// One state a reaction pool may play, such as a way to celebrate a finished turn.
+struct Reaction { QString state; int weight = 1; };
 
 class Player : public QObject {
     Q_OBJECT
@@ -53,6 +55,14 @@ public:
     const QVector<Fidget> &fidgets() const { return fidgets_; }
     bool isFidget(const QString &state) const { return fidgetStates_.contains(state); }
     int sleepAfterS() const { return sleepAfterS_; } // Idle time before drifting to sleep; 0 when unset.
+    // The catalog's mood art ("happy" or "poor") replaces a state's choices while that mood is set; an
+    // empty or unknown mood, or a state without mood art, plays the usual choices. A held state keeps
+    // what it drew until it is entered again; a loop picks up the new mood on its next pass.
+    void setMood(const QString &mood) { mood_ = mood; }
+    QString mood() const { return mood_; }
+    bool hasMood(const QString &mood, const QString &state) const { return moods_.value(mood).contains(state); }
+    // Weighted states for a named reaction ("turn_finished", "snack", "milestone"); empty when not in the catalog.
+    QVector<Reaction> reactions(const QString &name) const { return reactions_.value(name); }
 signals:
     void changed();
     void failed(const QString &message);
@@ -72,13 +82,15 @@ private:
     QMap<QString, QVector<Frame>> sequences_;
     QMap<QString, Animation> animations_;
     QVector<Fidget> fidgets_;
+    QMap<QString, QMap<QString, QVector<Choice>>> moods_; // mood -> state -> choices
+    QMap<QString, QVector<Reaction>> reactions_;
     QSet<QString> fidgetStates_;
     QStringList chosen_;
     Random random_ = systemRandom();
     QCache<QString, QPixmap> cache_{cacheLimitKiB};
     QPixmap pixmap_;
     QTimer timer_;
-    QString state_, sequence_, pending_, previous_ = "idle", dragResume_ = "idle", error_;
+    QString state_, sequence_, pending_, previous_ = "idle", dragResume_ = "idle", error_, mood_;
     int index_ = 0, phase_ = 0, duration_ = 0, renderSize_ = 240, loopCount_ = 0, sleepAfterS_ = 0;
     bool paused_ = false, stopped_ = false, dragActive_ = false, variants_ = true;
 };
