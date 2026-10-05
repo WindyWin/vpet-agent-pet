@@ -19,7 +19,8 @@ QPointF velocity(const QVector<Sample> &samples, qint64 spanMs = 80);
 enum class Edge { None, Left, Right };
 // The screen area holding most of the window, or the first area when it overlaps none.
 QRect areaFor(const QRect &window, const QVector<QRect> &areas);
-// The side of its screen a window was pushed past, by an eighth of its width or more. Only an outer
+// The side of its screen a window was pushed past, by a quarter of its width or more: the visible
+// artwork, the middle half of the window, has then reached the edge. Only an outer
 // edge counts: past the boundary between two side-by-side screens the pet is simply moving on.
 Edge pushedEdge(const QRect &window, const QVector<QRect> &areas);
 // Where the window sits while hiding at `edge`: the screen edge cuts the artwork at `at` of `scale`

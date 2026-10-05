@@ -17,6 +17,9 @@ concurrency:
 
 jobs:
   linux:
+    # Skip PRs from release/* branches (version bumps already built on the feature branches).
+    # head_ref is empty for push/tag/dispatch runs, so those are unaffected.
+    if: ${{ !startsWith(github.head_ref, 'release/') }}
     # Ubuntu 22.04 sets the glibc 2.35 baseline for the released binary.
     runs-on: ubuntu-22.04
     defaults:

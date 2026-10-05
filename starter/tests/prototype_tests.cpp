@@ -636,15 +636,17 @@ private slots:
         QCOMPARE(velocity({{0, {0, 0}}, {40, {40, 0}}, {80, {80, -20}}}), QPointF(1000, -250));
         QCOMPARE(velocity({{0, {0, 0}}, {40, {400, 0}}, {200, {400, 0}}}), QPointF());
         QCOMPARE(velocity({{0, {0, 0}}, {40, {400, 0}}, {80, {400, 0}}, {120, {400, 0}}}), QPointF(0, 0));
-        // An edge counts once an eighth of the window is past an outer side of its screen.
+        // An edge counts once a quarter of the window is past an outer side of its screen, where the artwork reaches it.
         const QVector<QRect> one{QRect(0, 0, 1000, 800)};
-        QCOMPARE(pushedEdge(QRect(-29, 100, 240, 240), one), Edge::None);
-        QCOMPARE(pushedEdge(QRect(-30, 100, 240, 240), one), Edge::Left);
-        QCOMPARE(pushedEdge(QRect(790, 100, 240, 240), one), Edge::Right);
+        QCOMPARE(pushedEdge(QRect(-59, 100, 240, 240), one), Edge::None);
+        QCOMPARE(pushedEdge(QRect(-30, 100, 240, 240), one), Edge::None); // Artwork still clear of the edge.
+        QCOMPARE(pushedEdge(QRect(-60, 100, 240, 240), one), Edge::Left);
+        QCOMPARE(pushedEdge(QRect(819, 100, 240, 240), one), Edge::None);
+        QCOMPARE(pushedEdge(QRect(820, 100, 240, 240), one), Edge::Right);
         QCOMPARE(pushedEdge(QRect(400, -100, 240, 240), one), Edge::None); // Top and bottom do not hide.
         const QVector<QRect> two{QRect(0, 0, 1000, 800), QRect(1000, 0, 1000, 800)};
-        QCOMPARE(pushedEdge(QRect(790, 100, 240, 240), two), Edge::None); // The next screen goes on.
-        QCOMPARE(pushedEdge(QRect(1790, 100, 240, 240), two), Edge::Right);
+        QCOMPARE(pushedEdge(QRect(820, 100, 240, 240), two), Edge::None); // The next screen goes on.
+        QCOMPARE(pushedEdge(QRect(1820, 100, 240, 240), two), Edge::Right);
         QCOMPARE(pushedEdge(QRect(-60, 100, 240, 240), two), Edge::Left);
         // Hiding puts the screen edge through the artwork at the catalog's line, kept on-screen vertically.
         QCOMPARE(hidePosition(Edge::Left, QRect(-60, 700, 240, 240), one, 219, 500), QPoint(-105, 560));
@@ -683,12 +685,12 @@ private slots:
         QCOMPARE(player.sequence(), QString("MOVE/fall.right/C_Nomal"));
         finishSequence(player); QCOMPARE(player.state(), QString("thinking"));
         // Pushed past an edge while busy, it just comes back into view.
-        player.beginDrag(); window.move(area.left() - 60, area.top() + 50); window.letGo({});
+        player.beginDrag(); window.move(area.left() - window.width() / 4, area.top() + 50); window.letGo({});
         QVERIFY(!window.hiding()); QCOMPARE(window.pos().x(), area.left());
         playOut(player); QVERIFY(monitor.apply(event("interrupt"), now + seq)); playOut(player);
         QCOMPARE(player.state(), QString("idle"));
         // Idle, it hides there once the drag's end has played, and the monitor's periodic update leaves it hiding.
-        player.beginDrag(); window.move(area.left() - 60, area.top() + 50); window.letGo({});
+        player.beginDrag(); window.move(area.left() - window.width() / 4, area.top() + 50); window.letGo({});
         QCOMPARE(player.state(), QString("dragging")); QVERIFY(!window.hiding());
         // It slides to its hiding place first, and only then does the hide play.
         QVERIFY(window.sliding()); QCOMPARE(player.requestedState(), QString("idle"));
@@ -704,20 +706,20 @@ private slots:
         QCOMPARE(player.state(), QString("thinking")); QVERIFY(!window.hiding()); QCOMPARE(window.pos().x(), area.left());
         playOut(player); QVERIFY(monitor.apply(event("interrupt"), now + seq)); playOut(player);
         // The right edge too; dragging it back out ends the hiding without fighting the drag.
-        player.beginDrag(); window.move(area.right() - window.width() + 60, area.top()); window.letGo({});
+        player.beginDrag(); window.move(area.right() + 1 - window.width() + window.width() / 4, area.top()); window.letGo({});
         QTRY_COMPARE_WITH_TIMEOUT(player.requestedState(), QString("edge_right"), 2000); finishSequence(player); QCOMPARE(window.edge(), pet::touch::Edge::Right);
         QCOMPARE(window.pos().x(), area.right() + 1 - qRound(281.0 * window.width() / 500));
         player.beginDrag(); QVERIFY(!window.hiding()); QCOMPARE(player.requestedState(), QString("dragging"));
         window.letGo({}); QCOMPARE(player.requestedState(), QString("idle")); playOut(player); QVERIFY(!window.hiding());
         // Recovering the position brings it out too, so nothing puts it back behind the edge later.
-        player.beginDrag(); window.move(area.left() - 60, area.top()); window.letGo({});
+        player.beginDrag(); window.move(area.left() - window.width() / 4, area.top()); window.letGo({});
         QTRY_COMPARE_WITH_TIMEOUT(player.requestedState(), QString("edge_left"), 2000); finishSequence(player);
         QVERIFY(window.hiding()); window.recover(); QVERIFY(!window.hiding()); QCOMPARE(player.state(), QString("idle"));
         window.constrainPosition(); QVERIFY(area.contains(window.geometry()));
         // Off, nothing falls or hides.
         window.setTouchEnabled(false);
         player.beginDrag(); window.letGo({-3000, 0}); QVERIFY(!window.flying());
-        player.beginDrag(); window.move(area.left() - 60, area.top()); window.letGo({});
+        player.beginDrag(); window.move(area.left() - window.width() / 4, area.top()); window.letGo({});
         QVERIFY(!window.sliding()); playOut(player); QVERIFY(!window.hiding()); QCOMPARE(player.state(), QString("idle"));
     }
     void holdToPet() {
