@@ -10,6 +10,7 @@
 #include <QMenu>
 #include <QPointer>
 #include <QSystemTrayIcon>
+#include <QVariantAnimation>
 #include <QWidget>
 #include <functional>
 #include <optional>
@@ -40,7 +41,9 @@ public:
     // What happens when the user lets go of a dragged pet moving at `velocity` (pixels per second):
     // fast enough and it falls; pushed past a screen edge while idle and it hides there.
     void letGo(QPointF velocity);
+    void slideToEdge(touch::Edge edge);
     bool flying() const { return flight_.has_value(); }
+    bool sliding() const { return slide_.state() == QAbstractAnimation::Running; }
     // Hiding behind a screen edge, partly off-screen. Session activity brings it back out.
     touch::Edge edge() const { return edge_; }
     bool hiding() const { return edge_ != touch::Edge::None; }
@@ -122,6 +125,7 @@ private:
     QMenu menu_;
     QSystemTrayIcon tray_;
     QTimer recoveryTimer_, dragTimer_, saveTimer_, flightTimer_;
+    QVariantAnimation slide_; // Eases a let-go pet to its hiding place before the hide plays.
     QPointer<QDialog> settingsDialog_, previewDialog_;
     QAction *clickAction_ = nullptr, *onTopAction_ = nullptr, *muteAction_ = nullptr, *showAction_ = nullptr;
     Presence presence_;
@@ -137,6 +141,6 @@ private:
     QString pressTouch_; // What a held press pets, decided where it landed.
     QVector<touch::Sample> samples_;
     std::optional<touch::Flight> flight_;
-    touch::Edge edge_ = touch::Edge::None;
+    touch::Edge edge_ = touch::Edge::None, slideEdge_ = touch::Edge::None;
 };
 }

@@ -690,6 +690,9 @@ private slots:
         // Idle, it hides there once the drag's end has played, and the monitor's periodic update leaves it hiding.
         player.beginDrag(); window.move(area.left() - 60, area.top() + 50); window.letGo({});
         QCOMPARE(player.state(), QString("dragging")); QVERIFY(!window.hiding());
+        // It slides to its hiding place first, and only then does the hide play.
+        QVERIFY(window.sliding()); QCOMPARE(player.requestedState(), QString("idle"));
+        QTRY_COMPARE_WITH_TIMEOUT(player.requestedState(), QString("edge_left"), 2000); QVERIFY(!window.sliding());
         monitor.update(now + seq); QCOMPARE(player.requestedState(), QString("edge_left"));
         finishSequence(player); QCOMPARE(player.state(), QString("edge_left")); QVERIFY(window.hiding());
         QCOMPARE(window.pos(), QPoint(area.left() - qRound(219.0 * window.width() / 500), area.top() + 50));
@@ -702,19 +705,20 @@ private slots:
         playOut(player); QVERIFY(monitor.apply(event("interrupt"), now + seq)); playOut(player);
         // The right edge too; dragging it back out ends the hiding without fighting the drag.
         player.beginDrag(); window.move(area.right() - window.width() + 60, area.top()); window.letGo({});
-        finishSequence(player); QCOMPARE(window.edge(), pet::touch::Edge::Right);
+        QTRY_COMPARE_WITH_TIMEOUT(player.requestedState(), QString("edge_right"), 2000); finishSequence(player); QCOMPARE(window.edge(), pet::touch::Edge::Right);
         QCOMPARE(window.pos().x(), area.right() + 1 - qRound(281.0 * window.width() / 500));
         player.beginDrag(); QVERIFY(!window.hiding()); QCOMPARE(player.requestedState(), QString("dragging"));
         window.letGo({}); QCOMPARE(player.requestedState(), QString("idle")); playOut(player); QVERIFY(!window.hiding());
         // Recovering the position brings it out too, so nothing puts it back behind the edge later.
-        player.beginDrag(); window.move(area.left() - 60, area.top()); window.letGo({}); finishSequence(player);
+        player.beginDrag(); window.move(area.left() - 60, area.top()); window.letGo({});
+        QTRY_COMPARE_WITH_TIMEOUT(player.requestedState(), QString("edge_left"), 2000); finishSequence(player);
         QVERIFY(window.hiding()); window.recover(); QVERIFY(!window.hiding()); QCOMPARE(player.state(), QString("idle"));
         window.constrainPosition(); QVERIFY(area.contains(window.geometry()));
         // Off, nothing falls or hides.
         window.setTouchEnabled(false);
         player.beginDrag(); window.letGo({-3000, 0}); QVERIFY(!window.flying());
         player.beginDrag(); window.move(area.left() - 60, area.top()); window.letGo({});
-        playOut(player); QVERIFY(!window.hiding()); QCOMPARE(player.state(), QString("idle"));
+        QVERIFY(!window.sliding()); playOut(player); QVERIFY(!window.hiding()); QCOMPARE(player.state(), QString("idle"));
     }
     void holdToPet() {
         QTemporaryDir directory;

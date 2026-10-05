@@ -122,6 +122,15 @@ PetWindow::PetWindow(QWidget *parent, const QString &path, bool persist)
         move(flight_->position());
         if (!airborne) land();
     });
+    slide_.setDuration(280); slide_.setEasingCurve(QEasingCurve::OutCubic);
+    connect(&slide_, &QVariantAnimation::valueChanged, this, [this](const QVariant &value) { move(value.toPoint()); });
+    connect(&slide_, &QVariantAnimation::finished, this, [this] {
+        // Arrived: hide only if the pet is still idle and nobody has picked it up meanwhile.
+        const auto &touch = player_.touch();
+        if (dragging_ || quitting_ || flight_ || player_.requestedState() != "idle") return;
+        const auto hide = slideEdge_ == touch::Edge::Left ? touch.edgeLeft : slideEdge_ == touch::Edge::Right ? touch.edgeRight : QString();
+        if (!hide.isEmpty()) player_.select(hide);
+    });
     saveTimer_.setSingleShot(true); saveTimer_.setInterval(250);
     connect(&saveTimer_, &QTimer::timeout, this, &PetWindow::savePreferences);
     new QShortcut(QKeySequence(Qt::Key_Escape), this, [this] { requestQuit(); });
@@ -252,6 +261,7 @@ void PetWindow::showAfterFlagChange(QPoint position) {
     if (!petHidden()) { show(); move(position); }
 }
 void PetWindow::recover() {
+    slide_.stop();
     applyPresence(presence_.setUserHidden(false));
     if (hiding()) player_.select("idle", true); // Out from behind the edge, to be placed in plain view.
     setClickThrough(false);
@@ -382,7 +392,7 @@ void PetWindow::paintEvent(QPaintEvent *) {
 }
 void PetWindow::requestQuit() {
     if (quitting_) { qApp->quit(); return; }
-    endDrag(); setClickThrough(false); savePreferences(); quitting_ = true;
+    slide_.stop(); endDrag(); setClickThrough(false); savePreferences(); quitting_ = true;
     emit quitRequested(); // Monitoring stops here; closing settings never reaches this.
     if (settingsDialog_) settingsDialog_->close();
     if (previewDialog_) previewDialog_->close();
@@ -398,6 +408,7 @@ void PetWindow::contextMenuEvent(QContextMenuEvent *event) { menu_.popup(event->
 void PetWindow::mousePressEvent(QMouseEvent *event) {
     if (event->button() != Qt::LeftButton || quitting_) return;
     if (flight_) land(); // Caught in mid-air.
+    slide_.stop(); // Caught on its way to the edge.
     dragging_ = true;
     pressPosition_ = nativePos(); pressTimer_.start(); samples_.clear();
     // A pet hiding at an edge is only partly there; it can be dragged back out, not petted.
@@ -440,8 +451,18 @@ void PetWindow::letGo(QPointF velocity) {
     // Only an idle pet hides; one with work to show stays in view.
     const auto edge = touchEnabled_ ? touch::pushedEdge(QRect(nativePos(), size()), screenAreas()) : touch::Edge::None;
     const auto hide = edge == touch::Edge::Left ? touch.edgeLeft : edge == touch::Edge::Right ? touch.edgeRight : QString();
-    if (!hide.isEmpty() && player_.requestedState() == "idle") player_.select(hide);
+    if (!hide.isEmpty() && player_.requestedState() == "idle") { slideToEdge(edge); return; }
     constrainPosition();
+}
+void PetWindow::slideToEdge(touch::Edge edge) {
+    const auto &touch = player_.touch();
+    const QRect window(nativePos(), size());
+    const auto target = touch::hidePosition(edge, window, screenAreas(), edge == touch::Edge::Left ? touch.edgeLeftAt : touch.edgeRightAt, touch.scale);
+    slideEdge_ = edge;
+    slide_.stop();
+    if (target == window.topLeft()) { slide_.setStartValue(target); slide_.setEndValue(target); }
+    else { slide_.setStartValue(window.topLeft()); slide_.setEndValue(target); }
+    slide_.start();
 }
 void PetWindow::land() {
     flightTimer_.stop();
