@@ -5,6 +5,7 @@
 #include <QApplication>
 #include <QCheckBox>
 #include <QComboBox>
+#include <QDateEdit>
 #include <QDateTime>
 #include <QGroupBox>
 #include <QDir>
@@ -16,6 +17,7 @@
 #include <QSignalSpy>
 #include <QTemporaryDir>
 #include <QTest>
+#include <QToolTip>
 #include <memory>
 
 namespace {
@@ -68,6 +70,8 @@ private slots:
         // Settings inspect integration files; keep them away from the real client configuration.
         qputenv("CLAUDE_CONFIG_DIR", QFile::encodeName(clients.path() + "/claude"));
         qputenv("CODEX_HOME", QFile::encodeName(clients.path() + "/codex"));
+        // An ordinary Wednesday noon, so no special day or hour changes what a test expects.
+        pet::EasterEggs::defaultClock = [] { return QDateTime(QDate(2026, 10, 7), QTime(12, 0)); };
     }
     void releaseMetadataIsEmbedded() {
         // The About view and release packages rely on these embedded resources.
@@ -133,11 +137,14 @@ private slots:
     }
     void everyIncludedFrameAndCacheBound() {
         pet::Player player; player.setPaused(true); player.setRenderSize(640);
-        // The session states, the reactions that only celebrate, and the fidgets.
+        // The session states, the reactions that only celebrate or surprise, and the fidgets.
         QSet<QString> reactions;
-        for (const auto *name : {"turn_finished", "snack", "milestone"})
+        for (const auto *name : {"turn_finished", "snack", "milestone", "long_turn", "friday_evening", "may20", "birthday",
+                                 "konami", "danger"})
             for (const auto &reaction : player.reactions(name)) reactions.insert(reaction.state);
-        QCOMPARE(reactions.size(), 6);
+        QCOMPARE(reactions.size(), 10);
+        // Late at night the pet yawns more, with a fidget it already has.
+        QCOMPARE(player.reactions("late_night").size(), 1); QVERIFY(player.isFidget(player.reactions("late_night").first().state));
         // And the touch reactions: three held presses, two falls and two edges.
         const auto &touch = player.touch();
         QSet<QString> touches{touch.fallLeft, touch.fallRight, touch.edgeLeft, touch.edgeRight};
@@ -776,6 +783,215 @@ private slots:
         QVERIFY(!loads(broken("fall", QJsonObject{{"right", "idle"}})));
         QVERIFY(!loads(broken("edge", QJsonObject{{"left", QJsonObject{{"state", "held"}, {"at", 500}}}})));
         QVERIFY(!loads(broken("edge", QJsonObject{{"left", QJsonObject{{"state", "brief"}, {"at", 200}}}})));
+    }
+    void easterEggOccasions() {
+        auto at = [](int year, int month, int day, int hour, int minute = 0, const QString &birthday = {}) {
+            return pet::EasterEggs::occasionsAt(QDateTime(QDate(year, month, day), QTime(hour, minute)), birthday);
+        };
+        QCOMPARE(at(2026, 10, 7, 12), QStringList());
+        QCOMPARE(at(2026, 5, 20, 12), QStringList{"may20"});
+        QCOMPARE(at(2026, 3, 14, 12, 0, "03-14"), QStringList{"birthday"});
+        QCOMPARE(at(2026, 3, 15, 12, 0, "03-14"), QStringList());
+        // A February 29 birthday is kept on the 28th in other years.
+        QCOMPARE(at(2027, 2, 28, 12, 0, "02-29"), QStringList{"birthday"});
+        QCOMPARE(at(2028, 2, 28, 12, 0, "02-29"), QStringList());
+        QCOMPARE(at(2028, 2, 29, 12, 0, "02-29"), QStringList{"birthday"});
+        // Late night runs from 01:00 to 05:00, Friday evening from 17:00 to midnight.
+        QCOMPARE(at(2026, 10, 7, 0, 59), QStringList()); QCOMPARE(at(2026, 10, 7, 1, 0), QStringList{"late_night"});
+        QCOMPARE(at(2026, 10, 7, 4, 59), QStringList{"late_night"}); QCOMPARE(at(2026, 10, 7, 5, 0), QStringList());
+        QCOMPARE(at(2026, 10, 9, 16, 59), QStringList()); QCOMPARE(at(2026, 10, 9, 17, 0), QStringList{"friday_evening"});
+        QCOMPARE(at(2026, 10, 9, 23, 59), QStringList{"friday_evening"}); QCOMPARE(at(2026, 10, 10, 0, 30), QStringList());
+        QCOMPARE(at(2026, 5, 20, 2, 0, "05-20"), (QStringList{"may20", "birthday", "late_night"}));
+        // A birthday is "MM-dd" of a real date.
+        pet::Player player; player.setPaused(true); pet::EasterEggs eggs(player);
+        for (const auto *bad : {"13-01", "02-30", "00-10", "2-1", "0101", "aa-bb", "2026-03-14"})
+            QVERIFY2(!eggs.setBirthday(bad), bad);
+        QVERIFY(eggs.setBirthday("02-29")); QVERIFY(!eggs.setBirthday("x")); QCOMPARE(eggs.birthday(), QString("02-29"));
+        QVERIFY(eggs.setBirthday({})); QCOMPARE(eggs.birthday(), QString());
+        // The bedtime note comes once a night, and only at night.
+        QDateTime local(QDate(2026, 10, 7), QTime(23, 0)); eggs.setClock([&] { return local; });
+        QVERIFY(!eggs.bedtime()); local = local.addSecs(3 * 3600); QVERIFY(eggs.bedtime()); QVERIFY(!eggs.bedtime());
+        local = local.addDays(1); QVERIFY(eggs.bedtime());
+        eggs.setEnabled(false); local = local.addDays(1); QVERIFY(!eggs.bedtime());
+        // The Konami code completes on its last key, also after a false start.
+        const QList<int> code{Qt::Key_Up, Qt::Key_Up, Qt::Key_Down, Qt::Key_Down, Qt::Key_Left, Qt::Key_Right,
+                              Qt::Key_Left, Qt::Key_Right, Qt::Key_B};
+        QVERIFY(!eggs.key(Qt::Key_Up));
+        for (const int key : code) QVERIFY(!eggs.key(key));
+        QVERIFY(eggs.key(Qt::Key_A)); QVERIFY(!eggs.key(Qt::Key_A));
+        // A surprise plays a pool at once; turned off, it plays nothing.
+        Draws draws; eggs.setRandom(draws.random());
+        QVERIFY(!eggs.surprise("danger")); QCOMPARE(player.state(), QString("idle"));
+        eggs.setEnabled(true); QVERIFY(!eggs.surprise("nobody"));
+        QVERIFY(eggs.surprise("danger")); QCOMPARE(player.state(), QString("startled")); QVERIFY(eggs.surprising());
+        // It stops counting once something else shows, or after a while even if the player stalls.
+        player.select("thinking", true); QVERIFY(!eggs.surprising());
+        QVERIFY(eggs.surprise("danger")); local = local.addMSecs(pet::EasterEggs::surpriseMs); QVERIFY(!eggs.surprising());
+        // Never over a drag.
+        player.beginDrag(); QVERIFY(!eggs.surprise("danger")); player.endDrag();
+        QCOMPARE(draws.unexpected, 0);
+    }
+    void easterEggFidgets() {
+        pet::Player player; player.setPaused(true); player.setRandom([](int) { return 0; });
+        pet::Ambient ambient(player); pet::EasterEggs eggs(player); ambient.setEasterEggs(&eggs);
+        Draws draws, eggDraws; qint64 now = 1000000;
+        QDateTime local(QDate(2026, 5, 20), QTime(12, 0));
+        ambient.setRandom(draws.random()); ambient.setClock([&] { return now; });
+        eggs.setRandom(eggDraws.random()); eggs.setClock([&] { return local; });
+        // On May 20 the first fidget greets with the day's own animation; a pool of one draws nothing.
+        draws.values = {0}; player.select("thinking", true); player.select("idle", true);
+        now += 45000; finishSequence(player);
+        QCOMPARE(player.state(), QString("love_520")); QVERIFY(ambient.resting());
+        // It plays out like a fidget, keeping the idle clock.
+        draws.values = {0}; playOut(player); QVERIFY(!ambient.resting()); QCOMPARE(ambient.idleFor(), qint64(45000));
+        // Later that day it comes back one fidget in four; otherwise an ordinary fidget plays.
+        now += 45000; eggDraws.values = {1}; draws.values = {5, 0}; finishSequence(player);
+        QCOMPARE(player.state(), QString("fidget_aside"));
+        draws.values = {0}; playOut(player);
+        now += 45000; eggDraws.values = {0}; finishSequence(player); QCOMPARE(player.state(), QString("love_520"));
+        // An ordinary day asks nothing of the eggs.
+        draws.values = {0}; playOut(player);
+        local = QDateTime(QDate(2026, 5, 21), QTime(12, 0));
+        now += 45000; draws.values = {5, 0}; finishSequence(player); QCOMPARE(player.state(), QString("fidget_aside"));
+        // Late at night one fidget in two is a yawn, even before the usual two idle minutes for one.
+        draws.values = {0}; playOut(player);
+        local = QDateTime(QDate(2026, 5, 22), QTime(2, 30));
+        now += 45000; eggDraws.values = {0}; finishSequence(player); QCOMPARE(player.state(), QString("fidget_yawn"));
+        QVERIFY(ambient.resting());
+        draws.values = {0}; playOut(player);
+        now += 45000; eggDraws.values = {1}; draws.values = {5, 0}; finishSequence(player);
+        QCOMPARE(player.state(), QString("fidget_aside"));
+        // A birthday greets first, then May 20 when it falls on the same day.
+        draws.values = {0}; playOut(player);
+        QVERIFY(eggs.setBirthday("05-20")); local = QDateTime(QDate(2027, 5, 20), QTime(12, 0));
+        now += 45000; finishSequence(player); QCOMPARE(player.state(), QString("birthday"));
+        draws.values = {0}; playOut(player);
+        now += 45000; finishSequence(player); QCOMPARE(player.state(), QString("love_520"));
+        // Turned off, it is an ordinary day again.
+        draws.values = {0}; playOut(player);
+        eggs.setEnabled(false); local = QDateTime(QDate(2028, 5, 20), QTime(12, 0));
+        now += 45000; draws.values = {5, 0}; finishSequence(player); QCOMPARE(player.state(), QString("fidget_aside"));
+        QCOMPARE(draws.unexpected, 0); QCOMPARE(eggDraws.unexpected, 0);
+    }
+    void easterEggCelebrations() {
+        pet::Player player; player.setPaused(true);
+        pet::Mood mood(player); pet::EasterEggs eggs(player); Draws draws; mood.setRandom(draws.random());
+        QDateTime local(QDate(2026, 10, 7), QTime(12, 0)); eggs.setClock([&] { return local; }); // A Wednesday.
+        QCOMPARE(eggs.celebration(0), QString()); QCOMPARE(eggs.celebration(60000), QString());
+        // A turn of fifteen minutes or more is celebrated bigger: the milestone weighs 2, a dance 1.
+        QCOMPARE(eggs.celebration(pet::EasterEggs::longTurnMs - 1), QString());
+        QCOMPARE(eggs.celebration(pet::EasterEggs::longTurnMs), QString("long_turn"));
+        draws.values = {1}; QCOMPARE(mood.celebrate("long_turn"), QString("milestone"));
+        draws.values = {2}; QCOMPARE(mood.celebrate("long_turn"), QString("dance"));
+        // Friday evening dances.
+        local = QDateTime(QDate(2026, 10, 9), QTime(17, 0));
+        QCOMPARE(eggs.celebration(0), QString("friday_evening")); QCOMPARE(mood.celebrate("friday_evening"), QString("dance"));
+        // A birthday celebrates its first finished turn; a long turn still comes first.
+        QVERIFY(eggs.setBirthday("10-09"));
+        QCOMPARE(eggs.celebration(pet::EasterEggs::longTurnMs), QString("long_turn"));
+        QCOMPARE(eggs.celebration(0), QString("birthday")); QCOMPARE(eggs.celebration(0), QString("friday_evening"));
+        QCOMPARE(mood.celebrate("birthday"), QString("birthday"));
+        // A milestone outranks an occasion, and a snack waits behind one for the next turn.
+        mood.setTurns(99); mood.finished(1000); QCOMPARE(mood.treat(), QString("milestone"));
+        QCOMPARE(mood.celebrate("friday_evening"), QString("milestone")); QCOMPARE(mood.treat(), QString());
+        for (int i = 0; i < pet::Mood::snackTurns && mood.treat().isEmpty(); ++i) mood.finished(2000);
+        QCOMPARE(mood.treat(), QString("snack"));
+        QCOMPARE(mood.celebrate("friday_evening"), QString("dance")); QCOMPARE(mood.treat(), QString("snack"));
+        draws.values = {0}; QCOMPARE(mood.celebrate(), QString("snack_hungry")); QCOMPARE(mood.treat(), QString());
+        // A pool the catalog lacks changes nothing, and neither do the eggs when turned off.
+        draws.values = {0}; QCOMPARE(mood.celebrate("nobody"), QString("turn_finished"));
+        eggs.setEnabled(false); QCOMPARE(eggs.celebration(pet::EasterEggs::longTurnMs), QString());
+        QCOMPARE(draws.unexpected, 0);
+    }
+    void monitorEasterEggs() {
+        QTemporaryDir directory;
+        pet::PetWindow window(nullptr, directory.path() + "/preferences.json"); window.show();
+        pet::Monitor monitor(window); auto &player = window.player(); player.setPaused(true);
+        player.setRandom([](int) { return 0; }); window.ambient().setRandom([](int) { return 0; });
+        Draws draws, eggDraws; window.mood().setRandom(draws.random()); window.eggs().setRandom(eggDraws.random());
+        QDateTime local(QDate(2026, 10, 7), QTime(12, 0)); window.eggs().setClock([&] { return local; });
+        const qint64 now = QDateTime::currentMSecsSinceEpoch(); qint64 seq = 0;
+        auto event = [&](QString kind, qint64 at, QString session = "s1") {
+            ++seq; return pet::Event{"claude", session, QString::number(seq), kind, {}, {}, "/work/abc-web", {}, at, {}};
+        };
+        auto tool = [&](QString id, qint64 at, bool risky) {
+            auto e = event("tool_start", at); e.tool = id; e.risky = risky; return e;
+        };
+        // A turn that ran twenty minutes ends in a big celebration.
+        const qint64 start = now - 20 * 60000;
+        QVERIFY(monitor.apply(event("prompt", start), start));
+        draws.values = {2}; QVERIFY(monitor.apply(event("turn_finished", now), now));
+        QCOMPARE(player.requestedState(), QString("dance"));
+        playOut(player); playOut(player); QCOMPARE(player.state(), QString("idle"));
+        // A destructive command startles the pet; the periodic update lets it finish, then shows the work.
+        QVERIFY(monitor.apply(event("prompt", now + 1), now + 1));
+        QVERIFY(monitor.apply(tool("t1", now + 2, true), now + 2));
+        QCOMPARE(player.state(), QString("startled")); QVERIFY(window.eggs().surprising());
+        monitor.update(now + 3); QCOMPARE(player.state(), QString("startled"));
+        playOut(player); monitor.update(now + 4); QCOMPARE(player.requestedState(), QString("working"));
+        // An ordinary command does not.
+        QVERIFY(monitor.apply(tool("t2", now + 5, false), now + 5)); QVERIFY(!window.eggs().surprising());
+        // A request for the user cuts a surprise short, and one waiting elsewhere keeps the pet from jumping.
+        QVERIFY(monitor.apply(tool("t3", now + 6, true), now + 6)); QCOMPARE(player.state(), QString("startled"));
+        QVERIFY(monitor.apply(event("attention", now + 7, "s2"), now + 7));
+        QCOMPARE(player.state(), QString("needs_input")); QVERIFY(!window.eggs().surprising());
+        QVERIFY(monitor.apply(tool("t4", now + 8, true), now + 8)); QCOMPARE(player.state(), QString("needs_input"));
+        QVERIFY(monitor.apply(event("session_end", now + 9, "s2"), now + 9));
+        // A turn finishing late at night brings one bedtime note.
+        local = QDateTime(QDate(2026, 10, 8), QTime(2, 0)); QToolTip::hideText();
+        draws.values = {0}; QVERIFY(monitor.apply(event("turn_finished", now + 10), now + 10));
+        QCOMPARE(QToolTip::text(), pet::Monitor::bedtimeNote); QVERIFY(!window.eggs().bedtime()); // Used for tonight.
+        // The Konami code, typed on the pet, makes it dance, and the monitor lets it.
+        local = QDateTime(QDate(2026, 10, 7), QTime(12, 0));
+        for (int i = 0; i < 4; ++i) playOut(player);
+        QCOMPARE(player.state(), QString("idle")); monitor.update(now + 13);
+        eggDraws.values = {0};
+        for (const int key : {Qt::Key_Up, Qt::Key_Up, Qt::Key_Down, Qt::Key_Down, Qt::Key_Left, Qt::Key_Right,
+                              Qt::Key_Left, Qt::Key_Right, Qt::Key_B, Qt::Key_A})
+            QTest::keyClick(&window, Qt::Key(key));
+        QCOMPARE(player.state(), QString("dance")); monitor.update(now + 14); QCOMPARE(player.state(), QString("dance"));
+        QCOMPARE(draws.unexpected, 0); QCOMPARE(eggDraws.unexpected, 0);
+    }
+    void easterEggPreference() {
+        QTemporaryDir directory; const auto path = directory.path() + "/preferences.json";
+        {
+            pet::PetWindow window(nullptr, path);
+            QVERIFY(window.easterEggsEnabled()); QCOMPARE(window.birthday(), QString());
+            window.showSettings(); auto *dialog = window.findChild<QDialog*>(); QVERIFY(dialog);
+            QCheckBox *eggs = nullptr, *birthday = nullptr; QDateEdit *date = nullptr;
+            for (auto *box : dialog->findChildren<QCheckBox*>()) {
+                if (box->accessibleName() == "Easter eggs") eggs = box;
+                if (box->accessibleName() == "Birthday") birthday = box;
+            }
+            for (auto *edit : dialog->findChildren<QDateEdit*>()) if (edit->accessibleName() == "Birthday date") date = edit;
+            QVERIFY(eggs && birthday && date);
+            QVERIFY(eggs->isChecked()); QVERIFY(!birthday->isChecked()); QVERIFY(!date->isEnabled());
+            birthday->setChecked(true); QVERIFY(date->isEnabled()); QCOMPARE(window.birthday(), QString("01-01"));
+            date->setDate(QDate(2000, 2, 29)); QCOMPARE(window.birthday(), QString("02-29"));
+            eggs->setChecked(false); QVERIFY(!window.eggs().enabled());
+            QVERIFY(window.savePreferences()); dialog->close();
+        }
+        auto saved = pet::PreferencesStore(path).load();
+        QVERIFY(!saved.easterEggs); QCOMPARE(saved.birthday, QString("02-29"));
+        {
+            pet::PetWindow restored(nullptr, path);
+            QVERIFY(!restored.easterEggsEnabled()); QCOMPARE(restored.birthday(), QString("02-29"));
+            restored.setBirthday("02-30"); QCOMPARE(restored.birthday(), QString("02-29")); // Refused.
+            restored.setBirthday({}); restored.setEasterEggsEnabled(true); QVERIFY(restored.savePreferences());
+        }
+        saved = pet::PreferencesStore(path).load(); QVERIFY(saved.easterEggs); QCOMPARE(saved.birthday, QString());
+        // Older files have neither key; bad values are refused like any other and preserved.
+        QFile file(path); QVERIFY(file.open(QIODevice::WriteOnly));
+        file.write(R"({"version":1,"size":200,"on_top":true})"); file.close();
+        const auto legacy = pet::PreferencesStore(path).load();
+        QVERIFY(legacy.easterEggs); QCOMPARE(legacy.birthday, QString());
+        for (const auto *broken : {R"({"version":1,"size":200,"on_top":true,"easter_eggs":1})",
+                                   R"({"version":1,"size":200,"on_top":true,"birthday":"02-30"})",
+                                   R"({"version":1,"size":200,"on_top":true,"birthday":229})",
+                                   R"({"version":1,"size":200,"on_top":true,"birthday":""})"}) {
+            QVERIFY(file.open(QIODevice::WriteOnly)); file.write(broken); file.close();
+            pet::PreferencesStore invalid(path); QCOMPARE(invalid.load().birthday, QString()); QVERIFY(!invalid.save(pet::Preferences{}));
+        }
     }
     void focusSessionListAndQuietHosts() {
         QTemporaryDir directory;

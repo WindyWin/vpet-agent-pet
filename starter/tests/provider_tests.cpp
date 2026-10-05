@@ -53,6 +53,38 @@ private slots:
         auto large = payload("UserPromptSubmit"); large["prompt"] = QString(20000, 'x');
         QVERIFY(!pet::normalizeHook("codex", large, now).isEmpty());
     }
+    void destructiveCommands() {
+        for (const auto *command : {"rm -rf build", "rm -fr /tmp/x", "rm -r -f x", "rm --recursive --force x", "sudo rm -Rf /",
+                                    "cd repo && rm -rf node_modules", "find . -name '*.o' | xargs rm -rf", "echo ok; /bin/rm -rf ~",
+                                    "git push --force", "git push -f origin main", "git push origin +main",
+                                    "git -C repo push --force-with-lease", "git reset --hard HEAD~3", "git clean -fdx",
+                                    "mkfs.ext4 /dev/sdb1", "dd if=image.iso of=/dev/sda bs=4M", "psql -c 'DROP TABLE users'",
+                                    "sqlite3 app.db \"truncate table logs\"", "LANG=C rm -rf out", "bash -lc 'rm -rf out'"})
+            QVERIFY2(pet::destructiveCommand(command), command);
+        for (const auto *command : {"", "rm file.txt", "rm -r build", "rm -f file", "ls -rf", "grep -rf patterns.txt .",
+                                    "git push", "git push -u origin feature-fix", "git push --follow-tags",
+                                    "git reset --soft HEAD~1", "git clean -n", "git commit -m 'force push later'",
+                                    "dd if=/dev/zero of=disk.img", "echo 'select * from dropbox'", "cmake --build build",
+                                    "bash -lc 'make test'", "sh scripts/build.sh"})
+            QVERIFY2(!pet::destructiveCommand(command), command);
+        // The hook flags a tool start; the command itself never leaves it.
+        for (const auto &provider : {QString("claude"), QString("codex")}) {
+            auto start = payload("PreToolUse", "call"); start["tool_name"] = "Bash";
+            start["tool_input"] = QJsonObject{{"command", "rm -rf build-output"}};
+            auto result = pet::normalizeHook(provider, start, now);
+            QCOMPARE(result["risky"], QJsonValue(true)); QVERIFY(event(provider, start, now).risky);
+            const auto bytes = QJsonDocument(result).toJson();
+            QVERIFY(!bytes.contains("rm -rf")); QVERIFY(!bytes.contains("build-output"));
+            start["tool_input"] = QJsonObject{{"command", QJsonArray{"git", "push", "--force"}}};
+            QCOMPARE(pet::normalizeHook(provider, start, now)["risky"], QJsonValue(true));
+            start["tool_input"] = QJsonObject{{"command", QJsonArray{"bash", "-lc", "git reset --hard"}}};
+            QCOMPARE(pet::normalizeHook(provider, start, now)["risky"], QJsonValue(true));
+            start["tool_input"] = QJsonObject{{"command", "cargo test"}};
+            QVERIFY(!pet::normalizeHook(provider, start, now).contains("risky"));
+            auto end = payload("PostToolUse", "call"); end["tool_input"] = QJsonObject{{"command", "rm -rf build-output"}};
+            QVERIFY(!pet::normalizeHook(provider, end, now).contains("risky"));
+        }
+    }
     void concurrentAndChildren() {
         for (const auto &provider : {QString("claude"), QString("codex")}) {
             pet::Sessions sessions; qint64 stamp = now;

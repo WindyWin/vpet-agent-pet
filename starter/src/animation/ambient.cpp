@@ -27,14 +27,14 @@ qint64 Ambient::gapMs() {
 void Ambient::entered(const QString &state) {
     if (state == "idle") {
         // Idle after a fidget keeps the clock, so the tiers and the nap still count up.
-        fidgeting_ = asleep_ = false;
+        fidgeting_ = asleep_ = false; special_.clear();
         if (idleSince_ < 0) idleSince_ = clock_();
         if (level_ != AmbientLevel::Off) nextDue_ = clock_() + gapMs();
-    } else if (player_.isFidget(state)) {
+    } else if (player_.isFidget(state) || (!special_.isEmpty() && state == special_)) {
         fidgeting_ = true; asleep_ = false;
     } else {
         // Anything else is real activity, or a nap this class chose to start.
-        idleSince_ = -1; fidgeting_ = false;
+        idleSince_ = -1; fidgeting_ = false; special_.clear();
         asleep_ = napping_ && state == "sleeping";
     }
 }
@@ -48,9 +48,10 @@ void Ambient::looped(const QString &state) {
         return;
     }
     if (now < nextDue_) return;
-    const auto fidget = pick(idle);
+    const auto special = eggs_ ? eggs_->fidget() : QString();
+    const auto fidget = special.isEmpty() ? pick(idle) : special;
     if (fidget.isEmpty()) { nextDue_ = now + gapMs(); return; }
-    last_ = fidget;
+    last_ = fidget; special_ = special;
     player_.select(fidget);
 }
 QString Ambient::pick(qint64 idleMs) {

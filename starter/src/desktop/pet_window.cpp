@@ -9,11 +9,13 @@
 #include <QCloseEvent>
 #include <QComboBox>
 #include <QContextMenuEvent>
+#include <QDateEdit>
 #include <QDialogButtonBox>
 #include <QFile>
 #include <QFormLayout>
 #include <QGroupBox>
 #include <QJsonObject>
+#include <QKeyEvent>
 #include <QMessageBox>
 #include <QLabel>
 #include <QMouseEvent>
@@ -43,7 +45,7 @@ static void drawBadge(QPainter &painter, const QRect &badge, const QColor &color
     painter.restore();
 }
 PetWindow::PetWindow(QWidget *parent, const QString &path, bool persist)
-    : QWidget(parent), player_(this), ambient_(player_, this), mood_(player_, this), store_(path), menu_(this), tray_(this), persist_(persist) {
+    : QWidget(parent), player_(this), ambient_(player_, this), mood_(player_, this), eggs_(player_, this), store_(path), menu_(this), tray_(this), persist_(persist) {
     const auto preferences = persist_ ? store_.load() : Preferences{};
     setWindowTitle("Agent Pet");
     setWindowFlags(Qt::Tool | Qt::FramelessWindowHint);
@@ -58,6 +60,8 @@ PetWindow::PetWindow(QWidget *parent, const QString &path, bool persist)
     mood_.setSetting(MoodSetting(qBound(0, preferences.mood, 2))); mood_.setTurns(preferences.turns);
     connect(&mood_, &Mood::counted, this, [this] { if (ready_) saveTimer_.start(); });
     touchEnabled_ = preferences.touch;
+    eggs_.setEnabled(preferences.easterEggs); eggs_.setBirthday(preferences.birthday);
+    ambient_.setEasterEggs(&eggs_);
     connect(&player_, &Player::entered, this, &PetWindow::entered);
     autostart_ = preferences.autostart; presence_.setPolicy(preferences.whenIdle);
     connect(&player_, &Player::changed, this, qOverload<>(&PetWindow::update));
@@ -234,6 +238,15 @@ void PetWindow::setTouchEnabled(bool enabled) {
     touchEnabled_ = enabled;
     if (ready_) saveTimer_.start();
 }
+void PetWindow::setEasterEggsEnabled(bool enabled) {
+    if (enabled == easterEggsEnabled()) return;
+    eggs_.setEnabled(enabled);
+    if (ready_) saveTimer_.start();
+}
+void PetWindow::setBirthday(const QString &monthDay) {
+    if (monthDay == birthday() || !eggs_.setBirthday(monthDay)) return;
+    if (ready_) saveTimer_.start();
+}
 void PetWindow::showAfterFlagChange(QPoint position) {
     // Changing window flags hides the window; a hidden pet stays hidden until shown.
     if (!petHidden()) { show(); move(position); }
@@ -338,7 +351,7 @@ bool PetWindow::writePreferences(const std::function<void(Preferences &)> &chang
     preferences.onTop = windowFlags().testFlag(Qt::WindowStaysOnTopHint);
     preferences.muted = muted_; preferences.sound = sound_; preferences.bubbles = bubbles_;
     preferences.ambient = ambientLevel(); preferences.mood = moodLevel(); preferences.turns = mood_.turns();
-    preferences.touch = touchEnabled_;
+    preferences.touch = touchEnabled_; preferences.easterEggs = easterEggsEnabled(); preferences.birthday = birthday();
     change(preferences);
     autostart_ = preferences.autostart; presence_.setPolicy(preferences.whenIdle);
     return store_.save(preferences);
@@ -447,6 +460,10 @@ void PetWindow::entered(const QString &state) {
     if (!dragging_) constrainPosition();
 }
 void PetWindow::mouseReleaseEvent(QMouseEvent *event) { if (event->button() == Qt::LeftButton) endDrag(true); }
+void PetWindow::keyPressEvent(QKeyEvent *event) {
+    if (eggs_.key(event->key()) && !quitting_) eggs_.surprise("konami");
+    QWidget::keyPressEvent(event);
+}
 
 void PetWindow::setUpdates(updates::Controller *controller) {
     updates_ = controller;
@@ -496,6 +513,30 @@ void PetWindow::showSettings() {
                       "hides there until an agent needs it. Off, the pet is only dragged.");
     layout->addRow("&Touch", touch);
     connect(touch, &QCheckBox::toggled, this, &PetWindow::setTouchEnabled);
+    auto *eggs = new QCheckBox("Special days, late nights and surprises", dialog);
+    eggs->setChecked(easterEggsEnabled()); eggs->setAccessibleName("Easter eggs");
+    eggs->setToolTip("Small surprises: a greeting on May 20 and on your birthday, extra yawns late at night, a\n"
+                     "dance for turns finished on a Friday evening, a bigger celebration for a very long turn,\n"
+                     "and a startled jump when an agent runs a destructive command. Some are left to be found.");
+    layout->addRow("&Easter eggs", eggs);
+    connect(eggs, &QCheckBox::toggled, this, &PetWindow::setEasterEggsEnabled);
+    auto *birthdayRow = new QWidget(dialog); auto *birthdayLayout = new QHBoxLayout(birthdayRow);
+    birthdayLayout->setContentsMargins(0, 0, 0, 0);
+    auto *hasBirthday = new QCheckBox("Celebrate on", birthdayRow); hasBirthday->setAccessibleName("Birthday");
+    auto *birthdayDate = new QDateEdit(birthdayRow); birthdayDate->setAccessibleName("Birthday date");
+    // The year is never shown or kept; a leap year lets February 29 be picked.
+    birthdayDate->setDisplayFormat("MMMM d"); birthdayDate->setDateRange(QDate(2000, 1, 1), QDate(2000, 12, 31));
+    const auto saved = QDate::fromString("2000-" + birthday(), "yyyy-MM-dd");
+    hasBirthday->setChecked(saved.isValid()); birthdayDate->setDate(saved.isValid() ? saved : QDate(2000, 1, 1));
+    birthdayDate->setEnabled(saved.isValid());
+    birthdayLayout->addWidget(hasBirthday); birthdayLayout->addWidget(birthdayDate, 1);
+    layout->addRow("Birthday", birthdayRow);
+    const auto applyBirthday = [this, hasBirthday, birthdayDate] {
+        birthdayDate->setEnabled(hasBirthday->isChecked());
+        setBirthday(hasBirthday->isChecked() ? birthdayDate->date().toString("MM-dd") : QString());
+    };
+    connect(hasBirthday, &QCheckBox::toggled, this, applyBirthday);
+    connect(birthdayDate, &QDateEdit::dateChanged, this, applyBirthday);
     if (updates_) {
         auto *updatesButton = new QPushButton(updates_->indicator(), dialog); layout->addRow(updatesButton);
         connect(updatesButton, &QPushButton::clicked, this, [this] { updates_->showSettings(this); });

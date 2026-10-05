@@ -63,6 +63,14 @@ until activity or a drag brings it out; and a Touch setting (default on). Automa
 tests pass; the feel of the hold, throw and edge thresholds still needs a real
 desktop. See [the notes](docs/architecture.md#touch-reactions).
 
+Easter eggs, phase 4 of that issue, implemented 2026-10-05: a May 20 and a birthday
+greeting (birthday set in settings), extra yawns and a bedtime note late at night, a
+Friday-evening dance for finished turns, a bigger celebration for turns of fifteen
+minutes or more, a startled jump when the hook sees a destructive shell command (only a
+flag leaves the hook), the Konami code, and an Easter eggs setting (default on).
+Automated tests pass; the cadence still needs a real desktop. Walking is the last
+phase. See [the notes](docs/architecture.md#easter-eggs).
+
 1. Build a transparent, draggable desktop window and play the bundled `idle` sequence using frame durations from `assets/vpet/animations.json`. Test X11 and XWayland behavior before choosing a Linux package format.
 2. Add an animation controller that can start a sequence, hold its middle loop, play its ending, and return to idle. Keep decoded images in a bounded cache. The JSON state map has separate folders for each A/B/C phase.
 3. Add a small local event receiver and a packaged `agent-pet hook` command. The command reads hook JSON from stdin, extracts normalized event/session metadata and project path when available, sends them through a private local channel, and exits quickly even when the UI is closed. Exclude prompt text, tool arguments, and output. Create records on any supported event, including when SessionStart was missed.

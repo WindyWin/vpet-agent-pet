@@ -27,6 +27,7 @@ Monitor::Monitor(PetWindow &window) : hostActive(hostFocus::active), bringForwar
         refreshAlerts();
     });
 }
+const QString Monitor::bedtimeNote = "It's getting late. Maybe finish up and get some sleep?";
 // Subagents fold into their parent, as in the running-sessions list.
 static int topLevelSessions(const Sessions &sessions) {
     const auto &records = sessions.records();
@@ -41,9 +42,20 @@ void Monitor::listen(std::unique_ptr<Receiver> receiver) {
 bool Monitor::apply(const Event &event, qint64 now) {
     if (!active_ || !sessions_.apply(event, now)) return false;
     // Only accepted events count: duplicates and stale callbacks of an interrupted turn are dropped above.
-    if (event.kind == "turn_finished") window_.mood().finished(now);
+    if (event.kind == "turn_finished") {
+        window_.mood().finished(now);
+        lastTurnMs_ = sessions_.records().value(event.provider + QChar(0x1f) + event.session).lastTurnMs;
+    }
     else if (event.kind == "error") window_.mood().failed(now);
     observed_ = true; update(now);
+    // The hook saw a destructive command start: the pet jumps, then shows the work going on. A session
+    // waiting on the user, or a fresh error, matters more.
+    const auto aggregate = sessions_.aggregate(now);
+    if (event.kind == "tool_start" && event.risky && !window_.petHidden() && aggregate != "attention" && aggregate != "error")
+        window_.eggs().surprise("danger");
+    // Work going on deep into the night earns one gentle note.
+    if (event.kind == "turn_finished" && !window_.muted() && !window_.petHidden() && window_.eggs().bedtime())
+        QToolTip::showText(window_.figure().center(), bedtimeNote);
     return true;
 }
 void Monitor::update(qint64 now) {
@@ -64,12 +76,15 @@ void Monitor::update(qint64 now) {
     // the drag's own end plays first.
     const bool resting = window_.ambient().resting() || window_.player().isTouch(window_.player().requestedState());
     const auto showing = animation == "idle" && resting ? animation : window_.player().requestedState();
+    // A surprise, such as a startled jump or a dance, plays out unless a session needs the user.
+    if (window_.eggs().surprising() && state != "attention" && state != "error") return;
     // While the user holds the pet, or it is falling, the player keeps the latest request for afterwards.
     if (state != lastAggregate_ || (!window_.player().held() && state != "error" && state != "turn-finished" &&
                                     showing != animation)) {
         // A turn that just finished is celebrated in one of several ways, or with a treat when one is due.
         const bool celebrate = state == "turn-finished" && lastAggregate_ != state;
-        window_.player().select(celebrate ? window_.mood().celebrate() : animation, state == "attention" || state == "error");
+        window_.player().select(celebrate ? window_.mood().celebrate(window_.eggs().celebration(lastTurnMs_)) : animation,
+                                state == "attention" || state == "error");
         lastAggregate_ = state;
     }
 }

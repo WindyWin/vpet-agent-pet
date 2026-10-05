@@ -6,37 +6,10 @@
   "source_commit": "6358445aa54587f9cd524264eaf17ef97bc826a8",
   "source_root": "VPet-Simulator.Windows/mod/0000_core/pet/vup",
   "bundled_catalog": "assets/vpet/animations.json",
-  "missing_sequence_count": 480,
-  "missing_frame_count": 4796,
-  "missing_size_bytes": 672117183,
+  "missing_sequence_count": 473,
+  "missing_frame_count": 4683,
+  "missing_size_bytes": 655030507,
   "sequences": [
-    {
-      "path": "BDay/A",
-      "category": "BDay",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/BDay/A",
-      "frame_count": 4,
-      "total_duration_ms": 500,
-      "size_bytes": 613918,
-      "timing_valid": true
-    },
-    {
-      "path": "BDay/B",
-      "category": "BDay",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/BDay/B",
-      "frame_count": 45,
-      "total_duration_ms": 5625,
-      "size_bytes": 6491841,
-      "timing_valid": true
-    },
-    {
-      "path": "BDay/C",
-      "category": "BDay",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/BDay/C",
-      "frame_count": 4,
-      "total_duration_ms": 500,
-      "size_bytes": 588632,
-      "timing_valid": true
-    },
     {
       "path": "Default/Happy/2",
       "category": "Default",
@@ -710,15 +683,6 @@
       "frame_count": 3,
       "total_duration_ms": 1000,
       "size_bytes": 439491,
-      "timing_valid": true
-    },
-    {
-      "path": "IDEL/happy_like520",
-      "category": "IDEL",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/IDEL/happy_like520",
-      "frame_count": 31,
-      "total_duration_ms": 3875,
-      "size_bytes": 4636009,
       "timing_valid": true
     },
     {
@@ -1595,15 +1559,6 @@
       "timing_valid": true
     },
     {
-      "path": "Music/A/Nomal",
-      "category": "Music",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Music/A/Nomal",
-      "frame_count": 1,
-      "total_duration_ms": 125,
-      "size_bytes": 171210,
-      "timing_valid": true
-    },
-    {
       "path": "Music/A/PoorCondition",
       "category": "Music",
       "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Music/A/PoorCondition",
@@ -1676,15 +1631,6 @@
       "timing_valid": true
     },
     {
-      "path": "Music/B/Nomal_1",
-      "category": "Music",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Music/B/Nomal_1",
-      "frame_count": 22,
-      "total_duration_ms": 2750,
-      "size_bytes": 3630252,
-      "timing_valid": true
-    },
-    {
       "path": "Music/B/Nomal_2",
       "category": "Music",
       "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Music/B/Nomal_2",
@@ -1745,15 +1691,6 @@
       "frame_count": 6,
       "total_duration_ms": 750,
       "size_bytes": 957094,
-      "timing_valid": true
-    },
-    {
-      "path": "Music/C/Nomal_1",
-      "category": "Music",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Music/C/Nomal_1",
-      "frame_count": 6,
-      "total_duration_ms": 750,
-      "size_bytes": 954814,
       "timing_valid": true
     },
     {

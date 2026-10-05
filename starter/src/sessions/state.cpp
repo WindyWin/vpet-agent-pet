@@ -11,9 +11,13 @@ bool Event::parse(const QByteArray &data, Event &e, QString &error) {
     if (!doc.isObject()) { error = "Expected a JSON object"; return false; }
     const auto o = doc.object();
     const QSet<QString> fields{"version", "provider", "session_id", "event_id", "kind", "timestamp_ms", "tool_id", "parent_id", "project_path", "activity", "reason",
-                              "host", "host_pids", "host_window", "host_target"};
+                              "host", "host_pids", "host_window", "host_target", "risky"};
     for (auto it = o.begin(); it != o.end(); ++it) {
         if (!fields.contains(it.key())) { error = "Unknown event field"; return false; }
+        if (it.key() == "risky") {
+            if (!it.value().isBool()) { error = "Invalid risky flag"; return false; }
+            continue;
+        }
         if (it.key() != "version" && it.key() != "timestamp_ms" &&
             (!it.value().isString() || it.value().toString().size() > (it.key() == "project_path" ? 2048 : 256))) {
             error = "Invalid string field"; return false;
@@ -29,12 +33,13 @@ bool Event::parse(const QByteArray &data, Event &e, QString &error) {
          o.value("kind").toString(), o.value("tool_id").toString(), o.value("parent_id").toString(),
          o.value("project_path").toString(), o.value("activity").toString(), static_cast<qint64>(stamp),
          o.value("reason").toString(), o.value("host").toString(), o.value("host_pids").toString(),
-         o.value("host_window").toString(), o.value("host_target").toString()};
+         o.value("host_window").toString(), o.value("host_target").toString(), o.value("risky").toBool()};
     const QSet<QString> kinds{"session_start", "prompt", "tool_start", "tool_end", "attention", "error", "turn_finished", "interrupt", "session_end"};
     if ((e.provider != "claude" && e.provider != "codex") || e.session.isEmpty() || e.id.isEmpty() || !kinds.contains(e.kind) ||
         ((e.kind == "tool_start" || e.kind == "tool_end") && e.tool.isEmpty()) ||
         (!e.activity.isEmpty() && e.activity != "reading" && e.activity != "working") ||
-        (!e.reason.isEmpty() && (e.kind != "attention" || (e.reason != "approval" && e.reason != "input")))) {
+        (!e.reason.isEmpty() && (e.kind != "attention" || (e.reason != "approval" && e.reason != "input"))) ||
+        (o.contains("risky") && e.kind != "tool_start")) {
         error = "Missing identity or unsupported event kind/activity"; return false;
     }
     static const QSet<QString> hosts{"konsole", "herdr", "tmux", "vscode", "terminal"};
@@ -87,7 +92,7 @@ bool Sessions::apply(const Event &e, qint64 now) {
     const bool held = s.activityUntil != 0; // Showing a finished tool's activity.
     if (e.kind != "session_start" && e.kind != "tool_end") s.activityUntil = 0;
     if (e.kind == "session_start") { /* Metadata refresh only for existing sessions. */ }
-    else if (e.kind == "prompt") { s.tools.clear(); s.state = "thinking"; s.interrupted = false; }
+    else if (e.kind == "prompt") { s.tools.clear(); s.state = "thinking"; s.interrupted = false; s.turnStarted = e.timestamp; }
     else if (e.kind == "tool_start") { s.tools[e.tool] = e.activity.isEmpty() ? "working" : e.activity; s.state = toolState(s); }
     else if (e.kind == "tool_end") {
         s.tools.remove(e.tool);
@@ -110,8 +115,11 @@ bool Sessions::apply(const Event &e, qint64 now) {
             s.state = "error"; s.reactionUntil = now + 4000;
         }
     }
-    else if (e.kind == "turn_finished") { s.tools.clear(); s.state = "turn-finished"; s.reactionUntil = now + 4000; }
-    else if (e.kind == "interrupt") { s.tools.clear(); s.state = "idle"; s.interrupted = true; }
+    else if (e.kind == "turn_finished") {
+        s.tools.clear(); s.state = "turn-finished"; s.reactionUntil = now + 4000;
+        s.lastTurnMs = s.turnStarted ? e.timestamp - s.turnStarted : 0; s.turnStarted = 0;
+    }
+    else if (e.kind == "interrupt") { s.tools.clear(); s.state = "idle"; s.interrupted = true; s.turnStarted = 0; }
     if (s.state != "attention") { s.reason.clear(); s.attentionTools.clear(); dismiss(k, "attention"); }
     if (e.kind == "attention" || e.kind == "error" || e.kind == "turn_finished") {
         const qint64 expires = e.kind == "turn_finished" ? now + finishedAlertMs : e.kind == "error" ? now + errorAlertMs : 0;

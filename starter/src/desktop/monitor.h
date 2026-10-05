@@ -34,6 +34,7 @@ public:
     // Replaceable for tests: is the user already looking at this session's window?
     std::function<bool(const Session &)> hostActive; // default: hostFocus::active
     std::function<bool(const Session &)> bringForward; // default: hostFocus::focus
+    static const QString bedtimeNote; // Shown once a night when a turn finishes late.
 private:
     void refreshAlerts();
     bool shown(const Alert &alert) const;
@@ -45,6 +46,7 @@ private:
     std::unique_ptr<Receiver> receiver_;
     QTimer timer_;
     QString lastAggregate_;
+    qint64 lastTurnMs_ = 0; // How long the latest finished turn ran, for a long-turn celebration.
     quint64 heard_ = 0;
     bool observed_ = false, active_ = true;
 };

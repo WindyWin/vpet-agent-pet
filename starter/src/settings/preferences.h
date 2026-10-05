@@ -27,11 +27,14 @@ struct Preferences {
     int mood = MoodFull;
     int turns = 0; // Finished turns seen so far, for the pet's every-hundredth celebration.
     bool touch = true; // Reacts to petting, throwing and being pushed against a screen edge.
+    bool easterEggs = true; // Special days, late nights and a few rare surprises.
+    QString birthday; // "MM-dd" for a birthday surprise, or empty.
     // Startup keys. `agent-pet autostart` edits them without a display, possibly
     // while a pet runs, so the pet re-reads them before each save.
     bool autostart = false; // Hook launches the pet on a session start when none is running.
     IdlePolicy whenIdle = IdlePolicy::Keep;
     static QPoint visiblePosition(QPoint position, QSize size, const QVector<QRect> &screens);
+    static bool validBirthday(const QString &monthDay); // "MM-dd" of a real date; February 29 counts.
 };
 class PreferencesStore {
 public:

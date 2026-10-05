@@ -140,6 +140,34 @@ private slots:
         QCOMPARE(state.aggregate(now), "error");
         state.expire(now + 5000); QCOMPARE(state.aggregate(now), "thinking");
     }
+    void turnLength() {
+        pet::Sessions state;
+        auto at = [&](QString kind, int seq, qint64 stamp) { auto e = event(kind, seq); e.timestamp = stamp; return e; };
+        auto record = [&] { return state.records().first(); };
+        // A turn runs from its prompt to its finish.
+        QVERIFY(state.apply(at("prompt", 1, now), now)); QCOMPARE(record().turnStarted, now);
+        QVERIFY(state.apply(at("turn_finished", 2, now + 90000), now + 90000));
+        QCOMPARE(record().lastTurnMs, qint64(90000)); QCOMPARE(record().turnStarted, qint64(0));
+        // A finish without a prompt seen, or after an interrupt, has no known length.
+        QVERIFY(state.apply(at("turn_finished", 3, now + 90001), now + 90001)); QCOMPARE(record().lastTurnMs, qint64(0));
+        QVERIFY(state.apply(at("prompt", 4, now + 90002), now + 90002));
+        QVERIFY(state.apply(at("interrupt", 5, now + 90003), now + 90003)); QCOMPARE(record().turnStarted, qint64(0));
+        QVERIFY(state.apply(at("prompt", 6, now + 90004), now + 90004));
+        QVERIFY(state.apply(at("turn_finished", 7, now + 95004), now + 95004)); QCOMPARE(record().lastTurnMs, qint64(5000));
+    }
+    void riskyFlag() {
+        const QByteArray base = R"({"version":1,"provider":"claude","session_id":"a","event_id":"b","timestamp_ms":1,)";
+        pet::Event e; QString error;
+        QVERIFY2(pet::Event::parse(base + R"("kind":"tool_start","tool_id":"t","risky":true})", e, error), qPrintable(error));
+        QVERIFY(e.risky);
+        QVERIFY(pet::Event::parse(base + R"("kind":"tool_start","tool_id":"t","risky":false})", e, error)); QVERIFY(!e.risky);
+        QVERIFY(pet::Event::parse(base + R"("kind":"tool_start","tool_id":"t"})", e, error)); QVERIFY(!e.risky);
+        // Only a boolean, and only on a tool start.
+        QVERIFY(!pet::Event::parse(base + R"("kind":"tool_start","tool_id":"t","risky":"yes"})", e, error));
+        QVERIFY(!pet::Event::parse(base + R"("kind":"tool_start","tool_id":"t","risky":1})", e, error));
+        QVERIFY(!pet::Event::parse(base + R"("kind":"prompt","risky":true})", e, error));
+        QVERIFY(!pet::Event::parse(base + R"("kind":"tool_end","tool_id":"t","risky":false})", e, error));
+    }
     void boundsAndValidation() {
         pet::Sessions state;
         for (int i = 0; i < 300; ++i) {

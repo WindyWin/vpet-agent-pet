@@ -1,4 +1,5 @@
 #include "preferences.h"
+#include <QDate>
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
@@ -23,6 +24,10 @@ QPoint Preferences::visiblePosition(QPoint position, QSize size, const QVector<Q
     if (largest == 0) position = target.bottomRight() - QPoint(size.width() + 23, size.height() + 23);
     return {qBound(target.left(), position.x(), qMax(target.left(), target.right() - size.width() + 1)),
             qBound(target.top(), position.y(), qMax(target.top(), target.bottom() - size.height() + 1))};
+}
+bool Preferences::validBirthday(const QString &monthDay) {
+    // A leap year, so February 29 is a date.
+    return monthDay.size() == 5 && QDate::fromString("2000-" + monthDay, "yyyy-MM-dd").isValid();
 }
 PreferencesStore::PreferencesStore(QString path) : path_(std::move(path)) {
     if (path_.isEmpty()) path_ = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/preferences.json";
@@ -54,6 +59,8 @@ Preferences PreferencesStore::load() {
         || (object.contains("mood") && !integer(object["mood"], 0, 2))
         || (object.contains("turns") && !integer(object["turns"], 0, 2147483647))
         || (object.contains("touch") && !object["touch"].isBool())
+        || (object.contains("easter_eggs") && !object["easter_eggs"].isBool())
+        || (object.contains("birthday") && !Preferences::validBirthday(object["birthday"].toString()))
         || (object.contains("autostart") && !object["autostart"].isBool())
         || (object.contains("when_idle") && !parseIdlePolicy(object["when_idle"].toString(), whenIdle))) {
         writable_ = false; error_ = "Invalid preferences; using defaults and preserving the file."; return result;
@@ -69,6 +76,8 @@ Preferences PreferencesStore::load() {
     result.mood = object["mood"].toInt(Preferences::MoodFull);
     result.turns = object["turns"].toInt(0);
     result.touch = object["touch"].toBool(true);
+    result.easterEggs = object["easter_eggs"].toBool(true);
+    result.birthday = object["birthday"].toString();
     result.autostart = object["autostart"].toBool();
     result.whenIdle = whenIdle;
     return result;
@@ -83,7 +92,9 @@ bool PreferencesStore::save(const Preferences &preferences) {
     QJsonObject object{{"version", 1}, {"size", preferences.size}, {"on_top", preferences.onTop},
                        {"muted", preferences.muted}, {"sound", preferences.sound}, {"bubbles", preferences.bubbles}, {"ambient", preferences.ambient},
                        {"mood", preferences.mood}, {"turns", preferences.turns}, {"touch", preferences.touch},
+                       {"easter_eggs", preferences.easterEggs},
                        {"autostart", preferences.autostart}, {"when_idle", idlePolicyName(preferences.whenIdle)}};
+    if (Preferences::validBirthday(preferences.birthday)) object["birthday"] = preferences.birthday;
     if (preferences.hasPosition) { object["x"] = preferences.position.x(); object["y"] = preferences.position.y(); }
     const auto bytes = QJsonDocument(object).toJson();
     if (file.write(bytes) != bytes.size() || !file.commit()) { error_ = file.errorString(); return false; }

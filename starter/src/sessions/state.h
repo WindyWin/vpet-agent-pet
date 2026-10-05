@@ -13,6 +13,8 @@ struct Event {
     // Where the agent runs, captured by the hook so the pet can bring it forward.
     // Identifiers only: see Host in providers/host.h.
     QString host, hostPids, hostWindow, hostTarget;
+    // tool_start only: the hook saw a destructive shell command. A flag, never the command.
+    bool risky = false;
     static bool parse(const QByteArray &data, Event &event, QString &error);
 };
 struct Session {
@@ -23,6 +25,8 @@ struct Session {
     QString host, hostPids, hostWindow, hostTarget;
     QMap<QString, QString> tools;
     qint64 timestamp = 0, seen = 0, reactionUntil = 0, activityUntil = 0;
+    qint64 turnStarted = 0; // Timestamp of the prompt that started the current turn; 0 when unknown.
+    qint64 lastTurnMs = 0; // How long the last finished turn ran, from its prompt; 0 when unknown.
 };
 struct Alert {
     QString session, kind, project, provider, id, reason;
