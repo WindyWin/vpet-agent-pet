@@ -11,6 +11,7 @@
 #include <functional>
 
 namespace pet {
+namespace updates { class Controller; }
 class PetWindow : public QWidget {
     Q_OBJECT
 public:
@@ -26,6 +27,7 @@ public:
     void recover();
     void setOnTop(bool enabled);
     void showSettings();
+    void setUpdates(updates::Controller *controller);
     void showPreview();
     void requestQuit();
     void constrainPosition();
@@ -85,6 +87,7 @@ private:
     void watchScreen(QScreen *screen);
     QWidget *integrationSettings(QWidget *parent);
     QWidget *startupSettings(QWidget *parent);
+    updates::Controller *updates_ = nullptr;
     Player player_;
     Ambient ambient_;
     PreferencesStore store_;

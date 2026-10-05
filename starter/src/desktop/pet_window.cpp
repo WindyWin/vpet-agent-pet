@@ -1,3 +1,4 @@
+#include "updates/controller.h"
 #include "pet_window.h"
 #include "drag_monitor.h"
 #include "ipc/autostart.h"
@@ -372,6 +373,11 @@ void PetWindow::endDrag(bool released) {
 }
 void PetWindow::mouseReleaseEvent(QMouseEvent *event) { if (event->button() == Qt::LeftButton) endDrag(true); }
 
+void PetWindow::setUpdates(updates::Controller *controller) {
+    updates_ = controller;
+    auto *action = menu_.addAction(controller->indicator(), this, [this, controller] { controller->showSettings(this); });
+    connect(controller, &updates::Controller::changed, action, [controller, action] { action->setText(controller->indicator()); });
+}
 void PetWindow::showSettings() {
     if (settingsDialog_) { settingsDialog_->show(); settingsDialog_->raise(); return; }
     auto *dialog = new QDialog(this); settingsDialog_ = dialog;
@@ -400,6 +406,11 @@ void PetWindow::showSettings() {
                         "dozing off after about ten quiet minutes. Any agent activity ends it at once.");
     layout->addRow("&Idle animation", ambient);
     connect(ambient, &QComboBox::currentIndexChanged, this, &PetWindow::setAmbientLevel);
+    if (updates_) {
+        auto *updatesButton = new QPushButton(updates_->indicator(), dialog); layout->addRow(updatesButton);
+        connect(updatesButton, &QPushButton::clicked, this, [this] { updates_->showSettings(this); });
+        connect(updates_, &updates::Controller::changed, updatesButton, [this, updatesButton] { updatesButton->setText(updates_->indicator()); });
+    }
     layout->addRow(startupSettings(dialog));
     layout->addRow(integrationSettings(dialog));
     auto *recover = new QPushButton("&Recover position and input", dialog); layout->addRow(recover);

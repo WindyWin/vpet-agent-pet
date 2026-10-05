@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 """Build the relocatable Linux release bundle from a trusted local build (not arbitrary ELF files)."""
 import argparse
+import ctypes
+import ctypes.util
 import json
 import os
 from pathlib import Path
 import platform
 import re
 import shutil
+import stat
 import subprocess
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -98,7 +101,17 @@ def main():
     plugin_dir = output / "plugins/platforms"
     plugin_dir.mkdir(parents=True)
     qt_plugins = Path(run(QMAKE, "-query", "QT_INSTALL_PLUGINS"))
-    binaries = [output / "bin/agent-pet"]
+    binaries = [output / "bin/agent-pet", output / "bin/agent-pet-updater"]
+    # HTTPS needs Qt's TLS backend, including its OpenSSL dependency closure.
+    tls_dir = output / "plugins/tls"
+    tls_dir.mkdir(parents=True)
+    tls_plugins = list((qt_plugins / "tls").glob("*.so"))
+    if not tls_plugins:
+        raise RuntimeError("Qt TLS plugins are required for update checks")
+    for source in tls_plugins:
+        dest = tls_dir / source.name
+        shutil.copy2(source, dest)
+        binaries.append(dest)
     for name in ("libqxcb.so", "libqoffscreen.so"):
         dest = plugin_dir / name
         shutil.copy2(qt_plugins / "platforms" / name, dest)
@@ -107,7 +120,7 @@ def main():
     sources = {}
     system = {}
     # ldd resolves the transitive closure; collect each plugin's closure as well.
-    for binary in binaries:
+    def collect_dependencies(binary):
         dependencies = run("ldd", str(binary))
         if "not found" in dependencies:
             raise RuntimeError(dependencies)
@@ -123,7 +136,33 @@ def main():
             if not dest.exists():
                 shutil.copy2(source, dest)
                 sources[source.name] = str(source.resolve())
+    for binary in binaries:
+        collect_dependencies(binary)
+    # aqt Qt resolves OpenSSL with dlopen. Prefer the SSL runtime beside the
+    # crypto library already selected by the package's dependency closure.
+    if not any(name.startswith("libssl.so.") for name in sources):
+        runtime_paths = []
+        for name, source in sources.items():
+            if name.startswith("libcrypto.so."):
+                candidate = Path(source).with_name(name.replace("libcrypto", "libssl"))
+                if candidate.is_file():
+                    runtime_paths.append(candidate)
+        if not runtime_paths:
+            ssl_name = ctypes.util.find_library("ssl")
+            if not ssl_name:
+                raise RuntimeError("OpenSSL runtime is required for HTTPS updates")
+            ssl_runtime = ctypes.CDLL(ssl_name)
+            for line in Path("/proc/self/maps").read_text().splitlines():
+                fields = line.split()
+                if len(fields) >= 6 and re.match(r"libssl\.so\.", Path(fields[-1]).name):
+                    runtime_paths.append(Path(fields[-1]))
+        for source in set(runtime_paths):
+            dest = lib / source.name
+            shutil.copy2(source, dest)
+            sources[source.name] = str(source.resolve())
+            collect_dependencies(source)
     for binary in [*binaries, *lib.iterdir()]:
+        binary.chmod(binary.stat().st_mode | stat.S_IWUSR)
         relative = os.path.relpath(lib, binary.parent)
         subprocess.run(["patchelf", "--set-rpath", "$ORIGIN/" + relative, str(binary)], check=True)
     # Preserve distro copyright/license notices for bundled libraries.
