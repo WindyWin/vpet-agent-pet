@@ -1032,7 +1032,7 @@ private slots:
         QVERIFY(eggs.key(Qt::Key_A)); QVERIFY(!eggs.key(Qt::Key_A));
         // A surprise plays a pool at once; turned off, it plays nothing.
         Draws draws; eggs.setRandom(draws.random());
-        QVERIFY(!eggs.surprise("danger")); QCOMPARE(player.state(), QString("idle"));
+        eggs.setEnabled(false); QVERIFY(!eggs.surprise("danger")); QCOMPARE(player.state(), QString("idle"));
         eggs.setEnabled(true); QVERIFY(!eggs.surprise("nobody"));
         QVERIFY(eggs.surprise("danger")); QCOMPARE(player.state(), QString("startled")); QVERIFY(eggs.surprising());
         // It stops counting once something else shows, or after a while even if the player stalls.
@@ -1258,6 +1258,46 @@ private slots:
         const QRect wide(0, 400, 1900, 240); // No side fits: above.
         QCOMPARE(pet::AlertBubble::placement(wide, bubble, screen).y(), 400 - 8 - 90);
         QVERIFY(inside(pet::AlertBubble::placement({-500, -500, 240, 240}, bubble, screen)));
+    }
+    void focusOutcomesAndAlertPolicy() {
+        QTemporaryDir directory;
+        pet::PetWindow window(nullptr, directory.path() + "/preferences.json"); window.show();
+        window.setBubbles(pet::Preferences::AllAlerts);
+        pet::Monitor monitor(window);
+        bool raised = false;
+        QStringList asked;
+        monitor.bringForward = [&](const pet::Session &) { return raised; };
+        monitor.hostActive = [&](const pet::Session &s) { asked << s.id; return false; };
+        const qint64 now = QDateTime::currentMSecsSinceEpoch(); qint64 seq = 0;
+        auto event = [&](QString session, QString kind, QString host, QString reason = {}) {
+            ++seq; pet::Event e{"claude", session, QString::number(seq), kind, {}, {}, "/work/" + session, {}, now + seq, reason};
+            e.host = host; return e;
+        };
+        const auto key = [](const QString &id) { return QString("claude") + QChar(0x1f) + id; };
+        // A session without host metadata is never checked for an active window.
+        QVERIFY(monitor.apply(event("old", "error", {}), now + seq));
+        QVERIFY(!asked.contains("old"));
+        QToolTip::hideText();
+        QVERIFY(!monitor.focusSession(key("old")));
+        QCOMPARE(QToolTip::text(), QString("This session started before Agent Pet could see its terminal. Its next event will fix that."));
+        // A host that cannot be raised keeps every alert and explains what to check.
+        QVERIFY(monitor.apply(event("web", "attention", "konsole", "input"), now + seq));
+        QVERIFY(monitor.apply(event("web", "turn_finished", "konsole"), now + seq)); // Answers the request.
+        QVERIFY(monitor.apply(event("web", "error", "konsole"), now + seq));
+        QVERIFY(asked.contains("web"));
+        QToolTip::hideText();
+        QVERIFY(!monitor.focusSession(key("web")));
+        QCOMPARE(QToolTip::text(), QString("Could not focus this session's window. Check that its terminal is attached. "
+                                           "Wayland focus requires KDE Plasma 6."));
+        int alerts = 0;
+        for (const auto &alert : monitor.sessions().pending()) alerts += alert.session == key("web");
+        QCOMPARE(alerts, 2);
+        // Once raised, its error and finished-turn alerts go; other sessions' stay.
+        raised = true;
+        QVERIFY(monitor.focusSession(key("web")));
+        for (const auto &alert : monitor.sessions().pending()) QVERIFY(alert.session != key("web"));
+        QCOMPARE(monitor.sessions().pending().size(), 1);
+        QVERIFY(!monitor.focusSession(key("missing"))); // An unknown session is not focused.
     }
     void monitorAlertsBadgeAndQuit() {
         QTemporaryDir directory;
