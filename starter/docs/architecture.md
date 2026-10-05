@@ -334,7 +334,10 @@ event boundary (`hosts::fromV1`/`toV1`); a non-X11 window is never written into
 session list asks it for labels. Sessions store the descriptor and know no host names.
 
 Capture order is registration order: herdr, tmux, Konsole, VS Code, then any
-terminal (needs ancestors). `FocusService::focus` copies the context (the monitor
+terminal (needs ancestors). Programs inherit their terminal's variables, so a
+`Capture` may name its program: herdr, tmux and Konsole count only when one of the
+hook's ancestors has that kernel name (`/proc/<pid>/comm`; any name is accepted when
+the ancestry is unreadable), and VS Code never takes `$WINDOWID`. `FocusService::focus` copies the context (the monitor
 copies the session, because KWin's callback processes events), checks the target
 with the adapter's codec before any side effect, selects, then offers each window
 the adapter names to each backend in order until one raises it. Selection and
@@ -753,7 +756,10 @@ inside an xterm produced no bubble while that xterm was active, and a later bubb
 Open raised it, with another xterm under the bubble, in each of four runs alternating
 this and the previous build (both raised the right window each time). The first,
 exploratory click had left focus on the xterm under the bubble; it did not recur.
-`desktop-tests`' X11 drag check passed. Not checked here: KWin on Plasma 6 (X11 and
+`desktop-tests`' X11 drag check passed. After merging main's ancestry check for
+inherited terminal variables into the registry, `hook` again matched main's build in
+nine environments, run beneath processes named `konsole`, `tmux`, `herdr` and `code`
+or none. Not checked here: KWin on Plasma 6 (X11 and
 Wayland), a live Konsole D-Bus tab switch, herdr, and CI on Qt 6.5.3.
 
 ## Application updates

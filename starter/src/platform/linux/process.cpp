@@ -19,6 +19,14 @@ QVector<qint64> processAncestors(qint64 pid, int limit) {
     }
     return chain;
 }
+QStringList processNames(const QVector<qint64> &pids) {
+    QStringList names;
+    for (const auto pid : pids) {
+        QFile comm(QString("/proc/%1/comm").arg(pid));
+        names << (comm.open(QIODevice::ReadOnly) ? QString::fromUtf8(comm.read(64)).trimmed() : QString());
+    }
+    return names;
+}
 QVector<ProcessInfo> LinuxProcesses::terminalClients(const QString &executable) const {
     QVector<ProcessInfo> clients;
     for (const auto &entry : QDir("/proc").entryList(QDir::Dirs | QDir::NoDotAndDotDot)) {

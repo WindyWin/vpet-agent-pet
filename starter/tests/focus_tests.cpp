@@ -64,7 +64,14 @@ struct Runner : pet::platform::CommandRunner {
 struct Processes : pet::platform::ProcessServices {
     QMap<qint64, QVector<qint64>> parents;
     QVector<pet::platform::ProcessInfo> clients;
+    QMap<qint64, QString> comm;
     QVector<qint64> ancestors(qint64 pid, int) const override { return parents.value(pid); }
+    QStringList names(const QVector<qint64> &pids) const override {
+        if (comm.isEmpty()) return {}; // Unreadable.
+        QStringList list;
+        for (const auto pid : pids) list << comm.value(pid);
+        return list;
+    }
     QVector<pet::platform::ProcessInfo> terminalClients(const QString &executable) const override {
         return executable == "herdr" ? clients : QVector<pet::platform::ProcessInfo>{};
     }
@@ -234,6 +241,26 @@ private slots:
         log.clear(); f.second->outcome = Outcome::Failed;
         f.service.focus({"herdr", {700}, {}, "|p_3|"}, {});
         QCOMPARE(log, (QStringList{"herdr agent", "x11:700", "kwin:700"}));
+    }
+    void herdrClientCaptureUsesNames() {
+        // A herdr client in a VS Code terminal: VS Code was launched from a terminal, so it inherited $WINDOWID.
+        const auto runner = std::make_shared<Runner>();
+        const auto processes = std::make_shared<Processes>();
+        QProcessEnvironment env;
+        env.insert("HERDR_SOCKET_PATH", "/run/h.sock"); env.insert("TERM_PROGRAM", "vscode"); env.insert("WINDOWID", "77");
+        env.insert("TMUX", "/tmp/t,1,0"); env.insert("TMUX_PANE", "%1"); // Also inherited: no tmux among its ancestors.
+        processes->clients = {{41, {}, env}};
+        processes->parents = {{41, {41, 30}}};
+        processes->comm = {{41, "herdr"}, {30, "code"}};
+        Fixture f(Outcome::Failed, Outcome::Failed);
+        f.service.addActivation(pet::hosts::herdr::activation(runner, processes));
+        f.service.focus({"herdr", {700}, {}, "|p_3|/run/h.sock"}, {});
+        QCOMPARE(f.first->requests.size(), 2);
+        QCOMPARE(f.first->requests[0].pids, (QVector<qint64>{41, 30})); QVERIFY(f.first->requests[0].window.isNull());
+        // Unreadable names keep what the environment says, as before.
+        processes->comm.clear(); f.first->requests.clear();
+        f.service.focus({"herdr", {700}, {}, "|p_3|/run/h.sock"}, {});
+        QCOMPARE(f.first->requests[0].window, (pet::platform::WindowRef{"x11", "77"})); // Detected as tmux.
     }
     void activeObservation() {
         Fixture f;

@@ -23,7 +23,7 @@ Publishing is outward-facing: it makes a public GitHub release, and installs wit
 
 It takes several minutes (PR checks, then the tag build). Run it in the background and report when it finishes.
 
-What it does, in order: refuses if the tag exists or the version is not higher; creates `release/X.Y.Z` from `origin/main` and bumps `starter/CMakeLists.txt`; opens a PR and waits for its checks; merges it with a merge commit; tags `vX.Y.Z` on `main` and pushes the tag; waits for the tag's release workflow, which builds the assets and creates a **draft** release; publishes the draft as Latest (skipped with `--no-publish`).
+What it does, in order: refuses if the tag exists, the version is not higher, or `main`'s latest CI run did not pass (it waits for one still running; the release PR's own checks are skipped by CI, so this is the real gate); creates `release/X.Y.Z` from `origin/main` and bumps `starter/CMakeLists.txt`; opens a PR and waits for its checks; merges it with a merge commit; tags `vX.Y.Z` on `main` and pushes the tag; waits for the tag's release workflow, which builds the assets and creates a **draft** release; publishes the draft as Latest (skipped with `--no-publish`).
 
 ## After
 

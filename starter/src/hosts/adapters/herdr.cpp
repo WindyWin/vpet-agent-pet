@@ -55,6 +55,7 @@ Capture capture() {
                 target = env.value("HERDR_TAB_ID") + "|" + env.value("HERDR_PANE_ID") + "|" + env.value("HERDR_SOCKET_PATH");
                 return true;
             },
-            [](const QString &target) { Target decoded; return decode(target, decoded); }};
+            [](const QString &target) { Target decoded; return decode(target, decoded); },
+            "herdr"};
 }
 }

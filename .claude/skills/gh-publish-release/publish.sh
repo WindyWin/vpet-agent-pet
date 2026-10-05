@@ -29,6 +29,19 @@ newest=$(printf '%s\n%s\n' "$current" "$version" | sort -V | tail -1)
 { [ "$newest" = "$version" ] && [ "$current" != "$version" ]; } || { echo "New version $version must be greater than $current" >&2; exit 1; }
 echo "Releasing $tag (main is at $current)"
 
+# The release PR's own checks are skipped (CI ignores release/* PRs), so main's CI is the gate.
+sha=$(git rev-parse origin/main)
+ci=$(gh run list --branch main --commit "$sha" --event push --limit 1 --json databaseId,status,conclusion \
+  --jq '.[0] // empty | "\(.databaseId) \(.status) \(.conclusion)"')
+[ -n "$ci" ] || { echo "No CI run found for main at ${sha:0:7}" >&2; exit 1; }
+read -r ci_run ci_status ci_conclusion <<<"$ci"
+if [ "$ci_status" != completed ]; then
+  echo "Waiting for main's CI run $ci_run"
+  gh run watch "$ci_run" --interval 20 --exit-status >/dev/null || { echo "main's CI failed: run $ci_run" >&2; exit 1; }
+elif [ "$ci_conclusion" != success ]; then
+  echo "main's CI at ${sha:0:7} is $ci_conclusion (run $ci_run); fix main before releasing" >&2; exit 1
+fi
+
 branch="release/$version"
 start=$(git rev-parse --abbrev-ref HEAD)
 git checkout -q -b "$branch" origin/main

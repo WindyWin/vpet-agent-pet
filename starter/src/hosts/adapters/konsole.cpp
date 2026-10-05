@@ -19,6 +19,7 @@ Capture capture() {
                 target = targetOf(env);
                 return true;
             },
-            [](const QString &target) { Target decoded; return decode(target, decoded); }};
+            [](const QString &target) { Target decoded; return decode(target, decoded); },
+            "konsole"};
 }
 }

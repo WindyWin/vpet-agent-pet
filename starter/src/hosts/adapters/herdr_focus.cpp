@@ -25,7 +25,8 @@ public:
             // Clients are matched by their current metadata, so this also works after a reattach.
             for (const auto &client : processes_->terminalClients("herdr")) {
                 if (clientSocket(client.environment, client.arguments) != QDir::cleanPath(target.socket)) continue;
-                auto window = registry_.capture(client.environment, processes_->ancestors(client.pid));
+                const auto ancestors = processes_->ancestors(client.pid);
+                auto window = registry_.capture(client.environment, ancestors, processes_->names(ancestors));
                 const bool inKonsole = !client.environment.value("KONSOLE_DBUS_SERVICE").isEmpty();
                 window.adapter = inKonsole ? konsole::id : terminal::id;
                 window.target = inKonsole ? konsole::targetOf(client.environment) : QString();

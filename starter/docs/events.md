@@ -48,8 +48,14 @@ identifiers from the hook's environment and `/proc`, never titles or content:
 | --- | --- |
 | `host` | `konsole`, `herdr`, `tmux`, `vscode` or `terminal` (innermost multiplexer wins) |
 | `host_pids` | Up to 16 ancestor process IDs, nearest first, comma-separated |
-| `host_window` | `$WINDOWID` when the terminal exports it (decimal X11 window) |
+| `host_window` | `$WINDOWID` when the terminal exports it (decimal X11 window); never for `vscode` |
 | `host_target` | Konsole `service\|/Windows/N\|/Sessions/M`; herdr `tab\|pane\|socket`; tmux `socket\|%pane` |
+
+Programs started from a terminal inherit its variables: VS Code launched from a
+herdr pane gives its own terminals that pane's `HERDR_PANE_ID`. So herdr, tmux
+and Konsole variables count only when that program is one of the hook's
+ancestors (by `/proc/<pid>/comm`), and are taken as they are only when the
+ancestry cannot be read.
 
 Values are validated again before use and passed to D-Bus or to `tmux`/`herdr`
 as separate arguments, never through a shell. Accepted `host` values are those of

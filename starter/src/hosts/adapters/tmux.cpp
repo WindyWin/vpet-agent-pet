@@ -27,6 +27,7 @@ Capture capture() {
                 target = env.value("TMUX").section(',', 0, 0) + "|" + env.value("TMUX_PANE");
                 return true;
             },
-            [](const QString &target) { Target decoded; return decode(target, decoded); }};
+            [](const QString &target) { Target decoded; return decode(target, decoded); },
+            "tmux"};
 }
 }

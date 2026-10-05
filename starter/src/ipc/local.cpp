@@ -117,8 +117,9 @@ int eventCommand(const QStringList &args) {
     if (hook) {
         object = normalizeHook(provider, object, QDateTime::currentMSecsSinceEpoch());
         if (object.isEmpty()) return 0;
-        const auto host = hosts::toV1(hosts::Registry::builtin().capture(QProcessEnvironment::systemEnvironment(),
-                                                                         platform::processAncestors(getppid())));
+        const auto ancestors = platform::processAncestors(getppid());
+        const auto host = hosts::toV1(hosts::Registry::builtin().capture(QProcessEnvironment::systemEnvironment(), ancestors,
+                                                                         platform::processNames(ancestors)));
         for (auto it = host.begin(); it != host.end(); ++it) object[it.key()] = it.value();
     }
     if (!provider.isEmpty()) {

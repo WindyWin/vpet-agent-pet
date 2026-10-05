@@ -22,6 +22,7 @@ public:
 class Processes : public ProcessServices {
 public:
     QVector<qint64> ancestors(qint64, int = 16) const override { return {}; }
+    QStringList names(const QVector<qint64> &) const override { return {}; }
     QVector<ProcessInfo> terminalClients(const QString &) const override { return {}; }
 };
 }
