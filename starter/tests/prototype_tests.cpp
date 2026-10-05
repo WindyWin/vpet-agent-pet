@@ -1032,7 +1032,7 @@ private slots:
         QVERIFY(eggs.key(Qt::Key_A)); QVERIFY(!eggs.key(Qt::Key_A));
         // A surprise plays a pool at once; turned off, it plays nothing.
         Draws draws; eggs.setRandom(draws.random());
-        QVERIFY(!eggs.surprise("danger")); QCOMPARE(player.state(), QString("idle"));
+        eggs.setEnabled(false); QVERIFY(!eggs.surprise("danger")); QCOMPARE(player.state(), QString("idle"));
         eggs.setEnabled(true); QVERIFY(!eggs.surprise("nobody"));
         QVERIFY(eggs.surprise("danger")); QCOMPARE(player.state(), QString("startled")); QVERIFY(eggs.surprising());
         // It stops counting once something else shows, or after a while even if the player stalls.
