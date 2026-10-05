@@ -36,15 +36,25 @@ qt_add_library(pet_ui STATIC
     src/desktop/drag_monitor.cpp src/desktop/touch.cpp src/desktop/wander.cpp src/desktop/alert_bubble.cpp src/desktop/monitor.cpp
     src/desktop/host_focus.cpp src/desktop/session_list.cpp src/updates/controller.cpp)
 target_include_directories(pet_ui PUBLIC src "${CMAKE_CURRENT_BINARY_DIR}/generated")
-target_link_libraries(pet_ui PUBLIC Qt6::Widgets pet_events pet_updates Qt6::Network PRIVATE Qt6::DBus X11::X11)
+target_link_libraries(pet_ui PUBLIC Qt6::Widgets pet_events pet_updates Qt6::Network PRIVATE pet_platform_linux Qt6::DBus X11::X11)
 qt_add_resources(pet_ui pet_assets PREFIX "/" FILES ${pet_notices})
 add_dependencies(pet_ui pet_artwork)
+# Host adapters' headless half: context, v1 conversion, capture, target codecs, labels and window matching.
+qt_add_library(pet_hosts STATIC src/hosts/context.cpp src/hosts/registry.cpp
+    src/hosts/adapters/konsole.cpp src/hosts/adapters/tmux.cpp src/hosts/adapters/herdr.cpp src/hosts/adapters/generic.cpp
+    src/platform/desktop/window_match.cpp)
+target_include_directories(pet_hosts PUBLIC src)
+target_link_libraries(pet_hosts PUBLIC Qt6::Core)
+# Linux process services (/proc), shared by the hook and the pet.
+qt_add_library(pet_platform_linux STATIC src/platform/linux/process.cpp)
+target_include_directories(pet_platform_linux PUBLIC src)
+target_link_libraries(pet_platform_linux PUBLIC Qt6::Core)
 # Headless code shared by the pet and its display-free commands (hook, integration, autostart).
 qt_add_library(pet_events STATIC src/sessions/state.cpp src/sessions/alerts.cpp src/sessions/presence.cpp
     src/ipc/local.cpp src/ipc/autostart.cpp src/settings/preferences.cpp
-    src/providers/adapters.cpp src/providers/integrations.cpp src/providers/host.cpp)
+    src/providers/adapters.cpp src/providers/integrations.cpp)
 target_include_directories(pet_events PUBLIC src)
-target_link_libraries(pet_events PUBLIC Qt6::Core)
+target_link_libraries(pet_events PUBLIC Qt6::Core pet_hosts PRIVATE pet_platform_linux)
 qt_add_library(pet_updates STATIC src/updates/release.cpp src/updates/installer.cpp src/updates/components.cpp)
 target_include_directories(pet_updates PUBLIC src "${CMAKE_CURRENT_BINARY_DIR}/generated")
 target_link_libraries(pet_updates PUBLIC Qt6::Core LibArchive::LibArchive)
@@ -85,7 +95,7 @@ if(BUILD_TESTING)
     add_dependencies(event-tests agent-pet)
     add_test(NAME events COMMAND event-tests)
     qt_add_executable(alert-tests tests/alert_tests.cpp)
-    target_link_libraries(alert-tests PRIVATE pet_events Qt6::Test)
+    target_link_libraries(alert-tests PRIVATE pet_events pet_platform_linux Qt6::Test)
     add_test(NAME alerts COMMAND alert-tests)
     qt_add_executable(startup-tests tests/startup_tests.cpp)
     target_link_libraries(startup-tests PRIVATE pet_events Qt6::Test)

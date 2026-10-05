@@ -1,5 +1,9 @@
 #include "host_focus.h"
 #include "drag_monitor.h"
+#include "hosts/adapters/herdr.h"
+#include "hosts/adapters/konsole.h"
+#include "hosts/adapters/tmux.h"
+#include "platform/linux/process.h"
 #include <QDBusInterface>
 #include <QDBusReply>
 #include <QDir>
@@ -25,7 +29,7 @@ public:
 public slots:
     void complete(bool success) { received = true; focused = success; loop.quit(); }
 };
-static bool activateKWin(const QString &pids, const QString &project) {
+static bool activateKWin(const QVector<qint64> &pids, const QString &project) {
     // Plasma 6 supports native Wayland windows through its scripting API:
     // https://develop.kde.org/docs/plasma/kwin/api/
     // Load a temporary script per click and wait for its actual focus result.
@@ -34,7 +38,7 @@ static bool activateKWin(const QString &pids, const QString &project) {
     scripting.setTimeout(1000);
     if (!scripting.isValid()) return false;
     QJsonArray ancestors;
-    for (const auto &pid : pids.split(',')) if (pid.toLongLong() > 1) ancestors.append(pid.toDouble());
+    for (const auto pid : pids) if (pid > 1) ancestors.append(double(pid));
     if (ancestors.isEmpty()) return false;
     FocusResult result;
     const QString path = "/AgentPetFocus";
@@ -108,14 +112,14 @@ struct IgnoreErrors {
     explicit IgnoreErrors(Display *d) : display(d), previous(XSetErrorHandler([](Display *, XErrorEvent *) { return 0; })) {}
     ~IgnoreErrors() { XSync(display, False); XSetErrorHandler(previous); }
 };
-QVector<HostWindow> windows() {
-    QVector<HostWindow> result;
+QVector<platform::WindowInfo> windows() {
+    QVector<platform::WindowInfo> result;
     auto *d = display();
     if (!d) return result;
     const IgnoreErrors guard(d);
     for (const auto id : property(d, DefaultRootWindow(d), "_NET_CLIENT_LIST", XA_WINDOW)) {
         const auto pid = property(d, id, "_NET_WM_PID", XA_CARDINAL);
-        result.append({quint64(id), pid.isEmpty() ? 0 : qint64(pid.first()), title(d, id)});
+        result.append({QString::number(id), pid.isEmpty() ? 0 : qint64(pid.first()), title(d, id)});
     }
     return result;
 }
@@ -125,7 +129,8 @@ static quint64 activeWindow() {
     const auto active = property(d, DefaultRootWindow(d), "_NET_ACTIVE_WINDOW", XA_WINDOW);
     return active.isEmpty() ? 0 : active.first();
 }
-static bool activate(quint64 id) {
+static bool activate(const QString &window) {
+    const auto id = window.toULongLong();
     auto *d = display();
     if (!d || !id) return false;
     const IgnoreErrors guard(d);
@@ -147,7 +152,7 @@ static QString executable(const QString &program) {
                                                         "/usr/local/bin", "/opt/homebrew/bin"});
     return path;
 }
-static bool run(const HostCommand &command, QByteArray *output = nullptr) {
+static bool run(const platform::Command &command, QByteArray *output = nullptr) {
     const auto program = executable(command.program);
     if (program.isEmpty()) return false;
     QProcess process;
@@ -161,35 +166,37 @@ static bool run(const HostCommand &command, QByteArray *output = nullptr) {
     if (output) *output = process.readAllStandardOutput();
     return process.exitStatus() == QProcess::NormalExit && process.exitCode() == 0;
 }
-static QString searchPids(const Session &s) {
-    QStringList pids;
-    if (s.host == "tmux") {
+static QString x11Window(const hosts::HostContext &host) {
+    return host.window.backend == hosts::x11Backend ? host.window.id : QString();
+}
+static QVector<platform::Command> selectCommands(const hosts::HostContext &host) {
+    if (hosts::tmux::Target tmux; host.adapter == hosts::tmux::id && hosts::tmux::decode(host.target, tmux))
+        return hosts::tmux::selectCommands(tmux);
+    if (hosts::herdr::Target herdr; host.adapter == hosts::herdr::id && hosts::herdr::decode(host.target, herdr))
+        return hosts::herdr::selectCommands(herdr);
+    return {};
+}
+static QVector<qint64> searchPids(const Session &s) {
+    QVector<qint64> pids;
+    if (hosts::tmux::Target tmux; s.host.adapter == hosts::tmux::id && hosts::tmux::decode(s.host.target, tmux)) {
         // The tmux server is detached from any terminal; its clients' parents are.
-        auto commands = hostCommands(s.host, s.hostTarget);
-        if (!commands.isEmpty()) {
-            auto list = commands.first();
-            list.arguments = list.arguments.mid(0, list.arguments.indexOf("select-window"));
-            list.arguments << "list-clients" << "-t" << s.hostTarget.section('|', 1) << "-F" << "#{client_pid}";
-            QByteArray output;
-            if (run(list, &output))
-                for (const auto &line : output.split('\n'))
-                    for (const auto pid : processAncestors(line.trimmed().toLongLong())) pids << QString::number(pid);
-        }
+        QByteArray output;
+        if (run(hosts::tmux::listClients(tmux), &output))
+            for (const auto &line : output.split('\n')) pids += platform::processAncestors(line.trimmed().toLongLong());
     }
-    if (!s.hostPids.isEmpty()) pids << s.hostPids;
-    return pids.join(',');
+    return pids + s.host.pids;
 }
 static bool selectKonsole(const QString &target) {
-    KonsoleTarget konsole;
-    if (konsoleTarget(target, konsole)) {
+    hosts::konsole::Target konsole;
+    if (hosts::konsole::decode(target, konsole)) {
         QDBusInterface window(konsole.service, konsole.window, "org.kde.konsole.Window", QDBusConnection::sessionBus());
         window.setTimeout(1000);
         return window.isValid() && window.call("setCurrentSession", konsole.session).type() != QDBusMessage::ErrorMessage;
     }
     return false;
 }
-static bool focusHerdrClient(const Session &s, const QVector<HostWindow> &available) {
-    const auto socket = s.hostTarget.section('|', 2, 2);
+static bool focusHerdrClient(const Session &s, const QVector<platform::WindowInfo> &available) {
+    const auto socket = s.host.target.section('|', 2, 2);
     if (socket.isEmpty()) return false;
     // Pane ancestors lead to the detached server. Find a live UI client for this
     // socket instead, using its current terminal metadata (also after reattach).
@@ -209,28 +216,29 @@ static bool focusHerdrClient(const Session &s, const QVector<HostWindow> &availa
             const auto equals = pair.indexOf('=');
             if (equals > 0) env.insert(QString::fromLocal8Bit(pair.left(equals)), QString::fromLocal8Bit(pair.mid(equals + 1)));
         }
-        if (herdrClientSocket(env, args) != QDir::cleanPath(socket)) continue;
-        const auto context = hostContext(env, processAncestors(pid));
-        const auto window = chooseWindow(context["host_window"].toString(), context["host_pids"].toString(), s.project, available);
-        selectKonsole(env.value("KONSOLE_DBUS_SERVICE") + "|" + env.value("KONSOLE_DBUS_WINDOW") + "|" + env.value("KONSOLE_DBUS_SESSION"));
+        if (hosts::herdr::clientSocket(env, args) != QDir::cleanPath(socket)) continue;
+        const auto context = hosts::Registry::builtin().capture(env, platform::processAncestors(pid));
+        const auto window = platform::matchWindow(x11Window(context), context.pids, s.project, available);
+        selectKonsole(hosts::konsole::targetOf(env));
         if (activate(window)) return true;
-        if (activateKWin(context["host_pids"].toString(), s.project)) return true;
+        if (activateKWin(context.pids, s.project)) return true;
     }
     return false;
 }
 bool focus(const Session &source) {
     // KWin callbacks process events; retain a copy if new hook events update the session map.
     const Session s = source;
-    if (s.host == "konsole") selectKonsole(s.hostTarget);
-    for (const auto &command : hostCommands(s.host, s.hostTarget)) if (!run(command)) return false;
+    if (s.host.adapter == hosts::konsole::id) selectKonsole(s.host.target);
+    for (const auto &command : selectCommands(s.host)) if (!run(command)) return false;
     const auto available = windows();
-    if (s.host == "herdr" && focusHerdrClient(s, available)) return true;
-    const auto window = chooseWindow(s.hostWindow, searchPids(s), s.project, available);
+    if (s.host.adapter == hosts::herdr::id && focusHerdrClient(s, available)) return true;
+    const auto window = platform::matchWindow(x11Window(s.host), searchPids(s), s.project, available);
     return activate(window) || activateKWin(searchPids(s), s.project);
 }
 bool active(const Session &s) {
     const auto current = activeWindow();
-    return current && s.host != "tmux" && s.host != "herdr" && chooseWindow(s.hostWindow, s.hostPids, s.project, windows()) == current;
+    return current && s.host.adapter != hosts::tmux::id && s.host.adapter != hosts::herdr::id &&
+           platform::matchWindow(x11Window(s.host), s.host.pids, s.project, windows()) == QString::number(current);
 }
 }
 #undef Bool

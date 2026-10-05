@@ -1,8 +1,28 @@
 #include "sessions/alerts.h"
-#include "providers/host.h"
+#include "hosts/adapters/generic.h"
+#include "hosts/adapters/herdr.h"
+#include "hosts/adapters/konsole.h"
+#include "hosts/adapters/tmux.h"
+#include "platform/desktop/window_match.h"
+#include "platform/linux/process.h"
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QTest>
+
+namespace {
+// The hook's v1 host fields for an environment and ancestors.
+QJsonObject capture(const QProcessEnvironment &env, const QVector<qint64> &ancestors) {
+    return pet::hosts::toV1(pet::hosts::Registry::builtin().capture(env, ancestors));
+}
+// Pane selection commands for a v1 host and target; none when it is malformed or has none.
+QVector<pet::platform::Command> selection(const QString &host, const QString &target) {
+    using namespace pet::hosts;
+    if (tmux::Target t; host == tmux::id && tmux::decode(target, t)) return tmux::selectCommands(t);
+    if (herdr::Target t; host == herdr::id && herdr::decode(target, t)) return herdr::selectCommands(t);
+    return {};
+}
+QString label(const QString &host) { return pet::hosts::Registry::builtin().label(host); }
+}
 
 class AlertTests : public QObject {
     Q_OBJECT
@@ -139,117 +159,118 @@ private slots:
         QProcessEnvironment env;
         env.insert("KONSOLE_DBUS_SERVICE", "org.kde.konsole-42"); env.insert("KONSOLE_DBUS_WINDOW", "/Windows/1");
         env.insert("KONSOLE_DBUS_SESSION", "/Sessions/5"); env.insert("WINDOWID", "6291463");
-        auto host = pet::hostContext(env, {300, 200, 100});
+        auto host = capture(env, {300, 200, 100});
         QCOMPARE(host["host"].toString(), "konsole"); QCOMPARE(host["host_pids"].toString(), "300,200,100");
         QCOMPARE(host["host_window"].toString(), "6291463");
-        pet::KonsoleTarget konsole;
-        QVERIFY(pet::konsoleTarget(host["host_target"].toString(), konsole));
+        pet::hosts::konsole::Target konsole;
+        QVERIFY(pet::hosts::konsole::decode(host["host_target"].toString(), konsole));
         QCOMPARE(konsole.service, "org.kde.konsole-42"); QCOMPARE(konsole.window, "/Windows/1"); QCOMPARE(konsole.session, 5);
-        QVERIFY(!pet::konsoleTarget("org.kde.konsole-42|/Windows/1|/Sessions/5;x", konsole));
+        QVERIFY(!pet::hosts::konsole::decode("org.kde.konsole-42|/Windows/1|/Sessions/5;x", konsole));
         env.insert("TMUX", "/tmp/tmux-1000/default,1234,0"); env.insert("TMUX_PANE", "%7");
-        host = pet::hostContext(env, {300});
+        host = capture(env, {300});
         QCOMPARE(host["host"].toString(), "tmux"); // The innermost multiplexer wins.
-        auto commands = pet::hostCommands("tmux", host["host_target"].toString());
+        auto commands = selection("tmux", host["host_target"].toString());
         QCOMPARE(commands.size(), 2);
         QCOMPARE(commands[1].arguments, (QStringList{"-S", "/tmp/tmux-1000/default", "select-pane", "-t", "%7"}));
-        QVERIFY(pet::hostCommands("tmux", "/tmp/s|%7; rm").isEmpty());
+        QVERIFY(selection("tmux", "/tmp/s|%7; rm").isEmpty());
         env.insert("HERDR_PANE_ID", "p_3"); env.insert("HERDR_TAB_ID", "t_2"); env.insert("HERDR_SOCKET_PATH", "/run/user/1/herdr.sock");
-        host = pet::hostContext(env, {});
+        host = capture(env, {});
         QCOMPARE(host["host"].toString(), "herdr"); QVERIFY(!host.contains("host_pids"));
-        commands = pet::hostCommands("herdr", host["host_target"].toString());
+        commands = selection("herdr", host["host_target"].toString());
         QCOMPARE(commands.size(), 2);
         QCOMPARE(commands[0].arguments, (QStringList{"tab", "focus", "t_2"}));
         QCOMPARE(commands[1].arguments, (QStringList{"agent", "focus", "p_3"}));
         QCOMPARE(commands[1].environment.value("HERDR_SOCKET_PATH"), "/run/user/1/herdr.sock");
         QProcessEnvironment code; code.insert("TERM_PROGRAM", "vscode");
-        QCOMPARE(pet::hostContext(code, {9})["host"].toString(), "vscode");
-        QVERIFY(pet::hostContext({}, {}).isEmpty());
-        QVERIFY(pet::processAncestors(QCoreApplication::applicationPid()).startsWith(QCoreApplication::applicationPid()));
+        QCOMPARE(capture(code, {9})["host"].toString(), "vscode");
+        QVERIFY(capture({}, {}).isEmpty());
+        QVERIFY(pet::platform::processAncestors(QCoreApplication::applicationPid()).startsWith(QCoreApplication::applicationPid()));
     }
     void herdrAttachedClientIdentity() {
         QProcessEnvironment env;
         env.insert("HOME", "/home/test");
-        QCOMPARE(pet::herdrClientSocket(env, {}), "/home/test/.config/herdr/herdr.sock");
+        QCOMPARE(pet::hosts::herdr::clientSocket(env, {}), "/home/test/.config/herdr/herdr.sock");
         env.insert("HERDR_SESSION", "work");
-        QCOMPARE(pet::herdrClientSocket(env, {}), "/home/test/.config/herdr/sessions/work/herdr.sock");
+        QCOMPARE(pet::hosts::herdr::clientSocket(env, {}), "/home/test/.config/herdr/sessions/work/herdr.sock");
         env.insert("HERDR_SOCKET_PATH", "/tmp/custom.sock");
-        QCOMPARE(pet::herdrClientSocket(env, {}), "/tmp/custom.sock");
+        QCOMPARE(pet::hosts::herdr::clientSocket(env, {}), "/tmp/custom.sock");
         env.insert("XDG_CONFIG_HOME", "/config");
-        QCOMPARE(pet::herdrClientSocket(env, {"--session", "other"}), "/config/herdr/sessions/other/herdr.sock");
-        QCOMPARE(pet::herdrClientSocket(env, {"session", "attach", "work.2"}), "/config/herdr/sessions/work.2/herdr.sock");
-        QCOMPARE(pet::herdrClientSocket(env, {"--session=default"}), "/config/herdr/herdr.sock");
-        QVERIFY(pet::herdrClientSocket(env, {"server"}).isEmpty());
-        QVERIFY(pet::herdrClientSocket(env, {"tab", "focus", "t_1"}).isEmpty());
-        QVERIFY(pet::herdrClientSocket(env, {"--remote", "example"}).isEmpty());
-        QVERIFY(pet::herdrClientSocket(env, {"--session", ".."}).isEmpty());
+        QCOMPARE(pet::hosts::herdr::clientSocket(env, {"--session", "other"}), "/config/herdr/sessions/other/herdr.sock");
+        QCOMPARE(pet::hosts::herdr::clientSocket(env, {"session", "attach", "work.2"}), "/config/herdr/sessions/work.2/herdr.sock");
+        QCOMPARE(pet::hosts::herdr::clientSocket(env, {"--session=default"}), "/config/herdr/herdr.sock");
+        QVERIFY(pet::hosts::herdr::clientSocket(env, {"server"}).isEmpty());
+        QVERIFY(pet::hosts::herdr::clientSocket(env, {"tab", "focus", "t_1"}).isEmpty());
+        QVERIFY(pet::hosts::herdr::clientSocket(env, {"--remote", "example"}).isEmpty());
+        QVERIFY(pet::hosts::herdr::clientSocket(env, {"--session", ".."}).isEmpty());
     }
     void chooseHostWindow() {
-        const QVector<pet::HostWindow> windows{{11, 500, "notes — other — Visual Studio Code"},
-                                               {12, 500, "main.cpp — abc-web — Visual Studio Code"},
-                                               {21, 600, "~ : bash — Konsole"}, {22, 600, "abc-web : claude — Konsole"}};
-        QCOMPARE(pet::chooseWindow({}, "900,500,1", "/work/abc-web", windows), 12ULL); // Title names the project.
-        QCOMPARE(pet::chooseWindow({}, "900,500,1", "/work/unknown", windows), 11ULL);
-        QCOMPARE(pet::chooseWindow("21", "900,600", "/work/abc-web", windows), 21ULL); // $WINDOWID wins.
-        QCOMPARE(pet::chooseWindow("99", "900,600", "/work/abc-web", windows), 22ULL);
-        QCOMPARE(pet::chooseWindow({}, "900", "/work/abc-web", windows), 0ULL);
+        const QVector<pet::platform::WindowInfo> windows{{"11", 500, "notes — other — Visual Studio Code"},
+                                                         {"12", 500, "main.cpp — abc-web — Visual Studio Code"},
+                                                         {"21", 600, "~ : bash — Konsole"}, {"22", 600, "abc-web : claude — Konsole"}};
+        using pet::platform::matchWindow;
+        QCOMPARE(matchWindow({}, {900, 500, 1}, "/work/abc-web", windows), "12"); // Title names the project.
+        QCOMPARE(matchWindow({}, {900, 500, 1}, "/work/unknown", windows), "11");
+        QCOMPARE(matchWindow("21", {900, 600}, "/work/abc-web", windows), "21"); // $WINDOWID wins.
+        QCOMPARE(matchWindow("99", {900, 600}, "/work/abc-web", windows), "22");
+        QCOMPARE(matchWindow({}, {900}, "/work/abc-web", windows), QString());
     }
     void hostCapturePrecedence() {
         // herdr → tmux → Konsole → VS Code → generic terminal; each layer needs its own complete identity.
         QProcessEnvironment env;
         env.insert("HERDR_PANE_ID", "p_1"); env.insert("TMUX", "/tmp/t,1,0"); env.insert("TMUX_PANE", "%1");
         env.insert("KONSOLE_DBUS_SERVICE", "org.kde.konsole-1"); env.insert("TERM_PROGRAM", "vscode");
-        QCOMPARE(pet::hostContext(env, {5})["host"].toString(), "herdr");
-        QCOMPARE(pet::hostContext(env, {5})["host_target"].toString(), "|p_1|"); // Missing tab and socket stay empty.
-        env.remove("HERDR_PANE_ID"); QCOMPARE(pet::hostContext(env, {5})["host"].toString(), "tmux");
-        env.remove("TMUX_PANE"); QCOMPARE(pet::hostContext(env, {5})["host"].toString(), "konsole");
-        QCOMPARE(pet::hostContext(env, {5})["host_target"].toString(), "org.kde.konsole-1||");
-        env.remove("KONSOLE_DBUS_SERVICE"); QCOMPARE(pet::hostContext(env, {5})["host"].toString(), "vscode");
-        QVERIFY(!pet::hostContext(env, {5}).contains("host_target"));
-        QCOMPARE(pet::hostContext(env, {})["host"].toString(), "vscode"); // No process hints needed.
-        env.remove("TERM_PROGRAM"); QCOMPARE(pet::hostContext(env, {5})["host"].toString(), "terminal");
-        QVERIFY(pet::hostContext(env, {}).isEmpty()); // A generic terminal needs ancestors.
+        QCOMPARE(capture(env, {5})["host"].toString(), "herdr");
+        QCOMPARE(capture(env, {5})["host_target"].toString(), "|p_1|"); // Missing tab and socket stay empty.
+        env.remove("HERDR_PANE_ID"); QCOMPARE(capture(env, {5})["host"].toString(), "tmux");
+        env.remove("TMUX_PANE"); QCOMPARE(capture(env, {5})["host"].toString(), "konsole");
+        QCOMPARE(capture(env, {5})["host_target"].toString(), "org.kde.konsole-1||");
+        env.remove("KONSOLE_DBUS_SERVICE"); QCOMPARE(capture(env, {5})["host"].toString(), "vscode");
+        QVERIFY(!capture(env, {5}).contains("host_target"));
+        QCOMPARE(capture(env, {})["host"].toString(), "vscode"); // No process hints needed.
+        env.remove("TERM_PROGRAM"); QCOMPARE(capture(env, {5})["host"].toString(), "terminal");
+        QVERIFY(capture(env, {}).isEmpty()); // A generic terminal needs ancestors.
     }
     void hostCaptureLimits() {
         QProcessEnvironment env;
         env.insert("TMUX", "/" + QString(300, 'a') + ",1,0"); env.insert("TMUX_PANE", "%1");
         QVector<qint64> ancestors;
         for (int pid = 100; pid < 120; ++pid) ancestors.append(pid);
-        auto host = pet::hostContext(env, ancestors);
+        auto host = capture(env, ancestors);
         QCOMPARE(host["host"].toString(), "tmux"); QVERIFY(!host.contains("host_target")); // Too long: dropped, host kept.
         QCOMPARE(host["host_pids"].toString().split(',').size(), 16); QVERIFY(host["host_pids"].toString().startsWith("100,101,"));
         for (const auto *bad : {"0", "0x1a", "-5", "12a", "123456789012345678901"}) {
-            env.insert("WINDOWID", bad); QVERIFY2(!pet::hostContext(env, {1}).contains("host_window"), bad);
+            env.insert("WINDOWID", bad); QVERIFY2(!capture(env, {1}).contains("host_window"), bad);
         }
-        env.insert("WINDOWID", "4194311"); QCOMPARE(pet::hostContext(env, {1})["host_window"].toString(), "4194311");
+        env.insert("WINDOWID", "4194311"); QCOMPARE(capture(env, {1})["host_window"].toString(), "4194311");
     }
     void hostTargetCodecs() {
         // Konsole: D-Bus unique or well-known service, window and session paths.
-        pet::KonsoleTarget konsole;
-        QVERIFY(pet::konsoleTarget(":1.42|/Windows/2|/Sessions/9", konsole)); QCOMPARE(konsole.session, 9);
+        pet::hosts::konsole::Target konsole;
+        QVERIFY(pet::hosts::konsole::decode(":1.42|/Windows/2|/Sessions/9", konsole)); QCOMPARE(konsole.session, 9);
         for (const auto *bad : {"", "||", "org.kde.konsole-1|/Windows/1", "konsole|/Windows/1|/Sessions/1",
                                 "org.kde.konsole-1|/Windows/x|/Sessions/1", "org.kde.konsole-1|/Windows/1|/Sessions/1234567"})
-            QVERIFY2(!pet::konsoleTarget(bad, konsole), bad);
+            QVERIFY2(!pet::hosts::konsole::decode(bad, konsole), bad);
         // tmux: an optional absolute socket and a pane ID.
-        auto commands = pet::hostCommands("tmux", "|%12");
+        auto commands = selection("tmux", "|%12");
         QCOMPARE(commands.size(), 2);
         QCOMPARE(commands[0].arguments, (QStringList{"select-window", "-t", "%12"}));
         for (const auto *bad : {"", "%1", "relative/sock|%1", "/s|1", "/s|%1|x", "/s|%1234567"})
-            QVERIFY2(pet::hostCommands("tmux", bad).isEmpty(), bad);
+            QVERIFY2(selection("tmux", bad).isEmpty(), bad);
         // herdr: an optional tab and socket, and a pane.
-        commands = pet::hostCommands("herdr", "|p_1|");
+        commands = selection("herdr", "|p_1|");
         QCOMPARE(commands.size(), 1); QCOMPARE(commands[0].arguments, (QStringList{"agent", "focus", "p_1"}));
         QVERIFY(commands[0].environment.isEmpty());
         for (const auto *bad : {"", "t|p", "t||/s", "t|p 1|/s", "t;x|p|/s", "t|p|relative"})
-            QVERIFY2(pet::hostCommands("herdr", bad).isEmpty(), bad);
+            QVERIFY2(selection("herdr", bad).isEmpty(), bad);
         // Hosts without a selection command.
         for (const auto *host : {"konsole", "vscode", "terminal", "unknown"})
-            QVERIFY(pet::hostCommands(host, "org.kde.konsole-1|/Windows/1|/Sessions/1").isEmpty());
+            QVERIFY(selection(host, "org.kde.konsole-1|/Windows/1|/Sessions/1").isEmpty());
     }
     void hostLabelsAndValidation() {
         const QMap<QString, QString> labels{{"konsole", "Konsole"}, {"herdr", "herdr"}, {"tmux", "tmux"},
                                             {"vscode", "VS Code"}, {"terminal", "Terminal"}};
-        for (auto it = labels.begin(); it != labels.end(); ++it) QCOMPARE(pet::hostName(it.key()), it.value());
-        QVERIFY(pet::hostName("xterm").isEmpty()); QVERIFY(pet::hostName({}).isEmpty());
+        for (auto it = labels.begin(); it != labels.end(); ++it) QCOMPARE(label(it.key()), it.value());
+        QVERIFY(label("xterm").isEmpty()); QVERIFY(label({}).isEmpty());
         // The event parser accepts exactly the known hosts, case-sensitively; host fields need no host.
         pet::Event e; QString error;
         QJsonObject o{{"version", 1}, {"provider", "claude"}, {"session_id", "s"}, {"event_id", "1"}, {"kind", "prompt"},
@@ -277,14 +298,60 @@ private slots:
         // An event without a host keeps the last known one.
         QVERIFY(apply(state, hosted("tool_start", {}, "1", "2", "x")));
         auto s = state.records().value(key);
-        QCOMPARE(s.host, "konsole"); QCOMPARE(s.hostPids, "10,9"); QCOMPARE(s.hostWindow, "77");
+        QCOMPARE(s.host.adapter, "konsole"); QCOMPARE(s.host.pids, (QVector<qint64>{10, 9}));
+        QCOMPARE(s.host.window.backend, "x11"); QCOMPARE(s.host.window.id, "77");
         // A new host replaces every field, also clearing ones it lacks.
         QVERIFY(apply(state, hosted("tool_end", "tmux", "20", {}, "/s|%3")));
         s = state.records().value(key);
-        QCOMPARE(s.host, "tmux"); QCOMPARE(s.hostPids, "20"); QVERIFY(s.hostWindow.isEmpty()); QCOMPARE(s.hostTarget, "/s|%3");
+        QCOMPARE(s.host.adapter, "tmux"); QCOMPARE(s.host.pids, QVector<qint64>{20}); QVERIFY(s.host.window.isNull());
+        QCOMPARE(s.host.target, "/s|%3");
         QVERIFY(apply(state, hosted("session_start", "terminal", "30", {}, {})));
         s = state.records().value(key);
-        QCOMPARE(s.host, "terminal"); QVERIFY(s.hostTarget.isEmpty());
+        QCOMPARE(s.host.adapter, "terminal"); QVERIFY(s.host.target.isEmpty());
+    }
+    void hostContextConversion() {
+        auto context = pet::hosts::fromV1("konsole", "12,7", "8388617", "org.kde.konsole-12|/Windows/1|/Sessions/3");
+        QCOMPARE(context.pids, (QVector<qint64>{12, 7})); QCOMPARE(context.window.backend, "x11");
+        const auto v1 = pet::hosts::toV1(context);
+        QCOMPARE(v1["host"].toString(), "konsole"); QCOMPARE(v1["host_pids"].toString(), "12,7");
+        QCOMPARE(v1["host_window"].toString(), "8388617"); QCOMPARE(v1["host_target"].toString(), context.target);
+        // v1 has no field for another backend's window: it is left out, never reinterpreted as X11.
+        context.window = {"kwin", "{6f1c}"}; QVERIFY(!pet::hosts::toV1(context).contains("host_window"));
+        QVERIFY(pet::hosts::toV1({}).isEmpty());
+        QVERIFY(pet::hosts::fromV1("terminal", {}, {}, {}).window.isNull());
+        // Targets are decoded by their adapter; hosts without one need none.
+        const auto &hosts = pet::hosts::Registry::builtin();
+        QCOMPARE(hosts.ids(), (QStringList{"herdr", "tmux", "konsole", "vscode", "terminal"})); // Detection order.
+        QVERIFY(hosts.validTarget({"tmux", {}, {}, "/s|%1"})); QVERIFY(!hosts.validTarget({"tmux", {}, {}, "/s|1"}));
+        QVERIFY(!hosts.validTarget({"konsole", {}, {}, {}})); QVERIFY(hosts.validTarget({"vscode", {}, {}, {}}));
+        QVERIFY(!hosts.validTarget({"xterm", {}, {}, {}}));
+    }
+    void testAdapterRegistration() {
+        // A host registers its capture, codec and label; sessions, alerts and the parser need no change.
+        pet::hosts::Registry registry;
+        registry.add({"test-term", "Test Term",
+                      [](const QProcessEnvironment &env, const QVector<qint64> &, QString &target) {
+                          target = env.value("TEST_TERM_TAB"); return !target.isEmpty();
+                      },
+                      [](const QString &target) { return target.startsWith("tab-"); }});
+        registry.add(pet::hosts::terminal::capture());
+        QProcessEnvironment env; env.insert("TEST_TERM_TAB", "tab-3");
+        const auto context = registry.capture(env, {40});
+        QCOMPARE(context.adapter, "test-term"); QCOMPARE(context.target, "tab-3"); QVERIFY(registry.validTarget(context));
+        QCOMPARE(registry.capture({}, {40}).adapter, "terminal");
+        pet::Event e; QString error;
+        auto o = pet::hosts::toV1(context);
+        for (const auto &[k, v] : std::initializer_list<std::pair<const char *, QJsonValue>>{
+                 {"version", 1}, {"provider", "claude"}, {"session_id", "s"}, {"event_id", "1"}, {"kind", "prompt"},
+                 {"timestamp_ms", double(now + 1)}, {"project_path", "/work/s"}})
+            o[k] = v;
+        QVERIFY(!pet::Event::parse(QJsonDocument(o).toJson(), e, error)); // Unknown to the built-in hosts.
+        QVERIFY2(pet::Event::parse(QJsonDocument(o).toJson(), e, error, registry), qPrintable(error));
+        pet::Sessions state;
+        QVERIFY(state.apply(e, now + 1));
+        const auto rows = pet::sessionRows(state, now + 1, registry);
+        QCOMPARE(rows.size(), 1); QVERIFY(rows[0].detail.endsWith(" · Test Term"));
+        QCOMPARE(state.records().first().host.target, "tab-3");
     }
     void restartAndBounds() {
         pet::Sessions state;

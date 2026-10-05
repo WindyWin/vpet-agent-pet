@@ -1,11 +1,10 @@
 #include "state.h"
 #include <QJsonDocument>
-#include <QRegularExpression>
 #include <cmath>
 #include <algorithm>
 
 namespace pet {
-bool Event::parse(const QByteArray &data, Event &e, QString &error) {
+bool Event::parse(const QByteArray &data, Event &e, QString &error, const hosts::Registry &hosts) {
     if (data.size() > 8192) { error = "Event exceeds 8192 bytes"; return false; }
     const auto doc = QJsonDocument::fromJson(data);
     if (!doc.isObject()) { error = "Expected a JSON object"; return false; }
@@ -42,12 +41,7 @@ bool Event::parse(const QByteArray &data, Event &e, QString &error) {
         (o.contains("risky") && e.kind != "tool_start")) {
         error = "Missing identity or unsupported event kind/activity"; return false;
     }
-    static const QSet<QString> hosts{"konsole", "herdr", "tmux", "vscode", "terminal"};
-    static const QRegularExpression pids("^[1-9][0-9]{0,9}(,[1-9][0-9]{0,9}){0,15}$"), window("^[1-9][0-9]{0,19}$");
-    if ((!e.host.isEmpty() && !hosts.contains(e.host)) || (!e.hostPids.isEmpty() && !pids.match(e.hostPids).hasMatch()) ||
-        (!e.hostWindow.isEmpty() && !window.match(e.hostWindow).hasMatch())) {
-        error = "Invalid host identification"; return false;
-    }
+    if (!hosts.validV1(e.host, e.hostPids, e.hostWindow)) { error = "Invalid host identification"; return false; }
     return true;
 }
 static QString key(const QString &provider, const QString &id) { return provider + QChar(0x1f) + id; }
@@ -88,7 +82,7 @@ bool Sessions::apply(const Event &e, qint64 now) {
     s.provider = e.provider; s.id = e.session; s.timestamp = e.timestamp; s.seen = now;
     if (!e.parent.isEmpty()) s.parent = e.parent;
     if (!e.project.isEmpty()) s.project = e.project;
-    if (!e.host.isEmpty()) { s.host = e.host; s.hostPids = e.hostPids; s.hostWindow = e.hostWindow; s.hostTarget = e.hostTarget; }
+    if (!e.host.isEmpty()) s.host = hosts::fromV1(e.host, e.hostPids, e.hostWindow, e.hostTarget);
     const bool held = s.activityUntil != 0; // Showing a finished tool's activity.
     if (e.kind != "session_start" && e.kind != "tool_end") s.activityUntil = 0;
     if (e.kind == "session_start") { /* Metadata refresh only for existing sessions. */ }

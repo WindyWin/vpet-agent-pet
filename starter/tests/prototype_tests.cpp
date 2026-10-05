@@ -1209,7 +1209,7 @@ private slots:
         pet::PetWindow window(nullptr, directory.path() + "/preferences.json"); window.show();
         pet::Monitor monitor(window);
         QStringList focused, looking;
-        monitor.bringForward = [&](const pet::Session &s) { focused << s.id; return s.host != "terminal"; };
+        monitor.bringForward = [&](const pet::Session &s) { focused << s.id; return s.host.adapter != "terminal"; };
         monitor.hostActive = [&](const pet::Session &s) { return looking.contains(s.id); };
         const qint64 now = QDateTime::currentMSecsSinceEpoch(); qint64 seq = 0;
         auto event = [&](QString session, QString kind, QString host = "konsole", QString reason = {}) {

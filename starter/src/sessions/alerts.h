@@ -28,7 +28,9 @@ struct SessionRow {
     int children = 0;
 };
 // Sorted: waiting on the user, then errors, then active, then idle and stopped.
-QVector<SessionRow> sessionRows(const Sessions &sessions, qint64 now);
+// Hosts are named by the registry that validated them.
+QVector<SessionRow> sessionRows(const Sessions &sessions, qint64 now,
+                                const hosts::Registry &hosts = hosts::Registry::builtin());
 QString alertTitle(const Alert &alert); // "Needs approval", "Turn finished", ...
 
 // Presentation cursor over Sessions::pending(). It holds no alert data, so a

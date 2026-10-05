@@ -111,7 +111,7 @@ void Monitor::refreshAlerts() {
         if (alert.serial <= heard_) continue;
         newest = std::max(newest, alert.serial);
         const auto session = sessions_.records().value(alert.session);
-        if (!session.host.isEmpty() && hostActive && hostActive(session)) sessions_.dismiss(alert.session, alert.kind);
+        if (!session.host.isNull() && hostActive && hostActive(session)) sessions_.dismiss(alert.session, alert.kind);
         else raised = raised || shown(alert);
     }
     heard_ = newest;
@@ -138,7 +138,7 @@ void Monitor::toggleSessions() {
 bool Monitor::focusSession(const QString &key) {
     const auto it = sessions_.records().find(key);
     if (it == sessions_.records().end() || !bringForward || !bringForward(*it)) {
-        QToolTip::showText(window_.figure().center(), it != sessions_.records().end() && it->host.isEmpty()
+        QToolTip::showText(window_.figure().center(), it != sessions_.records().end() && it->host.isNull()
             ? "This session started before Agent Pet could see its terminal. Its next event will fix that."
             : "Could not focus this session's window. Check that its terminal is attached. Wayland focus requires KDE Plasma 6.");
         return false;

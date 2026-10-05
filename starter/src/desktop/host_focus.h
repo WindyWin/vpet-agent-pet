@@ -1,5 +1,5 @@
 #pragma once
-#include "providers/host.h"
+#include "platform/desktop/window_match.h"
 #include "sessions/state.h"
 
 namespace pet {
@@ -10,6 +10,6 @@ namespace hostFocus {
 bool focus(const Session &session);
 // True when the session's window is the active X11 window (the user is already there).
 bool active(const Session &session);
-QVector<HostWindow> windows();
+QVector<platform::WindowInfo> windows();
 }
 }

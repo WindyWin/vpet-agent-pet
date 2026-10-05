@@ -1,7 +1,8 @@
 #include "local.h"
 #include "autostart.h"
 #include "providers/adapters.h"
-#include "providers/host.h"
+#include "hosts/registry.h"
+#include "platform/linux/process.h"
 #include <QCoreApplication>
 #include <QDateTime>
 #include <QDir>
@@ -116,7 +117,8 @@ int eventCommand(const QStringList &args) {
     if (hook) {
         object = normalizeHook(provider, object, QDateTime::currentMSecsSinceEpoch());
         if (object.isEmpty()) return 0;
-        const auto host = hostContext(QProcessEnvironment::systemEnvironment(), processAncestors(getppid()));
+        const auto host = hosts::toV1(hosts::Registry::builtin().capture(QProcessEnvironment::systemEnvironment(),
+                                                                         platform::processAncestors(getppid())));
         for (auto it = host.begin(); it != host.end(); ++it) object[it.key()] = it.value();
     }
     if (!provider.isEmpty()) {
