@@ -148,13 +148,14 @@ stable releases from `WindyWin/vpet-agent-pet` on GitHub. **Check now** checks
 immediately. Turn off **Check automatically once a day** to use manual checks.
 Network failures during background checks do not interrupt the pet.
 
-Choose one of three modes:
+Choose one of four modes:
 
 | Mode | Behavior |
 | --- | --- |
-| **Notify only** (default) | A menu indicator shows the available version; choose Download update or open the release page. |
+| **Notify only** | A menu indicator shows the available version; choose Download update or open the release page. |
 | **Download automatically** | Downloads and verifies the package, then waits for **Restart and update**. |
 | **Install automatically on next launch** | Downloads and verifies the package, then installs during the next normal launch. |
+| **Download and install automatically** (default for new installs) | Downloads and verifies the package, then restarts into the new version as soon as no agent sessions are active, checking again every 5 minutes. Each version is attempted once, so a rolled-back update does not loop. |
 
 **Later / Close** leaves the update available. **Skip this version** suppresses
 that version and discards its pending package; **Check now** shows it again.

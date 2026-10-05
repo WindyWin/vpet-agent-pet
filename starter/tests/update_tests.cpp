@@ -18,6 +18,9 @@
 #include <QDateTime>
 #include <cstring>
 using namespace pet::updates;
+static QJsonObject readState(const QTemporaryDir &dir) {
+    QFile f(dir.filePath("state.json")); return f.open(QIODevice::ReadOnly) ? QJsonDocument::fromJson(f.readAll()).object() : QJsonObject{};
+}
 static void write(const QString &path, const QByteArray &data) { QFile f(path); if (f.open(QIODevice::WriteOnly)) f.write(data); }
 static QJsonObject releaseObject(QByteArray package = "package") {
     const QString name = "agent-pet-99.1.0-linux-" + QSysInfo::buildCpuArchitecture() + ".tar.gz";
@@ -135,6 +138,19 @@ private slots:
         QSignalSpy restart(&controller, &Controller::restartRequested); controller.sessionsActive = [] { return true; };
         controller.install(); QCOMPARE(restart.size(), 0);
         QVERIFY(controller.indicator().contains("ready"));
+    }
+    void fullyAutomaticWaitsForIdleSessions() {
+        QTemporaryDir dir; Network network;
+        write(dir.filePath("state.json"), QJsonDocument(QJsonObject{{"format", 1}, {"mode", 3}, {"enabled", true}}).toJson());
+        Controller controller(nullptr, &network, "/managed", dir.path());
+        bool busy = true; controller.sessionsActive = [&busy] { return busy; };
+        controller.check(true);
+        QTRY_VERIFY(QFile::exists(dir.filePath("pending.json")));
+        // Active sessions must never be interrupted by an automatic restart.
+        QTest::qWait(50); QVERIFY(!readState(dir).contains("autoInstalled"));
+        // Once idle, the install is attempted exactly once per version.
+        busy = false; controller.autoInstall();
+        QCOMPARE(readState(dir)["autoInstalled"].toString(), QString("99.1.0"));
     }
 };
 QTEST_MAIN(UpdateTests)

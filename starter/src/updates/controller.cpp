@@ -55,7 +55,7 @@ bool prepareStartup(const QStringList &args) {
     const auto state = readObject(dataDirectory() + "/state.json");
     const auto pending = readObject(dataDirectory() + "/pending.json");
     // Agent-triggered startup carries a session event: deliver it immediately.
-    if (state["format"].toInt() != 1 || state["mode"].toInt() != 2 || args.contains("--autostarted") || pending.isEmpty()) return false;
+    if (state["format"].toInt() != 1 || state["mode"].toInt() < 2 || args.contains("--autostarted") || pending.isEmpty()) return false;
     if (!newer(pending["version"].toString(), AGENT_PET_VERSION)) { QFile::remove(dataDirectory() + "/pending.json"); return false; }
     QStringList command{"--apply", prefix, dataDirectory() + "/package.tar.gz", pending["digest"].toString(),
                         pending["version"].toString(), QString::number(QCoreApplication::applicationPid())};
@@ -67,10 +67,10 @@ Controller::Controller(QObject *parent, QNetworkAccessManager *transport, QStrin
     QDir().mkpath(directory_);
     state_ = readObject(directory_ + "/state.json");
     if (QFile::exists(directory_ + "/state.json") && (state_.isEmpty() || state_["format"].toInt() != 1
-        || state_["mode"].toInt(-1) < 0 || state_["mode"].toInt(-1) > 2)) {
+        || state_["mode"].toInt(-1) < 0 || state_["mode"].toInt(-1) > 3)) {
         writable_ = false; message_ = "Update settings could not be read; automatic updates are disabled."; state_ = {};
     }
-    if (state_.isEmpty()) state_ = {{"format", 1}, {"mode", 0}, {"enabled", true}};
+    if (state_.isEmpty()) state_ = {{"format", 1}, {"mode", 3}, {"enabled", true}};
     QString cacheError;
     Release cached;
     if (parseRelease(state_["release"].toObject(), QSysInfo::buildCpuArchitecture(), cached, cacheError)
@@ -98,9 +98,12 @@ QString Controller::indicator() const {
     return ready_ ? "Update ready — " + release_.version + "…" : "Update available — " + release_.version + "…";
 }
 void Controller::start() {
-    QTimer::singleShot(15000, this, [this] { check(); });
+    QTimer::singleShot(15000, this, [this] { check(); autoInstall(); });
     auto *timer = new QTimer(this); timer->setInterval(60 * 60 * 1000);
     connect(timer, &QTimer::timeout, this, [this] { check(); }); timer->start();
+    // A finished download waits here until the user's agent sessions are over.
+    auto *retry = new QTimer(this); retry->setInterval(5 * 60 * 1000);
+    connect(retry, &QTimer::timeout, this, [this] { autoInstall(); }); retry->start();
 }
 void Controller::check(bool manual) {
     if (reply_ || !writable_) return;
@@ -173,6 +176,7 @@ void Controller::download() {
         }
         if (!writeObject(directory_ + "/pending.json", target.json())) { status("Cannot save the pending update."); return; }
         ready_ = true; status("Update " + target.version + " is ready. Restart when your sessions are finished.");
+        autoInstall();
     });
     status("Downloading update…");
 }
@@ -183,6 +187,15 @@ void Controller::install() {
                      QString::number(QCoreApplication::applicationPid())};
     if (!QProcess::startDetached(helper(prefix_), args)) { status("Could not start the update installer."); return; }
     emit restartRequested();
+}
+void Controller::autoInstall() {
+    if (state_["mode"].toInt() != 3 || !ready_ || reply_ || prefix_.isEmpty()) return;
+    const QString version = release_.version;
+    // One attempt per version: a rolled-back update must not restart the pet in a loop.
+    if (state_["skipped"].toString() == version || state_["autoInstalled"].toString() == version) return;
+    if (sessionsActive && sessionsActive()) return;
+    state_["autoInstalled"] = version;
+    if (save()) install();
 }
 void Controller::showSettings(QWidget *parent) {
     if (dialog_) { dialog_->show(); dialog_->raise(); return; }
@@ -198,7 +211,7 @@ QWidget *Controller::settings(QWidget *parent) {
     auto *box = new QGroupBox("Updates", parent); auto *layout = new QVBoxLayout(box);
     auto *version = new QLabel("Installed version: " AGENT_PET_VERSION, box); layout->addWidget(version);
     auto *enabled = new QCheckBox("Check automatically once a day", box); enabled->setChecked(state_["enabled"].toBool(true)); layout->addWidget(enabled);
-    auto *mode = new QComboBox(box); mode->addItems({"Notify only", "Download automatically", "Install automatically on next launch"});
+    auto *mode = new QComboBox(box); mode->addItems({"Notify only", "Download automatically", "Install automatically on next launch", "Download and install automatically (restart when idle)"});
     mode->setCurrentIndex(state_["mode"].toInt()); layout->addWidget(mode);
     enabled->setEnabled(writable_); mode->setEnabled(writable_ && !prefix_.isEmpty());
     if (prefix_.isEmpty()) { auto *hint = new QLabel("This copy supports notifications and manual downloads. Install a release bundle to enable automatic updates.", box); hint->setWordWrap(true); layout->addWidget(hint); }

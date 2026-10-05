@@ -69,7 +69,7 @@ Native Wayland placement and stacking support remain unverified.
 ## Updates
 
 **Settings → Updates** offers daily release notifications, automatic downloads,
-and optional installation on the next normal launch. Notify only is the default.
+optional installation on the next normal launch, and fully automatic download and install when idle (the default).
 Updates preserve settings and hooks and restore the previous version if startup
 fails. Development builds offer notifications and manual downloads.
 See [update behavior and recovery](docs/install.md#update-notifications-and-automatic-updates).
