@@ -153,6 +153,11 @@ private slots:
         for (const auto &state : touches) QVERIFY2(player.isTouch(state), qPrintable(state));
         QCOMPARE(player.states().size(), 11 + reactions.size() - 1 + player.fidgets().size() + touches.size());
         QVERIFY(!player.fidgets().isEmpty());
+        // Walks in each mood, crawls and climbs up and down both edges: all fidgets that move the window.
+        int moves = 0;
+        for (const auto &state : player.states())
+            if (player.move(state)) { ++moves; QVERIFY2(player.isFidget(state), qPrintable(state)); }
+        QCOMPARE(moves, 12); QCOMPARE(player.moveScale(), 500);
         auto checkSequence = [&] {
             const int count = player.frameCount();
             for (int i = 0; i < count; ++i) {
@@ -167,7 +172,7 @@ private slots:
             QVERIFY(player.select(state, true));
             checkSequence();
             if (player.isFidget(state) || reactions.contains(state)) { // Plays itself out and hands back to idle.
-                for (int pass = 0; pass < 5 && player.state() == state; ++pass) checkSequence();
+                for (int pass = 0; pass < 10 && player.state() == state; ++pass) checkSequence();
                 QCOMPARE(player.state(), QString("idle"));
             } else if (player.state() == state && player.phase() == "loop" && state != "idle") {
                 checkSequence(); player.select("idle"); QCOMPARE(player.phase(), QString("end"));
@@ -789,6 +794,186 @@ private slots:
         QVERIFY(!loads(broken("fall", QJsonObject{{"right", "idle"}})));
         QVERIFY(!loads(broken("edge", QJsonObject{{"left", QJsonObject{{"state", "held"}, {"at", 500}}}})));
         QVERIFY(!loads(broken("edge", QJsonObject{{"left", QJsonObject{{"state", "brief"}, {"at", 200}}}})));
+    }
+    void wanderGeometry() {
+        using namespace pet::wander;
+        const QRect area(0, 0, 1000, 800);
+        // Distances are in the artwork's units: a 250-pixel window is 500 units wide, so a pixel is two.
+        const auto d = distances(QRect(100, 50, 250, 250), area, 500);
+        QCOMPARE(d.left, 200.0); QCOMPARE(d.top, 100.0); QCOMPARE(d.right, 1300.0); QCOMPARE(d.bottom, 1000.0);
+        QCOMPARE(distances(QRect(-20, 0, 250, 250), area, 500).left, -40.0); // Past the edge.
+        auto at = [&](int x, int y = 300) { return distances(QRect(x, y, 250, 250), area, 500); };
+        // A walk starts with room on its side and stops once it is down to what it keeps.
+        pet::Move walk; walk.speed = {-112, 0}; walk.room.left = 200; walk.keep.left = 100;
+        QVERIFY(fits(walk, at(100))); QVERIFY(!fits(walk, at(99)));
+        QVERIFY(keeps(walk, at(51))); QVERIFY(!keeps(walk, at(50)));
+        // A climb starts at its wall, with room above it.
+        pet::Move climb; climb.speed = {0, -80}; climb.near.left = 100; climb.room.top = 200; climb.keep.top = 100;
+        QVERIFY(fits(climb, at(0))); QVERIFY(fits(climb, at(-60))); QVERIFY(fits(climb, at(49))); QVERIFY(!fits(climb, at(50)));
+        QVERIFY(!fits(climb, at(0, 99))); QVERIFY(fits(climb, at(0, 100)));
+        QVERIFY(keeps(climb, at(0, 51))); QVERIFY(!keeps(climb, at(0, 50)));
+        // Steps follow the pet's size and the time passed, at most 100 ms of it.
+        QCOMPARE(step(walk, 250, 500, 100), QPointF(-5.6, 0));
+        QCOMPARE(step(walk, 500, 500, 50), QPointF(-5.6, 0));
+        QCOMPARE(step(walk, 250, 500, 5000), QPointF(-5.6, 0));
+        QCOMPARE(step(climb, 250, 500, 100), QPointF(0, -4));
+        QCOMPARE(step(walk, 250, 0, 100), QPointF());
+    }
+    void movesAreFidgetsTheWindowAllows() {
+        pet::Player player; player.setPaused(true); player.setRandom([](int) { return 0; });
+        // Ending a move early plays its end on the spot, then idle.
+        player.select("walk_left", true); QCOMPARE(player.phase(), QString("start"));
+        player.finish(); QCOMPARE(player.phase(), QString("end")); QCOMPARE(player.sequence(), QString("MOVE/walk.left/C_Nomal"));
+        player.finish(); QCOMPARE(player.phase(), QString("end")); // Already ending.
+        finishSequence(player); QCOMPARE(player.state(), QString("idle"));
+        player.finish(); QCOMPARE(player.state(), QString("idle")); // Nothing to end.
+        // Otherwise it walks its loop as many times as upstream's distance says.
+        player.select("walk_left", true); finishSequence(player);
+        for (int pass = 0; pass < 7; ++pass) { QCOMPARE(player.phase(), QString("loop")); finishSequence(player); }
+        QCOMPARE(player.phase(), QString("end")); player.select("idle", true);
+        // The catalog's moves, ported from vup.lps.
+        const auto *climb = player.move("climb_up_left"); QVERIFY(climb);
+        QCOMPARE(climb->wall, QString("left")); QCOMPARE(climb->at, 145); QCOMPARE(climb->speed, QPointF(0, -80));
+        QCOMPARE(climb->near.left, 100.0); QCOMPARE(climb->room.top, 200.0); QCOMPARE(climb->keep.top, 100.0);
+        QCOMPARE(climb->room.left, -1.0);
+        QCOMPARE(player.move("climb_down_right")->at, 315); QCOMPARE(player.move("climb_down_right")->speed, QPointF(0, 80));
+        QCOMPARE(player.move("trot_right")->mood, QString("happy")); QCOMPARE(player.move("trudge_left")->mood, QString("poor"));
+        QCOMPARE(player.move("walk_right")->speed, QPointF(112, 0)); QVERIFY(!player.move("fidget_aside"));
+        pet::Ambient ambient(player); Draws draws; qint64 now = 1000000;
+        ambient.setRandom(draws.random()); ambient.setClock([&] { return now; });
+        // Without a window to ask, a long idle spell draws only fidgets that stay put: aside 3, yawn 3,
+        // boring 2 and squat 2, so the highest draw is a squat.
+        draws.values = {0}; player.select("thinking", true); player.select("idle", true);
+        now += 300000; draws.values = {5, 10}; finishSequence(player); QCOMPARE(player.state(), QString("fidget_squat"));
+        // The window is asked about each move, and those it allows join the draw: squat just played, so
+        // aside 3, yawn 3, boring 2 and walk_right 2 remain.
+        QStringList asked;
+        ambient.setMoveGate([&](const pet::Move &move) { asked.append(move.state); return move.state == "walk_right"; });
+        draws.values = {0}; playOut(player);
+        now += 90000; draws.values = {5, 8}; finishSequence(player);
+        QCOMPARE(player.state(), QString("walk_right")); QVERIFY(ambient.resting()); QCOMPARE(asked.size(), 12);
+        // Before four idle minutes nobody is asked.
+        asked.clear(); draws.values = {0}; player.select("thinking", true); player.select("idle", true);
+        now += 45000; draws.values = {5, 0}; finishSequence(player);
+        QCOMPARE(player.state(), QString("fidget_aside")); QVERIFY(asked.isEmpty());
+        QCOMPARE(draws.unexpected, 0);
+    }
+    void windowWalksAndClimbs() {
+        QTemporaryDir directory;
+        pet::PetWindow window(nullptr, directory.path() + "/preferences.json"); window.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&window));
+        pet::Monitor monitor(window); auto &player = window.player(); player.setPaused(true);
+        window.ambient().setLevel(pet::AmbientLevel::Off); window.setPetSize(250); // A pixel is two artwork units.
+        playOut(player);
+        const auto area = pet::touch::areaFor(window.geometry(), window.screenAreas());
+        const int floor = area.bottom() + 1 - 250;
+        const qint64 now = QDateTime::currentMSecsSinceEpoch(); qint64 seq = 0;
+        auto event = [&](QString kind) {
+            ++seq; return pet::Event{"claude", "s1", QString::number(seq), kind, {}, {}, "/work/abc-web", {}, now + seq, {}};
+        };
+        // A walk needs room on its side and the mood it was drawn for; a climb needs its wall close by.
+        const auto &walk = *player.move("walk_left"), &trot = *player.move("trot_left"), &climb = *player.move("climb_up_left");
+        window.move(area.left() + 100, floor);
+        QVERIFY(window.canWander(walk)); QVERIFY(!window.canWander(trot)); QVERIFY(!window.canWander(climb));
+        player.setMood("happy"); QVERIFY(window.canWander(trot)); player.setMood({});
+        window.move(area.left() + 99, floor); QVERIFY(!window.canWander(walk));
+        window.move(area.left() + 49, floor); QVERIFY(window.canWander(climb));
+        QVERIFY(!window.canWander(*player.move("climb_down_left"))); // Already at the bottom.
+        window.setWanderEnabled(false); QVERIFY(!window.canWander(climb)); window.setWanderEnabled(true);
+        // Walking: the start plays on the spot, the loop travels, and it stops short of the edge to play its end.
+        window.move(area.left() + 60, floor);
+        player.select("walk_left", true); QVERIFY(window.walking()); QCOMPARE(player.phase(), QString("start"));
+        QTest::qWait(100); QCOMPARE(window.pos().x(), area.left() + 60);
+        finishSequence(player); QCOMPARE(player.phase(), QString("loop"));
+        player.setPaused(false);
+        QTRY_COMPARE_WITH_TIMEOUT(player.phase(), QString("end"), 3000);
+        player.setPaused(true);
+        QVERIFY(window.pos().x() <= area.left() + 50); QVERIFY(window.pos().x() >= area.left() + 44); // At most one 100 ms step past.
+        QCOMPARE(window.pos().y(), floor);
+        finishSequence(player); QCOMPARE(player.state(), QString("idle")); QVERIFY(!window.walking());
+        // A walk is how an idle pet looks: the monitor leaves it alone, and agent activity ends it at once.
+        QVERIFY(monitor.apply(event("prompt"), now + seq)); QVERIFY(monitor.apply(event("interrupt"), now + seq));
+        playOut(player); QCOMPARE(player.state(), QString("idle"));
+        window.move(area.left() + 200, floor);
+        player.select("walk_left", true); finishSequence(player); monitor.update(now + seq);
+        QCOMPARE(player.state(), QString("walk_left")); QVERIFY(window.walking());
+        QVERIFY(monitor.apply(event("prompt"), now + seq));
+        QCOMPARE(player.state(), QString("thinking")); QVERIFY(!window.walking());
+        playOut(player); QVERIFY(monitor.apply(event("interrupt"), now + seq)); playOut(player);
+        // Climbing: it leaps onto its wall, where the screen edge cuts the artwork at the hands, climbs during
+        // the loop, and steps back into view once something else shows.
+        window.move(area.left() + 20, floor);
+        player.select("climb_up_left", true); QVERIFY(window.walking()); QVERIFY(window.sliding());
+        QTRY_VERIFY(!window.sliding()); QCOMPARE(window.pos(), QPoint(area.left() - qRound(145 * 250 / 500.0), floor));
+        finishSequence(player); QCOMPARE(player.phase(), QString("loop"));
+        player.setPaused(false);
+        QTRY_VERIFY_WITH_TIMEOUT(window.pos().y() < floor - 10, 3000);
+        player.setPaused(true);
+        QCOMPARE(window.pos().x(), area.left() - qRound(145 * 250 / 500.0));
+        monitor.update(now + seq); QCOMPARE(player.state(), QString("climb_up_left"));
+        QVERIFY(monitor.apply(event("prompt"), now + seq));
+        QCOMPARE(player.state(), QString("thinking")); QVERIFY(!window.walking()); QVERIFY(window.sliding());
+        QTRY_VERIFY(!window.sliding()); QCOMPARE(window.pos().x(), area.left()); QVERIFY(window.pos().y() < floor - 10);
+        playOut(player); QVERIFY(monitor.apply(event("interrupt"), now + seq)); playOut(player);
+        // Recovering the position, or turning wandering off, stops a walk where it is.
+        window.move(area.left() + 200, floor);
+        player.select("walk_right", true); QVERIFY(window.walking()); window.recover();
+        QVERIFY(!window.walking()); QCOMPARE(player.state(), QString("idle"));
+        player.select("walk_right", true); window.setWanderEnabled(false);
+        QVERIFY(!window.walking()); QCOMPARE(player.state(), QString("idle"));
+    }
+    void wanderPreference() {
+        QTemporaryDir directory; const auto path = directory.path() + "/preferences.json";
+        {
+            pet::PetWindow window(nullptr, path); QVERIFY(window.wanderEnabled());
+            window.showSettings(); auto *dialog = window.findChild<QDialog*>(); QVERIFY(dialog);
+            QCheckBox *box = nullptr;
+            for (auto *check : dialog->findChildren<QCheckBox*>()) if (check->accessibleName() == "Wandering") box = check;
+            QVERIFY(box); QVERIFY(box->isChecked());
+            box->setChecked(false); QVERIFY(!window.wanderEnabled());
+            QVERIFY(window.savePreferences()); dialog->close();
+        }
+        QVERIFY(!pet::PreferencesStore(path).load().wander);
+        pet::PetWindow restored(nullptr, path); QVERIFY(!restored.wanderEnabled());
+        QFile file(path); QVERIFY(file.open(QIODevice::WriteOnly));
+        file.write(R"({"version":1,"size":200,"on_top":true})"); file.close();
+        QVERIFY(pet::PreferencesStore(path).load().wander); // Older files have no key.
+        QVERIFY(file.open(QIODevice::WriteOnly)); file.write(R"({"version":1,"size":200,"on_top":true,"wander":"no"})"); file.close();
+        pet::PreferencesStore invalid(path); QVERIFY(invalid.load().wander); QVERIFY(!invalid.save(pet::Preferences{}));
+    }
+    void malformedMoves() {
+        QTemporaryDir fixtures; auto base = fixture(fixtures.path()); // "idle" and "work" sequences exist.
+        // A move travels during the loop of a phased state that ends by itself.
+        auto states = base["states"].toObject(); states["stroll"] = QJsonArray{"work", "work", "idle"};
+        states["hop"] = QJsonArray{"work"}; base["states"] = states;
+        auto playback = base["playback"].toObject();
+        playback["stroll"] = QJsonObject{{"mode", "phased"}, {"after", "idle"}, {"loops", 3}};
+        playback["hop"] = QJsonObject{{"mode", "once"}, {"after", "idle"}}; base["playback"] = playback;
+        auto with = [&](QJsonArray list, int scale = 500) {
+            auto catalog = base; catalog["moves"] = QJsonObject{{"scale", scale}, {"list", list}}; return catalog;
+        };
+        const QJsonObject good{{"state", "stroll"}, {"speed", QJsonArray{0, -80}}, {"mood", "happy"},
+                               {"wall", QJsonObject{{"side", "left"}, {"at", 145}}}, {"near", QJsonObject{{"left", 100}}},
+                               {"room", QJsonObject{{"top", 200}}}, {"keep", QJsonObject{{"top", 100}}}};
+        QVERIFY(loads(base)); QVERIFY(loads(with({good}))); QVERIFY(loads(with({})));
+        QVERIFY(loads(with({QJsonObject{{"state", "stroll"}, {"speed", QJsonArray{112, 0}}}}))); // Conditions are optional.
+        auto broken = [&](const QString &key, const QJsonValue &value) { auto move = good; move[key] = value; return with({move}); };
+        QVERIFY(!loads(with({good}, 0)));
+        QVERIFY(!loads(with({good, good}))); // One move per state.
+        QVERIFY(!loads(broken("state", "hop"))); // No loop to travel in.
+        QVERIFY(!loads(broken("state", "working"))); // Never ends by itself.
+        QVERIFY(!loads(broken("state", "nobody")));
+        QVERIFY(!loads(broken("speed", QJsonArray{0, 0})));
+        QVERIFY(!loads(broken("speed", QJsonArray{-112})));
+        QVERIFY(!loads(broken("speed", QJsonArray{"fast", 0})));
+        QVERIFY(!loads(broken("speed", QJsonArray{5000, 0})));
+        QVERIFY(!loads(broken("mood", "sleepy")));
+        QVERIFY(!loads(broken("wall", QJsonObject{{"side", "top"}, {"at", 145}})));
+        QVERIFY(!loads(broken("wall", QJsonObject{{"side", "left"}, {"at", 500}})));
+        QVERIFY(!loads(broken("room", QJsonObject{{"middle", 100}})));
+        QVERIFY(!loads(broken("near", QJsonObject{{"left", -1}})));
+        QVERIFY(!loads(broken("keep", QJsonObject{})));
+        QVERIFY(!loads(broken("keep", 100)));
     }
     void easterEggOccasions() {
         auto at = [](int year, int month, int day, int hour, int minute = 0, const QString &birthday = {}) {

@@ -2,9 +2,9 @@
 
 A small starting repository for a desktop pet that reacts to Claude Code and Codex activity. The sprite files are bundled here, so development can proceed without a local VPet installation.
 
-The current asset pack contains **815 original PNG frames in 85 animation sequences (110.56 MiB)**. They cover idle (with two alternate loops, a few idle fidgets, and happy and droopy moods), thinking, reading, working, waiting for input, tool errors, several ways to celebrate a finished turn, sleeping, startup, closing, the original dragging animation, reactions to being petted, thrown and pushed against a screen edge, and a few easter eggs. [animations.json](assets/vpet/animations.json) maps each state to its sequences, records frame durations, and lists the idle variants, fidgets, mood art, reactions and touch hit boxes. [manifest.json](assets/vpet/manifest.json) records every file's size and SHA-256 hash.
+The current asset pack contains **951 original PNG frames in 115 animation sequences (128.05 MiB)**. They cover idle (with two alternate loops, a few idle fidgets, and happy and droopy moods), thinking, reading, working, waiting for input, tool errors, several ways to celebrate a finished turn, sleeping, startup, closing, the original dragging animation, reactions to being petted, thrown and pushed against a screen edge, a few easter eggs, and walking, crawling and climbing. [animations.json](assets/vpet/animations.json) maps each state to its sequences, records frame durations, and lists the idle variants, fidgets, mood art, reactions, touch hit boxes and moves. [manifest.json](assets/vpet/manifest.json) records every file's size and SHA-256 hash.
 
-[available-animations.json](assets/vpet/available-animations.json) catalogs the **480 remaining sequences and 4,796 frames** from the original character pack. Each entry gives its upstream folder, category, frame count, size, and timing status. These are references for future work; their PNG files are not included here. To add one later, run `python3 scripts/add_sequences.py IDEL/yawning/Nomal …` against a copy of the upstream VPet tree (`--source`; the full archive next to this folder is the default). It copies the frames, updates the manifest and both catalogs, and leaves you to map the sequences in `animations.json`, which `scripts/verify_assets.py` then checks. Retain the artwork notices.
+[available-animations.json](assets/vpet/available-animations.json) catalogs the **443 remaining sequences and 4,547 frames** from the original character pack. Each entry gives its upstream folder, category, frame count, size, and timing status. These are references for future work; their PNG files are not included here. To add one later, run `python3 scripts/add_sequences.py IDEL/yawning/Nomal …` against a copy of the upstream VPet tree (`--source`; the full archive next to this folder is the default). It copies the frames, updates the manifest and both catalogs, and leaves you to map the sequences in `animations.json`, which `scripts/verify_assets.py` then checks. Retain the artwork notices.
 
 This folder is ready to become its own repository:
 
@@ -100,6 +100,19 @@ itself and sends only that verdict. There is at least one more to find. Settings
 **Easter eggs** turns them all off. The special-day fidgets need idle animation on.
 Preview them from Preview state (`love_520`, `birthday`, `dance`, `startled`); see
 [the architecture notes](docs/architecture.md#easter-eggs).
+
+## Wandering
+
+After about four quiet minutes the idle pet sometimes goes for a stroll: it walks or
+crawls along the screen at its current height and stops short of the edge. A happy pet
+trots instead, and a droopy one trudges. Once it reaches a left or right screen edge it
+may climb up or down it, clinging to the edge, then step back into view. Any agent
+activity, a drag or Recover position stops it where it is, and it never wanders off a
+screen. Settings → **Wander** turns it off, so the pet stays where you put it; idle
+animation Off keeps it still too. Native Wayland does not let an application move its
+own window, so there the pet stays put. Preview the moves from Preview state
+(`walk_*`, `trot_*`, `trudge_*`, `crawl_*`, `climb_*`); see
+[the architecture notes](docs/architecture.md#walking).
 
 The default uses X11/XWayland when DISPLAY is available. For a development-only
 native Wayland check: `QT_QPA_PLATFORM=wayland ./build/agent-pet`.

@@ -4,6 +4,7 @@
 #include "animation/mood.h"
 #include "animation/player.h"
 #include "desktop/touch.h"
+#include "desktop/wander.h"
 #include "settings/preferences.h"
 #include <QDialog>
 #include <QElapsedTimer>
@@ -47,6 +48,14 @@ public:
     // Hiding behind a screen edge, partly off-screen. Session activity brings it back out.
     touch::Edge edge() const { return edge_; }
     bool hiding() const { return edge_ != touch::Edge::None; }
+    // Walking, crawling and climbing along the screen after a long idle spell; persisted. Off, the pet
+    // stays where it was put.
+    void setWanderEnabled(bool enabled);
+    bool wanderEnabled() const { return wanderEnabled_; }
+    // Whether a move could start now: wandering is on, the mood suits it, the pet is in plain view and
+    // free, it has the room the move needs, and the display server lets the app place its window.
+    bool canWander(const Move &move) const;
+    bool walking() const { return !walk_.isEmpty(); } // A move is playing and carries the window along.
     void setPetSize(int pixels);
     void setClickThrough(bool enabled);
     bool clickThrough() const { return clickThrough_; }
@@ -105,6 +114,10 @@ protected:
 private:
     void endDrag(bool released = false);
     void land();
+    void slideTo(QPoint target, touch::Edge hide); // Hides at `hide` on arrival, unless it is None.
+    void startWalk(const Move &move);
+    void walkStep();
+    void stopWalk();
     void entered(const QString &state);
     void applyPresence(Presence::Action action);
     void showAfterFlagChange(QPoint position);
@@ -124,8 +137,8 @@ private:
     PreferencesStore store_;
     QMenu menu_;
     QSystemTrayIcon tray_;
-    QTimer recoveryTimer_, dragTimer_, saveTimer_, flightTimer_;
-    QVariantAnimation slide_; // Eases a let-go pet to its hiding place before the hide plays.
+    QTimer recoveryTimer_, dragTimer_, saveTimer_, flightTimer_, walkTimer_;
+    QVariantAnimation slide_; // Eases a let-go pet to its hiding place before the hide plays, or a climber on and off its wall.
     QPointer<QDialog> settingsDialog_, previewDialog_;
     QAction *clickAction_ = nullptr, *onTopAction_ = nullptr, *muteAction_ = nullptr, *showAction_ = nullptr;
     Presence presence_;
@@ -133,14 +146,16 @@ private:
     int trayAttention_ = 0; // Badge shown on the tray icon; -1 forces a redraw.
     bool trayError_ = false;
     QPoint dragOffset_;
-    bool fallbackDrag_ = false, dragging_ = false, clickThrough_ = false, touchEnabled_ = true;
+    bool fallbackDrag_ = false, dragging_ = false, clickThrough_ = false, touchEnabled_ = true, wanderEnabled_ = true;
     bool persist_ = true, ready_ = false, quitting_ = false, muted_ = false, sound_ = false, autostart_ = false;
     int attention_ = 0, bubbles_ = Preferences::RequestsAndErrors;
     QPoint pressPosition_;
-    QElapsedTimer pressTimer_, flightClock_;
+    QElapsedTimer pressTimer_, flightClock_, walkClock_;
     QString pressTouch_; // What a held press pets, decided where it landed.
     QVector<touch::Sample> samples_;
     std::optional<touch::Flight> flight_;
+    QString walk_; // The move playing, while it carries the window.
+    QPointF walkPosition_; // Where the walk has taken the window, kept to fractions of a pixel.
     touch::Edge edge_ = touch::Edge::None, slideEdge_ = touch::Edge::None;
 };
 }

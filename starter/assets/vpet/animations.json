@@ -139,6 +139,66 @@
       "Pinch/Nomal/A",
       "Pinch/Nomal/B",
       "Pinch/Nomal/C"
+    ],
+    "walk_left": [
+      "MOVE/walk.left/A_Nomal",
+      "MOVE/walk.left/B_Nomal",
+      "MOVE/walk.left/C_Nomal"
+    ],
+    "walk_right": [
+      "MOVE/walk.right/A_Nomal",
+      "MOVE/walk.right/B_Nomal",
+      "MOVE/walk.right/C_Nomal"
+    ],
+    "trot_left": [
+      "MOVE/walk.left.faster/A_Happy",
+      "MOVE/walk.left.faster/B_Happy",
+      "MOVE/walk.left.faster/C_Happy"
+    ],
+    "trot_right": [
+      "MOVE/walk.right.faster/A_Happy",
+      "MOVE/walk.right.faster/B_Happy",
+      "MOVE/walk.right.faster/C_Happy"
+    ],
+    "trudge_left": [
+      "MOVE/walk.left.slow/PoorCondition_A",
+      "MOVE/walk.left.slow/B_PoorCondition_1",
+      "MOVE/walk.left.slow/PoorCondition_C"
+    ],
+    "trudge_right": [
+      "MOVE/walk.right.slow/PoorCondition_A",
+      "MOVE/walk.right.slow/B_PoorCondition_1",
+      "MOVE/walk.right.slow/PoorCondition_C"
+    ],
+    "crawl_left": [
+      "MOVE/crawl.left/A_Nomal",
+      "MOVE/crawl.left/B_Nomal",
+      "MOVE/crawl.left/C_Nomal"
+    ],
+    "crawl_right": [
+      "MOVE/crawl.right/A_Nomal",
+      "MOVE/crawl.right/B_Nomal",
+      "MOVE/crawl.right/C_Nomal"
+    ],
+    "climb_up_left": [
+      "MOVE/climb.left/A_Nomal",
+      "MOVE/climb.left/B_Nomal",
+      "MOVE/climb.left/C_Nomal"
+    ],
+    "climb_down_left": [
+      "MOVE/climb.left/A_Nomal",
+      "MOVE/climb.left/B_Nomal",
+      "MOVE/climb.left/C_Nomal"
+    ],
+    "climb_up_right": [
+      "MOVE/climb.right/A_Nomal",
+      "MOVE/climb.right/B_Nomal",
+      "MOVE/climb.right/C_Nomal"
+    ],
+    "climb_down_right": [
+      "MOVE/climb.right/A_Nomal",
+      "MOVE/climb.right/B_Nomal",
+      "MOVE/climb.right/C_Nomal"
     ]
   },
   "sequences": [
@@ -3996,6 +4056,760 @@
       ],
       "duration_ms": 750,
       "state": "dance"
+    },
+    {
+      "path": "MOVE/walk.left/A_Nomal",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/MOVE/walk.left/A_Nomal/\u8d70\u8def\u5411\u5de6_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/walk.left/A_Nomal/\u8d70\u8def\u5411\u5de6_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/walk.left/A_Nomal/\u8d70\u8def\u5411\u5de6_002_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 375,
+      "state": "walk_left"
+    },
+    {
+      "path": "MOVE/walk.left/B_Nomal",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/MOVE/walk.left/B_Nomal/\u8d70\u8def\u5411\u5de6_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/walk.left/B_Nomal/\u8d70\u8def\u5411\u5de6_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/walk.left/B_Nomal/\u8d70\u8def\u5411\u5de6_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/walk.left/B_Nomal/\u8d70\u8def\u5411\u5de6_003_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/walk.left/B_Nomal/\u8d70\u8def\u5411\u5de6_004_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/walk.left/B_Nomal/\u8d70\u8def\u5411\u5de6_005_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 750,
+      "state": "walk_left"
+    },
+    {
+      "path": "MOVE/walk.left/C_Nomal",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/MOVE/walk.left/C_Nomal/\u8d70\u8def\u5411\u5de6_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/walk.left/C_Nomal/\u8d70\u8def\u5411\u5de6_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/walk.left/C_Nomal/\u8d70\u8def\u5411\u5de6_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/walk.left/C_Nomal/\u8d70\u8def\u5411\u5de6_003_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/walk.left/C_Nomal/\u8d70\u8def\u5411\u5de6_004_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/walk.left/C_Nomal/\u8d70\u8def\u5411\u5de6_005_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 750,
+      "state": "walk_left"
+    },
+    {
+      "path": "MOVE/walk.right/A_Nomal",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/MOVE/walk.right/A_Nomal/\u8d70\u8def\u5411\u53f3_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/walk.right/A_Nomal/\u8d70\u8def\u5411\u53f3_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/walk.right/A_Nomal/\u8d70\u8def\u5411\u53f3_002_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 375,
+      "state": "walk_right"
+    },
+    {
+      "path": "MOVE/walk.right/B_Nomal",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/MOVE/walk.right/B_Nomal/\u8d70\u8def\u5411\u53f3_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/walk.right/B_Nomal/\u8d70\u8def\u5411\u53f3_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/walk.right/B_Nomal/\u8d70\u8def\u5411\u53f3_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/walk.right/B_Nomal/\u8d70\u8def\u5411\u53f3_003_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/walk.right/B_Nomal/\u8d70\u8def\u5411\u53f3_004_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/walk.right/B_Nomal/\u8d70\u8def\u5411\u53f3_005_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 750,
+      "state": "walk_right"
+    },
+    {
+      "path": "MOVE/walk.right/C_Nomal",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/MOVE/walk.right/C_Nomal/\u8d70\u8def\u5411\u53f3_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/walk.right/C_Nomal/\u8d70\u8def\u5411\u53f3_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/walk.right/C_Nomal/\u8d70\u8def\u5411\u53f3_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/walk.right/C_Nomal/\u8d70\u8def\u5411\u53f3_003_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/walk.right/C_Nomal/\u8d70\u8def\u5411\u53f3_004_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/walk.right/C_Nomal/\u8d70\u8def\u5411\u53f3_005_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 750,
+      "state": "walk_right"
+    },
+    {
+      "path": "MOVE/walk.left.faster/A_Happy",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/MOVE/walk.left.faster/A_Happy/\u54c8\u76ae\u8d70\u8def\u5411\u5de6_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/walk.left.faster/A_Happy/\u54c8\u76ae\u8d70\u8def\u5411\u5de6_001_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 250,
+      "state": "trot_left"
+    },
+    {
+      "path": "MOVE/walk.left.faster/B_Happy",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/MOVE/walk.left.faster/B_Happy/\u54c8\u76ae\u5de6\u8d70_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/walk.left.faster/B_Happy/\u54c8\u76ae\u5de6\u8d70_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/walk.left.faster/B_Happy/\u54c8\u76ae\u5de6\u8d70_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/walk.left.faster/B_Happy/\u54c8\u76ae\u5de6\u8d70_003_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/walk.left.faster/B_Happy/\u54c8\u76ae\u5de6\u8d70_004_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/walk.left.faster/B_Happy/\u54c8\u76ae\u5de6\u8d70_005_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/walk.left.faster/B_Happy/\u54c8\u76ae\u5de6\u8d70_006_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/walk.left.faster/B_Happy/\u54c8\u76ae\u5de6\u8d70_007_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/walk.left.faster/B_Happy/\u54c8\u76ae\u5de6\u8d70_008_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/walk.left.faster/B_Happy/\u54c8\u76ae\u5de6\u8d70_009_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 1250,
+      "state": "trot_left"
+    },
+    {
+      "path": "MOVE/walk.left.faster/C_Happy",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/MOVE/walk.left.faster/C_Happy/\u54c8\u76ae\u8d70\u8def\u5411\u5de6_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/walk.left.faster/C_Happy/\u54c8\u76ae\u8d70\u8def\u5411\u5de6_001_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 250,
+      "state": "trot_left"
+    },
+    {
+      "path": "MOVE/walk.right.faster/A_Happy",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/MOVE/walk.right.faster/A_Happy/\u8d70\u8def\u8def\u5411\u53f3.png_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/walk.right.faster/A_Happy/\u8d70\u8def\u8def\u5411\u53f32.png_001_250.png",
+          "duration_ms": 250
+        }
+      ],
+      "duration_ms": 375,
+      "state": "trot_right"
+    },
+    {
+      "path": "MOVE/walk.right.faster/B_Happy",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/MOVE/walk.right.faster/B_Happy/_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/walk.right.faster/B_Happy/_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/walk.right.faster/B_Happy/_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/walk.right.faster/B_Happy/_003_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/walk.right.faster/B_Happy/_004_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/walk.right.faster/B_Happy/_005_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/walk.right.faster/B_Happy/_006_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/walk.right.faster/B_Happy/_007_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/walk.right.faster/B_Happy/_008_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/walk.right.faster/B_Happy/_009_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 1250,
+      "state": "trot_right"
+    },
+    {
+      "path": "MOVE/walk.right.faster/C_Happy",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/MOVE/walk.right.faster/C_Happy/\u54c8\u76ae\u8d70\u8def\u5411\u5de6_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/walk.right.faster/C_Happy/\u54c8\u76ae\u8d70\u8def\u5411\u5de6_001_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 250,
+      "state": "trot_right"
+    },
+    {
+      "path": "MOVE/walk.left.slow/PoorCondition_A",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/MOVE/walk.left.slow/PoorCondition_A/SE_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/walk.left.slow/PoorCondition_A/SE_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/walk.left.slow/PoorCondition_A/SE_002_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 375,
+      "state": "trudge_left"
+    },
+    {
+      "path": "MOVE/walk.left.slow/B_PoorCondition_1",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/MOVE/walk.left.slow/B_PoorCondition_1/\u5de6\u8d701_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/walk.left.slow/B_PoorCondition_1/\u5de6\u8d701_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/walk.left.slow/B_PoorCondition_1/\u5de6\u8d701_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/walk.left.slow/B_PoorCondition_1/\u5de6\u8d701_003_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/walk.left.slow/B_PoorCondition_1/\u5de6\u8d701_004_500.png",
+          "duration_ms": 500
+        }
+      ],
+      "duration_ms": 1000,
+      "state": "trudge_left"
+    },
+    {
+      "path": "MOVE/walk.left.slow/PoorCondition_C",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/MOVE/walk.left.slow/PoorCondition_C/PoorCondition_C_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/walk.left.slow/PoorCondition_C/PoorCondition_C_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/walk.left.slow/PoorCondition_C/PoorCondition_C_002_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 375,
+      "state": "trudge_left"
+    },
+    {
+      "path": "MOVE/walk.right.slow/PoorCondition_A",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/MOVE/walk.right.slow/PoorCondition_A/SE_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/walk.right.slow/PoorCondition_A/SE_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/walk.right.slow/PoorCondition_A/SE_002_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 375,
+      "state": "trudge_right"
+    },
+    {
+      "path": "MOVE/walk.right.slow/B_PoorCondition_1",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/MOVE/walk.right.slow/B_PoorCondition_1/1_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/walk.right.slow/B_PoorCondition_1/1_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/walk.right.slow/B_PoorCondition_1/1_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/walk.right.slow/B_PoorCondition_1/1_003_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/walk.right.slow/B_PoorCondition_1/1_004_500.png",
+          "duration_ms": 500
+        }
+      ],
+      "duration_ms": 1000,
+      "state": "trudge_right"
+    },
+    {
+      "path": "MOVE/walk.right.slow/PoorCondition_C",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/MOVE/walk.right.slow/PoorCondition_C/PoorCondition_C_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/walk.right.slow/PoorCondition_C/PoorCondition_C_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/walk.right.slow/PoorCondition_C/PoorCondition_C_002_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 375,
+      "state": "trudge_right"
+    },
+    {
+      "path": "MOVE/crawl.left/A_Nomal",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/MOVE/crawl.left/A_Nomal/\u722c\u884c\u8db4\u5730\u5411\u5de6_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/crawl.left/A_Nomal/\u722c\u884c\u8db4\u5730\u5411\u5de6_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/crawl.left/A_Nomal/\u722c\u884c\u8db4\u5730\u5411\u5de6_002_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 375,
+      "state": "crawl_left"
+    },
+    {
+      "path": "MOVE/crawl.left/B_Nomal",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/MOVE/crawl.left/B_Nomal/\u722c\u884c\u5411\u5de6_000_250.png",
+          "duration_ms": 250
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/crawl.left/B_Nomal/\u722c\u884c\u5411\u5de6_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/crawl.left/B_Nomal/\u722c\u884c\u5411\u5de6_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/crawl.left/B_Nomal/\u722c\u884c\u5411\u5de6_003_250.png",
+          "duration_ms": 250
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/crawl.left/B_Nomal/\u722c\u884c\u5411\u5de6_004_250.png",
+          "duration_ms": 250
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/crawl.left/B_Nomal/\u722c\u884c\u5411\u5de6_005_250.png",
+          "duration_ms": 250
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/crawl.left/B_Nomal/\u722c\u884c\u5411\u5de6_006_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/crawl.left/B_Nomal/\u722c\u884c\u5411\u5de6_007_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/crawl.left/B_Nomal/\u722c\u884c\u5411\u5de6_008_250.png",
+          "duration_ms": 250
+        }
+      ],
+      "duration_ms": 1750,
+      "state": "crawl_left"
+    },
+    {
+      "path": "MOVE/crawl.left/C_Nomal",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/MOVE/crawl.left/C_Nomal/\u722c\u884c\u722c\u8d77\u5411\u5de6_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/crawl.left/C_Nomal/\u722c\u884c\u722c\u8d77\u5411\u5de6_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/crawl.left/C_Nomal/\u722c\u884c\u722c\u8d77\u5411\u5de6_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/crawl.left/C_Nomal/\u722c\u884c\u722c\u8d77\u5411\u5de6_003_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/crawl.left/C_Nomal/\u722c\u884c\u722c\u8d77\u5411\u5de6_004_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/crawl.left/C_Nomal/\u722c\u884c\u722c\u8d77\u5411\u5de6_005_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 750,
+      "state": "crawl_left"
+    },
+    {
+      "path": "MOVE/crawl.right/A_Nomal",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/MOVE/crawl.right/A_Nomal/\u722c\u884c\u8db4\u5730\u5411\u53f3_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/crawl.right/A_Nomal/\u722c\u884c\u8db4\u5730\u5411\u53f3_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/crawl.right/A_Nomal/\u722c\u884c\u8db4\u5730\u5411\u53f3_002_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 375,
+      "state": "crawl_right"
+    },
+    {
+      "path": "MOVE/crawl.right/B_Nomal",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/MOVE/crawl.right/B_Nomal/\u5411\u53f3\u722c\u884c_000_250.png",
+          "duration_ms": 250
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/crawl.right/B_Nomal/\u5411\u53f3\u722c\u884c_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/crawl.right/B_Nomal/\u5411\u53f3\u722c\u884c_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/crawl.right/B_Nomal/\u5411\u53f3\u722c\u884c_003_250.png",
+          "duration_ms": 250
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/crawl.right/B_Nomal/\u5411\u53f3\u722c\u884c_004_250.png",
+          "duration_ms": 250
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/crawl.right/B_Nomal/\u5411\u53f3\u722c\u884c_005_250.png",
+          "duration_ms": 250
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/crawl.right/B_Nomal/\u5411\u53f3\u722c\u884c_006_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/crawl.right/B_Nomal/\u5411\u53f3\u722c\u884c_007_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/crawl.right/B_Nomal/\u5411\u53f3\u722c\u884c_008_250.png",
+          "duration_ms": 250
+        }
+      ],
+      "duration_ms": 1750,
+      "state": "crawl_right"
+    },
+    {
+      "path": "MOVE/crawl.right/C_Nomal",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/MOVE/crawl.right/C_Nomal/\u722c\u884c\u722c\u8d77\u5411\u53f3_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/crawl.right/C_Nomal/\u722c\u884c\u722c\u8d77\u5411\u53f3_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/crawl.right/C_Nomal/\u722c\u884c\u722c\u8d77\u5411\u53f3_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/crawl.right/C_Nomal/\u722c\u884c\u722c\u8d77\u5411\u53f3_003_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/crawl.right/C_Nomal/\u722c\u884c\u722c\u8d77\u5411\u53f3_004_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/crawl.right/C_Nomal/\u722c\u884c\u722c\u8d77\u5411\u53f3_005_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 750,
+      "state": "crawl_right"
+    },
+    {
+      "path": "MOVE/climb.left/A_Nomal",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/MOVE/climb.left/A_Nomal/\u5411\u5de6\u722c\u4e0a_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/climb.left/A_Nomal/\u5411\u5de6\u722c\u4e0a_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/climb.left/A_Nomal/\u5411\u5de6\u722c\u4e0a_002_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 375,
+      "state": "climb_up_left"
+    },
+    {
+      "path": "MOVE/climb.left/B_Nomal",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/MOVE/climb.left/B_Nomal/\u4ece\u5de6\u8fb9\u722c_000_250.png",
+          "duration_ms": 250
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/climb.left/B_Nomal/\u4ece\u5de6\u8fb9\u722c_001_250.png",
+          "duration_ms": 250
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/climb.left/B_Nomal/\u4ece\u5de6\u8fb9\u722c_002_250.png",
+          "duration_ms": 250
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/climb.left/B_Nomal/\u4ece\u5de6\u8fb9\u722c_003_250.png",
+          "duration_ms": 250
+        }
+      ],
+      "duration_ms": 1000,
+      "state": "climb_up_left"
+    },
+    {
+      "path": "MOVE/climb.left/C_Nomal",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/MOVE/climb.left/C_Nomal/_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/climb.left/C_Nomal/_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/climb.left/C_Nomal/_002_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 375,
+      "state": "climb_up_left"
+    },
+    {
+      "path": "MOVE/climb.right/A_Nomal",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/MOVE/climb.right/A_Nomal/\u4ece\u53f3\u722c\u4e0a_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/climb.right/A_Nomal/\u4ece\u53f3\u722c\u4e0a_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/climb.right/A_Nomal/\u4ece\u53f3\u722c\u4e0a_002_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 375,
+      "state": "climb_up_right"
+    },
+    {
+      "path": "MOVE/climb.right/B_Nomal",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/MOVE/climb.right/B_Nomal/\u4ece\u53f3\u8fb9\u722c_000_250.png",
+          "duration_ms": 250
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/climb.right/B_Nomal/\u4ece\u53f3\u8fb9\u722c_001_250.png",
+          "duration_ms": 250
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/climb.right/B_Nomal/\u4ece\u53f3\u8fb9\u722c_002_250.png",
+          "duration_ms": 250
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/climb.right/B_Nomal/\u4ece\u53f3\u8fb9\u722c_003_250.png",
+          "duration_ms": 250
+        }
+      ],
+      "duration_ms": 1000,
+      "state": "climb_up_right"
+    },
+    {
+      "path": "MOVE/climb.right/C_Nomal",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/MOVE/climb.right/C_Nomal/_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/climb.right/C_Nomal/_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/MOVE/climb.right/C_Nomal/_002_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 375,
+      "state": "climb_up_right"
     }
   ],
   "playback": {
@@ -4135,6 +4949,66 @@
       "mode": "phased",
       "after": "idle",
       "loops": 2
+    },
+    "walk_left": {
+      "mode": "phased",
+      "after": "idle",
+      "loops": 7
+    },
+    "walk_right": {
+      "mode": "phased",
+      "after": "idle",
+      "loops": 7
+    },
+    "trot_left": {
+      "mode": "phased",
+      "after": "idle",
+      "loops": 5
+    },
+    "trot_right": {
+      "mode": "phased",
+      "after": "idle",
+      "loops": 5
+    },
+    "trudge_left": {
+      "mode": "phased",
+      "after": "idle",
+      "loops": 5
+    },
+    "trudge_right": {
+      "mode": "phased",
+      "after": "idle",
+      "loops": 5
+    },
+    "crawl_left": {
+      "mode": "phased",
+      "after": "idle",
+      "loops": 8
+    },
+    "crawl_right": {
+      "mode": "phased",
+      "after": "idle",
+      "loops": 8
+    },
+    "climb_up_left": {
+      "mode": "phased",
+      "after": "idle",
+      "loops": 7
+    },
+    "climb_down_left": {
+      "mode": "phased",
+      "after": "idle",
+      "loops": 7
+    },
+    "climb_up_right": {
+      "mode": "phased",
+      "after": "idle",
+      "loops": 7
+    },
+    "climb_down_right": {
+      "mode": "phased",
+      "after": "idle",
+      "loops": 7
     }
   },
   "variants": {
@@ -4339,6 +5213,66 @@
         "state": "fidget_meow",
         "weight": 1,
         "rare": true
+      },
+      {
+        "state": "walk_left",
+        "weight": 2,
+        "min_idle_s": 240
+      },
+      {
+        "state": "walk_right",
+        "weight": 2,
+        "min_idle_s": 240
+      },
+      {
+        "state": "trot_left",
+        "weight": 2,
+        "min_idle_s": 240
+      },
+      {
+        "state": "trot_right",
+        "weight": 2,
+        "min_idle_s": 240
+      },
+      {
+        "state": "trudge_left",
+        "weight": 2,
+        "min_idle_s": 240
+      },
+      {
+        "state": "trudge_right",
+        "weight": 2,
+        "min_idle_s": 240
+      },
+      {
+        "state": "crawl_left",
+        "weight": 1,
+        "min_idle_s": 240
+      },
+      {
+        "state": "crawl_right",
+        "weight": 1,
+        "min_idle_s": 240
+      },
+      {
+        "state": "climb_up_left",
+        "weight": 1,
+        "min_idle_s": 240
+      },
+      {
+        "state": "climb_down_left",
+        "weight": 1,
+        "min_idle_s": 240
+      },
+      {
+        "state": "climb_up_right",
+        "weight": 1,
+        "min_idle_s": 240
+      },
+      {
+        "state": "climb_down_right",
+        "weight": 1,
+        "min_idle_s": 240
       }
     ]
   },
@@ -4387,5 +5321,198 @@
         "at": 281
       }
     }
+  },
+  "moves": {
+    "scale": 500,
+    "list": [
+      {
+        "state": "walk_left",
+        "speed": [
+          -112,
+          0
+        ],
+        "room": {
+          "left": 200
+        },
+        "keep": {
+          "left": 100
+        }
+      },
+      {
+        "state": "walk_right",
+        "speed": [
+          112,
+          0
+        ],
+        "room": {
+          "right": 200
+        },
+        "keep": {
+          "right": 100
+        }
+      },
+      {
+        "state": "trot_left",
+        "speed": [
+          -160,
+          0
+        ],
+        "room": {
+          "left": 200
+        },
+        "keep": {
+          "left": 100
+        },
+        "mood": "happy"
+      },
+      {
+        "state": "trot_right",
+        "speed": [
+          160,
+          0
+        ],
+        "room": {
+          "right": 200
+        },
+        "keep": {
+          "right": 100
+        },
+        "mood": "happy"
+      },
+      {
+        "state": "trudge_left",
+        "speed": [
+          -80,
+          0
+        ],
+        "room": {
+          "left": 200
+        },
+        "keep": {
+          "left": 100
+        },
+        "mood": "poor"
+      },
+      {
+        "state": "trudge_right",
+        "speed": [
+          80,
+          0
+        ],
+        "room": {
+          "right": 200
+        },
+        "keep": {
+          "right": 100
+        },
+        "mood": "poor"
+      },
+      {
+        "state": "crawl_left",
+        "speed": [
+          -80,
+          0
+        ],
+        "room": {
+          "left": 200
+        },
+        "keep": {
+          "left": 100
+        }
+      },
+      {
+        "state": "crawl_right",
+        "speed": [
+          80,
+          0
+        ],
+        "room": {
+          "right": 200
+        },
+        "keep": {
+          "right": 100
+        }
+      },
+      {
+        "state": "climb_up_left",
+        "speed": [
+          0,
+          -80
+        ],
+        "wall": {
+          "side": "left",
+          "at": 145
+        },
+        "near": {
+          "left": 100
+        },
+        "room": {
+          "top": 200
+        },
+        "keep": {
+          "top": 100
+        }
+      },
+      {
+        "state": "climb_down_left",
+        "speed": [
+          0,
+          80
+        ],
+        "wall": {
+          "side": "left",
+          "at": 145
+        },
+        "near": {
+          "left": 100
+        },
+        "room": {
+          "bottom": 200
+        },
+        "keep": {
+          "bottom": 100
+        }
+      },
+      {
+        "state": "climb_up_right",
+        "speed": [
+          0,
+          -80
+        ],
+        "wall": {
+          "side": "right",
+          "at": 315
+        },
+        "near": {
+          "right": 100
+        },
+        "room": {
+          "top": 200
+        },
+        "keep": {
+          "top": 100
+        }
+      },
+      {
+        "state": "climb_down_right",
+        "speed": [
+          0,
+          80
+        ],
+        "wall": {
+          "side": "right",
+          "at": 315
+        },
+        "near": {
+          "right": 100
+        },
+        "room": {
+          "bottom": 200
+        },
+        "keep": {
+          "bottom": 100
+        }
+      }
+    ]
   }
 }

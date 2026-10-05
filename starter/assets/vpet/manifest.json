@@ -3,8 +3,8 @@
   "upstream": "https://github.com/LorisYounger/VPet",
   "source_commit": "6358445aa54587f9cd524264eaf17ef97bc826a8",
   "source_note": "Selected unmodified files from local checkout; per-file hashes identify copied bytes, including any local changes.",
-  "file_count": 815,
-  "total_bytes": 115933286,
+  "file_count": 951,
+  "total_bytes": 134272558,
   "files": [
     {
       "path": "assets/vpet/vup/Default/Nomal/1/_000_250.png",
@@ -4080,6 +4080,686 @@
       "path": "assets/vpet/vup/Music/C/Nomal_1/_005_125.png",
       "bytes": 165354,
       "sha256": "1818ea5f4167fc245e323316e7f74c79a24f946cba818960478ce266325a19c5"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.left/A_Nomal/\u8d70\u8def\u5411\u5de6_000_125.png",
+      "bytes": 146576,
+      "sha256": "052695eae2a28cd9c397e9cd2a237ed6f041629602342ee6f33d089c6839089d"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.left/A_Nomal/\u8d70\u8def\u5411\u5de6_001_125.png",
+      "bytes": 148992,
+      "sha256": "3af6d2412a1e6c4fcf3d783eb9a51d1a23a75909cb8d640e993f8be7f0797bf7"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.left/A_Nomal/\u8d70\u8def\u5411\u5de6_002_125.png",
+      "bytes": 158502,
+      "sha256": "d9fc5372580dd82805bdcb60decf4cca68877a17c07b7bf6f1ec420604eec16d"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.left/B_Nomal/\u8d70\u8def\u5411\u5de6_000_125.png",
+      "bytes": 116846,
+      "sha256": "5a8dbe5c67933f637163f855ead39fae07879a31daa2b684d94775d68b702daa"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.left/B_Nomal/\u8d70\u8def\u5411\u5de6_001_125.png",
+      "bytes": 120901,
+      "sha256": "1f1220fff6f5d6272e79f5f2a57ee3578f27434cd31ad80255251c20661d0dc7"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.left/B_Nomal/\u8d70\u8def\u5411\u5de6_002_125.png",
+      "bytes": 121211,
+      "sha256": "aadc8e0512b47fd677ebf6ccb6a9558f1d7827311cbe640abbf5ced3a25bbe25"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.left/B_Nomal/\u8d70\u8def\u5411\u5de6_003_125.png",
+      "bytes": 110885,
+      "sha256": "3d82c303328b7cdd698fce8196a208a0a34c3dbd321c5571e043d06da0d2caa6"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.left/B_Nomal/\u8d70\u8def\u5411\u5de6_004_125.png",
+      "bytes": 122621,
+      "sha256": "69559f785cfa185afc308fe16bbd8eff9e267cae5619a8381054587b3b068c77"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.left/B_Nomal/\u8d70\u8def\u5411\u5de6_005_125.png",
+      "bytes": 124031,
+      "sha256": "094bd64486a96b1c4e7539e2bf23a4e4b53e5d417d01d8032fe95ce503e8b3cb"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.left/C_Nomal/\u8d70\u8def\u5411\u5de6_000_125.png",
+      "bytes": 125790,
+      "sha256": "b843eb433fb414703b8c1ee60175e2ae42057ca0b2c45ffb5a93d980798d4ecc"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.left/C_Nomal/\u8d70\u8def\u5411\u5de6_001_125.png",
+      "bytes": 98288,
+      "sha256": "0ca34de499052e1fd2a733b8ff1fe08ab02af466e097f94a3f8cd554230e2a3c"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.left/C_Nomal/\u8d70\u8def\u5411\u5de6_002_125.png",
+      "bytes": 155090,
+      "sha256": "c2cb1ba43daa984215e1d40f5659200d5c21b42400207db1bcbba1b5ecadc86e"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.left/C_Nomal/\u8d70\u8def\u5411\u5de6_003_125.png",
+      "bytes": 155967,
+      "sha256": "4dacf4014b9bda9607a0894797ee5db0a3326fc78cd2bfb60781fb07bfed0158"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.left/C_Nomal/\u8d70\u8def\u5411\u5de6_004_125.png",
+      "bytes": 146576,
+      "sha256": "052695eae2a28cd9c397e9cd2a237ed6f041629602342ee6f33d089c6839089d"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.left/C_Nomal/\u8d70\u8def\u5411\u5de6_005_125.png",
+      "bytes": 140171,
+      "sha256": "5835428057a18b1b76ad81f7413de772567126004d5e6ac2d9a8475a8d5fed2a"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.right/A_Nomal/\u8d70\u8def\u5411\u53f3_000_125.png",
+      "bytes": 145403,
+      "sha256": "260bda50a3385fa0927720feb24770c42aa879da4d329c39db2aec85f3b82c9d"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.right/A_Nomal/\u8d70\u8def\u5411\u53f3_001_125.png",
+      "bytes": 146290,
+      "sha256": "e53479979ce9fe546d0437078f5bf972d075e48b7fe6bdf1892da38cddfc4b59"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.right/A_Nomal/\u8d70\u8def\u5411\u53f3_002_125.png",
+      "bytes": 157142,
+      "sha256": "d5f6a42ba08d0bdcf621b7840c38418ac57be2110dbce3fb27b9a89aa7735f9b"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.right/B_Nomal/\u8d70\u8def\u5411\u53f3_000_125.png",
+      "bytes": 112722,
+      "sha256": "b8e7038a0bcc5deff09aa136bcbe0373e8802db47972136f9c169d43715894f0"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.right/B_Nomal/\u8d70\u8def\u5411\u53f3_001_125.png",
+      "bytes": 117908,
+      "sha256": "b43bbfbd3a5b8ada28097c2f61bfc7e122443f3a519678df21c056bee57996a0"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.right/B_Nomal/\u8d70\u8def\u5411\u53f3_002_125.png",
+      "bytes": 118149,
+      "sha256": "cd108294ae1f6a2a597462379a9b56785c2d7487a9118c2ce2454925cbc5f241"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.right/B_Nomal/\u8d70\u8def\u5411\u53f3_003_125.png",
+      "bytes": 105212,
+      "sha256": "d13d781ff7738de00c9c84afdbfbe598977e163f792d13f29889bb2b89c3cf81"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.right/B_Nomal/\u8d70\u8def\u5411\u53f3_004_125.png",
+      "bytes": 123126,
+      "sha256": "db51b20a9e19c02417251412a27166914a0a007cd8e37c063728e543ad6a0ffa"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.right/B_Nomal/\u8d70\u8def\u5411\u53f3_005_125.png",
+      "bytes": 122564,
+      "sha256": "5c0bedabfd625226d0f8cc4a3135c9018e10c24aa414c12bfc5b0b6d6c92a42e"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.right/C_Nomal/\u8d70\u8def\u5411\u53f3_000_125.png",
+      "bytes": 121782,
+      "sha256": "18c4e00306d63d2e51535bbc643428f2ad49553d938c553a995fd8ab681e1e21"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.right/C_Nomal/\u8d70\u8def\u5411\u53f3_001_125.png",
+      "bytes": 92735,
+      "sha256": "dd920e068a2a2c3b8697f9e9aff6333e7e945c685176654e5600a9f95f269870"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.right/C_Nomal/\u8d70\u8def\u5411\u53f3_002_125.png",
+      "bytes": 152217,
+      "sha256": "2aa6c88133d77f6a34934e6d386669b886d9e6f34e822cd9efaed68ea5bc337e"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.right/C_Nomal/\u8d70\u8def\u5411\u53f3_003_125.png",
+      "bytes": 152746,
+      "sha256": "5dd466a310d79b0742b9a4fe9f15fa493f50b0beeffb341e89041981cb7a428c"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.right/C_Nomal/\u8d70\u8def\u5411\u53f3_004_125.png",
+      "bytes": 145403,
+      "sha256": "260bda50a3385fa0927720feb24770c42aa879da4d329c39db2aec85f3b82c9d"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.right/C_Nomal/\u8d70\u8def\u5411\u53f3_005_125.png",
+      "bytes": 137839,
+      "sha256": "15e56aa7d99f75a3d8c5fc33d214c3b95cbb359e1447e8e61b54f74808a64974"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.left.faster/A_Happy/\u54c8\u76ae\u8d70\u8def\u5411\u5de6_000_125.png",
+      "bytes": 150555,
+      "sha256": "3aa5666f67294339a51818c3a3cc799e846a30e99fb2acf15047c2794ff760c5"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.left.faster/A_Happy/\u54c8\u76ae\u8d70\u8def\u5411\u5de6_001_125.png",
+      "bytes": 160063,
+      "sha256": "e4994e247da76019cfa7bf7f5207d59b8e2825b6323ee58a1def6249ade58f5f"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.left.faster/B_Happy/\u54c8\u76ae\u5de6\u8d70_000_125.png",
+      "bytes": 106328,
+      "sha256": "e35f36db590d99fdddc7e0670f03e6567500d09308fecf048cffe669e8c74997"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.left.faster/B_Happy/\u54c8\u76ae\u5de6\u8d70_001_125.png",
+      "bytes": 113629,
+      "sha256": "cbb4cd278e1603f74b76d175ea1dda2426adae987b99e95478766b79113506a4"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.left.faster/B_Happy/\u54c8\u76ae\u5de6\u8d70_002_125.png",
+      "bytes": 128272,
+      "sha256": "29b93f53c914d309d65d2a99cac5ffd6f517cfecf692444a2bd5f577536d82c3"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.left.faster/B_Happy/\u54c8\u76ae\u5de6\u8d70_003_125.png",
+      "bytes": 129445,
+      "sha256": "012ed6572dbecd3849720f31a1c34217f056d40928b72436bd5a7e2f70531598"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.left.faster/B_Happy/\u54c8\u76ae\u5de6\u8d70_004_125.png",
+      "bytes": 128272,
+      "sha256": "29b93f53c914d309d65d2a99cac5ffd6f517cfecf692444a2bd5f577536d82c3"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.left.faster/B_Happy/\u54c8\u76ae\u5de6\u8d70_005_125.png",
+      "bytes": 106328,
+      "sha256": "e35f36db590d99fdddc7e0670f03e6567500d09308fecf048cffe669e8c74997"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.left.faster/B_Happy/\u54c8\u76ae\u5de6\u8d70_006_125.png",
+      "bytes": 121102,
+      "sha256": "5e2f6cc8905846807639d21f2bd747d29dde5e5695787c1754d1eef62a894bef"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.left.faster/B_Happy/\u54c8\u76ae\u5de6\u8d70_007_125.png",
+      "bytes": 126769,
+      "sha256": "a79245f917d1e811dfa2c60a012173d613b25eca5ab2006ac6f33646713067fb"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.left.faster/B_Happy/\u54c8\u76ae\u5de6\u8d70_008_125.png",
+      "bytes": 129140,
+      "sha256": "3ab769f7b2a9ba3cac17e672b6ad514d136cb6ed86bb7bf3ceff20195f1629a3"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.left.faster/B_Happy/\u54c8\u76ae\u5de6\u8d70_009_125.png",
+      "bytes": 126812,
+      "sha256": "a34b0373e9695a865f00fe823857101cca0adc7c50d4baa9061748b10193ae4c"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.left.faster/C_Happy/\u54c8\u76ae\u8d70\u8def\u5411\u5de6_000_125.png",
+      "bytes": 125790,
+      "sha256": "b843eb433fb414703b8c1ee60175e2ae42057ca0b2c45ffb5a93d980798d4ecc"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.left.faster/C_Happy/\u54c8\u76ae\u8d70\u8def\u5411\u5de6_001_125.png",
+      "bytes": 160063,
+      "sha256": "e4994e247da76019cfa7bf7f5207d59b8e2825b6323ee58a1def6249ade58f5f"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.right.faster/A_Happy/\u8d70\u8def\u8def\u5411\u53f3.png_000_125.png",
+      "bytes": 147783,
+      "sha256": "dc9ca89d107712a56229da426457e557513eb74dbfe6d3ccf8b801e12454c8eb"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.right.faster/A_Happy/\u8d70\u8def\u8def\u5411\u53f32.png_001_250.png",
+      "bytes": 158569,
+      "sha256": "5837ef6b9e4d02ca27c0bfe55c5d422316f47412c06613ba9432366c23535488"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.right.faster/B_Happy/_000_125.png",
+      "bytes": 98033,
+      "sha256": "4dfcd5742104603c8980ef76a0ad65a60ded9030523dbfd73f4f27aa7e24d737"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.right.faster/B_Happy/_001_125.png",
+      "bytes": 108642,
+      "sha256": "5519bb4e78818abb485f4ee43816f94246983fa5e26d2f1ffcfe4b90ae69096b"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.right.faster/B_Happy/_002_125.png",
+      "bytes": 119940,
+      "sha256": "cd364c2883804d0fc57d7d89d693059f91bfa71551ca4c153b5efe66e938a0e9"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.right.faster/B_Happy/_003_125.png",
+      "bytes": 122685,
+      "sha256": "0c39b7317d62867c1ded70b95e00a004b08f0c9546a45663f1b8385f787bb4b3"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.right.faster/B_Happy/_004_125.png",
+      "bytes": 119940,
+      "sha256": "cd364c2883804d0fc57d7d89d693059f91bfa71551ca4c153b5efe66e938a0e9"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.right.faster/B_Happy/_005_125.png",
+      "bytes": 98033,
+      "sha256": "4dfcd5742104603c8980ef76a0ad65a60ded9030523dbfd73f4f27aa7e24d737"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.right.faster/B_Happy/_006_125.png",
+      "bytes": 115771,
+      "sha256": "fad5eab81bacf180a24c245ca798120c5976cd7278b7a74ee88266234bfd7ea1"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.right.faster/B_Happy/_007_125.png",
+      "bytes": 120297,
+      "sha256": "d2393254186126db6a9f6fc5ae0e2dc4eb3ee2d988384dd844d2791103a7a183"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.right.faster/B_Happy/_008_125.png",
+      "bytes": 124271,
+      "sha256": "8a9d53ec20c8f8a1d6681789c27a91b74a736760f61db7cd568d7169b264c16e"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.right.faster/B_Happy/_009_125.png",
+      "bytes": 120369,
+      "sha256": "c1811e5eb5f5bd274b34711026a5dd627717b588aa0b8321d2e9f99f5e2fc714"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.right.faster/C_Happy/\u54c8\u76ae\u8d70\u8def\u5411\u5de6_000_125.png",
+      "bytes": 121782,
+      "sha256": "18c4e00306d63d2e51535bbc643428f2ad49553d938c553a995fd8ab681e1e21"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.right.faster/C_Happy/\u54c8\u76ae\u8d70\u8def\u5411\u5de6_001_125.png",
+      "bytes": 158569,
+      "sha256": "5837ef6b9e4d02ca27c0bfe55c5d422316f47412c06613ba9432366c23535488"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.left.slow/PoorCondition_A/SE_000_125.png",
+      "bytes": 157953,
+      "sha256": "530052e347fdec9765e812fe84e94c25dc02d7a974d0f58ce0e582a88ddc0702"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.left.slow/PoorCondition_A/SE_001_125.png",
+      "bytes": 160881,
+      "sha256": "98713906bfbde156b0b5b993e2aed6317745bbe2c38fdd14566bf4a372a74f79"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.left.slow/PoorCondition_A/SE_002_125.png",
+      "bytes": 162481,
+      "sha256": "ede465575eff8cceaa554e22eed3b4c627f866eb3241a93e4d029521788cceb1"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.left.slow/B_PoorCondition_1/\u5de6\u8d701_000_125.png",
+      "bytes": 150371,
+      "sha256": "3d93c2369893a9a0eef402203c2cb0259ca500f2a3be284395ffffcb7edcfe45"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.left.slow/B_PoorCondition_1/\u5de6\u8d701_001_125.png",
+      "bytes": 152510,
+      "sha256": "35b8fa9b1630a61df4799ad2fd29e6d66af132b3a250732b298af9085e5383cb"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.left.slow/B_PoorCondition_1/\u5de6\u8d701_002_125.png",
+      "bytes": 156575,
+      "sha256": "606e1cd1ebe7b8042007869d389c39b3d6ca2b48db23d938469361765861833b"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.left.slow/B_PoorCondition_1/\u5de6\u8d701_003_125.png",
+      "bytes": 154605,
+      "sha256": "3e426759a3be931b887edbd3bd616a6f3b7ba340d677d3f2e16e39f8a2b251b2"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.left.slow/B_PoorCondition_1/\u5de6\u8d701_004_500.png",
+      "bytes": 150371,
+      "sha256": "3d93c2369893a9a0eef402203c2cb0259ca500f2a3be284395ffffcb7edcfe45"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.left.slow/PoorCondition_C/PoorCondition_C_000_125.png",
+      "bytes": 162683,
+      "sha256": "3e343663bbeff1b10a494b9ea9ad76e7edf65cf028857957d245c9052d622f43"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.left.slow/PoorCondition_C/PoorCondition_C_001_125.png",
+      "bytes": 160881,
+      "sha256": "98713906bfbde156b0b5b993e2aed6317745bbe2c38fdd14566bf4a372a74f79"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.left.slow/PoorCondition_C/PoorCondition_C_002_125.png",
+      "bytes": 157953,
+      "sha256": "530052e347fdec9765e812fe84e94c25dc02d7a974d0f58ce0e582a88ddc0702"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.right.slow/PoorCondition_A/SE_000_125.png",
+      "bytes": 151599,
+      "sha256": "7685d56c2391c753a9db3705cb5826e485043c89a954a518873217ccb0a5c2e2"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.right.slow/PoorCondition_A/SE_001_125.png",
+      "bytes": 153991,
+      "sha256": "9db4cddfbe6743216703f4597be44284afa32ebecfe52e210470d5e2667a78dd"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.right.slow/PoorCondition_A/SE_002_125.png",
+      "bytes": 157417,
+      "sha256": "ab66bf18a1b93edd791fa44be98f34c4f18aef1bfd5a318a1e033d200ea50763"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.right.slow/B_PoorCondition_1/1_000_125.png",
+      "bytes": 148066,
+      "sha256": "514414d1e0543784c805a57d479079d89edb7a8faa776e795406034e7e36ca83"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.right.slow/B_PoorCondition_1/1_001_125.png",
+      "bytes": 148515,
+      "sha256": "e25708332275965b642207912bee0adc90611cc2e6b2e5ba648f5e577c70cf6f"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.right.slow/B_PoorCondition_1/1_002_125.png",
+      "bytes": 152372,
+      "sha256": "23703cd2f6a730a533bfa13e5f602355cd581854349bf817ef3c02a4ded275d7"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.right.slow/B_PoorCondition_1/1_003_125.png",
+      "bytes": 152941,
+      "sha256": "86959551b427e6a4e9d3701d931430d2ae3e3fa7386237726ff544ae1765d717"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.right.slow/B_PoorCondition_1/1_004_500.png",
+      "bytes": 148078,
+      "sha256": "5b756fd89b0733b48cc09f19449bce5461b493fbdf3591f555dc463705f92e5b"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.right.slow/PoorCondition_C/PoorCondition_C_000_125.png",
+      "bytes": 157417,
+      "sha256": "ab66bf18a1b93edd791fa44be98f34c4f18aef1bfd5a318a1e033d200ea50763"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.right.slow/PoorCondition_C/PoorCondition_C_001_125.png",
+      "bytes": 153991,
+      "sha256": "9db4cddfbe6743216703f4597be44284afa32ebecfe52e210470d5e2667a78dd"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/walk.right.slow/PoorCondition_C/PoorCondition_C_002_125.png",
+      "bytes": 151599,
+      "sha256": "7685d56c2391c753a9db3705cb5826e485043c89a954a518873217ccb0a5c2e2"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/crawl.left/A_Nomal/\u722c\u884c\u8db4\u5730\u5411\u5de6_000_125.png",
+      "bytes": 100831,
+      "sha256": "b8028947658318e9cbfb3ee6c6b9074f91ef6b937993628170d309bd97d68e41"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/crawl.left/A_Nomal/\u722c\u884c\u8db4\u5730\u5411\u5de6_001_125.png",
+      "bytes": 101615,
+      "sha256": "94242888f01084f2a89f0e24cdec7cdea2517475a1d26001aea702af09cd6454"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/crawl.left/A_Nomal/\u722c\u884c\u8db4\u5730\u5411\u5de6_002_125.png",
+      "bytes": 91845,
+      "sha256": "bfd9e2df940d74988d0e342de52289225f2edb9e92186bc3642c91e89fe77431"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/crawl.left/B_Nomal/\u722c\u884c\u5411\u5de6_000_250.png",
+      "bytes": 128834,
+      "sha256": "287ca49fde28876dc4287fa31a113adde4aa8c44b30308931509575c8b909fa1"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/crawl.left/B_Nomal/\u722c\u884c\u5411\u5de6_001_125.png",
+      "bytes": 126794,
+      "sha256": "18d0953b8351849072ba9cfb6565c8788eb615bb87725a0020f53eb7a0fae52c"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/crawl.left/B_Nomal/\u722c\u884c\u5411\u5de6_002_125.png",
+      "bytes": 126266,
+      "sha256": "538443d3176054b9e8ea79011ba3b1539811cdbbe55255e120dc47320b654855"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/crawl.left/B_Nomal/\u722c\u884c\u5411\u5de6_003_250.png",
+      "bytes": 115859,
+      "sha256": "22943884e16d2dddfa38a825600018d9d1f7fa4ef2f911582b4ff86d7502afab"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/crawl.left/B_Nomal/\u722c\u884c\u5411\u5de6_004_250.png",
+      "bytes": 113968,
+      "sha256": "27f2fd085e27b9fa72f6cfb5d75f796740d2edf6f7892a08e3792ab56b1fb2e3"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/crawl.left/B_Nomal/\u722c\u884c\u5411\u5de6_005_250.png",
+      "bytes": 115859,
+      "sha256": "22943884e16d2dddfa38a825600018d9d1f7fa4ef2f911582b4ff86d7502afab"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/crawl.left/B_Nomal/\u722c\u884c\u5411\u5de6_006_125.png",
+      "bytes": 126266,
+      "sha256": "538443d3176054b9e8ea79011ba3b1539811cdbbe55255e120dc47320b654855"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/crawl.left/B_Nomal/\u722c\u884c\u5411\u5de6_007_125.png",
+      "bytes": 126794,
+      "sha256": "18d0953b8351849072ba9cfb6565c8788eb615bb87725a0020f53eb7a0fae52c"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/crawl.left/B_Nomal/\u722c\u884c\u5411\u5de6_008_250.png",
+      "bytes": 128834,
+      "sha256": "287ca49fde28876dc4287fa31a113adde4aa8c44b30308931509575c8b909fa1"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/crawl.left/C_Nomal/\u722c\u884c\u722c\u8d77\u5411\u5de6_000_125.png",
+      "bytes": 91845,
+      "sha256": "bfd9e2df940d74988d0e342de52289225f2edb9e92186bc3642c91e89fe77431"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/crawl.left/C_Nomal/\u722c\u884c\u722c\u8d77\u5411\u5de6_001_125.png",
+      "bytes": 83946,
+      "sha256": "53489c8f750a72342a57c3205bbf47f12340e011223634ae057426491f730ec7"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/crawl.left/C_Nomal/\u722c\u884c\u722c\u8d77\u5411\u5de6_002_125.png",
+      "bytes": 108718,
+      "sha256": "f542e5a363d9034b5b892849a68c3b7fe85460e31b39e05d33593184e80ae948"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/crawl.left/C_Nomal/\u722c\u884c\u722c\u8d77\u5411\u5de6_003_125.png",
+      "bytes": 93021,
+      "sha256": "d9aece8d46c76c2f7d8a9c5c78b75dd09ba733d35424161f7d9470bf67968e14"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/crawl.left/C_Nomal/\u722c\u884c\u722c\u8d77\u5411\u5de6_004_125.png",
+      "bytes": 137070,
+      "sha256": "c12b0944dc23fb1d1b0c8ac5719c6d5c7ec11ca0e8344dac376eca164ca7e810"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/crawl.left/C_Nomal/\u722c\u884c\u722c\u8d77\u5411\u5de6_005_125.png",
+      "bytes": 119448,
+      "sha256": "e55ee127e01b708734f1d42cb5e152da5467dcb02a4e4021cbccad0a8d62c368"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/crawl.right/A_Nomal/\u722c\u884c\u8db4\u5730\u5411\u53f3_000_125.png",
+      "bytes": 98602,
+      "sha256": "595e29f61105f12eb09b18adc4c578efc62804b98a4ba964173aa596166bdb7e"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/crawl.right/A_Nomal/\u722c\u884c\u8db4\u5730\u5411\u53f3_001_125.png",
+      "bytes": 98911,
+      "sha256": "583f708caeab39f5282b9afcc4eb18a1b5dead22104d749b77bceac3a908448b"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/crawl.right/A_Nomal/\u722c\u884c\u8db4\u5730\u5411\u53f3_002_125.png",
+      "bytes": 88505,
+      "sha256": "76b3527d4713fc7e26bd997bebac7180908ec5eb67134ac0929d1db9005535bb"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/crawl.right/B_Nomal/\u5411\u53f3\u722c\u884c_000_250.png",
+      "bytes": 123764,
+      "sha256": "4244c09975590b0586d88d2dc9ea9f8277a3680179701eb6da03a65e7dc21cb8"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/crawl.right/B_Nomal/\u5411\u53f3\u722c\u884c_001_125.png",
+      "bytes": 118657,
+      "sha256": "3acea479579b41c8eba4a8b7ec757d5d92d7fa94cea8717b81f635940baea20f"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/crawl.right/B_Nomal/\u5411\u53f3\u722c\u884c_002_125.png",
+      "bytes": 117602,
+      "sha256": "e6fb553a38e99ba03a21dd648fc1f4752245d573c5adcaf88cc0faf338e85810"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/crawl.right/B_Nomal/\u5411\u53f3\u722c\u884c_003_250.png",
+      "bytes": 109338,
+      "sha256": "31971fda62df18f643dbf6008273b543e7455459eae09d7cac1b462090188381"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/crawl.right/B_Nomal/\u5411\u53f3\u722c\u884c_004_250.png",
+      "bytes": 106069,
+      "sha256": "309c233f0d305ef40e1260ab9cf21968ef0e827245324b29c078b36f044841d5"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/crawl.right/B_Nomal/\u5411\u53f3\u722c\u884c_005_250.png",
+      "bytes": 109338,
+      "sha256": "31971fda62df18f643dbf6008273b543e7455459eae09d7cac1b462090188381"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/crawl.right/B_Nomal/\u5411\u53f3\u722c\u884c_006_125.png",
+      "bytes": 117602,
+      "sha256": "e6fb553a38e99ba03a21dd648fc1f4752245d573c5adcaf88cc0faf338e85810"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/crawl.right/B_Nomal/\u5411\u53f3\u722c\u884c_007_125.png",
+      "bytes": 118657,
+      "sha256": "3acea479579b41c8eba4a8b7ec757d5d92d7fa94cea8717b81f635940baea20f"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/crawl.right/B_Nomal/\u5411\u53f3\u722c\u884c_008_250.png",
+      "bytes": 123764,
+      "sha256": "4244c09975590b0586d88d2dc9ea9f8277a3680179701eb6da03a65e7dc21cb8"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/crawl.right/C_Nomal/\u722c\u884c\u722c\u8d77\u5411\u53f3_000_125.png",
+      "bytes": 88505,
+      "sha256": "76b3527d4713fc7e26bd997bebac7180908ec5eb67134ac0929d1db9005535bb"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/crawl.right/C_Nomal/\u722c\u884c\u722c\u8d77\u5411\u53f3_001_125.png",
+      "bytes": 79407,
+      "sha256": "0e631d442fe53c2e29facd49ec001689410cbd7582c0e900fb6e9694ff3a7abe"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/crawl.right/C_Nomal/\u722c\u884c\u722c\u8d77\u5411\u53f3_002_125.png",
+      "bytes": 106027,
+      "sha256": "82a17c2de436e382d3557c6f3602c9c79066314e57138287c7f35187a101fc65"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/crawl.right/C_Nomal/\u722c\u884c\u722c\u8d77\u5411\u53f3_003_125.png",
+      "bytes": 90850,
+      "sha256": "48e508e05aa398b2a073b98a70a950506c474341135e668d031f68e6f5cc9b1f"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/crawl.right/C_Nomal/\u722c\u884c\u722c\u8d77\u5411\u53f3_004_125.png",
+      "bytes": 135900,
+      "sha256": "8ba04bb360ecd68bf13394377d18766160269c6542ba42f24ba26cb551906c38"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/crawl.right/C_Nomal/\u722c\u884c\u722c\u8d77\u5411\u53f3_005_125.png",
+      "bytes": 117005,
+      "sha256": "5dab1728d3272a1ce5cd3bc6e82aaec4c486dd4047c13b7d9c8d04205277ec3e"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/climb.left/A_Nomal/\u5411\u5de6\u722c\u4e0a_000_125.png",
+      "bytes": 201868,
+      "sha256": "2fdf53dd99100acd7e24a8d24aa235d55c2f01352c37443ce4de6173c75809c2"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/climb.left/A_Nomal/\u5411\u5de6\u722c\u4e0a_001_125.png",
+      "bytes": 184803,
+      "sha256": "3b21f0a3e30cb6064e58a5bf6377922c5bbfa36870457421ebb824f8131132f9"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/climb.left/A_Nomal/\u5411\u5de6\u722c\u4e0a_002_125.png",
+      "bytes": 192006,
+      "sha256": "bf7b41b3cc9919e840e8a926d6e2834b8665f546a2f3916f7d8a1b5f6f9466a1"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/climb.left/B_Nomal/\u4ece\u5de6\u8fb9\u722c_000_250.png",
+      "bytes": 153444,
+      "sha256": "f6923557bccb9b752fb568f2c5b118cf3415bf8e4a51499625cd1960b8283a78"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/climb.left/B_Nomal/\u4ece\u5de6\u8fb9\u722c_001_250.png",
+      "bytes": 157229,
+      "sha256": "02cb472ac2c2ffc9ca2de329c03e18b1d078f29376f9f029b6381f9abe27e4fb"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/climb.left/B_Nomal/\u4ece\u5de6\u8fb9\u722c_002_250.png",
+      "bytes": 156119,
+      "sha256": "86bd81d42ef1f4fadfac03dd95a64611a1ef31f96b75a456214e695c6ea29733"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/climb.left/B_Nomal/\u4ece\u5de6\u8fb9\u722c_003_250.png",
+      "bytes": 157229,
+      "sha256": "02cb472ac2c2ffc9ca2de329c03e18b1d078f29376f9f029b6381f9abe27e4fb"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/climb.left/C_Nomal/_000_125.png",
+      "bytes": 191576,
+      "sha256": "a0e8d8ec451dda8b522fca77989a07e1770c913e2b7462902da08428d29528db"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/climb.left/C_Nomal/_001_125.png",
+      "bytes": 184733,
+      "sha256": "cb1bc26a98bb87c0a1fcbb5a6b95c8d60b250b76562df539fdd9f97c029eb22d"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/climb.left/C_Nomal/_002_125.png",
+      "bytes": 199954,
+      "sha256": "8298e953f164c4d1e76cbf48a610302b7ecba4b22c146ac0c4c71f0582cc8f88"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/climb.right/A_Nomal/\u4ece\u53f3\u722c\u4e0a_000_125.png",
+      "bytes": 192108,
+      "sha256": "730b2033cab515b2f536ff367d22f92e0312b0fc0a77d0c67f113e08b5daa429"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/climb.right/A_Nomal/\u4ece\u53f3\u722c\u4e0a_001_125.png",
+      "bytes": 173553,
+      "sha256": "25d440b248afe992de958d5dd668fb7136331da04c1dc58ed200e613749b5011"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/climb.right/A_Nomal/\u4ece\u53f3\u722c\u4e0a_002_125.png",
+      "bytes": 189871,
+      "sha256": "6ab958763fa9f924b31a498d19394cfa2dcfa83d3c1b2c1218ff975aa9145363"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/climb.right/B_Nomal/\u4ece\u53f3\u8fb9\u722c_000_250.png",
+      "bytes": 138078,
+      "sha256": "82bbd180eb49f56d83af3720c5e2147e58994b5416e1890b3ef7dbc348e81f58"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/climb.right/B_Nomal/\u4ece\u53f3\u8fb9\u722c_001_250.png",
+      "bytes": 144761,
+      "sha256": "fa4d53a4c02bae7beef27a386ec74a6e92d8271942611b08a757dd4e452ec054"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/climb.right/B_Nomal/\u4ece\u53f3\u8fb9\u722c_002_250.png",
+      "bytes": 144900,
+      "sha256": "b4054a6b1d9830b980c70885b8c7a6f12b102bb41060dbd7ecc1a8518fad4bd0"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/climb.right/B_Nomal/\u4ece\u53f3\u8fb9\u722c_003_250.png",
+      "bytes": 144761,
+      "sha256": "fa4d53a4c02bae7beef27a386ec74a6e92d8271942611b08a757dd4e452ec054"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/climb.right/C_Nomal/_000_125.png",
+      "bytes": 188288,
+      "sha256": "58261b1679bbcbde90b97839d08e4aa620bde282795d50e70484359b8a79b2c7"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/climb.right/C_Nomal/_001_125.png",
+      "bytes": 171477,
+      "sha256": "ec55094e46583d50468f8f3c16ce6b3cb7e774add783cbed2df89fd0f71e2eb8"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/climb.right/C_Nomal/_002_125.png",
+      "bytes": 192011,
+      "sha256": "4939eb64a4f5db21bcbe421b2656e694b24529d4c93e628222ab6a3f9124c140"
     }
   ]
 }

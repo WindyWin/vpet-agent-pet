@@ -59,6 +59,7 @@ Preferences PreferencesStore::load() {
         || (object.contains("mood") && !integer(object["mood"], 0, 2))
         || (object.contains("turns") && !integer(object["turns"], 0, 2147483647))
         || (object.contains("touch") && !object["touch"].isBool())
+        || (object.contains("wander") && !object["wander"].isBool())
         || (object.contains("easter_eggs") && !object["easter_eggs"].isBool())
         || (object.contains("birthday") && !Preferences::validBirthday(object["birthday"].toString()))
         || (object.contains("autostart") && !object["autostart"].isBool())
@@ -76,6 +77,7 @@ Preferences PreferencesStore::load() {
     result.mood = object["mood"].toInt(Preferences::MoodFull);
     result.turns = object["turns"].toInt(0);
     result.touch = object["touch"].toBool(true);
+    result.wander = object["wander"].toBool(true);
     result.easterEggs = object["easter_eggs"].toBool(true);
     result.birthday = object["birthday"].toString();
     result.autostart = object["autostart"].toBool();
@@ -92,7 +94,7 @@ bool PreferencesStore::save(const Preferences &preferences) {
     QJsonObject object{{"version", 1}, {"size", preferences.size}, {"on_top", preferences.onTop},
                        {"muted", preferences.muted}, {"sound", preferences.sound}, {"bubbles", preferences.bubbles}, {"ambient", preferences.ambient},
                        {"mood", preferences.mood}, {"turns", preferences.turns}, {"touch", preferences.touch},
-                       {"easter_eggs", preferences.easterEggs},
+                       {"wander", preferences.wander}, {"easter_eggs", preferences.easterEggs},
                        {"autostart", preferences.autostart}, {"when_idle", idlePolicyName(preferences.whenIdle)}};
     if (Preferences::validBirthday(preferences.birthday)) object["birthday"] = preferences.birthday;
     if (preferences.hasPosition) { object["x"] = preferences.position.x(); object["y"] = preferences.position.y(); }

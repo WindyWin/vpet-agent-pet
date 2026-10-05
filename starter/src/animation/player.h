@@ -4,6 +4,7 @@
 #include <QMap>
 #include <QObject>
 #include <QPixmap>
+#include <QPointF>
 #include <QRect>
 #include <QSet>
 #include <QTimer>
@@ -31,6 +32,21 @@ struct Touch {
     QString fallLeft, fallRight; // Thrown, by direction of travel.
     QString edgeLeft, edgeRight; // Pushed past a screen edge.
     int edgeLeftAt = 0, edgeRightAt = 0; // Where the screen edge cuts the artwork while hiding.
+};
+// Distances from each side of the pet's window to the same side of its screen, in the artwork's units.
+// For a condition, a negative value leaves that side out.
+struct Sides { double left = -1, top = -1, right = -1, bottom = -1; };
+// A walk, crawl or climb across the screen, from the catalog's "moves" section (ported from the
+// upstream vup.lps `move` lines). It plays as an ambient fidget; its window moves during the loop phase.
+struct Move {
+    QString state;
+    QPointF speed; // Artwork units per second.
+    QString mood; // Only in this mood ("happy" or "poor"); empty for any.
+    QString wall; // "left" or "right": clings to that screen edge, which cuts the artwork at `at` units.
+    int at = 0;
+    Sides room; // Starts only with at least this much space on these sides...
+    Sides near; // ...and less than this much on these.
+    Sides keep; // Ends early once the space on these sides is this much or less.
 };
 
 class Player : public QObject {
@@ -85,6 +101,11 @@ public:
     bool isTouch(const QString &state) const { return touchStates_.contains(state); }
     // The state for a press at `point` on a square widget `side` pixels wide; empty off every region.
     QString touchAt(QPointF point, int side) const;
+    // The move a state plays, or null. Moves are in the artwork's square space of moveScale() units.
+    const Move *move(const QString &state) const;
+    int moveScale() const { return moveScale_; }
+    // Ends a phased state's start or loop now: it plays its end, then goes on as it would have.
+    void finish();
 signals:
     void changed();
     void failed(const QString &message);
@@ -108,13 +129,14 @@ private:
     QMap<QString, QVector<Reaction>> reactions_;
     QSet<QString> fidgetStates_, touchStates_;
     Touch touch_;
+    QMap<QString, Move> moves_;
     QStringList chosen_;
     Random random_ = systemRandom();
     QCache<QString, QPixmap> cache_{cacheLimitKiB};
     QPixmap pixmap_;
     QTimer timer_;
     QString state_, sequence_, pending_, previous_ = "idle", holdResume_ = "idle", error_, mood_;
-    int index_ = 0, phase_ = 0, duration_ = 0, renderSize_ = 240, loopCount_ = 0, sleepAfterS_ = 0;
+    int index_ = 0, phase_ = 0, duration_ = 0, renderSize_ = 240, loopCount_ = 0, sleepAfterS_ = 0, moveScale_ = 0;
     bool paused_ = false, stopped_ = false, held_ = false, variants_ = true;
 };
 }

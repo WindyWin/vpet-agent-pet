@@ -59,7 +59,8 @@ PetWindow::PetWindow(QWidget *parent, const QString &path, bool persist)
     ambient_.setLevel(AmbientLevel(qBound(0, preferences.ambient, 2)));
     mood_.setSetting(MoodSetting(qBound(0, preferences.mood, 2))); mood_.setTurns(preferences.turns);
     connect(&mood_, &Mood::counted, this, [this] { if (ready_) saveTimer_.start(); });
-    touchEnabled_ = preferences.touch;
+    touchEnabled_ = preferences.touch; wanderEnabled_ = preferences.wander;
+    ambient_.setMoveGate([this](const Move &move) { return canWander(move); });
     eggs_.setEnabled(preferences.easterEggs); eggs_.setBirthday(preferences.birthday);
     ambient_.setEasterEggs(&eggs_);
     connect(&player_, &Player::entered, this, &PetWindow::entered);
@@ -122,6 +123,8 @@ PetWindow::PetWindow(QWidget *parent, const QString &path, bool persist)
         move(flight_->position());
         if (!airborne) land();
     });
+    walkTimer_.setInterval(33);
+    connect(&walkTimer_, &QTimer::timeout, this, &PetWindow::walkStep);
     slide_.setDuration(280); slide_.setEasingCurve(QEasingCurve::OutCubic);
     connect(&slide_, &QVariantAnimation::valueChanged, this, [this](const QVariant &value) { move(value.toPoint()); });
     connect(&slide_, &QVariantAnimation::finished, this, [this] {
@@ -247,6 +250,12 @@ void PetWindow::setTouchEnabled(bool enabled) {
     touchEnabled_ = enabled;
     if (ready_) saveTimer_.start();
 }
+void PetWindow::setWanderEnabled(bool enabled) {
+    if (enabled == wanderEnabled_) return;
+    wanderEnabled_ = enabled;
+    if (!enabled && walking()) player_.select("idle", true); // Stops where it is.
+    if (ready_) saveTimer_.start();
+}
 void PetWindow::setEasterEggsEnabled(bool enabled) {
     if (enabled == easterEggsEnabled()) return;
     eggs_.setEnabled(enabled);
@@ -263,7 +272,7 @@ void PetWindow::showAfterFlagChange(QPoint position) {
 void PetWindow::recover() {
     slide_.stop();
     applyPresence(presence_.setUserHidden(false));
-    if (hiding()) player_.select("idle", true); // Out from behind the edge, to be placed in plain view.
+    if (hiding() || walking()) player_.select("idle", true); // Out from behind the edge, or off a walk, to be placed in plain view.
     setClickThrough(false);
     move(Preferences::visiblePosition({-1000000, -1000000}, size(), screenAreas()));
     show(); raise();
@@ -292,6 +301,7 @@ void PetWindow::applyPresence(Presence::Action action) {
     if (hidden) {
         endDrag();
         if (clickThrough_) setClickThrough(false);
+        if (walking()) player_.select("idle", true); // Nobody would see where it went.
         hide();
         player_.setPaused(true); // Nobody sees it; sessions keep driving its state.
     } else {
@@ -361,7 +371,7 @@ bool PetWindow::writePreferences(const std::function<void(Preferences &)> &chang
     preferences.onTop = windowFlags().testFlag(Qt::WindowStaysOnTopHint);
     preferences.muted = muted_; preferences.sound = sound_; preferences.bubbles = bubbles_;
     preferences.ambient = ambientLevel(); preferences.mood = moodLevel(); preferences.turns = mood_.turns();
-    preferences.touch = touchEnabled_; preferences.easterEggs = easterEggsEnabled(); preferences.birthday = birthday();
+    preferences.touch = touchEnabled_; preferences.wander = wanderEnabled_; preferences.easterEggs = easterEggsEnabled(); preferences.birthday = birthday();
     change(preferences);
     autostart_ = preferences.autostart; presence_.setPolicy(preferences.whenIdle);
     return store_.save(preferences);
@@ -456,13 +466,54 @@ void PetWindow::letGo(QPointF velocity) {
 }
 void PetWindow::slideToEdge(touch::Edge edge) {
     const auto &touch = player_.touch();
-    const QRect window(nativePos(), size());
-    const auto target = touch::hidePosition(edge, window, screenAreas(), edge == touch::Edge::Left ? touch.edgeLeftAt : touch.edgeRightAt, touch.scale);
-    slideEdge_ = edge;
+    slideTo(touch::hidePosition(edge, QRect(nativePos(), size()), screenAreas(),
+                                edge == touch::Edge::Left ? touch.edgeLeftAt : touch.edgeRightAt, touch.scale), edge);
+}
+void PetWindow::slideTo(QPoint target, touch::Edge hide) {
+    slideEdge_ = hide;
     slide_.stop();
-    if (target == window.topLeft()) { slide_.setStartValue(target); slide_.setEndValue(target); }
-    else { slide_.setStartValue(window.topLeft()); slide_.setEndValue(target); }
+    slide_.setStartValue(nativePos()); slide_.setEndValue(target);
     slide_.start();
+}
+bool PetWindow::canWander(const Move &move) const {
+    // Native Wayland leaves window placement to the compositor, so the pet could not go anywhere.
+    if (!wanderEnabled_ || quitting_ || petHidden() || !isVisible() || hiding() || dragging_ || flight_ || sliding()
+        || QGuiApplication::platformName().startsWith("wayland"))
+        return false;
+    if (!move.mood.isEmpty() && move.mood != player_.mood()) return false;
+    const QRect window(nativePos(), size());
+    return wander::fits(move, wander::distances(window, touch::areaFor(window, screenAreas()), player_.moveScale()));
+}
+void PetWindow::startWalk(const Move &move) {
+    walk_ = move.state; walkClock_.invalidate();
+    // A climb first leaps onto its wall: the screen edge then cuts the artwork where the hands hold on.
+    if (!move.wall.isEmpty())
+        slideTo(touch::hidePosition(move.wall == "left" ? touch::Edge::Left : touch::Edge::Right, QRect(nativePos(), size()),
+                                    screenAreas(), move.at, player_.moveScale()), touch::Edge::None);
+    walkTimer_.start();
+}
+void PetWindow::walkStep() {
+    const auto *walk = player_.move(walk_);
+    if (!walk || player_.state() != walk_) { stopWalk(); return; }
+    // Only the loop phase travels; the start and end play on the spot, and a paused, sliding or held pet waits.
+    if (player_.paused() || player_.phase() != "loop" || sliding() || dragging_) { walkClock_.invalidate(); return; }
+    if (!walkClock_.isValid()) { walkClock_.start(); walkPosition_ = pos(); return; }
+    if (walkPosition_.toPoint() != pos()) walkPosition_ = pos(); // Moved by something else, such as a screen change.
+    walkPosition_ += wander::step(*walk, width(), player_.moveScale(), walkClock_.restart());
+    move(walkPosition_.toPoint());
+    // Short of the screen edge, or of the top or bottom for a climb, it stops and plays its end.
+    const QRect window(pos(), size());
+    if (!wander::keeps(*walk, wander::distances(window, touch::areaFor(window, screenAreas()), player_.moveScale())))
+        player_.finish();
+}
+void PetWindow::stopWalk() {
+    walkTimer_.stop();
+    const auto *walk = player_.move(walk_);
+    walk_.clear();
+    // A climber clings partly past the screen edge; off the wall it steps back into plain view. A drag or a
+    // fall owns the position instead.
+    if (walk && !walk->wall.isEmpty() && !dragging_ && !flight_ && !quitting_)
+        slideTo(Preferences::visiblePosition(pos(), size(), screenAreas()), touch::Edge::None);
 }
 void PetWindow::land() {
     flightTimer_.stop();
@@ -472,6 +523,8 @@ void PetWindow::land() {
     constrainPosition();
 }
 void PetWindow::entered(const QString &state) {
+    if (walking() && state != walk_) stopWalk();
+    if (const auto *move = player_.move(state); move && !walking() && !dragging_ && !flight_) startWalk(*move);
     const auto &touch = player_.touch();
     const auto edge = state.isEmpty() ? touch::Edge::None
         : state == touch.edgeLeft ? touch::Edge::Left : state == touch.edgeRight ? touch::Edge::Right : touch::Edge::None;
@@ -515,10 +568,18 @@ void PetWindow::showSettings() {
     auto *ambient = new QComboBox(dialog);
     ambient->addItems({"Off (no fidgets or alternate idle loops)", "Subtle (a fidget about once a minute)", "Lively (a fidget every 15–25 seconds)"});
     ambient->setCurrentIndex(ambientLevel()); ambient->setAccessibleName("Idle animation");
-    ambient->setToolTip("What the pet does on its own while no agent needs it: fidgets, alternate idle loops, and\n"
-                        "dozing off after about ten quiet minutes. Any agent activity ends it at once.");
+    ambient->setToolTip("What the pet does on its own while no agent needs it: fidgets, alternate idle loops, wandering,\n"
+                        "and dozing off after about ten quiet minutes. Any agent activity ends it at once.");
     layout->addRow("&Idle animation", ambient);
     connect(ambient, &QComboBox::currentIndexChanged, this, &PetWindow::setAmbientLevel);
+    auto *wander = new QCheckBox("Walk, crawl and climb along the screen after a while", dialog);
+    wander->setChecked(wanderEnabled_); wander->setAccessibleName("Wandering");
+    wander->setToolTip("After about four quiet minutes the idle pet sometimes walks or crawls along the screen, and\n"
+                       "climbs up or down a screen edge it has reached, then steps back into view. It goes with the\n"
+                       "idle animation, so Off above keeps it still too. Native Wayland sessions cannot move it.\n"
+                       "Off, the pet stays where you put it.");
+    layout->addRow("&Wander", wander);
+    connect(wander, &QCheckBox::toggled, this, &PetWindow::setWanderEnabled);
     auto *mood = new QComboBox(dialog);
     mood->addItems({"Off (always neutral)", "Cheerful only (happy after a run of finished turns)",
                     "Full (also droopy after repeated tool errors)"});
