@@ -1,4 +1,5 @@
 #include "controller.h"
+#include "components.h"
 #include "version.h"
 #include <QCheckBox>
 #include <QComboBox>
@@ -33,6 +34,26 @@ static bool writeObject(const QString &path, const QJsonObject &object) {
     QSaveFile file(path); const auto bytes = QJsonDocument(object).toJson();
     return file.open(QIODevice::WriteOnly) && file.write(bytes) == bytes.size() && file.commit();
 }
+static QString pendingFile(const QString &directory, const QJsonObject &pending) {
+    return directory + (pending["kind"].toString() == "components" ? "/components.json" : "/package.tar.gz");
+}
+static QString applyCommand(const QJsonObject &pending) {
+    return pending["kind"].toString() == "components" ? "--apply-components" : "--apply";
+}
+static void pruneComponents(const QString &directory, const QStringList &keep = {}) {
+    const QStringList patterns{"agent-pet-*-linux-*-app.tar.gz", "agent-pet-*-linux-*-runtime.tar.gz", "agent-pet-*-linux-*-artwork.tar.gz"};
+    for (const auto &name : QDir(directory).entryList(patterns, QDir::Files))
+        if (!keep.contains(name)) QFile::remove(directory + '/' + name);
+}
+static bool pendingReady(const QString &directory, const QString &prefix, const QJsonObject &pending) {
+    QString error;
+    if (pending["kind"].toString() != "components")
+        return verifiedArchive(pendingFile(directory, pending), pending["digest"].toString(), error);
+    Components components;
+    return readComponents(pendingFile(directory, pending), pending["digest"].toString(),
+                          pending["version"].toString(), QSysInfo::buildCpuArchitecture(), components, error)
+        && componentsAvailable(components, prefix, directory);
+}
 static QString helper(const QString &prefix) { return prefix + "/bin/agent-pet-updater"; }
 bool prepareStartup(const QStringList &args) {
     if (args.contains("--smoke-test") || args.contains("--no-persist")) return false;
@@ -57,7 +78,7 @@ bool prepareStartup(const QStringList &args) {
     // Agent-triggered startup carries a session event: deliver it immediately.
     if (state["format"].toInt() != 1 || state["mode"].toInt() < 2 || args.contains("--autostarted") || pending.isEmpty()) return false;
     if (!newer(pending["version"].toString(), AGENT_PET_VERSION)) { QFile::remove(dataDirectory() + "/pending.json"); return false; }
-    QStringList command{"--apply", prefix, dataDirectory() + "/package.tar.gz", pending["digest"].toString(),
+    QStringList command{applyCommand(pending), prefix, pendingFile(dataDirectory(), pending), pending["digest"].toString(),
                         pending["version"].toString(), QString::number(QCoreApplication::applicationPid())};
     command << args.mid(1);
     return QProcess::startDetached(helper(prefix), command);
@@ -79,10 +100,10 @@ Controller::Controller(QObject *parent, QNetworkAccessManager *transport, QStrin
     }
     const auto pending = readObject(directory_ + "/pending.json");
     if (newer(pending["version"].toString(), AGENT_PET_VERSION)) {
-        release_.version = pending["version"].toString(); release_.digest = pending["digest"].toString();
+        release_.version = pending["version"].toString();
+        if (pending["kind"].toString() != "components") release_.digest = pending["digest"].toString();
         release_.page = QUrl("https://github.com/WindyWin/vpet-agent-pet/releases/tag/v" + release_.version);
-        QString error;
-        ready_ = verifiedArchive(directory_ + "/package.tar.gz", release_.digest, error);
+        ready_ = pendingReady(directory_, prefix_, pending);
         if (ready_) message_ = "Update " + release_.version + " is ready to install.";
     }
     QFile result(directory_ + "/result.txt");
@@ -106,7 +127,7 @@ void Controller::start() {
     connect(retry, &QTimer::timeout, this, [this] { autoInstall(); }); retry->start();
 }
 void Controller::check(bool manual) {
-    if (reply_ || !writable_) return;
+    if (reply_ || downloading_ || !writable_) return;
     const auto now = QDateTime::currentSecsSinceEpoch();
     const auto last = state_["attempt"].toInteger();
     if (!manual && (!state_["enabled"].toBool(true) || (last <= now && now - last < 86400))) return;
@@ -146,11 +167,60 @@ void Controller::check(bool manual) {
 }
 void Controller::cancel() { if (reply_) reply_->abort(); }
 void Controller::download() {
-    if (reply_ || ready_ || prefix_.isEmpty() || release_.digest.isEmpty() || release_.download.isEmpty()) return;
+    if (reply_ || downloading_ || ready_ || prefix_.isEmpty() || release_.digest.isEmpty() || release_.download.isEmpty()) return;
     QFile::remove(directory_ + "/pending.json");
-    auto file = std::make_shared<QSaveFile>(directory_ + "/package.tar.gz");
-    if (!file->open(QIODevice::WriteOnly)) { status("Cannot save the download. Check free disk space."); return; }
     const Release target = release_;
+    if (!target.componentsDownload.isEmpty()) {
+        Release manifest;
+        manifest.download = target.componentsDownload; manifest.digest = target.componentsDigest; manifest.size = target.componentsSize;
+        fetch(manifest, directory_ + "/components.json", [this, target] {
+            Components components; QString error;
+            if (!readComponents(directory_ + "/components.json", target.componentsDigest, target.version,
+                                QSysInfo::buildCpuArchitecture(), components, error)) {
+                downloadFull(target); return;
+            }
+            QStringList keep;
+            for (const auto &component : components.entries) keep.append(component.archive);
+            pruneComponents(directory_, keep);
+            QFile::remove(directory_ + "/package.tar.gz");
+            downloadComponent(target, components, 0);
+        }, [this, target] { downloadFull(target); });
+    } else {
+        downloadFull(target);
+    }
+}
+void Controller::downloadFull(const Release &target) {
+    pruneComponents(directory_);
+    QFile::remove(directory_ + "/components.json");
+    fetch(target, directory_ + "/package.tar.gz", [this, target] { finishDownload(target, false); });
+}
+void Controller::downloadComponent(const Release &target, const Components &components, int index) {
+    if (index == components.entries.size()) { finishDownload(target, true); return; }
+    const auto component = components.entries[index];
+    const QString path = directory_ + '/' + component.archive;
+    QString error;
+    if (componentMatches(component, prefix_) || verifiedArchive(path, component.digest, error)) {
+        downloadComponent(target, components, index + 1); return;
+    }
+    Release asset;
+    asset.download = target.componentsDownload.resolved(QUrl(component.archive));
+    asset.digest = component.digest; asset.size = component.size;
+    fetch(asset, path, [this, target, components, index] { downloadComponent(target, components, index + 1); },
+          [this, target] { downloadFull(target); });
+}
+void Controller::finishDownload(const Release &target, bool components) {
+    auto pending = target.json();
+    if (components) { pending["kind"] = "components"; pending["digest"] = target.componentsDigest; }
+    downloading_ = false;
+    if (!writeObject(directory_ + "/pending.json", pending)) { status("Cannot save the pending update."); return; }
+    ready_ = true; status("Update " + target.version + " is ready. It installs as soon as no agent is waiting for you.");
+    autoInstall();
+}
+void Controller::fetch(const Release &target, const QString &path, std::function<void()> complete,
+                       std::function<void()> fallback) {
+    downloading_ = true;
+    auto file = std::make_shared<QSaveFile>(path);
+    if (!file->open(QIODevice::WriteOnly)) { downloading_ = false; status("Cannot save the download. Check free disk space."); return; }
     QNetworkRequest request(target.download); request.setTransferTimeout(30000);
     request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
     request.setMaximumRedirectsAllowed(5);
@@ -164,32 +234,35 @@ void Controller::download() {
     connect(reply, &QNetworkReply::downloadProgress, this, [this](qint64 bytes, qint64 total) {
         status(total > 0 ? QString("Downloading update… %1%").arg(bytes * 100 / total) : "Downloading update…");
     });
-    connect(reply, &QNetworkReply::finished, this, [this, reply, file, received, target] {
+    connect(reply, &QNetworkReply::finished, this, [this, reply, file, received, target, path, complete, fallback] {
         reply_ = nullptr; reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError || reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() != 200
             || *received != target.size || !file->commit()) {
-            file->cancelWriting(); status("Download stopped or failed. You can retry."); return;
+            file->cancelWriting();
+            if (fallback && reply->error() != QNetworkReply::OperationCanceledError) { fallback(); return; }
+            downloading_ = false; status("Download stopped or failed. You can retry."); return;
         }
         QString error;
-        if (!verifiedArchive(directory_ + "/package.tar.gz", target.digest, error)) {
-            QFile::remove(directory_ + "/package.tar.gz"); status(error); return;
+        if (!verifiedArchive(path, target.digest, error)) {
+            QFile::remove(path);
+            if (fallback) { fallback(); return; }
+            downloading_ = false; status(error); return;
         }
-        if (!writeObject(directory_ + "/pending.json", target.json())) { status("Cannot save the pending update."); return; }
-        ready_ = true; status("Update " + target.version + " is ready. It installs as soon as no agent is waiting for you.");
-        autoInstall();
+        complete();
     });
     status("Downloading update…");
 }
 void Controller::install() {
-    if (!ready_ || prefix_.isEmpty() || reply_) return;
+    if (!ready_ || prefix_.isEmpty() || reply_ || downloading_) return;
     if (sessionsActive && sessionsActive()) { status("An agent is waiting for your answer. Respond to it, then restart to update."); return; }
-    QStringList args{"--apply", prefix_, directory_ + "/package.tar.gz", release_.digest, release_.version,
+    const auto pending = readObject(directory_ + "/pending.json");
+    QStringList args{applyCommand(pending), prefix_, pendingFile(directory_, pending), pending["digest"].toString(), release_.version,
                      QString::number(QCoreApplication::applicationPid())};
     if (!QProcess::startDetached(helper(prefix_), args)) { status("Could not start the update installer."); return; }
     emit restartRequested();
 }
 void Controller::autoInstall() {
-    if (state_["mode"].toInt() != 3 || !ready_ || reply_ || prefix_.isEmpty()) return;
+    if (state_["mode"].toInt() != 3 || !ready_ || reply_ || downloading_ || prefix_.isEmpty()) return;
     const QString version = release_.version;
     // One attempt per version: a rolled-back update must not restart the pet in a loop.
     if (state_["skipped"].toString() == version || state_["autoInstalled"].toString() == version) return;
@@ -226,10 +299,10 @@ QWidget *Controller::settings(QWidget *parent) {
     const auto refresh = [=] {
         const auto checked = state_["checked"].toInteger();
         last->setText(checked ? "Last checked: " + QDateTime::fromSecsSinceEpoch(checked).toLocalTime().toString("yyyy-MM-dd hh:mm") : "Not checked yet");
-        message->setText(message_); checkButton->setEnabled(!reply_ && writable_);
+        message->setText(message_); checkButton->setEnabled(!reply_ && !downloading_ && writable_);
         notes->setEnabled(!release_.page.isEmpty());
-        downloadButton->setEnabled(!reply_ && !ready_ && !prefix_.isEmpty() && !release_.digest.isEmpty() && !release_.download.isEmpty());
-        installButton->setEnabled(ready_ && !reply_ && !prefix_.isEmpty()); skip->setEnabled(!release_.version.isEmpty() && !reply_);
+        downloadButton->setEnabled(!reply_ && !downloading_ && !ready_ && !prefix_.isEmpty() && !release_.digest.isEmpty() && !release_.download.isEmpty());
+        installButton->setEnabled(ready_ && !reply_ && !downloading_ && !prefix_.isEmpty()); skip->setEnabled(!release_.version.isEmpty() && !reply_ && !downloading_);
         cancelButton->setEnabled(bool(reply_));
     };
     connect(this, &Controller::changed, box, refresh); refresh();
@@ -241,7 +314,10 @@ QWidget *Controller::settings(QWidget *parent) {
     connect(installButton, &QPushButton::clicked, this, &Controller::install);
     connect(cancelButton, &QPushButton::clicked, this, &Controller::cancel);
     connect(skip, &QPushButton::clicked, this, [this] { state_["skipped"] = release_.version; save(); ready_ = false;
-        QFile::remove(directory_ + "/pending.json"); QFile::remove(directory_ + "/package.tar.gz"); status("This version will be skipped. Check now to see it again."); });
+        QFile::remove(directory_ + "/pending.json"); QFile::remove(directory_ + "/package.tar.gz");
+        QFile::remove(directory_ + "/components.json");
+        pruneComponents(directory_);
+        status("This version will be skipped. Check now to see it again."); });
     return box;
 }
 }

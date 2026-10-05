@@ -1,4 +1,5 @@
 #include "release.h"
+#include "components.h"
 #include "version.h"
 #include <QCoreApplication>
 #include <QCryptographicHash>
@@ -30,6 +31,18 @@ bool parseRelease(const QJsonObject &object, const QString &architecture, Releas
     release.version = version;
     release.page = QUrl(base + "tag/" + tag);
     const QString name = "agent-pet-" + version + "-linux-" + architecture + ".tar.gz";
+    const QString componentsName = "agent-pet-" + version + "-linux-" + architecture + "-components.json";
+    for (const auto &entry : object["assets"].toArray()) {
+        const auto asset = entry.toObject();
+        if (asset["name"].toString() == componentsName && asset["state"].toString() == "uploaded"
+            && asset["browser_download_url"].toString() == base + "download/" + tag + '/' + componentsName
+            && asset["size"].toInteger() > 0 && asset["size"].toInteger() <= MaxComponentsManifest
+            && QRegularExpression("^sha256:[0-9a-f]{64}$").match(asset["digest"].toString()).hasMatch()) {
+            release.componentsDigest = asset["digest"].toString();
+            release.componentsDownload = QUrl(asset["browser_download_url"].toString());
+            release.componentsSize = asset["size"].toInteger();
+        }
+    }
     for (const auto &entry : object["assets"].toArray()) {
         const auto asset = entry.toObject();
         if (asset["name"].toString() != name) continue;
@@ -47,9 +60,13 @@ bool parseRelease(const QJsonObject &object, const QString &architecture, Releas
     error = "This release has no compatible Linux package."; return false;
 }
 bool verifiedArchive(const QString &path, const QString &digest, QString &error) {
+    if (QFileInfo(path).size() <= 0) { error = "Cannot read update package."; return false; }
+    return verifiedFile(path, digest, MaxArchive, error);
+}
+bool verifiedFile(const QString &path, const QString &digest, qint64 limit, QString &error) {
     if (!QRegularExpression("^sha256:[0-9a-f]{64}$").match(digest).hasMatch()) { error = "Release has no SHA-256 digest."; return false; }
     QFile file(path);
-    if (!file.open(QIODevice::ReadOnly) || file.size() <= 0 || file.size() > MaxArchive) { error = "Cannot read update package."; return false; }
+    if (!file.open(QIODevice::ReadOnly) || file.size() > limit) { error = "Cannot read update package."; return false; }
     QCryptographicHash hash(QCryptographicHash::Sha256);
     if (!hash.addData(&file) || hash.result().toHex() != digest.mid(7).toLatin1()) { error = "Update checksum does not match the release."; return false; }
     return true;

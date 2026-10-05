@@ -12,24 +12,39 @@ include(GNUInstallDirs)
 set(AGENT_PET_REVISION "local" CACHE STRING "Source revision shown in About")
 configure_file(src/version.h.in "${CMAKE_CURRENT_BINARY_DIR}/generated/version.h" @ONLY)
 
-# Embed the selected pack: development and installed binaries use identical paths.
+# Keep artwork outside the executable so code updates can reuse it.
 file(GLOB_RECURSE pet_resources CONFIGURE_DEPENDS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
-    "assets/vpet/vup/*.png" "licenses/*")
-list(APPEND pet_resources assets/vpet/animations.json THIRD_PARTY_NOTICES.md LICENSE NOTICE)
+    "assets/vpet/vup/*.png")
+list(APPEND pet_resources assets/vpet/animations.json)
+list(SORT pet_resources)
+set(artwork_qrc "<RCC><qresource prefix=\"/\">\n")
+foreach(resource IN LISTS pet_resources)
+    string(APPEND artwork_qrc "<file alias=\"${resource}\">${CMAKE_CURRENT_SOURCE_DIR}/${resource}</file>\n")
+endforeach()
+string(APPEND artwork_qrc "</qresource></RCC>\n")
+file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/artwork.qrc" "${artwork_qrc}")
+# Format 1 omits file timestamps. PNGs are already compressed; the outer tar.gz
+# compresses the catalog. Identical artwork must have identical bytes across builds.
+qt_add_binary_resources(pet_artwork "${CMAKE_CURRENT_BINARY_DIR}/artwork.qrc"
+    DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/artwork.rcc" OPTIONS --format-version 1 --no-compress)
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/artwork.rcc" DESTINATION ${CMAKE_INSTALL_DATADIR}/agent-pet)
+file(GLOB pet_notices CONFIGURE_DEPENDS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "licenses/*")
+list(APPEND pet_notices THIRD_PARTY_NOTICES.md LICENSE NOTICE)
 qt_add_library(pet_ui STATIC
     src/animation/player.cpp src/animation/ambient.cpp src/animation/mood.cpp src/desktop/pet_window.cpp
     src/desktop/drag_monitor.cpp src/desktop/touch.cpp src/desktop/alert_bubble.cpp src/desktop/monitor.cpp
     src/desktop/host_focus.cpp src/desktop/session_list.cpp src/updates/controller.cpp)
 target_include_directories(pet_ui PUBLIC src "${CMAKE_CURRENT_BINARY_DIR}/generated")
 target_link_libraries(pet_ui PUBLIC Qt6::Widgets pet_events pet_updates Qt6::Network PRIVATE Qt6::DBus X11::X11)
-qt_add_resources(pet_ui pet_assets PREFIX "/" FILES ${pet_resources})
+qt_add_resources(pet_ui pet_assets PREFIX "/" FILES ${pet_notices})
+add_dependencies(pet_ui pet_artwork)
 # Headless code shared by the pet and its display-free commands (hook, integration, autostart).
 qt_add_library(pet_events STATIC src/sessions/state.cpp src/sessions/alerts.cpp src/sessions/presence.cpp
     src/ipc/local.cpp src/ipc/autostart.cpp src/settings/preferences.cpp
     src/providers/adapters.cpp src/providers/integrations.cpp src/providers/host.cpp)
 target_include_directories(pet_events PUBLIC src)
 target_link_libraries(pet_events PUBLIC Qt6::Core)
-qt_add_library(pet_updates STATIC src/updates/release.cpp src/updates/installer.cpp)
+qt_add_library(pet_updates STATIC src/updates/release.cpp src/updates/installer.cpp src/updates/components.cpp)
 target_include_directories(pet_updates PUBLIC src "${CMAKE_CURRENT_BINARY_DIR}/generated")
 target_link_libraries(pet_updates PUBLIC Qt6::Core LibArchive::LibArchive)
 qt_add_executable(agent-pet-updater src/updates/helper.cpp)

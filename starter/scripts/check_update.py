@@ -2,12 +2,15 @@
 """Exercise the update helper with disposable installations and simulated apps."""
 import hashlib
 import io
+import json
+import platform
 import os
 from pathlib import Path
 import subprocess
 import sys
 import tarfile
 import tempfile
+from package import write_components
 
 helper = Path(sys.argv[1]).resolve()
 with tempfile.TemporaryDirectory(prefix="pet-update-") as temporary:
@@ -84,4 +87,83 @@ exit 1
     assert settings.read_text() == '{"preserve":"settings"}'
     assert not Path(str(app) + ".update-transaction.json").exists()
     assert not list(root.glob("installed pet.update-*"))
-print("Update checksums, archive safety, startup rollback and successful replacement: passed")
+    # Component updates use the real publisher and installer. An old full-package
+    # installation can immediately supply matching files without an old manifest.
+    bundle = root / "bundle"
+    for directory in ("bin", "lib", "share/agent-pet"):
+        (bundle / directory).mkdir(parents=True, exist_ok=True)
+        (app / directory).mkdir(parents=True, exist_ok=True)
+    for relative, content in (("bin/agent-pet-updater", b"helper"),
+                              ("lib/libtest.so", b"runtime"),
+                              ("share/agent-pet/artwork.rcc", b"artwork")):
+        (bundle / relative).write_bytes(content)
+        (app / relative).write_bytes(content)
+    (app / "obsolete-file").write_text("removed in target")
+    target = bundle / "bin/agent-pet"
+
+    def component_package(script):
+        target.write_bytes(script)
+        target.chmod(0o755)
+        manifest = write_components(bundle, "99.1.0", platform.machine())
+        manifest_path = root / f"agent-pet-99.1.0-linux-{platform.machine()}-components.json"
+        # No runtime/artwork archives are available: matching files must be reused.
+        for component in manifest["components"]:
+            if component["name"] != "app":
+                (root / component["archive"]).unlink()
+        return manifest, manifest_path
+
+    def apply_components(manifest_path):
+        checksum = "sha256:" + hashlib.sha256(manifest_path.read_bytes()).hexdigest()
+        return subprocess.run([str(helper), "--apply-components", str(app), str(manifest_path), checksum, "99.1.0", "0"],
+                              env=env, text=True, capture_output=True, timeout=40)
+
+    first_manifest, manifest_path = component_package(broken)
+    result = apply_components(manifest_path)
+    assert result.returncode != 0 and executable.read_bytes() == good, result
+    assert (app / "lib/libtest.so").read_bytes() == b"runtime"
+    assert (app / "obsolete-file").exists()  # Rollback restores the entire old tree.
+
+    changed = good.replace(b"(test)", b"(components)")
+    manifest, manifest_path = component_package(changed)
+    for name in ("runtime", "artwork"):
+        first = next(c for c in first_manifest["components"] if c["name"] == name)
+        second = next(c for c in manifest["components"] if c["name"] == name)
+        assert first == second, "Unchanged components must be reproducible"
+    runtime_file = app / "lib/libtest.so"
+    runtime_file.unlink()
+    runtime_file.symlink_to(bundle / "lib/libtest.so")
+    result = apply_components(manifest_path)
+    assert result.returncode != 0 and executable.read_bytes() == good, result
+    runtime_file.unlink()
+    runtime_file.write_bytes(b"runtime")
+    (app / "share/agent-pet/artwork.rcc").write_bytes(b"damaged")
+    result = apply_components(manifest_path)
+    assert result.returncode != 0 and executable.read_bytes() == good, result
+    (app / "share/agent-pet/artwork.rcc").write_bytes(b"artwork")
+
+    app_component = next(c for c in manifest["components"] if c["name"] == "app")
+    app_archive = root / app_component["archive"]
+    archive_bytes = app_archive.read_bytes()
+    app_archive.write_bytes(b"corrupt")
+    result = apply_components(manifest_path)
+    assert result.returncode != 0 and executable.read_bytes() == good, result
+    app_archive.write_bytes(archive_bytes)
+
+    # A valid archive digest is insufficient: staged files must match the manifest too.
+    original_manifest = manifest_path.read_bytes()
+    app_component["files"][0]["digest"] = "sha256:" + "0" * 64
+    manifest_path.write_text(json.dumps(manifest))
+    result = apply_components(manifest_path)
+    assert result.returncode != 0 and executable.read_bytes() == good, result
+    manifest_path.write_bytes(original_manifest)
+
+    result = apply_components(manifest_path)
+    assert result.returncode == 0 and executable.read_bytes() == changed, result
+    assert (app / "lib/libtest.so").read_bytes() == b"runtime"
+    assert (app / "share/agent-pet/artwork.rcc").read_bytes() == b"artwork"
+    assert not (app / "obsolete-file").exists()
+    assert not manifest_path.exists() and not app_archive.exists()
+    assert settings.read_text() == '{"preserve":"settings"}'
+    assert "file=/unchanged/desktop\nlink=/unchanged/bin" in (app / ".agent-pet-install").read_text()
+    assert not list(root.glob("installed pet.update-*"))
+print("Full/component updates: checksums, reuse, corrupt files, path safety, rollback and replacement passed")

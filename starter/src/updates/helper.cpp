@@ -1,5 +1,6 @@
 #include "installer.h"
 #include "release.h"
+#include "components.h"
 #include "ipc/local.h"
 #include <QCoreApplication>
 #include <QDir>
@@ -16,6 +17,7 @@
 #include <QUuid>
 #include <QElapsedTimer>
 #include <QScopeGuard>
+#include <QSysInfo>
 #include <signal.h>
 #include <unistd.h>
 #include <cstdio>
@@ -39,7 +41,8 @@ int main(int argc, char **argv) {
         if (!receiver.start(error)) return report("Close the running pet before update recovery.");
         return recoverInstallation(prefix, error) ? 0 : report(error);
     }
-    if (args[1] != "--apply" || args.size() < 7) return 2;
+    const bool componentUpdate = args[1] == "--apply-components";
+    if ((!componentUpdate && args[1] != "--apply") || args.size() < 7) return 2;
     bool validPid = false; const qint64 parent = args[6].toLongLong(&validPid);
     if (!validPid || parent < 0) return 2;
     QElapsedTimer wait; wait.start();
@@ -62,10 +65,15 @@ int main(int argc, char **argv) {
     if (!receipt.open(QIODevice::ReadOnly) || receipt.size() > 65536) return report("This is not a managed installation.");
     QByteArray receiptData = receipt.readAll(); receipt.close();
     if (!receiptData.split('\n').contains(("prefix=" + prefix).toUtf8())) return report("Installation path does not match its receipt.");
-    if (!verifiedArchive(archive, digest, error)) return report(error);
+    Components components;
+    if (componentUpdate) {
+        if (!readComponents(archive, digest, version, QSysInfo::buildCpuArchitecture(), components, error)) return report(error);
+    } else if (!verifiedArchive(archive, digest, error)) return report(error);
     QTemporaryDir staging(prefix + ".update-XXXXXX");
     if (!staging.isValid()) return report("Cannot stage the update beside the installation.");
-    if (!extractArchive(archive, staging.path(), error)) return report(error);
+    if (componentUpdate) {
+        if (!assembleComponents(components, prefix, QFileInfo(archive).absolutePath(), staging.path(), error)) return report(error);
+    } else if (!extractArchive(archive, staging.path(), error)) return report(error);
     QProcess probe;
     probe.start(staging.path() + "/bin/agent-pet", {"--version"});
     if (!probe.waitForFinished(10000) || probe.exitStatus() != QProcess::NormalExit || probe.exitCode() != 0
@@ -113,6 +121,8 @@ int main(int argc, char **argv) {
     relaunch = false;
     QDir(staging.path()).removeRecursively(); QFile::remove(health);
     QFile::remove(dataDirectory() + "/pending.json"); QFile::remove(archive);
+    for (const auto &component : components.entries)
+        QFile::remove(QFileInfo(archive).absolutePath() + '/' + component.archive);
     write(dataDirectory() + "/result.txt", ("Updated to " + version + '.').toUtf8());
     lock.unlock();
     // Keep the child process supervised without polling or terminating it when

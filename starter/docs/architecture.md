@@ -6,8 +6,12 @@ Develop in this starter directory. No original VPet installation is used.
 Qt provides translucent top-level windows, native move requests, input-transparent
 windows and tray menus with a small native application layer. The prototype uses
 software QWidget painting, without a browser or language interpreter at runtime.
-The selected 327-frame artwork pack, catalog and artwork terms are embedded as Qt
-resources, so moving the executable cannot break sprite lookup.
+The artwork pack and catalog are built as a separate binary Qt resource file,
+`share/agent-pet/artwork.rcc` (beside the executable in local builds). The player
+registers it using [QResource](https://doc.qt.io/qt-6/qresource.html), preserving
+the existing resource paths. Artwork terms and application notices remain embedded.
+Move the whole bundle together. The RCC uses format 1 without compression to omit
+source timestamps and keep identical artwork reproducible across checkouts.
 
 ## Boundaries
 
@@ -497,6 +501,35 @@ pending downloads. Hook, emit, integration and autostart commands return before
 constructing this service. Requests use TLS verification, size limits and idle
 timeouts; package downloads permit HTTPS redirects to GitHub's asset CDN.
 
+`scripts/package.py` publishes the full legacy tarball plus three independent
+archives (`app`, `runtime`, `artwork`) and a version/architecture-specific
+`-components.json`. Archives use sorted paths and fixed tar/gzip metadata. The
+manifest records archive names, sizes and SHA-256 hashes, plus each target file's
+path, size, hash and executable flag. Runtime libraries/plugins/notices form the
+runtime component; the RCC and artwork notices form artwork; remaining files form
+the app component.
+Release CI publishes all five assets. Full archives preserve first installation
+and upgrade compatibility with older clients; upload storage is not reduced.
+
+`components.*` validates the manifest after checking its GitHub asset digest,
+including target version/architecture, safe unique paths and size bounds. The
+controller compares actual installed files with the target file list, so no
+previous manifest or intermediate version is needed. Matching components are
+reused; missing or altered files cause their component to download. Completed
+archives survive a retry. Superseded component downloads are removed when a new
+manifest is accepted, and successful installation removes its downloads.
+An unsupported manifest or failed component request can fall back once to the full
+archive with its independently verified GitHub digest. User cancellation does not
+trigger a fallback download.
+
+`--apply-components` rechecks local files, copies matching components into a fresh
+stage, and extracts verified archives for the others. It verifies all staged
+files and rejects undeclared files before probing or launching the executable.
+Copies are independent of the previous installation to preserve rollback. A
+component that changes locally after downloading can cause installation to fail
+safely; retrying the download fetches the required replacement. Both package
+formats share the same transaction, startup health check and recovery logic.
+
 `agent-pet-updater` uses libarchive for bounded extraction, rejects links and
 traversal, probes the staged executable, preserves the install receipt, and uses
 Linux directory exchange for replacement. The update lock excludes competing
@@ -528,3 +561,9 @@ launch and readiness acknowledgement from the actual updated GUI (offscreen).
 Isolated-package HTTPS runtime, install/upgrade/autostart/uninstall checks, and all
 seven CTest suites passed locally. Actual GitHub release rollout and desktop
 interaction remain manual acceptance checks.
+
+Component validation adds target-version/path rejection, application-only network
+requests, cached retry, cancellation, corruption repair and readiness after restart.
+The helper integration check uses the real component publisher to cover reused
+files without cached archives, modified or symlinked installed files, corrupt
+archives, final file hashes, removal of obsolete files and failed-start rollback.

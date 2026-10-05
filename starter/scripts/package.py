@@ -3,6 +3,8 @@
 import argparse
 import ctypes
 import ctypes.util
+import gzip
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -11,6 +13,7 @@ import re
 import shutil
 import stat
 import subprocess
+import tarfile
 
 ROOT = Path(__file__).resolve().parents[1]
 QMAKE = None
@@ -75,6 +78,45 @@ def collect_notices(owners, qt_prefix, notices):
             if any(name.startswith("libicu") and owner is None for name, owner in owners.items()):
                 text += "The libicu* libraries are ICU, under the Unicode License (https://www.unicode.org/license.txt).\n"
             (notices / "qt/NOTICE.txt").write_text(text)
+
+
+def write_components(output, version, architecture):
+    """Publish independently downloadable components and a complete target file list."""
+    groups = {name: [] for name in ("app", "runtime", "artwork")}
+    for path in sorted(output.rglob("*")):
+        if path.is_symlink():
+            raise RuntimeError(f"Release contains a symlink: {path}")
+        if not path.is_file():
+            continue
+        relative = path.relative_to(output).as_posix()
+        component = "app"
+        if relative in ("share/agent-pet/artwork.rcc", "share/agent-pet/THIRD_PARTY_NOTICES.md") or relative.startswith("share/agent-pet/licenses/"):
+            component = "artwork"
+        elif relative.startswith(("lib/", "plugins/", "share/agent-pet/runtime-licenses/")):
+            component = "runtime"
+        groups[component].append(path)
+    base = f"agent-pet-{version}-linux-{architecture}"
+    manifest = {"format": 1, "version": version, "architecture": architecture, "components": []}
+    for name, paths in groups.items():
+        archive_path = output.parent / f"{base}-{name}.tar.gz"
+        files = []
+        # Fixed names, ordering, ownership and times make unchanged components reproducible.
+        with archive_path.open("wb") as raw, gzip.GzipFile(filename="", fileobj=raw, mode="wb", mtime=0) as compressed:
+            with tarfile.open(fileobj=compressed, mode="w|", format=tarfile.PAX_FORMAT) as archive:
+                for path in paths:
+                    relative = path.relative_to(output).as_posix()
+                    executable = bool(path.stat().st_mode & 0o111)
+                    entry = tarfile.TarInfo("agent-pet/" + relative)
+                    entry.size, entry.mode = path.stat().st_size, 0o755 if executable else 0o644
+                    with path.open("rb") as content:
+                        archive.addfile(entry, content)
+                    files.append({"path": relative, "size": entry.size, "executable": executable,
+                                  "digest": "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()})
+        manifest["components"].append({"name": name, "archive": archive_path.name,
+                                       "size": archive_path.stat().st_size, "files": files,
+                                       "digest": "sha256:" + hashlib.sha256(archive_path.read_bytes()).hexdigest()})
+    (output.parent / f"{base}-components.json").write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
+    return manifest
 
 
 def main():
@@ -181,6 +223,9 @@ def main():
                 "glibc_build_host": platform.libc_ver()[1]}
     (output / "share/agent-pet/runtime-manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
     archive = shutil.make_archive(str(output), "gztar", output.parent, output.name)
+    components = write_components(output, version, platform.machine())
+    for component in components["components"]:
+        print(f"{component['name']}: {component['size'] / 1024 / 1024:.2f} MiB")
     print(f"Created {archive}; {len(sources)} bundled libraries. See docs/install.md for host requirements.")
 
 
