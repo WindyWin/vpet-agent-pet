@@ -71,6 +71,15 @@ flag leaves the hook), the Konami code, and an Easter eggs setting (default on).
 Automated tests pass; the cadence still needs a real desktop. Walking is the last
 phase. See [the notes](docs/architecture.md#easter-eggs).
 
+Walking, phase 5 of that issue, implemented 2026-10-05: after four idle minutes the
+pet may walk or crawl along the screen (trotting when happy, trudging when droopy),
+and climb up or down a screen edge it has reached, then step back into view. Moves
+are ambient fidgets whose window travels during their loop; the speeds, room and wall
+lines are ported from `vup.lps`. Agent activity, a drag or Recover position stops a
+walk, and a Wander setting (default on) turns it off. Native Wayland is excluded
+because the app cannot place its window there. Automated tests pass; pace and
+distances still need a real X11/XWayland desktop. See [the notes](docs/architecture.md#walking).
+
 1. Build a transparent, draggable desktop window and play the bundled `idle` sequence using frame durations from `assets/vpet/animations.json`. Test X11 and XWayland behavior before choosing a Linux package format.
 2. Add an animation controller that can start a sequence, hold its middle loop, play its ending, and return to idle. Keep decoded images in a bounded cache. The JSON state map has separate folders for each A/B/C phase.
 3. Add a small local event receiver and a packaged `agent-pet hook` command. The command reads hook JSON from stdin, extracts normalized event/session metadata and project path when available, sends them through a private local channel, and exits quickly even when the UI is closed. Exclude prompt text, tool arguments, and output. Create records on any supported event, including when SessionStart was missed.

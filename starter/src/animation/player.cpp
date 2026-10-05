@@ -216,7 +216,58 @@ bool Player::load(const QString &root) {
                 return invalid("Invalid edge reaction: " + side);
         }
     }
+    // Moves carry the window across the screen during their loop phase, which a count must end, like
+    // a fidget's. Every part is optional; a catalog without the section never moves on its own.
+    if (catalog.contains("moves")) {
+        const auto moves = catalog["moves"].toObject();
+        moveScale_ = moves["scale"].toInt(0);
+        if (moveScale_ < 10 || moveScale_ > 10000) return invalid("Invalid move scale.");
+        auto sides = [this](const QJsonValue &value, Sides &sides) {
+            if (value.isUndefined()) return true;
+            const auto object = value.toObject();
+            if (!value.isObject() || object.isEmpty()) return false;
+            for (auto it = object.begin(); it != object.end(); ++it) {
+                const double distance = it.value().toDouble(-1);
+                if (!it.value().isDouble() || distance < 0 || distance > 10.0 * moveScale_) return false;
+                if (it.key() == "left") sides.left = distance;
+                else if (it.key() == "top") sides.top = distance;
+                else if (it.key() == "right") sides.right = distance;
+                else if (it.key() == "bottom") sides.bottom = distance;
+                else return false;
+            }
+            return true;
+        };
+        for (const auto &value : moves["list"].toArray()) {
+            const auto object = value.toObject();
+            const auto speed = object["speed"].toArray();
+            const auto wall = object["wall"].toObject();
+            Move move;
+            move.state = object["state"].toString();
+            move.mood = object["mood"].toString();
+            move.wall = wall["side"].toString();
+            move.at = wall["at"].toInt(0);
+            if (speed.size() == 2) move.speed = {speed[0].toDouble(), speed[1].toDouble()};
+            const double limit = 4.0 * moveScale_;
+            if (!endsItself(move.state) || animations_[move.state].mode != "phased" || moves_.contains(move.state)
+                || speed.size() != 2 || !speed[0].isDouble() || !speed[1].isDouble() || move.speed.isNull()
+                || qAbs(move.speed.x()) > limit || qAbs(move.speed.y()) > limit
+                || (object.contains("mood") && move.mood != "happy" && move.mood != "poor")
+                || (object.contains("wall") && ((move.wall != "left" && move.wall != "right") || move.at < 1 || move.at >= moveScale_))
+                || !sides(object.value("room"), move.room) || !sides(object.value("near"), move.near)
+                || !sides(object.value("keep"), move.keep))
+                return invalid("Invalid move: " + move.state);
+            moves_.insert(move.state, move);
+        }
+    }
     return true;
+}
+const Move *Player::move(const QString &state) const {
+    const auto found = moves_.constFind(state);
+    return found == moves_.constEnd() ? nullptr : &*found;
+}
+void Player::finish() {
+    if (stopped_ || held_ || animations_.value(state_).mode != "phased" || phase_ == 2) return;
+    enterSequence(2);
 }
 QString Player::phase() const {
     if (stopped_) return "stopped";

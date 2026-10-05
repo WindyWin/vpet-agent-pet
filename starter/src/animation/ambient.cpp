@@ -56,8 +56,11 @@ void Ambient::looped(const QString &state) {
 }
 QString Ambient::pick(qint64 idleMs) {
     QVector<const Fidget *> common, rare;
-    for (const auto &fidget : player_.fidgets())
-        if (idleMs >= qint64(fidget.minIdleS) * 1000) (fidget.rare ? rare : common).append(&fidget);
+    for (const auto &fidget : player_.fidgets()) {
+        const auto *move = player_.move(fidget.state);
+        if (idleMs < qint64(fidget.minIdleS) * 1000 || (move && !(moveGate_ && moveGate_(*move)))) continue;
+        (fidget.rare ? rare : common).append(&fidget);
+    }
     // Never the same fidget twice in a row, unless it is all there is.
     for (auto *pool : {&common, &rare})
         if (pool->size() > 1) pool->removeIf([this](const Fidget *fidget) { return fidget->state == last_; });

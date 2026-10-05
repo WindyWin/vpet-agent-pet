@@ -28,6 +28,9 @@ public:
     void setClock(std::function<qint64()> milliseconds);
     // Special days and late nights may offer their own fidget, asked before each ordinary draw.
     void setEasterEggs(EasterEggs *eggs) { eggs_ = eggs; }
+    // A fidget that walks, crawls or climbs moves the window, so the window decides whether one can
+    // start now; it is left out of the draw otherwise. Without a gate, moves never play.
+    void setMoveGate(std::function<bool(const Move &)> gate) { moveGate_ = std::move(gate); }
     // The shortest and longest wait between fidgets, in seconds.
     static QPair<int, int> gapSeconds(AmbientLevel level);
 private:
@@ -40,6 +43,7 @@ private:
     AmbientLevel level_ = AmbientLevel::Subtle;
     Random random_ = systemRandom();
     std::function<qint64()> clock_;
+    std::function<bool(const Move &)> moveGate_;
     qint64 idleSince_ = -1, nextDue_ = 0;
     QString last_, special_; // `special_`: what the easter eggs offered last, shown like a fidget.
     bool fidgeting_ = false, asleep_ = false, napping_ = false;

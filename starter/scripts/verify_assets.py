@@ -163,6 +163,41 @@ if 'touch' in animations:
         if side not in ('left', 'right') or not held(edge.get('state')) or not count(edge.get('at')) or edge['at'] >= scale:
             errors.append(f'Invalid edge reaction: {side}')
 
+# Moves carry the window across the screen during the loop of an ambient fidget. Speeds (units per
+# second) and distances are in the artwork's square space of `scale` units.
+def number(value, low, high):
+    return isinstance(value, (int, float)) and not isinstance(value, bool) and low <= value <= high
+
+if 'moves' in animations:
+    moves = animations['moves']
+    scale = moves.get('scale')
+    if not count(scale, 10) or scale > 10000:
+        errors.append('Invalid move scale')
+        scale = 0
+    moving = set()
+    for move in moves.get('list', []):
+        state = move.get('state')
+        speed = move.get('speed')
+        if (not ends_itself(state) or animations['playback'][state].get('mode') != 'phased' or state not in seen
+                or state in moving):
+            errors.append(f'Move must be a phased ambient fidget that ends by itself, once: {state}')
+        moving.add(state)
+        if (not isinstance(speed, list) or len(speed) != 2 or not all(number(v, -4 * scale, 4 * scale) for v in speed)
+                or speed == [0, 0]):
+            errors.append(f'Invalid move speed: {state}')
+        if 'mood' in move and move['mood'] not in ('happy', 'poor'):
+            errors.append(f'Invalid move mood: {state}')
+        wall = move.get('wall', {'side': 'left', 'at': 1})
+        if (not isinstance(wall, dict) or wall.get('side') not in ('left', 'right') or not count(wall.get('at'))
+                or wall['at'] >= scale):
+            errors.append(f'Invalid move wall: {state}')
+        for key in ('room', 'near', 'keep'):
+            sides = move.get(key, {'left': 0})
+            if (not isinstance(sides, dict) or not sides
+                    or any(side not in ('left', 'top', 'right', 'bottom') or not number(value, 0, 10 * scale)
+                           for side, value in sides.items())):
+                errors.append(f'Invalid move {key}: {state}')
+
 available_sequences = {sequence['path'] for sequence in available['sequences']}
 if len(bundled_sequences) != len(animations['sequences']) or len(available_sequences) != len(available['sequences']):
     errors.append('Duplicate animation sequence')

@@ -27,6 +27,7 @@ struct Preferences {
     int mood = MoodFull;
     int turns = 0; // Finished turns seen so far, for the pet's every-hundredth celebration.
     bool touch = true; // Reacts to petting, throwing and being pushed against a screen edge.
+    bool wander = true; // Walks, crawls and climbs along the screen after a long idle spell.
     bool easterEggs = true; // Special days, late nights and a few rare surprises.
     QString birthday; // "MM-dd" for a birthday surprise, or empty.
     // Startup keys. `agent-pet autostart` edits them without a display, possibly

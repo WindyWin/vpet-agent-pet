@@ -6,9 +6,9 @@
   "source_commit": "6358445aa54587f9cd524264eaf17ef97bc826a8",
   "source_root": "VPet-Simulator.Windows/mod/0000_core/pet/vup",
   "bundled_catalog": "assets/vpet/animations.json",
-  "missing_sequence_count": 473,
-  "missing_frame_count": 4683,
-  "missing_size_bytes": 655030507,
+  "missing_sequence_count": 443,
+  "missing_frame_count": 4547,
+  "missing_size_bytes": 636691235,
   "sequences": [
     {
       "path": "Default/Happy/2",
@@ -731,15 +731,6 @@
       "timing_valid": true
     },
     {
-      "path": "MOVE/climb.left/A_Nomal",
-      "category": "MOVE",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/MOVE/climb.left/A_Nomal",
-      "frame_count": 3,
-      "total_duration_ms": 375,
-      "size_bytes": 578677,
-      "timing_valid": true
-    },
-    {
       "path": "MOVE/climb.left/B_Happy",
       "category": "MOVE",
       "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/MOVE/climb.left/B_Happy",
@@ -749,30 +740,12 @@
       "timing_valid": true
     },
     {
-      "path": "MOVE/climb.left/B_Nomal",
-      "category": "MOVE",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/MOVE/climb.left/B_Nomal",
-      "frame_count": 4,
-      "total_duration_ms": 1000,
-      "size_bytes": 624021,
-      "timing_valid": true
-    },
-    {
       "path": "MOVE/climb.left/C_Happy",
       "category": "MOVE",
       "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/MOVE/climb.left/C_Happy",
       "frame_count": 3,
       "total_duration_ms": 375,
       "size_bytes": 578446,
-      "timing_valid": true
-    },
-    {
-      "path": "MOVE/climb.left/C_Nomal",
-      "category": "MOVE",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/MOVE/climb.left/C_Nomal",
-      "frame_count": 3,
-      "total_duration_ms": 375,
-      "size_bytes": 576263,
       "timing_valid": true
     },
     {
@@ -839,15 +812,6 @@
       "timing_valid": true
     },
     {
-      "path": "MOVE/climb.right/A_Nomal",
-      "category": "MOVE",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/MOVE/climb.right/A_Nomal",
-      "frame_count": 3,
-      "total_duration_ms": 375,
-      "size_bytes": 555532,
-      "timing_valid": true
-    },
-    {
       "path": "MOVE/climb.right/B_Happy",
       "category": "MOVE",
       "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/MOVE/climb.right/B_Happy",
@@ -857,30 +821,12 @@
       "timing_valid": true
     },
     {
-      "path": "MOVE/climb.right/B_Nomal",
-      "category": "MOVE",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/MOVE/climb.right/B_Nomal",
-      "frame_count": 4,
-      "total_duration_ms": 1000,
-      "size_bytes": 572500,
-      "timing_valid": true
-    },
-    {
       "path": "MOVE/climb.right/C_Happy",
       "category": "MOVE",
       "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/MOVE/climb.right/C_Happy",
       "frame_count": 3,
       "total_duration_ms": 375,
       "size_bytes": 552409,
-      "timing_valid": true
-    },
-    {
-      "path": "MOVE/climb.right/C_Nomal",
-      "category": "MOVE",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/MOVE/climb.right/C_Nomal",
-      "frame_count": 3,
-      "total_duration_ms": 375,
-      "size_bytes": 551776,
       "timing_valid": true
     },
     {
@@ -1082,15 +1028,6 @@
       "timing_valid": true
     },
     {
-      "path": "MOVE/crawl.left/A_Nomal",
-      "category": "MOVE",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/MOVE/crawl.left/A_Nomal",
-      "frame_count": 3,
-      "total_duration_ms": 375,
-      "size_bytes": 294291,
-      "timing_valid": true
-    },
-    {
       "path": "MOVE/crawl.left/A_PoorCondition",
       "category": "MOVE",
       "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/MOVE/crawl.left/A_PoorCondition",
@@ -1106,15 +1043,6 @@
       "frame_count": 10,
       "total_duration_ms": 1750,
       "size_bytes": 1225445,
-      "timing_valid": true
-    },
-    {
-      "path": "MOVE/crawl.left/B_Nomal",
-      "category": "MOVE",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/MOVE/crawl.left/B_Nomal",
-      "frame_count": 9,
-      "total_duration_ms": 1750,
-      "size_bytes": 1109474,
       "timing_valid": true
     },
     {
@@ -1136,15 +1064,6 @@
       "timing_valid": true
     },
     {
-      "path": "MOVE/crawl.left/C_Nomal",
-      "category": "MOVE",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/MOVE/crawl.left/C_Nomal",
-      "frame_count": 6,
-      "total_duration_ms": 750,
-      "size_bytes": 634048,
-      "timing_valid": true
-    },
-    {
       "path": "MOVE/crawl.left/C_PoorCondition",
       "category": "MOVE",
       "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/MOVE/crawl.left/C_PoorCondition",
@@ -1160,15 +1079,6 @@
       "frame_count": 3,
       "total_duration_ms": 375,
       "size_bytes": 290320,
-      "timing_valid": true
-    },
-    {
-      "path": "MOVE/crawl.right/A_Nomal",
-      "category": "MOVE",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/MOVE/crawl.right/A_Nomal",
-      "frame_count": 3,
-      "total_duration_ms": 375,
-      "size_bytes": 286018,
       "timing_valid": true
     },
     {
@@ -1190,15 +1100,6 @@
       "timing_valid": true
     },
     {
-      "path": "MOVE/crawl.right/B_Nomal",
-      "category": "MOVE",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/MOVE/crawl.right/B_Nomal",
-      "frame_count": 9,
-      "total_duration_ms": 1750,
-      "size_bytes": 1044791,
-      "timing_valid": true
-    },
-    {
       "path": "MOVE/crawl.right/B_PoorCondition",
       "category": "MOVE",
       "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/MOVE/crawl.right/B_PoorCondition",
@@ -1214,15 +1115,6 @@
       "frame_count": 6,
       "total_duration_ms": 750,
       "size_bytes": 623239,
-      "timing_valid": true
-    },
-    {
-      "path": "MOVE/crawl.right/C_Nomal",
-      "category": "MOVE",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/MOVE/crawl.right/C_Nomal",
-      "frame_count": 6,
-      "total_duration_ms": 750,
-      "size_bytes": 617694,
       "timing_valid": true
     },
     {
@@ -1352,42 +1244,6 @@
       "timing_valid": true
     },
     {
-      "path": "MOVE/walk.left.faster/A_Happy",
-      "category": "MOVE",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/MOVE/walk.left.faster/A_Happy",
-      "frame_count": 2,
-      "total_duration_ms": 250,
-      "size_bytes": 310618,
-      "timing_valid": true
-    },
-    {
-      "path": "MOVE/walk.left.faster/B_Happy",
-      "category": "MOVE",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/MOVE/walk.left.faster/B_Happy",
-      "frame_count": 10,
-      "total_duration_ms": 1250,
-      "size_bytes": 1216097,
-      "timing_valid": true
-    },
-    {
-      "path": "MOVE/walk.left.faster/C_Happy",
-      "category": "MOVE",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/MOVE/walk.left.faster/C_Happy",
-      "frame_count": 2,
-      "total_duration_ms": 250,
-      "size_bytes": 285853,
-      "timing_valid": true
-    },
-    {
-      "path": "MOVE/walk.left.slow/B_PoorCondition_1",
-      "category": "MOVE",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/MOVE/walk.left.slow/B_PoorCondition_1",
-      "frame_count": 5,
-      "total_duration_ms": 1000,
-      "size_bytes": 764432,
-      "timing_valid": true
-    },
-    {
       "path": "MOVE/walk.left.slow/B_PoorCondition_2",
       "category": "MOVE",
       "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/MOVE/walk.left.slow/B_PoorCondition_2",
@@ -1406,87 +1262,6 @@
       "timing_valid": true
     },
     {
-      "path": "MOVE/walk.left.slow/PoorCondition_A",
-      "category": "MOVE",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/MOVE/walk.left.slow/PoorCondition_A",
-      "frame_count": 3,
-      "total_duration_ms": 375,
-      "size_bytes": 481315,
-      "timing_valid": true
-    },
-    {
-      "path": "MOVE/walk.left.slow/PoorCondition_C",
-      "category": "MOVE",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/MOVE/walk.left.slow/PoorCondition_C",
-      "frame_count": 3,
-      "total_duration_ms": 375,
-      "size_bytes": 481517,
-      "timing_valid": true
-    },
-    {
-      "path": "MOVE/walk.left/A_Nomal",
-      "category": "MOVE",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/MOVE/walk.left/A_Nomal",
-      "frame_count": 3,
-      "total_duration_ms": 375,
-      "size_bytes": 454070,
-      "timing_valid": true
-    },
-    {
-      "path": "MOVE/walk.left/B_Nomal",
-      "category": "MOVE",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/MOVE/walk.left/B_Nomal",
-      "frame_count": 6,
-      "total_duration_ms": 750,
-      "size_bytes": 716495,
-      "timing_valid": true
-    },
-    {
-      "path": "MOVE/walk.left/C_Nomal",
-      "category": "MOVE",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/MOVE/walk.left/C_Nomal",
-      "frame_count": 6,
-      "total_duration_ms": 750,
-      "size_bytes": 821882,
-      "timing_valid": true
-    },
-    {
-      "path": "MOVE/walk.right.faster/A_Happy",
-      "category": "MOVE",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/MOVE/walk.right.faster/A_Happy",
-      "frame_count": 2,
-      "total_duration_ms": 375,
-      "size_bytes": 306352,
-      "timing_valid": true
-    },
-    {
-      "path": "MOVE/walk.right.faster/B_Happy",
-      "category": "MOVE",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/MOVE/walk.right.faster/B_Happy",
-      "frame_count": 10,
-      "total_duration_ms": 1250,
-      "size_bytes": 1147981,
-      "timing_valid": true
-    },
-    {
-      "path": "MOVE/walk.right.faster/C_Happy",
-      "category": "MOVE",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/MOVE/walk.right.faster/C_Happy",
-      "frame_count": 2,
-      "total_duration_ms": 250,
-      "size_bytes": 280351,
-      "timing_valid": true
-    },
-    {
-      "path": "MOVE/walk.right.slow/B_PoorCondition_1",
-      "category": "MOVE",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/MOVE/walk.right.slow/B_PoorCondition_1",
-      "frame_count": 5,
-      "total_duration_ms": 1000,
-      "size_bytes": 749972,
-      "timing_valid": true
-    },
-    {
       "path": "MOVE/walk.right.slow/B_PoorCondition_2",
       "category": "MOVE",
       "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/MOVE/walk.right.slow/B_PoorCondition_2",
@@ -1502,51 +1277,6 @@
       "frame_count": 5,
       "total_duration_ms": 1000,
       "size_bytes": 746864,
-      "timing_valid": true
-    },
-    {
-      "path": "MOVE/walk.right.slow/PoorCondition_A",
-      "category": "MOVE",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/MOVE/walk.right.slow/PoorCondition_A",
-      "frame_count": 3,
-      "total_duration_ms": 375,
-      "size_bytes": 463007,
-      "timing_valid": true
-    },
-    {
-      "path": "MOVE/walk.right.slow/PoorCondition_C",
-      "category": "MOVE",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/MOVE/walk.right.slow/PoorCondition_C",
-      "frame_count": 3,
-      "total_duration_ms": 375,
-      "size_bytes": 463007,
-      "timing_valid": true
-    },
-    {
-      "path": "MOVE/walk.right/A_Nomal",
-      "category": "MOVE",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/MOVE/walk.right/A_Nomal",
-      "frame_count": 3,
-      "total_duration_ms": 375,
-      "size_bytes": 448835,
-      "timing_valid": true
-    },
-    {
-      "path": "MOVE/walk.right/B_Nomal",
-      "category": "MOVE",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/MOVE/walk.right/B_Nomal",
-      "frame_count": 6,
-      "total_duration_ms": 750,
-      "size_bytes": 699681,
-      "timing_valid": true
-    },
-    {
-      "path": "MOVE/walk.right/C_Nomal",
-      "category": "MOVE",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/MOVE/walk.right/C_Nomal",
-      "frame_count": 6,
-      "total_duration_ms": 750,
-      "size_bytes": 802722,
       "timing_valid": true
     },
     {
