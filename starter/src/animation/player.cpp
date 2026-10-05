@@ -6,6 +6,8 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QSet>
+#include <QCoreApplication>
+#include <QResource>
 #include <tuple>
 
 namespace pet {
@@ -24,6 +26,15 @@ Player::Player(QObject *parent, const QString &root) : QObject(parent) {
     if (load(root)) { variants_ = false; enter("idle"); variants_ = true; }
 }
 bool Player::load(const QString &root) {
+    if (root == ":/" && !QFile::exists(":/assets/vpet/animations.json")) {
+        const QDir executable(QCoreApplication::applicationDirPath());
+        // Installed bundles keep it under share; local builds put it beside the executable.
+        const auto installed = executable.filePath("../share/agent-pet/artwork.rcc");
+        const auto artwork = QFile::exists(installed) ? installed : executable.filePath("artwork.rcc");
+        if (!QResource::registerResource(artwork)) {
+            fail("Cannot load the artwork pack. Reinstall Agent Pet to restore it."); return false;
+        }
+    }
     QFile file(QDir(root).filePath("assets/vpet/animations.json"));
     auto invalid = [this](const QString &reason) {
         sequences_.clear(); animations_.clear(); fail(reason); return false;

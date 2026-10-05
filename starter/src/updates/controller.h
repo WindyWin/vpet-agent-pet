@@ -1,5 +1,6 @@
 #pragma once
 #include "release.h"
+#include "components.h"
 #include <QObject>
 #include <QJsonObject>
 #include <QNetworkAccessManager>
@@ -30,6 +31,11 @@ signals:
     void changed();
     void restartRequested();
 private:
+    void fetch(const Release &target, const QString &path, std::function<void()> complete,
+               std::function<void()> fallback = {});
+    void downloadFull(const Release &target);
+    void downloadComponent(const Release &target, const Components &components, int index);
+    void finishDownload(const Release &target, bool components);
     bool save();
     void status(QString text);
     void cancel();
@@ -40,6 +46,6 @@ private:
     QNetworkAccessManager *network_;
     QPointer<QNetworkReply> reply_;
     QPointer<QDialog> dialog_;
-    bool ready_ = false, writable_ = true;
+    bool ready_ = false, writable_ = true, downloading_ = false;
 };
 }

@@ -1,6 +1,7 @@
 #include "updates/release.h"
 #include "updates/installer.h"
 #include "updates/controller.h"
+#include "updates/components.h"
 #include <QTest>
 #include <QSignalSpy>
 #include <memory>
@@ -45,13 +46,50 @@ public:
     qint64 bytesAvailable() const override { return data_.size() - offset_ + QNetworkReply::bytesAvailable(); }
     qint64 readData(char *buffer, qint64 max) override { const qint64 n = qMin(max, data_.size() - offset_); if (!n) return -1; std::memcpy(buffer, data_.constData() + offset_, n); offset_ += n; return n; }
 };
+static QString digest(const QByteArray &bytes) {
+    return "sha256:" + QString::fromLatin1(QCryptographicHash::hash(bytes, QCryptographicHash::Sha256).toHex());
+}
+static QJsonObject componentManifest() {
+    QJsonArray components;
+    const QMap<QString, QStringList> groups{
+        {"app", {"bin/agent-pet", "bin/agent-pet-updater"}},
+        {"runtime", {"lib/libtest.so"}}, {"artwork", {"share/agent-pet/artwork.rcc"}}};
+    for (auto it = groups.begin(); it != groups.end(); ++it) {
+        QJsonArray files;
+        for (const auto &path : it.value())
+            files.append(QJsonObject{{"path", path}, {"size", 3}, {"digest", digest("new")}, {"executable", false}});
+        components.append(QJsonObject{{"name", it.key()}, {"files", files}, {"size", 7}, {"digest", digest("package")},
+            {"archive", "agent-pet-99.1.0-linux-" + QSysInfo::buildCpuArchitecture() + '-' + it.key() + ".tar.gz"}});
+    }
+    return {{"format", 1}, {"version", "99.1.0"}, {"architecture", QSysInfo::buildCpuArchitecture()}, {"components", components}};
+}
+static QJsonObject withComponents(QJsonObject release, const QByteArray &manifest) {
+    const QString name = "agent-pet-99.1.0-linux-" + QSysInfo::buildCpuArchitecture() + "-components.json";
+    auto assets = release["assets"].toArray();
+    assets.append(QJsonObject{{"name", name}, {"state", "uploaded"}, {"size", manifest.size()}, {"digest", digest(manifest)},
+        {"browser_download_url", "https://github.com/WindyWin/vpet-agent-pet/releases/download/v99.1.0/" + name}});
+    release["assets"] = assets; return release;
+}
+static void installFiles(const QString &prefix, const QJsonObject &manifest) {
+    for (const auto &component : manifest["components"].toArray()) {
+        for (const auto &value : component.toObject()["files"].toArray()) {
+            const QString path = prefix + '/' + value.toObject()["path"].toString();
+            QDir().mkpath(QFileInfo(path).absolutePath()); write(path, "new");
+        }
+    }
+}
 class Network : public QNetworkAccessManager {
 public:
     int requests = 0; bool fail = false; QByteArray package = "package", download = "package";
+    QByteArray manifest; QStringList urls; QString failSuffix;
 protected:
     QNetworkReply *createRequest(Operation, const QNetworkRequest &request, QIODevice *) override {
-        ++requests;
-        return new Reply(request, request.url().host() == "api.github.com" ? QJsonDocument(releaseObject(package)).toJson() : download, fail, this);
+        ++requests; urls.append(request.url().fileName());
+        auto release = releaseObject(package);
+        if (!manifest.isEmpty()) release = withComponents(release, manifest);
+        const auto bytes = request.url().host() == "api.github.com" ? QJsonDocument(release).toJson()
+            : request.url().fileName().endsWith("-components.json") ? manifest : download;
+        return new Reply(request, bytes, fail || (!failSuffix.isEmpty() && request.url().fileName().endsWith(failSuffix)), this);
     }
 };
 class UpdateTests : public QObject {
@@ -72,6 +110,89 @@ private slots:
         QVERIFY(!parseRelease(object, QSysInfo::buildCpuArchitecture(), release, error));
         object = releaseObject(); asset = object["assets"].toArray().first().toObject(); asset.remove("digest"); object["assets"] = QJsonArray{asset};
         QVERIFY(parseRelease(object, QSysInfo::buildCpuArchitecture(), release, error)); QVERIFY(release.digest.isEmpty());
+    }
+    void componentMetadataAndValidation() {
+        QTemporaryDir dir; QString error; Components components;
+        const auto object = componentManifest();
+        const auto bytes = QJsonDocument(object).toJson();
+        const auto path = dir.filePath("components.json"); write(path, bytes);
+        QVERIFY(readComponents(path, digest(bytes), "99.1.0", QSysInfo::buildCpuArchitecture(), components, error));
+        QVERIFY(!readComponents(path, digest(bytes), "99.2.0", QSysInfo::buildCpuArchitecture(), components, error));
+        QVERIFY(!readComponents(path, digest(bytes), "99.1.0", "wrong-arch", components, error));
+        QVERIFY(!readComponents(path, digest("tampered"), "99.1.0", QSysInfo::buildCpuArchitecture(), components, error));
+        for (const auto &unsafe : {"../escape", "/absolute", "bin/../escape", ".agent-pet-install", "bin/agent-pet", "bin", "bin//empty"}) {
+            auto malformed = object;
+            auto entries = malformed["components"].toArray(); auto entry = entries[0].toObject();
+            auto files = entry["files"].toArray(); auto content = files[0].toObject(); content["path"] = unsafe;
+            files.append(content); entry["files"] = files; entries[0] = entry; malformed["components"] = entries;
+            const auto invalid = QJsonDocument(malformed).toJson(); write(path, invalid);
+            QVERIFY2(!readComponents(path, digest(invalid), "99.1.0", QSysInfo::buildCpuArchitecture(), components, error), unsafe);
+        }
+        Release release;
+        auto metadata = withComponents(releaseObject(), bytes);
+        QVERIFY(parseRelease(metadata, QSysInfo::buildCpuArchitecture(), release, error));
+        QCOMPARE(release.componentsDigest, digest(bytes));
+        auto assets = metadata["assets"].toArray(); auto manifestAsset = assets.last().toObject();
+        manifestAsset["browser_download_url"] = "https://example.com/components.json";
+        assets[assets.size() - 1] = manifestAsset; metadata["assets"] = assets;
+        QVERIFY(parseRelease(metadata, QSysInfo::buildCpuArchitecture(), release, error));
+        QVERIFY(release.componentsDownload.isEmpty()); // Full archive remains usable by old/new clients.
+    }
+    void downloadsOnlyChangedComponents() {
+        QTemporaryDir dir, installed; Network network;
+        const auto manifest = componentManifest(); network.manifest = QJsonDocument(manifest).toJson();
+        installFiles(installed.path(), manifest);
+        write(installed.filePath("bin/agent-pet"), "old");
+        write(dir.filePath("state.json"), QJsonDocument(QJsonObject{{"format", 1}, {"mode", 1}, {"enabled", true}}).toJson());
+        Controller controller(nullptr, &network, installed.path(), dir.path()); controller.check(true);
+        QTRY_VERIFY(QFile::exists(dir.filePath("pending.json")));
+        QCOMPARE(network.requests, 3); // Release metadata, target manifest, app only.
+        QVERIFY(network.urls.last().endsWith("-app.tar.gz"));
+        QVERIFY(!network.urls.contains("agent-pet-99.1.0-linux-" + QSysInfo::buildCpuArchitecture() + ".tar.gz"));
+        QVERIFY(!QFile::exists(dir.filePath("package.tar.gz")));
+        Controller reloaded(nullptr, &network, installed.path(), dir.path());
+        QVERIFY(reloaded.indicator().contains("ready"));
+        // A damaged reused component invalidates readiness after restart.
+        write(installed.filePath("share/agent-pet/artwork.rcc"), "bad");
+        Controller damaged(nullptr, &network, installed.path(), dir.path());
+        QVERIFY(!damaged.indicator().contains("ready"));
+        damaged.download(); QTRY_VERIFY(damaged.indicator().contains("ready"));
+        QCOMPARE(network.requests, 5); // Cached app survives; only manifest + artwork fetched.
+        QVERIFY(network.urls.last().endsWith("-artwork.tar.gz"));
+    }
+    void componentDownloadCancellationAndRetry() {
+        QTemporaryDir dir, installed; Network network;
+        const auto manifest = componentManifest(); network.manifest = QJsonDocument(manifest).toJson();
+        installFiles(installed.path(), manifest); write(installed.filePath("bin/agent-pet"), "old");
+        write(dir.filePath("state.json"), QJsonDocument(QJsonObject{{"format", 1}, {"mode", 0}, {"enabled", true}}).toJson());
+        Controller controller(nullptr, &network, installed.path(), dir.path());
+        std::unique_ptr<QWidget> settings(controller.settings(nullptr));
+        controller.check(true); QTRY_VERIFY(controller.indicator().contains("99.1.0"));
+        controller.download();
+        for (auto *button : settings->findChildren<QPushButton *>()) if (button->text().startsWith("Cancel")) button->click();
+        QTest::qWait(10); QVERIFY(!QFile::exists(dir.filePath("pending.json")));
+        network.download = "corrupt"; controller.download();
+        QTRY_VERIFY(([&] { for (auto *label : settings->findChildren<QLabel *>()) if (label->text().contains("checksum")) return true; return false; })());
+        QVERIFY(!QFile::exists(dir.filePath("pending.json")));
+        network.download = "package"; controller.download(); QTRY_VERIFY(controller.indicator().contains("ready"));
+    }
+    void componentFailureFallsBackToFullPackage() {
+        for (const bool unsupported : {false, true}) {
+            QTemporaryDir dir, installed; Network network;
+            auto manifest = componentManifest();
+            installFiles(installed.path(), manifest); write(installed.filePath("bin/agent-pet"), "old");
+            if (unsupported) manifest["format"] = 2;
+            else network.failSuffix = "-app.tar.gz";
+            network.manifest = QJsonDocument(manifest).toJson();
+            write(dir.filePath("state.json"), QJsonDocument(QJsonObject{{"format", 1}, {"mode", 1}, {"enabled", true}}).toJson());
+            Controller controller(nullptr, &network, installed.path(), dir.path()); controller.check(true);
+            QTRY_VERIFY(controller.indicator().contains("ready"));
+            QVERIFY(QFile::exists(dir.filePath("package.tar.gz")));
+            QCOMPARE(network.urls.last(), "agent-pet-99.1.0-linux-" + QSysInfo::buildCpuArchitecture() + ".tar.gz");
+            QFile pending(dir.filePath("pending.json")); QVERIFY(pending.open(QIODevice::ReadOnly));
+            QVERIFY(!QJsonDocument::fromJson(pending.readAll()).object().contains("kind"));
+            QVERIFY(!QFile::exists(dir.filePath("components.json")));
+        }
     }
     void checksum() {
         QTemporaryDir dir; QString error; const QString path = dir.filePath("package"); write(path, "package");

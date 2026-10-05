@@ -190,6 +190,14 @@ runtime library manifest. The version comes from `project()` in CMakeLists.txt;
 `-DAGENT_PET_REVISION=<commit>` records the source revision shown by
 `agent-pet --version` and About. Output directories must be new.
 
+Packaging also writes `-app.tar.gz`, `-runtime.tar.gz`, `-artwork.tar.gz` and
+`-components.json` beside the full archive. Automatic updates verify the manifest
+and reuse installed components whose files still match, downloading only changed
+components. Artwork lives in `share/agent-pet/artwork.rcc`; local builds load
+`build/artwork.rcc`. Keep the full archive for first installs and older updaters.
+Publish all five release files together. This reduces client download size;
+CI still uploads the full archive and all three components for each release.
+
 Two checks exercise the package without a display:
 
 ```bash
@@ -216,7 +224,8 @@ evidence remain open.
 
 CI ([.github/workflows/release.yml](../.github/workflows/release.yml)) runs all of
 the above from a clean checkout on Ubuntu 22.04 with Qt 6.5.3, uploads the
-tarball, and attaches it to a draft GitHub release for `v*` tags.
+full tarball, component tarballs and manifest, and attaches them to a draft GitHub
+release for `v*` tags.
 
 ## Artwork and publishing
 

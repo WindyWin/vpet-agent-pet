@@ -161,7 +161,22 @@ Choose one of four modes:
 that version and discards its pending package; **Check now** shows it again.
 The update window shows the installed version, last successful check, download
 progress, and release-page link. Updates never replace agent approval bubbles.
-Downloads can be cancelled or retried; interrupted downloads restart from zero.
+Downloads can be cancelled or retried. Completed, verified components are kept
+for retries; the interrupted component restarts from zero.
+
+Releases separate application files, runtime libraries and artwork. The updater
+checks installed files against the new release and downloads only components that
+changed or need repair. A code-only update normally reuses all artwork and runtime
+libraries. Changing one image downloads the artwork component; changing a library
+downloads the runtime component. This is component-level reuse, not binary patches.
+Skipping versions is supported because files are compared with the target release.
+
+Existing installations receive one full update to obtain this updater and the
+separate artwork file. Later updates use component downloads when the release
+provides a verified component manifest. Releases without that manifest use the full
+archive; an unsupported manifest or failed component download also falls back to
+the verified full archive. Cancelling stops the download. The full archive remains
+available for manual installation and recovery.
 
 Only installed release builds can download/install from inside the app. Local
 builds (revision `local`) and copies run directly from an extracted archive
@@ -173,21 +188,26 @@ waiting for your approval or input (that request would be lost). Session-trigger
 launches postpone installation on next launch so monitoring starts immediately.
 **Restart and update** applies the same rule.
 
-The helper verifies the package again, rejects unsafe archive paths and links,
-extracts beside the existing installation, and atomically switches directories.
+The helper verifies downloads again, rejects unsafe archive paths and links,
+and assembles the complete target beside the existing installation. Reused files
+are copied independently and verified again; obsolete files are omitted. The
+helper then atomically switches directories.
 The executable path, installer receipt, hooks, desktop/menu choices and settings
 are preserved. If the new app cannot start and acknowledge readiness within
 30 seconds, the previous version is restored. A recovery journal handles an
 interrupted replacement at the next normal launch. Installation requires a
 writable installation and parent directory and a filesystem supporting Linux
 `renameat2(RENAME_EXCHANGE)`; otherwise the existing installation is kept.
-Allow space for the downloaded archive plus both unpacked versions.
+Allow space for the downloaded components (or full archive) plus both unpacked
+versions. Smaller downloads do not eliminate staging space.
 
 Update state and pending downloads live in
 `~/.local/share/agent-pet/updates/` (or `$XDG_DATA_HOME/agent-pet/updates/`).
 `result.txt` records the last installation result. Update checks send no session,
 project, or agent data. They contact GitHub over HTTPS; downloads are matched
-against GitHub's SHA-256 asset digest. This trusts the repository's release
+against GitHub's SHA-256 asset digest. A component manifest is verified against
+that digest and supplies SHA-256 hashes for component archives and installed files.
+This trusts the repository's release
 account and HTTPS metadata, without a separate publisher signing key.
 
 ## Uninstall
