@@ -1,6 +1,6 @@
 #include "updates/controller.h"
 #include "pet_window.h"
-#include "drag_monitor.h"
+#include "platform/contracts/native_window.h"
 #include "ipc/autostart.h"
 #include "providers/integrations.h"
 #include "version.h"
@@ -106,7 +106,7 @@ PetWindow::PetWindow(QWidget *parent, const QString &path, bool persist)
     connect(&recoveryTimer_, &QTimer::timeout, this, [this] { setClickThrough(false); });
     dragTimer_.setInterval(40);
     connect(&dragTimer_, &QTimer::timeout, this, [this] {
-        const auto native = nativeLeftButtonDown();
+        const auto native = platform::nativeLeftButtonDown();
         const auto position = nativePos();
         samples_.append({pressTimer_.elapsed(), position}); // The last ones tell how fast it was let go.
         if (samples_.size() > 16) samples_.removeFirst();
@@ -168,7 +168,7 @@ QRect PetWindow::figure() const {
     return QRect(nativePos(), size()).adjusted(width() / 4, 0, -width() / 4, 0);
 }
 QPoint PetWindow::nativePos() const {
-    const auto origin = isVisible() ? nativeWindowOrigin(winId()) : std::nullopt;
+    const auto origin = isVisible() ? platform::nativeWindowOrigin(winId()) : std::nullopt;
     return origin.value_or(pos());
 }
 void PetWindow::watchScreen(QScreen *screen) {

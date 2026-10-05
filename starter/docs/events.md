@@ -58,7 +58,10 @@ ancestors (by `/proc/<pid>/comm`), and are taken as they are only when the
 ancestry cannot be read.
 
 Values are validated again before use and passed to D-Bus or to `tmux`/`herdr`
-as separate arguments, never through a shell.
+as separate arguments, never through a shell. Accepted `host` values are those of
+the host registry (`src/hosts/registry.cpp`); older pets reject IDs they do not know.
+The pet converts these fields into its internal host descriptor; see
+[session focus](architecture.md#session-focus).
 
 ## Commands and transport
 

@@ -1,4 +1,5 @@
 #pragma once
+#include "hosts/registry.h"
 #include <QJsonObject>
 #include <QMap>
 #include <QSet>
@@ -10,19 +11,21 @@ struct Event {
     QString provider, session, id, kind, tool, parent, project, activity;
     qint64 timestamp = 0;
     QString reason; // attention only: "approval" or "input"; empty when unknown
-    // Where the agent runs, captured by the hook so the pet can bring it forward.
-    // Identifiers only: see Host in providers/host.h.
+    // Where the agent runs, captured by the hook so the pet can bring it forward:
+    // the v1 wire fields, converted to a hosts::HostContext when applied.
     QString host, hostPids, hostWindow, hostTarget;
     // tool_start only: the hook saw a destructive shell command. A flag, never the command.
     bool risky = false;
-    static bool parse(const QByteArray &data, Event &event, QString &error);
+    // Host fields are checked against the registry's hosts (the built-in ones by default).
+    static bool parse(const QByteArray &data, Event &event, QString &error,
+                      const hosts::Registry &hosts = hosts::Registry::builtin());
 };
 struct Session {
     QString provider, id, parent, project, state = "idle", resume = "idle";
     QString reason; // Reason of the current attention request, if any.
     QSet<QString> attentionTools; // Tools awaiting the user's answer; the first to finish resolves the attention.
     bool interrupted = false; // Set by an interrupt; tool callbacks of that turn are stale until the next prompt.
-    QString host, hostPids, hostWindow, hostTarget;
+    hosts::HostContext host; // Null until an event identifies the host; kept until another one does.
     QMap<QString, QString> tools;
     qint64 timestamp = 0, seen = 0, reactionUntil = 0, activityUntil = 0;
     qint64 turnStarted = 0; // Timestamp of the prompt that started the current turn; 0 when unknown.

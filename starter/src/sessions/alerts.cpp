@@ -1,5 +1,4 @@
 #include "alerts.h"
-#include "providers/host.h"
 #include <QDir>
 #include <QFileInfo>
 #include <algorithm>
@@ -95,7 +94,7 @@ static QString statusText(const Session &s, qint64 now) {
     const qint64 minutes = std::max<qint64>(0, now - s.seen) / 60000;
     return minutes < 1 ? "Idle" : QString("Idle · %1 min").arg(minutes);
 }
-QVector<SessionRow> sessionRows(const Sessions &sessions, qint64 now) {
+QVector<SessionRow> sessionRows(const Sessions &sessions, qint64 now, const hosts::Registry &hosts) {
     const auto &records = sessions.records();
     const auto parentOf = [&](const Session &s) {
         const auto key = s.provider + QChar(0x1f) + s.parent;
@@ -110,7 +109,7 @@ QVector<SessionRow> sessionRows(const Sessions &sessions, qint64 now) {
     for (auto it = records.begin(); it != records.end(); ++it) {
         if (!parentOf(*it).isEmpty()) continue;
         QStringList detail{providerName(it->provider), shortSessionId(it->provider, it->id, context)};
-        if (!hostName(it->host).isEmpty()) detail << hostName(it->host);
+        if (!hosts.label(it->host.adapter).isEmpty()) detail << hosts.label(it->host.adapter);
         index[it.key()] = rows.size();
         rows.append({it.key(), projectName(it->project, context), detail.join(" · "), statusText(*it, now), it->state,
                      it->project.isEmpty() ? "Project path unavailable for this session" : it->project});

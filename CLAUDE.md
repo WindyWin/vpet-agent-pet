@@ -22,7 +22,7 @@ ctest --test-dir build --output-on-failure
 ./build/agent-pet                         # run the pet (--preview, --settings, --state thinking, --no-persist)
 ```
 
-Tests are Qt Test executables registered with CTest (`updates`, `update-install`, `providers`, `events`, `alerts`, `startup`, `prototype`):
+Tests are Qt Test executables registered with CTest (`updates`, `update-install`, `providers`, `events`, `alerts`, `focus`, `startup`, `prototype`):
 
 ```bash
 ctest --test-dir build -R events --output-on-failure            # one CTest suite
@@ -59,19 +59,23 @@ CMake libraries enforce this split:
 
 | Target | Contents |
 | --- | --- |
-| `pet_events` (Qt Core only) | `sessions/` (session/tool state machine, alerts, presence), `ipc/` (Unix datagram socket at `$XDG_RUNTIME_DIR/agent-pet-<uid>/events.sock`, autostart), `settings/` (atomic `preferences.json`), `providers/` (Claude/Codex hook → normalized event adapters, integration config merge, host detection from `/proc`) |
+| `pet_events` (Qt Core only) | `sessions/` (session/tool state machine, alerts, presence), `ipc/` (Unix datagram socket at `$XDG_RUNTIME_DIR/agent-pet-<uid>/events.sock`, autostart), `settings/` (atomic `preferences.json`), `providers/` (Claude/Codex hook → normalized event adapters, integration config merge) |
+| `pet_hosts` (Qt Core only) | `hosts/`: `HostContext` and v1 conversion, the host `Registry` (capture, target codecs, labels, detection order), `FocusService`, tmux/herdr selection; `platform/desktop/window_match` |
+| `pet_platform_linux` | `platform/linux/`: `/proc` process services and the `QProcess` command runner |
+| `pet_native` | The only target linking X11 and D-Bus: `platform/desktop/x11` and `kwin` backends, X11 pointer queries, Konsole's D-Bus selection, and `platform::createFocusService()` (composition) |
 | `pet_updates` | release metadata validation, component manifests, libarchive installer; also used by the separate `agent-pet-updater` helper |
-| `pet_ui` | `animation/` (catalog-driven player, ambient fidgets, mood, easter eggs) and `desktop/` (`PetWindow`, `Monitor`, alert bubble, session list, touch, wander, host focus via X11/D-Bus/tmux/herdr) |
+| `pet_ui` | `animation/` (catalog-driven player, ambient fidgets, mood, easter eggs) and `desktop/` (`PetWindow`, `Monitor`, alert bubble, session list, touch, wander); no native includes |
 
-Event flow: provider hook JSON → `providers/adapters.cpp` normalizes to protocol v1 → datagram → `Receiver` → `Monitor::apply` → `Sessions` (ordering, dedup, expiry, aggregate priority: attention > error > turn-finished > working > reading > thinking > idle) → `PetWindow`/`Player` selects the animation state, and `AlertQueue` drives the bubble and badge. Nothing about sessions is persisted.
+Event flow: provider hook JSON → `providers/adapters.cpp` normalizes to protocol v1 → datagram → `Receiver` → `Monitor::apply` → `Sessions` (ordering, dedup, expiry, aggregate priority: attention > error > turn-finished > working > reading > thinking > idle) → `PetWindow`/`Player` selects the animation state, and `AlertQueue` drives the bubble and badge. Nothing about sessions is persisted. Open goes `Monitor` → `hosts::FocusService` (injected from `main.cpp`) → host `Activation` (select tab/pane) → `platform::DesktopBackend`s in order (X11, then KWin), returning separate selection and activation outcomes. `starter/docs/architecture.md#session-focus` has the per-host policies.
 
 `assets/vpet/animations.json` is the animation catalog: display states, sequences with per-frame durations, playback phases (start → loop → end, one-shots), weighted variants, mood art, reactions, ambient fidgets, touch hit boxes and moves. Behavior is largely data-driven from it; the player validates it at load. The artwork and catalog are compiled into a separate `artwork.rcc` (not the executable), so updates can reuse unchanged artwork.
 
 ## Conventions and gotchas
 
 - **Adding sprites**: copy them from the root archive (the default `--source`) with `scripts/add_sequences.py IDEL/yawning/Nomal …`. The script updates `manifest.json`, `available-animations.json` and the catalog), then map them in `animations.json`. `verify_assets.py` fails if any PNG under `assets/vpet/vup` is missing from the manifest *or* unused by the catalog.
-- Test hooks: `Monitor::hostActive` / `bringForward` are `std::function`s replaced in tests; follow that pattern instead of adding real-desktop dependencies to tests.
+- Test hooks: `Monitor::hostActive` / `bringForward` are `std::function`s (returning `ActiveState` / `FocusResult`) replaced in tests; `tests/focus_tests.cpp` drives `FocusService` with fake activations, backends, runners and process services. Follow those patterns instead of adding real-desktop dependencies to tests.
+- Adding a host: register its `Capture` in `hosts::Registry::builtin()` (order is detection precedence) and its `Activation`, if any, in `platform::createFocusService()`. Adding a desktop backend: implement `platform::DesktopBackend`, add it to `pet_native` and register it there. Neither touches sessions, alerts or UI. Keep v1 wire fields unchanged.
 - `preferences.json` can be written concurrently by the headless `autostart` command, so the pet re-reads it before every save. Keep that when touching settings.
 - Integration enable/disable must merge only Agent Pet's own hook entries (recognized by command markers) and preserve foreign handlers. `check_install.py` enforces this.
-- Docs are kept in step with features: `starter/docs/events.md` (protocol is authoritative there), `integrations.md` (provider mappings), `install.md`, and `architecture.md` (a design section per feature plus a dated evidence section). User-visible features also get a section in `starter/README.md`. `starter/docs/platform-refactor-plan.md` is a proposed, not-yet-implemented refactor.
+- Docs are kept in step with features: `starter/docs/events.md` (protocol is authoritative there), `integrations.md` (provider mappings), `install.md`, and `architecture.md` (a design section per feature plus a dated evidence section). User-visible features also get a section in `starter/README.md`. `starter/docs/platform-refactor-plan.md` is the platform refactor plan: steps 1–3 are implemented, 4–5 (IPC/startup/updater seams, portable-core build) remain.
 - Artwork is under the separate VPet artwork terms, not the app's Apache-2.0 license. Keep `licenses/`, `THIRD_PARTY_NOTICES.md` and the credit with any distribution.

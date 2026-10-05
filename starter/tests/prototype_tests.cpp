@@ -1209,8 +1209,15 @@ private slots:
         pet::PetWindow window(nullptr, directory.path() + "/preferences.json"); window.show();
         pet::Monitor monitor(window);
         QStringList focused, looking;
-        monitor.bringForward = [&](const pet::Session &s) { focused << s.id; return s.host != "terminal"; };
-        monitor.hostActive = [&](const pet::Session &s) { return looking.contains(s.id); };
+        monitor.bringForward = [&](const pet::Session &s) {
+            focused << s.id;
+            pet::hosts::FocusResult result;
+            result.activation = s.host.adapter != "terminal" ? pet::platform::Outcome::Requested : pet::platform::Outcome::TargetNotFound;
+            return result;
+        };
+        monitor.hostActive = [&](const pet::Session &s) {
+            return looking.contains(s.id) ? pet::platform::ActiveState::Active : pet::platform::ActiveState::Inactive;
+        };
         const qint64 now = QDateTime::currentMSecsSinceEpoch(); qint64 seq = 0;
         auto event = [&](QString session, QString kind, QString host = "konsole", QString reason = {}) {
             ++seq; pet::Event e{"claude", session, QString::number(seq), kind, {}, {}, "/work/" + session, {}, now + seq, reason};
@@ -1258,6 +1265,81 @@ private slots:
         const QRect wide(0, 400, 1900, 240); // No side fits: above.
         QCOMPARE(pet::AlertBubble::placement(wide, bubble, screen).y(), 400 - 8 - 90);
         QVERIFY(inside(pet::AlertBubble::placement({-500, -500, 240, 240}, bubble, screen)));
+    }
+    void focusOutcomesAndAlertPolicy() {
+        using pet::platform::Outcome; using pet::platform::ActiveState;
+        QTemporaryDir directory;
+        pet::PetWindow window(nullptr, directory.path() + "/preferences.json"); window.show();
+        window.setBubbles(pet::Preferences::AllAlerts);
+        pet::Monitor monitor(window);
+        pet::hosts::FocusResult outcome;
+        QStringList asked;
+        auto active = ActiveState::Unknown;
+        monitor.bringForward = [&](const pet::Session &) { return outcome; };
+        monitor.hostActive = [&](const pet::Session &s) { asked << s.id; return active; };
+        const qint64 now = QDateTime::currentMSecsSinceEpoch(); qint64 seq = 0;
+        auto event = [&](QString session, QString kind, QString host, QString reason = {}) {
+            ++seq; pet::Event e{"claude", session, QString::number(seq), kind, {}, {}, "/work/" + session, {}, now + seq, reason};
+            e.host = host; return e;
+        };
+        const auto key = [](const QString &id) { return QString("claude") + QChar(0x1f) + id; };
+        const auto alerts = [&](const QString &id) {
+            int count = 0;
+            for (const auto &alert : monitor.sessions().pending()) count += alert.session == key(id);
+            return count;
+        };
+        // A session without host metadata is never checked for an active window.
+        QVERIFY(monitor.apply(event("old", "error", {}), now + seq));
+        QVERIFY(!asked.contains("old"));
+        QToolTip::hideText();
+        QVERIFY(!monitor.focusSession(key("old")));
+        QCOMPARE(QToolTip::text(), QString("This session started before Agent Pet could see its terminal. Its next event will fix that."));
+        // Unknown observation, as for a multiplexer pane, never suppresses an alert; only Active does.
+        QVERIFY(monitor.apply(event("pane", "error", "tmux"), now + seq)); QCOMPARE(alerts("pane"), 1);
+        active = ActiveState::Inactive;
+        QVERIFY(monitor.apply(event("pane", "turn_finished", "tmux"), now + seq)); QCOMPARE(alerts("pane"), 2);
+        active = ActiveState::Active;
+        QVERIFY(monitor.apply(event("seen", "error", "vscode"), now + seq)); QCOMPARE(alerts("seen"), 0);
+        active = ActiveState::Unknown;
+        // A host that cannot be raised keeps every alert and explains what to check.
+        QVERIFY(monitor.apply(event("web", "attention", "konsole", "input"), now + seq));
+        QVERIFY(monitor.apply(event("web", "turn_finished", "konsole"), now + seq)); // Answers the request.
+        QVERIFY(monitor.apply(event("web", "error", "konsole"), now + seq));
+        QVERIFY(asked.contains("web"));
+        const auto failure = [&](Outcome selection, Outcome activation, QStringList requirements = {}) {
+            outcome = {selection, activation, {}, requirements};
+            QToolTip::hideText();
+            const bool focused = monitor.focusSession(key("web"));
+            return focused ? QString("focused") : QToolTip::text();
+        };
+        // The window was searched for: the X11 lookup failed and KWin was unavailable, as on a non-KDE desktop.
+        QCOMPARE(failure(Outcome::Confirmed, Outcome::TargetNotFound, {"Wayland focus requires KDE Plasma 6."}),
+                 QString("Could not focus this session's window. Check that its terminal is attached. "
+                         "Wayland focus requires KDE Plasma 6."));
+        QCOMPARE(failure(Outcome::Failed, Outcome::Failed),
+                 QString("Could not focus this session's window. Check that its terminal is attached."));
+        // A multiplexer stopped at its pane selection; no window was tried.
+        QCOMPARE(failure(Outcome::TimedOut, Outcome::Skipped),
+                 QString("Could not select this session's tab or pane. Check that its terminal is attached."));
+        // No backend could act in this session at all.
+        QCOMPARE(failure(Outcome::Unsupported, Outcome::Unsupported, {"Wayland focus requires KDE Plasma 6."}),
+                 QString("This desktop session does not let Agent Pet raise windows. Wayland focus requires KDE Plasma 6."));
+        // Selecting the tab alone is not focus.
+        QCOMPARE(failure(Outcome::Confirmed, Outcome::MissingTarget), QString("Could not focus this session's window. "
+                                                                              "Check that its terminal is attached."));
+        QCOMPARE(alerts("web"), 2);
+        // Once raised, whether requested or confirmed, its error and finished-turn alerts go; other sessions' stay.
+        QCOMPARE(failure(Outcome::Failed, Outcome::Requested), QString("focused"));
+        QCOMPARE(alerts("web"), 0); QCOMPARE(alerts("pane"), 2);
+        QVERIFY(monitor.apply(event("web", "error", "konsole"), now + seq));
+        QCOMPARE(failure(Outcome::Unsupported, Outcome::Confirmed), QString("focused")); QCOMPARE(alerts("web"), 0);
+        QVERIFY(!monitor.focusSession(key("missing"))); // An unknown session is not focused.
+        // Without a focus service, nothing is raised or reported active.
+        pet::Monitor bare(window);
+        QVERIFY(!bare.hostActive); QVERIFY(!bare.bringForward);
+        QVERIFY(bare.apply(event("lone", "error", "konsole"), now + seq));
+        QToolTip::hideText(); QVERIFY(!bare.focusSession(key("lone")));
+        QCOMPARE(QToolTip::text(), QString("This desktop session does not let Agent Pet raise windows."));
     }
     void monitorAlertsBadgeAndQuit() {
         QTemporaryDir directory;
