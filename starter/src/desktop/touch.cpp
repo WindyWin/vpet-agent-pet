@@ -30,7 +30,8 @@ static bool outer(const QPoint &beyond, const QVector<QRect> &areas) {
 Edge pushedEdge(const QRect &window, const QVector<QRect> &areas) {
     if (areas.isEmpty()) return Edge::None;
     const auto area = areaFor(window, areas);
-    const int margin = qMax(1, window.width() / 8), middle = window.center().y();
+    // The artwork sits in the middle half of the window, so the pet is at the edge once that part reaches it.
+    const int margin = qMax(1, window.width() / 4), middle = window.center().y();
     if (window.left() <= area.left() - margin && outer({area.left() - 1, middle}, areas)) return Edge::Left;
     if (window.right() >= area.right() + margin && outer({area.right() + 1, middle}, areas)) return Edge::Right;
     return Edge::None;
