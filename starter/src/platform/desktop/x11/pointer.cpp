@@ -1,18 +1,10 @@
-#include "drag_monitor.h"
-#include <QGuiApplication>
+#include "connection.h"
+#include "platform/contracts/native_window.h"
 #include <X11/Xlib.h>
-namespace pet {
-Display *x11Display() {
-    if (QGuiApplication::platformName() != "xcb") return nullptr;
-    struct Connection {
-        Display *display = XOpenDisplay(nullptr);
-        ~Connection() { if (display) XCloseDisplay(display); }
-    };
-    static Connection connection;
-    return connection.display;
-}
-std::optional<QPoint> nativeWindowOrigin(unsigned long window) {
-    auto *d = x11Display();
+
+namespace pet::platform {
+std::optional<QPoint> nativeWindowOrigin(quintptr window) {
+    auto *d = x11::display();
     if (!d || !window) return std::nullopt;
     auto *previous = XSetErrorHandler([](Display *, XErrorEvent *) { return 0; });
     int x = 0, y = 0; Window child;
@@ -21,7 +13,7 @@ std::optional<QPoint> nativeWindowOrigin(unsigned long window) {
     return ok ? std::optional<QPoint>(QPoint(x, y)) : std::nullopt;
 }
 std::optional<bool> nativeLeftButtonDown() {
-    auto *d = x11Display();
+    auto *d = x11::display();
     if (!d) return std::nullopt;
     Window root, child;
     int rootX, rootY, localX, localY;

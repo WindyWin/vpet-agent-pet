@@ -1,5 +1,4 @@
 #include "monitor.h"
-#include "host_focus.h"
 #include "session_playback.h"
 #include <QApplication>
 #include <QDateTime>
@@ -7,7 +6,11 @@
 #include <algorithm>
 
 namespace pet {
-Monitor::Monitor(PetWindow &window) : hostActive(hostFocus::active), bringForward(hostFocus::focus), window_(window) {
+Monitor::Monitor(PetWindow &window, std::shared_ptr<hosts::FocusService> focus) : window_(window), focus_(std::move(focus)) {
+    if (focus_) {
+        hostActive = [this](const Session &s) { return focus_->active(s.host, s.project); };
+        bringForward = [this](const Session &s) { return focus_->focus(s.host, s.project); };
+    }
     timer_.setInterval(250);
     connect(&timer_, &QTimer::timeout, this, [this] { update(QDateTime::currentMSecsSinceEpoch()); });
     timer_.start();
@@ -111,7 +114,7 @@ void Monitor::refreshAlerts() {
         if (alert.serial <= heard_) continue;
         newest = std::max(newest, alert.serial);
         const auto session = sessions_.records().value(alert.session);
-        if (!session.host.isNull() && hostActive && hostActive(session)) sessions_.dismiss(alert.session, alert.kind);
+        if (!session.host.isNull() && hostActive && hostActive(session) == platform::ActiveState::Active) sessions_.dismiss(alert.session, alert.kind);
         else raised = raised || shown(alert);
     }
     heard_ = newest;
@@ -135,12 +138,29 @@ void Monitor::toggleSessions() {
     list_.place(window_.figure(), window_.screenAreas());
     list_.show();
 }
+// Tooltip shown when Open did not raise the session's window.
+static QString focusFailure(const Session &session, const hosts::FocusResult &result) {
+    using platform::Outcome;
+    if (session.host.isNull()) return "This session started before Agent Pet could see its terminal. Its next event will fix that.";
+    QStringList text;
+    if (result.activation == Outcome::Unsupported) text << "This desktop session does not let Agent Pet raise windows.";
+    else if (result.activation == Outcome::Skipped) text << "Could not select this session's tab or pane. Check that its terminal is attached.";
+    else text << "Could not focus this session's window. Check that its terminal is attached.";
+    return (text + result.requirements).join(' ');
+}
 bool Monitor::focusSession(const QString &key) {
     const auto it = sessions_.records().find(key);
-    if (it == sessions_.records().end() || !bringForward || !bringForward(*it)) {
-        QToolTip::showText(window_.figure().center(), it != sessions_.records().end() && it->host.isNull()
-            ? "This session started before Agent Pet could see its terminal. Its next event will fix that."
-            : "Could not focus this session's window. Check that its terminal is attached. Wayland focus requires KDE Plasma 6.");
+    if (it == sessions_.records().end()) {
+        QToolTip::showText(window_.figure().center(), "Could not focus this session's window. Check that its terminal is attached.");
+        return false;
+    }
+    // A copy: focusing can process events, and new hook events may change the session map.
+    const Session session = *it;
+    hosts::FocusResult result;
+    result.activation = platform::Outcome::Unsupported;
+    if (!session.host.isNull() && bringForward) result = bringForward(session);
+    if (!result.raised()) {
+        QToolTip::showText(window_.figure().center(), focusFailure(session, result));
         return false;
     }
     // Going there answers its bubbles; a pending request keeps the badge until it resolves.

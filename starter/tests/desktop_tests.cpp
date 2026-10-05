@@ -1,5 +1,5 @@
 #include "desktop/pet_window.h"
-#include "desktop/host_focus.h"
+#include "platform/native.h"
 #include <QApplication>
 #include <QCursor>
 #include <QSignalSpy>
@@ -20,14 +20,15 @@ private slots:
         QVERIFY(QTest::qWaitForWindowExposed(&other));
         target.showMinimized();
         QTest::qWait(200);
-        pet::Session session;
-        session.host = {"terminal", {QCoreApplication::applicationPid()}, {}, {}};
-        session.project = "/tmp/agent-pet-focus-regression";
-        QVERIFY(pet::hostFocus::focus(session));
+        pet::hosts::HostContext host{"terminal", {QCoreApplication::applicationPid()}, {}, {}};
+        const QString project = "/tmp/agent-pet-focus-regression";
+        const auto focus = pet::platform::createFocusService();
+        const auto result = focus->focus(host, project);
+        QVERIFY(result.raised()); QCOMPARE(result.backend, QString("kwin")); QCOMPARE(result.activation, pet::platform::Outcome::Confirmed);
         QTRY_VERIFY(target.isActiveWindow());
         QVERIFY(!target.isMinimized());
-        session.host.pids = {2147483647};
-        QVERIFY(!pet::hostFocus::focus(session));
+        host.pids = {2147483647};
+        QVERIFY(!focus->focus(host, project).raised());
     }
     void nativeDragReleasesAndRestores() {
         if (QGuiApplication::platformName() != "xcb") QSKIP("Requires X11/XWayland and XTest");

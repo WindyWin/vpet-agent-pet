@@ -1,7 +1,9 @@
 # Platform and session focus refactor plan
 
-Status: proposed, 2026-10-05. This document plans the refactor; it does not
-implement it or expand the supported platforms.
+Status, 2026-10-05: steps 1–3 below are implemented (characterization tests, host
+registry, focus service with adapters and X11/KWin backends); see
+[session focus](architecture.md#session-focus) for the result. Steps 4 and 5 remain
+proposed. The refactor does not expand the supported platforms.
 
 Prepare extension points for other operating systems, Linux desktop environments,
 and applications hosting agent sessions. Move the existing implementations behind

@@ -172,7 +172,9 @@ owns the agent's parent processes is activated (VS Code windows are told apart
 by the project name in their title). Detached Herdr sessions are matched to
 their attached terminal clients. On KDE Plasma 6, KWin scripting also raises
 native Wayland windows; other Wayland compositors are not supported. Open keeps
-the alert visible if it cannot raise a window. Sessions that
+the alert visible if it cannot raise a window, and its tooltip says whether the
+tab or pane could not be selected, the window was not found, or this desktop cannot
+raise windows at all. Sessions that
 started before this version appear without a host until their next event.
 
 An orange badge stays on the pet while any observed session waits for approval

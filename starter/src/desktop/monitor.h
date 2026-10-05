@@ -1,5 +1,6 @@
 #pragma once
 #include "alert_bubble.h"
+#include "hosts/focus_service.h"
 #include "ipc/local.h"
 #include "pet_window.h"
 #include "session_list.h"
@@ -15,7 +16,8 @@ namespace pet {
 class Monitor : public QObject {
     Q_OBJECT
 public:
-    explicit Monitor(PetWindow &window);
+    // Focus is optional: without it, sessions cannot be brought forward or checked for being in view.
+    explicit Monitor(PetWindow &window, std::shared_ptr<hosts::FocusService> focus = nullptr);
     // Takes a receiver that already holds the single-instance lock.
     void listen(std::unique_ptr<Receiver> receiver);
     bool apply(const Event &event, qint64 now);
@@ -28,18 +30,20 @@ public:
     SessionList &sessionList() { return list_; }
     void dismiss();
     void toggleSessions();
-    // Brings the session's terminal or editor forward; false when it cannot be found.
+    // Brings the session's terminal or editor forward; false when its window was not raised.
     bool focusSession(const QString &key);
     void focusCurrent();
-    // Replaceable for tests: is the user already looking at this session's window?
-    std::function<bool(const Session &)> hostActive; // default: hostFocus::active
-    std::function<bool(const Session &)> bringForward; // default: hostFocus::focus
+    // Replaceable for tests. Defaults use the focus service given at construction.
+    // Is the user already looking at this session? Only Active suppresses its new alerts.
+    std::function<platform::ActiveState(const Session &)> hostActive;
+    std::function<hosts::FocusResult(const Session &)> bringForward;
     static const QString bedtimeNote; // Shown once a night when a turn finishes late.
 private:
     void refreshAlerts();
     void remind();
     bool shown(const Alert &alert) const;
     PetWindow &window_;
+    std::shared_ptr<hosts::FocusService> focus_;
     Sessions sessions_;
     AlertQueue queue_;
     AlertBubble bubble_;

@@ -18,8 +18,8 @@ struct Capture {
 };
 
 // Built-in host adapters, registered explicitly in registry.cpp. A new host adds
-// its Capture there, and its activation in focus_service.cpp; session state,
-// alert policy and presentation stay untouched.
+// its Capture there and its Activation, if any, in platform::createFocusService();
+// session state, alert policy and presentation stay untouched.
 class Registry {
 public:
     // Registration order is detection precedence: the first host that recognizes
