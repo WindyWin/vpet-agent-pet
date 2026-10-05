@@ -101,7 +101,7 @@ void Controller::start() {
     QTimer::singleShot(15000, this, [this] { check(); autoInstall(); });
     auto *timer = new QTimer(this); timer->setInterval(60 * 60 * 1000);
     connect(timer, &QTimer::timeout, this, [this] { check(); }); timer->start();
-    // A finished download waits here until the user's agent sessions are over.
+    // A finished download waits here while an agent is waiting for the user's answer.
     auto *retry = new QTimer(this); retry->setInterval(5 * 60 * 1000);
     connect(retry, &QTimer::timeout, this, [this] { autoInstall(); }); retry->start();
 }
@@ -175,14 +175,14 @@ void Controller::download() {
             QFile::remove(directory_ + "/package.tar.gz"); status(error); return;
         }
         if (!writeObject(directory_ + "/pending.json", target.json())) { status("Cannot save the pending update."); return; }
-        ready_ = true; status("Update " + target.version + " is ready. Restart when your sessions are finished.");
+        ready_ = true; status("Update " + target.version + " is ready. It installs as soon as no agent is waiting for you.");
         autoInstall();
     });
     status("Downloading update…");
 }
 void Controller::install() {
     if (!ready_ || prefix_.isEmpty() || reply_) return;
-    if (sessionsActive && sessionsActive()) { status("Finish your agent sessions before restarting to update."); return; }
+    if (sessionsActive && sessionsActive()) { status("An agent is waiting for your answer. Respond to it, then restart to update."); return; }
     QStringList args{"--apply", prefix_, directory_ + "/package.tar.gz", release_.digest, release_.version,
                      QString::number(QCoreApplication::applicationPid())};
     if (!QProcess::startDetached(helper(prefix_), args)) { status("Could not start the update installer."); return; }

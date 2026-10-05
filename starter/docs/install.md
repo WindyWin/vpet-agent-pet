@@ -155,7 +155,7 @@ Choose one of four modes:
 | **Notify only** | A menu indicator shows the available version; choose Download update or open the release page. |
 | **Download automatically** | Downloads and verifies the package, then waits for **Restart and update**. |
 | **Install automatically on next launch** | Downloads and verifies the package, then installs during the next normal launch. |
-| **Download and install automatically** (default for new installs) | Downloads and verifies the package, then restarts into the new version as soon as no agent sessions are active, checking again every 5 minutes. Each version is attempted once, so a rolled-back update does not loop. |
+| **Download and install automatically** (default for new installs) | Downloads and verifies the package, then restarts into the new version as soon as no agent is waiting for your approval or input, checking again every 5 minutes. Working and idle sessions do not block it; they reappear with their next hook event after the restart. Each version is attempted once, so a rolled-back update does not loop. |
 
 **Later / Close** leaves the update available. **Skip this version** suppresses
 that version and discards its pending package; **Check now** shows it again.
@@ -168,9 +168,10 @@ builds (revision `local`) and copies run directly from an extracted archive
 support notifications and the manual download link. Older releases without a
 GitHub SHA-256 asset digest also require manual download.
 
-Automatic updates never force a running pet to restart. Session-triggered
-launches postpone automatic installation so monitoring starts immediately.
-**Restart and update** waits until no observed agent sessions remain.
+Only the fully automatic mode restarts a running pet, and never while an agent is
+waiting for your approval or input (that request would be lost). Session-triggered
+launches postpone installation on next launch so monitoring starts immediately.
+**Restart and update** applies the same rule.
 
 The helper verifies the package again, rejects unsafe archive paths and links,
 extracts beside the existing installation, and atomically switches directories.
