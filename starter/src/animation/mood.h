@@ -29,9 +29,11 @@ public:
     void refresh(qint64 now);  // Lets the score recover and updates the mood shown.
     int score(qint64 now);
     QString level() const { return level_; } // "happy", "poor" or empty for neutral.
-    // The state that celebrates a finished turn: a pending treat if one is due and the catalog has it,
-    // otherwise one drawn from the "turn_finished" reaction. Falls back to "turn_finished".
-    QString celebrate();
+    // The state that celebrates a finished turn: a pending milestone, else a draw from the `occasion`
+    // reaction (an easter egg such as "long_turn") when the catalog has it, else a pending snack, else a
+    // draw from the "turn_finished" reaction. A snack passed over waits for the next turn. Falls back to
+    // "turn_finished".
+    QString celebrate(const QString &occasion = {});
     QString treat() const { return treat_; } // "milestone", "snack" or empty.
     // Every finished turn ever seen, persisted so the hundredth survives restarts.
     int turns() const { return turns_; }

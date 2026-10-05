@@ -116,9 +116,13 @@ Codex hosted tools can lack tool hooks. There is no universal input-request even
 
 A callback carrying `agent_id` uses that child identity; a child Stop cannot
 finish its parent's turn. Concurrent tools retain their own IDs. Unknown tool
-names are treated as working, without examining arguments. Tool failure text,
-prompt text, tool arguments/results, assistant messages, and transcript paths
-never enter the normalized envelope. Raw input is parsed only in memory, bounded
+names are treated as working. The one argument examined is a tool start's
+`tool_input.command` (a string, or a list of strings): the hook checks it in
+memory against a fixed list of destructive patterns (`rm` with recursive and force
+flags, a forced `git push`, `git reset --hard`, `git clean -f`, `mkfs`, `dd` onto
+`/dev/`, SQL `DROP`/`TRUNCATE`) and sends only `risky: true` for the pet's startled
+reaction. Tool failure text, prompt text, tool arguments/results, assistant
+messages, and transcript paths never enter the normalized envelope. Raw input is parsed only in memory, bounded
 at 1 MiB; oversized callbacks are dropped. The normalized datagram stays at 8 KiB.
 
 Missing/invalid session IDs and uncorrelatable tool events are dropped. Tool

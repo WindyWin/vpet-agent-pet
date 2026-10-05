@@ -20,6 +20,8 @@ struct Animation { QVector<Choice> choices; QString mode; QString after; int loo
 struct Fidget { QString state; int weight = 1; int minIdleS = 0; bool rare = false; };
 // One state a reaction pool may play, such as a way to celebrate a finished turn.
 struct Reaction { QString state; int weight = 1; };
+// A state drawn by weight from a reaction pool; a pool of one draws no number. Empty for an empty pool.
+QString drawReaction(const QVector<Reaction> &pool, const Random &random);
 // How the pet answers being handled, from the catalog's "touch" section. Rectangles and edge lines are
 // in the artwork's own square space of `scale` units, so they follow the pet's size.
 struct TouchRegion { QString state; QRect rect; };

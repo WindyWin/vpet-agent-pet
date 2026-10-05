@@ -2,7 +2,7 @@
 
 A small starting repository for a desktop pet that reacts to Claude Code and Codex activity. The sprite files are bundled here, so development can proceed without a local VPet installation.
 
-The current asset pack contains **702 original PNG frames in 78 animation sequences (94.27 MiB)**. They cover idle (with two alternate loops, a few idle fidgets, and happy and droopy moods), thinking, reading, working, waiting for input, tool errors, several ways to celebrate a finished turn, sleeping, startup, closing, the original dragging animation, and reactions to being petted, thrown and pushed against a screen edge. [animations.json](assets/vpet/animations.json) maps each state to its sequences, records frame durations, and lists the idle variants, fidgets, mood art, reactions and touch hit boxes. [manifest.json](assets/vpet/manifest.json) records every file's size and SHA-256 hash.
+The current asset pack contains **815 original PNG frames in 85 animation sequences (110.56 MiB)**. They cover idle (with two alternate loops, a few idle fidgets, and happy and droopy moods), thinking, reading, working, waiting for input, tool errors, several ways to celebrate a finished turn, sleeping, startup, closing, the original dragging animation, reactions to being petted, thrown and pushed against a screen edge, and a few easter eggs. [animations.json](assets/vpet/animations.json) maps each state to its sequences, records frame durations, and lists the idle variants, fidgets, mood art, reactions and touch hit boxes. [manifest.json](assets/vpet/manifest.json) records every file's size and SHA-256 hash.
 
 [available-animations.json](assets/vpet/available-animations.json) catalogs the **480 remaining sequences and 4,796 frames** from the original character pack. Each entry gives its upstream folder, category, frame count, size, and timing status. These are references for future work; their PNG files are not included here. To add one later, run `python3 scripts/add_sequences.py IDEL/yawning/Nomal …` against a copy of the upstream VPet tree (`--source`; the full archive next to this folder is the default). It copies the frames, updates the manifest and both catalogs, and leaves you to map the sequences in `animations.json`, which `scripts/verify_assets.py` then checks. Retain the artwork notices.
 
@@ -86,6 +86,20 @@ the edge. Agent activity brings it back out, and so does dragging it away. Setti
 **Touch** turns all of this off, leaving plain dragging. Preview the reactions from
 Preview state (`touch_*`, `pinch`, `fall_*`, `edge_*`); see
 [the architecture notes](docs/architecture.md#touch-reactions).
+
+## Easter eggs
+
+A few surprises, on by default. On May 20 the idle pet greets you with a heart, and
+on your birthday (Settings → **Birthday**, day and month only) it celebrates, both
+when it idles and on the day's first finished turn. Late at night it yawns more, and
+the first turn that finishes after 1 AM brings a gentle bedtime note. Turns finished
+on a Friday evening end in a dance, and a turn that ran for a quarter of an hour or
+more gets a bigger celebration. When an agent starts a destructive shell command,
+such as `rm -rf` or `git push --force`, the pet jumps; the hook judges the command
+itself and sends only that verdict. There is at least one more to find. Settings →
+**Easter eggs** turns them all off. The special-day fidgets need idle animation on.
+Preview them from Preview state (`love_520`, `birthday`, `dance`, `startled`); see
+[the architecture notes](docs/architecture.md#easter-eggs).
 
 The default uses X11/XWayland when DISPLAY is available. For a development-only
 native Wayland check: `QT_QPA_PLATFORM=wayland ./build/agent-pet`.

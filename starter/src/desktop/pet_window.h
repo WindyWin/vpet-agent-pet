@@ -1,5 +1,6 @@
 #pragma once
 #include "animation/ambient.h"
+#include "animation/easter_eggs.h"
 #include "animation/mood.h"
 #include "animation/player.h"
 #include "desktop/touch.h"
@@ -27,6 +28,12 @@ public:
     Mood &mood() { return mood_; }
     void setMoodLevel(int level); // Preferences::Mood; persisted.
     int moodLevel() const { return int(mood_.setting()); }
+    EasterEggs &eggs() { return eggs_; }
+    // Special days, late nights and rare surprises; persisted. Off, none of them happen.
+    void setEasterEggsEnabled(bool enabled);
+    bool easterEggsEnabled() const { return eggs_.enabled(); }
+    void setBirthday(const QString &monthDay); // "MM-dd" or empty; persisted.
+    QString birthday() const { return eggs_.birthday(); }
     // Petting, throwing and hiding at a screen edge; persisted. Off, the pet only drags.
     void setTouchEnabled(bool enabled);
     bool touchEnabled() const { return touchEnabled_; }
@@ -91,6 +98,7 @@ protected:
     void mousePressEvent(QMouseEvent *) override;
     void mouseMoveEvent(QMouseEvent *) override;
     void mouseReleaseEvent(QMouseEvent *) override;
+    void keyPressEvent(QKeyEvent *) override;
 private:
     void endDrag(bool released = false);
     void land();
@@ -109,6 +117,7 @@ private:
     Player player_;
     Ambient ambient_;
     Mood mood_;
+    EasterEggs eggs_;
     PreferencesStore store_;
     QMenu menu_;
     QSystemTrayIcon tray_;

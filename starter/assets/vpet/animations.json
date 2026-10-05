@@ -121,6 +121,24 @@
       "SideHide_Right_Main/Nomal/A",
       "SideHide_Right_Main/Nomal/B_1",
       "SideHide_Right_Main/Nomal/C"
+    ],
+    "love_520": [
+      "IDEL/happy_like520"
+    ],
+    "birthday": [
+      "BDay/A",
+      "BDay/B",
+      "BDay/C"
+    ],
+    "dance": [
+      "Music/A/Nomal",
+      "Music/B/Nomal_1",
+      "Music/C/Nomal_1"
+    ],
+    "startled": [
+      "Pinch/Nomal/A",
+      "Pinch/Nomal/B",
+      "Pinch/Nomal/C"
     ]
   },
   "sequences": [
@@ -3477,6 +3495,507 @@
       ],
       "duration_ms": 625,
       "state": "edge_right"
+    },
+    {
+      "path": "IDEL/happy_like520",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/IDEL/happy_like520/\u51d1\u51d1\u7684\u7231_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/happy_like520/\u51d1\u51d1\u7684\u7231_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/happy_like520/\u51d1\u51d1\u7684\u7231_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/happy_like520/\u51d1\u51d1\u7684\u7231_003_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/happy_like520/\u51d1\u51d1\u7684\u7231_004_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/happy_like520/\u51d1\u51d1\u7684\u7231_005_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/happy_like520/\u51d1\u51d1\u7684\u7231_006_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/happy_like520/\u51d1\u51d1\u7684\u7231_007_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/happy_like520/\u51d1\u51d1\u7684\u7231_008_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/happy_like520/\u51d1\u51d1\u7684\u7231_009_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/happy_like520/\u51d1\u51d1\u7684\u7231_010_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/happy_like520/\u51d1\u51d1\u7684\u7231_011_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/happy_like520/\u51d1\u51d1\u7684\u7231_012_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/happy_like520/\u51d1\u51d1\u7684\u7231_013_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/happy_like520/\u51d1\u51d1\u7684\u7231_014_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/happy_like520/\u51d1\u51d1\u7684\u7231_015_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/happy_like520/\u51d1\u51d1\u7684\u7231_016_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/happy_like520/\u51d1\u51d1\u7684\u7231_017_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/happy_like520/\u51d1\u51d1\u7684\u7231_018_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/happy_like520/\u51d1\u51d1\u7684\u7231_019_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/happy_like520/\u51d1\u51d1\u7684\u7231_020_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/happy_like520/\u51d1\u51d1\u7684\u7231_021_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/happy_like520/\u51d1\u51d1\u7684\u7231_022_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/happy_like520/\u51d1\u51d1\u7684\u7231_023_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/happy_like520/\u51d1\u51d1\u7684\u7231_024_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/happy_like520/\u51d1\u51d1\u7684\u7231_025_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/happy_like520/\u51d1\u51d1\u7684\u7231_026_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/happy_like520/\u51d1\u51d1\u7684\u7231_027_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/happy_like520/\u51d1\u51d1\u7684\u7231_028_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/happy_like520/\u51d1\u51d1\u7684\u7231_029_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/happy_like520/\u51d1\u51d1\u7684\u7231_030_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 3875,
+      "state": "love_520"
+    },
+    {
+      "path": "BDay/A",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/BDay/A/A_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/BDay/A/A_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/BDay/A/A_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/BDay/A/A_003_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 500,
+      "state": "birthday"
+    },
+    {
+      "path": "BDay/B",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/BDay/B/B_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/BDay/B/B_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/BDay/B/B_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/BDay/B/B_003_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/BDay/B/B_004_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/BDay/B/B_005_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/BDay/B/B_006_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/BDay/B/B_007_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/BDay/B/B_008_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/BDay/B/B_009_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/BDay/B/B_010_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/BDay/B/B_011_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/BDay/B/B_012_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/BDay/B/B_013_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/BDay/B/B_014_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/BDay/B/B_015_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/BDay/B/B_016_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/BDay/B/B_017_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/BDay/B/B_018_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/BDay/B/B_019_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/BDay/B/B_020_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/BDay/B/B_021_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/BDay/B/B_022_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/BDay/B/B_023_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/BDay/B/B_024_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/BDay/B/B_025_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/BDay/B/B_026_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/BDay/B/B_027_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/BDay/B/B_028_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/BDay/B/B_029_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/BDay/B/B_030_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/BDay/B/B_031_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/BDay/B/B_032_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/BDay/B/B_033_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/BDay/B/B_034_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/BDay/B/B_035_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/BDay/B/B_036_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/BDay/B/B_037_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/BDay/B/B_038_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/BDay/B/B_039_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/BDay/B/B_040_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/BDay/B/B_041_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/BDay/B/B_042_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/BDay/B/B_043_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/BDay/B/B_044_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 5625,
+      "state": "birthday"
+    },
+    {
+      "path": "BDay/C",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/BDay/C/C_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/BDay/C/C_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/BDay/C/C_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/BDay/C/C_003_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 500,
+      "state": "birthday"
+    },
+    {
+      "path": "Music/A/Nomal",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/Music/A/Nomal/Nomal_000_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 125,
+      "state": "dance"
+    },
+    {
+      "path": "Music/B/Nomal_1",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/Music/B/Nomal_1/_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Music/B/Nomal_1/_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Music/B/Nomal_1/_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Music/B/Nomal_1/_003_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Music/B/Nomal_1/_004_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Music/B/Nomal_1/_005_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Music/B/Nomal_1/_006_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Music/B/Nomal_1/_007_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Music/B/Nomal_1/_008_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Music/B/Nomal_1/_009_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Music/B/Nomal_1/_010_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Music/B/Nomal_1/_011_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Music/B/Nomal_1/_012_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Music/B/Nomal_1/_013_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Music/B/Nomal_1/_014_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Music/B/Nomal_1/_015_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Music/B/Nomal_1/_016_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Music/B/Nomal_1/_017_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Music/B/Nomal_1/_018_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Music/B/Nomal_1/_019_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Music/B/Nomal_1/_020_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Music/B/Nomal_1/_021_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 2750,
+      "state": "dance"
+    },
+    {
+      "path": "Music/C/Nomal_1",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/Music/C/Nomal_1/_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Music/C/Nomal_1/_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Music/C/Nomal_1/_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Music/C/Nomal_1/_003_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Music/C/Nomal_1/_004_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Music/C/Nomal_1/_005_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 750,
+      "state": "dance"
     }
   ],
   "playback": {
@@ -3597,6 +4116,25 @@
     "edge_right": {
       "mode": "phased",
       "after": "idle"
+    },
+    "love_520": {
+      "mode": "once",
+      "after": "idle"
+    },
+    "birthday": {
+      "mode": "phased",
+      "after": "idle",
+      "loops": 1
+    },
+    "dance": {
+      "mode": "phased",
+      "after": "idle",
+      "loops": 2
+    },
+    "startled": {
+      "mode": "phased",
+      "after": "idle",
+      "loops": 2
     }
   },
   "variants": {
@@ -3721,6 +4259,56 @@
     "milestone": [
       {
         "state": "milestone",
+        "weight": 1
+      }
+    ],
+    "long_turn": [
+      {
+        "state": "milestone",
+        "weight": 2
+      },
+      {
+        "state": "dance",
+        "weight": 1
+      }
+    ],
+    "friday_evening": [
+      {
+        "state": "dance",
+        "weight": 1
+      }
+    ],
+    "may20": [
+      {
+        "state": "love_520",
+        "weight": 1
+      }
+    ],
+    "birthday": [
+      {
+        "state": "birthday",
+        "weight": 1
+      }
+    ],
+    "late_night": [
+      {
+        "state": "fidget_yawn",
+        "weight": 1
+      }
+    ],
+    "konami": [
+      {
+        "state": "dance",
+        "weight": 2
+      },
+      {
+        "state": "love_520",
+        "weight": 1
+      }
+    ],
+    "danger": [
+      {
+        "state": "startled",
         "weight": 1
       }
     ]

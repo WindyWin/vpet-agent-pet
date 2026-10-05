@@ -15,12 +15,16 @@ One UTF-8 JSON object per Unix datagram, at most 8192 bytes:
 Required fields: `version` (integer 1), `provider` (`claude` or `codex`),
 `session_id`, `event_id`, `kind`, and positive integer Unix `timestamp_ms`.
 Optional fields: `tool_id`, `parent_id`, `project_path`, `activity`, `reason`,
-and the host fields below.
+`risky`, and the host fields below.
 `tool_start` and `tool_end` require `tool_id`; activity is `reading` or `working`
 (default working). `reason` is allowed only on `attention` and is `approval` or
-`input`; without it alerts say "Needs attention". Strings are limited to 256 UTF-16 units, except project paths
+`input`; without it alerts say "Needs attention". `risky` is a boolean allowed only
+on `tool_start`: the hook found a destructive shell command (see
+[adapter policy](integrations.md#adapter-policy)), and the pet looks startled. It is
+the only non-string field besides the version and timestamp. Strings are limited to 256 UTF-16 units, except project paths
 (2048); control characters and unknown fields are rejected. No prompt, tool
-arguments, output, or raw provider payload is retained or transmitted.
+arguments, output, or raw provider payload is retained or transmitted; `risky` is
+a one-bit judgment made inside the hook.
 
 Kinds: `session_start`, `prompt`, `tool_start`, `tool_end`, `attention`, `error`,
 `turn_finished`, `interrupt`, `session_end`. A finished turn indicates only that

@@ -47,18 +47,11 @@ void Mood::refresh(qint64 now) {
     level_ = level;
     player_.setMood(level_);
 }
-QString Mood::celebrate() {
-    auto pool = player_.reactions(treat_);
-    treat_.clear();
+QString Mood::celebrate(const QString &occasion) {
+    const bool occasional = treat_ != "milestone" && !player_.reactions(occasion).isEmpty();
+    auto pool = player_.reactions(occasional ? occasion : treat_);
+    if (!occasional) treat_.clear();
     if (pool.isEmpty()) pool = player_.reactions("turn_finished");
-    if (pool.isEmpty()) return "turn_finished";
-    int total = 0;
-    for (const auto &reaction : pool) total += reaction.weight;
-    int roll = pool.size() == 1 ? 0 : qBound(0, random_(total), total - 1);
-    for (const auto &reaction : pool) {
-        if (roll < reaction.weight) return reaction.state;
-        roll -= reaction.weight;
-    }
-    return pool.first().state;
+    return pool.isEmpty() ? QString("turn_finished") : drawReaction(pool, random_);
 }
 }

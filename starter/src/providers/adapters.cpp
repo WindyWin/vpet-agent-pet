@@ -1,9 +1,12 @@
 #include "adapters.h"
 #include "sessions/state.h"
 #include <QCryptographicHash>
+#include <QJsonArray>
 #include <QJsonDocument>
+#include <QRegularExpression>
 #include <QSet>
 #include <QUuid>
+#include <algorithm>
 
 namespace pet {
 QStringList hookEvents(const QString &provider) {
@@ -44,6 +47,48 @@ static QString codexKind(const QJsonObject &in) {
     }
     return commonKind(name);
 }
+bool destructiveCommand(const QString &command) {
+    static const QRegularExpression sql(R"(\b(drop\s+(table|database|schema)|truncate\s+table)\b)",
+                                        QRegularExpression::CaseInsensitiveOption);
+    if (sql.match(command).hasMatch()) return true;
+    // Each simple command on its own, with quotes dropped: a false alarm only startles the pet.
+    static const QRegularExpression separators(R"(&&|\|\||[;|&\n`()]|\$\()");
+    static const QSet<QString> wrappers{"sudo", "doas", "command", "exec", "nohup", "time", "env", "xargs"};
+    for (const auto &part : command.split(separators, Qt::SkipEmptyParts)) {
+        auto words = QString(part).remove('"').remove('\'').simplified().split(' ', Qt::SkipEmptyParts);
+        while (!words.isEmpty() && (wrappers.contains(words.first()) || (words.first().contains('=') && !words.first().startsWith('-'))))
+            words.removeFirst();
+        if (words.isEmpty()) continue;
+        const auto program = words.takeFirst().section('/', -1);
+        // A shell running a script, such as Codex's ["bash", "-lc", "..."]: check the script.
+        if (QStringList{"bash", "sh", "zsh", "dash"}.contains(program)) {
+            while (!words.isEmpty() && words.first().startsWith('-')) words.removeFirst();
+            if (destructiveCommand(words.join(' '))) return true;
+            continue;
+        }
+        auto flag = [&words](QChar letter, const QString &longName) {
+            for (const auto &word : words)
+                if (word == longName || (word.startsWith('-') && !word.startsWith("--") && word.contains(letter))) return true;
+            return false;
+        };
+        if (program == "rm" && (flag('r', "--recursive") || flag('R', "--recursive")) && flag('f', "--force")) return true;
+        if (program.startsWith("mkfs")) return true;
+        if (program == "dd" && std::any_of(words.begin(), words.end(), [](const QString &w) { return w.startsWith("of=/dev/"); }))
+            return true;
+        if (program != "git") continue;
+        // The subcommand is the first word that is not an option or the value of -C or -c.
+        QString subcommand;
+        for (int i = 0; i < words.size() && subcommand.isEmpty(); ++i) {
+            if (words[i] == "-C" || words[i] == "-c") ++i;
+            else if (!words[i].startsWith('-')) subcommand = words[i];
+        }
+        const auto forced = flag('f', "--force") ||
+            std::any_of(words.begin(), words.end(), [](const QString &w) { return w.startsWith("--force") || w.startsWith('+'); });
+        if ((subcommand == "push" && forced) || (subcommand == "reset" && words.contains("--hard")) ||
+            (subcommand == "clean" && flag('f', "--force"))) return true;
+    }
+    return false;
+}
 QJsonObject normalizeHook(const QString &provider, const QJsonObject &in, qint64 now) {
     const auto name = in.value("hook_event_name").toString();
     if (!hookEvents(provider).contains(name)) return {};
@@ -74,6 +119,11 @@ QJsonObject normalizeHook(const QString &provider, const QJsonObject &in, qint64
     if (kind == "tool_start") {
         const QSet<QString> reading{"Read", "Grep", "Glob", "WebFetch", "WebSearch", "read_file", "list_dir"};
         out["activity"] = reading.contains(in.value("tool_name").toString()) ? "reading" : "working";
+        // A shell tool's command line, as one string or an argument list, is checked here and dropped.
+        const auto command = in.value("tool_input").toObject().value("command");
+        QString line = command.toString();
+        if (command.isArray()) for (const auto &part : command.toArray()) line += part.toString() + ' ';
+        if (destructiveCommand(line)) out["risky"] = true;
     }
     if (in.value("cwd").isString()) out["project_path"] = in.value("cwd");
     // Tool identities are stable across delivery retries. Lifecycle events lack a

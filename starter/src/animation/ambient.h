@@ -1,4 +1,5 @@
 #pragma once
+#include "easter_eggs.h"
 #include "player.h"
 #include <QObject>
 #include <functional>
@@ -25,6 +26,8 @@ public:
     // then the rare roll (only when a rare fidget exists), then the weighted pick.
     void setRandom(Random random) { random_ = random ? std::move(random) : systemRandom(); }
     void setClock(std::function<qint64()> milliseconds);
+    // Special days and late nights may offer their own fidget, asked before each ordinary draw.
+    void setEasterEggs(EasterEggs *eggs) { eggs_ = eggs; }
     // The shortest and longest wait between fidgets, in seconds.
     static QPair<int, int> gapSeconds(AmbientLevel level);
 private:
@@ -33,11 +36,12 @@ private:
     qint64 gapMs();
     QString pick(qint64 idleMs);
     Player &player_;
+    EasterEggs *eggs_ = nullptr;
     AmbientLevel level_ = AmbientLevel::Subtle;
     Random random_ = systemRandom();
     std::function<qint64()> clock_;
     qint64 idleSince_ = -1, nextDue_ = 0;
-    QString last_;
+    QString last_, special_; // `special_`: what the easter eggs offered last, shown like a fidget.
     bool fidgeting_ = false, asleep_ = false, napping_ = false;
 };
 }

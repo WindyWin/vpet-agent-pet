@@ -18,6 +18,17 @@ bool safePath(const QString &path) {
         && !path.split('/').contains(".");
 }
 }
+QString drawReaction(const QVector<Reaction> &pool, const Random &random) {
+    if (pool.isEmpty()) return {};
+    int total = 0;
+    for (const auto &reaction : pool) total += reaction.weight;
+    int roll = pool.size() == 1 ? 0 : qBound(0, random(total), total - 1);
+    for (const auto &reaction : pool) {
+        if (roll < reaction.weight) return reaction.state;
+        roll -= reaction.weight;
+    }
+    return pool.first().state;
+}
 Player::Player(QObject *parent, const QString &root) : QObject(parent) {
     timer_.setSingleShot(true);
     timer_.setTimerType(Qt::PreciseTimer);
