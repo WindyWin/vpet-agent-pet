@@ -2,9 +2,9 @@
 
 A small starting repository for a desktop pet that reacts to Claude Code and Codex activity. The sprite files are bundled here, so development can proceed without a local VPet installation.
 
-The current asset pack contains **518 original PNG frames in 57 animation sequences (70.25 MiB)**. They cover idle (with two alternate loops, a few idle fidgets, and happy and droopy moods), thinking, reading, working, waiting for input, tool errors, several ways to celebrate a finished turn, sleeping, startup, closing, and the original dragging animation. [animations.json](assets/vpet/animations.json) maps each state to its sequences, records frame durations, and lists the idle variants, fidgets, mood art and reactions. [manifest.json](assets/vpet/manifest.json) records every file's size and SHA-256 hash.
+The current asset pack contains **702 original PNG frames in 78 animation sequences (94.27 MiB)**. They cover idle (with two alternate loops, a few idle fidgets, and happy and droopy moods), thinking, reading, working, waiting for input, tool errors, several ways to celebrate a finished turn, sleeping, startup, closing, the original dragging animation, and reactions to being petted, thrown and pushed against a screen edge. [animations.json](assets/vpet/animations.json) maps each state to its sequences, records frame durations, and lists the idle variants, fidgets, mood art, reactions and touch hit boxes. [manifest.json](assets/vpet/manifest.json) records every file's size and SHA-256 hash.
 
-[available-animations.json](assets/vpet/available-animations.json) catalogs the **501 remaining sequences and 4,980 frames** from the original character pack. Each entry gives its upstream folder, category, frame count, size, and timing status. These are references for future work; their PNG files are not included here. To add one later, run `python3 scripts/add_sequences.py IDEL/yawning/Nomal …` against a copy of the upstream VPet tree (`--source`; the full archive next to this folder is the default). It copies the frames, updates the manifest and both catalogs, and leaves you to map the sequences in `animations.json`, which `scripts/verify_assets.py` then checks. Retain the artwork notices.
+[available-animations.json](assets/vpet/available-animations.json) catalogs the **480 remaining sequences and 4,796 frames** from the original character pack. Each entry gives its upstream folder, category, frame count, size, and timing status. These are references for future work; their PNG files are not included here. To add one later, run `python3 scripts/add_sequences.py IDEL/yawning/Nomal …` against a copy of the upstream VPet tree (`--source`; the full archive next to this folder is the default). It copies the frames, updates the manifest and both catalogs, and leaves you to map the sequences in `animations.json`, which `scripts/verify_assets.py` then checks. Retain the artwork notices.
 
 This folder is ready to become its own repository:
 
@@ -73,6 +73,19 @@ a break, and every hundredth finished turn gets a bigger celebration. Settings �
 **Mood** chooses **Off** (always neutral), **Cheerful only** (never droopy) or **Full**
 (the default). Preview the reactions from Preview state (`cheer_*`, `snack_*`,
 `milestone`); see [the architecture notes](docs/architecture.md#mood).
+
+## Touch
+
+A quick click still opens the running-sessions list. Hold the pet still for half a
+second instead and it reacts to where you hold it: a head pat, a poke in the tummy, or
+a pinched cheek. It keeps reacting until you let go. Moving while holding turns it into
+an ordinary drag. Let go of a drag while still moving fast and the pet is thrown: it
+tumbles to the bottom of the screen, lands and gets back up. Push it past the left or
+right edge of your screen while it idles and it hides there, peeking out from behind
+the edge. Agent activity brings it back out, and so does dragging it away. Settings →
+**Touch** turns all of this off, leaving plain dragging. Preview the reactions from
+Preview state (`touch_*`, `pinch`, `fall_*`, `edge_*`); see
+[the architecture notes](docs/architecture.md#touch-reactions).
 
 The default uses X11/XWayland when DISPLAY is available. For a development-only
 native Wayland check: `QT_QPA_PLATFORM=wayland ./build/agent-pet`.

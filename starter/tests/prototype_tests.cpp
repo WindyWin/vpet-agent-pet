@@ -138,7 +138,13 @@ private slots:
         for (const auto *name : {"turn_finished", "snack", "milestone"})
             for (const auto &reaction : player.reactions(name)) reactions.insert(reaction.state);
         QCOMPARE(reactions.size(), 6);
-        QCOMPARE(player.states().size(), 11 + reactions.size() - 1 + player.fidgets().size());
+        // And the touch reactions: three held presses, two falls and two edges.
+        const auto &touch = player.touch();
+        QSet<QString> touches{touch.fallLeft, touch.fallRight, touch.edgeLeft, touch.edgeRight};
+        for (const auto &region : touch.regions) touches.insert(region.state);
+        QCOMPARE(touches.size(), 7);
+        for (const auto &state : touches) QVERIFY2(player.isTouch(state), qPrintable(state));
+        QCOMPARE(player.states().size(), 11 + reactions.size() - 1 + player.fidgets().size() + touches.size());
         QVERIFY(!player.fidgets().isEmpty());
         auto checkSequence = [&] {
             const int count = player.frameCount();
@@ -587,6 +593,189 @@ private slots:
         QVERIFY(!loads(reactions({reaction("idle")}, reacting)));
         QVERIFY(!loads(reactions({reaction("working", 0)}, reacting)));
         QVERIFY(!loads(reactions({reaction("working")}, base))); // A loop never ends by itself.
+    }
+    void touchRegionsAndHolds() {
+        pet::Player player; player.setPaused(true);
+        // Hit boxes are in the artwork's 500-unit space and follow the pet's size.
+        for (const int side : {160, 240, 320}) {
+            auto at = [&](double x, double y) { return player.touchAt(QPointF(x * side / 500, y * side / 500), side); };
+            QCOMPARE(at(250, 80), QString("touch_head"));
+            QCOMPARE(at(170, 150), QString("pinch")); // The cheek sits inside the head and wins.
+            QCOMPARE(at(250, 270), QString("touch_body"));
+            QCOMPARE(at(250, 460), QString()); QCOMPARE(at(20, 20), QString()); // Feet and empty margins.
+        }
+        // A held touch keeps playing while sessions move on, then ends and shows the latest request.
+        player.select("working", true); finishSequence(player);
+        player.hold("touch_head"); QVERIFY(player.held()); QCOMPARE(player.sequence(), QString("Touch_Head/A_Nomal"));
+        finishSequence(player); QCOMPARE(player.sequence(), QString("Touch_Head/B_Nomal"));
+        finishSequence(player); QCOMPARE(player.sequence(), QString("Touch_Head/B_Nomal"));
+        player.select("needs_input", true); QCOMPARE(player.state(), QString("touch_head"));
+        QCOMPARE(player.requestedState(), QString("touch_head"));
+        player.release(); QVERIFY(!player.held()); QCOMPARE(player.sequence(), QString("Touch_Head/C_Nomal"));
+        finishSequence(player); QCOMPARE(player.state(), QString("needs_input"));
+        // Moving while petting turns into a drag at once; the request from before the touch survives both.
+        player.select("idle", true);
+        player.hold("pinch"); player.beginDrag(); QCOMPARE(player.state(), QString("dragging")); QVERIFY(player.isDragging());
+        player.select("thinking"); player.endDrag(); finishSequence(player); QCOMPARE(player.state(), QString("thinking"));
+        // A reaction never comes back after a one-shot that returns to what was showing.
+        player.select("edge_left", true); player.select("tool_error", true); finishSequence(player);
+        QCOMPARE(player.state(), QString("idle"));
+        player.release(); QVERIFY(!player.held()); // Releasing nothing is harmless.
+    }
+    void gestureGeometry() {
+        using namespace pet::touch;
+        // Speed over the last 120 ms of a drag; a pause before letting go reads as still.
+        QCOMPARE(velocity({}), QPointF());
+        QCOMPARE(velocity({{0, {0, 0}}, {40, {40, 0}}, {80, {80, -20}}}), QPointF(1000, -250));
+        QCOMPARE(velocity({{0, {0, 0}}, {40, {400, 0}}, {200, {400, 0}}}), QPointF());
+        QCOMPARE(velocity({{0, {0, 0}}, {40, {400, 0}}, {80, {400, 0}}, {120, {400, 0}}}), QPointF(0, 0));
+        // An edge counts once an eighth of the window is past an outer side of its screen.
+        const QVector<QRect> one{QRect(0, 0, 1000, 800)};
+        QCOMPARE(pushedEdge(QRect(-29, 100, 240, 240), one), Edge::None);
+        QCOMPARE(pushedEdge(QRect(-30, 100, 240, 240), one), Edge::Left);
+        QCOMPARE(pushedEdge(QRect(790, 100, 240, 240), one), Edge::Right);
+        QCOMPARE(pushedEdge(QRect(400, -100, 240, 240), one), Edge::None); // Top and bottom do not hide.
+        const QVector<QRect> two{QRect(0, 0, 1000, 800), QRect(1000, 0, 1000, 800)};
+        QCOMPARE(pushedEdge(QRect(790, 100, 240, 240), two), Edge::None); // The next screen goes on.
+        QCOMPARE(pushedEdge(QRect(1790, 100, 240, 240), two), Edge::Right);
+        QCOMPARE(pushedEdge(QRect(-60, 100, 240, 240), two), Edge::Left);
+        // Hiding puts the screen edge through the artwork at the catalog's line, kept on-screen vertically.
+        QCOMPARE(hidePosition(Edge::Left, QRect(-60, 700, 240, 240), one, 219, 500), QPoint(-105, 560));
+        QCOMPARE(hidePosition(Edge::Right, QRect(800, 100, 240, 240), one, 281, 500), QPoint(1000 - 135, 100));
+        QCOMPARE(hidePosition(Edge::Right, QRect(1800, 100, 240, 240), two, 281, 500), QPoint(2000 - 135, 100));
+        // A thrown pet falls onto the bottom of its screen, bouncing off the sides on the way.
+        Flight drop({100, 0}, {-2000, -500}, QRect(0, 0, 1000, 800), {240, 240});
+        int steps = 0; bool bounced = false;
+        while (drop.step(16)) { ++steps; bounced = bounced || drop.position().x() == 0; QVERIFY(drop.position().y() >= 0); }
+        QVERIFY(drop.landed()); QVERIFY(bounced); QCOMPARE(drop.position().y(), 560); QVERIFY(steps < 100);
+        QVERIFY(drop.position().x() >= 0); QVERIFY(!drop.step(16));
+        // On the floor already it lands at once; one that cannot move still ends in time.
+        Flight floor({300, 560}, {1500, 0}, QRect(0, 0, 1000, 800), {240, 240}); QVERIFY(!floor.step(16));
+        Flight stuck({300, 0}, {0, 0}, QRect(0, 0, 1000, 100000), {240, 240});
+        int ticks = 0; while (stuck.step(100)) ++ticks;
+        QCOMPARE(ticks, int(Flight::maxMs / 100) - 1);
+    }
+    void windowTouchReactions() {
+        QTemporaryDir directory;
+        pet::PetWindow window(nullptr, directory.path() + "/preferences.json"); window.show();
+        pet::Monitor monitor(window); auto &player = window.player(); player.setPaused(true);
+        window.ambient().setLevel(pet::AmbientLevel::Off);
+        const auto area = pet::touch::areaFor(window.geometry(), window.screenAreas());
+        const qint64 now = QDateTime::currentMSecsSinceEpoch(); qint64 seq = 0;
+        auto event = [&](QString kind) {
+            ++seq; return pet::Event{"claude", "s1", QString::number(seq), kind, {}, {}, "/work/abc-web", {}, now + seq, {}};
+        };
+        playOut(player); QCOMPARE(player.state(), QString("idle"));
+        // Thrown: it falls to the bottom of the screen while sessions wait, then lands and shows them.
+        window.move(area.left() + 100, area.top());
+        player.beginDrag(); window.letGo({1500, 0});
+        QVERIFY(window.flying()); QCOMPARE(player.state(), QString("fall_right")); QVERIFY(player.held());
+        QVERIFY(monitor.apply(event("prompt"), now + seq)); QCOMPARE(player.state(), QString("fall_right"));
+        QTRY_VERIFY_WITH_TIMEOUT(!window.flying(), 4000);
+        QCOMPARE(window.pos().y(), area.bottom() + 1 - window.height()); QVERIFY(window.pos().x() > area.left() + 100);
+        QCOMPARE(player.sequence(), QString("MOVE/fall.right/C_Nomal"));
+        finishSequence(player); QCOMPARE(player.state(), QString("thinking"));
+        // Pushed past an edge while busy, it just comes back into view.
+        player.beginDrag(); window.move(area.left() - 60, area.top() + 50); window.letGo({});
+        QVERIFY(!window.hiding()); QCOMPARE(window.pos().x(), area.left());
+        playOut(player); QVERIFY(monitor.apply(event("interrupt"), now + seq)); playOut(player);
+        QCOMPARE(player.state(), QString("idle"));
+        // Idle, it hides there once the drag's end has played, and the monitor's periodic update leaves it hiding.
+        player.beginDrag(); window.move(area.left() - 60, area.top() + 50); window.letGo({});
+        QCOMPARE(player.state(), QString("dragging")); QVERIFY(!window.hiding());
+        monitor.update(now + seq); QCOMPARE(player.requestedState(), QString("edge_left"));
+        finishSequence(player); QCOMPARE(player.state(), QString("edge_left")); QVERIFY(window.hiding());
+        QCOMPARE(window.pos(), QPoint(area.left() - qRound(219.0 * window.width() / 500), area.top() + 50));
+        monitor.update(now + seq); QCOMPARE(player.requestedState(), QString("edge_left"));
+        window.constrainPosition(); QCOMPARE(window.pos().x(), area.left() - qRound(219.0 * window.width() / 500));
+        // Session activity brings it out through its end, back into view.
+        QVERIFY(monitor.apply(event("prompt"), now + seq)); QCOMPARE(player.phase(), QString("end"));
+        QVERIFY(window.hiding()); finishSequence(player);
+        QCOMPARE(player.state(), QString("thinking")); QVERIFY(!window.hiding()); QCOMPARE(window.pos().x(), area.left());
+        playOut(player); QVERIFY(monitor.apply(event("interrupt"), now + seq)); playOut(player);
+        // The right edge too; dragging it back out ends the hiding without fighting the drag.
+        player.beginDrag(); window.move(area.right() - window.width() + 60, area.top()); window.letGo({});
+        finishSequence(player); QCOMPARE(window.edge(), pet::touch::Edge::Right);
+        QCOMPARE(window.pos().x(), area.right() + 1 - qRound(281.0 * window.width() / 500));
+        player.beginDrag(); QVERIFY(!window.hiding()); QCOMPARE(player.requestedState(), QString("dragging"));
+        window.letGo({}); QCOMPARE(player.requestedState(), QString("idle")); playOut(player); QVERIFY(!window.hiding());
+        // Recovering the position brings it out too, so nothing puts it back behind the edge later.
+        player.beginDrag(); window.move(area.left() - 60, area.top()); window.letGo({}); finishSequence(player);
+        QVERIFY(window.hiding()); window.recover(); QVERIFY(!window.hiding()); QCOMPARE(player.state(), QString("idle"));
+        window.constrainPosition(); QVERIFY(area.contains(window.geometry()));
+        // Off, nothing falls or hides.
+        window.setTouchEnabled(false);
+        player.beginDrag(); window.letGo({-3000, 0}); QVERIFY(!window.flying());
+        player.beginDrag(); window.move(area.left() - 60, area.top()); window.letGo({});
+        playOut(player); QVERIFY(!window.hiding()); QCOMPARE(player.state(), QString("idle"));
+    }
+    void holdToPet() {
+        QTemporaryDir directory;
+        pet::PetWindow window(nullptr, directory.path() + "/preferences.json"); window.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&window));
+        auto &player = window.player(); player.setPaused(true); window.ambient().setLevel(pet::AmbientLevel::Off);
+        playOut(player);
+        QSignalSpy sessions(&window, &pet::PetWindow::sessionsRequested);
+        const QPoint head(window.width() / 2, window.width() * 80 / 500);
+        // A short press is still a click.
+        QTest::mousePress(&window, Qt::LeftButton, {}, head); QTest::mouseRelease(&window, Qt::LeftButton, {}, head, 50);
+        QTRY_COMPARE(sessions.size(), 1); QCOMPARE(player.state(), QString("idle"));
+        // Held still, it pets; let go, it finishes and is not a click.
+        QTest::mousePress(&window, Qt::LeftButton, {}, head);
+        QTRY_COMPARE_WITH_TIMEOUT(player.state(), QString("touch_head"), 2000);
+        QTest::mouseRelease(&window, Qt::LeftButton, {}, head);
+        QTRY_VERIFY(!player.held()); QCOMPARE(player.phase(), QString("end"));
+        QTest::qWait(300); QCOMPARE(sessions.size(), 1);
+        finishSequence(player); QCOMPARE(player.state(), QString("idle"));
+        // Off the artwork, or with touch off, holding does nothing.
+        window.setTouchEnabled(false);
+        QTest::mousePress(&window, Qt::LeftButton, {}, head); QTest::qWait(700);
+        QCOMPARE(player.state(), QString("idle")); QTest::mouseRelease(&window, Qt::LeftButton, {}, head);
+    }
+    void touchPreference() {
+        QTemporaryDir directory; const auto path = directory.path() + "/preferences.json";
+        {
+            pet::PetWindow window(nullptr, path); QVERIFY(window.touchEnabled());
+            window.showSettings(); auto *dialog = window.findChild<QDialog*>(); QVERIFY(dialog);
+            QCheckBox *box = nullptr;
+            for (auto *check : dialog->findChildren<QCheckBox*>()) if (check->accessibleName() == "Touch reactions") box = check;
+            QVERIFY(box); QVERIFY(box->isChecked());
+            box->setChecked(false); QVERIFY(!window.touchEnabled());
+            QVERIFY(window.savePreferences()); dialog->close();
+        }
+        QVERIFY(!pet::PreferencesStore(path).load().touch);
+        pet::PetWindow restored(nullptr, path); QVERIFY(!restored.touchEnabled());
+        QFile file(path); QVERIFY(file.open(QIODevice::WriteOnly));
+        file.write(R"({"version":1,"size":200,"on_top":true})"); file.close();
+        QVERIFY(pet::PreferencesStore(path).load().touch); // Older files have no key.
+        QVERIFY(file.open(QIODevice::WriteOnly)); file.write(R"({"version":1,"size":200,"on_top":true,"touch":1})"); file.close();
+        pet::PreferencesStore invalid(path); QVERIFY(invalid.load().touch); QVERIFY(!invalid.save(pet::Preferences{}));
+    }
+    void malformedTouch() {
+        QTemporaryDir fixtures; auto base = fixture(fixtures.path()); // "idle" and "work" sequences exist.
+        // A held reaction needs a phased state with a loop only a release ends.
+        auto states = base["states"].toObject(); states["held"] = QJsonArray{"work", "work", "idle"};
+        states["brief"] = QJsonArray{"work"}; base["states"] = states;
+        auto playback = base["playback"].toObject();
+        playback["held"] = QJsonObject{{"mode", "phased"}, {"after", "idle"}};
+        playback["brief"] = QJsonObject{{"mode", "once"}, {"after", "idle"}}; base["playback"] = playback;
+        auto with = [&](QJsonObject touch) { auto catalog = base; catalog["touch"] = touch; return catalog; };
+        auto region = [](QString state, QJsonArray rect) { return QJsonObject{{"state", state}, {"rect", rect}}; };
+        const QJsonObject good{{"scale", 500}, {"regions", QJsonArray{region("held", {10, 10, 100, 100})}},
+                               {"fall", QJsonObject{{"left", "held"}}},
+                               {"edge", QJsonObject{{"right", QJsonObject{{"state", "held"}, {"at", 250}}}}}};
+        QVERIFY(loads(base)); QVERIFY(loads(with(good))); QVERIFY(loads(with({{"scale", 500}})));
+        auto broken = [&](const QString &key, const QJsonValue &value) { auto touch = good; touch[key] = value; return with(touch); };
+        QVERIFY(!loads(broken("scale", 0)));
+        QVERIFY(!loads(broken("regions", QJsonArray{region("brief", {10, 10, 100, 100})}))); // Ends by itself.
+        QVERIFY(!loads(broken("regions", QJsonArray{region("working", {10, 10, 100, 100})}))); // A loop has no end.
+        QVERIFY(!loads(broken("regions", QJsonArray{region("nobody", {10, 10, 100, 100})})));
+        QVERIFY(!loads(broken("regions", QJsonArray{region("held", {450, 10, 100, 100})}))); // Outside the artwork.
+        QVERIFY(!loads(broken("regions", QJsonArray{region("held", {10, 10, 0, 100})})));
+        QVERIFY(!loads(broken("regions", QJsonArray{region("held", {10, 10, 100})})));
+        QVERIFY(!loads(broken("fall", QJsonObject{{"right", "idle"}})));
+        QVERIFY(!loads(broken("edge", QJsonObject{{"left", QJsonObject{{"state", "held"}, {"at", 500}}}})));
+        QVERIFY(!loads(broken("edge", QJsonObject{{"left", QJsonObject{{"state", "brief"}, {"at", 200}}}})));
     }
     void focusSessionListAndQuietHosts() {
         QTemporaryDir directory;

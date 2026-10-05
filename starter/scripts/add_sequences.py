@@ -32,7 +32,10 @@ def save(name, document):
 
 
 def frames_of(directory):
-    """Frames of one sequence folder as (index, duration_ms, path), ordered by index."""
+    """Frames of one sequence folder as (index, duration_ms, path), ordered by index.
+
+    A few folders join two numbered runs, such as FLA_000.. then FLB_000.. in MOVE/fall.*/C_*;
+    when indexes repeat, frames are ordered by the name before the index, then by index."""
     if not directory.is_dir():
         raise SystemExit(f'Source folder not found: {directory} (point --source at the original VPet sequences)')
     found = []
@@ -40,10 +43,13 @@ def frames_of(directory):
         match = FRAME.search(file.name)
         if file.is_symlink() or not file.is_file() or file.suffix != '.png' or not match:
             raise SystemExit(f'Unexpected entry in {directory}: {file.name}')
-        found.append((int(match[1]), int(match[2]), file))
-    if not found or len({index for index, _, _ in found}) != len(found):
+        found.append((file.name[:match.start()], int(match[1]), int(match[2]), file))
+    keys = {(prefix, index) for prefix, index, _, _ in found}
+    if not found or len(keys) != len(found):
         raise SystemExit(f'No frames or duplicate frame indexes in {directory}')
-    return sorted(found)
+    by_run = len({index for _, index, _, _ in found}) != len(found)
+    found.sort(key=lambda frame: (frame[0], frame[1]) if by_run else frame[1])
+    return [(index, duration, file) for _, index, duration, file in found]
 
 
 def main():

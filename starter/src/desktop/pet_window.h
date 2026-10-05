@@ -2,6 +2,7 @@
 #include "animation/ambient.h"
 #include "animation/mood.h"
 #include "animation/player.h"
+#include "desktop/touch.h"
 #include "settings/preferences.h"
 #include <QDialog>
 #include <QElapsedTimer>
@@ -10,6 +11,7 @@
 #include <QSystemTrayIcon>
 #include <QWidget>
 #include <functional>
+#include <optional>
 
 namespace pet {
 namespace updates { class Controller; }
@@ -25,6 +27,16 @@ public:
     Mood &mood() { return mood_; }
     void setMoodLevel(int level); // Preferences::Mood; persisted.
     int moodLevel() const { return int(mood_.setting()); }
+    // Petting, throwing and hiding at a screen edge; persisted. Off, the pet only drags.
+    void setTouchEnabled(bool enabled);
+    bool touchEnabled() const { return touchEnabled_; }
+    // What happens when the user lets go of a dragged pet moving at `velocity` (pixels per second):
+    // fast enough and it falls; pushed past a screen edge while idle and it hides there.
+    void letGo(QPointF velocity);
+    bool flying() const { return flight_.has_value(); }
+    // Hiding behind a screen edge, partly off-screen. Session activity brings it back out.
+    touch::Edge edge() const { return edge_; }
+    bool hiding() const { return edge_ != touch::Edge::None; }
     void setPetSize(int pixels);
     void setClickThrough(bool enabled);
     bool clickThrough() const { return clickThrough_; }
@@ -81,6 +93,8 @@ protected:
     void mouseReleaseEvent(QMouseEvent *) override;
 private:
     void endDrag(bool released = false);
+    void land();
+    void entered(const QString &state);
     void applyPresence(Presence::Action action);
     void showAfterFlagChange(QPoint position);
     // Reads the startup keys, which `agent-pet autostart` may change while the pet runs.
@@ -98,7 +112,7 @@ private:
     PreferencesStore store_;
     QMenu menu_;
     QSystemTrayIcon tray_;
-    QTimer recoveryTimer_, dragTimer_, saveTimer_;
+    QTimer recoveryTimer_, dragTimer_, saveTimer_, flightTimer_;
     QPointer<QDialog> settingsDialog_, previewDialog_;
     QAction *clickAction_ = nullptr, *onTopAction_ = nullptr, *muteAction_ = nullptr, *showAction_ = nullptr;
     Presence presence_;
@@ -106,10 +120,14 @@ private:
     int trayAttention_ = 0; // Badge shown on the tray icon; -1 forces a redraw.
     bool trayError_ = false;
     QPoint dragOffset_;
-    bool fallbackDrag_ = false, dragging_ = false, clickThrough_ = false;
+    bool fallbackDrag_ = false, dragging_ = false, clickThrough_ = false, touchEnabled_ = true;
     bool persist_ = true, ready_ = false, quitting_ = false, muted_ = false, sound_ = false, autostart_ = false;
     int attention_ = 0, bubbles_ = Preferences::RequestsAndErrors;
     QPoint pressPosition_;
-    QElapsedTimer pressTimer_;
+    QElapsedTimer pressTimer_, flightClock_;
+    QString pressTouch_; // What a held press pets, decided where it landed.
+    QVector<touch::Sample> samples_;
+    std::optional<touch::Flight> flight_;
+    touch::Edge edge_ = touch::Edge::None;
 };
 }

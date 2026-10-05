@@ -6,6 +6,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QSet>
+#include <tuple>
 
 namespace pet {
 namespace {
@@ -155,6 +156,44 @@ bool Player::load(const QString &root) {
         fidgets_.append(fidget);
         fidgetStates_.insert(fidget.state);
     }
+    // Touch reactions are held while the user (or a fall) keeps them, so each holds a loop phase that
+    // only a release ends. Every part is optional; a catalog without the section has no reactions.
+    if (catalog.contains("touch")) {
+        const auto touch = catalog["touch"].toObject();
+        touch_.scale = touch["scale"].toInt(0);
+        if (touch_.scale < 10 || touch_.scale > 10000) return invalid("Invalid touch scale.");
+        auto heldState = [this](const QJsonValue &value, QString &state) {
+            state = value.toString();
+            const auto found = animations_.constFind(state);
+            if (found == animations_.constEnd() || found->mode != "phased" || found->loops > 0 || fidgetStates_.contains(state)
+                || state == "idle" || state == "dragging") return false;
+            touchStates_.insert(state);
+            return true;
+        };
+        for (const auto &value : touch["regions"].toArray()) {
+            const auto object = value.toObject();
+            const auto rect = object["rect"].toArray();
+            TouchRegion region;
+            if (!heldState(object["state"], region.state) || rect.size() != 4) return invalid("Invalid touch region.");
+            region.rect = QRect(rect[0].toInt(-1), rect[1].toInt(-1), rect[2].toInt(0), rect[3].toInt(0));
+            if (region.rect.left() < 0 || region.rect.top() < 0 || region.rect.width() < 1 || region.rect.height() < 1
+                || region.rect.right() >= touch_.scale || region.rect.bottom() >= touch_.scale)
+                return invalid("Touch region outside the artwork: " + region.state);
+            touch_.regions.append(region);
+        }
+        const auto fall = touch["fall"].toObject(), edge = touch["edge"].toObject();
+        if ((fall.contains("left") && !heldState(fall["left"], touch_.fallLeft))
+            || (fall.contains("right") && !heldState(fall["right"], touch_.fallRight)))
+            return invalid("Invalid fall reaction.");
+        for (auto [side, state, at] : {std::tuple{QString("left"), &touch_.edgeLeft, &touch_.edgeLeftAt},
+                                       std::tuple{QString("right"), &touch_.edgeRight, &touch_.edgeRightAt}}) {
+            if (!edge.contains(side)) continue;
+            const auto object = edge[side].toObject();
+            *at = object["at"].toInt(0);
+            if (!heldState(object["state"], *state) || *at < 1 || *at >= touch_.scale)
+                return invalid("Invalid edge reaction: " + side);
+        }
+    }
     return true;
 }
 QString Player::phase() const {
@@ -164,9 +203,11 @@ QString Player::phase() const {
     return QStringList{"start", "loop", "end"}.at(phase_);
 }
 QString Player::resumeTarget() const {
-    if (dragActive_) return dragResume_;
+    if (held_) return holdResume_;
     if (!pending_.isEmpty()) return pending_;
-    if (isFidget(state_)) return "idle"; // Decoration is never worth coming back to.
+    // Decoration is never worth coming back to, nor is a reaction to being handled: a pet dragged
+    // out of its hiding place stays out.
+    if (isFidget(state_) || isTouch(state_)) return "idle";
     return animations_.value(state_).mode == "once" ? previous_ : state_;
 }
 bool Player::select(const QString &state, bool interrupt) {
@@ -174,8 +215,8 @@ bool Player::select(const QString &state, bool interrupt) {
         error_ = "Unknown animation state: " + state;
         emit failed(error_); return false;
     }
-    if (dragActive_ && state != "dragging") {
-        dragResume_ = state;
+    if (held_ && state != state_) {
+        holdResume_ = state;
         return true;
     }
     if (state == state_ && pending_.isEmpty() && !stopped_) return true;
@@ -193,17 +234,24 @@ bool Player::select(const QString &state, bool interrupt) {
     enter(state);
     return true;
 }
-void Player::beginDrag() {
-    if (dragActive_ || !animations_.contains("dragging")) return;
-    dragResume_ = resumeTarget();
+void Player::hold(const QString &state) {
+    if (!animations_.contains(state) || (held_ && state == state_)) return;
+    if (!held_) holdResume_ = resumeTarget();
     pending_.clear();
-    dragActive_ = true;
-    enter("dragging");
+    held_ = true;
+    enter(state);
 }
-void Player::endDrag() {
-    if (!dragActive_) return;
-    dragActive_ = false;
-    select(dragResume_);
+void Player::release() {
+    if (!held_) return;
+    held_ = false;
+    select(holdResume_);
+}
+QString Player::touchAt(QPointF point, int side) const {
+    if (touch_.scale <= 0 || side <= 0) return {};
+    const QPointF scaled(point.x() * touch_.scale / side, point.y() * touch_.scale / side);
+    for (const auto &region : touch_.regions)
+        if (QRectF(region.rect).contains(scaled)) return region.state;
+    return {};
 }
 QStringList Player::choose(const QString &state) {
     const QVector<Choice> *art = &animations_[state].choices;
@@ -258,7 +306,8 @@ void Player::advance() {
             stopped_ = true; index_ = sequences_[sequence_].size() - 1; emit changed();
         } else {
             auto target = animation.after == "previous" ? previous_ : QString("idle");
-            if (!animations_.contains(target) || animations_[target].mode == "once" || target == "dragging") target = "idle";
+            if (!animations_.contains(target) || animations_[target].mode == "once" || target == "dragging"
+                || isTouch(target)) target = "idle";
             enter(target);
         }
         emit completed(finished);
@@ -303,7 +352,7 @@ void Player::fail(const QString &message) {
     emit failed(error_);
     // A damaged activity can recover to idle. A damaged idle remains a visible UI fallback.
     if (state_ != "idle" && animations_.contains("idle")) {
-        pending_.clear(); dragActive_ = false; enter("idle");
+        pending_.clear(); held_ = false; enter("idle");
     } else emit changed();
 }
 void Player::setRenderSize(int pixels) {

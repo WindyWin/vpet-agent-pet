@@ -55,6 +55,14 @@ Off / Cheerful only / Full setting (default Full). Eat, Drink and Gift need a la
 renderer and item art the archive lacks, so single-layer stand-ins play instead.
 Automated tests pass; tuning still needs real sessions. See [the notes](docs/architecture.md#mood).
 
+Touch reactions, phase 3 of that issue, implemented 2026-10-05: holding the pet still
+for half a second pets its head, body or cheek (a click still opens the session list);
+letting go of a fast drag throws it, so it falls to the bottom of its screen and gets
+up; letting go past an outer screen edge while idle makes it hide behind that edge
+until activity or a drag brings it out; and a Touch setting (default on). Automated
+tests pass; the feel of the hold, throw and edge thresholds still needs a real
+desktop. See [the notes](docs/architecture.md#touch-reactions).
+
 1. Build a transparent, draggable desktop window and play the bundled `idle` sequence using frame durations from `assets/vpet/animations.json`. Test X11 and XWayland behavior before choosing a Linux package format.
 2. Add an animation controller that can start a sequence, hold its middle loop, play its ending, and return to idle. Keep decoded images in a bounded cache. The JSON state map has separate folders for each A/B/C phase.
 3. Add a small local event receiver and a packaged `agent-pet hook` command. The command reads hook JSON from stdin, extracts normalized event/session metadata and project path when available, sends them through a private local channel, and exits quickly even when the UI is closed. Exclude prompt text, tool arguments, and output. Create records on any supported event, including when SessionStart was missed.

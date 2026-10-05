@@ -6,9 +6,9 @@
   "source_commit": "6358445aa54587f9cd524264eaf17ef97bc826a8",
   "source_root": "VPet-Simulator.Windows/mod/0000_core/pet/vup",
   "bundled_catalog": "assets/vpet/animations.json",
-  "missing_sequence_count": 501,
-  "missing_frame_count": 4980,
-  "missing_size_bytes": 697303002,
+  "missing_sequence_count": 480,
+  "missing_frame_count": 4796,
+  "missing_size_bytes": 672117183,
   "sequences": [
     {
       "path": "BDay/A",
@@ -1280,15 +1280,6 @@
       "timing_valid": true
     },
     {
-      "path": "MOVE/fall.left/A_Nomal",
-      "category": "MOVE",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/MOVE/fall.left/A_Nomal",
-      "frame_count": 4,
-      "total_duration_ms": 500,
-      "size_bytes": 513786,
-      "timing_valid": true
-    },
-    {
       "path": "MOVE/fall.left/A_PoorCondition",
       "category": "MOVE",
       "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/MOVE/fall.left/A_PoorCondition",
@@ -1304,15 +1295,6 @@
       "frame_count": 6,
       "total_duration_ms": 875,
       "size_bytes": 780985,
-      "timing_valid": true
-    },
-    {
-      "path": "MOVE/fall.left/B_Nomal",
-      "category": "MOVE",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/MOVE/fall.left/B_Nomal",
-      "frame_count": 8,
-      "total_duration_ms": 1000,
-      "size_bytes": 1037880,
       "timing_valid": true
     },
     {
@@ -1334,15 +1316,6 @@
       "timing_valid": true
     },
     {
-      "path": "MOVE/fall.left/C_Nomal",
-      "category": "MOVE",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/MOVE/fall.left/C_Nomal",
-      "frame_count": 21,
-      "total_duration_ms": 3000,
-      "size_bytes": 2234238,
-      "timing_valid": true
-    },
-    {
       "path": "MOVE/fall.left/C_PoorCondition",
       "category": "MOVE",
       "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/MOVE/fall.left/C_PoorCondition",
@@ -1361,15 +1334,6 @@
       "timing_valid": true
     },
     {
-      "path": "MOVE/fall.right/A_Nomal",
-      "category": "MOVE",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/MOVE/fall.right/A_Nomal",
-      "frame_count": 4,
-      "total_duration_ms": 500,
-      "size_bytes": 489897,
-      "timing_valid": true
-    },
-    {
       "path": "MOVE/fall.right/A_PoorCondition",
       "category": "MOVE",
       "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/MOVE/fall.right/A_PoorCondition",
@@ -1385,15 +1349,6 @@
       "frame_count": 7,
       "total_duration_ms": 1125,
       "size_bytes": 871456,
-      "timing_valid": true
-    },
-    {
-      "path": "MOVE/fall.right/B_Nomal",
-      "category": "MOVE",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/MOVE/fall.right/B_Nomal",
-      "frame_count": 8,
-      "total_duration_ms": 1000,
-      "size_bytes": 999382,
       "timing_valid": true
     },
     {
@@ -1421,15 +1376,6 @@
       "frame_count": 21,
       "total_duration_ms": 2875,
       "size_bytes": 2187723,
-      "timing_valid": true
-    },
-    {
-      "path": "MOVE/fall.right/C_Nomal",
-      "category": "MOVE",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/MOVE/fall.right/C_Nomal",
-      "frame_count": 21,
-      "total_duration_ms": 2875,
-      "size_bytes": 2174694,
       "timing_valid": true
     },
     {
@@ -1892,33 +1838,6 @@
       "timing_valid": true
     },
     {
-      "path": "Pinch/Nomal/A",
-      "category": "Pinch",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Pinch/Nomal/A",
-      "frame_count": 1,
-      "total_duration_ms": 125,
-      "size_bytes": 173758,
-      "timing_valid": true
-    },
-    {
-      "path": "Pinch/Nomal/B",
-      "category": "Pinch",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Pinch/Nomal/B",
-      "frame_count": 6,
-      "total_duration_ms": 750,
-      "size_bytes": 1022377,
-      "timing_valid": true
-    },
-    {
-      "path": "Pinch/Nomal/C",
-      "category": "Pinch",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Pinch/Nomal/C",
-      "frame_count": 21,
-      "total_duration_ms": 3375,
-      "size_bytes": 3204258,
-      "timing_valid": true
-    },
-    {
       "path": "Pinch/PoorCondition/A",
       "category": "Pinch",
       "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Pinch/PoorCondition/A",
@@ -2279,39 +2198,12 @@
       "timing_valid": true
     },
     {
-      "path": "SideHide_Left_Main/Nomal/A",
-      "category": "SideHide_Left_Main",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/SideHide_Left_Main/Nomal/A",
-      "frame_count": 9,
-      "total_duration_ms": 1125,
-      "size_bytes": 1356913,
-      "timing_valid": true
-    },
-    {
-      "path": "SideHide_Left_Main/Nomal/B_1",
-      "category": "SideHide_Left_Main",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/SideHide_Left_Main/Nomal/B_1",
-      "frame_count": 4,
-      "total_duration_ms": 500,
-      "size_bytes": 558772,
-      "timing_valid": true
-    },
-    {
       "path": "SideHide_Left_Main/Nomal/B_2",
       "category": "SideHide_Left_Main",
       "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/SideHide_Left_Main/Nomal/B_2",
       "frame_count": 1,
       "total_duration_ms": 500,
       "size_bytes": 141803,
-      "timing_valid": true
-    },
-    {
-      "path": "SideHide_Left_Main/Nomal/C",
-      "category": "SideHide_Left_Main",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/SideHide_Left_Main/Nomal/C",
-      "frame_count": 7,
-      "total_duration_ms": 875,
-      "size_bytes": 973970,
       "timing_valid": true
     },
     {
@@ -2495,39 +2387,12 @@
       "timing_valid": true
     },
     {
-      "path": "SideHide_Right_Main/Nomal/A",
-      "category": "SideHide_Right_Main",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/SideHide_Right_Main/Nomal/A",
-      "frame_count": 14,
-      "total_duration_ms": 1750,
-      "size_bytes": 2081898,
-      "timing_valid": true
-    },
-    {
-      "path": "SideHide_Right_Main/Nomal/B_1",
-      "category": "SideHide_Right_Main",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/SideHide_Right_Main/Nomal/B_1",
-      "frame_count": 4,
-      "total_duration_ms": 500,
-      "size_bytes": 574737,
-      "timing_valid": true
-    },
-    {
       "path": "SideHide_Right_Main/Nomal/B_2",
       "category": "SideHide_Right_Main",
       "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/SideHide_Right_Main/Nomal/B_2",
       "frame_count": 1,
       "total_duration_ms": 625,
       "size_bytes": 145970,
-      "timing_valid": true
-    },
-    {
-      "path": "SideHide_Right_Main/Nomal/C",
-      "category": "SideHide_Right_Main",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/SideHide_Right_Main/Nomal/C",
-      "frame_count": 5,
-      "total_duration_ms": 625,
-      "size_bytes": 675072,
       "timing_valid": true
     },
     {
@@ -3197,15 +3062,6 @@
       "timing_valid": true
     },
     {
-      "path": "Touch_Body/A_Happy/tb1",
-      "category": "Touch_Body",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Touch_Body/A_Happy/tb1",
-      "frame_count": 15,
-      "total_duration_ms": 2125,
-      "size_bytes": 2139202,
-      "timing_valid": true
-    },
-    {
       "path": "Touch_Body/A_Happy/tb2",
       "category": "Touch_Body",
       "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Touch_Body/A_Happy/tb2",
@@ -3224,15 +3080,6 @@
       "timing_valid": true
     },
     {
-      "path": "Touch_Body/B_Happy/tb1",
-      "category": "Touch_Body",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Touch_Body/B_Happy/tb1",
-      "frame_count": 14,
-      "total_duration_ms": 2125,
-      "size_bytes": 2171157,
-      "timing_valid": true
-    },
-    {
       "path": "Touch_Body/B_Happy/tb2",
       "category": "Touch_Body",
       "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Touch_Body/B_Happy/tb2",
@@ -3248,15 +3095,6 @@
       "frame_count": 10,
       "total_duration_ms": 2250,
       "size_bytes": 1418356,
-      "timing_valid": true
-    },
-    {
-      "path": "Touch_Body/C_Happy/tb1",
-      "category": "Touch_Body",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Touch_Body/C_Happy/tb1",
-      "frame_count": 3,
-      "total_duration_ms": 375,
-      "size_bytes": 420535,
       "timing_valid": true
     },
     {
@@ -3332,15 +3170,6 @@
       "timing_valid": true
     },
     {
-      "path": "Touch_Head/A_Nomal",
-      "category": "Touch_Head",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Touch_Head/A_Nomal",
-      "frame_count": 2,
-      "total_duration_ms": 375,
-      "size_bytes": 356258,
-      "timing_valid": true
-    },
-    {
       "path": "Touch_Head/A_ill",
       "category": "Touch_Head",
       "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Touch_Head/A_ill",
@@ -3350,30 +3179,12 @@
       "timing_valid": true
     },
     {
-      "path": "Touch_Head/B_Nomal",
-      "category": "Touch_Head",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Touch_Head/B_Nomal",
-      "frame_count": 11,
-      "total_duration_ms": 1500,
-      "size_bytes": 1715186,
-      "timing_valid": true
-    },
-    {
       "path": "Touch_Head/B_ill",
       "category": "Touch_Head",
       "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Touch_Head/B_ill",
       "frame_count": 12,
       "total_duration_ms": 2750,
       "size_bytes": 904511,
-      "timing_valid": true
-    },
-    {
-      "path": "Touch_Head/C_Nomal",
-      "category": "Touch_Head",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Touch_Head/C_Nomal",
-      "frame_count": 2,
-      "total_duration_ms": 375,
-      "size_bytes": 311849,
       "timing_valid": true
     },
     {

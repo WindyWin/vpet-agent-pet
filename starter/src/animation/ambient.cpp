@@ -39,7 +39,7 @@ void Ambient::entered(const QString &state) {
     }
 }
 void Ambient::looped(const QString &state) {
-    if (state != "idle" || level_ == AmbientLevel::Off || idleSince_ < 0 || player_.isDragging() || player_.stopped())
+    if (state != "idle" || level_ == AmbientLevel::Off || idleSince_ < 0 || player_.held() || player_.stopped())
         return;
     const auto now = clock_(), idle = now - idleSince_;
     if (player_.sleepAfterS() > 0 && idle >= qint64(player_.sleepAfterS()) * 1000

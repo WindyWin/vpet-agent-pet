@@ -59,9 +59,13 @@ void Monitor::update(qint64 now) {
     if (!active_ || !observed_ || window_.player().requestedState() == "closing") return;
     const auto state = sessions_.aggregate(now);
     const auto animation = sessionAnimation(state);
-    // A fidget or an ambient nap is how an idle pet looks; leave it until something real happens.
-    const auto showing = animation == "idle" && window_.ambient().resting() ? animation : window_.player().requestedState();
-    if (state != lastAggregate_ || (!window_.player().isDragging() && state != "error" && state != "turn-finished" &&
+    // A fidget, an ambient nap or a reaction to the user, such as hiding at a screen edge, is how an idle pet
+    // looks; leave it until something real happens. A reaction counts from when it is requested, because
+    // the drag's own end plays first.
+    const bool resting = window_.ambient().resting() || window_.player().isTouch(window_.player().requestedState());
+    const auto showing = animation == "idle" && resting ? animation : window_.player().requestedState();
+    // While the user holds the pet, or it is falling, the player keeps the latest request for afterwards.
+    if (state != lastAggregate_ || (!window_.player().held() && state != "error" && state != "turn-finished" &&
                                     showing != animation)) {
         // A turn that just finished is celebrated in one of several ways, or with a treat when one is due.
         const bool celebrate = state == "turn-finished" && lastAggregate_ != state;

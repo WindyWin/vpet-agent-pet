@@ -136,6 +136,33 @@ for fidget in ambient.get('fidgets', []):
 if ambient.get('fidgets') and all(fidget.get('rare') for fidget in ambient['fidgets']):
     errors.append('Ambient needs at least one non-rare fidget')
 
+# Touch reactions are held until released: phased states whose loop has no count. Hit boxes and
+# edge lines are in the artwork's own square space of `scale` units.
+def held(state):
+    policy = animations.get('playback', {}).get(state, {})
+    return (state in animations['states'] and state not in ('idle', 'dragging') and state not in seen
+            and policy.get('mode') == 'phased' and 'loops' not in policy)
+
+if 'touch' in animations:
+    touch = animations['touch']
+    scale = touch.get('scale')
+    if not count(scale, 10) or scale > 10000:
+        errors.append('Invalid touch scale')
+        scale = 0
+    for region in touch.get('regions', []):
+        rect = region.get('rect')
+        if not held(region.get('state')):
+            errors.append(f'Touch region must hold a phased state until released: {region.get("state")}')
+        if (not isinstance(rect, list) or len(rect) != 4 or not all(count(value, 0) for value in rect)
+                or rect[2] < 1 or rect[3] < 1 or rect[0] + rect[2] > scale or rect[1] + rect[3] > scale):
+            errors.append(f'Invalid touch rectangle: {region.get("state")}')
+    for side, state in touch.get('fall', {}).items():
+        if side not in ('left', 'right') or not held(state):
+            errors.append(f'Invalid fall reaction: {side}')
+    for side, edge in touch.get('edge', {}).items():
+        if side not in ('left', 'right') or not held(edge.get('state')) or not count(edge.get('at')) or edge['at'] >= scale:
+            errors.append(f'Invalid edge reaction: {side}')
+
 available_sequences = {sequence['path'] for sequence in available['sequences']}
 if len(bundled_sequences) != len(animations['sequences']) or len(available_sequences) != len(available['sequences']):
     errors.append('Duplicate animation sequence')
