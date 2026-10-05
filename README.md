@@ -8,6 +8,106 @@ Status: M3 local events and session tracking, plus M2 animation and desktop cont
 
 This directory is the new project root and can be moved into its own repository. The bundled artwork is a real copy. Development and future releases must resolve assets relative to this project or the installed application's resources, without requiring an existing VPet installation or command.
 
+## Features
+
+Every image below was captured from the running app (`starter/`, Linux, X11) with demo events sent through `agent-pet emit`. Project names and session IDs are made up. See the [starter README](starter/README.md) for the full behavior of each feature.
+
+### Reacts to what your agents are doing
+
+Claude Code and Codex hooks report each session's activity, and the pet animates the most important state across all sessions.
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/media/thinking.gif" width="140" alt="Thinking"><br>Thinking</td>
+    <td align="center"><img src="docs/media/reading.gif" width="140" alt="Reading"><br>Reading files</td>
+    <td align="center"><img src="docs/media/working.gif" width="140" alt="Working"><br>Running tools</td>
+    <td align="center"><img src="docs/media/needs-input.gif" width="140" alt="Needs input"><br>Needs approval or input</td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/media/tool-error.gif" width="140" alt="Tool error"><br>Tool error</td>
+    <td align="center"><img src="docs/media/turn-finished.gif" width="140" alt="Turn finished"><br>Turn finished</td>
+    <td align="center"><img src="docs/media/sleeping.gif" width="140" alt="Sleeping"><br>Dozes off after 10 quiet minutes</td>
+    <td align="center"><img src="docs/media/startled.gif" width="140" alt="Startled"><br>Jumps at <code>rm -rf</code> or <code>git push --force</code></td>
+  </tr>
+</table>
+
+### Alerts that point to the right session
+
+Approval and input requests and tool errors raise a one-line toast beside the pet. **Open** brings the agent's terminal or editor forward (Konsole, tmux, herdr, VS Code, or any X11 window), **×** dismisses it, and **+N** shows how many more are waiting. An orange badge stays on the pet until the waiting session moves on. Alerts can be muted, and an optional sound plays for new ones.
+
+<img src="docs/media/alert-toast.png" width="420" alt="Needs approval toast beside the pet with Open and dismiss buttons and an attention badge">
+
+### Running sessions at a glance
+
+Click the pet to list every observed session, most urgent first, with project, status, provider, short ID and host. Click a row to jump to that session.
+
+<img src="docs/media/session-list.png" width="420" alt="List of four sessions: needs approval, working, thinking and idle">
+
+### Drag, pet and throw it
+
+Drag the pet anywhere; it dangles while you hold it. Hold still on its head or tummy and it reacts to being petted. Let go mid-swing and it tumbles to the bottom of the screen, then gets back up. Push it past a screen edge and it hides there, peeking out until agent activity brings it back.
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/media/drag-throw.gif" width="420" alt="Dragging and throwing the pet"><br>Drag and throw</td>
+    <td align="center"><img src="docs/media/edge-hide.gif" width="240" alt="Pet hiding at the screen edge"><br>Hide at the edge</td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/media/touch-head.gif" width="160" alt="Head pat"><br>Head pat</td>
+    <td align="center"><img src="docs/media/touch-body.gif" width="160" alt="Tummy poke"><br>Tummy poke</td>
+  </tr>
+</table>
+
+### Idle life: fidgets, mood and wandering
+
+While no agent needs it, the pet fidgets now and then, alternates its idle loop and, after a few quiet minutes, walks, crawls or climbs along the screen edges. A run of finished turns makes it happy and repeated errors make it droopy; after a long productive stretch it hints that you should take a break.
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/media/walk-left.gif" width="240" alt="Walking"><br>Walking</td>
+    <td align="center"><img src="docs/media/crawl-left.gif" width="240" alt="Crawling"><br>Crawling</td>
+    <td align="center"><img src="docs/media/climb-up-right.gif" width="240" alt="Climbing the screen edge"><br>Climbing an edge</td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/media/fidget-yawn.gif" width="160" alt="Yawning"><br>Idle fidget</td>
+    <td align="center"><img src="docs/media/cheer-shining.gif" width="160" alt="Happy celebration"><br>Happy celebration</td>
+    <td align="center"><img src="docs/media/snack-hungry.gif" width="160" alt="Hungry"><br>Take-a-break hint</td>
+  </tr>
+</table>
+
+### Easter eggs
+
+Special days, Friday evenings, late nights, long turns and every hundredth finished turn get their own reactions. There is at least one more to find.
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/media/dance.gif" width="160" alt="Dance"><br>Friday evening dance</td>
+    <td align="center"><img src="docs/media/birthday.gif" width="160" alt="Birthday"><br>Your birthday</td>
+    <td align="center"><img src="docs/media/love-520.gif" width="160" alt="Heart on May 20"><br>May 20</td>
+    <td align="center"><img src="docs/media/milestone.gif" width="160" alt="Milestone"><br>Every 100th turn</td>
+  </tr>
+</table>
+
+### Settings, menu and developer preview
+
+Right-click the pet (or its tray icon) for preview states, running sessions, mute, settings, always-on-top, click-through and recovery. Settings cover size, alerts, idle animation, wandering, mood, touch, easter eggs, startup behavior and one-click Claude Code and Codex integration. `--preview` opens a developer window that plays any state and steps through frames.
+
+<table>
+  <tr>
+    <td align="center" valign="top"><img src="docs/media/context-menu.png" width="300" alt="Right-click menu"><br>Right-click menu</td>
+    <td align="center" valign="top"><img src="docs/media/settings.png" width="340" alt="Settings window"><br>Settings</td>
+  </tr>
+  <tr>
+    <td align="center" colspan="2"><img src="docs/media/animation-preview.png" width="520" alt="Animation preview window beside the pet"><br>Animation preview</td>
+  </tr>
+</table>
+
+### Install and updates
+
+A self-contained Linux x86_64 tarball includes an interactive installer that sets up the menu entry, the `agent-pet` command, agent hooks and autostart, plus an uninstaller that removes only Agent Pet's own hook entries. Updates download only the components that changed and roll back if the new version fails to start. See the [install guide](starter/docs/install.md).
+
+<img src="docs/media/installer.png" width="520" alt="Installer checklist in a terminal">
+
 ## Included
 
 - **5,498 original PNG frames**, across 558 sequence folders and 25 animation categories.
