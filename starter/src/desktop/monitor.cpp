@@ -26,7 +26,7 @@ Monitor::Monitor(PetWindow &window, std::shared_ptr<hosts::FocusService> focus) 
     connect(&window_, &PetWindow::sessionsRequested, this, &Monitor::toggleSessions);
     connect(&window_, &PetWindow::quitRequested, this, &Monitor::stop);
     connect(&window_, &PetWindow::presenceChanged, this, [this] {
-        if (window_.petHidden()) list_.hide();
+        if (window_.petHidden()) { list_.hide(); note_.hide(); }
         refreshAlerts();
     });
 }
@@ -58,7 +58,7 @@ bool Monitor::apply(const Event &event, qint64 now) {
         window_.eggs().surprise("danger");
     // Work going on deep into the night earns one gentle note.
     if (event.kind == "turn_finished" && !window_.muted() && !window_.petHidden() && window_.eggs().bedtime())
-        QToolTip::showText(window_.figure().center(), bedtimeNote);
+        say(bedtimeNote);
     return true;
 }
 void Monitor::update(qint64 now) {
@@ -92,13 +92,14 @@ void Monitor::update(qint64 now) {
         lastAggregate_ = state;
     }
 }
+void Monitor::say(const QString &text) { note_.say(text, window_.figure(), window_.screenAreas()); }
 // Monday blues, the go-home nudge and bedtime: said once each day, and kept for later while the pet is hidden.
 void Monitor::remind() {
     if (window_.petHidden()) return;
     const auto reminder = window_.eggs().reminder();
     if (reminder.isEmpty()) return;
     window_.eggs().surprise(reminder);
-    if (!window_.muted()) QToolTip::showText(window_.figure().center(), EasterEggs::reminderNote(reminder));
+    if (!window_.muted()) say(EasterEggs::reminderNote(reminder));
 }
 bool Monitor::shown(const Alert &alert) const {
     const int level = window_.bubbles();
@@ -172,6 +173,6 @@ void Monitor::focusCurrent() {
     if (const auto *alert = queue_.current()) focusSession(QString(alert->session)); // A copy: the queue re-syncs.
 }
 void Monitor::stop() {
-    active_ = false; timer_.stop(); receiver_.reset(); bubble_.hide(); list_.hide();
+    active_ = false; timer_.stop(); receiver_.reset(); bubble_.hide(); note_.hide(); list_.hide();
 }
 }

@@ -94,7 +94,10 @@ public:
     QVector<QRect> screenAreas() const;
     // Global rectangle around the character itself, excluding the sprite's transparent margins.
     QRect figure() const;
-    QPoint nativePos() const; // Position as the display server reports it.
+    QPoint nativePos() const; // Position as the display server reports it, in Qt's logical pixels.
+    // The display server counts device pixels. Qt keeps a screen's origin and divides the rest by its
+    // device pixel ratio, which is not 1 under a scaled XWayland.
+    static QPoint fromNative(QPoint native, QPoint screenOrigin, qreal ratio);
 signals:
     void moved();
     void notificationsChanged();

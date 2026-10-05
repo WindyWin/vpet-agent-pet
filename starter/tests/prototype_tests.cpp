@@ -669,6 +669,14 @@ private slots:
         int ticks = 0; while (stuck.step(100)) ++ticks;
         QCOMPARE(ticks, int(Flight::maxMs / 100) - 1);
     }
+    void nativePixelsMapToLogical() {
+        // XWayland at 1.75: Qt keeps each screen's origin and scales the rest, so the X server's
+        // 3391,875 is the pet's 3200,500 on a screen starting at 2945,0 (measured on KDE).
+        QCOMPARE(pet::PetWindow::fromNative({3391, 875}, {2945, 0}, 1.75), QPoint(3200, 500));
+        QCOMPARE(pet::PetWindow::fromNative({875, 488}, {0, 49}, 1.75), QPoint(500, 300));
+        QCOMPARE(pet::PetWindow::fromNative({2770, 875}, {2945, 0}, 1.75), QPoint(2845, 500)); // Hiding past its left edge.
+        QCOMPARE(pet::PetWindow::fromNative({400, 300}, {0, 0}, 1), QPoint(400, 300));
+    }
     void windowTouchReactions() {
         QTemporaryDir directory;
         pet::PetWindow window(nullptr, directory.path() + "/preferences.json"); window.show();
@@ -1149,9 +1157,10 @@ private slots:
         QVERIFY(monitor.apply(tool("t4", now + 8, true), now + 8)); QCOMPARE(player.state(), QString("needs_input"));
         QVERIFY(monitor.apply(event("session_end", now + 9, "s2"), now + 9));
         // A turn finishing late at night brings one bedtime note.
-        local = QDateTime(QDate(2026, 10, 8), QTime(2, 0)); QToolTip::hideText();
+        local = QDateTime(QDate(2026, 10, 8), QTime(2, 0)); monitor.note().hide();
         draws.values = {0}; QVERIFY(monitor.apply(event("turn_finished", now + 10), now + 10));
-        QCOMPARE(QToolTip::text(), pet::Monitor::bedtimeNote); QVERIFY(!window.eggs().bedtime()); // Used for tonight.
+        QVERIFY(monitor.note().isVisible()); QCOMPARE(monitor.note().text(), pet::Monitor::bedtimeNote); QVERIFY(!QToolTip::isVisible());
+        QVERIFY(!window.eggs().bedtime()); // Used for tonight.
         // The Konami code, typed on the pet, makes it dance, and the monitor lets it.
         local = QDateTime(QDate(2026, 10, 7), QTime(12, 0));
         for (int i = 0; i < 4; ++i) playOut(player);

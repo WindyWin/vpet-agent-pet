@@ -2,6 +2,7 @@
 #include "sessions/alerts.h"
 #include <QLabel>
 #include <QPushButton>
+#include <QTimer>
 #include <QWidget>
 
 namespace pet {
@@ -31,5 +32,21 @@ private:
     QPushButton *more_, *open_, *dismiss_;
     QString label_;
     QColor accent_;
+};
+
+// A short speech bubble for the pet's own remarks (bedtime, Monday blues): the alert bubble's look
+// without buttons. It dismisses itself after a few seconds, or when clicked.
+class NoteBubble : public QWidget {
+    Q_OBJECT
+public:
+    explicit NoteBubble(QWidget *parent = nullptr);
+    void say(const QString &text, const QRect &pet, const QVector<QRect> &screens);
+    QString text() const { return label_->text(); }
+protected:
+    void paintEvent(QPaintEvent *) override;
+    void mouseReleaseEvent(QMouseEvent *) override;
+private:
+    QLabel *label_;
+    QTimer hide_;
 };
 }

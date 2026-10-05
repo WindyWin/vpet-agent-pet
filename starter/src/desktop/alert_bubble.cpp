@@ -73,4 +73,37 @@ void AlertBubble::paintEvent(QPaintEvent *) {
     painter.setPen(Qt::NoPen); painter.setBrush(accent_);
     painter.drawEllipse(QPointF(14, body.center().y()), 5, 5);
 }
+NoteBubble::NoteBubble(QWidget *parent) : QWidget(parent) {
+    setWindowFlags(Qt::Tool | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::WindowDoesNotAcceptFocus |
+                   Qt::X11BypassWindowManagerHint);
+    setAttribute(Qt::WA_TranslucentBackground);
+    setAttribute(Qt::WA_ShowWithoutActivating);
+    setAccessibleName("Agent Pet note");
+    auto *layout = new QHBoxLayout(this);
+    layout->setContentsMargins(16, 8, 16, 8);
+    label_ = new QLabel(this);
+    label_->setTextFormat(Qt::PlainText); label_->setWordWrap(true);
+    label_->setStyleSheet("color:#453324; font-weight:600;");
+    label_->setMaximumWidth(260);
+    layout->addWidget(label_);
+    hide_.setSingleShot(true); hide_.setInterval(7000);
+    connect(&hide_, &QTimer::timeout, this, &QWidget::hide);
+}
+void NoteBubble::say(const QString &text, const QRect &pet, const QVector<QRect> &screens) {
+    label_->setText(text);
+    setAccessibleDescription(text);
+    adjustSize();
+    QRect screen = screens.value(0, pet);
+    for (const auto &area : screens) if (area.contains(pet.center())) { screen = area; break; }
+    move(AlertBubble::placement(pet, size(), screen));
+    show(); raise(); hide_.start();
+}
+void NoteBubble::mouseReleaseEvent(QMouseEvent *) { hide(); }
+void NoteBubble::paintEvent(QPaintEvent *) {
+    QPainter painter(this);
+    painter.setRenderHint(QPainter::Antialiasing);
+    const QRectF body = QRectF(rect()).adjusted(1, 1, -1, -1);
+    painter.setPen(QPen(QColor("#453324"), 1.2)); painter.setBrush(QColor("#fff7e3"));
+    painter.drawRoundedRect(body, 14, 14);
+}
 }

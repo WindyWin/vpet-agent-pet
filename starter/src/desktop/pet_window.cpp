@@ -169,7 +169,14 @@ QRect PetWindow::figure() const {
 }
 QPoint PetWindow::nativePos() const {
     const auto origin = isVisible() ? platform::nativeWindowOrigin(winId()) : std::nullopt;
-    return origin.value_or(pos());
+    if (!origin) return pos();
+    // Qt maps a window through the screen it is on, even where the window reaches past that screen.
+    const auto *on = screen();
+    return on ? fromNative(*origin, on->geometry().topLeft(), on->devicePixelRatio()) : *origin;
+}
+QPoint PetWindow::fromNative(QPoint native, QPoint screenOrigin, qreal ratio) {
+    if (ratio <= 0) return native;
+    return screenOrigin + (QPointF(native - screenOrigin) / ratio).toPoint();
 }
 void PetWindow::watchScreen(QScreen *screen) {
     connect(screen, &QScreen::availableGeometryChanged, this, [this] { constrainPosition(); });

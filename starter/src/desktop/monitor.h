@@ -27,6 +27,7 @@ public:
     Sessions &sessions() { return sessions_; }
     AlertQueue &queue() { return queue_; }
     AlertBubble &bubble() { return bubble_; }
+    NoteBubble &note() { return note_; }
     SessionList &sessionList() { return list_; }
     void dismiss();
     void toggleSessions();
@@ -41,12 +42,14 @@ public:
 private:
     void refreshAlerts();
     void remind();
+    void say(const QString &text);
     bool shown(const Alert &alert) const;
     PetWindow &window_;
     std::shared_ptr<hosts::FocusService> focus_;
     Sessions sessions_;
     AlertQueue queue_;
     AlertBubble bubble_;
+    NoteBubble note_; // The pet's own remarks: easter-egg reminders and the bedtime note.
     SessionList list_;
     std::unique_ptr<Receiver> receiver_;
     QTimer timer_;
