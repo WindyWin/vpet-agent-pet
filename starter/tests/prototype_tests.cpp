@@ -16,8 +16,19 @@
 #include <QSignalSpy>
 #include <QTemporaryDir>
 #include <QTest>
+#include <memory>
 
 namespace {
+// Scripted random draws; one that is missing counts as unexpected, so a test also pins how many are made.
+struct Draws {
+    QList<int> values; int unexpected = 0;
+    pet::Random random() {
+        return [this](int bound) {
+            if (values.isEmpty()) { ++unexpected; return 0; }
+            return qMin(values.takeFirst(), bound - 1);
+        };
+    }
+};
 void finishSequence(pet::Player &player) {
     const int remaining = player.frameCount() - player.frameIndex();
     for (int i = 0; i < remaining; ++i) player.advance();
@@ -38,6 +49,15 @@ QJsonObject fixture(const QString &root) {
 void writeCatalog(const QString &root, const QJsonObject &catalog) {
     QFile file(root + "/assets/vpet/animations.json");
     QVERIFY(file.open(QIODevice::WriteOnly)); file.write(QJsonDocument(catalog).toJson());
+}
+// Plays a fidget or any other state until the pet is back at idle.
+void playOut(pet::Player &player) {
+    for (int i = 0; i < 12 && player.state() != "idle"; ++i) finishSequence(player);
+}
+bool loads(const QJsonObject &catalog) {
+    QTemporaryDir directory; fixture(directory.path()); // The images the catalog's sequences point at.
+    writeCatalog(directory.path(), catalog);
+    return pet::Player(nullptr, directory.path()).valid();
 }
 }
 class PrototypeTests : public QObject {
@@ -113,7 +133,8 @@ private slots:
     }
     void everyIncludedFrameAndCacheBound() {
         pet::Player player; player.setPaused(true); player.setRenderSize(640);
-        QCOMPARE(player.states().size(), 11);
+        QCOMPARE(player.states().size(), 11 + player.fidgets().size()); // The states plus their fidgets.
+        QVERIFY(!player.fidgets().isEmpty());
         auto checkSequence = [&] {
             const int count = player.frameCount();
             for (int i = 0; i < count; ++i) {
@@ -125,7 +146,10 @@ private slots:
         for (const auto &state : player.states()) {
             QVERIFY(player.select(state, true));
             checkSequence();
-            if (player.state() == state && player.phase() == "loop" && state != "idle") {
+            if (player.isFidget(state)) { // Plays itself out and hands back to idle.
+                for (int pass = 0; pass < 5 && player.state() == state; ++pass) checkSequence();
+                QCOMPARE(player.state(), QString("idle"));
+            } else if (player.state() == state && player.phase() == "loop" && state != "idle") {
                 checkSequence(); player.select("idle"); QCOMPARE(player.phase(), QString("end"));
                 checkSequence(); QCOMPARE(player.state(), QString("idle"));
             }
@@ -207,6 +231,197 @@ private slots:
         QVERIFY(legacy.open(QIODevice::WriteOnly));
         legacy.write(R"({"version":1,"size":200,"on_top":true,"x":10,"y":20,"muted":"yes"})"); legacy.close();
         pet::PreferencesStore invalid(path); QVERIFY(!invalid.load().muted); QVERIFY(!invalid.save(prefs));
+    }
+
+    void variantsAreDrawnByWeight() {
+        pet::Player player; player.setPaused(true);
+        QCOMPARE(player.sequence(), QString("Default/Nomal/1")); // The first idle is always the catalog's own.
+        Draws draws; player.setRandom(draws.random());
+        // Idle weighs 2, 1, 1: draws 0 and 1 are the catalog entry, 2 and 3 are the variants.
+        const QList<QPair<int, QString>> expected{{0, "Default/Nomal/1"}, {1, "Default/Nomal/1"},
+                                                  {2, "Default/Nomal/2"}, {3, "Default/Nomal/3"}};
+        for (const auto &[draw, sequence] : expected) {
+            draws.values = {draw};
+            player.select("thinking", true); player.select("idle", true);
+            QCOMPARE(player.sequence(), sequence);
+        }
+        // An idle loop may change variant on each pass, and says so.
+        QSignalSpy looped(&player, &pet::Player::looped);
+        draws.values = {2}; finishSequence(player);
+        QCOMPARE(player.sequence(), QString("Default/Nomal/2")); QCOMPARE(player.frameIndex(), 0);
+        QCOMPARE(looped.size(), 1); QCOMPARE(looped.last().first().toString(), QString("idle"));
+        // Variants off plays only the catalog's entry and draws nothing.
+        player.setVariants(false); draws.values = {3}; // Turning them off also ends a variant already playing.
+        finishSequence(player); QCOMPARE(player.sequence(), QString("Default/Nomal/1"));
+        player.select("thinking", true); player.select("idle", true);
+        QCOMPARE(player.sequence(), QString("Default/Nomal/1")); QCOMPARE(draws.values.size(), 1);
+        // Phased fidgets vary their middle part.
+        player.setVariants(true); draws.values = {1};
+        player.select("fidget_aside", true); QCOMPARE(player.sequence(), QString("IDEL/aside/Nomal/A"));
+        finishSequence(player); QCOMPARE(player.phase(), QString("loop"));
+        QCOMPARE(player.sequence(), QString("IDEL/aside/Nomal/B_2"));
+        QCOMPARE(draws.unexpected, 0);
+    }
+    void fidgetsEndThemselvesAndYieldAtOnce() {
+        pet::Player player; player.setPaused(true); player.setRandom([](int) { return 0; });
+        QSignalSpy entered(&player, &pet::Player::entered);
+        // The loop part of "aside" plays twice, then its end, then idle.
+        player.select("fidget_aside", true); finishSequence(player);
+        QCOMPARE(player.phase(), QString("loop")); finishSequence(player);
+        QCOMPARE(player.phase(), QString("loop")); finishSequence(player);
+        QCOMPARE(player.phase(), QString("end")); QCOMPARE(player.sequence(), QString("IDEL/aside/Nomal/C"));
+        finishSequence(player); QCOMPARE(player.state(), QString("idle"));
+        QCOMPARE(entered.last().first().toString(), QString("idle"));
+        // One-shot fidgets simply finish.
+        player.select("fidget_yawn", true); QCOMPARE(player.phase(), QString("once"));
+        finishSequence(player); QCOMPARE(player.state(), QString("idle"));
+        // Real work replaces a fidget immediately, even without the urgent flag.
+        player.select("fidget_squat", true); finishSequence(player); QCOMPARE(player.phase(), QString("loop"));
+        QVERIFY(player.select("thinking"));
+        QCOMPARE(player.state(), QString("thinking")); QCOMPARE(player.phase(), QString("start"));
+        // An error or a drag during a fidget returns to idle, not to the fidget.
+        player.select("idle", true); player.select("fidget_squat", true); player.select("tool_error");
+        QCOMPARE(player.state(), QString("tool_error")); finishSequence(player); QCOMPARE(player.state(), QString("idle"));
+        player.select("fidget_aside", true); player.beginDrag(); player.endDrag();
+        playOut(player); QCOMPARE(player.state(), QString("idle"));
+    }
+    void ambientFidgetsFollowTheIdleClock() {
+        pet::Player player; player.setPaused(true); player.setRandom([](int) { return 0; });
+        pet::Ambient ambient(player);
+        QCOMPARE(ambient.level(), pet::AmbientLevel::Subtle);
+        QCOMPARE(pet::Ambient::gapSeconds(pet::AmbientLevel::Subtle), (QPair<int, int>{45, 90}));
+        QCOMPARE(pet::Ambient::gapSeconds(pet::AmbientLevel::Lively), (QPair<int, int>{15, 25}));
+        Draws draws; qint64 now = 1000000; ambient.setRandom(draws.random()); ambient.setClock([&] { return now; });
+        // A gap draw of 0 is the shortest wait, 45 s; the rare roll (not 0) and the pick follow when it is due.
+        draws.values = {0}; player.select("thinking", true); player.select("idle", true);
+        QCOMPARE(ambient.idleFor(), qint64(0));
+        now += 44999; finishSequence(player); QCOMPARE(player.state(), QString("idle"));
+        now += 1; draws.values = {5, 0}; finishSequence(player);
+        QCOMPARE(player.state(), QString("fidget_aside")); QVERIFY(ambient.resting()); QVERIFY(draws.values.isEmpty());
+        // Under two idle minutes only "aside" is eligible. After the fidget the idle clock keeps counting
+        // and the next fidget waits for a new gap.
+        draws.values = {10}; playOut(player);
+        QVERIFY(!ambient.resting()); QCOMPARE(ambient.idleFor(), qint64(45000)); QVERIFY(draws.values.isEmpty());
+        finishSequence(player); QCOMPARE(player.state(), QString("idle"));
+        // Past two minutes the longer-wait fidgets join in, and the last one never repeats at once:
+        // yawn 3, boring 2 and squat 2 remain, so a draw of 3 is "boring".
+        now += 130000; draws.values = {5, 3}; finishSequence(player);
+        QCOMPARE(player.state(), QString("fidget_boring"));
+        // A rare roll of 0 draws from the rare pool instead.
+        draws.values = {0}; playOut(player); now += 100000; draws.values = {0, 0}; finishSequence(player);
+        QCOMPARE(player.state(), QString("fidget_meow"));
+        // Real activity ends the idle clock; idling again starts a fresh one.
+        draws.values = {0}; playOut(player); player.select("thinking", true);
+        QCOMPARE(ambient.idleFor(), qint64(-1)); QVERIFY(!ambient.resting());
+        draws.values = {0}; player.select("idle", true); QCOMPARE(ambient.idleFor(), qint64(0));
+        // After ten quiet minutes it dozes off, and wakes through the usual end of its sleep.
+        // Just short of that a fidget is still due, not a nap; exactly then the nap wins.
+        now += 599999; draws.values = {5, 0}; finishSequence(player); QCOMPARE(player.state(), QString("fidget_aside"));
+        draws.values = {0}; playOut(player);
+        now += 1; finishSequence(player);
+        QCOMPARE(player.state(), QString("sleeping")); QVERIFY(ambient.resting());
+        player.select("thinking"); playOut(player);
+        for (int i = 0; i < 12 && player.state() != "thinking"; ++i) finishSequence(player);
+        QCOMPARE(player.state(), QString("thinking")); QVERIFY(!ambient.resting());
+        QCOMPARE(draws.unexpected, 0);
+        // Lively waits 15 to 25 seconds.
+        ambient.setLevel(pet::AmbientLevel::Lively);
+        draws.values = {0}; player.select("idle", true);
+        now += 14999; finishSequence(player); QCOMPARE(player.state(), QString("idle"));
+        now += 1; draws.values = {5, 0}; finishSequence(player); QCOMPARE(player.state(), QString("fidget_aside"));
+        QCOMPARE(draws.unexpected, 0);
+    }
+    void ambientOffIsQuiet() {
+        pet::Player player; player.setPaused(true); player.setRandom([](int) { return 0; });
+        pet::Ambient ambient(player); Draws draws; qint64 now = 0;
+        ambient.setRandom(draws.random()); ambient.setClock([&] { return now; });
+        ambient.setLevel(pet::AmbientLevel::Off); QVERIFY(!player.variants());
+        player.select("thinking", true); player.select("idle", true);
+        now += 3 * 3600 * 1000; finishSequence(player); QCOMPARE(player.state(), QString("idle"));
+        QCOMPARE(draws.unexpected, 0); QVERIFY(!ambient.resting());
+        ambient.setLevel(pet::AmbientLevel::Subtle); QVERIFY(player.variants());
+    }
+    void ambientDoesNotFightTheMonitor() {
+        QTemporaryDir directory;
+        pet::PetWindow window(nullptr, directory.path() + "/preferences.json"); window.show();
+        pet::Monitor monitor(window); auto &player = window.player(); player.setPaused(true);
+        Draws draws; qint64 clock = 1000000;
+        window.ambient().setRandom(draws.random()); window.ambient().setClock([&] { return clock; });
+        const qint64 now = QDateTime::currentMSecsSinceEpoch(); qint64 seq = 0;
+        auto event = [&](QString kind) {
+            ++seq; return pet::Event{"claude", "s1", QString::number(seq), kind, {}, {}, "/work/abc-web", {}, now + seq, {}};
+        };
+        QVERIFY(monitor.apply(event("prompt"), now + seq));
+        QCOMPARE(player.requestedState(), QString("thinking"));
+        draws.values = {0}; QVERIFY(monitor.apply(event("interrupt"), now + seq)); // The aggregate is idle again.
+        playOut(player); QCOMPARE(player.state(), QString("idle"));
+        // A fidget survives the monitor's periodic update, which would otherwise restore plain idle.
+        clock += 45000; draws.values = {5, 0}; finishSequence(player);
+        QCOMPARE(player.state(), QString("fidget_aside"));
+        monitor.update(now + seq + 1); QCOMPARE(player.state(), QString("fidget_aside"));
+        // So does a nap, until something real happens; then it wakes through its end.
+        draws.values = {0}; playOut(player);
+        clock += 700000; finishSequence(player); QCOMPARE(player.state(), QString("sleeping"));
+        monitor.update(now + seq + 2); QCOMPARE(player.state(), QString("sleeping"));
+        QVERIFY(monitor.apply(event("prompt"), now + seq));
+        QCOMPARE(player.requestedState(), QString("thinking")); QCOMPARE(player.phase(), QString("end"));
+        QCOMPARE(draws.unexpected, 0);
+    }
+    void ambientPreference() {
+        QTemporaryDir directory; const auto path = directory.path() + "/preferences.json";
+        {
+            pet::PetWindow window(nullptr, path); QCOMPARE(window.ambientLevel(), int(pet::Preferences::AmbientSubtle));
+            window.showSettings(); auto *dialog = window.findChild<QDialog*>(); QVERIFY(dialog);
+            QComboBox *combo = nullptr;
+            for (auto *box : dialog->findChildren<QComboBox*>()) if (box->accessibleName() == "Idle animation") combo = box;
+            QVERIFY(combo); QCOMPARE(combo->count(), 3); QCOMPARE(combo->currentIndex(), 1);
+            combo->setCurrentIndex(2); QCOMPARE(window.ambient().level(), pet::AmbientLevel::Lively);
+            QVERIFY(window.savePreferences()); dialog->close();
+        }
+        QCOMPARE(pet::PreferencesStore(path).load().ambient, int(pet::Preferences::AmbientLively));
+        pet::PetWindow restored(nullptr, path); QCOMPARE(restored.ambient().level(), pet::AmbientLevel::Lively);
+        restored.setAmbientLevel(0); QVERIFY(!restored.player().variants()); // Off also means the plain idle loop.
+        restored.setAmbientLevel(99); QCOMPARE(restored.ambientLevel(), 2);
+        // Older files have no key; a bad value is refused like any other and preserved.
+        QFile file(path); QVERIFY(file.open(QIODevice::WriteOnly));
+        file.write(R"({"version":1,"size":200,"on_top":true})"); file.close();
+        pet::PreferencesStore legacy(path); QCOMPARE(legacy.load().ambient, int(pet::Preferences::AmbientSubtle));
+        QVERIFY(file.open(QIODevice::WriteOnly));
+        file.write(R"({"version":1,"size":200,"on_top":true,"ambient":7})"); file.close();
+        pet::PreferencesStore invalid(path); QCOMPARE(invalid.load().ambient, int(pet::Preferences::AmbientSubtle));
+        QVERIFY(!invalid.save(pet::Preferences{}));
+    }
+    void malformedVariantsAndFidgets() {
+        QTemporaryDir fixtures; auto base = fixture(fixtures.path()); // "idle" and "work" sequences exist.
+        auto with = [&](const QString &key, const QJsonValue &value) { auto catalog = base; catalog[key] = value; return catalog; };
+        auto variant = [](QJsonArray sequences, int weight) { return QJsonObject{{"sequences", sequences}, {"weight", weight}}; };
+        auto playback = [&](const QString &state, const QJsonObject &policy) {
+            auto catalog = base; auto all = catalog["playback"].toObject(); all[state] = policy;
+            catalog["playback"] = all; return catalog;
+        };
+        // A well-formed variant, weight and one-shot fidget load.
+        QVERIFY(loads(with("variants", QJsonObject{{"idle", QJsonArray{variant({"work"}, 3)}}})));
+        auto fidgeting = playback("working", QJsonObject{{"mode", "once"}, {"after", "idle"}});
+        auto ambient = [](QJsonArray fidgets, int sleep = 600) {
+            return QJsonObject{{"sleep_after_s", sleep}, {"fidgets", fidgets}};
+        };
+        auto fidget = [](QString state, int weight = 1) { return QJsonObject{{"state", state}, {"weight", weight}}; };
+        fidgeting["ambient"] = ambient({fidget("working")}); QVERIFY(loads(fidgeting));
+        QVERIFY(loads(playback("idle", QJsonObject{{"mode", "loop"}, {"after", "idle"}, {"weight", 5}})));
+        // Each of these is refused.
+        QVERIFY(!loads(with("variants", QJsonObject{{"nobody", QJsonArray{variant({"work"}, 1)}}})));
+        QVERIFY(!loads(with("variants", QJsonObject{{"idle", QJsonArray{}}})));
+        QVERIFY(!loads(with("variants", QJsonObject{{"idle", QJsonArray{variant({"missing"}, 1)}}})));
+        QVERIFY(!loads(with("variants", QJsonObject{{"idle", QJsonArray{variant({"work", "idle"}, 1)}}})));
+        QVERIFY(!loads(with("variants", QJsonObject{{"idle", QJsonArray{variant({"work"}, 0)}}})));
+        QVERIFY(!loads(playback("idle", QJsonObject{{"mode", "loop"}, {"after", "idle"}, {"weight", 0}})));
+        QVERIFY(!loads(playback("idle", QJsonObject{{"mode", "loop"}, {"after", "idle"}, {"loops", 2}}))); // Phased only.
+        for (const auto &broken : {ambient({fidget("nobody")}), ambient({fidget("idle")}), ambient({fidget("working", 0)}),
+                                   ambient({fidget("working"), fidget("working")}), ambient({fidget("working")}, 30)}) {
+            auto catalog = fidgeting; catalog["ambient"] = broken; QVERIFY(!loads(catalog));
+        }
+        // A looping state never ends by itself, so it cannot be a fidget.
+        auto looping = base; looping["ambient"] = ambient({fidget("working")}); QVERIFY(!loads(looping));
     }
     void focusSessionListAndQuietHosts() {
         QTemporaryDir directory;

@@ -55,8 +55,10 @@ void Monitor::update(qint64 now) {
     if (!active_ || !observed_ || window_.player().requestedState() == "closing") return;
     const auto state = sessions_.aggregate(now);
     const auto animation = sessionAnimation(state);
+    // A fidget or an ambient nap is how an idle pet looks; leave it until something real happens.
+    const auto showing = animation == "idle" && window_.ambient().resting() ? animation : window_.player().requestedState();
     if (state != lastAggregate_ || (!window_.player().isDragging() && state != "error" && state != "turn-finished" &&
-                                    window_.player().requestedState() != animation)) {
+                                    showing != animation)) {
         window_.player().select(animation, state == "attention" || state == "error");
         lastAggregate_ = state;
     }

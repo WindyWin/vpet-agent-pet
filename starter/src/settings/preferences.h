@@ -19,6 +19,9 @@ struct Preferences {
     // Which alerts pop a bubble. Pet animation and badge react to everything regardless.
     enum Bubbles { RequestsOnly = 0, RequestsAndErrors = 1, AllAlerts = 2 };
     int bubbles = RequestsAndErrors;
+    // How much the idle pet does on its own: fidgets, alternate idle loops and dozing off.
+    enum Ambient { AmbientOff = 0, AmbientSubtle = 1, AmbientLively = 2 };
+    int ambient = AmbientSubtle;
     // Startup keys. `agent-pet autostart` edits them without a display, possibly
     // while a pet runs, so the pet re-reads them before each save.
     bool autostart = false; // Hook launches the pet on a session start when none is running.

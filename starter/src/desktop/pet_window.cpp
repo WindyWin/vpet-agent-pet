@@ -42,7 +42,7 @@ static void drawBadge(QPainter &painter, const QRect &badge, const QColor &color
     painter.restore();
 }
 PetWindow::PetWindow(QWidget *parent, const QString &path, bool persist)
-    : QWidget(parent), player_(this), store_(path), menu_(this), tray_(this), persist_(persist) {
+    : QWidget(parent), player_(this), ambient_(player_, this), store_(path), menu_(this), tray_(this), persist_(persist) {
     const auto preferences = persist_ ? store_.load() : Preferences{};
     setWindowTitle("Agent Pet");
     setWindowFlags(Qt::Tool | Qt::FramelessWindowHint);
@@ -52,6 +52,7 @@ PetWindow::PetWindow(QWidget *parent, const QString &path, bool persist)
     setToolTip("Click for running sessions · Drag to move · Right-click for controls · Esc to quit");
     setPetSize(preferences.size);
     muted_ = preferences.muted; sound_ = preferences.sound; bubbles_ = qBound(0, preferences.bubbles, 2);
+    ambient_.setLevel(AmbientLevel(qBound(0, preferences.ambient, 2)));
     autostart_ = preferences.autostart; presence_.setPolicy(preferences.whenIdle);
     connect(&player_, &Player::changed, this, qOverload<>(&PetWindow::update));
     connect(&player_, &Player::completed, this, [this](const QString &state) {
@@ -194,6 +195,12 @@ void PetWindow::setBubbles(int level) {
     bubbles_ = level; emit notificationsChanged();
     if (ready_) saveTimer_.start();
 }
+void PetWindow::setAmbientLevel(int level) {
+    level = qBound(0, level, 2);
+    if (level == ambientLevel()) return;
+    ambient_.setLevel(AmbientLevel(level));
+    if (ready_) saveTimer_.start();
+}
 void PetWindow::showAfterFlagChange(QPoint position) {
     // Changing window flags hides the window; a hidden pet stays hidden until shown.
     if (!petHidden()) { show(); move(position); }
@@ -296,6 +303,7 @@ bool PetWindow::writePreferences(const std::function<void(Preferences &)> &chang
     preferences.size = width(); preferences.position = pos(); preferences.hasPosition = true;
     preferences.onTop = windowFlags().testFlag(Qt::WindowStaysOnTopHint);
     preferences.muted = muted_; preferences.sound = sound_; preferences.bubbles = bubbles_;
+    preferences.ambient = ambientLevel();
     change(preferences);
     autostart_ = preferences.autostart; presence_.setPolicy(preferences.whenIdle);
     return store_.save(preferences);
@@ -391,6 +399,13 @@ void PetWindow::showSettings() {
     bubbles->setCurrentIndex(bubbles_); bubbles->setAccessibleName("Show alert bubbles");
     layout->addRow("Show &bubbles", bubbles);
     connect(bubbles, &QComboBox::currentIndexChanged, this, &PetWindow::setBubbles);
+    auto *ambient = new QComboBox(dialog);
+    ambient->addItems({"Off (always the plain idle loop)", "Subtle (a fidget about once a minute)", "Lively (a fidget every 15–25 seconds)"});
+    ambient->setCurrentIndex(ambientLevel()); ambient->setAccessibleName("Idle animation");
+    ambient->setToolTip("What the pet does on its own while no agent needs it: fidgets, alternate idle loops, and\n"
+                        "dozing off after about ten quiet minutes. Any agent activity ends it at once.");
+    layout->addRow("&Idle animation", ambient);
+    connect(ambient, &QComboBox::currentIndexChanged, this, &PetWindow::setAmbientLevel);
     if (updates_) {
         auto *updatesButton = new QPushButton(updates_->indicator(), dialog); layout->addRow(updatesButton);
         connect(updatesButton, &QPushButton::clicked, this, [this] { updates_->showSettings(this); });
