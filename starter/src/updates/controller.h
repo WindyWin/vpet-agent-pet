@@ -22,7 +22,7 @@ public:
     void check(bool manual = false);
     void download();
     void install();
-    // Installs a downloaded update in fully automatic mode once no sessions are active.
+    // Installs a downloaded update in fully automatic mode unless an agent is waiting for the user.
     void autoInstall();
     QString indicator() const;
     std::function<bool()> sessionsActive;
