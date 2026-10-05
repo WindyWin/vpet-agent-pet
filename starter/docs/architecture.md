@@ -3,6 +3,10 @@
 Decision recorded 2026-10-04: C++17, Qt 6 Widgets, CMake and Ninja.
 Develop in this starter directory. No original VPet installation is used.
 
+Proposed next refactor: [platform boundaries and session focus adapters](platform-refactor-plan.md).
+The proposal prepares extension points while retaining current Linux behavior;
+it does not add support for another operating system or desktop environment.
+
 Qt provides translucent top-level windows, native move requests, input-transparent
 windows and tray menus with a small native application layer. The prototype uses
 software QWidget painting, without a browser or language interpreter at runtime.
