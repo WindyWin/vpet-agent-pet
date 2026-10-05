@@ -1,5 +1,6 @@
 #include "sessions/alerts.h"
 #include "providers/host.h"
+#include <QFileInfo>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QTest>
@@ -139,7 +140,7 @@ private slots:
         QProcessEnvironment env;
         env.insert("KONSOLE_DBUS_SERVICE", "org.kde.konsole-42"); env.insert("KONSOLE_DBUS_WINDOW", "/Windows/1");
         env.insert("KONSOLE_DBUS_SESSION", "/Sessions/5"); env.insert("WINDOWID", "6291463");
-        auto host = pet::hostContext(env, {300, 200, 100});
+        auto host = pet::hostContext(env, {300, 200, 100}, {"bash", "konsole", "plasmashell"});
         QCOMPARE(host["host"].toString(), "konsole"); QCOMPARE(host["host_pids"].toString(), "300,200,100");
         QCOMPARE(host["host_window"].toString(), "6291463");
         pet::KonsoleTarget konsole;
@@ -147,23 +148,32 @@ private slots:
         QCOMPARE(konsole.service, "org.kde.konsole-42"); QCOMPARE(konsole.window, "/Windows/1"); QCOMPARE(konsole.session, 5);
         QVERIFY(!pet::konsoleTarget("org.kde.konsole-42|/Windows/1|/Sessions/5;x", konsole));
         env.insert("TMUX", "/tmp/tmux-1000/default,1234,0"); env.insert("TMUX_PANE", "%7");
-        host = pet::hostContext(env, {300});
+        host = pet::hostContext(env, {300, 200}, {"bash", "tmux: server"});
         QCOMPARE(host["host"].toString(), "tmux"); // The innermost multiplexer wins.
         auto commands = pet::hostCommands("tmux", host["host_target"].toString());
         QCOMPARE(commands.size(), 2);
         QCOMPARE(commands[1].arguments, (QStringList{"-S", "/tmp/tmux-1000/default", "select-pane", "-t", "%7"}));
         QVERIFY(pet::hostCommands("tmux", "/tmp/s|%7; rm").isEmpty());
         env.insert("HERDR_PANE_ID", "p_3"); env.insert("HERDR_TAB_ID", "t_2"); env.insert("HERDR_SOCKET_PATH", "/run/user/1/herdr.sock");
-        host = pet::hostContext(env, {});
-        QCOMPARE(host["host"].toString(), "herdr"); QVERIFY(!host.contains("host_pids"));
+        host = pet::hostContext(env, {}, {});
+        QCOMPARE(host["host"].toString(), "herdr"); // Unreadable ancestry keeps what the environment says. QVERIFY(!host.contains("host_pids"));
         commands = pet::hostCommands("herdr", host["host_target"].toString());
         QCOMPARE(commands.size(), 2);
         QCOMPARE(commands[0].arguments, (QStringList{"tab", "focus", "t_2"}));
         QCOMPARE(commands[1].arguments, (QStringList{"agent", "focus", "p_3"}));
         QCOMPARE(commands[1].environment.value("HERDR_SOCKET_PATH"), "/run/user/1/herdr.sock");
         QProcessEnvironment code; code.insert("TERM_PROGRAM", "vscode");
-        QCOMPARE(pet::hostContext(code, {9})["host"].toString(), "vscode");
-        QVERIFY(pet::hostContext({}, {}).isEmpty());
+        QCOMPARE(pet::hostContext(code, {9}, {"code"})["host"].toString(), "vscode");
+        // VS Code started from a herdr pane in Konsole hands that pane's variables to its own terminals.
+        for (const auto *name : {"HERDR_PANE_ID", "HERDR_TAB_ID", "TMUX", "TMUX_PANE", "KONSOLE_DBUS_SERVICE",
+                                 "KONSOLE_DBUS_WINDOW", "KONSOLE_DBUS_SESSION", "WINDOWID"})
+            code.insert(name, env.value(name));
+        host = pet::hostContext(code, {40, 30, 20}, {"claude", "nu", "code"});
+        QCOMPARE(host["host"].toString(), "vscode");
+        QVERIFY(!host.contains("host_target")); QVERIFY(!host.contains("host_window"));
+        QCOMPARE(pet::hostContext(code, {50, 40}, {"bash", "herdr"})["host"].toString(), "herdr"); // herdr inside VS Code.
+        QVERIFY(pet::hostContext({}, {}, {}).isEmpty());
+        QCOMPARE(pet::processNames({QCoreApplication::applicationPid()}).value(0), QFileInfo(QCoreApplication::applicationFilePath()).fileName().left(15));
         QVERIFY(pet::processAncestors(QCoreApplication::applicationPid()).startsWith(QCoreApplication::applicationPid()));
     }
     void herdrAttachedClientIdentity() {

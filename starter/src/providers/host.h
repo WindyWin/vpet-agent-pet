@@ -13,9 +13,14 @@ namespace pet {
 //   host_target konsole: "<D-Bus service>|<window path>|<session path>"
 //               herdr:   "<tab id>|<pane id>|<socket path>"
 //               tmux:    "<socket path>|<pane id>"
-QJsonObject hostContext(const QProcessEnvironment &environment, QVector<qint64> ancestors);
+// Programs started from a terminal inherit its variables, so herdr, tmux and Konsole
+// count only when one of the ancestor names (from processNames) is that program.
+// Without names, as when /proc is unreadable, the variables are taken as they are.
+QJsonObject hostContext(const QProcessEnvironment &environment, QVector<qint64> ancestors, const QStringList &names);
 // Parent chain of a process from /proc, nearest first, excluding pid 1.
 QVector<qint64> processAncestors(qint64 pid, int limit = 16);
+// Kernel command names (/proc/<pid>/comm) of the processes, in order.
+QStringList processNames(const QVector<qint64> &pids);
 
 struct HostCommand {
     QString program;

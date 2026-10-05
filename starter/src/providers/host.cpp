@@ -3,6 +3,7 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QRegularExpression>
+#include <algorithm>
 
 namespace pet {
 static bool matches(const char *pattern, const QString &value) {
@@ -21,17 +22,31 @@ QVector<qint64> processAncestors(qint64 pid, int limit) {
     }
     return chain;
 }
-QJsonObject hostContext(const QProcessEnvironment &env, QVector<qint64> ancestors) {
+QStringList processNames(const QVector<qint64> &pids) {
+    QStringList names;
+    for (const auto pid : pids) {
+        QFile comm(QString("/proc/%1/comm").arg(pid));
+        names << (comm.open(QIODevice::ReadOnly) ? QString::fromUtf8(comm.read(64)).trimmed() : QString());
+    }
+    return names;
+}
+QJsonObject hostContext(const QProcessEnvironment &env, QVector<qint64> ancestors, const QStringList &names) {
     QJsonObject out;
     const auto value = [&](const char *name) { return env.value(name); };
+    // VS Code launched from a herdr pane passes HERDR_PANE_ID on to its own terminals, for example.
+    const auto under = [&](const char *program) {
+        return names.isEmpty() || std::any_of(names.begin(), names.end(), [&](const QString &name) {
+            return name == program || name.startsWith(QString(program) + ":"); // tmux renames itself "tmux: server".
+        });
+    };
     QString host, target;
-    if (!value("HERDR_PANE_ID").isEmpty()) {
+    if (!value("HERDR_PANE_ID").isEmpty() && under("herdr")) {
         host = "herdr";
         target = value("HERDR_TAB_ID") + "|" + value("HERDR_PANE_ID") + "|" + value("HERDR_SOCKET_PATH");
-    } else if (!value("TMUX").isEmpty() && !value("TMUX_PANE").isEmpty()) {
+    } else if (!value("TMUX").isEmpty() && !value("TMUX_PANE").isEmpty() && under("tmux")) {
         host = "tmux";
         target = value("TMUX").section(',', 0, 0) + "|" + value("TMUX_PANE");
-    } else if (!value("KONSOLE_DBUS_SERVICE").isEmpty()) {
+    } else if (!value("KONSOLE_DBUS_SERVICE").isEmpty() && under("konsole")) {
         host = "konsole";
         target = value("KONSOLE_DBUS_SERVICE") + "|" + value("KONSOLE_DBUS_WINDOW") + "|" + value("KONSOLE_DBUS_SESSION");
     } else if (value("TERM_PROGRAM") == "vscode") host = "vscode";
@@ -42,7 +57,8 @@ QJsonObject hostContext(const QProcessEnvironment &env, QVector<qint64> ancestor
     QStringList pids;
     for (const auto pid : ancestors.mid(0, 16)) pids << QString::number(pid);
     if (!pids.isEmpty()) out["host_pids"] = pids.join(',');
-    if (matches("[1-9][0-9]{0,19}", value("WINDOWID"))) out["host_window"] = value("WINDOWID");
+    // VS Code sets no WINDOWID; one in its terminals belongs to the terminal that launched it.
+    if (host != "vscode" && matches("[1-9][0-9]{0,19}", value("WINDOWID"))) out["host_window"] = value("WINDOWID");
     return out;
 }
 bool konsoleTarget(const QString &target, KonsoleTarget &out) {

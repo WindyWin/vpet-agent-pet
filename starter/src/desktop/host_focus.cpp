@@ -210,7 +210,8 @@ static bool focusHerdrClient(const Session &s, const QVector<HostWindow> &availa
             if (equals > 0) env.insert(QString::fromLocal8Bit(pair.left(equals)), QString::fromLocal8Bit(pair.mid(equals + 1)));
         }
         if (herdrClientSocket(env, args) != QDir::cleanPath(socket)) continue;
-        const auto context = hostContext(env, processAncestors(pid));
+        const auto ancestors = processAncestors(pid);
+        const auto context = hostContext(env, ancestors, processNames(ancestors));
         const auto window = chooseWindow(context["host_window"].toString(), context["host_pids"].toString(), s.project, available);
         selectKonsole(env.value("KONSOLE_DBUS_SERVICE") + "|" + env.value("KONSOLE_DBUS_WINDOW") + "|" + env.value("KONSOLE_DBUS_SESSION"));
         if (activate(window)) return true;
