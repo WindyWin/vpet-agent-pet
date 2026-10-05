@@ -26,6 +26,7 @@ struct Preferences {
     enum Mood { MoodOff = 0, MoodCheerful = 1, MoodFull = 2 };
     int mood = MoodFull;
     int turns = 0; // Finished turns seen so far, for the pet's every-hundredth celebration.
+    bool touch = true; // Reacts to petting, throwing and being pushed against a screen edge.
     // Startup keys. `agent-pet autostart` edits them without a display, possibly
     // while a pet runs, so the pet re-reads them before each save.
     bool autostart = false; // Hook launches the pet on a session start when none is running.

@@ -3,8 +3,8 @@
   "upstream": "https://github.com/LorisYounger/VPet",
   "source_commit": "6358445aa54587f9cd524264eaf17ef97bc826a8",
   "source_note": "Selected unmodified files from local checkout; per-file hashes identify copied bytes, including any local changes.",
-  "file_count": 518,
-  "total_bytes": 73660791,
+  "file_count": 702,
+  "total_bytes": 98846610,
   "files": [
     {
       "path": "assets/vpet/vup/Default/Nomal/1/_000_250.png",
@@ -2595,6 +2595,926 @@
       "path": "assets/vpet/vup/LevelUP/Happy/\u5f00\u5fc3\u5347\u7ea7_028_125.png",
       "bytes": 140547,
       "sha256": "2504ed3e71f13b586d8f8f6fcca1df9e4ee7d0fcdd89c6b3041ebdec64a7e4d3"
+    },
+    {
+      "path": "assets/vpet/vup/Touch_Head/A_Nomal/\u6478\u5934_0_250.png",
+      "bytes": 169681,
+      "sha256": "833238f4fc50d5237695ade9971ef371e2216c6a210927f9b0aad436f75e5082"
+    },
+    {
+      "path": "assets/vpet/vup/Touch_Head/A_Nomal/\u6478\u5934_1_125.png",
+      "bytes": 186577,
+      "sha256": "e7bde4871e0b7ce409bdd807bedfad18a150f3256376358cbf58a039ee50e6cb"
+    },
+    {
+      "path": "assets/vpet/vup/Touch_Head/B_Nomal/\u6478\u5934_000_125.png",
+      "bytes": 158380,
+      "sha256": "c8e1c2a4579c9f3751de6ed45816f88e155afcdf4e0dfb0c9bd89de8c13b83cb"
+    },
+    {
+      "path": "assets/vpet/vup/Touch_Head/B_Nomal/\u6478\u5934_001_125.png",
+      "bytes": 157776,
+      "sha256": "0db61f48264de432075073c9aef90d586749c6eef75c8681c29cdf6163c0e681"
+    },
+    {
+      "path": "assets/vpet/vup/Touch_Head/B_Nomal/\u6478\u5934_002_125.png",
+      "bytes": 150595,
+      "sha256": "9b2b760e7921afe88a43c3741dd16a0a865858b3683262a0b145f4ff61e37448"
+    },
+    {
+      "path": "assets/vpet/vup/Touch_Head/B_Nomal/\u6478\u5934_003_125.png",
+      "bytes": 158380,
+      "sha256": "c8e1c2a4579c9f3751de6ed45816f88e155afcdf4e0dfb0c9bd89de8c13b83cb"
+    },
+    {
+      "path": "assets/vpet/vup/Touch_Head/B_Nomal/\u6478\u5934_004_125.png",
+      "bytes": 157719,
+      "sha256": "cd4e6a679fa9958e98476d26f035d4104032cb52fde36bc182206db757191837"
+    },
+    {
+      "path": "assets/vpet/vup/Touch_Head/B_Nomal/\u6478\u5934_005_250.png",
+      "bytes": 150595,
+      "sha256": "9b2b760e7921afe88a43c3741dd16a0a865858b3683262a0b145f4ff61e37448"
+    },
+    {
+      "path": "assets/vpet/vup/Touch_Head/B_Nomal/\u6478\u5934_006_125.png",
+      "bytes": 158380,
+      "sha256": "c8e1c2a4579c9f3751de6ed45816f88e155afcdf4e0dfb0c9bd89de8c13b83cb"
+    },
+    {
+      "path": "assets/vpet/vup/Touch_Head/B_Nomal/\u6478\u5934_007_125.png",
+      "bytes": 156688,
+      "sha256": "d1a6dac54f4b23a75ecdac3e4c5b88697e811b8b21167c1ba8fc0d8d868f3391"
+    },
+    {
+      "path": "assets/vpet/vup/Touch_Head/B_Nomal/\u6478\u5934_008_125.png",
+      "bytes": 150595,
+      "sha256": "9b2b760e7921afe88a43c3741dd16a0a865858b3683262a0b145f4ff61e37448"
+    },
+    {
+      "path": "assets/vpet/vup/Touch_Head/B_Nomal/\u6478\u5934_009_125.png",
+      "bytes": 157698,
+      "sha256": "6b556144efdda1c53483fee60b9c91ab34767ef521ffdff32c4acd0846732ef1"
+    },
+    {
+      "path": "assets/vpet/vup/Touch_Head/B_Nomal/\u6478\u5934_010_125.png",
+      "bytes": 158380,
+      "sha256": "c8e1c2a4579c9f3751de6ed45816f88e155afcdf4e0dfb0c9bd89de8c13b83cb"
+    },
+    {
+      "path": "assets/vpet/vup/Touch_Head/C_Nomal/\u6478\u5934_0_125.png",
+      "bytes": 153138,
+      "sha256": "35627647624647ceb2117de55305f1af4755baea8daf6f2f80a907c346b5b591"
+    },
+    {
+      "path": "assets/vpet/vup/Touch_Head/C_Nomal/\u6478\u5934_1_250.png",
+      "bytes": 158711,
+      "sha256": "3dec3de337295e670e55e32901894bb11a95c0a53e0ea1a3c3d5ca4b57c6c9d9"
+    },
+    {
+      "path": "assets/vpet/vup/Touch_Body/A_Happy/tb1/\u6478\u9ad8\u5174A_000_125.png",
+      "bytes": 145371,
+      "sha256": "f26b3bdd751bea50113797dd426d80e56c662c98ad826ec1896fa4295ea89687"
+    },
+    {
+      "path": "assets/vpet/vup/Touch_Body/A_Happy/tb1/\u6478\u9ad8\u5174A_001_125.png",
+      "bytes": 155376,
+      "sha256": "028b4c3265886041160908b59b8ffc98bf4519915b2215c47204c41535615541"
+    },
+    {
+      "path": "assets/vpet/vup/Touch_Body/A_Happy/tb1/\u6478\u9ad8\u5174A_002_125.png",
+      "bytes": 132359,
+      "sha256": "10feee62b1afe06438d66f5221db302f0d60e0c3c5713efddfc20d7a15bf0807"
+    },
+    {
+      "path": "assets/vpet/vup/Touch_Body/A_Happy/tb1/\u6478\u9ad8\u5174A_003_125.png",
+      "bytes": 128098,
+      "sha256": "82528654ebe42163086134caa86b993a05d4d5e812ae66b1f4150d8c5e1024ac"
+    },
+    {
+      "path": "assets/vpet/vup/Touch_Body/A_Happy/tb1/\u6478\u9ad8\u5174A_004_125.png",
+      "bytes": 132886,
+      "sha256": "e28f29d92304ae53527905bbfc77ff8fe4d26eb5842e55e2ef7ffc34d90fc822"
+    },
+    {
+      "path": "assets/vpet/vup/Touch_Body/A_Happy/tb1/\u6478\u9ad8\u5174A_005_125.png",
+      "bytes": 138051,
+      "sha256": "d6f5802dfbed3ce3dcaf9f9bd18051ef1278f2688e78cc993cf1f3cda2179a23"
+    },
+    {
+      "path": "assets/vpet/vup/Touch_Body/A_Happy/tb1/\u6478\u9ad8\u5174A_006_125.png",
+      "bytes": 145790,
+      "sha256": "693103b9a5202f72fa5eb30ca6f3aa77613c3e31a60b226ee38d4c8c384e2808"
+    },
+    {
+      "path": "assets/vpet/vup/Touch_Body/A_Happy/tb1/\u6478\u9ad8\u5174A_007_125.png",
+      "bytes": 146741,
+      "sha256": "4f9343846b6984a1ae3ba0926c26310f6c8bb7330658849b13fd89b2e7bd223e"
+    },
+    {
+      "path": "assets/vpet/vup/Touch_Body/A_Happy/tb1/\u6478\u9ad8\u5174A_008_125.png",
+      "bytes": 143918,
+      "sha256": "98d1e7f06a9c9284365a0fbda6a5e9c95e52e8756915658c2e046cdd902d283b"
+    },
+    {
+      "path": "assets/vpet/vup/Touch_Body/A_Happy/tb1/\u6478\u9ad8\u5174A_009_125.png",
+      "bytes": 144319,
+      "sha256": "7fc18bce9e370a02e250a7a6a69b68622a52da9c741a62dcd2834386378d0a5f"
+    },
+    {
+      "path": "assets/vpet/vup/Touch_Body/A_Happy/tb1/\u6478\u9ad8\u5174A_010_375.png",
+      "bytes": 146741,
+      "sha256": "4f9343846b6984a1ae3ba0926c26310f6c8bb7330658849b13fd89b2e7bd223e"
+    },
+    {
+      "path": "assets/vpet/vup/Touch_Body/A_Happy/tb1/\u6478\u9ad8\u5174A_011_125.png",
+      "bytes": 143285,
+      "sha256": "ec56901f6abc96e1196d7af231a78e524f466484dcc6ddad7776015884a97773"
+    },
+    {
+      "path": "assets/vpet/vup/Touch_Body/A_Happy/tb1/\u6478\u9ad8\u5174A_012_125.png",
+      "bytes": 143838,
+      "sha256": "4c001716f9003fdf499359aa568d932430c333a1338c3513f45ebaaf7202eb5a"
+    },
+    {
+      "path": "assets/vpet/vup/Touch_Body/A_Happy/tb1/\u6478\u9ad8\u5174A_013_125.png",
+      "bytes": 146741,
+      "sha256": "4f9343846b6984a1ae3ba0926c26310f6c8bb7330658849b13fd89b2e7bd223e"
+    },
+    {
+      "path": "assets/vpet/vup/Touch_Body/A_Happy/tb1/\u6478\u9ad8\u5174A_014_125.png",
+      "bytes": 145688,
+      "sha256": "6b246d0a518168472e20374d175ed620ee35c16592f7c7ccf64b121a8a88845e"
+    },
+    {
+      "path": "assets/vpet/vup/Touch_Body/B_Happy/tb1/\u9ad8\u5174\u5faa\u73af_000_125.png",
+      "bytes": 147405,
+      "sha256": "3ae298b98c46dacb248f93eaf516c90ca03aaf1c2d93a916034383d8ea51c4f1"
+    },
+    {
+      "path": "assets/vpet/vup/Touch_Body/B_Happy/tb1/\u9ad8\u5174\u5faa\u73af_001_125.png",
+      "bytes": 145781,
+      "sha256": "4f32811c3da7499e8f877d9ab6e1d2fec93a45127f8c661ab01d089cfe3667fa"
+    },
+    {
+      "path": "assets/vpet/vup/Touch_Body/B_Happy/tb1/\u9ad8\u5174\u5faa\u73af_002_125.png",
+      "bytes": 162398,
+      "sha256": "577e59714c0cedc558fde8be4b2e1d8d7c1d8ec7102ce999eddce394ce10d62b"
+    },
+    {
+      "path": "assets/vpet/vup/Touch_Body/B_Happy/tb1/\u9ad8\u5174\u5faa\u73af_003_125.png",
+      "bytes": 152114,
+      "sha256": "fbd3115bdfebb58f40e0cdaf5aea7b78afdb31e184d9618bb9c33ca35ce70ad1"
+    },
+    {
+      "path": "assets/vpet/vup/Touch_Body/B_Happy/tb1/\u9ad8\u5174\u5faa\u73af_004_125.png",
+      "bytes": 171361,
+      "sha256": "481ec6832d7c89eb7646bdb064905fa48f4cacad3e4c053a8d916c6e0068a928"
+    },
+    {
+      "path": "assets/vpet/vup/Touch_Body/B_Happy/tb1/\u9ad8\u5174\u5faa\u73af_005_125.png",
+      "bytes": 140994,
+      "sha256": "398f7be955db19b711916ebc6c3e9174f7f48138846e95a8d7c901f3e8056e2c"
+    },
+    {
+      "path": "assets/vpet/vup/Touch_Body/B_Happy/tb1/\u9ad8\u5174\u5faa\u73af_006_125.png",
+      "bytes": 162398,
+      "sha256": "577e59714c0cedc558fde8be4b2e1d8d7c1d8ec7102ce999eddce394ce10d62b"
+    },
+    {
+      "path": "assets/vpet/vup/Touch_Body/B_Happy/tb1/\u9ad8\u5174\u5faa\u73af_007_125.png",
+      "bytes": 145781,
+      "sha256": "4f32811c3da7499e8f877d9ab6e1d2fec93a45127f8c661ab01d089cfe3667fa"
+    },
+    {
+      "path": "assets/vpet/vup/Touch_Body/B_Happy/tb1/\u9ad8\u5174\u5faa\u73af_008_125.png",
+      "bytes": 167969,
+      "sha256": "0743064fbd8a30bc36e7f32479a2cd23b1fbc518aa9e06b14e9a71044c7d072c"
+    },
+    {
+      "path": "assets/vpet/vup/Touch_Body/B_Happy/tb1/\u9ad8\u5174\u5faa\u73af_009_125.png",
+      "bytes": 147405,
+      "sha256": "3ae298b98c46dacb248f93eaf516c90ca03aaf1c2d93a916034383d8ea51c4f1"
+    },
+    {
+      "path": "assets/vpet/vup/Touch_Body/B_Happy/tb1/\u9ad8\u5174\u5faa\u73af_010_125.png",
+      "bytes": 162398,
+      "sha256": "577e59714c0cedc558fde8be4b2e1d8d7c1d8ec7102ce999eddce394ce10d62b"
+    },
+    {
+      "path": "assets/vpet/vup/Touch_Body/B_Happy/tb1/\u9ad8\u5174\u5faa\u73af_011_125.png",
+      "bytes": 152114,
+      "sha256": "fbd3115bdfebb58f40e0cdaf5aea7b78afdb31e184d9618bb9c33ca35ce70ad1"
+    },
+    {
+      "path": "assets/vpet/vup/Touch_Body/B_Happy/tb1/\u9ad8\u5174\u5faa\u73af_012_125.png",
+      "bytes": 171361,
+      "sha256": "481ec6832d7c89eb7646bdb064905fa48f4cacad3e4c053a8d916c6e0068a928"
+    },
+    {
+      "path": "assets/vpet/vup/Touch_Body/B_Happy/tb1/\u9ad8\u5174\u5faa\u73af_013_500.png",
+      "bytes": 141678,
+      "sha256": "f2959f962bc084ee18d096c0c1f0c015c831e93ffaa1968ff958e981be535cfb"
+    },
+    {
+      "path": "assets/vpet/vup/Touch_Body/C_Happy/tb1/\u6478\u9ad8\u5174C_000_125.png",
+      "bytes": 142278,
+      "sha256": "51acb7425d28687ee001f2db15ffbbef2758030a8910ee9066d4305e5fd9aa2e"
+    },
+    {
+      "path": "assets/vpet/vup/Touch_Body/C_Happy/tb1/\u6478\u9ad8\u5174C_001_125.png",
+      "bytes": 132886,
+      "sha256": "e28f29d92304ae53527905bbfc77ff8fe4d26eb5842e55e2ef7ffc34d90fc822"
+    },
+    {
+      "path": "assets/vpet/vup/Touch_Body/C_Happy/tb1/\u6478\u9ad8\u5174C_002_125.png",
+      "bytes": 145371,
+      "sha256": "f26b3bdd751bea50113797dd426d80e56c662c98ad826ec1896fa4295ea89687"
+    },
+    {
+      "path": "assets/vpet/vup/Pinch/Nomal/A/_000_125.png",
+      "bytes": 173758,
+      "sha256": "946af7123b26df86039a4a52f715543a01fb304e11547401ecd4eeda031f8165"
+    },
+    {
+      "path": "assets/vpet/vup/Pinch/Nomal/B/_000_125.png",
+      "bytes": 170083,
+      "sha256": "b2e034f0af1492f776616c800842e339dd0752c3a2c4f4d3bd6820b00d8cff82"
+    },
+    {
+      "path": "assets/vpet/vup/Pinch/Nomal/B/_001_125.png",
+      "bytes": 173396,
+      "sha256": "62aa724702dc262ee682f12c71f42f2654efd8a631c8f08c770c84ed9ebfb11a"
+    },
+    {
+      "path": "assets/vpet/vup/Pinch/Nomal/B/_002_125.png",
+      "bytes": 171648,
+      "sha256": "b8bd5fb67033b7ef723cfc461687ab1ed00a9b01324a1791662852f54c810a4c"
+    },
+    {
+      "path": "assets/vpet/vup/Pinch/Nomal/B/_003_125.png",
+      "bytes": 162063,
+      "sha256": "6660932ac72cdf613f27e390ae64f73ddfaa6ad3439e3aecade307bbebc9fb1b"
+    },
+    {
+      "path": "assets/vpet/vup/Pinch/Nomal/B/_004_125.png",
+      "bytes": 171791,
+      "sha256": "609a8145864294447d13e6f2a782854fc7bd154c255020118ad3975209b64e0b"
+    },
+    {
+      "path": "assets/vpet/vup/Pinch/Nomal/B/_005_125.png",
+      "bytes": 173396,
+      "sha256": "62aa724702dc262ee682f12c71f42f2654efd8a631c8f08c770c84ed9ebfb11a"
+    },
+    {
+      "path": "assets/vpet/vup/Pinch/Nomal/C/_000_125.png",
+      "bytes": 164799,
+      "sha256": "548d3e04cf4e03e1d8e7a47d2c697837cec2638c747a1ddaa14e428c6d531572"
+    },
+    {
+      "path": "assets/vpet/vup/Pinch/Nomal/C/_001_125.png",
+      "bytes": 179098,
+      "sha256": "187c56754d7637f58f2e824229d17aaec9ab63868525223487426f6be640bea0"
+    },
+    {
+      "path": "assets/vpet/vup/Pinch/Nomal/C/_002_125.png",
+      "bytes": 170636,
+      "sha256": "01032a1631321f47225fe3f471286c3d395c4338d690ed37356854920fb1e45e"
+    },
+    {
+      "path": "assets/vpet/vup/Pinch/Nomal/C/_003_125.png",
+      "bytes": 168036,
+      "sha256": "ef415af258002947c9de7ee5145c9b67351026906609c23505b3ab90131be629"
+    },
+    {
+      "path": "assets/vpet/vup/Pinch/Nomal/C/_004_125.png",
+      "bytes": 155993,
+      "sha256": "37a6897cb6c35582075e96d3053dd0ffd98650268b1d1acf1f571bdcbd25f1e7"
+    },
+    {
+      "path": "assets/vpet/vup/Pinch/Nomal/C/_005_125.png",
+      "bytes": 152416,
+      "sha256": "cf7a2257a0f3519cd3e2bc044275a6443da76664015f5eed24b3fb60f34c109d"
+    },
+    {
+      "path": "assets/vpet/vup/Pinch/Nomal/C/_006_125.png",
+      "bytes": 147713,
+      "sha256": "ee325210b9fb9fd60748f2fb475d283f80a7d03cfae944aff8809bb80f187814"
+    },
+    {
+      "path": "assets/vpet/vup/Pinch/Nomal/C/_007_125.png",
+      "bytes": 145289,
+      "sha256": "dc3d07b19b795afbe7b9b2700947c7d0a6de7254f0514c73a5fb20eace03e304"
+    },
+    {
+      "path": "assets/vpet/vup/Pinch/Nomal/C/_008_125.png",
+      "bytes": 144042,
+      "sha256": "3e48d12423f5d3861010eaf0bfcdfa2947c172f409753d8f4540c21d4db1519f"
+    },
+    {
+      "path": "assets/vpet/vup/Pinch/Nomal/C/_009_125.png",
+      "bytes": 158433,
+      "sha256": "bce456a44717304c7b168394a0aeb46c0cea8f036bfa409f638881725b1a424d"
+    },
+    {
+      "path": "assets/vpet/vup/Pinch/Nomal/C/_010_125.png",
+      "bytes": 136334,
+      "sha256": "e33aaf4f29e84b1c1a09d911e82ca3246bcee47c24e5ff40d8c4145358b4e45f"
+    },
+    {
+      "path": "assets/vpet/vup/Pinch/Nomal/C/_011_125.png",
+      "bytes": 147485,
+      "sha256": "851e6bfe9af7bfd92892a0017eac0888feddf96c07310d55cc36303b6d51975a"
+    },
+    {
+      "path": "assets/vpet/vup/Pinch/Nomal/C/_012_125.png",
+      "bytes": 141899,
+      "sha256": "29b76f8f7a5ce9b3ba69deddafc1763c925a952545f3770d12b05790d116018d"
+    },
+    {
+      "path": "assets/vpet/vup/Pinch/Nomal/C/_013_125.png",
+      "bytes": 137711,
+      "sha256": "51e93efd29df6b5f3782e1807be88d678f1ffa14d5e05f046639ba43eb5bfbb9"
+    },
+    {
+      "path": "assets/vpet/vup/Pinch/Nomal/C/_014_500.png",
+      "bytes": 141899,
+      "sha256": "29b76f8f7a5ce9b3ba69deddafc1763c925a952545f3770d12b05790d116018d"
+    },
+    {
+      "path": "assets/vpet/vup/Pinch/Nomal/C/_015_125.png",
+      "bytes": 137711,
+      "sha256": "51e93efd29df6b5f3782e1807be88d678f1ffa14d5e05f046639ba43eb5bfbb9"
+    },
+    {
+      "path": "assets/vpet/vup/Pinch/Nomal/C/_016_500.png",
+      "bytes": 141899,
+      "sha256": "29b76f8f7a5ce9b3ba69deddafc1763c925a952545f3770d12b05790d116018d"
+    },
+    {
+      "path": "assets/vpet/vup/Pinch/Nomal/C/_017_125.png",
+      "bytes": 143597,
+      "sha256": "3783d21800e3445b8a8c17c102ccca97841244363b1cb3bbf2d8f0f38e678474"
+    },
+    {
+      "path": "assets/vpet/vup/Pinch/Nomal/C/_018_125.png",
+      "bytes": 163958,
+      "sha256": "92aeef55593eae8aac7e61795efd7721b63f448133d06c846bb258f152609522"
+    },
+    {
+      "path": "assets/vpet/vup/Pinch/Nomal/C/_019_125.png",
+      "bytes": 158214,
+      "sha256": "1f69346a95599668b7e8eda25c7ec1d31da98f2edc3f0b076154fd9974356c38"
+    },
+    {
+      "path": "assets/vpet/vup/Pinch/Nomal/C/_020_125.png",
+      "bytes": 167096,
+      "sha256": "f9d02906bfb56489dc39ab641fe146a1c04044dd86e62f6926b09d35abf99a88"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.left/A_Nomal/\u5f00\u59cb\u4e0b\u843d\uff0c\u5411\u5de6_000_125.png",
+      "bytes": 123952,
+      "sha256": "5c609b9ab88af01ba7f42921013f1cb24d7acbc214b78d61044f812fb097cf7e"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.left/A_Nomal/\u5f00\u59cb\u4e0b\u843d\uff0c\u5411\u5de6_001_125.png",
+      "bytes": 129018,
+      "sha256": "878e4d09c32ab517977753cf53a1f60e04bcace1d80c9e98ba24314d768886b1"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.left/A_Nomal/\u5f00\u59cb\u4e0b\u843d\uff0c\u5411\u5de6_002_125.png",
+      "bytes": 129992,
+      "sha256": "112791b8a7880814e88688c5dd6e303c3bf0fe1b6c963227a951581405d51076"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.left/A_Nomal/\u5f00\u59cb\u4e0b\u843d\uff0c\u5411\u5de6_003_125.png",
+      "bytes": 130824,
+      "sha256": "55fadcdc0f3285591bfff6dcb9d58c1af2d27eee6c8bcb91d2b034eb01f5dca9"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.left/B_Nomal/\u4e0b\u843d\u5411\u5de6\u5faa\u73af_000_125.png",
+      "bytes": 128132,
+      "sha256": "c0bb1014fae58751767d9b67dfb32ea00c1367e729c5af09cfbb5acac3471d3c"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.left/B_Nomal/\u4e0b\u843d\u5411\u5de6\u5faa\u73af_001_125.png",
+      "bytes": 129992,
+      "sha256": "112791b8a7880814e88688c5dd6e303c3bf0fe1b6c963227a951581405d51076"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.left/B_Nomal/\u4e0b\u843d\u5411\u5de6\u5faa\u73af_002_125.png",
+      "bytes": 130824,
+      "sha256": "55fadcdc0f3285591bfff6dcb9d58c1af2d27eee6c8bcb91d2b034eb01f5dca9"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.left/B_Nomal/\u4e0b\u843d\u5411\u5de6\u5faa\u73af_003_125.png",
+      "bytes": 129992,
+      "sha256": "112791b8a7880814e88688c5dd6e303c3bf0fe1b6c963227a951581405d51076"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.left/B_Nomal/\u4e0b\u843d\u5411\u5de6\u5faa\u73af_004_125.png",
+      "bytes": 128132,
+      "sha256": "c0bb1014fae58751767d9b67dfb32ea00c1367e729c5af09cfbb5acac3471d3c"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.left/B_Nomal/\u4e0b\u843d\u5411\u5de6\u5faa\u73af_005_125.png",
+      "bytes": 129992,
+      "sha256": "112791b8a7880814e88688c5dd6e303c3bf0fe1b6c963227a951581405d51076"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.left/B_Nomal/\u4e0b\u843d\u5411\u5de6\u5faa\u73af_006_125.png",
+      "bytes": 130824,
+      "sha256": "55fadcdc0f3285591bfff6dcb9d58c1af2d27eee6c8bcb91d2b034eb01f5dca9"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.left/B_Nomal/\u4e0b\u843d\u5411\u5de6\u5faa\u73af_007_125.png",
+      "bytes": 129992,
+      "sha256": "112791b8a7880814e88688c5dd6e303c3bf0fe1b6c963227a951581405d51076"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.left/C_Nomal/FLA_000_125.png",
+      "bytes": 107829,
+      "sha256": "42ffd07bc3398079216feed60421534efab4dcdb38ad19e30c5f84fc4a63c1bb"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.left/C_Nomal/FLA_001_125.png",
+      "bytes": 110014,
+      "sha256": "2d376d83d6a0c8485ba1e71048089c2180074d5ea2edc1efb15afc018208d0e9"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.left/C_Nomal/FLA_002_125.png",
+      "bytes": 107694,
+      "sha256": "64d7780c2c596738f30af2c9619871623a2b4370e6e242c95ebfa127e5a0afba"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.left/C_Nomal/FLA_003_125.png",
+      "bytes": 105243,
+      "sha256": "43dad729a84e53bbaed2fbc1bef8f51df3209916bf0947d906fecfd7440e432d"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.left/C_Nomal/FLA_004_125.png",
+      "bytes": 92043,
+      "sha256": "ebd38c057bbda992380f8d83e088c8c016abee64e55b4ae3b3fffe2c0ea5f6fb"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.left/C_Nomal/FLA_005_125.png",
+      "bytes": 98853,
+      "sha256": "cbc3390b8d38e2fbe62e907c090db919b8268d065fa42e4658f087c740d4fcbd"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.left/C_Nomal/FLA_006_500.png",
+      "bytes": 92043,
+      "sha256": "ebd38c057bbda992380f8d83e088c8c016abee64e55b4ae3b3fffe2c0ea5f6fb"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.left/C_Nomal/FLB_000_125.png",
+      "bytes": 82833,
+      "sha256": "06fd66194f376ba3bdd94a332dad755d0a330738fc413f4fa1949dc903200aa1"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.left/C_Nomal/FLB_001_125.png",
+      "bytes": 92831,
+      "sha256": "372bd4762dbb8e048f28fa8388622d3ba7243ba47d2f6cfe08ce31888e9c1603"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.left/C_Nomal/FLB_002_125.png",
+      "bytes": 93049,
+      "sha256": "549a46aa44961bf97e79909f3f3ae46d2a536b109a68e0c15bfa5814d038a427"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.left/C_Nomal/FLB_003_125.png",
+      "bytes": 96763,
+      "sha256": "f647b6c539c9c799ad124c5bccbfd072469d8d0d93fb21ab299aa7c6a260b95e"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.left/C_Nomal/FLB_004_125.png",
+      "bytes": 101692,
+      "sha256": "b7cf7f60c05c1b29bcff47e1ea44239fead1a7a9abe83311ff54090c900387b1"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.left/C_Nomal/FLB_005_125.png",
+      "bytes": 94210,
+      "sha256": "bf9e10634b56756fc2ed88230dce59de4e53e52cb4205f8be82cd797e9404c94"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.left/C_Nomal/FLB_006_125.png",
+      "bytes": 115322,
+      "sha256": "bbd577e302ba8bf908d4fc5848658eb75a05f1f51c2f8be8a9e9fd81504ad374"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.left/C_Nomal/FLB_007_125.png",
+      "bytes": 120231,
+      "sha256": "815d2dd2b3ea687a9a787501cdcab4a9aa5e60d5467ae113fc63c23a448627f5"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.left/C_Nomal/FLB_008_125.png",
+      "bytes": 97093,
+      "sha256": "5c373d8d09d1631dc9930b0141673c426f0470e67a707cd0c6d4a8e1e8682b9a"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.left/C_Nomal/FLB_009_125.png",
+      "bytes": 129816,
+      "sha256": "2b42b4fa1c14710f44fe54725396f8f9cf3097e05b060b1cf6e9492fb96b69d2"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.left/C_Nomal/FLB_010_125.png",
+      "bytes": 107363,
+      "sha256": "2d5fcc653a586b223f3a166263ed6288a2dc1211fc2dbd75a90baad9e23a5a14"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.left/C_Nomal/FLB_011_125.png",
+      "bytes": 102630,
+      "sha256": "6885e65950adb9c3c3f0a9d79e6414bc1ce56ef035cb5f0014ff674e9b0e937d"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.left/C_Nomal/FLB_012_125.png",
+      "bytes": 146541,
+      "sha256": "5e57828564a829b08f02fff9bd3239c7336746eed158ed3d9ad7f557f8c36ffd"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.left/C_Nomal/FLB_013_125.png",
+      "bytes": 140145,
+      "sha256": "c121b6e4da10a493a20a608b99194ad3ac9627cf71d7e894473478fff0b7d41d"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.right/A_Nomal/\u5f00\u59cb\u4e0b\u843d\uff0c\u5411\u53f3_000_125.png",
+      "bytes": 115089,
+      "sha256": "91292dd4b74636d7f105c5fc6a25bc79fe3a829c8c4eaab825b8a047be6de2a5"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.right/A_Nomal/\u5f00\u59cb\u4e0b\u843d\uff0c\u5411\u53f3_001_125.png",
+      "bytes": 123727,
+      "sha256": "de79f52eaf3e109e846659e6e63da23b89b962f608e512817ac53eb119ece3cc"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.right/A_Nomal/\u5f00\u59cb\u4e0b\u843d\uff0c\u5411\u53f3_002_125.png",
+      "bytes": 124883,
+      "sha256": "d74e9777d82354b3b32641a1da3249234509f42f36c796e0bd6ddbea03ce279e"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.right/A_Nomal/\u5f00\u59cb\u4e0b\u843d\uff0c\u5411\u53f3_003_125.png",
+      "bytes": 126198,
+      "sha256": "45389a7d12a3b7cc0be7c5d00f6fb238c31b824545089505d70bb59cdba6c719"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.right/B_Nomal/\u5411\u53f3\u4e0b\u843d\u5faa\u73af_000_125.png",
+      "bytes": 126198,
+      "sha256": "45389a7d12a3b7cc0be7c5d00f6fb238c31b824545089505d70bb59cdba6c719"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.right/B_Nomal/\u5411\u53f3\u4e0b\u843d\u5faa\u73af_001_125.png",
+      "bytes": 124883,
+      "sha256": "d74e9777d82354b3b32641a1da3249234509f42f36c796e0bd6ddbea03ce279e"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.right/B_Nomal/\u5411\u53f3\u4e0b\u843d\u5faa\u73af_002_125.png",
+      "bytes": 123727,
+      "sha256": "de79f52eaf3e109e846659e6e63da23b89b962f608e512817ac53eb119ece3cc"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.right/B_Nomal/\u5411\u53f3\u4e0b\u843d\u5faa\u73af_003_125.png",
+      "bytes": 124883,
+      "sha256": "d74e9777d82354b3b32641a1da3249234509f42f36c796e0bd6ddbea03ce279e"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.right/B_Nomal/\u5411\u53f3\u4e0b\u843d\u5faa\u73af_004_125.png",
+      "bytes": 126198,
+      "sha256": "45389a7d12a3b7cc0be7c5d00f6fb238c31b824545089505d70bb59cdba6c719"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.right/B_Nomal/\u5411\u53f3\u4e0b\u843d\u5faa\u73af_005_125.png",
+      "bytes": 124883,
+      "sha256": "d74e9777d82354b3b32641a1da3249234509f42f36c796e0bd6ddbea03ce279e"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.right/B_Nomal/\u5411\u53f3\u4e0b\u843d\u5faa\u73af_006_125.png",
+      "bytes": 123727,
+      "sha256": "de79f52eaf3e109e846659e6e63da23b89b962f608e512817ac53eb119ece3cc"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.right/B_Nomal/\u5411\u53f3\u4e0b\u843d\u5faa\u73af_007_125.png",
+      "bytes": 124883,
+      "sha256": "d74e9777d82354b3b32641a1da3249234509f42f36c796e0bd6ddbea03ce279e"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.right/C_Nomal/FRA_000_125.png",
+      "bytes": 102021,
+      "sha256": "f54f87e0073579b7d1de81749bbabdf5dab4a6a5a7b28a0f9c4410d0c87a3568"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.right/C_Nomal/FRA_001_125.png",
+      "bytes": 118833,
+      "sha256": "3885fc0e98a09de2bcdc546d434e4d934d513c3108801ef14a2e6cb6cea7dad8"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.right/C_Nomal/FRA_002_125.png",
+      "bytes": 102763,
+      "sha256": "9efc8d5b2c84fa4cd03c4956f97888f6e6c90c1be7f02c83b90369c269a4fe2d"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.right/C_Nomal/FRA_003_125.png",
+      "bytes": 97739,
+      "sha256": "d3e3e893350f53b8106e8ca5fb7d0d5412262d1451f515e59e8eaf921af8c3c6"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.right/C_Nomal/FRA_004_125.png",
+      "bytes": 84549,
+      "sha256": "570a892551f63141c946a5c7dc9d195c3d98815a8fb3d9782d09a6910492cef6"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.right/C_Nomal/FRA_005_125.png",
+      "bytes": 100076,
+      "sha256": "c4d63e59dbce3df93d6ada4cd953e7faff7619d2c01e296d10dd18f0cc788468"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.right/C_Nomal/FRA_006_375.png",
+      "bytes": 84549,
+      "sha256": "570a892551f63141c946a5c7dc9d195c3d98815a8fb3d9782d09a6910492cef6"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.right/C_Nomal/FRB_000_125.png",
+      "bytes": 76576,
+      "sha256": "9646cdf482a062273868ef22020fab30f5e5814cb152a0d11bd96d55f438c6e2"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.right/C_Nomal/FRB_001_125.png",
+      "bytes": 86108,
+      "sha256": "e576a6e294bb78f4f19313eb047570f9fedcda0b11de3973f65eeb265017ee83"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.right/C_Nomal/FRB_002_125.png",
+      "bytes": 86815,
+      "sha256": "84d0fcabf48e3b89b8fff92f392f7018fff49725b2f700c676119a23ce1e6487"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.right/C_Nomal/FRB_003_125.png",
+      "bytes": 87923,
+      "sha256": "d2b53ca8e1ac5aee6b647ee5afb6ed0a15f02863e997bce1b2c6edc217bd196a"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.right/C_Nomal/FRB_004_125.png",
+      "bytes": 111013,
+      "sha256": "d5a3a0e9bd7a0c93740de5893c18ac5a0b101f732475cd1719d794104eead66d"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.right/C_Nomal/FRB_005_125.png",
+      "bytes": 99170,
+      "sha256": "92730bb8998f20795f091ea98c3f3eb56e602ffe4b553ceeb541eeb41c4851b0"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.right/C_Nomal/FRB_006_125.png",
+      "bytes": 111432,
+      "sha256": "e79a36f699f3d56d3d6dffa8efd0161ea6f2b4cadda3dd73feb34db99d02e279"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.right/C_Nomal/FRB_007_125.png",
+      "bytes": 115454,
+      "sha256": "14c623cb76a176df32c5e6f42253cf7914e2316b867844a1fe7692dc2a7d56ae"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.right/C_Nomal/FRB_008_125.png",
+      "bytes": 92251,
+      "sha256": "ed25b65a417b7ac07249e888483d3202155c7a36992ed5ade73efdc998c8d4a6"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.right/C_Nomal/FRB_009_125.png",
+      "bytes": 128519,
+      "sha256": "2f54883ffd832bfe584d956517ab24737bad1a85490ca2d6da4e37f7caef437f"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.right/C_Nomal/FRB_010_125.png",
+      "bytes": 108720,
+      "sha256": "c432ac73531a82d4007844eac7370421fffb19a1294023060d4899b0df477c7a"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.right/C_Nomal/FRB_011_125.png",
+      "bytes": 101104,
+      "sha256": "5233491923b057b650f91bb303ecba4064f17c5e61a9703f0733782f3bf00e2e"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.right/C_Nomal/FRB_012_125.png",
+      "bytes": 143248,
+      "sha256": "dbbae3ab155c0fb5ba4d6f3bc97b17c592f301fbda0a09f2516192790c356e46"
+    },
+    {
+      "path": "assets/vpet/vup/MOVE/fall.right/C_Nomal/FRB_013_125.png",
+      "bytes": 135831,
+      "sha256": "70ff5b51fc6ba8132541ecd4a6f0b62f790579d81235e3e6b458580e30209809"
+    },
+    {
+      "path": "assets/vpet/vup/SideHide_Left_Main/Nomal/A/A_000_125.png",
+      "bytes": 151858,
+      "sha256": "c5bbc25f73cdb7d434bad2165894cb9223a4acb3973494549316a8c4f4351ab3"
+    },
+    {
+      "path": "assets/vpet/vup/SideHide_Left_Main/Nomal/A/A_001_125.png",
+      "bytes": 155720,
+      "sha256": "9b5804e4d4cd262a141308d6f991edc1c987cb7c0fc6d55e517636fd2589e5e9"
+    },
+    {
+      "path": "assets/vpet/vup/SideHide_Left_Main/Nomal/A/A_002_125.png",
+      "bytes": 169552,
+      "sha256": "9ed40d3e7cb0ca810cd6aa6db2369e2decd9e1ef0f5dc033eba85927606472cb"
+    },
+    {
+      "path": "assets/vpet/vup/SideHide_Left_Main/Nomal/A/A_003_125.png",
+      "bytes": 188552,
+      "sha256": "234e79006423f51d3ef98acd7de8f372ab1ac27c8344ab5370fe035edc4e4700"
+    },
+    {
+      "path": "assets/vpet/vup/SideHide_Left_Main/Nomal/A/A_004_125.png",
+      "bytes": 147212,
+      "sha256": "071ac0ee49ea7cbd9177c6c5f5c139d21817dfc90925a8fefb460fcaaa925862"
+    },
+    {
+      "path": "assets/vpet/vup/SideHide_Left_Main/Nomal/A/A_005_125.png",
+      "bytes": 133612,
+      "sha256": "fd6d7955dbfbdba4e9756bbf5ff942cea4e4cedd120133e8c83cf7bd306ef7ac"
+    },
+    {
+      "path": "assets/vpet/vup/SideHide_Left_Main/Nomal/A/A_006_125.png",
+      "bytes": 139480,
+      "sha256": "a68d938cd1cb70a0ce179d2d12b616137b7f9712cc44d09c9c4483b1eb5a8aa7"
+    },
+    {
+      "path": "assets/vpet/vup/SideHide_Left_Main/Nomal/A/A_007_125.png",
+      "bytes": 129124,
+      "sha256": "47eba1f6327b00517a793a6ab846585496e3c6b2ab2d2206e38489104638843b"
+    },
+    {
+      "path": "assets/vpet/vup/SideHide_Left_Main/Nomal/A/A_008_125.png",
+      "bytes": 141803,
+      "sha256": "06c55962a2f784568157f57b8ca38479100f7d087bc65e04837d29d9c97f2e02"
+    },
+    {
+      "path": "assets/vpet/vup/SideHide_Left_Main/Nomal/B_1/B1_000_125.png",
+      "bytes": 141803,
+      "sha256": "06c55962a2f784568157f57b8ca38479100f7d087bc65e04837d29d9c97f2e02"
+    },
+    {
+      "path": "assets/vpet/vup/SideHide_Left_Main/Nomal/B_1/B1_001_125.png",
+      "bytes": 135852,
+      "sha256": "ac6abbc216c4288644199a0d334d979702df5a2ca9945a1419dd4c8666b0ec7e"
+    },
+    {
+      "path": "assets/vpet/vup/SideHide_Left_Main/Nomal/B_1/B1_002_125.png",
+      "bytes": 139314,
+      "sha256": "0a343f8142895a26399515e304755748a638b75caf821c32882222613a0597e3"
+    },
+    {
+      "path": "assets/vpet/vup/SideHide_Left_Main/Nomal/B_1/B1_003_125.png",
+      "bytes": 141803,
+      "sha256": "06c55962a2f784568157f57b8ca38479100f7d087bc65e04837d29d9c97f2e02"
+    },
+    {
+      "path": "assets/vpet/vup/SideHide_Left_Main/Nomal/C/C_000_125.png",
+      "bytes": 147211,
+      "sha256": "52e2f3db8e869c41bebcf6951f6997db318462e156d255437283b7f754326e0d"
+    },
+    {
+      "path": "assets/vpet/vup/SideHide_Left_Main/Nomal/C/C_001_125.png",
+      "bytes": 150777,
+      "sha256": "24541a669acf1a584de6d3c14c0a303259be8c67136287bacfa1cb65dc9bfaa2"
+    },
+    {
+      "path": "assets/vpet/vup/SideHide_Left_Main/Nomal/C/C_002_125.png",
+      "bytes": 110624,
+      "sha256": "b5affc9b0fecc3fffcbed00203ff293ce06ed0a01f8a183355a4045e34ffd870"
+    },
+    {
+      "path": "assets/vpet/vup/SideHide_Left_Main/Nomal/C/C_003_125.png",
+      "bytes": 141590,
+      "sha256": "d5f3f0adcc6c69a59d43d06fe24da5696380cd44b7014870e7b52d70c845d475"
+    },
+    {
+      "path": "assets/vpet/vup/SideHide_Left_Main/Nomal/C/C_004_125.png",
+      "bytes": 143821,
+      "sha256": "6e8c16831904d8ea8c9ca5b413fac93ee88afe5c69273a4d1fd9a03130f7c162"
+    },
+    {
+      "path": "assets/vpet/vup/SideHide_Left_Main/Nomal/C/C_005_125.png",
+      "bytes": 136327,
+      "sha256": "ddd28157bfaa56deea5888998f5fd67f2ff11a8deef2b9613eb782b9f42ba28e"
+    },
+    {
+      "path": "assets/vpet/vup/SideHide_Left_Main/Nomal/C/C_006_125.png",
+      "bytes": 143620,
+      "sha256": "7929e04ce1d30650fe40684f4b63d2e6d5285bfadc7a89a0fcc26c4becbcfa8b"
+    },
+    {
+      "path": "assets/vpet/vup/SideHide_Right_Main/Nomal/A/A_000_125.png",
+      "bytes": 147570,
+      "sha256": "3e9acd27a249dc13eda1bd94155808b6d361c91ec38cd8824416ed70903acfed"
+    },
+    {
+      "path": "assets/vpet/vup/SideHide_Right_Main/Nomal/A/A_001_125.png",
+      "bytes": 151011,
+      "sha256": "078905096ba4e0d1aab3089af477ab31832ab1adfc3532ed7a2160d023987e58"
+    },
+    {
+      "path": "assets/vpet/vup/SideHide_Right_Main/Nomal/A/A_002_125.png",
+      "bytes": 163709,
+      "sha256": "86083c1db51f81a396effb84bf541114f9e8e251aafaa7c28017de13faec0368"
+    },
+    {
+      "path": "assets/vpet/vup/SideHide_Right_Main/Nomal/A/A_003_125.png",
+      "bytes": 182236,
+      "sha256": "dd2feb3e71841e3ea4aa72597d0a5ff01e140895dc3bed173fc88c3311515359"
+    },
+    {
+      "path": "assets/vpet/vup/SideHide_Right_Main/Nomal/A/A_004_125.png",
+      "bytes": 143896,
+      "sha256": "521ffe4c8e520d4d9d2c38995c27921c80ad03da36859b2aa87fcae3f8cba5d2"
+    },
+    {
+      "path": "assets/vpet/vup/SideHide_Right_Main/Nomal/A/A_005_125.png",
+      "bytes": 133263,
+      "sha256": "0dd0faf2ccbd8b2067b966d6ebff9dbe3b9327545271a23e90f49bf64e0cb750"
+    },
+    {
+      "path": "assets/vpet/vup/SideHide_Right_Main/Nomal/A/A_006_125.png",
+      "bytes": 143058,
+      "sha256": "7ca120bca5c7bb4c1d7315c25bf2543b7746ddb2fa8e533ac82f41c1e7b32679"
+    },
+    {
+      "path": "assets/vpet/vup/SideHide_Right_Main/Nomal/A/A_007_125.png",
+      "bytes": 133481,
+      "sha256": "6ee850ff84f1c060f31963d930ee68274243b767344630710e133a9649dd6542"
+    },
+    {
+      "path": "assets/vpet/vup/SideHide_Right_Main/Nomal/A/A_008_125.png",
+      "bytes": 145940,
+      "sha256": "8e2b99360c23cdb71bb284aa340d4e438dc30edab78c5608b68fb3510b3f23cd"
+    },
+    {
+      "path": "assets/vpet/vup/SideHide_Right_Main/Nomal/A/A_009_125.png",
+      "bytes": 150789,
+      "sha256": "7798cc9df6f7d178fe452a3e350b2379b91e7005773e63d436085f17ed209a43"
+    },
+    {
+      "path": "assets/vpet/vup/SideHide_Right_Main/Nomal/A/A_010_125.png",
+      "bytes": 153753,
+      "sha256": "6ed76f6ef6ed1b5d6943b22a2b7069c92a7c9b91fc05f1345d4afd4577794bc6"
+    },
+    {
+      "path": "assets/vpet/vup/SideHide_Right_Main/Nomal/A/A01_011_125.png",
+      "bytes": 135911,
+      "sha256": "4370df7632d9d9a75c278a0e4226d91ffd91b726da06bf34821667d6b51caf8d"
+    },
+    {
+      "path": "assets/vpet/vup/SideHide_Right_Main/Nomal/A/A_012_125.png",
+      "bytes": 149687,
+      "sha256": "d336da5ad2d27a8b4946b8e52db7eaaf619fdff73e827cdbbe051d552ccb1e12"
+    },
+    {
+      "path": "assets/vpet/vup/SideHide_Right_Main/Nomal/A/A_013_125.png",
+      "bytes": 147594,
+      "sha256": "7dafd6605967dc028c97308c75de8d56db25090e61d0c80248d5db8abd5aecd0"
+    },
+    {
+      "path": "assets/vpet/vup/SideHide_Right_Main/Nomal/B_1/B1_000_125.png",
+      "bytes": 145970,
+      "sha256": "f2487efb133502d9f9d73b110186b156b1c106c8cbc75a1db554002716c06871"
+    },
+    {
+      "path": "assets/vpet/vup/SideHide_Right_Main/Nomal/B_1/B1_001_125.png",
+      "bytes": 140156,
+      "sha256": "8e8f154ea7632bf5872c8a45ea42a9817d46e1b8f01f3daea20a785171adc6c2"
+    },
+    {
+      "path": "assets/vpet/vup/SideHide_Right_Main/Nomal/B_1/B1_002_125.png",
+      "bytes": 142641,
+      "sha256": "5328367394df967a66c24c26ec346f9c21b1c46a73581366fcc8c64a1048457a"
+    },
+    {
+      "path": "assets/vpet/vup/SideHide_Right_Main/Nomal/B_1/B1_003_125.png",
+      "bytes": 145970,
+      "sha256": "f2487efb133502d9f9d73b110186b156b1c106c8cbc75a1db554002716c06871"
+    },
+    {
+      "path": "assets/vpet/vup/SideHide_Right_Main/Nomal/C/C_000_125.png",
+      "bytes": 113322,
+      "sha256": "1092ceed0aa04e850b15e18be6f4c6818c257ca9e68118c1a68bcde0ca8115a1"
+    },
+    {
+      "path": "assets/vpet/vup/SideHide_Right_Main/Nomal/C/C_001_125.png",
+      "bytes": 138223,
+      "sha256": "6fb8975917230a3b2fcbb1478764a77d1e7e0d088a65509ae48595d226f8d9d3"
+    },
+    {
+      "path": "assets/vpet/vup/SideHide_Right_Main/Nomal/C/C_002_125.png",
+      "bytes": 140508,
+      "sha256": "52e50e38b04b4154d0f5519d63c998f77f8130887978d8a30dc933fc72db3304"
+    },
+    {
+      "path": "assets/vpet/vup/SideHide_Right_Main/Nomal/C/C_003_125.png",
+      "bytes": 139792,
+      "sha256": "6f4ebeda9484966f55ae03d31b05f403b4ef766a9747077b47084ede7f7cab86"
+    },
+    {
+      "path": "assets/vpet/vup/SideHide_Right_Main/Nomal/C/C_004_125.png",
+      "bytes": 143227,
+      "sha256": "22edc0ddec273aa4917095cff7423be93bb815183bb6798139fca0fa11ff9ef7"
     }
   ]
 }

@@ -29,6 +29,7 @@
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QWindow>
+#include <QtMath>
 
 namespace pet {
 // The persistent attention badge, drawn on the pet and on the tray icon.
@@ -49,12 +50,15 @@ PetWindow::PetWindow(QWidget *parent, const QString &path, bool persist)
     setWindowFlag(Qt::WindowStaysOnTopHint, preferences.onTop);
     setAttribute(Qt::WA_TranslucentBackground);
     setAccessibleName("Agent Pet");
-    setToolTip("Click for running sessions · Drag to move · Right-click for controls · Esc to quit");
+    setToolTip("Click for running sessions · Hold still to pet · Drag to move, or throw · Push past a screen edge to hide\n"
+               "Right-click for controls · Esc to quit");
     setPetSize(preferences.size);
     muted_ = preferences.muted; sound_ = preferences.sound; bubbles_ = qBound(0, preferences.bubbles, 2);
     ambient_.setLevel(AmbientLevel(qBound(0, preferences.ambient, 2)));
     mood_.setSetting(MoodSetting(qBound(0, preferences.mood, 2))); mood_.setTurns(preferences.turns);
     connect(&mood_, &Mood::counted, this, [this] { if (ready_) saveTimer_.start(); });
+    touchEnabled_ = preferences.touch;
+    connect(&player_, &Player::entered, this, &PetWindow::entered);
     autostart_ = preferences.autostart; presence_.setPolicy(preferences.whenIdle);
     connect(&player_, &Player::changed, this, qOverload<>(&PetWindow::update));
     connect(&player_, &Player::completed, this, [this](const QString &state) {
@@ -98,9 +102,21 @@ PetWindow::PetWindow(QWidget *parent, const QString &path, bool persist)
     dragTimer_.setInterval(40);
     connect(&dragTimer_, &QTimer::timeout, this, [this] {
         const auto native = nativeLeftButtonDown();
+        const auto position = nativePos();
+        samples_.append({pressTimer_.elapsed(), position}); // The last ones tell how fast it was let go.
+        if (samples_.size() > 16) samples_.removeFirst();
         if (!(native.has_value() ? *native : bool(QApplication::mouseButtons() & Qt::LeftButton))) endDrag(true);
         // Lift the pet only once it moves, so a click opens the session list without the drop animation.
-        else if (!player_.isDragging() && nativePos() != pressPosition_) player_.beginDrag();
+        else if (!player_.isDragging() && position != pressPosition_) player_.beginDrag();
+        // Held still past a click, a press pets whatever it landed on until let go.
+        else if (!player_.held() && !pressTouch_.isEmpty() && pressTimer_.elapsed() >= touch::holdMs) player_.hold(pressTouch_);
+    });
+    flightTimer_.setInterval(16);
+    connect(&flightTimer_, &QTimer::timeout, this, [this] {
+        if (!flight_) { flightTimer_.stop(); return; }
+        const bool airborne = flight_->step(flightClock_.restart());
+        move(flight_->position());
+        if (!airborne) land();
     });
     saveTimer_.setSingleShot(true); saveTimer_.setInterval(250);
     connect(&saveTimer_, &QTimer::timeout, this, &PetWindow::savePreferences);
@@ -143,7 +159,11 @@ void PetWindow::watchScreen(QScreen *screen) {
     connect(screen, &QScreen::availableGeometryChanged, this, [this] { constrainPosition(); });
 }
 void PetWindow::constrainPosition() {
-    const auto adjusted = Preferences::visiblePosition(pos(), size(), screenAreas());
+    const auto &touch = player_.touch();
+    const auto adjusted = hiding()
+        ? touch::hidePosition(edge_, QRect(pos(), size()), screenAreas(),
+                              edge_ == touch::Edge::Left ? touch.edgeLeftAt : touch.edgeRightAt, touch.scale)
+        : Preferences::visiblePosition(pos(), size(), screenAreas());
     if (pos() != adjusted) move(adjusted);
     if (ready_) saveTimer_.start();
 }
@@ -209,12 +229,18 @@ void PetWindow::setMoodLevel(int level) {
     mood_.setSetting(MoodSetting(level));
     if (ready_) saveTimer_.start();
 }
+void PetWindow::setTouchEnabled(bool enabled) {
+    if (enabled == touchEnabled_) return;
+    touchEnabled_ = enabled;
+    if (ready_) saveTimer_.start();
+}
 void PetWindow::showAfterFlagChange(QPoint position) {
     // Changing window flags hides the window; a hidden pet stays hidden until shown.
     if (!petHidden()) { show(); move(position); }
 }
 void PetWindow::recover() {
     applyPresence(presence_.setUserHidden(false));
+    if (hiding()) player_.select("idle", true); // Out from behind the edge, to be placed in plain view.
     setClickThrough(false);
     move(Preferences::visiblePosition({-1000000, -1000000}, size(), screenAreas()));
     show(); raise();
@@ -312,6 +338,7 @@ bool PetWindow::writePreferences(const std::function<void(Preferences &)> &chang
     preferences.onTop = windowFlags().testFlag(Qt::WindowStaysOnTopHint);
     preferences.muted = muted_; preferences.sound = sound_; preferences.bubbles = bubbles_;
     preferences.ambient = ambientLevel(); preferences.mood = moodLevel(); preferences.turns = mood_.turns();
+    preferences.touch = touchEnabled_;
     change(preferences);
     autostart_ = preferences.autostart; presence_.setPolicy(preferences.whenIdle);
     return store_.save(preferences);
@@ -357,8 +384,11 @@ void PetWindow::closeEvent(QCloseEvent *event) { event->ignore(); requestQuit();
 void PetWindow::contextMenuEvent(QContextMenuEvent *event) { menu_.popup(event->globalPos()); }
 void PetWindow::mousePressEvent(QMouseEvent *event) {
     if (event->button() != Qt::LeftButton || quitting_) return;
+    if (flight_) land(); // Caught in mid-air.
     dragging_ = true;
-    pressPosition_ = nativePos(); pressTimer_.start();
+    pressPosition_ = nativePos(); pressTimer_.start(); samples_.clear();
+    // A pet hiding at an edge is only partly there; it can be dragged back out, not petted.
+    pressTouch_ = touchEnabled_ && !hiding() ? player_.touchAt(event->position(), width()) : QString();
     dragOffset_ = event->globalPosition().toPoint() - pos();
     fallbackDrag_ = !windowHandle()->startSystemMove();
     dragTimer_.start();
@@ -370,14 +400,51 @@ void PetWindow::mouseMoveEvent(QMouseEvent *event) {
     }
 }
 void PetWindow::endDrag(bool released) {
+    if (flight_) land(); // Hiding, quitting or click-through: put it down where it is.
     if (!dragging_) return;
-    dragging_ = false; fallbackDrag_ = false; dragTimer_.stop();
-    player_.endDrag(); constrainPosition();
+    dragging_ = false; fallbackDrag_ = false; dragTimer_.stop(); pressTouch_.clear();
     // Every press starts a move, so a short press that left the pet in place is a click.
+    const bool click = released && nativePos() == pressPosition_ && pressTimer_.isValid() && pressTimer_.elapsed() < touch::holdMs;
+    if (released && !click) letGo(touch::velocity(samples_));
+    else { player_.release(); constrainPosition(); }
+    samples_.clear();
     // Wait for the window manager to release its move grab: a popup opened while it
     // holds the pointer cannot take its own grab and closes at once.
-    if (released && nativePos() == pressPosition_ && pressTimer_.isValid() && pressTimer_.elapsed() < 500)
-        QTimer::singleShot(150, this, &PetWindow::sessionsRequested);
+    if (click) QTimer::singleShot(150, this, &PetWindow::sessionsRequested);
+}
+void PetWindow::letGo(QPointF velocity) {
+    const auto &touch = player_.touch();
+    const auto fall = velocity.x() < 0 ? touch.fallLeft : touch.fallRight;
+    if (touchEnabled_ && !quitting_ && !fall.isEmpty() && qHypot(velocity.x(), velocity.y()) >= touch::throwSpeed) {
+        // The fall replaces the drag as what is held, so session changes still wait for the landing.
+        const QRect window(nativePos(), size());
+        player_.hold(fall);
+        flight_.emplace(window.topLeft(), velocity, touch::areaFor(window, screenAreas()), size());
+        flightClock_.start(); flightTimer_.start();
+        return;
+    }
+    player_.release();
+    // Only an idle pet hides; one with work to show stays in view.
+    const auto edge = touchEnabled_ ? touch::pushedEdge(QRect(nativePos(), size()), screenAreas()) : touch::Edge::None;
+    const auto hide = edge == touch::Edge::Left ? touch.edgeLeft : edge == touch::Edge::Right ? touch.edgeRight : QString();
+    if (!hide.isEmpty() && player_.requestedState() == "idle") player_.select(hide);
+    constrainPosition();
+}
+void PetWindow::land() {
+    flightTimer_.stop();
+    if (!flight_) return;
+    flight_.reset();
+    player_.release(); // Plays the landing, then whatever sessions asked for meanwhile.
+    constrainPosition();
+}
+void PetWindow::entered(const QString &state) {
+    const auto &touch = player_.touch();
+    const auto edge = state.isEmpty() ? touch::Edge::None
+        : state == touch.edgeLeft ? touch::Edge::Left : state == touch.edgeRight ? touch::Edge::Right : touch::Edge::None;
+    if (edge == edge_) return;
+    edge_ = edge;
+    // Into hiding, or back out because something else is showing. A drag in progress owns the position.
+    if (!dragging_) constrainPosition();
 }
 void PetWindow::mouseReleaseEvent(QMouseEvent *event) { if (event->button() == Qt::LeftButton) endDrag(true); }
 
@@ -422,6 +489,13 @@ void PetWindow::showSettings() {
                      "back to neutral over a few quiet minutes.");
     layout->addRow("M&ood", mood);
     connect(mood, &QComboBox::currentIndexChanged, this, &PetWindow::setMoodLevel);
+    auto *touch = new QCheckBox("React to &petting, throwing and screen edges", dialog);
+    touch->setChecked(touchEnabled_); touch->setAccessibleName("Touch reactions");
+    touch->setToolTip("Hold the pet still on its head, cheek or body to pet it. Let go while dragging fast and it\n"
+                      "falls to the bottom of the screen. Push it past the left or right edge while it idles and it\n"
+                      "hides there until an agent needs it. Off, the pet is only dragged.");
+    layout->addRow("&Touch", touch);
+    connect(touch, &QCheckBox::toggled, this, &PetWindow::setTouchEnabled);
     if (updates_) {
         auto *updatesButton = new QPushButton(updates_->indicator(), dialog); layout->addRow(updatesButton);
         connect(updatesButton, &QPushButton::clicked, this, [this] { updates_->showSettings(this); });
