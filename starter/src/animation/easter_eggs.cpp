@@ -78,6 +78,31 @@ bool EasterEggs::bedtime() {
     bedtimeOn_ = now.date();
     return true;
 }
+QStringList EasterEggs::remindersAt(const QDateTime &local) {
+    QStringList due;
+    const int day = local.date().dayOfWeek(), hour = local.time().hour();
+    const int minutes = hour * 60 + local.time().minute();
+    if (day == Qt::Monday && hour >= mondayFrom && hour < mondayUntil) due << "monday";
+    if (day <= Qt::Friday && minutes >= leaveWorkAt && minutes < leaveWorkUntil) due << "leave_work";
+    if (hour >= sleepFrom) due << "sleep";
+    return due;
+}
+QString EasterEggs::reminderNote(const QString &reminder) {
+    if (reminder == "monday") return "Monday again... I'm so tired. Let's take it slow today.";
+    if (reminder == "leave_work") return "It's 4:45 PM. Time to wrap up and get ready to head home!";
+    if (reminder == "sleep") return "It's 10 PM. Time to put everything down and go to sleep!";
+    return {};
+}
+QString EasterEggs::reminder() {
+    if (!enabled_) return {};
+    const auto now = clock_();
+    for (const auto &due : remindersAt(now)) {
+        if (reminded_.value(due) == now.date()) continue;
+        reminded_.insert(due, now.date());
+        return due;
+    }
+    return {};
+}
 bool EasterEggs::key(int key) {
     static const QVector<int> code{Qt::Key_Up, Qt::Key_Up, Qt::Key_Down, Qt::Key_Down, Qt::Key_Left,
                                    Qt::Key_Right, Qt::Key_Left, Qt::Key_Right, Qt::Key_B, Qt::Key_A};

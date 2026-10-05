@@ -5170,6 +5170,28 @@
         "weight": 1
       }
     ],
+    "monday": [
+      {
+        "state": "fidget_yawn",
+        "weight": 2
+      },
+      {
+        "state": "fidget_boring",
+        "weight": 1
+      }
+    ],
+    "leave_work": [
+      {
+        "state": "fidget_aside",
+        "weight": 1
+      }
+    ],
+    "sleep": [
+      {
+        "state": "fidget_yawn",
+        "weight": 1
+      }
+    ],
     "konami": [
       {
         "state": "dance",

@@ -37,6 +37,7 @@ public:
     static const QString bedtimeNote; // Shown once a night when a turn finishes late.
 private:
     void refreshAlerts();
+    void remind();
     bool shown(const Alert &alert) const;
     PetWindow &window_;
     Sessions sessions_;

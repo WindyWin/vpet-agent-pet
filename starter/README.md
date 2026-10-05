@@ -92,7 +92,10 @@ Preview state (`touch_*`, `pinch`, `fall_*`, `edge_*`); see
 A few surprises, on by default. On May 20 the idle pet greets you with a heart, and
 on your birthday (Settings → **Birthday**, day and month only) it celebrates, both
 when it idles and on the day's first finished turn. Late at night it yawns more, and
-the first turn that finishes after 1 AM brings a gentle bedtime note. Turns finished
+the first turn that finishes after 1 AM brings a gentle bedtime note. The pet also
+keeps time: on Monday morning it is tired and down about the week, at 4:45 PM on
+weekdays it tells you to get ready to go home, and at 10 PM it tells you to go to
+sleep (each once a day, while it is running and visible). Turns finished
 on a Friday evening end in a dance, and a turn that ran for a quarter of an hour or
 more gets a bigger celebration. When an agent starts a destructive shell command,
 such as `rm -rf` or `git push --force`, the pet jumps; the hook judges the command
