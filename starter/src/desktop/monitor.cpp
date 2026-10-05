@@ -61,6 +61,7 @@ bool Monitor::apply(const Event &event, qint64 now) {
 void Monitor::update(qint64 now) {
     if (!active_) return;
     sessions_.expire(now);
+    remind();
     refreshAlerts();
     if (list_.isVisible()) list_.present(sessionRows(sessions_, now));
     int errors = 0;
@@ -87,6 +88,14 @@ void Monitor::update(qint64 now) {
                                 state == "attention" || state == "error");
         lastAggregate_ = state;
     }
+}
+// Monday blues, the go-home nudge and bedtime: said once each day, and kept for later while the pet is hidden.
+void Monitor::remind() {
+    if (window_.petHidden()) return;
+    const auto reminder = window_.eggs().reminder();
+    if (reminder.isEmpty()) return;
+    window_.eggs().surprise(reminder);
+    if (!window_.muted()) QToolTip::showText(window_.figure().center(), EasterEggs::reminderNote(reminder));
 }
 bool Monitor::shown(const Alert &alert) const {
     const int level = window_.bubbles();

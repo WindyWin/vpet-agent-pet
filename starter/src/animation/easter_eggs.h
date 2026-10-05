@@ -1,6 +1,7 @@
 #pragma once
 #include "player.h"
 #include <QDateTime>
+#include <QHash>
 #include <QObject>
 #include <QSet>
 #include <functional>
@@ -15,6 +16,9 @@ namespace pet {
 //   birthday         also celebrates the first finished turn of the birthday
 //   danger           a hook saw a destructive shell command start
 //   konami           the Konami code typed while the pet has focus
+//   monday           Monday morning: the pet is tired and down about the week ahead (once a day)
+//   leave_work       weekdays from 16:45: time to get ready to go home (once a day)
+//   sleep            from 22:00: time to go to sleep (once a day)
 // Local time comes from a replaceable clock, so tests can visit any date.
 class EasterEggs : public QObject {
     Q_OBJECT
@@ -25,6 +29,8 @@ public:
     // On a special day, one later fidget in this many is the day's own; at night, one in this many yawns.
     static constexpr int occasionOneIn = 4, lateNightOneIn = 2;
     static constexpr int lateNightFrom = 1, lateNightUntil = 5, fridayEveningFrom = 17; // Hours, local time.
+    // Clock reminders, in local time. Monday's mood lasts until noon, the go-home nudge until 18:00.
+    static constexpr int mondayFrom = 6, mondayUntil = 12, leaveWorkAt = 16 * 60 + 45, leaveWorkUntil = 18 * 60, sleepFrom = 22;
     // The clock every new instance starts with; tests replace it to run at an ordinary time.
     inline static std::function<QDateTime()> defaultClock = [] { return QDateTime::currentDateTime(); };
     explicit EasterEggs(Player &player, QObject *parent = nullptr);
@@ -46,6 +52,13 @@ public:
     bool surprise(const QString &pool);
     bool surprising() const; // A surprise is still what the pet shows.
     bool bedtime(); // True once a night, the first time it is asked late at night.
+    // Which of "monday", "leave_work" and "sleep" are due at this local time, whether or not already given.
+    static QStringList remindersAt(const QDateTime &local);
+    // What the pet says for a reminder; empty for an unknown one.
+    static QString reminderNote(const QString &reminder);
+    // The first reminder that is due and not yet given today, and marks it given; empty for none. A reminder
+    // is given once a day, or not at all if the pet was not running when it was due.
+    QString reminder();
     bool key(int key); // Feeds a key press; true when it completes the Konami code.
     void setClock(std::function<QDateTime()> clock) { if (clock) clock_ = std::move(clock); }
     // Replaceable for tests. A pool of one draws nothing; see `fidget` for the other draws.
@@ -59,7 +72,8 @@ private:
     QString birthday_, surprise_;
     qint64 surpriseUntil_ = 0;
     QDate greetedOn_, cheeredOn_, bedtimeOn_;
-    QSet<QString> greeted_; // Occasions that already greeted on `greetedOn_`.
+    QHash<QString, QDate> reminded_; // The day each reminder was last given.
+    QSet<QString> greeted_; //Occasions that already greeted on `greetedOn_`.
     QVector<int> keys_;
 };
 }

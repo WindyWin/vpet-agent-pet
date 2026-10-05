@@ -1004,6 +1004,26 @@ private slots:
         QVERIFY(!eggs.bedtime()); local = local.addSecs(3 * 3600); QVERIFY(eggs.bedtime()); QVERIFY(!eggs.bedtime());
         local = local.addDays(1); QVERIFY(eggs.bedtime());
         eggs.setEnabled(false); local = local.addDays(1); QVERIFY(!eggs.bedtime());
+        // Clock reminders: Monday morning, weekdays from 16:45, and every evening from 22:00.
+        auto due = [](int year, int month, int day, int hour, int minute) {
+            return pet::EasterEggs::remindersAt(QDateTime(QDate(year, month, day), QTime(hour, minute)));
+        };
+        QCOMPARE(due(2026, 10, 5, 5, 59), QStringList()); QCOMPARE(due(2026, 10, 5, 6, 0), QStringList{"monday"});
+        QCOMPARE(due(2026, 10, 5, 11, 59), QStringList{"monday"}); QCOMPARE(due(2026, 10, 6, 9, 0), QStringList());
+        QCOMPARE(due(2026, 10, 7, 16, 44), QStringList()); QCOMPARE(due(2026, 10, 7, 16, 45), QStringList{"leave_work"});
+        QCOMPARE(due(2026, 10, 7, 17, 59), QStringList{"leave_work"}); QCOMPARE(due(2026, 10, 7, 18, 0), QStringList());
+        QCOMPARE(due(2026, 10, 10, 16, 45), QStringList()); // Saturday.
+        QCOMPARE(due(2026, 10, 10, 21, 59), QStringList()); QCOMPARE(due(2026, 10, 10, 22, 0), QStringList{"sleep"});
+        QCOMPARE(due(2026, 10, 7, 23, 59), QStringList{"sleep"}); QCOMPARE(due(2026, 10, 8, 0, 0), QStringList());
+        // Each is given once a day, and not at all while the eggs are off.
+        local = QDateTime(QDate(2026, 10, 5), QTime(9, 0));
+        QCOMPARE(eggs.reminder(), QString()); // Off since the bedtime check above.
+        eggs.setEnabled(true);
+        QCOMPARE(eggs.reminder(), QString("monday")); QCOMPARE(eggs.reminder(), QString());
+        local = QDateTime(QDate(2026, 10, 5), QTime(16, 50)); QCOMPARE(eggs.reminder(), QString("leave_work"));
+        local = QDateTime(QDate(2026, 10, 5), QTime(22, 0)); QCOMPARE(eggs.reminder(), QString("sleep")); QCOMPARE(eggs.reminder(), QString());
+        local = local.addDays(1); QCOMPARE(eggs.reminder(), QString("sleep"));
+        for (const auto *name : {"monday", "leave_work", "sleep"}) QVERIFY(!pet::EasterEggs::reminderNote(name).isEmpty());
         // The Konami code completes on its last key, also after a false start.
         const QList<int> code{Qt::Key_Up, Qt::Key_Up, Qt::Key_Down, Qt::Key_Down, Qt::Key_Left, Qt::Key_Right,
                               Qt::Key_Left, Qt::Key_Right, Qt::Key_B};
