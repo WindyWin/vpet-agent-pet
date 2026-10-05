@@ -133,7 +133,12 @@ private slots:
     }
     void everyIncludedFrameAndCacheBound() {
         pet::Player player; player.setPaused(true); player.setRenderSize(640);
-        QCOMPARE(player.states().size(), 11 + player.fidgets().size()); // The states plus their fidgets.
+        // The session states, the reactions that only celebrate, and the fidgets.
+        QSet<QString> reactions;
+        for (const auto *name : {"turn_finished", "snack", "milestone"})
+            for (const auto &reaction : player.reactions(name)) reactions.insert(reaction.state);
+        QCOMPARE(reactions.size(), 6);
+        QCOMPARE(player.states().size(), 11 + reactions.size() - 1 + player.fidgets().size());
         QVERIFY(!player.fidgets().isEmpty());
         auto checkSequence = [&] {
             const int count = player.frameCount();
@@ -143,10 +148,12 @@ private slots:
                 QVERIFY(player.cacheKiB() <= pet::Player::cacheLimitKiB); player.advance();
             }
         };
-        for (const auto &state : player.states()) {
+        // Every state under every mood, so each mood's art is decoded too.
+        for (const auto *mood : {"", "happy", "poor"}) for (const auto &state : player.states()) {
+            player.setMood(mood);
             QVERIFY(player.select(state, true));
             checkSequence();
-            if (player.isFidget(state)) { // Plays itself out and hands back to idle.
+            if (player.isFidget(state) || reactions.contains(state)) { // Plays itself out and hands back to idle.
                 for (int pass = 0; pass < 5 && player.state() == state; ++pass) checkSequence();
                 QCOMPARE(player.state(), QString("idle"));
             } else if (player.state() == state && player.phase() == "loop" && state != "idle") {
@@ -422,6 +429,164 @@ private slots:
         }
         // A looping state never ends by itself, so it cannot be a fidget.
         auto looping = base; looping["ambient"] = ambient({fidget("working")}); QVERIFY(!loads(looping));
+    }
+    void moodArtReplacesChoices() {
+        pet::Player player; player.setPaused(true); Draws draws; player.setRandom(draws.random());
+        // A happy idle loop picks up its art on the next pass, without drawing among the plain variants.
+        player.setMood("happy"); finishSequence(player);
+        QCOMPARE(player.sequence(), QString("Default/Happy/1"));
+        player.select("fidget_aside", true); QCOMPARE(player.sequence(), QString("IDEL/aside/Happy/A"));
+        finishSequence(player); QCOMPARE(player.sequence(), QString("IDEL/aside/Happy/B"));
+        // A held state keeps what it drew; the new mood shows the next time it is entered.
+        player.setMood("poor"); finishSequence(player); QCOMPARE(player.sequence(), QString("IDEL/aside/Happy/B"));
+        player.select("fidget_yawn", true); QCOMPARE(player.sequence(), QString("IDEL/yawning/PoorCondition"));
+        // States without mood art, and moods the catalog lacks, play the usual choices.
+        draws.values = {0}; player.select("fidget_boring", true); QCOMPARE(player.sequence(), QString("IDEL/Boring/A_Nomal"));
+        QVERIFY(!player.hasMood("happy", "fidget_boring")); QVERIFY(player.hasMood("poor", "idle"));
+        player.setMood("ill"); draws.values = {2}; player.select("idle", true);
+        QCOMPARE(player.sequence(), QString("Default/Nomal/2"));
+        // With variants off a mood still shows, through its first choice.
+        player.setVariants(false); player.setMood("poor"); finishSequence(player);
+        QCOMPARE(player.sequence(), QString("Default/PoorCondition/1"));
+        player.setMood({}); finishSequence(player); QCOMPARE(player.sequence(), QString("Default/Nomal/1"));
+        QCOMPARE(draws.unexpected, 0); QVERIFY(draws.values.isEmpty());
+    }
+    void moodFollowsTurnsAndErrors() {
+        pet::Player player; player.setPaused(true);
+        pet::Mood mood(player); qint64 now = 1000000;
+        QCOMPARE(mood.setting(), pet::MoodSetting::Full); QCOMPARE(mood.score(now), pet::Mood::neutral);
+        // A streak gains more with each turn: 5, 6, 7, then 8 crosses into happy.
+        for (int i = 0; i < 3; ++i) mood.finished(now);
+        QCOMPARE(mood.score(now), 68); QCOMPARE(mood.level(), QString());
+        mood.finished(now); QCOMPARE(mood.score(now), 76);
+        QCOMPARE(mood.level(), QString("happy")); QCOMPARE(player.mood(), QString("happy"));
+        // It fades a point every 30 s, and stays happy down to 60, below the 70 it took to get there.
+        now += 16 * pet::Mood::recoveryMs + 29999; mood.refresh(now);
+        QCOMPARE(mood.score(now), 60); QCOMPARE(mood.level(), QString("happy"));
+        now += 1; mood.refresh(now); QCOMPARE(mood.score(now), 59); QCOMPARE(mood.level(), QString());
+        QCOMPARE(player.mood(), QString());
+        // Errors end a streak and cost 12 each; two in a row from neutral droop.
+        now += 3600000; mood.refresh(now); QCOMPARE(mood.score(now), pet::Mood::neutral);
+        mood.failed(now); QCOMPARE(mood.level(), QString()); mood.failed(now);
+        QCOMPARE(mood.score(now), 26); QCOMPARE(mood.level(), QString("poor"));
+        mood.finished(now); QCOMPARE(mood.score(now), 31); QCOMPARE(mood.level(), QString("poor")); // Back to a streak of one.
+        // Poorly lasts until the score passes 40.
+        now += 9 * pet::Mood::recoveryMs; mood.refresh(now); QCOMPARE(mood.score(now), 40); QCOMPARE(mood.level(), QString("poor"));
+        now += pet::Mood::recoveryMs; mood.refresh(now); QCOMPARE(mood.level(), QString());
+        // Cheerful never droops; Off is always neutral.
+        mood.failed(now); mood.failed(now); QCOMPARE(mood.level(), QString("poor"));
+        mood.setSetting(pet::MoodSetting::Cheerful); QCOMPARE(mood.level(), QString()); QCOMPARE(player.mood(), QString());
+        for (int i = 0; i < 10; ++i) mood.finished(now);
+        QCOMPARE(mood.score(now), 100); QCOMPARE(mood.level(), QString("happy"));
+        mood.setSetting(pet::MoodSetting::Off); QCOMPARE(mood.level(), QString()); QCOMPARE(player.mood(), QString());
+        mood.finished(now); QCOMPARE(mood.level(), QString());
+    }
+    void celebrationsAndTreats() {
+        pet::Player player; player.setPaused(true);
+        pet::Mood mood(player); Draws draws; mood.setRandom(draws.random()); qint64 now = 1000000;
+        QSignalSpy counted(&mood, &pet::Mood::counted);
+        // "turn_finished" weighs 2, the two cheers 1 each.
+        const QList<QPair<int, QString>> expected{{0, "turn_finished"}, {1, "turn_finished"}, {2, "cheer_shining"}, {3, "cheer_shy"}};
+        for (const auto &[draw, state] : expected) { draws.values = {draw}; QCOMPARE(mood.celebrate(), state); }
+        // Twenty finished turns without a long break earn a snack, eaten by the next celebration.
+        for (int i = 0; i < 19; ++i) { mood.finished(now); now += 60000; }
+        QCOMPARE(mood.treat(), QString());
+        mood.finished(now); QCOMPARE(mood.treat(), QString("snack"));
+        draws.values = {1}; QCOMPARE(mood.celebrate(), QString("snack_thirsty")); QCOMPARE(mood.treat(), QString());
+        // A break of more than half an hour starts the count again.
+        for (int i = 0; i < 19; ++i) { mood.finished(now); now += 60000; }
+        now += pet::Mood::breakMs; mood.finished(now); QCOMPARE(mood.treat(), QString());
+        // Every hundredth turn is a milestone, and it outranks a snack.
+        QCOMPARE(mood.turns(), 40); QCOMPARE(counted.size(), 40);
+        mood.setTurns(98); mood.finished(now); QCOMPARE(mood.treat(), QString());
+        mood.finished(now); QCOMPARE(mood.turns(), 100); QCOMPARE(mood.treat(), QString("milestone"));
+        QCOMPARE(mood.celebrate(), QString("milestone")); // A pool of one draws nothing.
+        QCOMPARE(draws.unexpected, 0);
+    }
+    void monitorFeedsTheMood() {
+        QTemporaryDir directory;
+        pet::PetWindow window(nullptr, directory.path() + "/preferences.json"); window.show();
+        pet::Monitor monitor(window); auto &player = window.player(); player.setPaused(true);
+        player.setRandom([](int) { return 0; }); window.ambient().setRandom([](int) { return 0; });
+        Draws draws; window.mood().setRandom(draws.random());
+        const qint64 now = QDateTime::currentMSecsSinceEpoch(); qint64 seq = 0;
+        auto event = [&](QString kind, QString session = "s1") {
+            ++seq; return pet::Event{"claude", session, QString::number(seq), kind, {}, {}, "/work/abc-web", {}, now + seq, {}};
+        };
+        QVERIFY(monitor.apply(event("prompt"), now + seq));
+        draws.values = {2}; const auto finished = event("turn_finished");
+        QVERIFY(monitor.apply(finished, now + seq));
+        // Thinking plays its end first, then the drawn celebration.
+        QCOMPARE(player.requestedState(), QString("cheer_shining")); QCOMPARE(window.mood().turns(), 1);
+        finishSequence(player); QCOMPARE(player.state(), QString("cheer_shining"));
+        // The periodic update leaves the celebration alone, and a duplicate event counts for nothing.
+        monitor.update(now + seq); QCOMPARE(player.state(), QString("cheer_shining"));
+        QVERIFY(!monitor.apply(finished, now + seq)); QCOMPARE(window.mood().turns(), 1);
+        // Another session finishing while this one waits on the user raises the mood without a celebration.
+        QVERIFY(monitor.apply(event("attention"), now + seq));
+        QVERIFY(monitor.apply(event("prompt", "s2"), now + seq));
+        QVERIFY(monitor.apply(event("turn_finished", "s2"), now + seq));
+        QCOMPARE(window.mood().turns(), 2); QCOMPARE(player.requestedState(), QString("needs_input"));
+        // Tool errors lower it; two after a neutral start droop the idle pet.
+        const auto before = window.mood().score(now + seq);
+        QVERIFY(monitor.apply(event("error"), now + seq)); QVERIFY(monitor.apply(event("error"), now + seq));
+        QCOMPARE(window.mood().score(now + seq), before - 2 * pet::Mood::errorLoss);
+        QCOMPARE(draws.unexpected, 0);
+    }
+    void moodPreference() {
+        QTemporaryDir directory; const auto path = directory.path() + "/preferences.json";
+        {
+            pet::PetWindow window(nullptr, path); QCOMPARE(window.moodLevel(), int(pet::Preferences::MoodFull));
+            window.showSettings(); auto *dialog = window.findChild<QDialog*>(); QVERIFY(dialog);
+            QComboBox *combo = nullptr;
+            for (auto *box : dialog->findChildren<QComboBox*>()) if (box->accessibleName() == "Mood") combo = box;
+            QVERIFY(combo); QCOMPARE(combo->count(), 3); QCOMPARE(combo->currentIndex(), 2);
+            combo->setCurrentIndex(1); QCOMPARE(window.mood().setting(), pet::MoodSetting::Cheerful);
+            window.mood().finished(1000); window.mood().finished(2000); // Counted turns are saved too.
+            QVERIFY(window.savePreferences()); dialog->close();
+        }
+        const auto saved = pet::PreferencesStore(path).load();
+        QCOMPARE(saved.mood, int(pet::Preferences::MoodCheerful)); QCOMPARE(saved.turns, 2);
+        pet::PetWindow restored(nullptr, path);
+        QCOMPARE(restored.mood().setting(), pet::MoodSetting::Cheerful); QCOMPARE(restored.mood().turns(), 2);
+        restored.setMoodLevel(99); QCOMPARE(restored.moodLevel(), 2);
+        // Older files have neither key; bad values are refused like any other and preserved.
+        QFile file(path); QVERIFY(file.open(QIODevice::WriteOnly));
+        file.write(R"({"version":1,"size":200,"on_top":true})"); file.close();
+        const auto legacy = pet::PreferencesStore(path).load();
+        QCOMPARE(legacy.mood, int(pet::Preferences::MoodFull)); QCOMPARE(legacy.turns, 0);
+        for (const auto *broken : {R"({"version":1,"size":200,"on_top":true,"mood":3})",
+                                   R"({"version":1,"size":200,"on_top":true,"turns":-1})",
+                                   R"({"version":1,"size":200,"on_top":true,"turns":1.5})"}) {
+            QVERIFY(file.open(QIODevice::WriteOnly)); file.write(broken); file.close();
+            pet::PreferencesStore invalid(path); QCOMPARE(invalid.load().turns, 0); QVERIFY(!invalid.save(pet::Preferences{}));
+        }
+    }
+    void malformedMoodsAndReactions() {
+        QTemporaryDir fixtures; auto base = fixture(fixtures.path()); // "idle" and "work" sequences exist.
+        auto choice = [](QJsonArray sequences, int weight = 1) { return QJsonObject{{"sequences", sequences}, {"weight", weight}}; };
+        auto moods = [&](QJsonObject value) { auto catalog = base; catalog["moods"] = value; return catalog; };
+        QVERIFY(loads(moods({{"happy", QJsonObject{{"idle", QJsonArray{choice({"work"})}}}},
+                             {"poor", QJsonObject{{"working", QJsonArray{choice({"idle"}, 2)}}}}})));
+        QVERIFY(!loads(moods({{"ill", QJsonObject{{"idle", QJsonArray{choice({"work"})}}}}})));
+        QVERIFY(!loads(moods({{"happy", QJsonObject{{"nobody", QJsonArray{choice({"work"})}}}}})));
+        QVERIFY(!loads(moods({{"happy", QJsonObject{{"idle", QJsonArray{}}}}})));
+        QVERIFY(!loads(moods({{"happy", QJsonObject{{"idle", QJsonArray{choice({"missing"})}}}}})));
+        QVERIFY(!loads(moods({{"happy", QJsonObject{{"idle", QJsonArray{choice({"work", "idle"})}}}}})));
+        QVERIFY(!loads(moods({{"happy", QJsonObject{{"idle", QJsonArray{choice({"work"}, 0)}}}}})));
+        // A reaction plays states that end by themselves and return to idle.
+        auto reacting = base; auto playback = reacting["playback"].toObject();
+        playback["working"] = QJsonObject{{"mode", "once"}, {"after", "idle"}}; reacting["playback"] = playback;
+        auto reactions = [&](QJsonArray pool, QJsonObject catalog) {
+            catalog["reactions"] = QJsonObject{{"turn_finished", pool}}; return catalog;
+        };
+        auto reaction = [](QString state, int weight = 1) { return QJsonObject{{"state", state}, {"weight", weight}}; };
+        QVERIFY(loads(reactions({reaction("working", 3)}, reacting)));
+        QVERIFY(!loads(reactions({}, reacting)));
+        QVERIFY(!loads(reactions({reaction("nobody")}, reacting)));
+        QVERIFY(!loads(reactions({reaction("idle")}, reacting)));
+        QVERIFY(!loads(reactions({reaction("working", 0)}, reacting)));
+        QVERIFY(!loads(reactions({reaction("working")}, base))); // A loop never ends by itself.
     }
     void focusSessionListAndQuietHosts() {
         QTemporaryDir directory;

@@ -1,5 +1,6 @@
 #pragma once
 #include "animation/ambient.h"
+#include "animation/mood.h"
 #include "animation/player.h"
 #include "settings/preferences.h"
 #include <QDialog>
@@ -21,6 +22,9 @@ public:
     Ambient &ambient() { return ambient_; }
     void setAmbientLevel(int level); // Preferences::Ambient; persisted.
     int ambientLevel() const { return int(ambient_.level()); }
+    Mood &mood() { return mood_; }
+    void setMoodLevel(int level); // Preferences::Mood; persisted.
+    int moodLevel() const { return int(mood_.setting()); }
     void setPetSize(int pixels);
     void setClickThrough(bool enabled);
     bool clickThrough() const { return clickThrough_; }
@@ -90,6 +94,7 @@ private:
     updates::Controller *updates_ = nullptr;
     Player player_;
     Ambient ambient_;
+    Mood mood_;
     PreferencesStore store_;
     QMenu menu_;
     QSystemTrayIcon tray_;

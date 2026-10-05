@@ -47,6 +47,14 @@ a rare pool, dozing off after ten quiet minutes, and an Off / Subtle / Lively se
 Mood, touch reactions, easter eggs and walking are later phases of that issue.
 See [the notes](docs/architecture.md#idle-animation).
 
+Mood, phase 2 of that issue, implemented 2026-10-05: finished turns and tool errors
+move a mood score that picks happy or droopy idle and fidget art and fades back to
+neutral; finished turns are celebrated three ways; a snack reaction after twenty
+turns without a break and a milestone every hundredth turn (count persisted); and an
+Off / Cheerful only / Full setting (default Full). Eat, Drink and Gift need a layered
+renderer and item art the archive lacks, so single-layer stand-ins play instead.
+Automated tests pass; tuning still needs real sessions. See [the notes](docs/architecture.md#mood).
+
 1. Build a transparent, draggable desktop window and play the bundled `idle` sequence using frame durations from `assets/vpet/animations.json`. Test X11 and XWayland behavior before choosing a Linux package format.
 2. Add an animation controller that can start a sequence, hold its middle loop, play its ending, and return to idle. Keep decoded images in a bounded cache. The JSON state map has separate folders for each A/B/C phase.
 3. Add a small local event receiver and a packaged `agent-pet hook` command. The command reads hook JSON from stdin, extracts normalized event/session metadata and project path when available, sends them through a private local channel, and exits quickly even when the UI is closed. Exclude prompt text, tool arguments, and output. Create records on any supported event, including when SessionStart was missed.
@@ -63,4 +71,4 @@ Keep bounded session state and pending alerts in memory. Persist only preference
 
 Validate concurrent sessions in the same project, missed start events, late/duplicate callbacks, monitor restart, attention priority, settings closure, and alert dismissal. The first release is complete when supported sessions can be identified and monitored without locating or controlling their original windows.
 
-The source pack includes only normal mood variants and one selected version of each animation. Expand it from the larger local asset archive only when a new state needs more frames. Preserve attribution and notices for all derived asset packs.
+The source pack includes normal mood art for every state, happy and poor art only for the idle loop and the `aside` and `yawn` fidgets, and a selection of variants. Expand it from the larger local asset archive only when a new state needs more frames. Preserve attribution and notices for all derived asset packs.

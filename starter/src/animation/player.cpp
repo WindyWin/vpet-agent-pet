@@ -99,6 +99,47 @@ bool Player::load(const QString &root) {
             animation.choices.append(choice);
         }
     }
+    // Mood art: per mood, states whose choices it replaces. Each choice keeps the state's shape.
+    const auto moods = catalog["moods"].toObject();
+    for (auto mood = moods.begin(); mood != moods.end(); ++mood) {
+        if (mood.key() != "happy" && mood.key() != "poor") return invalid("Unknown mood: " + mood.key());
+        const auto states = mood.value().toObject();
+        for (auto it = states.begin(); it != states.end(); ++it) {
+            if (!animations_.contains(it.key()) || it.value().toArray().isEmpty())
+                return invalid("Mood art for an unknown or empty state: " + it.key());
+            const int phases = animations_[it.key()].choices.first().sequences.size();
+            QVector<Choice> choices;
+            for (const auto &value : it.value().toArray()) {
+                Choice choice;
+                choice.weight = value.toObject()["weight"].toInt(0);
+                for (const auto &id : value.toObject()["sequences"].toArray()) {
+                    if (!sequences_.contains(id.toString())) return invalid("Unknown mood sequence for " + it.key());
+                    choice.sequences.append(id.toString());
+                }
+                if (choice.sequences.size() != phases || choice.weight < 1 || choice.weight > maxWeight)
+                    return invalid("Invalid mood choice for " + it.key());
+                choices.append(choice);
+            }
+            moods_[mood.key()].insert(it.key(), choices);
+        }
+    }
+    // A fidget or a reaction must end by itself and hand back to idle, so nothing has to wait for it.
+    auto endsItself = [this](const QString &state) {
+        const auto found = animations_.constFind(state);
+        return state != "idle" && found != animations_.constEnd() && found->after == "idle"
+            && (found->mode == "once" || (found->mode == "phased" && found->loops > 0));
+    };
+    const auto reactions = catalog["reactions"].toObject();
+    for (auto it = reactions.begin(); it != reactions.end(); ++it) {
+        if (it.value().toArray().isEmpty()) return invalid("Empty reaction: " + it.key());
+        for (const auto &value : it.value().toArray()) {
+            const auto object = value.toObject();
+            const Reaction reaction{object["state"].toString(), object["weight"].toInt(0)};
+            if (!endsItself(reaction.state) || reaction.weight < 1 || reaction.weight > maxWeight)
+                return invalid("Invalid reaction for " + it.key() + ": " + reaction.state);
+            reactions_[it.key()].append(reaction);
+        }
+    }
     const auto ambient = catalog["ambient"].toObject();
     if (ambient.contains("sleep_after_s")) {
         sleepAfterS_ = ambient["sleep_after_s"].toInt(0);
@@ -108,11 +149,7 @@ bool Player::load(const QString &root) {
         const auto object = value.toObject();
         Fidget fidget{object["state"].toString(), object["weight"].toInt(0), object["min_idle_s"].toInt(0),
                       object["rare"].toBool()};
-        const auto found = animations_.constFind(fidget.state);
-        // A fidget must end by itself and hand back to idle, so nothing has to wait for it.
-        const bool endsItself = found != animations_.constEnd() && found->after == "idle"
-            && (found->mode == "once" || (found->mode == "phased" && found->loops > 0));
-        if (!endsItself || fidget.state == "idle" || fidgetStates_.contains(fidget.state)
+        if (!endsItself(fidget.state) || fidgetStates_.contains(fidget.state)
             || fidget.weight < 1 || fidget.weight > maxWeight || fidget.minIdleS < 0 || fidget.minIdleS > 86400)
             return invalid("Invalid ambient fidget: " + fidget.state);
         fidgets_.append(fidget);
@@ -169,7 +206,10 @@ void Player::endDrag() {
     select(dragResume_);
 }
 QStringList Player::choose(const QString &state) {
-    const auto &choices = animations_[state].choices;
+    const QVector<Choice> *art = &animations_[state].choices;
+    if (const auto mood = moods_.constFind(mood_); mood != moods_.constEnd())
+        if (const auto found = mood->constFind(state); found != mood->constEnd()) art = &*found;
+    const auto &choices = *art;
     if (!variants_ || choices.size() == 1) return choices.first().sequences;
     int total = 0;
     for (const auto &choice : choices) total += choice.weight;
@@ -224,9 +264,9 @@ void Player::advance() {
         emit completed(finished);
         return;
     }
-    // Another pass of a loop. An idle loop may switch variant here, between two identical first frames,
-    // and with variants off this is where it returns to the catalog's own entry.
-    if (animation.mode == "loop" && animation.choices.size() > 1) {
+    // Another pass of a loop. An idle loop may switch variant or mood here, between two identical first
+    // frames, and with variants off this is where it returns to the catalog's own entry.
+    if (animation.mode == "loop") {
         chosen_ = choose(state_);
         sequence_ = chosen_.value(0);
     }

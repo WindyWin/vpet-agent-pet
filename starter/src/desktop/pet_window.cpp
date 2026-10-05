@@ -42,7 +42,7 @@ static void drawBadge(QPainter &painter, const QRect &badge, const QColor &color
     painter.restore();
 }
 PetWindow::PetWindow(QWidget *parent, const QString &path, bool persist)
-    : QWidget(parent), player_(this), ambient_(player_, this), store_(path), menu_(this), tray_(this), persist_(persist) {
+    : QWidget(parent), player_(this), ambient_(player_, this), mood_(player_, this), store_(path), menu_(this), tray_(this), persist_(persist) {
     const auto preferences = persist_ ? store_.load() : Preferences{};
     setWindowTitle("Agent Pet");
     setWindowFlags(Qt::Tool | Qt::FramelessWindowHint);
@@ -53,6 +53,8 @@ PetWindow::PetWindow(QWidget *parent, const QString &path, bool persist)
     setPetSize(preferences.size);
     muted_ = preferences.muted; sound_ = preferences.sound; bubbles_ = qBound(0, preferences.bubbles, 2);
     ambient_.setLevel(AmbientLevel(qBound(0, preferences.ambient, 2)));
+    mood_.setSetting(MoodSetting(qBound(0, preferences.mood, 2))); mood_.setTurns(preferences.turns);
+    connect(&mood_, &Mood::counted, this, [this] { if (ready_) saveTimer_.start(); });
     autostart_ = preferences.autostart; presence_.setPolicy(preferences.whenIdle);
     connect(&player_, &Player::changed, this, qOverload<>(&PetWindow::update));
     connect(&player_, &Player::completed, this, [this](const QString &state) {
@@ -201,6 +203,12 @@ void PetWindow::setAmbientLevel(int level) {
     ambient_.setLevel(AmbientLevel(level));
     if (ready_) saveTimer_.start();
 }
+void PetWindow::setMoodLevel(int level) {
+    level = qBound(0, level, 2);
+    if (level == moodLevel()) return;
+    mood_.setSetting(MoodSetting(level));
+    if (ready_) saveTimer_.start();
+}
 void PetWindow::showAfterFlagChange(QPoint position) {
     // Changing window flags hides the window; a hidden pet stays hidden until shown.
     if (!petHidden()) { show(); move(position); }
@@ -303,7 +311,7 @@ bool PetWindow::writePreferences(const std::function<void(Preferences &)> &chang
     preferences.size = width(); preferences.position = pos(); preferences.hasPosition = true;
     preferences.onTop = windowFlags().testFlag(Qt::WindowStaysOnTopHint);
     preferences.muted = muted_; preferences.sound = sound_; preferences.bubbles = bubbles_;
-    preferences.ambient = ambientLevel();
+    preferences.ambient = ambientLevel(); preferences.mood = moodLevel(); preferences.turns = mood_.turns();
     change(preferences);
     autostart_ = preferences.autostart; presence_.setPolicy(preferences.whenIdle);
     return store_.save(preferences);
@@ -400,12 +408,20 @@ void PetWindow::showSettings() {
     layout->addRow("Show &bubbles", bubbles);
     connect(bubbles, &QComboBox::currentIndexChanged, this, &PetWindow::setBubbles);
     auto *ambient = new QComboBox(dialog);
-    ambient->addItems({"Off (always the plain idle loop)", "Subtle (a fidget about once a minute)", "Lively (a fidget every 15–25 seconds)"});
+    ambient->addItems({"Off (no fidgets or alternate idle loops)", "Subtle (a fidget about once a minute)", "Lively (a fidget every 15–25 seconds)"});
     ambient->setCurrentIndex(ambientLevel()); ambient->setAccessibleName("Idle animation");
     ambient->setToolTip("What the pet does on its own while no agent needs it: fidgets, alternate idle loops, and\n"
                         "dozing off after about ten quiet minutes. Any agent activity ends it at once.");
     layout->addRow("&Idle animation", ambient);
     connect(ambient, &QComboBox::currentIndexChanged, this, &PetWindow::setAmbientLevel);
+    auto *mood = new QComboBox(dialog);
+    mood->addItems({"Off (always neutral)", "Cheerful only (happy after a run of finished turns)",
+                    "Full (also droopy after repeated tool errors)"});
+    mood->setCurrentIndex(moodLevel()); mood->setAccessibleName("Mood");
+    mood->setToolTip("Whether finished turns and tool errors change how the idle pet looks. The mood fades\n"
+                     "back to neutral over a few quiet minutes.");
+    layout->addRow("M&ood", mood);
+    connect(mood, &QComboBox::currentIndexChanged, this, &PetWindow::setMoodLevel);
     if (updates_) {
         auto *updatesButton = new QPushButton(updates_->indicator(), dialog); layout->addRow(updatesButton);
         connect(updatesButton, &QPushButton::clicked, this, [this] { updates_->showSettings(this); });

@@ -51,6 +51,8 @@ Preferences PreferencesStore::load() {
         || (object.contains("muted") && !object["muted"].isBool()) || (object.contains("sound") && !object["sound"].isBool())
         || (object.contains("bubbles") && !integer(object["bubbles"], 0, 2))
         || (object.contains("ambient") && !integer(object["ambient"], 0, 2))
+        || (object.contains("mood") && !integer(object["mood"], 0, 2))
+        || (object.contains("turns") && !integer(object["turns"], 0, 2147483647))
         || (object.contains("autostart") && !object["autostart"].isBool())
         || (object.contains("when_idle") && !parseIdlePolicy(object["when_idle"].toString(), whenIdle))) {
         writable_ = false; error_ = "Invalid preferences; using defaults and preserving the file."; return result;
@@ -63,6 +65,8 @@ Preferences PreferencesStore::load() {
     result.sound = object["sound"].toBool();
     result.bubbles = object["bubbles"].toInt(Preferences::RequestsAndErrors);
     result.ambient = object["ambient"].toInt(Preferences::AmbientSubtle);
+    result.mood = object["mood"].toInt(Preferences::MoodFull);
+    result.turns = object["turns"].toInt(0);
     result.autostart = object["autostart"].toBool();
     result.whenIdle = whenIdle;
     return result;
@@ -76,6 +80,7 @@ bool PreferencesStore::save(const Preferences &preferences) {
     if (!file.open(QIODevice::WriteOnly)) { error_ = file.errorString(); return false; }
     QJsonObject object{{"version", 1}, {"size", preferences.size}, {"on_top", preferences.onTop},
                        {"muted", preferences.muted}, {"sound", preferences.sound}, {"bubbles", preferences.bubbles}, {"ambient", preferences.ambient},
+                       {"mood", preferences.mood}, {"turns", preferences.turns},
                        {"autostart", preferences.autostart}, {"when_idle", idlePolicyName(preferences.whenIdle)}};
     if (preferences.hasPosition) { object["x"] = preferences.position.x(); object["y"] = preferences.position.y(); }
     const auto bytes = QJsonDocument(object).toJson();
