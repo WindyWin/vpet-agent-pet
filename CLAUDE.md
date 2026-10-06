@@ -12,7 +12,7 @@ Agent Pet is a desktop pet for Linux and macOS (C++17, Qt 6 Widgets, CMake/Ninja
 
 ## Commands (run from `starter/`)
 
-Build requirements: CMake 3.22+, Ninja, C++17, Qt 6.5+ (Widgets, DBus, Network, Test), libarchive, X11 (+ Xtst for desktop tests). macOS needs only Qt (no DBus), Ninja and the Xcode tools; `scripts/package_macos.py` builds the `.app` zip and `.dmg` there.
+Build requirements: CMake 3.22+, Ninja, C++17, Qt 6.5+ (Widgets, DBus, Network, Test, LinguistTools), libarchive, X11 (+ Xtst for desktop tests). macOS needs only Qt (no DBus), Ninja and the Xcode tools; `scripts/package_macos.py` builds the `.app` zip and `.dmg` there.
 
 ```bash
 python3 scripts/verify_assets.py          # asset manifest/catalog check (also run in CI)
@@ -22,7 +22,7 @@ ctest --test-dir build --output-on-failure
 ./build/agent-pet                         # run the pet (--preview, --settings, --state thinking, --no-persist)
 ```
 
-Tests are Qt Test executables registered with CTest (`updates`, `update-install`, `providers`, `events`, `alerts`, `focus`, `startup`, `prototype-1`…`prototype-4`; macOS registers all but `updates`, `update-install` and `startup`):
+Tests are Qt Test executables registered with CTest (`updates`, `update-install`, `providers`, `events`, `alerts`, `focus`, `startup`, `prototype-1`…`prototype-4`, `i18n`; macOS registers all but `updates`, `update-install` and `startup`):
 
 ```bash
 ctest --test-dir build -R events --output-on-failure            # one CTest suite
@@ -77,6 +77,7 @@ Event flow: provider hook JSON → `providers/adapters.cpp` normalizes to protoc
 - Adding a host: register its `Capture` in `hosts::Registry::builtin()` (order is detection precedence) and its `Activation`, if any, in `platform::createFocusService()` (`platform/linux/native.cpp`, and `platform/macos/native.cpp` where it applies). Adding a desktop backend: implement `platform::DesktopBackend`, add it to `pet_native` and register it there. Neither touches sessions, alerts or UI. Keep v1 wire fields unchanged.
 - `preferences.json` can be written concurrently by the headless `autostart` command, so the pet re-reads it before every save. Keep that when touching settings.
 - Integration enable/disable must merge only Agent Pet's own hook entries (recognized by command markers) and preserve foreign handlers. `check_install.py` enforces this.
-- Docs are kept in step with features: `starter/docs/events.md` (protocol is authoritative there), `integrations.md` (provider mappings), `install.md`, and `architecture.md` (short overview and code map). Each design decision or feature gets an ADR in `starter/docs/adr/` (`NNNN-slug.md`: Context, Decision, Consequences, and a Validation section of dated evidence) plus a row in `adr/README.md`; later evidence is appended to the existing ADR. User-visible features also get a section in `starter/README.md`. `starter/docs/platform-refactor-plan.md` is the platform refactor plan (steps 1–5 implemented); the macOS port builds on it (`adr/0020-macos-port.md`).
+- Interface text is translated (English source, Vietnamese in `starter/translations/agent-pet_vi.ts`; see `starter/docs/i18n.md`). Wrap user-visible strings in `tr()`: the class's own in QObjects, otherwise a context from `src/i18n/contexts.h` (`Pet` is the pet's own voice). Use `%1` with `.arg()`, singular/plural pairs instead of `%n`, and give dialog buttons explicit `tr()` text (Qt has no Vietnamese catalog). CLI output, the hook, logs and developer diagnostics stay plain English. After changing strings run `cmake --build build --target update_translations`, translate the new entries and commit the `.ts`; CI runs `scripts/check_translations.py` to catch a stale file. Widgets relabel in `changeEvent(QEvent::LanguageChange)` → `retranslate()`.
+- Docs are kept in step with features: `starter/docs/events.md` (protocol is authoritative there), `integrations.md` (provider mappings), `install.md`, `i18n.md` (translation workflow), and `architecture.md` (short overview and code map). Each design decision or feature gets an ADR in `starter/docs/adr/` (`NNNN-slug.md`: Context, Decision, Consequences, and a Validation section of dated evidence) plus a row in `adr/README.md`; later evidence is appended to the existing ADR. User-visible features also get a section in `starter/README.md`. `starter/docs/platform-refactor-plan.md` is the platform refactor plan (steps 1–5 implemented); the macOS port builds on it (`adr/0020-macos-port.md`).
 - Platform code shared by Linux and macOS goes in `platform/posix/`; keep OS-specific `#ifdef`s there minimal and put larger differences in `platform/linux/` or `platform/macos/`. Qt tool windows need `WA_MacAlwaysShowToolWindow` or macOS hides them while another app is active.
 - Artwork is under the separate VPet artwork terms, not the app's Apache-2.0 license. Keep `licenses/`, `THIRD_PARTY_NOTICES.md` and the credit with any distribution.

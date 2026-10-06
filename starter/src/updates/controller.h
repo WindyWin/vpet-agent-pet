@@ -19,6 +19,8 @@ public:
                         QString prefix = installedPrefix(), QString directory = dataDirectory());
     QWidget *settings(QWidget *parent);
     void showSettings(QWidget *parent);
+    // Rebuilds an open updates dialog in the current language, at the same place.
+    void retranslate(QWidget *parent);
     void start();
     void check(bool manual = false);
     void download();
@@ -26,6 +28,7 @@ public:
     // Installs a downloaded update in fully automatic mode after checkpointing monitored sessions.
     void autoInstall();
     QString indicator() const;
+    bool waiting() const; // A release is known and not skipped: the indicator names it.
     std::function<bool()> prepareRestart;
 signals:
     void changed();

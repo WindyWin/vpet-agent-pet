@@ -1,4 +1,5 @@
 #include "easter_eggs.h"
+#include "i18n/contexts.h"
 #include "settings/preferences.h"
 
 namespace pet {
@@ -88,9 +89,9 @@ QStringList EasterEggs::remindersAt(const QDateTime &local) {
     return due;
 }
 QString EasterEggs::reminderNote(const QString &reminder) {
-    if (reminder == "monday") return "Monday again... I'm so tired. Let's take it slow today.";
-    if (reminder == "leave_work") return "It's 4:45 PM. Time to wrap up and get ready to head home!";
-    if (reminder == "sleep") return "It's 10 PM. Time to put everything down and go to sleep!";
+    if (reminder == "monday") return Pet::tr("Monday again... I'm so tired. Let's take it slow today.");
+    if (reminder == "leave_work") return Pet::tr("It's 4:45 PM. Time to wrap up and get ready to head home!");
+    if (reminder == "sleep") return Pet::tr("It's 10 PM. Time to put everything down and go to sleep!");
     return {};
 }
 QString EasterEggs::reminder() {

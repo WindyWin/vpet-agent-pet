@@ -17,7 +17,9 @@ with tempfile.TemporaryDirectory(prefix="pet-update-") as temporary:
     root = Path(temporary)
     runtime = root / "runtime"
     runtime.mkdir(mode=0o700)
-    env = dict(os.environ, HOME=str(root), XDG_DATA_HOME=str(root / "data"), XDG_RUNTIME_DIR=str(runtime))
+    env = dict(os.environ, HOME=str(root), XDG_DATA_HOME=str(root / "data"), XDG_RUNTIME_DIR=str(runtime), LANG="C.UTF-8")
+    for variable in ("LC_ALL", "LC_MESSAGES", "LANGUAGE"):  # Messages are English unless preferences say otherwise.
+        env.pop(variable, None)
     updates = root / "data/agent-pet/updates"
     updates.mkdir(parents=True)
     app = root / "installed pet"
@@ -78,6 +80,12 @@ exit 1
     assert "restored" in (updates / "result.txt").read_text(), result
     assert (app / ".agent-pet-install").read_text() == receipt
     assert not Path(str(app) + ".update-transaction.json").exists()
+    # The pet shows result.txt later, so the helper writes it in the pet's language.
+    settings.write_text('{"version":1,"size":240,"on_top":true,"language":"vi"}')
+    result = apply(path, digest)
+    assert result.returncode != 0 and executable.read_bytes() == old, result
+    assert "Đã khôi phục phiên bản trước" in (updates / "result.txt").read_text(encoding="utf-8"), result
+    settings.write_text('{"preserve":"settings"}')
 
     path, digest = package(good)
     result = apply(path, digest)

@@ -1,4 +1,5 @@
 #include "preferences.h"
+#include "i18n/contexts.h"
 #include <QDate>
 #include <QDir>
 #include <QFile>
@@ -38,7 +39,7 @@ Preferences PreferencesStore::load() {
     if (!file.exists()) return result;
     QJsonParseError parse;
     if (!file.open(QIODevice::ReadOnly) || file.size() > 4096) {
-        writable_ = false; error_ = "Cannot read preferences; existing file preserved."; return result;
+        writable_ = false; error_ = Settings::tr("Cannot read preferences; existing file preserved."); return result;
     }
     const auto document = QJsonDocument::fromJson(file.readAll(), &parse);
     const auto object = document.object();
@@ -67,8 +68,9 @@ Preferences PreferencesStore::load() {
         || (object.contains("water_minutes") && !integer(object["water_minutes"], 0, 1440))
         || (object.contains("recap") && !object["recap"].isBool())
         || (object.contains("autostart") && !object["autostart"].isBool())
+        || (object.contains("language") && !object["language"].isString())
         || (object.contains("when_idle") && !parseIdlePolicy(object["when_idle"].toString(), whenIdle))) {
-        writable_ = false; error_ = "Invalid preferences; using defaults and preserving the file."; return result;
+        writable_ = false; error_ = Settings::tr("Invalid preferences; using defaults and preserving the file."); return result;
     }
     result.size = object["size"].toInt();
     if (position) result.position = {object["x"].toInt(), object["y"].toInt()};
@@ -90,12 +92,14 @@ Preferences PreferencesStore::load() {
     result.recap = object["recap"].toBool(true);
     result.autostart = object["autostart"].toBool();
     result.whenIdle = whenIdle;
+    const auto language = object["language"].toString();
+    if (language == "en" || language == "vi") result.language = language;
     return result;
 }
 bool PreferencesStore::save(const Preferences &preferences) {
     if (!writable_) return false;
     if (!QDir().mkpath(QFileInfo(path_).absolutePath())) {
-        error_ = "Cannot create preferences directory."; return false;
+        error_ = Settings::tr("Cannot create preferences directory."); return false;
     }
     QSaveFile file(path_);
     if (!file.open(QIODevice::WriteOnly)) { error_ = file.errorString(); return false; }
@@ -104,7 +108,8 @@ bool PreferencesStore::save(const Preferences &preferences) {
                        {"mood", preferences.mood}, {"turns", preferences.turns}, {"touch", preferences.touch},
                        {"wander", preferences.wander}, {"easter_eggs", preferences.easterEggs}, {"recap", preferences.recap},
                        {"eye_minutes", preferences.eyeMinutes}, {"water_minutes", preferences.waterMinutes},
-                       {"autostart", preferences.autostart}, {"when_idle", idlePolicyName(preferences.whenIdle)}};
+                       {"autostart", preferences.autostart}, {"when_idle", idlePolicyName(preferences.whenIdle)},
+                       {"language", preferences.language}};
     if (Preferences::validBirthday(preferences.birthday)) object["birthday"] = preferences.birthday;
     if (preferences.hasPosition) { object["x"] = preferences.position.x(); object["y"] = preferences.position.y(); }
     const auto bytes = QJsonDocument(object).toJson();

@@ -1,6 +1,7 @@
 #include "monitor.h"
 #include "ipc/session_store.h"
 #include "session_playback.h"
+#include "i18n/contexts.h"
 #include <QApplication>
 #include <QCursor>
 #include <QDateTime>
@@ -20,6 +21,11 @@ Monitor::Monitor(PetWindow &window, std::shared_ptr<hosts::FocusService> focus)
     rest_.setInterval(1000);
     connect(&rest_, &QTimer::timeout, this, &Monitor::rest);
     connect(&note_, &NoteBubble::clicked, this, &Monitor::answered);
+    // A reminder on screen is said again in the new language; anything else was a passing remark and goes.
+    connect(&note_, &NoteBubble::outdated, this, [this] {
+        if (reminder_.isEmpty()) return;
+        const auto reminder = reminder_; say(Wellness::note(reminder)); reminder_ = reminder;
+    });
     timer_.setInterval(250);
     connect(&timer_, &QTimer::timeout, this, [this] { update(QDateTime::currentMSecsSinceEpoch()); });
     timer_.start();
@@ -42,7 +48,7 @@ Monitor::Monitor(PetWindow &window, std::shared_ptr<hosts::FocusService> focus)
         refreshAlerts();
     });
 }
-const QString Monitor::bedtimeNote = "It's getting late. Maybe finish up and get some sleep?";
+QString Monitor::bedtimeNote() { return Pet::tr("It's getting late. Maybe finish up and get some sleep?"); }
 // Subagents fold into their parent, as in the running-sessions list.
 static int topLevelSessions(const Sessions &sessions) {
     const auto &records = sessions.records();
@@ -89,7 +95,7 @@ bool Monitor::apply(const Event &event, qint64 now) {
         window_.eggs().surprise("danger");
     // Work going on deep into the night earns one gentle note.
     if (event.kind == "turn_finished" && !window_.muted() && !window_.petHidden() && window_.eggs().bedtime())
-        say(bedtimeNote);
+        say(bedtimeNote());
     return true;
 }
 void Monitor::update(qint64 now) {
@@ -183,18 +189,19 @@ void Monitor::rest() {
     if (locked && locked()) { dropReminder(); return; }
     if (!active_ || window_.petHidden() || --restLeft_ < 0) { rest_.stop(); restLeft_ = 0; return; }
     if (restLeft_ > 0) {
-        note_.say(QString("Eyes on something far away… %1").arg(restLeft_), window_.figure(), window_.screenAreas(), {}, 1500);
+        //: A countdown; %1 = seconds left
+        note_.say(Pet::tr("Eyes on something far away… %1").arg(restLeft_), window_.figure(), window_.screenAreas(), {}, 1500);
         return;
     }
     rest_.stop();
     window_.eggs().surprise("reminder_done", true);
-    say("Nice! Your eyes thank you.", {}, 4000);
+    say(Pet::tr("Nice! Your eyes thank you."), {}, 4000);
 }
 void Monitor::showRecap() {
     if (!active_) return;
     const auto today = recap_.day(QDate::currentDate());
     // A hidden pet has no bubble to speak from; the tray says it instead.
-    if (window_.petHidden()) window_.showTrayMessage("Today's recap", Recap::breakdown(today));
+    if (window_.petHidden()) window_.showTrayMessage(Pet::tr("Today's recap"), Recap::breakdown(today));
     else say(Recap::summary(today), today.turns ? Recap::breakdown(today) : QString());
 }
 // Monday blues, the go-home nudge and bedtime: said once each day, and kept for later while the pet is hidden.
@@ -251,17 +258,17 @@ void Monitor::toggleSessions() {
 // Tooltip shown when Open did not raise the session's window.
 static QString focusFailure(const Session &session, const hosts::FocusResult &result) {
     using platform::Outcome;
-    if (session.host.isNull()) return "This session started before Agent Pet could see its terminal. Its next event will fix that.";
+    if (session.host.isNull()) return Monitor::tr("This session started before Agent Pet could see its terminal. Its next event will fix that.");
     QStringList text;
-    if (result.activation == Outcome::Unsupported) text << "This desktop session does not let Agent Pet raise windows.";
-    else if (result.activation == Outcome::Skipped) text << "Could not select this session's tab or pane. Check that its terminal is attached.";
-    else text << "Could not focus this session's window. Check that its terminal is attached.";
+    if (result.activation == Outcome::Unsupported) text << Monitor::tr("This desktop session does not let Agent Pet raise windows.");
+    else if (result.activation == Outcome::Skipped) text << Monitor::tr("Could not select this session's tab or pane. Check that its terminal is attached.");
+    else text << Monitor::tr("Could not focus this session's window. Check that its terminal is attached.");
     return (text + result.requirements).join(' ');
 }
 bool Monitor::focusSession(const QString &key) {
     const auto it = sessions_.records().find(key);
     if (it == sessions_.records().end()) {
-        QToolTip::showText(window_.figure().center(), "Could not focus this session's window. Check that its terminal is attached.");
+        QToolTip::showText(window_.figure().center(), tr("Could not focus this session's window. Check that its terminal is attached."));
         return false;
     }
     // A copy: focusing can process events, and new hook events may change the session map.

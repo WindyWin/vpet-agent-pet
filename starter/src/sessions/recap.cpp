@@ -1,4 +1,5 @@
 #include "recap.h"
+#include "i18n/contexts.h"
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
@@ -9,17 +10,27 @@
 #include <cmath>
 
 namespace pet {
+// Kept in recap.json as is; translated only when shown.
+static const QString unknownProject = "Unknown project";
 static QString projectFolder(const QString &path) {
-    if (path.isEmpty()) return "Unknown project";
+    if (path.isEmpty()) return unknownProject;
     const auto cleaned = QDir::cleanPath(path);
     const auto name = QFileInfo(cleaned).fileName();
     return name.isEmpty() ? cleaned : name;
 }
-static QString plural(qint64 n, const QString &one, const QString &many) { return QString("%1 %2").arg(n).arg(n == 1 ? one : many); }
+static QString shown(const QString &project) { return project == unknownProject ? Alerts::tr("Unknown project") : project; }
+// English needs its singular; the many form takes the number as %1.
+static QString count(qint64 n, const char *one, const char *many) { return n == 1 ? Pet::tr(one) : Pet::tr(many).arg(n); }
+static QString turns(qint64 n) { return count(n, QT_TRANSLATE_NOOP("Pet", "1 turn"), QT_TRANSLATE_NOOP("Pet", "%1 turns")); }
+static QString errors(qint64 n) { return count(n, QT_TRANSLATE_NOOP("Pet", "1 error"), QT_TRANSLATE_NOOP("Pet", "%1 errors")); }
+static QString approvals(qint64 n) {
+    return count(n, QT_TRANSLATE_NOOP("Pet", "1 approval"), QT_TRANSLATE_NOOP("Pet", "%1 approvals"));
+}
 static QString duration(qint64 ms) {
     const qint64 minutes = ms / 60000;
-    if (minutes < 60) return QString("%1 min").arg(minutes);
-    return minutes % 60 ? QString("%1 h %2 min").arg(minutes / 60).arg(minutes % 60) : QString("%1 h").arg(minutes / 60);
+    if (minutes < 60) return Pet::tr("%1 min").arg(minutes);
+    //: %1 = hours, %2 = minutes
+    return minutes % 60 ? Pet::tr("%1 h %2 min").arg(minutes / 60).arg(minutes % 60) : Pet::tr("%1 h").arg(minutes / 60);
 }
 RecapDay &Recap::at(const QDate &date) {
     auto it = std::find_if(days_.begin(), days_.end(), [&](const RecapDay &d) { return d.date == date; });
@@ -66,29 +77,35 @@ bool Recap::record(const Event &e, const Session *s, const QDate &date) {
     return changed;
 }
 QString Recap::summary(const RecapDay &d) {
-    if (d.turns == 0 && d.errors == 0 && d.approvals == 0) return "No agent work yet today.";
-    QString text = "Today: " + plural(d.turns, "turn", "turns");
-    if (d.projects.size() == 1) text += " in " + d.projects.firstKey();
-    else if (d.projects.size() > 1) text += " across " + plural(d.projects.size(), "project", "projects");
+    if (d.turns == 0 && d.errors == 0 && d.approvals == 0) return Pet::tr("No agent work yet today.");
+    //: %1 = "3 turns", %2 = a project folder name
+    QString text = d.projects.size() == 1 ? Pet::tr("Today: %1 in %2").arg(turns(d.turns), shown(d.projects.firstKey()))
+                   //: %1 = "3 turns", %2 = "2 projects"
+                   : d.projects.size() > 1 ? Pet::tr("Today: %1 across %2").arg(turns(d.turns),
+                         count(d.projects.size(), QT_TRANSLATE_NOOP("Pet", "1 project"), QT_TRANSLATE_NOOP("Pet", "%1 projects")))
+                   : Pet::tr("Today: %1").arg(turns(d.turns));
     QStringList parts{text};
-    if (d.errors) parts << plural(d.errors, "error", "errors");
-    if (d.longWaits) parts << plural(d.longWaits, "approval", "approvals") + " waited 10+ min";
-    else if (d.approvals) parts << plural(d.approvals, "approval", "approvals");
-    if (d.longestTurnMs >= 60000) parts << "longest run " + duration(d.longestTurnMs);
+    if (d.errors) parts << errors(d.errors);
+    //: %1 = "2 approvals"
+    if (d.longWaits) parts << Pet::tr("%1 waited 10+ min").arg(approvals(d.longWaits));
+    else if (d.approvals) parts << approvals(d.approvals);
+    //: %1 = a duration such as "1 h 5 min"
+    if (d.longestTurnMs >= 60000) parts << Pet::tr("longest run %1").arg(duration(d.longestTurnMs));
     return parts.join(" · ");
 }
 QString Recap::breakdown(const RecapDay &d) {
     QVector<QPair<QString, int>> projects;
     for (auto it = d.projects.begin(); it != d.projects.end(); ++it) projects.append({it.key(), it.value()});
     std::stable_sort(projects.begin(), projects.end(), [](const auto &a, const auto &b) { return a.second > b.second; });
-    QStringList lines{"Today's recap"};
-    for (const auto &[name, turns] : projects) lines << name + " · " + plural(turns, "turn", "turns");
-    if (projects.isEmpty()) lines << "No finished turns yet.";
+    QStringList lines{Pet::tr("Today's recap")};
+    for (const auto &[name, count] : projects) lines << shown(name) + " · " + turns(count);
+    if (projects.isEmpty()) lines << Pet::tr("No finished turns yet.");
     QStringList totals;
-    if (d.errors) totals << plural(d.errors, "error", "errors");
-    if (d.approvals) totals << plural(d.approvals, "approval", "approvals") +
-                               (d.longestWaitMs >= 60000 ? ", longest wait " + duration(d.longestWaitMs) : QString());
-    if (d.longestTurnMs >= 60000) totals << "longest run " + duration(d.longestTurnMs);
+    if (d.errors) totals << errors(d.errors);
+    //: %1 = "2 approvals", %2 = a duration such as "12 min"
+    if (d.approvals) totals << (d.longestWaitMs >= 60000 ? Pet::tr("%1, longest wait %2").arg(approvals(d.approvals), duration(d.longestWaitMs))
+                                                         : approvals(d.approvals));
+    if (d.longestTurnMs >= 60000) totals << Pet::tr("longest run %1").arg(duration(d.longestTurnMs));
     if (!totals.isEmpty()) lines << totals.join(" · ");
     return lines.join('\n');
 }

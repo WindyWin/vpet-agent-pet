@@ -1,4 +1,5 @@
 #pragma once
+#include "i18n/contexts.h"
 #include "platform/contracts/desktop.h"
 
 namespace pet::platform::kwin {
@@ -10,7 +11,7 @@ class KWinDesktop : public DesktopBackend {
 public:
     static constexpr int callbackTimeoutMs = 1500;
     QString id() const override { return "kwin"; }
-    QString requirement() const override { return "Wayland focus requires KDE Plasma 6."; }
+    QString requirement() const override { return Focus::tr("Wayland focus requires KDE Plasma 6."); }
     Outcome activate(const WindowRequest &request) override;
 };
 }

@@ -8,6 +8,8 @@
 #include "platform/native.h"
 #include "platform/headless.h"
 #include "providers/integrations.h"
+#include "i18n/language.h"
+#include "settings/preferences.h"
 #include "version.h"
 #include <QApplication>
 #include <QCommandLineParser>
@@ -98,7 +100,11 @@ int main(int argc, char **argv) {
                 return 0;
             }
         }
-        pet::PetWindow window(nullptr, {}, !parser.isSet("smoke-test") && !parser.isSet("no-persist"));
+        const bool persist = !parser.isSet("smoke-test") && !parser.isSet("no-persist");
+        // Before any window exists, so everything is created in the chosen language. Headless commands
+        // above never translate: the CLI stays English and `hook` stays silent.
+        pet::i18n::install(pet::i18n::fromName(persist ? pet::PreferencesStore().load().language : QString()));
+        pet::PetWindow window(nullptr, {}, persist);
         if (!window.player().select(parser.value("state"), true)) {
             std::fprintf(stderr, "%s\n", qPrintable(window.player().error()));
             return 1;

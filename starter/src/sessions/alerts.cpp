@@ -1,4 +1,5 @@
 #include "alerts.h"
+#include "i18n/contexts.h"
 #include <QDir>
 #include <QFileInfo>
 #include <algorithm>
@@ -21,7 +22,7 @@ static QString cleanPath(const QString &path) {
     return cleaned.size() > 1 && cleaned.endsWith('/') ? cleaned.chopped(1) : cleaned;
 }
 QString projectName(const QString &path, const QVector<Alert> &context) {
-    if (path.isEmpty()) return "Unknown project";
+    if (path.isEmpty()) return Alerts::tr("Unknown project");
     const auto cleaned = cleanPath(path);
     const QFileInfo info(cleaned);
     const auto name = info.fileName().isEmpty() ? cleaned : info.fileName();
@@ -32,15 +33,16 @@ QString projectName(const QString &path, const QVector<Alert> &context) {
     return ambiguous && !parent.isEmpty() ? name + " (" + parent + ")" : name;
 }
 QString alertTitle(const Alert &alert) {
-    return alert.kind == "error" ? "Tool error" : alert.kind == "turn_finished" ? "Turn finished"
-         : alert.reason == "approval" ? "Needs approval" : alert.reason == "input" ? "Needs input" : "Needs attention";
+    return alert.kind == "error" ? Alerts::tr("Tool error") : alert.kind == "turn_finished" ? Alerts::tr("Turn finished")
+         : alert.reason == "approval" ? Alerts::tr("Needs approval") : alert.reason == "input" ? Alerts::tr("Needs input")
+         : Alerts::tr("Needs attention");
 }
 AlertText describe(const Alert &alert, const QVector<Alert> &context) {
     QString title = alertTitle(alert);
     if (alert.count > 1) title += QString(" (×%1)").arg(alert.count);
     const auto name = projectName(alert.project, context);
     return {title, name + " · " + providerName(alert.provider) + " · " + shortSessionId(alert.provider, alert.id, context),
-            alert.project.isEmpty() ? "Project path unavailable for this session" : alert.project, name};
+            alert.project.isEmpty() ? Alerts::tr("Project path unavailable for this session") : alert.project, name};
 }
 int AlertQueue::index() const {
     for (int i = 0; i < pending_.size(); ++i)
@@ -85,14 +87,16 @@ static int stateRank(const QString &state) {
 }
 static QString statusText(const Session &s, qint64 now) {
     if (s.state == "attention") return alertTitle({{}, "attention", {}, {}, {}, s.reason});
-    if (s.state == "error") return "Tool error";
-    if (s.state == "working") return "Working";
-    if (s.state == "reading") return "Reading";
-    if (s.state == "thinking") return "Thinking";
-    if (s.state == "turn-finished") return "Finished";
-    if (s.state == "inactive") return "Stopped";
+    if (s.state == "error") return Alerts::tr("Tool error");
+    if (s.state == "working") return Alerts::tr("Working");
+    if (s.state == "reading") return Alerts::tr("Reading");
+    if (s.state == "thinking") return Alerts::tr("Thinking");
+    if (s.state == "turn-finished") return Alerts::tr("Finished");
+    if (s.state == "inactive") return Alerts::tr("Stopped");
     const qint64 minutes = std::max<qint64>(0, now - s.seen) / 60000;
-    return minutes < 1 ? "Idle" : QString("Idle · %1 min").arg(minutes);
+    return minutes < 1 ? Alerts::tr("Idle")
+                       //: %1 = minutes since the session's last event
+                       : Alerts::tr("Idle · %1 min").arg(minutes);
 }
 QVector<SessionRow> sessionRows(const Sessions &sessions, qint64 now, const hosts::Registry &hosts) {
     const auto &records = sessions.records();
@@ -112,7 +116,7 @@ QVector<SessionRow> sessionRows(const Sessions &sessions, qint64 now, const host
         if (!hosts.label(it->host.adapter).isEmpty()) detail << hosts.label(it->host.adapter);
         index[it.key()] = rows.size();
         rows.append({it.key(), projectName(it->project, context), detail.join(" · "), statusText(*it, now), it->state,
-                     it->project.isEmpty() ? "Project path unavailable for this session" : it->project});
+                     it->project.isEmpty() ? Alerts::tr("Project path unavailable for this session") : it->project});
     }
     for (auto it = records.begin(); it != records.end(); ++it) {
         const auto parent = parentOf(*it);
@@ -124,7 +128,8 @@ QVector<SessionRow> sessionRows(const Sessions &sessions, qint64 now, const host
             row.state = it->state; row.status = statusText(*it, now);
         }
     }
-    for (auto &row : rows) if (row.children) row.detail += row.children == 1 ? " · 1 subagent" : QString(" · %1 subagents").arg(row.children);
+    for (auto &row : rows)
+        if (row.children) row.detail += " · " + (row.children == 1 ? Alerts::tr("1 subagent") : Alerts::tr("%1 subagents").arg(row.children));
     std::stable_sort(rows.begin(), rows.end(), [&](const SessionRow &a, const SessionRow &b) {
         const int ra = stateRank(a.state), rb = stateRank(b.state);
         return ra != rb ? ra < rb : records.value(a.key).seen > records.value(b.key).seen;

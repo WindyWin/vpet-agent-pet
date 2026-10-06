@@ -76,6 +76,10 @@ public:
     bool clickThrough() const { return clickThrough_; }
     void recover();
     void setOnTop(bool enabled);
+    // Interface language: "auto", "en" or "vi"; persisted. Applies at once: the menu, tray and open
+    // bubbles relabel themselves and an open settings dialog reopens on the same tab.
+    void setLanguage(const QString &language);
+    QString language() const { return language_; }
     void showSettings();
     void setUpdates(updates::Controller *controller);
     void showPreview();
@@ -122,6 +126,7 @@ signals:
     void recapRequested(); // "Today's recap" in the menu.
 protected:
     bool event(QEvent *) override;
+    void changeEvent(QEvent *) override;
     void closeEvent(QCloseEvent *) override;
     void moveEvent(QMoveEvent *) override;
     void paintEvent(QPaintEvent *) override;
@@ -146,6 +151,7 @@ private:
     void refreshStartup();
     bool writePreferences(const std::function<void(Preferences &)> &change);
     void updateTrayIcon();
+    void retranslate(); // Every label set once rather than built on demand.
     void showAbout();
     void watchScreen(QScreen *screen);
     QWidget *integrationSettings(QWidget *parent);
@@ -163,9 +169,14 @@ private:
     QSystemTrayIcon tray_;
     QTimer recoveryTimer_, dragTimer_, saveTimer_, flightTimer_, walkTimer_, quitTimer_;
     QVariantAnimation slide_; // Eases a let-go pet to its hiding place before the hide plays, or a climber on and off its wall.
-    QPointer<QDialog> settingsDialog_, previewDialog_;
+    QPointer<QDialog> settingsDialog_, previewDialog_, aboutDialog_;
     QAction *clickAction_ = nullptr, *onTopAction_ = nullptr, *muteAction_ = nullptr, *showAction_ = nullptr;
     QAction *updateAction_ = nullptr, *updatesItem_ = nullptr;
+    QAction *sessionsAction_ = nullptr, *recapAction_ = nullptr, *settingsAction_ = nullptr, *previewAction_ = nullptr;
+    QAction *recoverAction_ = nullptr, *aboutAction_ = nullptr, *quitAction_ = nullptr;
+    QMenu *moreMenu_ = nullptr, *statesMenu_ = nullptr;
+    QString language_ = "auto";
+    int statusSessions_ = 0, statusAttention_ = 0, statusErrors_ = 0; // The tray tooltip's last counts.
     Presence presence_;
     QPixmap trayBase_;
     int trayAttention_ = 0; // Badge shown on the tray icon; -1 forces a redraw.

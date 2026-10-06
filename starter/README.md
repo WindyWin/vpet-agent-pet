@@ -19,7 +19,7 @@ The asset verifier uses only Python's standard library and works from any curren
 ## Build and run
 
 From this directory, install CMake 3.22+, Ninja, a C++17 compiler and Qt 6.5+
-Widgets/Test/Network/DBus, libarchive and X11 development packages, then run:
+Widgets/Test/Network/DBus/LinguistTools, libarchive and X11 development packages, then run:
 
 ```bash
 python3 scripts/verify_assets.py
@@ -194,6 +194,14 @@ own window, so there the pet stays put. Preview the moves from Preview state
 The default uses X11/XWayland when DISPLAY is available. For a development-only
 native Wayland check: `QT_QPA_PLATFORM=wayland ./build/agent-pet`.
 Native Wayland placement and stacking support remain unverified.
+
+## Language
+
+The pet speaks English or Vietnamese (Tiếng Việt). By default it follows the system
+language. Settings → General → **Language** picks one, and the switch happens right away,
+without a restart. In Vietnamese the pet speaks as "em" and calls you "bạn". The
+command line, the installer and these docs stay in English. To add or fix
+translations, see [translations](docs/i18n.md).
 
 ## Updates
 

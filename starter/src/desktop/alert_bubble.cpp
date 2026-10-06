@@ -1,4 +1,5 @@
 #include "alert_bubble.h"
+#include <QEvent>
 #include <QHBoxLayout>
 #include <QMouseEvent>
 #include <QPainter>
@@ -11,7 +12,6 @@ AlertBubble::AlertBubble(QWidget *parent) : QWidget(parent) {
     setAttribute(Qt::WA_TranslucentBackground);
     setAttribute(Qt::WA_ShowWithoutActivating);
     setAttribute(Qt::WA_MacAlwaysShowToolWindow);
-    setAccessibleName("Agent Pet alert");
     setCursor(Qt::PointingHandCursor);
     auto *layout = new QHBoxLayout(this);
     layout->setContentsMargins(26, 6, 8, 6); layout->setSpacing(8);
@@ -19,7 +19,7 @@ AlertBubble::AlertBubble(QWidget *parent) : QWidget(parent) {
     name_ = new QLabel(this); name_->setStyleSheet("color:#6b5643;");
     title_->setTextFormat(Qt::PlainText); name_->setTextFormat(Qt::PlainText);
     layout->addWidget(title_); layout->addWidget(name_);
-    more_ = new QPushButton(this); open_ = new QPushButton("Open", this); dismiss_ = new QPushButton("×", this);
+    more_ = new QPushButton(this); open_ = new QPushButton(this); dismiss_ = new QPushButton("×", this);
     more_->setStyleSheet("QPushButton{color:#8a4b12; background:#f3e3c3; border:0; border-radius:8px; padding:1px 7px; font-weight:600;}"
                          "QPushButton:hover{background:#ecd3a5;}");
     for (auto *button : {open_, dismiss_})
@@ -27,13 +27,22 @@ AlertBubble::AlertBubble(QWidget *parent) : QWidget(parent) {
                               "QPushButton:hover{text-decoration:underline;}");
     dismiss_->setStyleSheet(dismiss_->styleSheet() + "QPushButton{font-size:15px;}");
     for (auto *button : {more_, open_, dismiss_}) { button->setFlat(true); button->setCursor(Qt::PointingHandCursor); }
-    more_->setAccessibleName("Show running sessions"); more_->setToolTip("Show running sessions");
-    open_->setAccessibleName("Open the agent's terminal or editor"); open_->setToolTip("Bring the agent's terminal or editor forward");
-    dismiss_->setAccessibleName("Dismiss alert"); dismiss_->setToolTip("Dismiss");
+    retranslate();
     layout->addWidget(more_); layout->addWidget(open_); layout->addWidget(dismiss_);
     connect(more_, &QPushButton::clicked, this, &AlertBubble::listRequested);
     connect(open_, &QPushButton::clicked, this, &AlertBubble::focusRequested);
     connect(dismiss_, &QPushButton::clicked, this, &AlertBubble::dismissRequested);
+}
+void AlertBubble::retranslate() {
+    setAccessibleName(tr("Agent Pet alert"));
+    open_->setText(tr("Open"));
+    more_->setAccessibleName(tr("Show running sessions")); more_->setToolTip(tr("Show running sessions"));
+    open_->setAccessibleName(tr("Open the agent's terminal or editor")); open_->setToolTip(tr("Bring the agent's terminal or editor forward"));
+    dismiss_->setAccessibleName(tr("Dismiss alert")); dismiss_->setToolTip(tr("Dismiss"));
+}
+void AlertBubble::changeEvent(QEvent *event) {
+    if (event->type() == QEvent::LanguageChange) { retranslate(); adjustSize(); }
+    QWidget::changeEvent(event);
 }
 void AlertBubble::present(const AlertText &text, const QString &kind, int more) {
     title_->setText(text.title);
@@ -80,7 +89,7 @@ NoteBubble::NoteBubble(QWidget *parent) : QWidget(parent) {
     setAttribute(Qt::WA_TranslucentBackground);
     setAttribute(Qt::WA_ShowWithoutActivating);
     setAttribute(Qt::WA_MacAlwaysShowToolWindow);
-    setAccessibleName("Agent Pet note");
+    setAccessibleName(tr("Agent Pet note"));
     auto *layout = new QHBoxLayout(this);
     layout->setContentsMargins(16, 8, 16, 8);
     label_ = new QLabel(this);
@@ -94,8 +103,17 @@ NoteBubble::NoteBubble(QWidget *parent) : QWidget(parent) {
 void NoteBubble::say(const QString &text, const QRect &pet, const QVector<QRect> &screens, const QString &details, int ms) {
     details_ = details; pet_ = pet; screens_ = screens;
     setCursor(details.isEmpty() ? Qt::ArrowCursor : Qt::PointingHandCursor);
-    setToolTip(details.isEmpty() ? QString() : "Click for more");
+    setToolTip(details.isEmpty() ? QString() : tr("Click for more"));
     present(text, ms);
+}
+void NoteBubble::changeEvent(QEvent *event) {
+    if (event->type() == QEvent::LanguageChange) {
+        setAccessibleName(tr("Agent Pet note"));
+        // What it says was worded in the old language and cannot be translated here: it goes, and whoever said it
+        // may say it again.
+        if (isVisible()) { hide_.stop(); details_.clear(); hide(); emit outdated(); }
+    }
+    QWidget::changeEvent(event);
 }
 void NoteBubble::present(const QString &text, int ms) {
     label_->setText(text);

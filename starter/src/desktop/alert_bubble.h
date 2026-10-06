@@ -25,9 +25,11 @@ signals:
     void listRequested();
     void dismissRequested();
 protected:
+    void changeEvent(QEvent *) override;
     void paintEvent(QPaintEvent *) override;
     void mouseReleaseEvent(QMouseEvent *) override;
 private:
+    void retranslate(); // Labels set once; the alert itself is presented again on the next refresh.
     QLabel *title_, *name_;
     QPushButton *more_, *open_, *dismiss_;
     QString label_;
@@ -48,7 +50,9 @@ public:
     bool hasDetails() const { return !details_.isEmpty(); }
 signals:
     void clicked(); // A click that hides it, before it hides.
+    void outdated(); // The language changed while it showed; it hid, since its words were in the old one.
 protected:
+    void changeEvent(QEvent *) override;
     void paintEvent(QPaintEvent *) override;
     void mouseReleaseEvent(QMouseEvent *) override;
 private:

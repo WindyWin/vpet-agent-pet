@@ -229,6 +229,17 @@ From a terminal without options it shows a checklist instead: *remove hooks*
 (on), *delete settings* (off) and *remove command link* (on), then asks to
 confirm. `--yes` skips the questions.
 
+## Language
+
+The pet's interface is in English or Vietnamese. **Automatic** (the default) follows the
+system language. On Linux, that is the first of `LANGUAGE`, `LC_ALL`, `LC_MESSAGES`
+and `LANG` that is set, as for other desktop applications: `LANG=vi_VN.UTF-8` gives
+Vietnamese, and any language other than Vietnamese or English gives English. On macOS,
+it is the first of the preferred languages in System Settings. Right-click the pet →
+**Settings → General → Language** to pick one regardless. The change applies at once,
+is saved in `preferences.json` as `"language": "auto"`, `"en"` or `"vi"`, and
+survives upgrades. The command-line interface and the installer are always in English.
+
 ## Troubleshooting
 
 | Symptom | What to check |

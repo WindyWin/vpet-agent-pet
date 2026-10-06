@@ -2,6 +2,7 @@
 #include "desktop/monitor.h"
 #include "desktop/pet_window.h"
 #include "desktop/session_playback.h"
+#include "i18n/language.h"
 #include "version.h"
 #include <QApplication>
 #include <QCheckBox>
@@ -15,8 +16,11 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QMenu>
 #include <QRandomGenerator>
+#include <QScopeGuard>
 #include <QSignalSpy>
+#include <QTabWidget>
 #include <QTemporaryDir>
 #include <QTest>
 #include <QToolTip>
@@ -429,6 +433,64 @@ private slots:
         file.write(R"({"version":1,"size":200,"on_top":true,"ambient":7})"); file.close();
         pet::PreferencesStore invalid(path); QCOMPARE(invalid.load().ambient, int(pet::Preferences::AmbientSubtle));
         QVERIFY(!invalid.save(pet::Preferences{}));
+    }
+    void languagePreference() {
+        // The translator is application-wide: the other tests expect English whatever happens here.
+        const auto english = qScopeGuard([] { pet::i18n::install(pet::i18n::Language::English); });
+        QTemporaryDir directory; const auto path = directory.path() + "/preferences.json";
+        {
+            pet::PetWindow window(nullptr, path); window.show(); QCOMPARE(window.language(), QString("auto"));
+            pet::Monitor monitor(window);
+            const qint64 now = QDateTime::currentMSecsSinceEpoch();
+            QVERIFY(monitor.apply(pet::Event{"claude", "a1b2", "1", "attention", {}, {}, "/work/abc-web", {}, now, "approval"}, now));
+            QCOMPARE(monitor.bubble().title(), "Needs approval");
+            const auto menuHas = [&window](const QString &text) {
+                const auto actions = window.findChild<QMenu *>()->actions();
+                return std::any_of(actions.begin(), actions.end(), [&](QAction *action) { return action->text() == text; });
+            };
+            const auto dialogTitled = [&window](const QString &title) -> QDialog * {
+                for (auto *dialog : window.findChildren<QDialog *>()) if (dialog->isVisible() && dialog->windowTitle() == title) return dialog;
+                return nullptr;
+            };
+            QVERIFY(menuHas("Settings…"));
+            window.showSettings();
+            auto *dialog = dialogTitled("Agent Pet settings"); QVERIFY(dialog);
+            dialog->findChild<QTabWidget *>()->setCurrentIndex(1);
+            QComboBox *combo = nullptr;
+            for (auto *box : dialog->findChildren<QComboBox *>()) if (box->accessibleName() == "Language") combo = box;
+            QVERIFY(combo); QCOMPARE(combo->count(), 3); QCOMPARE(combo->itemText(2), "Tiếng Việt");
+            // Other open dialogs and a note on screen follow too.
+            window.showPreview();
+            for (auto *action : window.findChildren<QAction *>()) if (action->text() == "About and artwork terms…") action->trigger();
+            QVERIFY(dialogTitled("Animation preview")); QVERIFY(dialogTitled("About Agent Pet — artwork and terms"));
+            monitor.note().say("Hello", window.figure(), window.screenAreas()); QVERIFY(monitor.note().isVisible());
+            combo->setCurrentIndex(combo->findData("vi")); // Live.
+            QTRY_VERIFY(!monitor.note().isVisible()); // Worded in English: it goes.
+            QCOMPARE(pet::i18n::installed(), pet::i18n::Language::Vietnamese);
+            QTRY_VERIFY(menuHas("Cài đặt…"));
+            QCOMPARE(window.statusText(), "Agent Pet — 1 phiên · 1 phiên cần chú ý");
+            monitor.update(now); QCOMPARE(monitor.bubble().title(), "Cần phê duyệt");
+            // Settings come back in Vietnamese, on the tab that was open.
+            QTRY_VERIFY(dialogTitled("Cài đặt Agent Pet"));
+            QCOMPARE(dialogTitled("Cài đặt Agent Pet")->findChild<QTabWidget *>()->currentIndex(), 1);
+            auto *birthday = dialogTitled("Cài đặt Agent Pet")->findChild<QDateEdit *>();
+            QVERIFY(birthday); QCOMPARE(birthday->text(), "1 tháng 1"); // Month names follow the pet, not the system.
+            QVERIFY(dialogTitled("Xem trước hoạt ảnh")); QVERIFY(dialogTitled("Giới thiệu Agent Pet — hình ảnh và điều khoản"));
+            window.setLanguage("en");
+            QTRY_VERIFY(menuHas("Settings…"));
+            monitor.update(now); QCOMPARE(monitor.bubble().title(), "Needs approval");
+            window.setLanguage("vi");
+        }
+        QCOMPARE(pet::PreferencesStore(path).load().language, QString("vi"));
+        // An unknown value, perhaps from a newer version, reads as automatic without invalidating the file.
+        QFile file(path); QVERIFY(file.open(QIODevice::WriteOnly));
+        file.write(R"({"version":1,"size":200,"on_top":true,"language":"klingon"})"); file.close();
+        pet::PreferencesStore store(path); QCOMPARE(store.load().language, QString("auto")); QVERIFY(store.error().isEmpty());
+        // A value that is not a string is malformed: the file is kept as it is.
+        QVERIFY(file.open(QIODevice::WriteOnly));
+        file.write(R"({"version":1,"size":200,"on_top":true,"language":7})"); file.close();
+        pet::PreferencesStore malformed(path); malformed.load(); QVERIFY(!malformed.error().isEmpty());
+        QVERIFY(!malformed.save(pet::Preferences{}));
     }
     void activityPreference() {
         QTemporaryDir directory; const auto path = directory.path() + "/preferences.json";
@@ -1735,7 +1797,7 @@ private slots:
         // A turn finishing late at night brings one bedtime note.
         local = QDateTime(QDate(2026, 10, 8), QTime(2, 0)); monitor.note().hide();
         draws.values = {0}; QVERIFY(monitor.apply(event("turn_finished", now + 10), now + 10));
-        QVERIFY(monitor.note().isVisible()); QCOMPARE(monitor.note().text(), pet::Monitor::bedtimeNote); QVERIFY(!QToolTip::isVisible());
+        QVERIFY(monitor.note().isVisible()); QCOMPARE(monitor.note().text(), pet::Monitor::bedtimeNote()); QVERIFY(!QToolTip::isVisible());
         QVERIFY(!window.eggs().bedtime()); // Used for tonight.
         // The Konami code, typed on the pet, makes it dance, and the monitor lets it.
         local = QDateTime(QDate(2026, 10, 7), QTime(12, 0));
@@ -1899,6 +1961,14 @@ private slots:
         work(1);
         QVERIFY(monitor.note().isVisible()); QCOMPARE(monitor.note().text(), pet::Wellness::note("eyes"));
         QCOMPARE(monitor.reminder(), QString("eyes")); QCOMPARE(player.requestedState(), QString("fidget_yawn"));
+        {
+            // A language change says it again in the new language rather than dropping it.
+            const auto english = qScopeGuard([] { pet::i18n::install(pet::i18n::Language::English); });
+            QVERIFY(pet::i18n::install(pet::i18n::Language::Vietnamese));
+            QTRY_COMPARE(monitor.note().text(), QString("Bạn nhìn ra xa trong 20 giây nha"));
+            QVERIFY(monitor.note().isVisible()); QCOMPARE(monitor.reminder(), QString("eyes"));
+        }
+        QTRY_COMPARE(monitor.note().text(), pet::Wellness::note("eyes")); QCOMPARE(monitor.reminder(), QString("eyes"));
         // Clicking it starts a twenty-second countdown, then the pet cheers.
         emit monitor.note().clicked(); QCOMPARE(monitor.restLeft(), 20); QVERIFY(monitor.note().isVisible());
         QVERIFY(monitor.note().text().endsWith("20")); QCOMPARE(monitor.reminder(), QString());

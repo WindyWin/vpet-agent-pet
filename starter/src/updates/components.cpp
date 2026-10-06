@@ -1,4 +1,5 @@
 #include "platform/contracts/update_layout.h"
+#include "i18n/contexts.h"
 #include "components.h"
 #include "installer.h"
 #include "release.h"
@@ -44,7 +45,7 @@ bool matches(const ComponentFile &file, const QString &prefix) {
 bool readComponents(const QString &path, const QString &digest, const QString &version,
                     const QString &architecture, Components &result, QString &error) {
     result = {};
-    auto invalid = [&] { result = {}; error = "Invalid update component manifest."; return false; };
+    auto invalid = [&] { result = {}; error = Updater::tr("Invalid update component manifest."); return false; };
     if (!verifiedFile(path, digest, MaxComponentsManifest, error)) return false;
     QFile file(path);
     if (!file.open(QIODevice::ReadOnly)) return invalid();
@@ -116,7 +117,7 @@ bool assembleComponents(const Components &components, const QString &prefix, con
                 const QString target = destination + '/' + file.path;
                 // Independent copies keep rollback files immutable when the new app runs.
                 if (!QDir().mkpath(QFileInfo(target).absolutePath()) || !QFile::copy(prefix + '/' + file.path, target)) {
-                    error = "Cannot reuse installed files; check free disk space."; return false;
+                    error = Updater::tr("Cannot reuse installed files; check free disk space."); return false;
                 }
             }
         } else {
@@ -126,12 +127,12 @@ bool assembleComponents(const Components &components, const QString &prefix, con
     }
     // Verify the final tree, including copied bytes, before executing anything.
     for (const auto &component : components.entries) {
-        if (!componentMatches(component, destination)) { error = "Update files do not match the component manifest."; return false; }
+        if (!componentMatches(component, destination)) { error = Updater::tr("Update files do not match the component manifest."); return false; }
     }
     QDirIterator files(destination, QDir::Files | QDir::Hidden | QDir::System, QDirIterator::Subdirectories);
     while (files.hasNext()) {
         if (!expected.contains(QDir(destination).relativeFilePath(files.next()))) {
-            error = "Update contains an undeclared file."; return false;
+            error = Updater::tr("Update contains an undeclared file."); return false;
         }
     }
     return true;
