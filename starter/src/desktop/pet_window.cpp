@@ -47,7 +47,7 @@ static void drawBadge(QPainter &painter, const QRect &badge, const QColor &color
     painter.restore();
 }
 PetWindow::PetWindow(QWidget *parent, const QString &path, bool persist)
-    : QWidget(parent), player_(this), ambient_(player_, this), mood_(player_, this), eggs_(player_, this), store_(path), menu_(this), tray_(this), persist_(persist) {
+    : QWidget(parent), player_(this), ambient_(player_, this), activity_(player_, this), mood_(player_, this), eggs_(player_, this), store_(path), menu_(this), tray_(this), persist_(persist) {
     const auto preferences = persist_ ? store_.load() : Preferences{};
     setWindowTitle("Agent Pet");
     setWindowFlags(Qt::Tool | Qt::FramelessWindowHint);
@@ -59,6 +59,7 @@ PetWindow::PetWindow(QWidget *parent, const QString &path, bool persist)
     setPetSize(preferences.size);
     muted_ = preferences.muted; sound_ = preferences.sound; bubbles_ = qBound(0, preferences.bubbles, 2);
     ambient_.setLevel(AmbientLevel(qBound(0, preferences.ambient, 2)));
+    activity_.setStyle(ActivityStyle(qBound(0, preferences.activity, 2)));
     mood_.setSetting(MoodSetting(qBound(0, preferences.mood, 2))); mood_.setTurns(preferences.turns);
     connect(&mood_, &Mood::counted, this, [this] { if (ready_) saveTimer_.start(); });
     touchEnabled_ = preferences.touch; wanderEnabled_ = preferences.wander; recapEnabled_ = preferences.recap;
@@ -261,6 +262,12 @@ void PetWindow::setAmbientLevel(int level) {
     ambient_.setLevel(AmbientLevel(level));
     if (ready_) saveTimer_.start();
 }
+void PetWindow::setActivityStyle(int style) {
+    style = qBound(0, style, 2);
+    if (style == activityStyle()) return;
+    activity_.setStyle(ActivityStyle(style));
+    if (ready_) saveTimer_.start();
+}
 void PetWindow::setMoodLevel(int level) {
     level = qBound(0, level, 2);
     if (level == moodLevel()) return;
@@ -411,7 +418,7 @@ bool PetWindow::writePreferences(const std::function<void(Preferences &)> &chang
     preferences.size = width(); preferences.position = pos(); preferences.hasPosition = true;
     preferences.onTop = windowFlags().testFlag(Qt::WindowStaysOnTopHint);
     preferences.muted = muted_; preferences.sound = sound_; preferences.bubbles = bubbles_;
-    preferences.ambient = ambientLevel(); preferences.mood = moodLevel(); preferences.turns = mood_.turns();
+    preferences.ambient = ambientLevel(); preferences.activity = activityStyle(); preferences.mood = moodLevel(); preferences.turns = mood_.turns();
     preferences.touch = touchEnabled_; preferences.wander = wanderEnabled_; preferences.easterEggs = easterEggsEnabled(); preferences.birthday = birthday();
     preferences.eyeMinutes = wellness_.eyeMinutes(); preferences.waterMinutes = wellness_.waterMinutes();
     preferences.recap = recapEnabled_;
@@ -630,6 +637,17 @@ void PetWindow::showSettings() {
                         "and dozing off after about ten quiet minutes. Any agent activity ends it at once.");
     layout->addRow("&Idle animation", ambient);
     connect(ambient, &QComboBox::currentIndexChanged, this, &PetWindow::setAmbientLevel);
+    auto *activity = new QComboBox(dialog);
+    activity->addItems({"Classic (one loop per activity, as before)",
+                        "Subtle (calm variations; stays at the desk for short thinking pauses)",
+                        "Playful (also pen spinning and small reactions)"});
+    activity->setCurrentIndex(activityStyle()); activity->setAccessibleName("Active animation");
+    activity->setToolTip("How the pet thinks, reads and works while an agent is busy: alternate loops now and then,\n"
+                         "staying at its desk through short thinking pauses, and (Playful) small reactions.\n"
+                         "Independent of Idle animation. Requests, errors and finished turns still show at once:\n"
+                         "it never delays alerts.");
+    layout->addRow("&Active animation", activity);
+    connect(activity, &QComboBox::currentIndexChanged, this, &PetWindow::setActivityStyle);
     auto *wander = new QCheckBox("Walk, crawl and climb along the screen after a while", dialog);
     wander->setChecked(wanderEnabled_); wander->setAccessibleName("Wandering");
     wander->setToolTip("After about four quiet minutes the idle pet sometimes walks or crawls along the screen, and\n"

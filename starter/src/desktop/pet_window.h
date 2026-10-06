@@ -1,4 +1,5 @@
 #pragma once
+#include "animation/activity.h"
 #include "animation/ambient.h"
 #include "animation/easter_eggs.h"
 #include "animation/mood.h"
@@ -28,6 +29,9 @@ public:
     Ambient &ambient() { return ambient_; }
     void setAmbientLevel(int level); // Preferences::Ambient; persisted.
     int ambientLevel() const { return int(ambient_.level()); }
+    Activity &activity() { return activity_; }
+    void setActivityStyle(int style); // Preferences::Activity; persisted.
+    int activityStyle() const { return int(activity_.style()); }
     Mood &mood() { return mood_; }
     void setMoodLevel(int level); // Preferences::Mood; persisted.
     int moodLevel() const { return int(mood_.setting()); }
@@ -147,6 +151,7 @@ private:
     updates::Controller *updates_ = nullptr;
     Player player_;
     Ambient ambient_;
+    Activity activity_;
     Mood mood_;
     EasterEggs eggs_;
     Wellness wellness_;

@@ -56,6 +56,7 @@ Preferences PreferencesStore::load() {
         || (object.contains("muted") && !object["muted"].isBool()) || (object.contains("sound") && !object["sound"].isBool())
         || (object.contains("bubbles") && !integer(object["bubbles"], 0, 2))
         || (object.contains("ambient") && !integer(object["ambient"], 0, 2))
+        || (object.contains("activity") && !integer(object["activity"], 0, 2))
         || (object.contains("mood") && !integer(object["mood"], 0, 2))
         || (object.contains("turns") && !integer(object["turns"], 0, 2147483647))
         || (object.contains("touch") && !object["touch"].isBool())
@@ -77,6 +78,7 @@ Preferences PreferencesStore::load() {
     result.sound = object["sound"].toBool();
     result.bubbles = object["bubbles"].toInt(Preferences::RequestsAndErrors);
     result.ambient = object["ambient"].toInt(Preferences::AmbientSubtle);
+    result.activity = object["activity"].toInt(Preferences::ActivityPlayful);
     result.mood = object["mood"].toInt(Preferences::MoodFull);
     result.turns = object["turns"].toInt(0);
     result.touch = object["touch"].toBool(true);
@@ -98,7 +100,7 @@ bool PreferencesStore::save(const Preferences &preferences) {
     QSaveFile file(path_);
     if (!file.open(QIODevice::WriteOnly)) { error_ = file.errorString(); return false; }
     QJsonObject object{{"version", 1}, {"size", preferences.size}, {"on_top", preferences.onTop},
-                       {"muted", preferences.muted}, {"sound", preferences.sound}, {"bubbles", preferences.bubbles}, {"ambient", preferences.ambient},
+                       {"muted", preferences.muted}, {"sound", preferences.sound}, {"bubbles", preferences.bubbles}, {"ambient", preferences.ambient}, {"activity", preferences.activity},
                        {"mood", preferences.mood}, {"turns", preferences.turns}, {"touch", preferences.touch},
                        {"wander", preferences.wander}, {"easter_eggs", preferences.easterEggs}, {"recap", preferences.recap},
                        {"eye_minutes", preferences.eyeMinutes}, {"water_minutes", preferences.waterMinutes},
