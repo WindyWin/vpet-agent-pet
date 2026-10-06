@@ -1375,6 +1375,10 @@ private slots:
         const auto playing = player.requestedState(); locked = true;
         QTRY_COMPARE_WITH_TIMEOUT(monitor.restLeft(), 0, 2500);
         QVERIFY(!monitor.note().isVisible()); QCOMPARE(player.requestedState(), playing);
+        // A pointer moved behind the lock is not the user back: after unlock, only a new move counts.
+        pointer += QPoint(5, 0); t += 30000; monitor.update(t); locked = false;
+        t += 30000; monitor.update(t); QVERIFY(!window.wellness().present(t));
+        pointer += QPoint(1, 0); t += 30000; monitor.update(t); QVERIFY(window.wellness().present(t));
     }
     void wellnessPreference() {
         QTemporaryDir directory; const auto path = directory.path() + "/preferences.json";

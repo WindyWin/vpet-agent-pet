@@ -83,8 +83,12 @@ void Monitor::update(qint64 now) {
     if (!active_) return;
     sessions_.expire(now);
     // A locked screen is a break: both timers start over, nothing counts until it is unlocked, and a
-    // reminder or countdown on screen goes away.
-    if (locked && locked()) { window_.wellness().reset(); dropReminder(); }
+    // reminder or countdown on screen goes away. The pointer is followed, so a move behind the lock does
+    // not count as the user coming back.
+    if (locked && locked()) {
+        window_.wellness().reset(); dropReminder();
+        if (pointer) lastPointer_ = pointer();
+    }
     else if (pointer) {
         const auto position = pointer();
         if (position != lastPointer_) { lastPointer_ = position; window_.wellness().activity(now); }
