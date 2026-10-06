@@ -37,7 +37,8 @@ qt_add_library(pet_core STATIC
 target_include_directories(pet_core PUBLIC src)
 target_link_libraries(pet_core PUBLIC Qt6::Core pet_host_capture)
 qt_add_library(pet_animation STATIC
-    src/animation/player.cpp src/animation/ambient.cpp src/animation/mood.cpp src/animation/easter_eggs.cpp)
+    src/animation/player.cpp src/animation/ambient.cpp src/animation/activity.cpp src/animation/mood.cpp
+    src/animation/easter_eggs.cpp)
 target_include_directories(pet_animation PUBLIC src)
 target_link_libraries(pet_animation PUBLIC Qt6::Gui)
 

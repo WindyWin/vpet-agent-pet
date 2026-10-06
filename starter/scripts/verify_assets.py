@@ -1,13 +1,18 @@
 #!/usr/bin/env python3
-"""Verify the selected VPet artwork and animation catalog after copying the folder."""
+"""Verify the selected VPet artwork and animation catalog after copying the folder.
+
+    python3 scripts/verify_assets.py               # the bundled pack and its catalog
+    python3 scripts/verify_assets.py other.json    # another catalog against the same pack
+"""
 import hashlib
 import json
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 ASSETS = ROOT / 'assets/vpet'
 manifest = json.loads((ASSETS / 'manifest.json').read_text())
-animations = json.loads((ASSETS / 'animations.json').read_text())
+animations = json.loads((Path(sys.argv[1]) if len(sys.argv) > 1 else ASSETS / 'animations.json').read_text())
 available = json.loads((ASSETS / 'available-animations.json').read_text())
 errors = []
 expected = set()
@@ -87,8 +92,6 @@ for mood, states in moods.items():
             if not count(choice.get('weight')):
                 errors.append(f'Invalid mood weight: {mood}/{state}')
             used.update(paths)
-if used != bundled_sequences:
-    errors.append('State, variant and mood maps do not cover the bundled sequences')
 owners = {}
 for state, paths in animations['states'].items():
     for path in paths:
@@ -102,9 +105,6 @@ for states in moods.values():
         for choice in choices:
             for path in choice.get('sequences', []):
                 owners.setdefault(path, set()).add(state)
-for sequence in animations['sequences']:
-    if sequence.get('state') not in owners.get(sequence['path'], set()):
-        errors.append(f'Sequence names no state that uses it: {sequence["path"]}')
 
 def ends_itself(state):
     policy = animations.get('playback', {}).get(state, {})
@@ -197,6 +197,69 @@ if 'moves' in animations:
                     or any(side not in ('left', 'top', 'right', 'bottom') or not number(value, 0, 10 * scale)
                            for side, value in sides.items())):
                 errors.append(f'Invalid move {key}: {state}')
+
+# Activity decoration (alternate loops, reactions, desk continuity) for states that end only when asked.
+# A sequence it plays counts as used by, and owned by, the state it decorates.
+touch = animations.get('touch', {})
+touch_states = ({region.get('state') for region in touch.get('regions', [])} | set(touch.get('fall', {}).values())
+                | {edge.get('state') for edge in touch.get('edge', {}).values()})
+activity = animations.get('activity', {})
+
+
+def claim(state, path):
+    if path not in bundled_sequences:
+        return False
+    used.add(path)
+    owners.setdefault(path, set()).add(state)
+    return True
+
+
+def pool(state, choices, styled=False):
+    if not isinstance(choices, list) or not choices:
+        return False
+    valid = True
+    for choice in choices:
+        if not isinstance(choice, dict):
+            return False
+        valid = claim(state, choice.get('sequence')) and valid
+        valid = valid and count(choice.get('weight')) and choice['weight'] <= 1000
+        valid = valid and (choice.get('style', 'subtle') in ('subtle', 'playful') if styled else 'style' not in choice)
+    return valid
+
+
+for state, entry in activity.items():
+    if not held(state) or state in touch_states or not isinstance(entry, dict):
+        errors.append(f'Activity must decorate a phased state that ends only when asked: {state}')
+        continue
+    others = set(activity) - {state}
+    valid = 'loops' not in entry or pool(state, entry['loops'], styled=True)
+    if 'enter' in entry:
+        enter = entry['enter']
+        valid = (valid and isinstance(enter, dict) and isinstance(enter.get('from'), list) and bool(enter['from'])
+                 and all(source in others for source in enter['from']) and pool(state, enter.get('choices')))
+    if 'exit' in entry:
+        leaving = entry['exit']
+        valid = (valid and isinstance(leaving, dict) and bool(leaving)
+                 and all(target in others and pool(state, choices) for target, choices in leaving.items()))
+    if 'linger' in entry:
+        linger = entry['linger']
+        valid = (valid and isinstance(linger, dict) and linger.get('to') in others
+                 and count(linger.get('max_s')) and linger['max_s'] <= 60
+                 and isinstance(linger.get('loop'), list) and bool(linger['loop'])
+                 and all(claim(state, path) for path in linger['loop'])
+                 and all(claim(state, linger[key]) for key in ('in', 'out') if key in linger))
+    if 'handover' in entry:
+        handover = entry['handover']
+        valid = (valid and isinstance(handover, dict) and bool(handover)
+                 and all(target in others and claim(state, path) for target, path in handover.items()))
+    if not valid:
+        errors.append(f'Invalid activity: {state}')
+
+if used != bundled_sequences:
+    errors.append('State, variant, mood and activity maps do not cover the bundled sequences')
+for sequence in animations['sequences']:
+    if sequence.get('state') not in owners.get(sequence['path'], set()):
+        errors.append(f'Sequence names no state that uses it: {sequence["path"]}')
 
 available_sequences = {sequence['path'] for sequence in available['sequences']}
 if len(bundled_sequences) != len(animations['sequences']) or len(available_sequences) != len(available['sequences']):

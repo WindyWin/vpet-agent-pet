@@ -6,9 +6,9 @@
   "source_commit": "6358445aa54587f9cd524264eaf17ef97bc826a8",
   "source_root": "VPet-Simulator.Windows/mod/0000_core/pet/vup",
   "bundled_catalog": "assets/vpet/animations.json",
-  "missing_sequence_count": 443,
-  "missing_frame_count": 4547,
-  "missing_size_bytes": 636691235,
+  "missing_sequence_count": 430,
+  "missing_frame_count": 4421,
+  "missing_size_bytes": 620888658,
   "sequences": [
     {
       "path": "Default/Happy/2",
@@ -2603,75 +2603,12 @@
       "timing_valid": true
     },
     {
-      "path": "Think/Happy/B_3",
-      "category": "Think",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Think/Happy/B_3",
-      "frame_count": 9,
-      "total_duration_ms": 1125,
-      "size_bytes": 1288453,
-      "timing_valid": true
-    },
-    {
-      "path": "Think/Happy/B_4",
-      "category": "Think",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Think/Happy/B_4",
-      "frame_count": 9,
-      "total_duration_ms": 1125,
-      "size_bytes": 1284632,
-      "timing_valid": true
-    },
-    {
       "path": "Think/Happy/B_5",
       "category": "Think",
       "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Think/Happy/B_5",
       "frame_count": 9,
       "total_duration_ms": 1125,
       "size_bytes": 1327720,
-      "timing_valid": true
-    },
-    {
-      "path": "Think/Happy/C_2",
-      "category": "Think",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Think/Happy/C_2",
-      "frame_count": 2,
-      "total_duration_ms": 250,
-      "size_bytes": 298296,
-      "timing_valid": true
-    },
-    {
-      "path": "Think/Nomal/B_2",
-      "category": "Think",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Think/Nomal/B_2",
-      "frame_count": 9,
-      "total_duration_ms": 1125,
-      "size_bytes": 1316099,
-      "timing_valid": true
-    },
-    {
-      "path": "Think/Nomal/B_3",
-      "category": "Think",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Think/Nomal/B_3",
-      "frame_count": 9,
-      "total_duration_ms": 1125,
-      "size_bytes": 1323264,
-      "timing_valid": true
-    },
-    {
-      "path": "Think/Nomal/B_4",
-      "category": "Think",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Think/Nomal/B_4",
-      "frame_count": 9,
-      "total_duration_ms": 1125,
-      "size_bytes": 1267402,
-      "timing_valid": true
-    },
-    {
-      "path": "Think/Nomal/B_5",
-      "category": "Think",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Think/Nomal/B_5",
-      "frame_count": 9,
-      "total_duration_ms": 1125,
-      "size_bytes": 1304851,
       "timing_valid": true
     },
     {
@@ -3287,33 +3224,6 @@
       "timing_valid": true
     },
     {
-      "path": "WORK/Study/B_2_Nomal",
-      "category": "WORK",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/WORK/Study/B_2_Nomal",
-      "frame_count": 10,
-      "total_duration_ms": 1375,
-      "size_bytes": 913378,
-      "timing_valid": true
-    },
-    {
-      "path": "WORK/Study/B_3_Nomal",
-      "category": "WORK",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/WORK/Study/B_3_Nomal",
-      "frame_count": 3,
-      "total_duration_ms": 1500,
-      "size_bytes": 271195,
-      "timing_valid": true
-    },
-    {
-      "path": "WORK/Study/B_4_Nomal",
-      "category": "WORK",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/WORK/Study/B_4_Nomal",
-      "frame_count": 1,
-      "total_duration_ms": 1250,
-      "size_bytes": 91522,
-      "timing_valid": true
-    },
-    {
       "path": "WORK/StudyPaint/Happy/A",
       "category": "WORK",
       "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/WORK/StudyPaint/Happy/A",
@@ -3800,15 +3710,6 @@
       "timing_valid": true
     },
     {
-      "path": "WORK/WorkONE/B/Nomal/1",
-      "category": "WORK",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/WORK/WorkONE/B/Nomal/1",
-      "frame_count": 38,
-      "total_duration_ms": 4750,
-      "size_bytes": 4505478,
-      "timing_valid": true
-    },
-    {
       "path": "WORK/WorkONE/B/Nomal/2",
       "category": "WORK",
       "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/WORK/WorkONE/B/Nomal/2",
@@ -3836,30 +3737,12 @@
       "timing_valid": true
     },
     {
-      "path": "WORK/WorkONE/B_2_Nomal",
-      "category": "WORK",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/WORK/WorkONE/B_2_Nomal",
-      "frame_count": 8,
-      "total_duration_ms": 1500,
-      "size_bytes": 858840,
-      "timing_valid": true
-    },
-    {
       "path": "WORK/WorkONE/Happy/A",
       "category": "WORK",
       "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/WORK/WorkONE/Happy/A",
       "frame_count": 10,
       "total_duration_ms": 1250,
       "size_bytes": 1168385,
-      "timing_valid": true
-    },
-    {
-      "path": "WORK/WorkONE/Happy/B",
-      "category": "WORK",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/WORK/WorkONE/Happy/B",
-      "frame_count": 10,
-      "total_duration_ms": 1625,
-      "size_bytes": 1079167,
       "timing_valid": true
     },
     {

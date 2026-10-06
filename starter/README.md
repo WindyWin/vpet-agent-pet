@@ -91,6 +91,18 @@ hidden pet does nothing. Preview any fidget from the right-click menu → More �
 (`fidget_*`). The catalog sections behind this are described in
 [the architecture notes](docs/architecture.md#idle-animation).
 
+## Active animation
+
+While an agent thinks, reads or works, the pet no longer repeats one short loop.
+Settings → **Active animation** chooses how: **Classic** (one loop per activity, as
+before), **Subtle** (a calmer variation every 10–18 seconds; a short thinking pause
+between tools keeps it at its desk, and switching between reading and working swaps
+book and pen without getting up) or **Playful** (the default: variations every 6–12
+seconds, pen spinning, and now and then a small happy reaction when it gets to work).
+It is independent of Idle animation. Requests, errors, finished turns, pausing and
+dragging always take over at once. See
+[the architecture notes](docs/architecture.md#active-animation).
+
 ## Mood
 
 The pet also keeps a mood from what your agents do. A run of finished turns makes it
