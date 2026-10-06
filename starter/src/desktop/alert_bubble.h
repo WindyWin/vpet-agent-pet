@@ -41,13 +41,16 @@ class NoteBubble : public QWidget {
     Q_OBJECT
 public:
     explicit NoteBubble(QWidget *parent = nullptr);
+    /// Shows text beside the pet for seven seconds; optional details appear on the first click.
     void say(const QString &text, const QRect &pet, const QVector<QRect> &screens, const QString &details = {});
     QString text() const { return label_->text(); }
+    /// Returns whether the next click will expand the note instead of dismissing it.
     bool hasDetails() const { return !details_.isEmpty(); }
 protected:
     void paintEvent(QPaintEvent *) override;
     void mouseReleaseEvent(QMouseEvent *) override;
 private:
+    /// Displays text using the saved placement and dismisses it after ms milliseconds.
     void present(const QString &text, int ms);
     QLabel *label_;
     QTimer hide_;

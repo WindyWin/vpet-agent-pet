@@ -73,6 +73,7 @@ void AlertBubble::paintEvent(QPaintEvent *) {
     painter.setPen(Qt::NoPen); painter.setBrush(accent_);
     painter.drawEllipse(QPointF(14, body.center().y()), 5, 5);
 }
+/// Creates a non-activating, plain-text bubble with a single-shot dismissal timer.
 NoteBubble::NoteBubble(QWidget *parent) : QWidget(parent) {
     setWindowFlags(Qt::Tool | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::WindowDoesNotAcceptFocus |
                    Qt::X11BypassWindowManagerHint);
@@ -89,12 +90,14 @@ NoteBubble::NoteBubble(QWidget *parent) : QWidget(parent) {
     hide_.setSingleShot(true);
     connect(&hide_, &QTimer::timeout, this, &QWidget::hide);
 }
+/// Shows text beside the pet for seven seconds, with optional details on the first click.
 void NoteBubble::say(const QString &text, const QRect &pet, const QVector<QRect> &screens, const QString &details) {
     details_ = details; pet_ = pet; screens_ = screens;
     setCursor(details.isEmpty() ? Qt::ArrowCursor : Qt::PointingHandCursor);
     setToolTip(details.isEmpty() ? QString() : "Click for more");
     present(text, 7000);
 }
+/// Places text on the stored pet screen and restarts dismissal after ms milliseconds.
 void NoteBubble::present(const QString &text, int ms) {
     label_->setText(text);
     setAccessibleDescription(text);
@@ -104,6 +107,7 @@ void NoteBubble::present(const QString &text, int ms) {
     move(AlertBubble::placement(pet_, size(), screen));
     show(); raise(); hide_.start(ms);
 }
+/// Shows pending details for fifteen seconds, or hides the bubble if none remain.
 void NoteBubble::mouseReleaseEvent(QMouseEvent *) {
     if (details_.isEmpty()) { hide(); return; }
     const auto details = details_; details_.clear();

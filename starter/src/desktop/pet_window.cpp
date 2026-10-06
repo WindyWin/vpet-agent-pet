@@ -45,6 +45,7 @@ static void drawBadge(QPainter &painter, const QRect &badge, const QColor &color
     painter.drawText(badge, Qt::AlignCenter, text);
     painter.restore();
 }
+/// Initializes pet controls and animations from preferences, or defaults when persistence is disabled.
 PetWindow::PetWindow(QWidget *parent, const QString &path, bool persist)
     : QWidget(parent), player_(this), ambient_(player_, this), mood_(player_, this), eggs_(player_, this), store_(path), menu_(this), tray_(this), persist_(persist) {
     const auto preferences = persist_ ? store_.load() : Preferences{};
@@ -265,12 +266,15 @@ void PetWindow::setWanderEnabled(bool enabled) {
     if (!enabled && walking()) player_.select("idle", true); // Stops where it is.
     if (ready_) saveTimer_.start();
 }
+/// Sets recap inclusion in go-home reminders and schedules a preference save when ready.
 void PetWindow::setRecapEnabled(bool enabled) {
     if (enabled == recapEnabled_) return;
     recapEnabled_ = enabled;
     if (ready_) saveTimer_.start();
 }
+/// Returns recap.json beside preferences, or an empty path when persistence is disabled.
 QString PetWindow::recapPath() const { return persist_ ? QFileInfo(store_.path()).absolutePath() + "/recap.json" : QString(); }
+/// Displays a note with no icon if the system tray icon is visible.
 void PetWindow::showTrayMessage(const QString &title, const QString &text) {
     if (tray_.isVisible()) tray_.showMessage(title, text, QSystemTrayIcon::NoIcon);
 }
@@ -381,6 +385,7 @@ void PetWindow::setWhenIdle(IdlePolicy policy) {
     writePreferences([policy](Preferences &preferences) { preferences.whenIdle = policy; });
 }
 bool PetWindow::savePreferences() { return writePreferences([](Preferences &) {}); }
+/// Reloads startup settings, merges UI state and change, then saves; returns true for disabled or unready persistence.
 bool PetWindow::writePreferences(const std::function<void(Preferences &)> &change) {
     if (!persist_ || !ready_) return true;
     // Start from the file: `agent-pet autostart` may have changed the startup keys meanwhile.
@@ -563,6 +568,7 @@ void PetWindow::setUpdates(updates::Controller *controller) {
     auto *action = menu_.addAction(controller->indicator(), this, [this, controller] { controller->showSettings(this); });
     connect(controller, &updates::Controller::changed, action, [controller, action] { action->setText(controller->indicator()); });
 }
+/// Creates the settings dialog with live preference controls, or raises the existing dialog.
 void PetWindow::showSettings() {
     if (settingsDialog_) { settingsDialog_->show(); settingsDialog_->raise(); return; }
     auto *dialog = new QDialog(this); settingsDialog_ = dialog;

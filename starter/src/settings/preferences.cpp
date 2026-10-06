@@ -32,6 +32,7 @@ bool Preferences::validBirthday(const QString &monthDay) {
 PreferencesStore::PreferencesStore(QString path) : path_(std::move(path)) {
     if (path_.isEmpty()) path_ = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/preferences.json";
 }
+/// Loads validated preferences with defaults for omitted options; unreadable or invalid files disable writes.
 Preferences PreferencesStore::load() {
     Preferences result;
     QFile file(path_);
@@ -86,6 +87,7 @@ Preferences PreferencesStore::load() {
     result.whenIdle = whenIdle;
     return result;
 }
+/// Atomically writes preferences unless disabled; returns false on directory creation or write failure.
 bool PreferencesStore::save(const Preferences &preferences) {
     if (!writable_) return false;
     if (!QDir().mkpath(QFileInfo(path_).absolutePath())) {

@@ -6,6 +6,7 @@
 #include <algorithm>
 
 namespace pet {
+/// Loads the recap, starts session polling, and connects pet controls and delayed recap saves.
 Monitor::Monitor(PetWindow &window, std::shared_ptr<hosts::FocusService> focus)
     : window_(window), focus_(std::move(focus)), recapStore_(window.recapPath()), recap_(recapStore_.load()) {
     if (focus_) {
@@ -46,6 +47,7 @@ void Monitor::listen(std::unique_ptr<Receiver> receiver) {
     receiver->received = [this](const Event &event) { apply(event, QDateTime::currentMSecsSinceEpoch()); };
     receiver_ = std::move(receiver);
 }
+/// Applies an event and updates recap and UI state; returns false when inactive or rejected.
 bool Monitor::apply(const Event &event, qint64 now) {
     if (!active_ || !sessions_.apply(event, now)) return false;
     {
@@ -101,9 +103,11 @@ void Monitor::update(qint64 now) {
         lastAggregate_ = state;
     }
 }
+/// Shows a pet remark with optional details that expand on the first click.
 void Monitor::say(const QString &text, const QString &details) {
     note_.say(text, window_.figure(), window_.screenAreas(), details);
 }
+/// Shows today's recap in a bubble or, for a hidden pet, the tray; does nothing when stopped.
 void Monitor::showRecap() {
     if (!active_) return;
     const auto today = recap_.day(QDate::currentDate());
@@ -111,7 +115,7 @@ void Monitor::showRecap() {
     if (window_.petHidden()) window_.showTrayMessage("Today's recap", Recap::breakdown(today));
     else say(Recap::summary(today), today.turns ? Recap::breakdown(today) : QString());
 }
-// Monday blues, the go-home nudge and bedtime: said once each day, and kept for later while the pet is hidden.
+/// Consumes visible daily reminders; unless muted, speaks them and adds eligible go-home recaps.
 void Monitor::remind() {
     if (window_.petHidden()) return;
     const auto reminder = window_.eggs().reminder();
@@ -195,6 +199,7 @@ bool Monitor::focusSession(const QString &key) {
 void Monitor::focusCurrent() {
     if (const auto *alert = queue_.current()) focusSession(QString(alert->session)); // A copy: the queue re-syncs.
 }
+/// Stops monitoring, hides transient UI, releases the receiver, and attempts any pending recap save.
 void Monitor::stop() {
     active_ = false; timer_.stop(); receiver_.reset(); bubble_.hide(); note_.hide(); list_.hide();
     if (recapTimer_.isActive()) { recapTimer_.stop(); recapStore_.save(recap_); }

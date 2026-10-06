@@ -156,6 +156,7 @@ private slots:
         QVERIFY(state.apply(at("prompt", 6, now + 90004), now + 90004));
         QVERIFY(state.apply(at("turn_finished", 7, now + 95004), now + 95004)); QCOMPARE(record().lastTurnMs, qint64(5000));
     }
+    /// Verifies daily counts, approval waits, summary wording and retention of the newest fourteen days.
     void dailyRecap() {
         pet::Sessions state; pet::Recap recap;
         const QDate today(2026, 10, 6), tomorrow(2026, 10, 7);
@@ -200,6 +201,7 @@ private slots:
         QVERIFY(feed("error", "b", {}, asked + 100, today));
         QCOMPARE(recap.days().size(), pet::Recap::keepDays); QCOMPARE(recap.day(today).errors, 0);
     }
+    /// Verifies recap persistence, exclusion of paths and providers, invalid-file fallback and disabled saves.
     void recapStore() {
         QTemporaryDir directory; const auto path = directory.path() + "/data/recap.json";
         pet::RecapStore store(path);

@@ -30,8 +30,9 @@ public:
     AlertBubble &bubble() { return bubble_; }
     NoteBubble &note() { return note_; }
     SessionList &sessionList() { return list_; }
+    /// Returns the mutable daily counters owned by this monitor.
     Recap &recap() { return recap_; }
-    // Says today's recap in the speech bubble; a click on it shows the per-project breakdown.
+    /// Shows today's recap in a bubble or the tray when hidden; does nothing when stopped.
     void showRecap();
     void dismiss();
     void toggleSessions();
@@ -46,6 +47,7 @@ public:
 private:
     void refreshAlerts();
     void remind();
+    /// Shows a pet remark with optional details revealed on the first click.
     void say(const QString &text, const QString &details = {});
     bool shown(const Alert &alert) const;
     PetWindow &window_;

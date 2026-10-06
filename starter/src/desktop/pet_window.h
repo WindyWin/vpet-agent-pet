@@ -36,10 +36,13 @@ public:
     bool easterEggsEnabled() const { return eggs_.enabled(); }
     void setBirthday(const QString &monthDay); // "MM-dd" or empty; persisted.
     QString birthday() const { return eggs_.birthday(); }
-    // Today's recap rides on the go-home reminder; persisted. The menu shows it either way.
+    /// Sets and persists recap inclusion in go-home reminders; the menu recap remains available.
     void setRecapEnabled(bool enabled);
+    /// Returns whether go-home reminders may include today's recap.
     bool recapEnabled() const { return recapEnabled_; }
+    /// Returns recap.json beside preferences, or an empty path when persistence is disabled.
     QString recapPath() const; // recap.json beside the preferences; empty when nothing is persisted.
+    /// Displays a note if the system tray icon is visible.
     void showTrayMessage(const QString &title, const QString &text); // For a hidden pet's notes.
     // Petting, throwing and hiding at a screen edge; persisted. Off, the pet only drags.
     void setTouchEnabled(bool enabled);
@@ -109,6 +112,7 @@ signals:
     void quitRequested();
     void presenceChanged(); // The pet was hidden or shown.
     void sessionsRequested(); // A click on the pet (press and release without moving it), or the menu.
+    /// Signals that the user selected Today's recap in the menu.
     void recapRequested(); // "Today's recap" in the menu.
 protected:
     bool event(QEvent *) override;

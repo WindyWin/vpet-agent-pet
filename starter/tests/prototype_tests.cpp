@@ -1172,6 +1172,7 @@ private slots:
         QCOMPARE(player.state(), QString("dance")); monitor.update(now + 14); QCOMPARE(player.state(), QString("dance"));
         QCOMPARE(draws.unexpected, 0); QCOMPARE(eggDraws.unexpected, 0);
     }
+    /// Verifies recap display and expansion, reminder preferences, restart persistence and the settings control.
     void dailyRecap() {
         QTemporaryDir directory; const auto path = directory.path() + "/preferences.json";
         const qint64 now = QDateTime::currentMSecsSinceEpoch();

@@ -9,18 +9,22 @@
 #include <cmath>
 
 namespace pet {
+/// Returns a cleaned path's final component, the cleaned path if unnamed, or Unknown project if empty.
 static QString projectFolder(const QString &path) {
     if (path.isEmpty()) return "Unknown project";
     const auto cleaned = QDir::cleanPath(path);
     const auto name = QFileInfo(cleaned).fileName();
     return name.isEmpty() ? cleaned : name;
 }
+/// Formats a count with the singular word only when n equals one.
 static QString plural(qint64 n, const QString &one, const QString &many) { return QString("%1 %2").arg(n).arg(n == 1 ? one : many); }
+/// Formats milliseconds as whole minutes, adding hours for durations of at least one hour.
 static QString duration(qint64 ms) {
     const qint64 minutes = ms / 60000;
     if (minutes < 60) return QString("%1 min").arg(minutes);
     return minutes % 60 ? QString("%1 h %2 min").arg(minutes / 60).arg(minutes % 60) : QString("%1 h").arg(minutes / 60);
 }
+/// Finds or inserts a day within the newest keepDays entries; older overflow uses a discarded scratch day.
 RecapDay &Recap::at(const QDate &date) {
     auto it = std::find_if(days_.begin(), days_.end(), [&](const RecapDay &d) { return d.date == date; });
     if (it != days_.end()) return *it;
@@ -31,10 +35,13 @@ RecapDay &Recap::at(const QDate &date) {
     return *days_.insert(std::upper_bound(days_.begin(), days_.end(), date,
                                           [](const QDate &d, const RecapDay &r) { return d < r.date; }), day);
 }
+/// Returns counters for date, or zero counters carrying that date when it is absent.
 RecapDay Recap::day(const QDate &date) const {
     for (const auto &d : days_) if (d.date == date) return d;
     RecapDay empty; empty.date = date; return empty;
 }
+/// Counts an accepted event on date using post-event session s; null ends pending waits without counting them.
+/// Returns true when counters are updated, including updates to a discarded older day.
 bool Recap::record(const Event &e, const Session *s, const QDate &date) {
     const auto k = e.provider + QChar(0x1f) + e.session;
     bool changed = false;
@@ -65,6 +72,7 @@ bool Recap::record(const Event &e, const Session *s, const QDate &date) {
     }
     return changed;
 }
+/// Formats a compact daily summary, or an empty-activity message when no turns, errors or approvals exist.
 QString Recap::summary(const RecapDay &d) {
     if (d.turns == 0 && d.errors == 0 && d.approvals == 0) return "No agent work yet today.";
     QString text = "Today: " + plural(d.turns, "turn", "turns");
@@ -77,6 +85,7 @@ QString Recap::summary(const RecapDay &d) {
     if (d.longestTurnMs >= 60000) parts << "longest run " + duration(d.longestTurnMs);
     return parts.join(" · ");
 }
+/// Lists projects by descending turn count, then errors, approvals, wait time and longest run.
 QString Recap::breakdown(const RecapDay &d) {
     QVector<QPair<QString, int>> projects;
     for (auto it = d.projects.begin(); it != d.projects.end(); ++it) projects.append({it.key(), it.value()});
@@ -92,6 +101,7 @@ QString Recap::breakdown(const RecapDay &d) {
     if (!totals.isEmpty()) lines << totals.join(" · ");
     return lines.join('\n');
 }
+/// Serializes retained dates, counters and project labels as version 1 JSON, omitting pending waits.
 QJsonObject Recap::toJson() const {
     QJsonArray days;
     for (const auto &d : days_) {
@@ -104,6 +114,7 @@ QJsonObject Recap::toJson() const {
     }
     return {{"version", 1}, {"days", days}};
 }
+/// Validates version 1 JSON and replaces recap on success; returns false without modifying it on failure.
 bool Recap::fromJson(const QJsonObject &object, Recap &recap) {
     auto count = [](const QJsonValue &value, double high, qint64 &out) {
         const double n = value.toDouble(-1);
@@ -138,6 +149,7 @@ bool Recap::fromJson(const QJsonObject &object, Recap &recap) {
     recap = result;
     return true;
 }
+/// Loads validated counters, or returns an empty recap for an empty path, unreadable, oversized or invalid file.
 Recap RecapStore::load() const {
     Recap recap;
     QFile file(path_);
@@ -145,6 +157,7 @@ Recap RecapStore::load() const {
     Recap::fromJson(QJsonDocument::fromJson(file.readAll()).object(), recap);
     return recap;
 }
+/// Creates the parent directory and atomically writes recap; returns false for an empty path or write failure.
 bool RecapStore::save(const Recap &recap) const {
     if (path_.isEmpty() || !QDir().mkpath(QFileInfo(path_).absolutePath())) return false;
     QSaveFile file(path_);

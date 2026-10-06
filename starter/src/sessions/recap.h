@@ -22,18 +22,23 @@ class Recap {
 public:
     static constexpr int keepDays = 14, maxProjects = 64;
     static constexpr qint64 longWaitMs = 10 * 60 * 1000;
-    // Counts an accepted event; `session` is its record after the event, or null once it ended.
-    // True when a counter changed.
+    /// Counts an accepted event using its post-event session, or null after it ends.
+    /// Returns true when counters are updated, even for a day too old to retain.
     bool record(const Event &event, const Session *session, const QDate &day);
+    /// Returns counters for date, or zero counters carrying that date when it is absent.
     RecapDay day(const QDate &date) const; // Empty counters for a day without any.
+    /// Returns retained days in ascending date order, with at most keepDays entries.
     const QVector<RecapDay> &days() const { return days_; }
-    // "Today: 38 turns across 3 projects · 2 approvals waited 10+ min · longest run 22 min"
+    /// Formats today's counts and notable durations as a compact speech-bubble summary.
     static QString summary(const RecapDay &day);
-    // A few lines: turns per project, busiest first, then errors, approvals and the longest run.
+    /// Lists turns per project, busiest first, then errors, approvals and the longest run.
     static QString breakdown(const RecapDay &day);
+    /// Serializes retained daily counters as version 1 JSON; pending approval waits are omitted.
     QJsonObject toJson() const;
+    /// Replaces recap with validated version 1 JSON; returns false and leaves it unchanged on failure.
     static bool fromJson(const QJsonObject &object, Recap &recap); // False leaves `recap` unchanged.
 private:
+    /// Finds or inserts a retained day, using a scratch day if date predates a full history.
     RecapDay &at(const QDate &date);
     QVector<RecapDay> days_; // Oldest first, at most `keepDays`.
     RecapDay discarded_;
@@ -42,9 +47,13 @@ private:
 // recap.json beside preferences.json, written atomically. Only the pet writes it.
 class RecapStore {
 public:
+    /// Uses path for recap storage; an empty path disables loading and saving.
     explicit RecapStore(QString path) : path_(std::move(path)) {}
+    /// Returns stored counters, or an empty recap if the file is unavailable, oversized or invalid.
     Recap load() const; // Empty when missing or invalid; the next save replaces an invalid file.
+    /// Atomically writes recap, creating parent directories; returns false if disabled or unsuccessful.
     bool save(const Recap &recap) const;
+    /// Returns the configured recap file path, which may be empty to disable persistence.
     QString path() const { return path_; }
 private:
     QString path_;
