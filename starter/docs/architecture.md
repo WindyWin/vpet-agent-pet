@@ -966,6 +966,10 @@ a real desktop, and CI on Qt 6.5.3.
   and the bundled binary reports `agent-pet 0.10.0` and "Update HTTPS runtime:
   available". The first runs caught a compile error, an offscreen test reading the
   hardware button, and a test socket path over the 104-byte macOS limit.
+- macOS disk image: CI run 114 built a 149 MiB
+  `agent-pet-0.10.0-macos-universal.dmg` beside the 146 MiB zip; `hdiutil verify`
+  passed and the image, mounted read-only, held exactly the app, `INSTALL.txt` and
+  the `Applications` link, with a valid signature and the expected version.
 - Not yet verified by hand on a Mac: the pet window over other apps and full-screen
   spaces, the menu bar icon, dragging, login start, and hooks from Terminal, iTerm2
   and VS Code.
