@@ -337,7 +337,7 @@ active time with time passed in, and `Monitor` drives it:
   `prompt` events are the user's own; other agent events count only while the user was
   seen within five minutes, so an agent working for an absent user pauses and then
   resets the timers. While the screen is locked nothing counts, no reminder shows and
-  both timers start over (`Wellness::reset`):
+  both timers start over until the user is seen again (`Wellness::reset`):
   `platform::ScreenLock` (`pet_native`, `src/platform/desktop/screensaver/`) follows
   the `ActiveChanged` signal of `org.freedesktop.ScreenSaver` and
   `org.gnome.ScreenSaver` after one asynchronous `GetActive`, and `main.cpp` hands it

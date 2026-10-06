@@ -1297,6 +1297,12 @@ private slots:
         for (qint64 at = t0 + 30000; at <= t0 + 20 * minute; at += 30000) agent.activity(at, false);
         QCOMPARE(agent.eyesActiveMs(t0 + 4 * minute + 30000), 4 * minute + 30000);
         QCOMPARE(agent.eyesActiveMs(t0 + 20 * minute), qint64(0)); QCOMPARE(agent.due(t0 + 20 * minute), QString());
+        // A reset (the screen was locked) also forgets the user: agent events alone do not restart it.
+        pet::Wellness locked; locked.activity(t0); locked.activity(t0 + 30000); locked.reset();
+        QVERIFY(!locked.present(t0 + 30000));
+        locked.activity(t0 + minute, false); QCOMPARE(locked.eyesActiveMs(t0 + minute + 30000), qint64(0));
+        locked.activity(t0 + 2 * minute); locked.activity(t0 + 2 * minute + 30000, false);
+        QCOMPARE(locked.eyesActiveMs(t0 + 2 * minute + 30000), qint64(30000));
     }
     void monitorWellnessReminders() {
         QTemporaryDir directory;

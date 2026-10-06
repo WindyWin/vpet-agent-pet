@@ -37,8 +37,9 @@ public:
     QString due(qint64 now) const;
     // The reminder was given (shown, or answered some other way); its timer starts over.
     void given(const QString &reminder, qint64 now);
-    // A break seen some other way, such as a locked screen: both timers start over at the next activity.
-    void reset() { last_ = -1; eyes_ = water_ = 0; }
+    // A break seen some other way, such as a locked screen: both timers start over, and only the
+    // user's own activity starts them again.
+    void reset() { last_ = lastUser_ = -1; eyes_ = water_ = 0; }
 private:
     qint64 pending(qint64 now) const;
     qint64 counted(qint64 base, qint64 now) const;
