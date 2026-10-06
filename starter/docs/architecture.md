@@ -3,7 +3,8 @@
 Decision recorded 2026-10-04: C++17, Qt 6 Widgets, CMake and Ninja.
 Develop in this starter directory. No original VPet installation is used.
 
-Refactor in progress: [platform boundaries and session focus adapters](platform-refactor-plan.md).
+Platform extraction: [plan and completion criteria](platform-refactor-plan.md),
+[services and build registration](../src/platform/README.md).
 Phases 1–3 (host registry, focus service and desktop backends; see
 [session focus](#session-focus)) are implemented; IPC, startup, updater and build
 seams remain. It prepares extension points while retaining current Linux behavior;
@@ -237,7 +238,7 @@ hiding behind the screen edge was not used for danger because it would move the 
 
 The pet sums up the day's agent work in its `NoteBubble`: "Today: 38 turns across 3
 projects · 2 approvals waited 10+ min · longest run 22 min". `Recap`
-(`src/sessions/recap.*`, in `pet_events`) counts per local day from the events
+(`src/sessions/recap.*`, in `pet_core`) counts per local day from the events
 `Sessions` accepted, so duplicates and stale callbacks of an interrupted turn never
 count. `Monitor::apply` hands it each accepted event with the session's record after
 it, and the local date of arrival:
@@ -476,6 +477,13 @@ presentation stay unchanged in both cases. `tests/focus_tests.cpp` registers a
 test-only adapter and fake backends this way.
 
 ## Build and packaging
+
+The portable-core profile builds capture, focus contracts, state and animation
+without native implementations or application targets. The normal Linux profile
+adds headless services, native desktop backends, updates and UI. See the
+[platform target map](../src/platform/README.md#build-registration) and README
+for core configure/test commands. The full app fails clearly on unsupported OSes.
+
 
 See the starter README for exact commands. Build requirements: Linux C++17 compiler,
 CMake 3.22+, Ninja, Qt 6.5+ Widgets and Test development files. Packaging additionally
@@ -883,7 +891,7 @@ a real desktop, and CI on Qt 6.5.3.
 ## Application updates
 
 `src/updates/release.*` validates stable release metadata, exact repository asset
-URLs, platform selection and SHA-256 digests. `controller.*` owns asynchronous
+URLs and SHA-256 digests, using `platform/contracts/update_layout.h` for asset names. `controller.*` owns asynchronous
 Qt Network requests, bounded daily checks, persisted update preferences, UI and
 pending downloads. Hook, emit, integration and autostart commands return before
 constructing this service. Requests use TLS verification, size limits and idle

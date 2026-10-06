@@ -3,8 +3,12 @@
 #include "hosts/adapters/konsole.h"
 #include "hosts/adapters/tmux.h"
 #include "hosts/focus_service.h"
+#ifdef PET_TEST_LINUX
 #include "platform/linux/commands.h"
+#endif
 #include "platform/unsupported/unsupported.h"
+#include "sessions/state.h"
+#include <QJsonDocument>
 #include <QElapsedTimer>
 #include <QTest>
 
@@ -300,9 +304,23 @@ private slots:
         const auto result = service.focus(registry.capture(env, {12}), {});
         QCOMPARE(selector->selected, QStringList{"tab-4"}); QVERIFY(result.raised());
         QCOMPARE(result.backend, QString("test-desktop"));
+        // The same registration crosses v1 parsing and the unchanged session reducer.
+        auto wire = pet::hosts::toV1(registry.capture(env, {12}));
+        wire.insert("version", 1); wire.insert("provider", "claude");
+        wire.insert("session_id", "registered-host"); wire.insert("event_id", "one");
+        wire.insert("kind", "session_start"); wire.insert("timestamp_ms", 1700000000000LL);
+        pet::Event event; QString error;
+        const auto bytes = QJsonDocument(wire).toJson();
+        QVERIFY(!pet::Event::parse(bytes, event, error)); // Built-in registry rejects unknown IDs.
+        QVERIFY2(pet::Event::parse(bytes, event, error, registry), qPrintable(error));
+        pet::Sessions sessions;
+        QVERIFY(sessions.apply(event, event.timestamp));
+        QCOMPARE(sessions.records().first().host.adapter, QString("test-term"));
+        QVERIFY(service.focus(sessions.records().first().host, {}).raised());
         // Built-in hosts are unknown to this registry.
         QCOMPARE(service.focus({"konsole", {12}, {}, {}}, {}).activation, Outcome::Unsupported);
     }
+#ifdef PET_TEST_LINUX
     void linuxCommandRunner() {
         pet::platform::LinuxCommandRunner runner;
         QCOMPARE(runner.run({"agent-pet-no-such-program", {}, {}}), Outcome::Unsupported);
@@ -316,6 +334,7 @@ private slots:
         QCOMPARE(runner.run({"sleep", {"10"}, {}}), Outcome::TimedOut);
         QVERIFY(elapsed.elapsed() < 5000);
     }
+#endif
 };
 QTEST_GUILESS_MAIN(FocusTests)
 #include "focus_tests.moc"

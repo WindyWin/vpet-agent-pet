@@ -1,4 +1,4 @@
-#include "installer.h"
+#include "platform/contracts/update_install.h"
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>

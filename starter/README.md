@@ -19,7 +19,7 @@ The asset verifier uses only Python's standard library and works from any curren
 ## Build and run
 
 From this directory, install CMake 3.22+, Ninja, a C++17 compiler and Qt 6.5+
-Widgets/Test/Network, libarchive and X11 development packages, then run:
+Widgets/Test/Network/DBus, libarchive and X11 development packages, then run:
 
 ```bash
 python3 scripts/verify_assets.py
@@ -28,6 +28,18 @@ cmake --build build -j 4
 ctest --test-dir build --output-on-failure
 ./build/agent-pet
 ```
+
+To build only portable libraries and tests, without the application, native
+backends or Linux packaging (Qt Core/Gui/Test required):
+
+```bash
+cmake -S . -B build-core -DAGENT_PET_PORTABLE_CORE=ON
+cmake --build build-core -j 4
+ctest --test-dir build-core --output-on-failure
+```
+
+This checks platform boundaries; full application builds remain Linux-only.
+See [platform services and extension points](src/platform/README.md).
 
 Left-drag to move; the original Raise animation plays while dragging and returns
 to the prior state on release. Right-click for the running sessions, today's recap,

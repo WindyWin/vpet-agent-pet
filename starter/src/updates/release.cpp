@@ -1,6 +1,6 @@
 #include "release.h"
 #include "components.h"
-#include "version.h"
+#include "platform/contracts/update_layout.h"
 #include <QCoreApplication>
 #include <QCryptographicHash>
 #include <QDir>
@@ -30,8 +30,8 @@ bool parseRelease(const QJsonObject &object, const QString &architecture, Releas
     const QString base = "https://github.com/WindyWin/vpet-agent-pet/releases/";
     release.version = version;
     release.page = QUrl(base + "tag/" + tag);
-    const QString name = "agent-pet-" + version + "-linux-" + architecture + ".tar.gz";
-    const QString componentsName = "agent-pet-" + version + "-linux-" + architecture + "-components.json";
+    const QString name = platform::releaseArchive(version, architecture);
+    const QString componentsName = platform::componentsManifest(version, architecture);
     for (const auto &entry : object["assets"].toArray()) {
         const auto asset = entry.toObject();
         if (asset["name"].toString() == componentsName && asset["state"].toString() == "uploaded"
@@ -72,14 +72,5 @@ bool verifiedFile(const QString &path, const QString &digest, qint64 limit, QStr
     return true;
 }
 QString dataDirectory() { return QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/updates"; }
-QString installedPrefix() {
-    if (QStringLiteral(AGENT_PET_REVISION) == "local") return {};
-    const QString prefix = QFileInfo(QCoreApplication::applicationFilePath()).absoluteDir().absoluteFilePath("..");
-    const QString canonical = QFileInfo(prefix).canonicalFilePath();
-    QFile receipt(canonical + "/.agent-pet-install");
-    if (!receipt.open(QIODevice::ReadOnly) || receipt.size() > 65536 || !QFileInfo(canonical).isWritable()) return {};
-    if (!receipt.readAll().split('\n').contains(("prefix=" + canonical).toUtf8())) return {};
-    if (!QFileInfo(canonical + "/bin/agent-pet-updater").isExecutable()) return {};
-    return canonical;
-}
+QString installedPrefix() { return platform::managedInstallPrefix(); }
 }

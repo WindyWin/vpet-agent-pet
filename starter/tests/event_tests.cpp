@@ -9,10 +9,12 @@
 #include <QProcess>
 #include <QDateTime>
 #include <QElapsedTimer>
+#ifdef PET_TEST_LINUX
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#endif
 
 class EventTests : public QObject {
     Q_OBJECT
@@ -259,6 +261,24 @@ private slots:
         auto future = event("prompt"); future.timestamp = now + 60001;
         QVERIFY(!tools.apply(future, now));
     }
+#ifdef PET_TEST_LINUX
+    void receiverValidatesTransportData() {
+        struct Transport : pet::platform::EventTransport {
+            bool start(QString &) override { return true; }
+        };
+        auto transport = std::make_unique<Transport>();
+        auto *source = transport.get();
+        pet::Receiver receiver(std::move(transport));
+        QString error; QVERIFY(receiver.start(error));
+        int delivered = 0;
+        receiver.received = [&](const pet::Event &event) {
+            ++delivered; QCOMPARE(event.session, QString("fake"));
+        };
+        source->received("not json");
+        source->received(R"({"version":1,"provider":"claude","session_id":"fake","event_id":"1","kind":"session_start","timestamp_ms":1700000000000})");
+        source->received(R"({"version":1,"provider":"claude","session_id":"fake","event_id":"2","kind":"unknown","timestamp_ms":1700000000000})");
+        QCOMPARE(delivered, 1);
+    }
     void transportAndCommands() {
         QTemporaryDir temp; QVERIFY(temp.isValid());
         const auto previous = qgetenv("XDG_RUNTIME_DIR"); qputenv("XDG_RUNTIME_DIR", temp.path().toUtf8());
@@ -298,6 +318,7 @@ private slots:
         { pet::Receiver unsafe; QString error; QVERIFY(!unsafe.start(error)); }
         if (previous.isNull()) qunsetenv("XDG_RUNTIME_DIR"); else qputenv("XDG_RUNTIME_DIR", previous);
     }
+#endif
 };
 QTEST_GUILESS_MAIN(EventTests)
 #include "event_tests.moc"

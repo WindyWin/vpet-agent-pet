@@ -1,3 +1,4 @@
+#include "platform/contracts/update_layout.h"
 #include "installer.h"
 #include "release.h"
 #include "components.h"
@@ -17,9 +18,6 @@
 #include <QUuid>
 #include <QElapsedTimer>
 #include <QScopeGuard>
-#include <QSysInfo>
-#include <signal.h>
-#include <unistd.h>
 #include <cstdio>
 using namespace pet::updates;
 static bool write(const QString &path, const QByteArray &data) {
@@ -46,14 +44,14 @@ int main(int argc, char **argv) {
     bool validPid = false; const qint64 parent = args[6].toLongLong(&validPid);
     if (!validPid || parent < 0) return 2;
     QElapsedTimer wait; wait.start();
-    while (parent > 0 && kill(pid_t(parent), 0) == 0 && wait.elapsed() < 30000) QThread::msleep(100);
-    if (parent > 0 && kill(pid_t(parent), 0) == 0) return report("The pet is still running. Update postponed.");
+    while (pet::platform::processRunning(parent) && wait.elapsed() < 30000) QThread::msleep(100);
+    if (pet::platform::processRunning(parent)) return report("The pet is still running. Update postponed.");
     bool relaunch = true;
     auto resumePrevious = qScopeGuard([&] {
         if (!relaunch) return;
         QFile::remove(dataDirectory() + "/pending.json");
         lock.unlock();
-        QProcess::startDetached(prefix + "/bin/agent-pet", args.mid(7));
+        QProcess::startDetached(prefix + '/' + pet::platform::applicationRelativePath(), args.mid(7));
     });
     // Exclude other monitors during extraction and replacement. Hooks cannot start
     // a second GUI while the update lock is held.
@@ -67,7 +65,7 @@ int main(int argc, char **argv) {
     if (!receiptData.split('\n').contains(("prefix=" + prefix).toUtf8())) return report("Installation path does not match its receipt.");
     Components components;
     if (componentUpdate) {
-        if (!readComponents(archive, digest, version, QSysInfo::buildCpuArchitecture(), components, error)) return report(error);
+        if (!readComponents(archive, digest, version, pet::platform::updateArchitecture(), components, error)) return report(error);
     } else if (!verifiedArchive(archive, digest, error)) return report(error);
     QTemporaryDir staging(prefix + ".update-XXXXXX");
     if (!staging.isValid()) return report("Cannot stage the update beside the installation.");
@@ -75,7 +73,7 @@ int main(int argc, char **argv) {
         if (!assembleComponents(components, prefix, QFileInfo(archive).absolutePath(), staging.path(), error)) return report(error);
     } else if (!extractArchive(archive, staging.path(), error)) return report(error);
     QProcess probe;
-    probe.start(staging.path() + "/bin/agent-pet", {"--version"});
+    probe.start(staging.path() + '/' + pet::platform::applicationRelativePath(), {"--version"});
     if (!probe.waitForFinished(10000) || probe.exitStatus() != QProcess::NormalExit || probe.exitCode() != 0
         || !probe.readAllStandardOutput().startsWith(("agent-pet " + version + " (").toUtf8())) {
         probe.kill(); probe.waitForFinished(); return report("The downloaded app cannot run on this system.");
@@ -94,7 +92,7 @@ int main(int argc, char **argv) {
     QStringList launch = args.mid(7); launch << "--update-health" << token;
     QProcess child;
     child.setProcessChannelMode(QProcess::ForwardedChannels);
-    child.start(prefix + "/bin/agent-pet", launch);
+    child.start(prefix + '/' + pet::platform::applicationRelativePath(), launch);
     bool healthy = false;
     if (child.waitForStarted(10000)) {
         wait.restart();

@@ -2,9 +2,16 @@ cmake_minimum_required(VERSION 3.22)
 project(AgentPet VERSION 0.9.0 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-find_package(Qt6 6.5 REQUIRED COMPONENTS Widgets DBus Network)
-find_package(LibArchive REQUIRED)
-find_package(X11 REQUIRED)
+option(AGENT_PET_PORTABLE_CORE "Build portable libraries and tests only (no application or native services)" OFF)
+if(NOT AGENT_PET_PORTABLE_CORE AND NOT CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    message(FATAL_ERROR "The full Agent Pet application currently supports Linux only. Use -DAGENT_PET_PORTABLE_CORE=ON for core libraries/tests.")
+endif()
+find_package(Qt6 6.5 REQUIRED COMPONENTS Core Gui)
+if(NOT AGENT_PET_PORTABLE_CORE)
+    find_package(Qt6 6.5 REQUIRED COMPONENTS Widgets DBus Network)
+    find_package(LibArchive REQUIRED)
+    find_package(X11 REQUIRED)
+endif()
 qt_standard_project_setup()
 include(GNUInstallDirs)
 
@@ -12,6 +19,26 @@ include(GNUInstallDirs)
 set(AGENT_PET_REVISION "local" CACHE STRING "Source revision shown in About")
 configure_file(src/version.h.in "${CMAKE_CURRENT_BINARY_DIR}/generated/version.h" @ONLY)
 
+# Capture/codecs link independently of focus coordination and native activation.
+qt_add_library(pet_host_capture STATIC src/hosts/context.cpp src/hosts/registry.cpp
+    src/hosts/adapters/konsole.cpp src/hosts/adapters/tmux.cpp src/hosts/adapters/herdr.cpp src/hosts/adapters/generic.cpp)
+target_include_directories(pet_host_capture PUBLIC src)
+target_link_libraries(pet_host_capture PUBLIC Qt6::Core)
+qt_add_library(pet_hosts STATIC src/hosts/focus_service.cpp
+    src/hosts/adapters/tmux_focus.cpp src/hosts/adapters/herdr_focus.cpp src/platform/desktop/window_match.cpp)
+target_include_directories(pet_hosts PUBLIC src)
+target_link_libraries(pet_hosts PUBLIC pet_host_capture)
+qt_add_library(pet_core STATIC
+    src/sessions/state.cpp src/sessions/alerts.cpp src/sessions/presence.cpp src/sessions/recap.cpp
+    src/settings/preferences.cpp src/providers/adapters.cpp)
+target_include_directories(pet_core PUBLIC src)
+target_link_libraries(pet_core PUBLIC Qt6::Core pet_host_capture)
+qt_add_library(pet_animation STATIC
+    src/animation/player.cpp src/animation/ambient.cpp src/animation/mood.cpp src/animation/easter_eggs.cpp)
+target_include_directories(pet_animation PUBLIC src)
+target_link_libraries(pet_animation PUBLIC Qt6::Gui)
+
+if(NOT AGENT_PET_PORTABLE_CORE)
 # Stable sequence packs keep additions from repacking unrelated artwork.
 function(add_artwork_pack target filename)
     set(qrc "<RCC><qresource prefix=\"/\">\n")
@@ -57,23 +84,17 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/artwork.rcc" DESTINATION ${CMAKE_INST
 file(GLOB pet_notices CONFIGURE_DEPENDS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "licenses/*")
 list(APPEND pet_notices THIRD_PARTY_NOTICES.md LICENSE NOTICE)
 qt_add_library(pet_ui STATIC
-    src/animation/player.cpp src/animation/ambient.cpp src/animation/mood.cpp src/animation/easter_eggs.cpp
     src/desktop/pet_window.cpp
     src/desktop/touch.cpp src/desktop/wander.cpp src/desktop/wellness.cpp src/desktop/alert_bubble.cpp src/desktop/monitor.cpp
     src/desktop/session_list.cpp src/updates/controller.cpp)
 target_include_directories(pet_ui PUBLIC src "${CMAKE_CURRENT_BINARY_DIR}/generated")
-target_link_libraries(pet_ui PUBLIC Qt6::Widgets pet_events pet_updates Qt6::Network PRIVATE pet_native)
+target_link_libraries(pet_ui PUBLIC Qt6::Widgets pet_animation pet_events pet_updates Qt6::Network PRIVATE pet_native)
 qt_add_resources(pet_ui pet_assets PREFIX "/" FILES ${pet_notices})
 add_dependencies(pet_ui pet_artwork)
-# Host adapters without native dependencies: context and v1 conversion, capture, target codecs and labels
-# (registry), the session focus service, and the tmux/herdr activations, which use only platform contracts.
-qt_add_library(pet_hosts STATIC src/hosts/context.cpp src/hosts/registry.cpp src/hosts/focus_service.cpp
-    src/hosts/adapters/konsole.cpp src/hosts/adapters/tmux.cpp src/hosts/adapters/herdr.cpp src/hosts/adapters/generic.cpp
-    src/hosts/adapters/tmux_focus.cpp src/hosts/adapters/herdr_focus.cpp src/platform/desktop/window_match.cpp)
-target_include_directories(pet_hosts PUBLIC src)
-target_link_libraries(pet_hosts PUBLIC Qt6::Core)
 # Linux process and command services (/proc, QProcess), shared by the hook and the pet.
-qt_add_library(pet_platform_linux STATIC src/platform/linux/process.cpp src/platform/linux/commands.cpp)
+qt_add_library(pet_platform_linux STATIC src/platform/linux/process.cpp src/platform/linux/commands.cpp
+    src/platform/linux/headless.cpp src/platform/linux/event_transport.cpp src/platform/linux/hook_input.cpp
+    src/platform/linux/startup.cpp src/platform/linux/hook_command.cpp)
 target_include_directories(pet_platform_linux PUBLIC src)
 target_link_libraries(pet_platform_linux PUBLIC Qt6::Core)
 # Native desktop backends (X11, KWin), Konsole's D-Bus tab selection, pointer queries and their composition
@@ -85,14 +106,15 @@ qt_add_library(pet_native STATIC src/platform/linux/native.cpp
 target_include_directories(pet_native PUBLIC src)
 target_link_libraries(pet_native PUBLIC pet_hosts PRIVATE pet_platform_linux Qt6::Gui Qt6::DBus X11::X11)
 # Headless code shared by the pet and its display-free commands (hook, integration, autostart).
-qt_add_library(pet_events STATIC src/sessions/state.cpp src/sessions/alerts.cpp src/sessions/presence.cpp src/sessions/recap.cpp
-    src/ipc/local.cpp src/ipc/autostart.cpp src/settings/preferences.cpp
-    src/providers/adapters.cpp src/providers/integrations.cpp)
+qt_add_library(pet_events STATIC src/ipc/local.cpp src/ipc/autostart.cpp src/providers/integrations.cpp)
 target_include_directories(pet_events PUBLIC src)
-target_link_libraries(pet_events PUBLIC Qt6::Core pet_hosts PRIVATE pet_platform_linux)
-qt_add_library(pet_updates STATIC src/updates/release.cpp src/updates/installer.cpp src/updates/components.cpp)
+target_link_libraries(pet_events PUBLIC pet_core PRIVATE pet_platform_linux)
+qt_add_library(pet_update_platform STATIC src/platform/linux/update_install.cpp src/platform/linux/update_layout.cpp)
+target_include_directories(pet_update_platform PUBLIC src PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/generated")
+target_link_libraries(pet_update_platform PUBLIC Qt6::Core PRIVATE LibArchive::LibArchive)
+qt_add_library(pet_updates STATIC src/updates/release.cpp src/updates/components.cpp)
 target_include_directories(pet_updates PUBLIC src "${CMAKE_CURRENT_BINARY_DIR}/generated")
-target_link_libraries(pet_updates PUBLIC Qt6::Core LibArchive::LibArchive)
+target_link_libraries(pet_updates PUBLIC Qt6::Core PRIVATE pet_update_platform)
 qt_add_executable(agent-pet-updater src/updates/helper.cpp)
 target_link_libraries(agent-pet-updater PRIVATE pet_updates pet_events)
 set_target_properties(agent-pet-updater PROPERTIES INSTALL_RPATH "$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
@@ -110,44 +132,52 @@ install(FILES packaging/INSTALL.txt DESTINATION .)
 install(DIRECTORY licenses DESTINATION ${CMAKE_INSTALL_DATADIR}/agent-pet)
 # scripts/package.py copies only the required plugins and their library closure.
 
+endif() # Linux application and installation
+
 include(CTest)
 if(BUILD_TESTING)
     find_package(Qt6 REQUIRED COMPONENTS Test)
-    qt_add_executable(update-tests tests/update_tests.cpp)
-    target_link_libraries(update-tests PRIVATE pet_ui Qt6::Test)
-    add_test(NAME updates COMMAND update-tests)
-    set_tests_properties(updates PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
-    find_package(Python3 COMPONENTS Interpreter REQUIRED)
-    add_test(NAME update-install COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/scripts/check_update.py $<TARGET_FILE:agent-pet-updater>)
     qt_add_executable(provider-tests tests/provider_tests.cpp)
-    target_link_libraries(provider-tests PRIVATE pet_events Qt6::Test)
-    target_compile_definitions(provider-tests PRIVATE PROVIDER_FIXTURE_PATH="${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/providers.json" APP_PATH="$<TARGET_FILE:agent-pet>")
-    add_dependencies(provider-tests agent-pet)
+    target_link_libraries(provider-tests PRIVATE pet_core Qt6::Test)
+    target_compile_definitions(provider-tests PRIVATE PROVIDER_FIXTURE_PATH="${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/providers.json")
     add_test(NAME providers COMMAND provider-tests)
     qt_add_executable(event-tests tests/event_tests.cpp)
-    target_link_libraries(event-tests PRIVATE pet_events Qt6::Test)
-    target_compile_definitions(event-tests PRIVATE FIXTURE_PATH="${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/concurrent.json" APP_PATH="$<TARGET_FILE:agent-pet>")
-    add_dependencies(event-tests agent-pet)
+    target_link_libraries(event-tests PRIVATE pet_core Qt6::Test)
+    target_compile_definitions(event-tests PRIVATE FIXTURE_PATH="${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/concurrent.json")
     add_test(NAME events COMMAND event-tests)
     qt_add_executable(alert-tests tests/alert_tests.cpp)
-    target_link_libraries(alert-tests PRIVATE pet_events pet_platform_linux Qt6::Test)
+    target_link_libraries(alert-tests PRIVATE pet_core pet_hosts Qt6::Test)
     add_test(NAME alerts COMMAND alert-tests)
     # Focus contracts with fake adapters and backends; needs no desktop, D-Bus or terminal.
     qt_add_executable(focus-tests tests/focus_tests.cpp)
-    target_link_libraries(focus-tests PRIVATE pet_hosts pet_platform_linux Qt6::Test)
+    target_link_libraries(focus-tests PRIVATE pet_hosts pet_core Qt6::Test)
     add_test(NAME focus COMMAND focus-tests)
-    qt_add_executable(startup-tests tests/startup_tests.cpp)
-    target_link_libraries(startup-tests PRIVATE pet_events Qt6::Test)
-    target_compile_definitions(startup-tests PRIVATE APP_PATH="$<TARGET_FILE:agent-pet>")
-    add_dependencies(startup-tests agent-pet)
-    add_test(NAME startup COMMAND startup-tests)
-    qt_add_executable(prototype-tests tests/prototype_tests.cpp)
-    target_link_libraries(prototype-tests PRIVATE pet_ui Qt6::Test)
-    add_test(NAME prototype COMMAND prototype-tests)
-    set_tests_properties(prototype PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
-    # Explicitly invoked desktop test: it moves the real pointer on X11/XWayland.
-    if(TARGET X11::Xtst)
-        qt_add_executable(desktop-tests tests/desktop_tests.cpp)
-        target_link_libraries(desktop-tests PRIVATE pet_ui pet_native Qt6::Test X11::X11 X11::Xtst)
-    endif()
+    if(NOT AGENT_PET_PORTABLE_CORE)
+        foreach(target provider-tests event-tests alert-tests focus-tests)
+            target_link_libraries(${target} PRIVATE pet_events pet_platform_linux)
+            target_compile_definitions(${target} PRIVATE PET_TEST_LINUX APP_PATH="$<TARGET_FILE:agent-pet>")
+        endforeach()
+        add_dependencies(provider-tests agent-pet)
+        add_dependencies(event-tests agent-pet)
+        qt_add_executable(update-tests tests/update_tests.cpp)
+        target_link_libraries(update-tests PRIVATE pet_ui Qt6::Test)
+        add_test(NAME updates COMMAND update-tests)
+        set_tests_properties(updates PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+        find_package(Python3 COMPONENTS Interpreter REQUIRED)
+        add_test(NAME update-install COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/scripts/check_update.py $<TARGET_FILE:agent-pet-updater>)
+        qt_add_executable(startup-tests tests/startup_tests.cpp)
+        target_link_libraries(startup-tests PRIVATE pet_events Qt6::Test)
+        target_compile_definitions(startup-tests PRIVATE APP_PATH="$<TARGET_FILE:agent-pet>")
+        add_dependencies(startup-tests agent-pet)
+        add_test(NAME startup COMMAND startup-tests)
+        qt_add_executable(prototype-tests tests/prototype_tests.cpp)
+        target_link_libraries(prototype-tests PRIVATE pet_ui Qt6::Test)
+        add_test(NAME prototype COMMAND prototype-tests)
+        set_tests_properties(prototype PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+        # Explicitly invoked desktop test: it moves the real pointer on X11/XWayland.
+        if(TARGET X11::Xtst)
+            qt_add_executable(desktop-tests tests/desktop_tests.cpp)
+            target_link_libraries(desktop-tests PRIVATE pet_ui pet_native Qt6::Test X11::X11 X11::Xtst)
+        endif()
+    endif() # Linux tests
 endif()

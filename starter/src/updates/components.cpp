@@ -1,3 +1,4 @@
+#include "platform/contracts/update_layout.h"
 #include "components.h"
 #include "installer.h"
 #include "release.h"
@@ -63,7 +64,7 @@ bool readComponents(const QString &path, const QString &digest, const QString &v
         component.digest = item["digest"].toString(); component.size = item["size"].toInteger(-1);
         const bool artworkPack = format == 2 && QRegularExpression("^artwork-[0-9a-f]{64}$").match(component.name).hasMatch();
         if ((!QStringList{"app", "runtime", "artwork"}.contains(component.name) && !artworkPack) || names.contains(component.name)
-            || component.archive != "agent-pet-" + version + "-linux-" + architecture + '-' + component.name + ".tar.gz"
+            || component.archive != platform::releaseArchive(version, architecture, component.name)
             || !validDigest(component.digest) || component.size <= 0 || component.size > MaxArchive) return invalid();
         names.insert(component.name);
         for (const auto &fileValue : item["files"].toArray()) {
@@ -76,13 +77,13 @@ bool readComponents(const QString &path, const QString &digest, const QString &v
         }
         if (component.files.isEmpty()) return invalid();
         if (artworkPack && (component.files.size() != 1
-            || component.files.first().path != "share/agent-pet/" + component.name + ".rcc")) return invalid();
+            || component.files.first().path != platform::artworkPackRelativePath(component.name))) return invalid();
         result.entries.append(component);
     }
     // A complete target, including the helper for the following update.
     if (!names.contains("app") || !names.contains("runtime") || !names.contains("artwork")
-        || !paths.contains("bin/agent-pet") || !paths.contains("bin/agent-pet-updater")
-        || !paths.contains("share/agent-pet/artwork.rcc")) return invalid();
+        || !paths.contains(pet::platform::applicationRelativePath()) || !paths.contains(pet::platform::updaterRelativePath())
+        || !paths.contains(pet::platform::artworkRelativePath())) return invalid();
     // A file cannot also be another file's parent directory.
     for (const auto &path : paths) {
         QString parent = path;

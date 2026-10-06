@@ -4,7 +4,9 @@
 #include "hosts/adapters/konsole.h"
 #include "hosts/adapters/tmux.h"
 #include "platform/desktop/window_match.h"
+#ifdef PET_TEST_LINUX
 #include "platform/linux/process.h"
+#endif
 #include <QFileInfo>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -194,9 +196,11 @@ private slots:
         QVERIFY(!host.contains("host_target")); QVERIFY(!host.contains("host_window"));
         QCOMPARE(capture(code, {50, 40}, {"bash", "herdr"})["host"].toString(), "herdr"); // herdr inside VS Code.
         QVERIFY(capture({}, {}, {}).isEmpty());
+#ifdef PET_TEST_LINUX
         QCOMPARE(pet::platform::processNames({QCoreApplication::applicationPid()}).value(0),
                  QFileInfo(QCoreApplication::applicationFilePath()).fileName().left(15));
         QVERIFY(pet::platform::processAncestors(QCoreApplication::applicationPid()).startsWith(QCoreApplication::applicationPid()));
+#endif
     }
     void herdrAttachedClientIdentity() {
         QProcessEnvironment env;
