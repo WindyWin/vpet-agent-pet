@@ -161,7 +161,7 @@ flowchart LR
 | **Platform** | Small contracts for native services, with POSIX, Linux and macOS implementations; X11 and D-Bus are linked only by the Linux `pet_native` |
 | **Updates** | Verified release metadata and component downloads (app, runtime, one pack per animation sequence) with rollback |
 
-Only preferences and the recap's daily counts are written to disk; sessions and alerts live in memory. A portable-core build (`AGENT_PET_PORTABLE_CORE=ON`) compiles the event, session, provider and focus logic with no X11, D-Bus, Widgets or libarchive, which keeps the door open for other platforms. For the details see the [architecture notes](starter/docs/architecture.md), the [event protocol](starter/docs/events.md), [integrations](starter/docs/integrations.md) and [platform services](starter/src/platform/README.md).
+Only preferences and the recap's daily counts are written to disk; sessions and alerts live in memory. A portable-core build (`AGENT_PET_PORTABLE_CORE=ON`) compiles the event, session, provider and focus logic with no X11, D-Bus, Widgets or libarchive, which keeps the door open for other platforms. For the details see the [architecture overview and decision records](starter/docs/architecture.md), the [event protocol](starter/docs/events.md), [integrations](starter/docs/integrations.md) and [platform services](starter/src/platform/README.md).
 
 ## Included
 

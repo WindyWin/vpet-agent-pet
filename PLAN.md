@@ -116,7 +116,7 @@ Complete these milestones in order. Check items only when their deliverables exi
 
 ### M1 — Desktop prototype and technology decision
 
-Implemented 2026-10-04 in `starter/`: C++17 / Qt 6 Widgets prototype, CMake build, relocatable Linux package, and isolated runtime smoke check. See [architecture and evidence](starter/docs/architecture.md). Native X11 and manual desktop behavior checks remain open. Session/provider/IPC boundaries are reserved modules for later milestones.
+Implemented 2026-10-04 in `starter/`: C++17 / Qt 6 Widgets prototype, CMake build, relocatable Linux package, and isolated runtime smoke check. See [M1 evidence](starter/docs/adr/0001-desktop-stack.md). Native X11 and manual desktop behavior checks remain open. Session/provider/IPC boundaries are reserved modules for later milestones.
 
 - [x] Run `python3 scripts/verify_assets.py` in `starter/` to establish the asset baseline.
 - [x] Prototype a transparent, borderless window with bundled idle and thinking frames.
@@ -130,7 +130,7 @@ Implemented 2026-10-04 in `starter/`: C++17 / Qt 6 Widgets prototype, CMake buil
 
 ### M2 — Animation engine and desktop controls
 
-Implemented 2026-10-04 in `starter/`. Asset verification, frame/transition/settings tests, XWayland pointer drag, and isolated package smoke passed. The user visually confirmed the result. See [M2 evidence](starter/docs/architecture.md). Native Wayland and a native X11 session remain outside the tested desktop set.
+Implemented 2026-10-04 in `starter/`. Asset verification, frame/transition/settings tests, XWayland pointer drag, and isolated package smoke passed. The user visually confirmed the result. See [M2 evidence](starter/docs/adr/0003-catalog-driven-playback.md). Native Wayland and a native X11 session remain outside the tested desktop set.
 
 - [x] Add the original dragging animation from the `Raise/` asset sequences; import selected frames into the starter pack and restore the previous state when dragging ends (including native system moves).
 - [x] Load `assets/vpet/animations.json` through application-owned resource resolution.
@@ -151,7 +151,7 @@ receiver, headless hook/emit commands, bounded session/tool state and pending
 alerts, aggregate playback, replay fixtures and transport tests pass. Packaged
 headless callbacks took about 10 ms with the UI absent; isolated package smoke
 passed. See [protocol and policies](starter/docs/events.md) and
-[validation evidence](starter/docs/architecture.md). Provider payload adapters
+[validation evidence](starter/docs/adr/0005-local-event-transport.md). Provider payload adapters
 and live-client validation remain M4; alert presentation remains M5.
 
 - [x] Document a versioned event envelope with provider, session identity, event identity, event kind, timestamp, and optional tool/parent identity.
@@ -193,7 +193,7 @@ see [setup, limitations and evidence](starter/docs/integrations.md).
 Implemented 2026-10-04 in `starter/`. Alert queue/label logic, offscreen window,
 badge, mute and quit tests pass, and the real app showed the bubble and badge for
 `emit`ted events under Xvfb. Sound audibility and visual review on a real desktop
-compositor remain manual checks. See [M5 evidence](starter/docs/architecture.md).
+compositor remain manual checks. See [M5 evidence](starter/docs/adr/0007-alert-presentation.md).
 
 - [x] Add compact alerts for supported approval/input requests, errors, and finished turns, identified by project, provider, and short session ID.
 - [x] Implement a bounded pending-alert queue, duplicate aggregation, pending count, and next/dismiss controls.
@@ -210,7 +210,7 @@ Implemented 2026-10-04 in `starter/` and `.github/workflows/release.yml`: a
 relocatable x86_64 tarball with a per-user installer, built on Ubuntu 22.04
 (glibc 2.35 baseline). Isolated-runtime and install/upgrade/uninstall checks
 pass locally; a clean-machine desktop run and other distributions remain open.
-See [install guide](starter/docs/install.md) and [M6 evidence](starter/docs/architecture.md).
+See [install guide](starter/docs/install.md) and [M6 evidence](starter/docs/adr/0009-linux-packaging.md).
 
 - [x] Package the executable, hook entry point, starter asset pack, catalog, desktop launcher, icon, and required runtime dependencies.
 - [x] Optimize selected assets only if measured size or playback performance justifies it; preserve timing, visual quality, and provenance. (Measured; not justified.)

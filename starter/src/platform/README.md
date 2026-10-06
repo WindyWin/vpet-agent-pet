@@ -79,7 +79,7 @@ bundle; the Linux package is unchanged.
 For a desktop backend, implement `DesktopBackend`, register it in the platform's
 `createFocusService()` (`linux/native.cpp` or `macos/native.cpp`) and add
 sources/private dependencies to `pet_native`. Runtime capabilities select the usable backend, preserving the X11
-then KWin fallback. See [session focus](../../docs/architecture.md#session-focus)
+then KWin fallback. See [session focus](../../docs/adr/0017-session-focus.md)
 and [host registration](../hosts/README.md). The test-only `test-term` adapter in
 `tests/focus_tests.cpp` demonstrates capture, event validation, unchanged session
 reduction, selection and activation with a fake backend, without session/UI edits.
