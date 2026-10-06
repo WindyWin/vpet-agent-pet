@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
-project(AgentPet VERSION 0.10.0 LANGUAGES CXX)
+project(AgentPet VERSION 0.11.0 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 option(AGENT_PET_PORTABLE_CORE "Build portable libraries and tests only (no application or native services)" OFF)
