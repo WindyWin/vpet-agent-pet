@@ -62,6 +62,15 @@ Run as many sessions as you like. The pet always shows the one that matters most
   </tr>
 </table>
 
+It doesn't just loop one pose while it works, either. It swaps its book for a pen without leaving the desk, twirls the pen, and every so often does something new. In Settings you can make it calmer (**Subtle**) or keep the classic single loop (**Classic**); the lively style (**Playful**) is the default.
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/media/reading-to-working.gif" width="180" alt="Pet at its desk swapping a book for a pen"><br>From reading to writing</td>
+    <td align="center"><img src="docs/media/pen-spin.gif" width="180" alt="Pet twirling its pen at the desk"><br>Twirling the pen</td>
+  </tr>
+</table>
+
 ### Tells you when an agent needs you
 
 When an agent asks for approval or input, or a tool fails, a short note appears beside the pet. Click **Open** to jump straight to that agent's terminal or editor, or **×** to dismiss it. An orange badge stays on the pet until you've answered. You can mute the notes, or turn on a sound for new ones.
@@ -78,7 +87,7 @@ Click the pet to see every running session, most urgent first. Click one to jump
 
 Drag it anywhere and it dangles from your cursor. Hold still on its head or tummy and it enjoys being petted. Let go mid-swing and it tumbles down, then gets back up. Push it past the side of the screen and it hides there, peeking out until your agents get busy again.
 
-Just don't overdo it: throw it around too much or hold on too long and it gets grumpy and leaves.
+Just don't overdo it: throw it around too much, pet it nonstop or hold on to it too long, and it gets grumpy and leaves.
 
 <table>
   <tr>
@@ -88,6 +97,9 @@ Just don't overdo it: throw it around too much or hold on too long and it gets g
   <tr>
     <td align="center"><img src="docs/media/touch-head.gif" width="160" alt="Head pat"><br>Head pat</td>
     <td align="center"><img src="docs/media/touch-body.gif" width="160" alt="Tummy poke"><br>Tummy poke</td>
+  </tr>
+  <tr>
+    <td align="center" colspan="2"><img src="docs/media/angry-leave.gif" width="340" alt="Pet stomping angrily with a 'Too much petting! I need a break. Bye!' bubble, then jumping away"><br>Too much petting: it storms off</td>
   </tr>
 </table>
 
@@ -148,7 +160,7 @@ Right-click → **Today's recap** for a one-line summary like *"Today: 38 turns 
 Right-click the pet (or its tray / menu bar icon) for everything: your sessions, today's recap, mute, always on top, Settings and Quit. In **Settings** you can:
 
 - change its size and choose which notes pop up;
-- make it calmer or livelier, and switch off wandering, moods, touch or surprises;
+- make it calmer or livelier (when idle and while working), and switch off wandering, moods, touch or surprises;
 - set or turn off the eye and water reminders, and enter your birthday;
 - connect Claude Code and Codex with one click, and have it start with your agents or at login;
 - choose how updates are installed.
