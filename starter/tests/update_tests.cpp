@@ -160,6 +160,37 @@ private slots:
         QCOMPARE(network.requests, 5); // Cached app survives; only manifest + artwork fetched.
         QVERIFY(network.urls.last().endsWith("-artwork.tar.gz"));
     }
+    void downloadsOnlyChangedArtworkPack() {
+        QTemporaryDir dir, installed; Network network;
+        auto manifest = componentManifest();
+        manifest["format"] = 2;
+        auto entries = manifest["components"].toArray();
+        const QString changed = "artwork-" + QString(64, 'b');
+        for (const auto &name : {QString("artwork-") + QString(64, 'a'), changed}) {
+            auto entry = entries.last().toObject();
+            entry["name"] = name;
+            entry["archive"] = "agent-pet-99.1.0-linux-" + QSysInfo::buildCpuArchitecture() + '-' + name + ".tar.gz";
+            auto file = entry["files"].toArray().first().toObject();
+            file["path"] = "share/agent-pet/" + name + ".rcc";
+            entry["files"] = QJsonArray{file}; entries.append(entry);
+        }
+        manifest["components"] = entries;
+        network.manifest = QJsonDocument(manifest).toJson();
+        installFiles(installed.path(), manifest);
+        write(installed.filePath("share/agent-pet/" + changed + ".rcc"), "old");
+        write(dir.filePath("state.json"), QJsonDocument(QJsonObject{{"format", 1}, {"mode", 1}, {"enabled", true}}).toJson());
+        Controller controller(nullptr, &network, installed.path(), dir.path()); controller.check(true);
+        QTRY_VERIFY(QFile::exists(dir.filePath("pending.json")));
+        QCOMPARE(network.requests, 3); // Metadata, manifest, and exactly one changed sequence.
+        QVERIFY(network.urls.last().endsWith('-' + changed + ".tar.gz"));
+        QVERIFY(!QFile::exists(dir.filePath("package.tar.gz")));
+        // Duplicate components must be rejected in the variable-length format too.
+        entries[entries.size() - 1] = entries.first().toObject(); manifest["components"] = entries;
+        const auto bytes = QJsonDocument(manifest).toJson();
+        const auto path = dir.filePath("invalid.json"); write(path, bytes);
+        Components components; QString error;
+        QVERIFY(!readComponents(path, digest(bytes), "99.1.0", QSysInfo::buildCpuArchitecture(), components, error));
+    }
     void componentDownloadCancellationAndRetry() {
         QTemporaryDir dir, installed; Network network;
         const auto manifest = componentManifest(); network.manifest = QJsonDocument(manifest).toJson();
@@ -181,7 +212,7 @@ private slots:
             QTemporaryDir dir, installed; Network network;
             auto manifest = componentManifest();
             installFiles(installed.path(), manifest); write(installed.filePath("bin/agent-pet"), "old");
-            if (unsupported) manifest["format"] = 2;
+            if (unsupported) manifest["format"] = 99;
             else network.failSuffix = "-app.tar.gz";
             network.manifest = QJsonDocument(manifest).toJson();
             write(dir.filePath("state.json"), QJsonDocument(QJsonObject{{"format", 1}, {"mode", 1}, {"enabled", true}}).toJson());

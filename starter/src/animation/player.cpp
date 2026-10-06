@@ -8,6 +8,7 @@
 #include <QSet>
 #include <QCoreApplication>
 #include <QResource>
+#include <QRegularExpression>
 #include <tuple>
 
 namespace pet {
@@ -42,8 +43,30 @@ bool Player::load(const QString &root) {
         // Installed bundles keep it under share; local builds put it beside the executable.
         const auto installed = executable.filePath("../share/agent-pet/artwork.rcc");
         const auto artwork = QFile::exists(installed) ? installed : executable.filePath("artwork.rcc");
-        if (!QResource::registerResource(artwork)) {
+        QStringList registered;
+        auto registerPack = [&](const QString &path) {
+            if (!QResource::registerResource(path)) return false;
+            registered.append(path); return true;
+        };
+        auto missingPack = [&] {
+            for (const auto &path : registered) QResource::unregisterResource(path);
             fail("Cannot load the artwork pack. Reinstall Agent Pet to restore it."); return false;
+        };
+        if (!registerPack(artwork)) return missingPack();
+        QFile index(":/assets/vpet/packs.json");
+        // Legacy bundles contain all frames in artwork.rcc and have no index.
+        if (index.exists()) {
+            if (!index.open(QIODevice::ReadOnly) || index.size() > 1024 * 1024) return missingPack();
+            const auto packs = QJsonDocument::fromJson(index.readAll());
+            if (!packs.isArray() || packs.array().isEmpty() || packs.array().size() > 4093) return missingPack();
+            const QDir directory(QFileInfo(artwork).absolutePath());
+            QSet<QString> seen;
+            for (const auto &value : packs.array()) {
+                const auto name = value.toString();
+                if (!QRegularExpression("^artwork-[0-9a-f]{64}\\.rcc$").match(name).hasMatch()
+                    || seen.contains(name) || !registerPack(directory.filePath(name))) return missingPack();
+                seen.insert(name);
+            }
         }
     }
     QFile file(QDir(root).filePath("assets/vpet/animations.json"));

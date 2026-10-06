@@ -167,12 +167,13 @@ for retries; the interrupted component restarts from zero.
 Releases separate application files, runtime libraries and artwork. The updater
 checks installed files against the new release and downloads only components that
 changed or need repair. A code-only update normally reuses all artwork and runtime
-libraries. Changing one image downloads the artwork component; changing a library
-downloads the runtime component. This is component-level reuse, not binary patches.
+libraries. Artwork is split into stable packs per animation sequence, with a small
+separate catalog. Changing one image downloads its sequence pack; adding a sequence
+downloads its new pack and catalog. Changing a library downloads the runtime component. This is component-level reuse, not binary patches.
 Skipping versions is supported because files are compared with the target release.
 
 Existing installations receive one full update to obtain this updater and the
-separate artwork file. Later updates use component downloads when the release
+sequence-pack layout. Later updates use component downloads when the release
 provides a verified component manifest. Releases without that manifest use the full
 archive; an unsupported manifest or failed component download also falls back to
 the verified full archive. Cancelling stops the download. The full archive remains

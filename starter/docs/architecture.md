@@ -771,14 +771,16 @@ pending downloads. Hook, emit, integration and autostart commands return before
 constructing this service. Requests use TLS verification, size limits and idle
 timeouts; package downloads permit HTTPS redirects to GitHub's asset CDN.
 
-`scripts/package.py` publishes the full legacy tarball plus three independent
-archives (`app`, `runtime`, `artwork`) and a version/architecture-specific
+`scripts/package.py` publishes the full legacy tarball plus independent
+archives (`app`, `runtime`, `artwork`, and `artwork-<sequence-hash>`) and a version/architecture-specific
 `-components.json`. Archives use sorted paths and fixed tar/gzip metadata. The
 manifest records archive names, sizes and SHA-256 hashes, plus each target file's
 path, size, hash and executable flag. Runtime libraries/plugins/notices form the
-runtime component; the RCC and artwork notices form artwork; remaining files form
-the app component.
-Release CI publishes all five assets. Full archives preserve first installation
+runtime component; the catalog RCC, pack index and artwork notices form artwork;
+each PNG sequence directory becomes its own RCC and component, named by the SHA-256
+of its source directory path. Remaining files form the app component. Manifest
+format 2 supports the variable pack list; the updater also accepts format 1.
+Release CI publishes the full archive, manifest and every component. Full archives preserve first installation
 and upgrade compatibility with older clients; upload storage is not reduced.
 
 `components.*` validates the manifest after checking its GitHub asset digest,

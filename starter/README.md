@@ -222,13 +222,21 @@ runtime library manifest. The version comes from `project()` in CMakeLists.txt;
 `-DAGENT_PET_REVISION=<commit>` records the source revision shown by
 `agent-pet --version` and About. Output directories must be new.
 
-Packaging also writes `-app.tar.gz`, `-runtime.tar.gz`, `-artwork.tar.gz` and
-`-components.json` beside the full archive. Automatic updates verify the manifest
-and reuse installed components whose files still match, downloading only changed
-components. Artwork lives in `share/agent-pet/artwork.rcc`; local builds load
-`build/artwork.rcc`. Keep the full archive for first installs and older updaters.
-Publish all five release files together. This reduces client download size;
-CI still uploads the full archive and all three components for each release.
+Packaging also writes `-app.tar.gz`, `-runtime.tar.gz`, `-artwork.tar.gz`,
+`-artwork-<sequence-hash>.tar.gz` and `-components.json` beside the full archive.
+Each PNG sequence directory becomes a separate resource pack with a stable name
+based on its path. Adding or editing a sequence only replaces that pack and the
+small catalog; other sequences and the runtime are reused when their installed
+files still match. Editing animation timing alone only changes the catalog.
+
+`share/agent-pet/artwork.rcc` contains the catalog and pack index, and
+`share/agent-pet/artwork-<sequence-hash>.rcc` contains each sequence's frames.
+Local builds load the same files from `build/`. Component manifest format 2
+supports these packs; the updater also accepts legacy format 1 bundles.
+Older updaters fall back to the full archive for the first upgrade to this layout.
+First installs still download all artwork. Keep the full archive for first
+installs and older updaters. CI uploads the full archive and all components for
+each release; this split reduces update downloads, not release upload volume.
 
 Two checks exercise the package without a display:
 
