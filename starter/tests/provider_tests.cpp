@@ -114,6 +114,14 @@ private slots:
             QCOMPARE(restarted.aggregate(stamp), "thinking");
         }
     }
+    void codexApprovalWithoutPreToolUseClears() {
+        // apply_patch and MCP approvals can arrive with no PreToolUse; the tool's PostToolUse is the answer.
+        pet::Sessions sessions; qint64 stamp = now;
+        auto apply = [&](QJsonObject in) { return sessions.apply(event("codex", in, ++stamp), stamp); };
+        QVERIFY(apply(payload("UserPromptSubmit")));
+        QVERIFY(apply(payload("PermissionRequest"))); QCOMPARE(sessions.aggregate(stamp), "attention");
+        QVERIFY(apply(payload("PostToolUse", "patch"))); QCOMPARE(sessions.aggregate(stamp), "thinking");
+    }
     void configurationPreservation() {
         for (const auto &provider : {QString("claude"), QString("codex")}) {
             const QString executable = "/tmp/Pet's folder/$(do-not-run)`x`/agent-pet";
