@@ -1,49 +1,93 @@
 # Agent Pet
 
-A standalone desktop companion that animates in response to Claude Code and Codex hooks.
+**A little desktop pet that keeps you company while Claude Code and Codex work.**
 
-Agent Pet runs on Linux x86_64 (X11 and XWayland) and macOS 11+ (Apple silicon and Intel). On Linux it ships as a self-contained tarball with an installer, one-click Claude Code and Codex integration, and automatic updates; on macOS as an app in a disk image (`.dmg`) or zip, with the same integration and update notifications. See the [install guide](starter/docs/install.md). The application lives in [starter/](starter/README.md). This repository root also keeps the full 749 MB VPet artwork archive as a source bundle; the app never reads it at runtime.
+It sits on your screen, thinks when your agent thinks, gets busy when it runs tools, and waves at you when a session needs your approval, so you can look away from the terminal without missing anything.
 
-Application code is licensed under Apache-2.0 ([LICENSE](starter/LICENSE)); the artwork keeps its own terms.
+<p align="center">
+  <img src="docs/media/thinking.gif" width="120" alt="Thinking">
+  <img src="docs/media/working.gif" width="120" alt="Working">
+  <img src="docs/media/needs-input.gif" width="120" alt="Needs input">
+  <img src="docs/media/turn-finished.gif" width="120" alt="Turn finished">
+</p>
 
-## Features
+- **Know at a glance** what every agent session is doing.
+- **Never miss a request**: a small note pops up when an agent waits for you, and one click takes you to the right terminal.
+- **A pet, not just a status light**: drag it, pet it, throw it, watch it wander and nap.
+- **Looks after you**: gentle reminders to rest your eyes and drink water, and a recap of your day.
+- **Private**: it only learns *what kind* of thing is happening, never your prompts, code or commands.
 
-Every image below was captured from the running app (`starter/`, Linux, X11) with demo events sent through `agent-pet emit`. Project names and session IDs are made up. See the [starter README](starter/README.md) for the full behavior of each feature.
+Works on **Linux** x86_64 (X11, or Wayland desktops with XWayland such as GNOME and KDE) and **macOS 11+** (Apple silicon and Intel).
 
-### Reacts to what your agents are doing
+## Get started
 
-Claude Code and Codex hooks report each session's activity, and the pet animates the most important state across all sessions.
+Download the latest version from the [Releases page](https://github.com/WindyWin/vpet-agent-pet/releases).
+
+**Linux**
+
+1. Download `agent-pet-<version>-linux-x86_64.tar.gz` and extract it.
+2. In the extracted folder, run `./install.sh`. It asks a few simple questions: where to install, whether to add a menu entry and connect Claude Code and/or Codex, and whether the pet should start on its own when an agent session starts.
+3. Restart Claude Code or Codex and send a prompt. The pet reacts.
+
+<img src="docs/media/installer.png" width="480" alt="Installer checklist in a terminal">
+
+**macOS**
+
+1. Download the `.dmg`, open it and drag **Agent Pet** into **Applications**.
+2. Open it. The first time, macOS asks you to confirm: go to **System Settings → Privacy & Security → Open Anyway** (on macOS 14 or older, Control-click the app → **Open**).
+3. Right-click the pet → **Settings → Startup and agents**, press **Enable** next to Claude Code or Codex, then restart the client.
+
+Need more detail, or something isn't working? See the [install guide](starter/docs/install.md) and its [troubleshooting table](starter/docs/install.md#troubleshooting).
+
+## What it does
+
+*All pictures are from the real app; project names are made up.*
+
+### Shows what your agents are up to
+
+Run as many sessions as you like. The pet always shows the one that matters most right now: a request waiting for you beats an error, which beats a finished turn, and so on.
 
 <table>
   <tr>
     <td align="center"><img src="docs/media/thinking.gif" width="140" alt="Thinking"><br>Thinking</td>
     <td align="center"><img src="docs/media/reading.gif" width="140" alt="Reading"><br>Reading files</td>
-    <td align="center"><img src="docs/media/working.gif" width="140" alt="Working"><br>Running tools</td>
-    <td align="center"><img src="docs/media/needs-input.gif" width="140" alt="Needs input"><br>Needs approval or input</td>
+    <td align="center"><img src="docs/media/working.gif" width="140" alt="Working"><br>Working</td>
+    <td align="center"><img src="docs/media/needs-input.gif" width="140" alt="Needs input"><br>Waiting for you</td>
   </tr>
   <tr>
-    <td align="center"><img src="docs/media/tool-error.gif" width="140" alt="Tool error"><br>Tool error</td>
-    <td align="center"><img src="docs/media/turn-finished.gif" width="140" alt="Turn finished"><br>Turn finished</td>
-    <td align="center"><img src="docs/media/sleeping.gif" width="140" alt="Sleeping"><br>Dozes off after 10 quiet minutes</td>
-    <td align="center"><img src="docs/media/startled.gif" width="140" alt="Startled"><br>Jumps at <code>rm -rf</code> or <code>git push --force</code></td>
+    <td align="center"><img src="docs/media/tool-error.gif" width="140" alt="Tool error"><br>Something failed</td>
+    <td align="center"><img src="docs/media/turn-finished.gif" width="140" alt="Turn finished"><br>Done!</td>
+    <td align="center"><img src="docs/media/sleeping.gif" width="140" alt="Sleeping"><br>Naps after 10 quiet minutes</td>
+    <td align="center"><img src="docs/media/startled.gif" width="140" alt="Startled"><br>Jumps at risky commands like <code>rm -rf</code></td>
   </tr>
 </table>
 
-### Alerts that point to the right session
+It doesn't just loop one pose while it works, either. It swaps its book for a pen without leaving the desk, twirls the pen, and every so often does something new. In Settings you can make it calmer (**Subtle**) or keep the classic single loop (**Classic**); the lively style (**Playful**) is the default.
 
-Approval and input requests and tool errors raise a one-line toast beside the pet. **Open** brings the agent's terminal or editor forward (Konsole, tmux, herdr, VS Code, or any X11 window), **×** dismisses it, and **+N** shows how many more are waiting. An orange badge stays on the pet until the waiting session moves on. Alerts can be muted, and an optional sound plays for new ones.
+<table>
+  <tr>
+    <td align="center"><img src="docs/media/reading-to-working.gif" width="180" alt="Pet at its desk swapping a book for a pen"><br>From reading to writing</td>
+    <td align="center"><img src="docs/media/pen-spin.gif" width="180" alt="Pet twirling its pen at the desk"><br>Twirling the pen</td>
+  </tr>
+</table>
 
-<img src="docs/media/alert-toast.png" width="420" alt="Needs approval toast beside the pet with Open and dismiss buttons and an attention badge">
+### Tells you when an agent needs you
 
-### Running sessions at a glance
+When an agent asks for approval or input, or a tool fails, a short note appears beside the pet. Click **Open** to jump straight to that agent's terminal or editor, or **×** to dismiss it. An orange badge stays on the pet until you've answered. You can mute the notes, or turn on a sound for new ones.
 
-Click the pet to list every observed session, most urgent first, with project, status, provider, short ID and host. Click a row to jump to that session.
+<img src="docs/media/alert-toast.png" width="420" alt="Needs approval note beside the pet with Open and dismiss buttons">
+
+### All your sessions in one list
+
+Click the pet to see every running session, most urgent first. Click one to jump to it.
 
 <img src="docs/media/session-list.png" width="420" alt="List of four sessions: needs approval, working, thinking and idle">
 
-### Drag, pet and throw it
+### Play with it
 
-Drag the pet anywhere; it dangles while you hold it. Hold still on its head or tummy and it reacts to being petted. Let go mid-swing and it tumbles to the bottom of the screen, then gets back up. Push it past a screen edge and it hides there, peeking out until agent activity brings it back.
+Drag it anywhere and it dangles from your cursor. Hold still on its head or tummy and it enjoys being petted. Let go mid-swing and it tumbles down, then gets back up. Push it past the side of the screen and it hides there, peeking out until your agents get busy again.
+
+Just don't overdo it: throw it around too much, pet it nonstop or hold on to it too long, and it gets grumpy and leaves.
 
 <table>
   <tr>
@@ -54,153 +98,111 @@ Drag the pet anywhere; it dangles while you hold it. Hold still on its head or t
     <td align="center"><img src="docs/media/touch-head.gif" width="160" alt="Head pat"><br>Head pat</td>
     <td align="center"><img src="docs/media/touch-body.gif" width="160" alt="Tummy poke"><br>Tummy poke</td>
   </tr>
+  <tr>
+    <td align="center" colspan="2"><img src="docs/media/angry-leave.gif" width="340" alt="Pet stomping angrily with a 'Too much petting! I need a break. Bye!' bubble, then jumping away"><br>Too much petting: it storms off</td>
+  </tr>
 </table>
 
-### Idle life: fidgets, mood and wandering
+### A life of its own
 
-While no agent needs it, the pet fidgets now and then, alternates its idle loop and, after a few quiet minutes, walks, crawls or climbs along the screen edges. A run of finished turns makes it happy and repeated errors make it droopy; after a long productive stretch it hints that you should take a break.
+When nothing needs it, the pet yawns, looks around and every so often goes for a walk, crawls along the screen or climbs up its edge. It also has moods: a good run of finished work makes it happy, lots of errors make it droopy, and after a long busy stretch it gets hungry, a hint that you could use a break too.
 
 <table>
   <tr>
     <td align="center"><img src="docs/media/walk-left.gif" width="240" alt="Walking"><br>Walking</td>
     <td align="center"><img src="docs/media/crawl-left.gif" width="240" alt="Crawling"><br>Crawling</td>
-    <td align="center"><img src="docs/media/climb-up-right.gif" width="240" alt="Climbing the screen edge"><br>Climbing an edge</td>
+    <td align="center"><img src="docs/media/climb-up-right.gif" width="240" alt="Climbing the screen edge"><br>Climbing</td>
   </tr>
   <tr>
     <td align="center"><img src="docs/media/fidget-yawn.gif" width="160" alt="Yawning"><br>Idle fidget</td>
-    <td align="center"><img src="docs/media/cheer-shining.gif" width="160" alt="Happy celebration"><br>Happy celebration</td>
-    <td align="center"><img src="docs/media/snack-hungry.gif" width="160" alt="Hungry"><br>Take-a-break hint</td>
+    <td align="center"><img src="docs/media/cheer-shining.gif" width="160" alt="Happy celebration"><br>Happy</td>
+    <td align="center"><img src="docs/media/snack-hungry.gif" width="160" alt="Hungry"><br>Time for a break?</td>
   </tr>
 </table>
 
-### Easter eggs
+### Little surprises
 
-Special days, Friday evenings, late nights, long turns and every hundredth finished turn get their own reactions. There is at least one more to find.
+Friday evenings, your birthday, late nights, very long tasks and every 100th finished task get their own reactions. On weekdays it reminds you to get ready to go home, and at night it tells you to go to bed. There's at least one more surprise to find.
 
 <table>
   <tr>
     <td align="center"><img src="docs/media/dance.gif" width="160" alt="Dance"><br>Friday evening dance</td>
     <td align="center"><img src="docs/media/birthday.gif" width="160" alt="Birthday"><br>Your birthday</td>
     <td align="center"><img src="docs/media/love-520.gif" width="160" alt="Heart on May 20"><br>May 20</td>
-    <td align="center"><img src="docs/media/milestone.gif" width="160" alt="Milestone"><br>Every 100th turn</td>
+    <td align="center"><img src="docs/media/milestone.gif" width="160" alt="Milestone"><br>Every 100th task</td>
   </tr>
 </table>
 
-### Wellness reminders
+### Takes care of you
 
-While you work, the pet looks after you too. After 20 minutes of activity it suggests looking at something far away for 20 seconds (click the note and it counts the seconds down), and after an hour it gets thirsty and reminds you to drink some water. Reminders wait until you are at the computer, stay out of the way while an agent needs you or alerts are muted, pause while the screen is locked and skip quiet hours. Settings → **Reminders** sets both intervals or turns them off.
+Every 20 minutes of work it reminds you to look at something far away for 20 seconds (click the note and it counts down with you), and every hour it reminds you to drink some water. It waits until you're actually at the computer, stays quiet while an agent needs you, and leaves you alone at night.
 
 <table>
   <tr>
-    <td align="center"><img src="docs/media/eye-break.png" width="300" alt="Eye break reminder in a speech bubble beside the yawning pet"><br>Eye break</td>
-    <td align="center"><img src="docs/media/water.png" width="300" alt="Water reminder in a speech bubble beside the thirsty pet"><br>Time for water</td>
+    <td align="center"><img src="docs/media/eye-break.png" width="300" alt="Eye break reminder beside the pet"><br>Eye break</td>
+    <td align="center"><img src="docs/media/water.png" width="300" alt="Water reminder beside the pet"><br>Time for water</td>
   </tr>
 </table>
 
-### Daily recap
+### Sums up your day
 
-Right-click → **Today's recap** and the pet sums up what your agents did today, such as "Today: 38 turns across 3 projects · 2 approvals waited 10+ min · longest run 22 min". Click the note for turns per project, errors, approvals with the longest wait and the longest run. On weekdays the 4:45 PM go-home reminder includes the summary. Only counts and project folder names are kept, for two weeks, never prompts, commands or paths.
+Right-click → **Today's recap** for a one-line summary like *"Today: 38 turns across 3 projects · longest run 22 min"*. Click it for a per-project breakdown. On weekdays the go-home reminder includes it too.
 
 <table>
   <tr>
-    <td align="center"><img src="docs/media/recap.png" width="300" alt="Recap summary: 11 turns across 3 projects, 1 error, 1 approval"><br>Summary</td>
-    <td align="center"><img src="docs/media/recap-breakdown.png" width="300" alt="Recap breakdown with turns per project"><br>Click for the breakdown</td>
+    <td align="center"><img src="docs/media/recap.png" width="300" alt="Recap summary"><br>Summary</td>
+    <td align="center"><img src="docs/media/recap-breakdown.png" width="300" alt="Recap breakdown with turns per project"><br>Breakdown</td>
   </tr>
 </table>
 
-### Remarks
+### Make it yours
 
-Reminders, the recap and the pet's own comments (Monday blues, time to go home, time for bed) appear in a small speech bubble that fades on its own or when clicked, so they never cover your work for long.
+Right-click the pet (or its tray / menu bar icon) for everything: your sessions, today's recap, mute, always on top, Settings and Quit. In **Settings** you can:
 
-### Menu, settings and developer preview
+- change its size and choose which notes pop up;
+- make it calmer or livelier (when idle and while working), and switch off wandering, moods, touch or surprises;
+- set or turn off the eye and water reminders, and enter your birthday;
+- connect Claude Code and Codex with one click, and have it start with your agents or at login;
+- choose how updates are installed.
 
-Right-click the pet (or its tray icon) for everyday actions: running sessions, today's recap, mute, always on top, Settings and Quit. **More** holds the animation preview, temporary click-through, position recovery, updates and the artwork terms. Settings has three tabs: **General** (size, alerts, reminders), **Pet** (idle animation, wandering, mood, touch, easter eggs, birthday, recap) and **Startup and agents** (autostart and one-click Claude Code and Codex integration). `--preview` opens a developer window that plays any state and steps through frames.
+If it ever gets in the way, click the tray icon to hide it. It keeps watching your sessions and shows a badge on the icon instead.
 
 <table>
   <tr>
-    <td align="center" valign="top"><img src="docs/media/menus/after-menu.png" width="380" alt="Right-click menu with the More submenu open"><br>Right-click menu</td>
-    <td align="center" valign="top"><img src="docs/media/menus/after-settings.png" width="340" alt="Settings window, General tab"><br>Settings</td>
-  </tr>
-  <tr>
-    <td align="center" colspan="2"><img src="docs/media/animation-preview.png" width="520" alt="Animation preview window beside the pet"><br>Animation preview</td>
+    <td align="center" valign="top"><img src="docs/media/menus/after-menu.png" width="380" alt="Right-click menu"><br>Right-click menu</td>
+    <td align="center" valign="top"><img src="docs/media/menus/after-settings.png" width="340" alt="Settings window"><br>Settings</td>
   </tr>
 </table>
 
-### Install and updates
+### Stays up to date
 
-A self-contained Linux x86_64 tarball includes an interactive installer that sets up the menu entry, the `agent-pet` command, agent hooks and autostart, plus an uninstaller that removes only Agent Pet's own hook entries. Updates download only the components that changed, down to individual animation sequences, so a new or edited animation fetches just its own frames. If the new version fails to start, the previous one is restored. The macOS app is universal and signed ad hoc but not notarized, so the first launch needs approving in System Settings; it announces updates and installs them by hand. See the [install guide](starter/docs/install.md#macos).
+On Linux the pet updates itself in the background by default, downloading only what changed and keeping your settings. If a new version fails to start, it goes back to the previous one. On macOS it tells you when a new version is out, and you install it by replacing the app.
 
-<img src="docs/media/installer.png" width="520" alt="Installer checklist in a terminal">
+## Your privacy
 
-## Architecture
+- Everything stays on your computer. The pet only hears from your agents through a private local channel.
+- It learns *what kind* of thing is happening (thinking, working, waiting, finished), never your prompts, code, file contents or commands. For risky commands it gets only a simple "this looks dangerous" yes or no.
+- The only things it saves are your settings and the recap's daily counts (with project folder names), kept for two weeks.
+- Connecting it adds its own small entries to Claude Code's or Codex's hook settings and leaves everything else there untouched. Uninstalling removes only those entries.
 
-Agent Pet is one C++17 / Qt 6 binary, `agent-pet`, with two roles. Inside Claude Code and Codex it runs as a tiny headless **hook**: it turns the client's hook JSON into a normalized event, sends one datagram over a private Unix socket and exits, always silently and within 150 ms, never sending prompts or tool content. On the desktop it is the **pet**: it receives those events, tracks every session, and picks what to animate and when to alert.
+## Good to know
 
-```mermaid
-flowchart LR
-    C[Claude Code / Codex hooks] --> H["agent-pet hook<br/>(headless, fail-open)"]
-    E["agent-pet emit<br/>(scripts, demos)"] --> S
-    H -->|protocol v1 datagram| S[(Unix socket)]
-    S --> R[Receiver]
-    R --> M[Monitor]
-    M --> SE["Sessions<br/>ordering, dedup, expiry, priority"]
-    SE --> P["Pet window + Player<br/>animations.json"]
-    SE --> A[Alert toast and badge]
-    SE --> RC[Daily recap]
-    A -->|Open| F["Focus service<br/>Konsole, tmux, herdr, VS Code"]
-    F --> D[X11 / KWin backends]
-```
+- **Not reacting?** Restart Claude Code or Codex after connecting, then send a new prompt. In Codex, approve the new hooks in `/hooks`.
+- **Lost the pet?** Click the tray icon, or right-click it → **More → Recover pet position and input**.
+- **macOS:** jumping to a terminal window and automatic updates aren't available yet. **Open** still switches tmux and herdr panes.
+- **Linux on Wayland:** the pet runs through XWayland, which GNOME and KDE provide by default. Pure Wayland isn't supported yet.
 
-| Layer | What it does |
-| --- | --- |
-| **Providers** | Map each client's hook events onto protocol v1 and merge Agent Pet's own entries into the client config without touching anyone else's hooks |
-| **Sessions** | Track concurrent sessions and tools and pick one aggregate state: attention > error > turn finished > working > reading > thinking > idle |
-| **Animation** | Play the data-driven catalog in `animations.json`: phased sequences, weighted variants, mood art, fidgets, reactions, touch and moves |
-| **Desktop** | The pet window, alert toast, session list, speech bubble, wandering, wellness reminders and recap |
-| **Hosts** | Record where a session runs (Konsole tab, tmux or herdr pane, X11 window) and bring it forward on **Open** |
-| **Platform** | Small contracts for native services, with POSIX, Linux and macOS implementations; X11 and D-Bus are linked only by the Linux `pet_native` |
-| **Updates** | Verified release metadata and component downloads (app, runtime, one pack per animation sequence) with rollback |
+## For developers
 
-Only preferences and the recap's daily counts are written to disk; sessions and alerts live in memory. A portable-core build (`AGENT_PET_PORTABLE_CORE=ON`) compiles the event, session, provider and focus logic with no X11, D-Bus, Widgets or libarchive, which keeps the door open for other platforms. For the details see the [architecture overview and decision records](starter/docs/architecture.md), the [event protocol](starter/docs/events.md), [integrations](starter/docs/integrations.md) and [platform services](starter/src/platform/README.md).
+The app lives in [`starter/`](starter/README.md): building from source, running tests, command-line options, sending demo events and packaging. Further reading:
 
-## Included
+- [Architecture overview](starter/docs/architecture.md) and [design decision records](starter/docs/adr/README.md)
+- [Event protocol](starter/docs/events.md) and [Claude Code / Codex integrations](starter/docs/integrations.md)
 
-- **5,498 original PNG frames**, across 558 sequence folders and 25 animation categories.
-- Character metadata and nine sequence metadata files: **5,508 imported files**, 735.26 MiB in total.
-- A manifest with relative paths, provenance, sizes, and SHA-256 checksums.
-- Upstream artwork terms, original README, and code license for provenance. The code license does not replace the artwork terms.
-- A portable asset verification/catalog script and a [standalone application plan](PLAN.md).
+This repository root also keeps the original VPet artwork archive (about 5,500 frames, 735 MiB) as a source bundle for adding new animations. The app itself doesn't need it. Check it with `python3 scripts/assets.py verify`, or list every sequence with `python3 scripts/assets.py catalog`.
 
-```text
-agent-pet/
-├── assets/vpet/
-│   ├── manifest.json
-│   └── pet/
-│       ├── vup.lps
-│       └── vup/                 # original sprites and sequence metadata
-├── docs/ASSETS.md               # generated catalog
-├── licenses/
-├── scripts/assets.py
-├── PLAN.md
-├── README.md
-└── THIRD_PARTY_NOTICES.md
-```
+## Credits and license
 
-## Inspect the bundled assets
+Character artwork by the **VUP-Simulator team**, from [LorisYounger/VPet](https://github.com/LorisYounger/VPet). The artwork keeps its own [terms](licenses/VPET-ARTWORK-TERMS.md); see [third-party notices](THIRD_PARTY_NOTICES.md).
 
-Python 3.9 or newer is sufficient for these development commands:
-
-```bash
-python3 scripts/assets.py verify
-python3 scripts/assets.py catalog
-```
-
-The commands locate the project from the script's location, so they also work when invoked from a different working directory. `verify` checks every imported file, rejects symlinks, and checks for unlisted asset files. `catalog` lists every sequence and preserves upstream folder names and filename timing.
-
-No sprite conversion has been applied. Eight frames in `IDEL/Squat/C_Happy` lack duration suffixes; the catalog flags them so playback can exclude that sequence until timing is resolved.
-
-## Distribution
-
-The release plan bundles the renderer, hook command, selected animation resources, and required notices into an installable application. Users should not need this source checkout, Python, VPet, or a separately installed runtime to run the release.
-
-Keep the original artwork as the source bundle; choose and optimize a smaller release pack during implementation. See [the packaging plan](PLAN.md) and [third-party notices](THIRD_PARTY_NOTICES.md).
+Agent Pet's own code is licensed under [Apache-2.0](starter/LICENSE). That license doesn't cover the artwork.
