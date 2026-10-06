@@ -38,6 +38,9 @@ read -r ci_run ci_status ci_conclusion <<<"$ci"
 if [ "$ci_status" != completed ]; then
   echo "Waiting for main's CI run $ci_run"
   gh run watch "$ci_run" --interval 20 --exit-status >/dev/null || { echo "main's CI failed: run $ci_run" >&2; exit 1; }
+elif [ "$ci_conclusion" = skipped ]; then
+  # CI skips the merge of a release PR (its tag builds it), so main's tip is the last release.
+  echo "Nothing new on main since the last release (${sha:0:7})" >&2; exit 1
 elif [ "$ci_conclusion" != success ]; then
   echo "main's CI at ${sha:0:7} is $ci_conclusion (run $ci_run); fix main before releasing" >&2; exit 1
 fi

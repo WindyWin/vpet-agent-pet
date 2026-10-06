@@ -5,6 +5,10 @@ on:
     branches: [main]
     tags: ["v*"]
   pull_request:
+    # Docs-only PRs need no build; main still builds every merge, and it gates releases.
+    # Later patterns win: the notices and licenses compiled into the app still build.
+    paths: ["**", "!**.md", "!docs/**", "!starter/docs/**", "!.claude/**",
+            "starter/THIRD_PARTY_NOTICES.md", "starter/licenses/**"]
   workflow_dispatch:
 
 permissions:
@@ -17,9 +21,12 @@ concurrency:
 
 jobs:
   linux:
-    # Skip PRs from release/* branches (version bumps already built on the feature branches).
-    # head_ref is empty for push/tag/dispatch runs, so those are unaffected.
-    if: ${{ !startsWith(github.head_ref, 'release/') }}
+    # Skip PRs from release/* branches (version bumps already built on the feature branches), and their
+    # merge into main: the release tag on that same commit builds it. head_ref is empty for push/tag/dispatch
+    # runs, and only the main branch push checks the merge message.
+    if: >-
+      ${{ !startsWith(github.head_ref, 'release/') && !(github.ref == 'refs/heads/main'
+      && startsWith(github.event.head_commit.message, 'Merge pull request') && contains(github.event.head_commit.message, format('from {0}/release/', github.repository_owner))) }}
     # Ubuntu 22.04 sets the glibc 2.35 baseline for the released binary.
     runs-on: ubuntu-22.04
     defaults:
@@ -56,6 +63,7 @@ jobs:
       - name: Build and test portable core
         run: |
           cmake -S . -B build-core -G Ninja -DAGENT_PET_PORTABLE_CORE=ON -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
             -DCMAKE_DISABLE_FIND_PACKAGE_X11=TRUE -DCMAKE_DISABLE_FIND_PACKAGE_LibArchive=TRUE \
             -DCMAKE_DISABLE_FIND_PACKAGE_Qt6Widgets=TRUE -DCMAKE_DISABLE_FIND_PACKAGE_Qt6Network=TRUE
           cmake --build build-core
@@ -94,7 +102,9 @@ jobs:
           if-no-files-found: error
 
   macos:
-    if: ${{ !startsWith(github.head_ref, 'release/') }}
+    if: >-
+      ${{ !startsWith(github.head_ref, 'release/') && !(github.ref == 'refs/heads/main'
+      && startsWith(github.event.head_commit.message, 'Merge pull request') && contains(github.event.head_commit.message, format('from {0}/release/', github.repository_owner))) }}
     # One universal (arm64 + x86_64) bundle for macOS 11 and newer.
     runs-on: macos-14
     defaults:

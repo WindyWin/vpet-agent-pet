@@ -50,6 +50,7 @@ public:
     // The wellness reminder whose note is showing, until it is answered or another note replaces it.
     QString reminder() const { return reminder_; }
     int restLeft() const { return restLeft_; } // Seconds left of an eye break the user took; 0 for none.
+    void setRestTickMs(int ms) { rest_.setInterval(ms); } // One countdown second; tests shorten it.
 private:
     void refreshAlerts();
     void remind();

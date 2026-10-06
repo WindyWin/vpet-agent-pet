@@ -22,14 +22,14 @@ ctest --test-dir build --output-on-failure
 ./build/agent-pet                         # run the pet (--preview, --settings, --state thinking, --no-persist)
 ```
 
-Tests are Qt Test executables registered with CTest (`updates`, `update-install`, `providers`, `events`, `alerts`, `focus`, `startup`, `prototype`; macOS registers all but `updates`, `update-install` and `startup`):
+Tests are Qt Test executables registered with CTest (`updates`, `update-install`, `providers`, `events`, `alerts`, `focus`, `startup`, `prototype-1`…`prototype-4`; macOS registers all but `updates`, `update-install` and `startup`):
 
 ```bash
 ctest --test-dir build -R events --output-on-failure            # one CTest suite
 QT_QPA_PLATFORM=offscreen ./build/prototype-tests variantsAreDrawnByWeight   # one test function
 ```
 
-`prototype` and `updates` need `QT_QPA_PLATFORM=offscreen` when run directly (CTest sets it). `desktop-tests` is built but not registered: it moves the real pointer, so run it (`QT_QPA_PLATFORM=xcb ./build/desktop-tests`) only when the desktop is free.
+`prototype-tests` and `update-tests` need `QT_QPA_PLATFORM=offscreen` when run directly (CTest sets it). CTest runs `prototype-tests` as four `--shard K/4` processes so `ctest -j` spreads the slowest suite over the cores (`-R prototype` still selects them all); its `main` deals the known-slow functions first, so list a new slow one there. `desktop-tests` is built but not registered: it moves the real pointer, so run it (`QT_QPA_PLATFORM=xcb ./build/desktop-tests`) only when the desktop is free.
 
 Send events to a running pet without hooks:
 
