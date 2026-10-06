@@ -157,6 +157,7 @@ private:
     QVariantAnimation slide_; // Eases a let-go pet to its hiding place before the hide plays, or a climber on and off its wall.
     QPointer<QDialog> settingsDialog_, previewDialog_;
     QAction *clickAction_ = nullptr, *onTopAction_ = nullptr, *muteAction_ = nullptr, *showAction_ = nullptr;
+    QAction *updateAction_ = nullptr, *updatesItem_ = nullptr;
     Presence presence_;
     QPixmap trayBase_;
     int trayAttention_ = 0; // Badge shown on the tray icon; -1 forces a redraw.
