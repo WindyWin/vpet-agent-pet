@@ -89,11 +89,11 @@ NoteBubble::NoteBubble(QWidget *parent) : QWidget(parent) {
     hide_.setSingleShot(true);
     connect(&hide_, &QTimer::timeout, this, &QWidget::hide);
 }
-void NoteBubble::say(const QString &text, const QRect &pet, const QVector<QRect> &screens, const QString &details) {
+void NoteBubble::say(const QString &text, const QRect &pet, const QVector<QRect> &screens, const QString &details, int ms) {
     details_ = details; pet_ = pet; screens_ = screens;
     setCursor(details.isEmpty() ? Qt::ArrowCursor : Qt::PointingHandCursor);
     setToolTip(details.isEmpty() ? QString() : "Click for more");
-    present(text, 7000);
+    present(text, ms);
 }
 void NoteBubble::present(const QString &text, int ms) {
     label_->setText(text);
@@ -105,7 +105,7 @@ void NoteBubble::present(const QString &text, int ms) {
     show(); raise(); hide_.start(ms);
 }
 void NoteBubble::mouseReleaseEvent(QMouseEvent *) {
-    if (details_.isEmpty()) { hide(); return; }
+    if (details_.isEmpty()) { hide(); emit clicked(); return; }
     const auto details = details_; details_.clear();
     setCursor(Qt::ArrowCursor); setToolTip({});
     present(details, 15000);

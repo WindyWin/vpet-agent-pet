@@ -42,11 +42,23 @@ public:
     // Is the user already looking at this session? Only Active suppresses its new alerts.
     std::function<platform::ActiveState(const Session &)> hostActive;
     std::function<hosts::FocusResult(const Session &)> bringForward;
+    // Where the pointer is; moving it counts as activity for wellness reminders.
+    std::function<QPoint()> pointer;
+    // Whether the screen is locked; while it is, nothing counts as activity and no reminder shows. Unset: never.
+    std::function<bool()> locked;
     static const QString bedtimeNote; // Shown once a night when a turn finishes late.
+    // The wellness reminder whose note is showing, until it is answered or another note replaces it.
+    QString reminder() const { return reminder_; }
+    int restLeft() const { return restLeft_; } // Seconds left of an eye break the user took; 0 for none.
 private:
     void refreshAlerts();
     void remind();
-    void say(const QString &text, const QString &details = {});
+    void remindWellness(qint64 now);
+    bool calm(qint64 now) const;
+    void answered();
+    void rest();
+    void dropReminder(); // Hides a shown reminder or countdown without counting it as answered.
+    void say(const QString &text, const QString &details = {}, int ms = NoteBubble::defaultMs);
     bool shown(const Alert &alert) const;
     PetWindow &window_;
     std::shared_ptr<hosts::FocusService> focus_;
@@ -58,8 +70,10 @@ private:
     RecapStore recapStore_;
     Recap recap_; // Persisted shortly after each change, and when monitoring stops.
     std::unique_ptr<Receiver> receiver_;
-    QTimer timer_, recapTimer_;
-    QString lastAggregate_;
+    QTimer timer_, rest_, recapTimer_;
+    QString lastAggregate_, reminder_;
+    QPoint lastPointer_;
+    int restLeft_ = 0;
     qint64 lastTurnMs_ = 0; // How long the latest finished turn ran, for a long-turn celebration.
     quint64 heard_ = 0;
     bool observed_ = false, active_ = true;

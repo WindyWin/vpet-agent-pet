@@ -59,7 +59,7 @@ list(APPEND pet_notices THIRD_PARTY_NOTICES.md LICENSE NOTICE)
 qt_add_library(pet_ui STATIC
     src/animation/player.cpp src/animation/ambient.cpp src/animation/mood.cpp src/animation/easter_eggs.cpp
     src/desktop/pet_window.cpp
-    src/desktop/touch.cpp src/desktop/wander.cpp src/desktop/alert_bubble.cpp src/desktop/monitor.cpp
+    src/desktop/touch.cpp src/desktop/wander.cpp src/desktop/wellness.cpp src/desktop/alert_bubble.cpp src/desktop/monitor.cpp
     src/desktop/session_list.cpp src/updates/controller.cpp)
 target_include_directories(pet_ui PUBLIC src "${CMAKE_CURRENT_BINARY_DIR}/generated")
 target_link_libraries(pet_ui PUBLIC Qt6::Widgets pet_events pet_updates Qt6::Network PRIVATE pet_native)
@@ -80,7 +80,8 @@ target_link_libraries(pet_platform_linux PUBLIC Qt6::Core)
 # (platform/native.h). Only this target links X11 and D-Bus.
 qt_add_library(pet_native STATIC src/platform/linux/native.cpp
     src/platform/desktop/x11/connection.cpp src/platform/desktop/x11/pointer.cpp src/platform/desktop/x11/x11_desktop.cpp
-    src/platform/desktop/kwin/kwin_desktop.cpp src/hosts/adapters/konsole_dbus.cpp)
+    src/platform/desktop/kwin/kwin_desktop.cpp src/platform/desktop/screensaver/screen_lock.cpp
+    src/hosts/adapters/konsole_dbus.cpp)
 target_include_directories(pet_native PUBLIC src)
 target_link_libraries(pet_native PUBLIC pet_hosts PRIVATE pet_platform_linux Qt6::Gui Qt6::DBus X11::X11)
 # Headless code shared by the pet and its display-free commands (hook, integration, autostart).
