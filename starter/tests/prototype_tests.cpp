@@ -58,6 +58,39 @@ void writeCatalog(const QString &root, const QJsonObject &catalog) {
 void playOut(pet::Player &player) {
     for (int i = 0; i < 12 && player.state() != "idle"; ++i) finishSequence(player);
 }
+// The reactions that only celebrate or surprise.
+QSet<QString> celebrations(pet::Player &player) {
+    QSet<QString> reactions;
+    for (const auto *name : {"turn_finished", "snack", "milestone", "long_turn", "friday_evening", "may20", "birthday",
+                             "konami", "danger"})
+        for (const auto &reaction : player.reactions(name)) reactions.insert(reaction.state);
+    return reactions;
+}
+// Every state under one mood, every frame decoded within the size and cache bounds, each state played out.
+void playsEveryFrame(pet::Player &player, const char *mood) {
+    const auto reactions = celebrations(player);
+    auto checkSequence = [&] {
+        const int count = player.frameCount();
+        for (int i = 0; i < count; ++i) {
+            QVERIFY2(!player.pixmap().isNull(), qPrintable(player.error()));
+            QVERIFY(player.pixmap().width() <= 640); QVERIFY(player.pixmap().height() <= 640);
+            QVERIFY(player.cacheKiB() <= pet::Player::cacheLimitKiB); player.advance();
+        }
+    };
+    for (const auto &state : player.states()) {
+        player.setMood(mood);
+        QVERIFY(player.select(state, true));
+        checkSequence();
+        if (player.isFidget(state) || reactions.contains(state)) { // Plays itself out and hands back to idle.
+            for (int pass = 0; pass < 10 && player.state() == state; ++pass) checkSequence();
+            QCOMPARE(player.state(), QString("idle"));
+        } else if (player.state() == state && player.phase() == "loop" && state != "idle") {
+            checkSequence(); player.select("idle"); QCOMPARE(player.phase(), QString("end"));
+            checkSequence(); QCOMPARE(player.state(), QString("idle"));
+        }
+        QVERIFY2(player.error().isEmpty(), qPrintable(player.error()));
+    }
+}
 bool loads(const QJsonObject &catalog) {
     QTemporaryDir directory; fixture(directory.path()); // The images the catalog's sequences point at.
     writeCatalog(directory.path(), catalog);
@@ -140,10 +173,7 @@ private slots:
     void everyIncludedFrameAndCacheBound() {
         pet::Player player; player.setPaused(true); player.setRenderSize(640);
         // The session states, the reactions that only celebrate or surprise, and the fidgets.
-        QSet<QString> reactions;
-        for (const auto *name : {"turn_finished", "snack", "milestone", "long_turn", "friday_evening", "may20", "birthday",
-                                 "konami", "danger"})
-            for (const auto &reaction : player.reactions(name)) reactions.insert(reaction.state);
+        const auto reactions = celebrations(player);
         QCOMPARE(reactions.size(), 10);
         // Late at night the pet yawns more, with a fidget it already has.
         QCOMPARE(player.reactions("late_night").size(), 1); QVERIFY(player.isFidget(player.reactions("late_night").first().state));
@@ -160,34 +190,16 @@ private slots:
         for (const auto &state : player.states())
             if (player.move(state)) { ++moves; QVERIFY2(player.isFidget(state), qPrintable(state)); }
         QCOMPARE(moves, 12); QCOMPARE(player.moveScale(), 500);
-        auto checkSequence = [&] {
-            const int count = player.frameCount();
-            for (int i = 0; i < count; ++i) {
-                QVERIFY2(!player.pixmap().isNull(), qPrintable(player.error()));
-                QVERIFY(player.pixmap().width() <= 640); QVERIFY(player.pixmap().height() <= 640);
-                QVERIFY(player.cacheKiB() <= pet::Player::cacheLimitKiB); player.advance();
-            }
-        };
-        // Every state under every mood, so each mood's art is decoded too.
-        for (const auto *mood : {"", "happy", "poor"}) for (const auto &state : player.states()) {
-            player.setMood(mood);
-            QVERIFY(player.select(state, true));
-            checkSequence();
-            if (player.isFidget(state) || reactions.contains(state)) { // Plays itself out and hands back to idle.
-                for (int pass = 0; pass < 10 && player.state() == state; ++pass) checkSequence();
-                QCOMPARE(player.state(), QString("idle"));
-            } else if (player.state() == state && player.phase() == "loop" && state != "idle") {
-                checkSequence(); player.select("idle"); QCOMPARE(player.phase(), QString("end"));
-                checkSequence(); QCOMPARE(player.state(), QString("idle"));
-            }
-            QVERIFY2(player.error().isEmpty(), qPrintable(player.error()));
-        }
+        playsEveryFrame(player, ""); if (QTest::currentTestFailed()) return;
         for (int i = 0; i < 50; ++i) {
             player.select(i % 2 ? "thinking" : "working", true);
             QVERIFY(player.cacheKiB() <= 1600);
         }
         player.setRenderSize(160); QVERIFY(player.cacheKiB() <= 100);
     }
+    // Each mood's art is decoded too; separate functions so test shards can share the work.
+    void everyHappyFrame() { pet::Player player; player.setPaused(true); player.setRenderSize(640); playsEveryFrame(player, "happy"); }
+    void everyPoorFrame() { pet::Player player; player.setPaused(true); player.setRenderSize(640); playsEveryFrame(player, "poor"); }
     void brokenResourcesRecover() {
         QTemporaryDir directory; auto catalog = fixture(directory.path()); writeCatalog(directory.path(), catalog);
         pet::Player player(nullptr, directory.path()); player.setPaused(true); QVERIFY(player.valid());
@@ -1792,6 +1804,7 @@ private slots:
         window.ambient().setLevel(pet::AmbientLevel::Off);
         QDateTime local(QDate(2026, 10, 7), QTime(12, 0)); window.eggs().setClock([&] { return local; });
         QPoint pointer; monitor.pointer = [&] { return pointer; };
+        monitor.setRestTickMs(10); // The twenty-second eye break, in a fifth of a second.
         const qint64 minute = 60000; qint64 t = QDateTime::currentMSecsSinceEpoch();
         // The user keeps moving the pointer; the monitor's updates notice.
         auto work = [&](qint64 minutes) {
@@ -1806,7 +1819,7 @@ private slots:
         emit monitor.note().clicked(); QCOMPARE(monitor.restLeft(), 20); QVERIFY(monitor.note().isVisible());
         QVERIFY(monitor.note().text().endsWith("20")); QCOMPARE(monitor.reminder(), QString());
         playOut(player);
-        QTRY_COMPARE_WITH_TIMEOUT(monitor.restLeft(), 0, 25000);
+        QTRY_COMPARE_WITH_TIMEOUT(monitor.restLeft(), 0, 2500);
         QCOMPARE(player.requestedState(), QString("cheer_shy")); playOut(player);
         monitor.note().hide();
         // An approval waiting holds a due reminder until it is answered; then it comes.
@@ -2168,5 +2181,34 @@ private slots:
         dialog->close(); QCoreApplication::processEvents();
     }
 };
-QTEST_MAIN(PrototypeTests)
+// QTEST_MAIN, plus "--shard K/N": run every Nth test function from the Kth on, so CTest can run the suite
+// as parallel processes. The slowest functions are dealt first, so no shard gets two of them; every function
+// runs in exactly one shard either way. initTestCase and cleanupTestCase run in each shard.
+int main(int argc, char *argv[]) {
+    QApplication app(argc, argv);
+    app.setAttribute(Qt::AA_Use96Dpi, true);
+    PrototypeTests tests;
+    QTEST_SET_MAIN_SOURCE_PATH
+    QStringList arguments;
+    for (int i = 0; i < argc; ++i) arguments << QString::fromLocal8Bit(argv[i]);
+    if (const auto at = arguments.indexOf("--shard"); at > 0) {
+        const auto parts = arguments.value(at + 1).split('/');
+        const int shard = parts.value(0).toInt(), shards = parts.value(1).toInt();
+        if (parts.size() != 2 || shard < 1 || shard > shards) { qCritical("--shard expects K/N"); return 2; }
+        arguments.remove(at, 2);
+        QStringList functions;
+        const auto *meta = tests.metaObject();
+        for (int i = meta->methodOffset(); i < meta->methodCount(); ++i) {
+            const auto method = meta->method(i); const QByteArray name = method.name();
+            if (method.methodType() != QMetaMethod::Slot || method.parameterCount() > 0 || name.endsWith("_data") ||
+                name == "initTestCase" || name == "cleanupTestCase" || name == "init" || name == "cleanup") continue;
+            functions << QString::fromLatin1(name);
+        }
+        int slow = 0;
+        for (const auto *name : {"decorationFollowsEveryRequest", "everyIncludedFrameAndCacheBound", "everyHappyFrame", "everyPoorFrame"})
+            if (const auto at = functions.indexOf(name); at >= 0) functions.move(at, slow++);
+        for (int index = shard - 1; index < functions.size(); index += shards) arguments << functions.at(index);
+    }
+    return QTest::qExec(&tests, arguments);
+}
 #include "prototype_tests.moc"
