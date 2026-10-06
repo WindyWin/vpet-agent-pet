@@ -13,6 +13,11 @@ QVector<platform::Command> selectCommands(const Target &target);
 // API socket used by a local herdr UI invocation; empty for other commands and remotes.
 QString clientSocket(const QProcessEnvironment &environment, const QStringList &arguments);
 Capture capture();
+// Finds a Codex-style session's pane when its hook ran outside the terminal: the
+// agent of that provider whose cwd is the project, taking the focused one if several
+// match and nothing if still ambiguous. Keeps the captured hints. `socket` is the
+// API socket to ask; empty means herdr's default.
+std::unique_ptr<Locator> locator(std::shared_ptr<platform::CommandRunner> commands, QString socket);
 // Selects the tab and pane through the herdr CLI. Pane ancestors lead to the
 // detached server, so live UI clients of the same socket are raised first, each
 // after selecting the Konsole tab it runs in, before the session's own hints.

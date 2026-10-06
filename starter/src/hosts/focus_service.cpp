@@ -1,4 +1,5 @@
 #include "focus_service.h"
+#include "adapters/generic.h"
 
 namespace pet::hosts {
 void FocusService::addActivation(std::unique_ptr<Activation> activation) {
@@ -6,6 +7,7 @@ void FocusService::addActivation(std::unique_ptr<Activation> activation) {
     activations_[id] = std::move(activation);
 }
 void FocusService::addBackend(std::unique_ptr<platform::DesktopBackend> backend) { backends_.push_back(std::move(backend)); }
+void FocusService::addLocator(std::unique_ptr<Locator> locator) { locators_.push_back(std::move(locator)); }
 Activation *FocusService::find(const QString &id) const {
     const auto it = activations_.find(id);
     return it == activations_.end() ? nullptr : it->second.get();
@@ -21,9 +23,12 @@ static int severity(Outcome outcome) {
     default: return 0;
     }
 }
-FocusResult FocusService::focus(HostContext host, const QString &project) {
+FocusResult FocusService::focus(HostContext host, const QString &project, const QString &provider) {
     FocusResult result;
     if (host.isNull()) { result.activation = Outcome::MissingTarget; return result; }
+    if (host.adapter == terminal::id && !provider.isEmpty())
+        for (const auto &locator : locators_)
+            if (const auto located = locator->locate(host, provider, project); !located.isNull()) { host = located; break; }
     if (!registry_.find(host.adapter)) { result.selection = result.activation = Outcome::Unsupported; return result; }
     auto *activation = find(host.adapter);
     if (!activation) result.selection = Outcome::Unsupported;

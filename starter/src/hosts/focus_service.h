@@ -29,6 +29,16 @@ public:
     virtual bool windowShowsSession() const { return true; }
 };
 
+// Finds the real host of a session whose hook could not see it. Codex runs hooks
+// from a shared daemon outside the terminal, so the hook only captured a generic
+// terminal; a locator names the multiplexer pane from the provider and project.
+class Locator {
+public:
+    virtual ~Locator() = default;
+    // The host to use instead, or a null context to keep the captured one.
+    virtual HostContext locate(const HostContext &host, const QString &provider, const QString &project) = 0;
+};
+
 // Selection and activation are reported separately: a selected tab in a window
 // that could not be raised is not focus.
 struct FocusResult {
@@ -52,7 +62,9 @@ public:
     void addActivation(std::unique_ptr<Activation> activation);
     // Backends are tried in registration order.
     void addBackend(std::unique_ptr<platform::DesktopBackend> backend);
-    FocusResult focus(HostContext host, const QString &project);
+    // Locators are tried in order, and only for a host that is a bare terminal.
+    void addLocator(std::unique_ptr<Locator> locator);
+    FocusResult focus(HostContext host, const QString &project, const QString &provider = {});
     // Active only when a backend sees the host's window active and that shows the session.
     ActiveState active(const HostContext &host, const QString &project);
 private:
@@ -60,5 +72,6 @@ private:
     const Registry &registry_;
     std::map<QString, std::unique_ptr<Activation>> activations_;
     std::vector<std::unique_ptr<platform::DesktopBackend>> backends_;
+    std::vector<std::unique_ptr<Locator>> locators_;
 };
 }

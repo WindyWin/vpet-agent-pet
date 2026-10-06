@@ -3,6 +3,9 @@
 #include "konsole.h"
 #include "multiplexer.h"
 #include <QDir>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 
 namespace pet::hosts::herdr {
 namespace {
@@ -41,6 +44,39 @@ private:
     std::shared_ptr<const platform::ProcessServices> processes_;
     const Registry &registry_;
 };
+class HerdrLocator : public Locator {
+public:
+    HerdrLocator(std::shared_ptr<platform::CommandRunner> commands, QString socket)
+        : commands_(std::move(commands)), socket_(std::move(socket)) {}
+    HostContext locate(const HostContext &host, const QString &provider, const QString &project) override {
+        if (project.isEmpty()) return {};
+        QMap<QString, QString> env;
+        if (!socket_.isEmpty()) env["HERDR_SOCKET_PATH"] = socket_;
+        QByteArray output;
+        if (!platform::succeeded(commands_->run({"herdr", {"agent", "list"}, env}, &output))) return {};
+        const auto agents = QJsonDocument::fromJson(output).object().value("result").toObject().value("agents").toArray();
+        QJsonObject match;
+        int found = 0, focused = 0;
+        QJsonObject focusedMatch;
+        for (const auto &value : agents) {
+            const auto agent = value.toObject();
+            if (agent.value("agent").toString() != provider || agent.value("cwd").toString() != project) continue;
+            match = agent; ++found;
+            if (agent.value("focused").toBool()) { focusedMatch = agent; ++focused; }
+        }
+        if (found > 1) { match = focusedMatch; found = focused; }
+        if (found != 1) return {};
+        HostContext located{id, host.pids, host.window, match.value("tab_id").toString() + "|" + match.value("pane_id").toString() + "|" + socket_};
+        Target decoded;
+        return decode(located.target, decoded) ? located : HostContext{};
+    }
+private:
+    std::shared_ptr<platform::CommandRunner> commands_;
+    QString socket_;
+};
+}
+std::unique_ptr<Locator> locator(std::shared_ptr<platform::CommandRunner> commands, QString socket) {
+    return std::make_unique<HerdrLocator>(std::move(commands), std::move(socket));
 }
 std::unique_ptr<Activation> activation(std::shared_ptr<platform::CommandRunner> commands,
                                        std::shared_ptr<const platform::ProcessServices> processes, const Registry &registry) {

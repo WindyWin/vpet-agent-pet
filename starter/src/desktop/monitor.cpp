@@ -12,7 +12,7 @@ Monitor::Monitor(PetWindow &window, std::shared_ptr<hosts::FocusService> focus)
     : window_(window), focus_(std::move(focus)), recapStore_(window.recapPath()), recap_(recapStore_.load()) {
     if (focus_) {
         hostActive = [this](const Session &s) { return focus_->active(s.host, s.project); };
-        bringForward = [this](const Session &s) { return focus_->focus(s.host, s.project); };
+        bringForward = [this](const Session &s) { return focus_->focus(s.host, s.project, s.provider); };
     }
     pointer = [] { return QCursor::pos(); };
     lastPointer_ = pointer();

@@ -10,6 +10,9 @@
 #include "sessions/state.h"
 #include <QJsonDocument>
 #include <QElapsedTimer>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QTest>
 
 // Session focus contracts with fake adapters, backends and services: no desktop,
@@ -245,6 +248,59 @@ private slots:
         log.clear(); f.second->outcome = Outcome::Failed;
         f.service.focus({"herdr", {700}, {}, "|p_3|"}, {});
         QCOMPARE(log, (QStringList{"herdr agent", "x11:700", "kwin:700"}));
+    }
+    void herdrLocatesAgentBehindSharedDaemon() {
+        // Codex runs hooks from a daemon outside the pane, so the hook only saw a bare terminal.
+        // The pane is found by provider and project among herdr's agents.
+        auto agents = [](QList<std::tuple<QString, QString, QString, bool>> list) {
+            QJsonArray array;
+            for (const auto &[agent, cwd, pane, focused] : list)
+                array.append(QJsonObject{{"agent", agent}, {"cwd", cwd}, {"pane_id", pane}, {"tab_id", pane.section(':', 0, 0) + ":t1"},
+                                         {"focused", focused}});
+            return QJsonDocument(QJsonObject{{"result", QJsonObject{{"agents", array}, {"type", "agent_list"}}}}).toJson(QJsonDocument::Compact);
+        };
+        const HostContext daemon{"terminal", {900, 1}, {}, {}};
+        const auto setup = [&](Fixture &f, const std::shared_ptr<Runner> &runner) {
+            f.service.addActivation(pet::hosts::herdr::activation(runner, std::make_shared<Processes>()));
+            f.service.addLocator(pet::hosts::herdr::locator(runner, "/run/h.sock"));
+        };
+        {   // The Claude pane in the same directory is not the Codex session.
+            const auto runner = std::make_shared<Runner>();
+            runner->clients = agents({{"claude", "/work/web", "w1:pA", false}, {"codex", "/work/web", "w1:p8", false},
+                                      {"codex", "/work/api", "w1:p5", false}});
+            Fixture f(Outcome::TargetNotFound, Outcome::Confirmed); setup(f, runner);
+            QVERIFY(f.service.focus(daemon, "/work/web", "codex").raised());
+            QCOMPARE(runner->commands.size(), 3);
+            QCOMPARE(runner->commands[0].arguments, (QStringList{"agent", "list"}));
+            QCOMPARE(runner->commands[1].arguments, (QStringList{"tab", "focus", "w1:t1"}));
+            QCOMPARE(runner->commands[2].arguments, (QStringList{"agent", "focus", "w1:p8"}));
+            QCOMPARE(runner->commands[2].environment.value("HERDR_SOCKET_PATH"), QString("/run/h.sock"));
+        }
+        {   // Two candidates: the focused one wins; with none focused nothing is guessed.
+            const auto runner = std::make_shared<Runner>();
+            runner->clients = agents({{"codex", "/work/web", "w1:p3", false}, {"codex", "/work/web", "w1:p8", true}});
+            Fixture f(Outcome::TargetNotFound, Outcome::Confirmed); setup(f, runner);
+            f.service.focus(daemon, "/work/web", "codex");
+            QCOMPARE(runner->commands.last().arguments, (QStringList{"agent", "focus", "w1:p8"}));
+            runner->clients = agents({{"codex", "/work/web", "w1:p3", false}, {"codex", "/work/web", "w1:p8", false}});
+            runner->commands.clear();
+            QVERIFY(f.service.focus(daemon, "/work/web", "codex").raised()); // Still raised from its hints.
+            QCOMPARE(runner->commands.size(), 1);                              // Only the lookup.
+        }
+        {   // Nothing to look up: another host, no provider, a failed lookup or no match.
+            const auto runner = std::make_shared<Runner>();
+            runner->clients = agents({{"codex", "/work/web", "w1:p8", true}});
+            Fixture f(Outcome::TargetNotFound, Outcome::Confirmed); setup(f, runner);
+            f.service.focus({"herdr", {900}, {}, "|w1:p8|"}, "/work/web", "codex");
+            QCOMPARE(runner->commands.size(), 1); QCOMPARE(runner->commands[0].arguments.value(0), QString("agent")); // Its own focus only.
+            runner->commands.clear();
+            f.service.focus(daemon, "/work/web", {});
+            f.service.focus(daemon, "/elsewhere", "codex");
+            QCOMPARE(runner->commands.size(), 1); // Only the second lookup; no pane matches.
+            runner->commands.clear(); runner->outcomes["agent"] = Outcome::Failed;
+            QVERIFY(f.service.focus(daemon, "/work/web", "codex").raised());
+            QCOMPARE(runner->commands.size(), 1);
+        }
     }
     void herdrClientCaptureUsesNames() {
         // A herdr client in a VS Code terminal: VS Code was launched from a terminal, so it inherited $WINDOWID.

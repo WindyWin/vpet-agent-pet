@@ -447,6 +447,20 @@ boolean did.
 | herdr | `herdr tab focus`, `herdr agent focus` | Stops | Each live UI client of the same API socket, after selecting the Konsole tab it runs in; then its own hints | Never: `Unknown` |
 | VS Code, terminal | None | — | Its hints | Yes |
 
+**Hooks that run outside the terminal.** Codex runs hooks from a shared
+`codex app-server` daemon whose parent is `systemd --user`, not the pane. The hook
+sees no `herdr` ancestor, so it reports a bare `terminal` host, and the daemon's
+inherited `HERDR_PANE_ID` names whichever pane first started it, so it is never
+trusted. The hook must stay fast and never block, so it does not look further. At
+Open time, a `terminal` host whose session has a provider goes through the
+`FocusService` locators: the herdr locator runs `herdr agent list` and takes the
+agent whose `agent` equals the provider and whose `cwd` equals the session's
+project. With several matches it takes the focused one; if that is still ambiguous
+(or the lookup fails) it keeps the captured host and guesses nothing. The result is
+an ordinary herdr host, so selection and client raising work as above, and the
+captured pids stay as hints. Resolution is read-only and never sent over the wire,
+so v1 fields are unchanged.
+
 A malformed target is `MissingTarget`: nothing is selected or run, and the window is
 still raised from the remaining hints, as before. Commands are argument arrays run
 through `platform::CommandRunner` (1.5 s each; common user tool directories are

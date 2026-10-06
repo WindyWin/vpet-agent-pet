@@ -15,6 +15,8 @@ std::unique_ptr<hosts::FocusService> createFocusService() {
     service->addActivation(hosts::konsole::activation());
     service->addActivation(hosts::tmux::activation(commands, processes));
     service->addActivation(hosts::herdr::activation(commands, processes));
+    // Codex hooks run in a shared daemon, outside the pane; its pane is found through herdr.
+    service->addLocator(hosts::herdr::locator(commands, hosts::herdr::clientSocket(QProcessEnvironment::systemEnvironment(), {})));
     // Backends are chosen by what the session offers, not by distribution: X11/XWayland
     // first, then KWin's scripting API for native Wayland windows on Plasma 6.
     service->addBackend(std::make_unique<x11::X11Desktop>());
