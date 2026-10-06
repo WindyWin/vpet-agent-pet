@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Build the relocatable Linux release bundle from a trusted local build (not arbitrary ELF files)."""
 import argparse
+from concurrent.futures import ThreadPoolExecutor
 import ctypes
 import ctypes.util
 import gzip
@@ -99,7 +100,8 @@ def write_components(output, version, architecture):
         groups.setdefault(component, []).append(path)
     base = f"agent-pet-{version}-linux-{architecture}"
     manifest = {"format": 2 if any(name.startswith("artwork-") for name in groups) else 1, "version": version, "architecture": architecture, "components": []}
-    for name, paths in groups.items():
+
+    def pack(name, paths):
         archive_path = output.parent / f"{base}-{name}.tar.gz"
         files = []
         # Fixed names, ordering, ownership and times make unchanged components reproducible.
@@ -114,9 +116,12 @@ def write_components(output, version, architecture):
                         archive.addfile(entry, content)
                     files.append({"path": relative, "size": entry.size, "executable": executable,
                                   "digest": "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()})
-        manifest["components"].append({"name": name, "archive": archive_path.name,
-                                       "size": archive_path.stat().st_size, "files": files,
-                                       "digest": "sha256:" + hashlib.sha256(archive_path.read_bytes()).hexdigest()})
+        return {"name": name, "archive": archive_path.name, "size": archive_path.stat().st_size, "files": files,
+                "digest": "sha256:" + hashlib.sha256(archive_path.read_bytes()).hexdigest()}
+
+    # zlib and hashlib release the GIL, so threads compress in parallel; map keeps the manifest order.
+    with ThreadPoolExecutor() as pool:
+        manifest["components"] = list(pool.map(pack, groups.keys(), groups.values()))
     (output.parent / f"{base}-components.json").write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
     return manifest
 
@@ -224,8 +229,11 @@ def main():
                 "qt_version": run(QMAKE, "-query", "QT_VERSION"),
                 "glibc_build_host": platform.libc_ver()[1]}
     (output / "share/agent-pet/runtime-manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
-    archive = shutil.make_archive(str(output), "gztar", output.parent, output.name)
-    components = write_components(output, version, platform.machine())
+    # The complete archive is one long gzip stream; build it while the components compress.
+    with ThreadPoolExecutor(1) as pool:
+        complete = pool.submit(shutil.make_archive, str(output), "gztar", output.parent, output.name)
+        components = write_components(output, version, platform.machine())
+        archive = complete.result()
     for component in components["components"]:
         print(f"{component['name']}: {component['size'] / 1024 / 1024:.2f} MiB")
     print(f"Created {archive}; {len(sources)} bundled libraries. See docs/install.md for host requirements.")
