@@ -57,7 +57,7 @@ bool parseRelease(const QJsonObject &object, const QString &architecture, Releas
         if (!QRegularExpression("^sha256:[0-9a-f]{64}$").match(release.digest).hasMatch()) release.digest.clear();
         return true;
     }
-    error = "This release has no compatible Linux package."; return false;
+    error = "This release has no compatible package for this system."; return false;
 }
 bool verifiedArchive(const QString &path, const QString &digest, QString &error) {
     if (QFileInfo(path).size() <= 0) { error = "Cannot read update package."; return false; }

@@ -1,0 +1,43 @@
+Agent Pet for macOS (Apple silicon and Intel)
+=============================================
+
+Install or upgrade:
+
+ 1. Drag "Agent Pet.app" into Applications. Do this before the first launch:
+    macOS runs an app opened straight from Downloads from a temporary copy,
+    and hooks registered from that copy would stop working.
+ 2. Open it. This build is not notarized by Apple, so macOS blocks the first
+    launch:
+      - macOS 15 or newer: open it once, then System Settings > Privacy &
+        Security > "Open Anyway".
+      - macOS 14 or older: Control-click the app > Open > Open.
+    Or, in Terminal:  xattr -dr com.apple.quarantine "/Applications/Agent Pet.app"
+ 3. The pet appears on the desktop and its icon in the menu bar. Right-click
+    the pet > Settings > Startup and agents to connect Claude Code or Codex,
+    then restart the agent client.
+
+To upgrade, quit the pet, replace the app in Applications and open it again.
+Settings and enabled hooks are kept.
+
+From Terminal (preview first; only Agent Pet's own hook entries change):
+
+    "/Applications/Agent Pet.app/Contents/MacOS/agent-pet" integration preview --provider claude
+    "/Applications/Agent Pet.app/Contents/MacOS/agent-pet" integration enable --provider claude
+    "/Applications/Agent Pet.app/Contents/MacOS/agent-pet" autostart enable --when-idle hide
+
+Use --provider codex for Codex.
+
+Not yet available on macOS: bringing the agent's terminal window to the front
+(Open still selects tmux and herdr panes) and automatic update installation
+(the pet announces new versions; download them from the release page).
+
+Remove: disable the hooks in Settings (or "integration disable" above), turn
+off "Start Agent Pet at login", quit the pet and move the app to the Trash. Settings
+are in ~/Library/Application Support/agent-pet.
+
+Requirements: macOS 11 or newer. Qt is bundled.
+
+License: application code is Apache-2.0 (Contents/Resources/LICENSE, NOTICE).
+The pet artwork is by the VUP-Simulator team and keeps its own terms; see
+Contents/Resources/THIRD_PARTY_NOTICES.md and Contents/Resources/licenses/.
+Bundled Qt notices are in Contents/Resources/runtime-licenses/.

@@ -3,8 +3,8 @@
 #include "hosts/adapters/konsole.h"
 #include "hosts/adapters/tmux.h"
 #include "hosts/focus_service.h"
-#ifdef PET_TEST_LINUX
-#include "platform/linux/commands.h"
+#ifdef PET_TEST_POSIX
+#include "platform/posix/commands.h"
 #endif
 #include "platform/unsupported/unsupported.h"
 #include "sessions/state.h"
@@ -376,9 +376,9 @@ private slots:
         // Built-in hosts are unknown to this registry.
         QCOMPARE(service.focus({"konsole", {12}, {}, {}}, {}).activation, Outcome::Unsupported);
     }
-#ifdef PET_TEST_LINUX
-    void linuxCommandRunner() {
-        pet::platform::LinuxCommandRunner runner;
+#ifdef PET_TEST_POSIX
+    void posixCommandRunner() {
+        pet::platform::PosixCommandRunner runner;
         QCOMPARE(runner.run({"agent-pet-no-such-program", {}, {}}), Outcome::Unsupported);
         QCOMPARE(runner.run({"true", {}, {}}), Outcome::Confirmed);
         QCOMPARE(runner.run({"false", {}, {}}), Outcome::Failed);

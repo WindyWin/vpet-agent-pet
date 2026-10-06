@@ -74,6 +74,11 @@ bool runIntegration(const QString &operation, const QString &provider, QString p
     if (operation == "enable" && (!QFileInfo(executable).isFile() || !QFileInfo(executable).isExecutable())) {
         error = "Hook executable does not exist or is not executable"; return fail();
     }
+    // macOS runs a downloaded app that was never moved from a temporary, read-only copy that later disappears.
+    if (operation == "enable" && executable.contains("/AppTranslocation/")) {
+        error = "macOS is running Agent Pet from a temporary copy. Move Agent Pet to Applications, open it from there, "
+                "and enable the hooks again."; return fail();
+    }
     if (path.isEmpty()) path = integrationConfigPath(provider);
     path = QFileInfo(path).absoluteFilePath();
     const bool write = operation == "enable" || operation == "disable";
