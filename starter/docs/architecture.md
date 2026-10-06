@@ -953,9 +953,14 @@ a real desktop, and CI on Qt 6.5.3.
 - Linux, after moving shared code to `src/platform/posix/`: full build and all
   eight CTest suites pass locally (Ubuntu 24.04, Qt 6.4.2 with the version floor
   lowered only for that local check; CI uses Qt 6.5.3).
-- macOS: CI (`macos-14`, Qt 6.5.3, universal arm64 + x86_64, deployment target
-  11.0) builds both profiles, runs the portable-core suites and the providers,
-  events, alerts, focus and prototype suites, and packages and checks the bundle.
+- macOS: CI run 113 (`macos-14`, Qt 6.5.3, universal arm64 + x86_64, deployment
+  target 11.0) passes both profiles: the 4 portable-core suites and the providers,
+  events, alerts, focus and prototype suites. Packaging produced a 146 MiB
+  `agent-pet-0.10.0-macos-universal.zip`; every bundled Mach-O file is universal and
+  loads only bundled or system libraries, `codesign --verify --deep --strict` passes,
+  and the bundled binary reports `agent-pet 0.10.0` and "Update HTTPS runtime:
+  available". The first runs caught a compile error, an offscreen test reading the
+  hardware button, and a test socket path over the 104-byte macOS limit.
 - Not yet verified by hand on a Mac: the pet window over other apps and full-screen
   spaces, the menu bar icon, dragging, login start, and hooks from Terminal, iTerm2
   and VS Code.
