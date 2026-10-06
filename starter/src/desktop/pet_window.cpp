@@ -28,6 +28,7 @@
 #include <QShortcut>
 #include <QSpinBox>
 #include <QStandardItemModel>
+#include <QTabWidget>
 #include <QTextBrowser>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
@@ -71,29 +72,36 @@ PetWindow::PetWindow(QWidget *parent, const QString &path, bool persist)
     connect(&player_, &Player::completed, this, [this](const QString &state) {
         if (quitting_ && state == "closing") qApp->quit();
     });
+    // Everyday actions stay at the top level; previews, troubleshooting, updates and credits go under More.
     showAction_ = menu_.addAction("Show pet");
     showAction_->setCheckable(true); showAction_->setChecked(true);
     connect(showAction_, &QAction::toggled, this, [this](bool shown) { setPetHidden(!shown); });
     menu_.addSeparator();
-    auto *states = menu_.addMenu("Preview state");
-    for (const auto &state : player_.states())
-        states->addAction(state, this, [this, state] { if (!quitting_) player_.select(state); });
     menu_.addAction("Running sessions…", this, &PetWindow::sessionsRequested);
     menu_.addAction("Today's recap", this, &PetWindow::recapRequested);
     muteAction_ = menu_.addAction("Mute alerts");
     muteAction_->setCheckable(true); muteAction_->setChecked(muted_);
     connect(muteAction_, &QAction::toggled, this, &PetWindow::setMuted);
-    menu_.addAction("Settings…", this, &PetWindow::showSettings);
-    menu_.addAction("Animation preview…", this, &PetWindow::showPreview);
     onTopAction_ = menu_.addAction("Always on top");
     onTopAction_->setCheckable(true); onTopAction_->setChecked(preferences.onTop);
     connect(onTopAction_, &QAction::toggled, this, &PetWindow::setOnTop);
-    clickAction_ = menu_.addAction("Click-through for 15 seconds");
+    menu_.addSeparator();
+    updateAction_ = menu_.addAction(QString()); updateAction_->setVisible(false); // Only while an update waits.
+    menu_.addAction("Settings…", this, &PetWindow::showSettings);
+    auto *more = menu_.addMenu("More");
+    auto *states = more->addMenu("Preview state");
+    for (const auto &state : player_.states())
+        states->addAction(state, this, [this, state] { if (!quitting_) player_.select(state); });
+    more->addAction("Animation preview…", this, &PetWindow::showPreview);
+    more->addSeparator();
+    clickAction_ = more->addAction("Click-through for 15 seconds");
     clickAction_->setCheckable(true);
     connect(clickAction_, &QAction::toggled, this, &PetWindow::setClickThrough);
-    menu_.addAction("Recover pet position and input", this, &PetWindow::recover);
+    more->addAction("Recover pet position and input", this, &PetWindow::recover);
+    more->addSeparator();
+    updatesItem_ = more->addAction("Updates…"); updatesItem_->setVisible(false);
+    more->addAction("About and artwork terms…", this, &PetWindow::showAbout);
     menu_.addSeparator();
-    menu_.addAction("About and artwork terms…", this, &PetWindow::showAbout);
     menu_.addAction("Quit", this, &PetWindow::requestQuit);
     trayBase_ = player_.pixmap();
     updateTrayIcon();
@@ -572,14 +580,29 @@ void PetWindow::keyPressEvent(QKeyEvent *event) {
 
 void PetWindow::setUpdates(updates::Controller *controller) {
     updates_ = controller;
-    auto *action = menu_.addAction(controller->indicator(), this, [this, controller] { controller->showSettings(this); });
-    connect(controller, &updates::Controller::changed, action, [controller, action] { action->setText(controller->indicator()); });
+    // "Updates…" always sits under More; a waiting update also shows at the top level.
+    const auto open = [this, controller] { controller->showSettings(this); };
+    updatesItem_->setVisible(true);
+    connect(updatesItem_, &QAction::triggered, this, open);
+    connect(updateAction_, &QAction::triggered, this, open);
+    const auto refresh = [this, controller] {
+        const auto text = controller->indicator();
+        updateAction_->setText(text); updateAction_->setVisible(text != "Updates…");
+    };
+    refresh(); connect(controller, &updates::Controller::changed, this, refresh);
 }
 void PetWindow::showSettings() {
     if (settingsDialog_) { settingsDialog_->show(); settingsDialog_->raise(); return; }
     auto *dialog = new QDialog(this); settingsDialog_ = dialog;
     dialog->setAttribute(Qt::WA_DeleteOnClose); dialog->setWindowTitle("Agent Pet settings");
-    auto *layout = new QFormLayout(dialog);
+    // Three short tabs instead of one long form; status and Close/Quit stay below them.
+    auto *outer = new QVBoxLayout(dialog);
+    auto *tabs = new QTabWidget(dialog); outer->addWidget(tabs);
+    const auto page = [tabs](const QString &title) {
+        auto *widget = new QWidget(tabs); tabs->addTab(widget, title);
+        return new QFormLayout(widget);
+    };
+    auto *layout = page("General");
     auto *size = new QSpinBox(dialog); size->setRange(160, 320); size->setSingleStep(20); size->setSuffix(" px"); size->setValue(width());
     size->setAccessibleName("Pet size"); layout->addRow("&Size", size);
     connect(size, &QSpinBox::valueChanged, this, &PetWindow::setPetSize);
@@ -596,6 +619,8 @@ void PetWindow::showSettings() {
     bubbles->setCurrentIndex(bubbles_); bubbles->setAccessibleName("Show alert bubbles");
     layout->addRow("Show &bubbles", bubbles);
     connect(bubbles, &QComboBox::currentIndexChanged, this, &PetWindow::setBubbles);
+    layout->addRow(reminderSettings(dialog));
+    layout = page("Pet");
     auto *ambient = new QComboBox(dialog);
     ambient->addItems({"Off (no fidgets or alternate idle loops)", "Subtle (a fidget about once a minute)", "Lively (a fidget every 15–25 seconds)"});
     ambient->setCurrentIndex(ambientLevel()); ambient->setAccessibleName("Idle animation");
@@ -657,31 +682,28 @@ void PetWindow::showSettings() {
                       "in the menu shows it any time.");
     layout->addRow("Re&cap", recap);
     connect(recap, &QCheckBox::toggled, this, &PetWindow::setRecapEnabled);
-    if (updates_) {
-        auto *updatesButton = new QPushButton(updates_->indicator(), dialog); layout->addRow(updatesButton);
-        connect(updatesButton, &QPushButton::clicked, this, [this] { updates_->showSettings(this); });
-        connect(updates_, &updates::Controller::changed, updatesButton, [this, updatesButton] { updatesButton->setText(updates_->indicator()); });
-    }
-    layout->addRow(reminderSettings(dialog));
+    layout = page("Startup and agents");
     layout->addRow(startupSettings(dialog));
     layout->addRow(integrationSettings(dialog));
-    auto *recover = new QPushButton("&Recover position and input", dialog); layout->addRow(recover);
-    connect(recover, &QPushButton::clicked, this, &PetWindow::recover);
-    auto *about = new QPushButton("Artwork &credits and terms", dialog); layout->addRow(about);
-    connect(about, &QPushButton::clicked, this, &PetWindow::showAbout);
     auto *status = new QLabel(dialog); status->setWordWrap(true); status->setTextInteractionFlags(Qt::TextSelectableByMouse);
     const auto updateStatus = [this, status] {
         status->setText(store_.error().isEmpty() ? "Preferences are saved automatically. Closing this window keeps monitoring; Quit stops it."
                                                : store_.error() + "\n" + store_.path());
     };
-    updateStatus(); layout->addRow(status);
+    updateStatus(); outer->addWidget(status);
     auto *statusTimer = new QTimer(dialog); statusTimer->setInterval(1000);
     connect(statusTimer, &QTimer::timeout, dialog, updateStatus); statusTimer->start();
     auto *buttons = new QDialogButtonBox(QDialogButtonBox::Close, dialog);
+    // Recover and the artwork credits live in the menu under More.
+    if (updates_) {
+        auto *updatesButton = buttons->addButton(updates_->indicator(), QDialogButtonBox::ActionRole);
+        connect(updatesButton, &QPushButton::clicked, this, [this] { updates_->showSettings(this); });
+        connect(updates_, &updates::Controller::changed, updatesButton, [this, updatesButton] { updatesButton->setText(updates_->indicator()); });
+    }
     auto *quit = buttons->addButton("&Quit Agent Pet", QDialogButtonBox::DestructiveRole);
     connect(quit, &QPushButton::clicked, this, &PetWindow::requestQuit);
     connect(buttons, &QDialogButtonBox::rejected, dialog, &QDialog::close);
-    layout->addRow(buttons); dialog->show();
+    outer->addWidget(buttons); dialog->show();
 }
 QWidget *PetWindow::reminderSettings(QWidget *parent) {
     auto *box = new QGroupBox("Reminders", parent); box->setObjectName("reminders");
