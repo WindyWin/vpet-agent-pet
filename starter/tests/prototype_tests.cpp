@@ -688,6 +688,45 @@ private slots:
         QCOMPARE(player.phase(), QString("end")); QCOMPARE(player.sequence(), QString("WORK/Study/C_Nomal"));
         QCOMPARE(player.requestedState(), QString("idle"));
     }
+    void handoverLandsBeforeChangingCourse() {
+        // Tool calls flip reading and working faster than a handover plays: the swap lands, then the pet acts
+        // on the latest request from the desk instead of getting up.
+        pet::Player player; player.setPaused(true); player.setRandom([](int) { return 0; }); player.setContinuity(true);
+        player.select("reading", true); finishSequence(player);
+        player.select("working"); player.advance();
+        player.select("reading");
+        QCOMPARE(player.phase(), QString("handover")); QCOMPARE(player.sequence(), QString("WORK/Desk/reading_to_working"));
+        QCOMPARE(player.frameIndex(), 1); QCOMPARE(player.requestedState(), QString("reading"));
+        finishSequence(player); // Lands in working, then hands straight back.
+        QCOMPARE(player.state(), QString("working")); QCOMPARE(player.phase(), QString("handover"));
+        QCOMPARE(player.sequence(), QString("WORK/Desk/working_to_reading")); QCOMPARE(player.requestedState(), QString("reading"));
+        // Flipping back and forth while it plays: only the last request counts.
+        player.select("working"); player.select("reading"); player.select("working");
+        QCOMPARE(player.phase(), QString("handover")); QCOMPARE(player.requestedState(), QString("working"));
+        finishSequence(player);
+        QCOMPARE(player.state(), QString("reading")); QCOMPARE(player.phase(), QString("handover"));
+        QCOMPARE(player.sequence(), QString("WORK/Desk/reading_to_working"));
+        finishSequence(player); QCOMPARE(player.state(), QString("working")); QCOMPARE(player.phase(), QString("loop"));
+        // A thinking pause mid-swap lingers at the new desk once it lands.
+        player.select("reading"); player.select("thinking");
+        QCOMPARE(player.phase(), QString("handover")); QCOMPARE(player.requestedState(), QString("thinking"));
+        finishSequence(player);
+        QCOMPARE(player.state(), QString("reading")); QCOMPARE(player.phase(), QString("linger"));
+        QCOMPARE(player.sequence(), QString("WORK/Study/B_4_Nomal")); QCOMPARE(player.requestedState(), QString("thinking"));
+        // Anything the desk cannot show still ends at once, mid-swap or not.
+        player.select("working"); QCOMPARE(player.phase(), QString("handover"));
+        player.select("turn_finished");
+        QCOMPARE(player.phase(), QString("end")); QCOMPARE(player.sequence(), QString("WORK/Study/C_Nomal"));
+        // Queued flip-backs never hold an urgent alert or a drag behind the swap.
+        for (const auto *urgent : {"needs_input", "tool_error", "dragging"}) {
+            player.select("reading", true); finishSequence(player);
+            player.select("working"); player.select("reading");
+            if (QString(urgent) == "dragging") player.beginDrag();
+            else player.select(urgent, true);
+            QCOMPARE(player.state(), QString(urgent));
+            if (QString(urgent) == "dragging") player.endDrag();
+        }
+    }
     void reactionsAskTheGate() {
         pet::Player player; player.setPaused(true);
         int asked = 0; bool allow = false;
@@ -748,6 +787,9 @@ private slots:
         // Mostly between activities, as tool calls flip it; now and then a finished turn or idle.
         const QStringList requests{"thinking", "reading", "working", "thinking", "reading", "working", "idle", "turn_finished"};
         QSet<QString> visited; // Every frame decodes full-size art, so the run is short but must reach each path.
+        connect(&player, &pet::Player::changed, &player, [&] {
+            visited << player.phase() << player.sequence();
+        }); // Observe every displayed frame, including sequences crossed by a batch of advances.
         for (int step = 0; step < 600; ++step) {
             if (generator.bounded(10) < 4) {
                 const auto request = requests.at(int(generator.bounded(int(requests.size()))));
@@ -759,6 +801,14 @@ private slots:
             QVERIFY2(player.error().isEmpty(), qPrintable(player.error()));
             visited << player.phase() << player.sequence();
         }
+        // Desk continuity can avoid entering working for the entire random run. Finish with a
+        // thinking -> working transition whose gate declines the exit and allows the welcome.
+        asked = 0;
+        player.select("thinking", true); finishSequence(player);
+        player.select("working"); QCOMPARE(player.requestedState(), QString("working"));
+        finishSequence(player); finishSequence(player);
+        QCOMPARE(player.state(), QString("working"));
+        QCOMPARE(player.sequence(), QString("WORK/WorkONE/Happy/B"));
         for (const auto *path : {"linger", "handover", "WORK/Desk/ponder_out", "WORK/Desk/working_to_reading",
                                  "WORK/Desk/reading_to_working", "Think/Happy/C_2", "WORK/WorkONE/Happy/B"})
             QVERIFY2(visited.contains(path), path);

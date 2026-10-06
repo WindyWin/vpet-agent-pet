@@ -12,6 +12,32 @@
 
 All paths below are relative to `starter/`. Run every command from `starter/`.
 
+## Continuation record — 2026-10-06
+
+Tasks 1–5 are implemented in commits `78cc909` through `d5b2b57`. The original
+step checkboxes below are retained as the execution recipe, not current status.
+Task 6's README and architecture sections are now written; validation results are
+recorded in the architecture evidence section. The live desktop walkthrough remains
+pending; automated offscreen checks do not establish visual smoothness.
+
+Decisions carried forward:
+
+- The importer accepts repeated indexes only for byte-identical pictures and accepts
+  the unprefixed `000_1250.png` in `WORK/Study/B_4_Nomal`.
+- The random request regression uses 600 activity-weighted steps instead of 3,000
+  full-size frame decodes. It asserts coverage of linger, both handovers, ponder out
+  and both reactions, as well as the latest request and eventual settlement.
+  With the new handover behavior, the random run no longer reaches the working
+  welcome, so a deterministic thinking-to-working tail exercises that gate path.
+  Coverage records every displayed frame, including frames within advance batches.
+- `monitorLeavesTheDeskAlone` records its sequence after `advance()`, since the
+  one-frame `B_4_Nomal` can finish in that call.
+- A handover keeps a fixed landing destination and records subsequent desk requests
+  separately. It lands before following the latest request, so a flip-back may wait
+  up to 1.25 seconds. Requests outside desk continuity end the decoration immediately;
+  urgent alerts and holds interrupt immediately. `handoverLandsBeforeChangingCourse`
+  checks flapping, a thinking pause, finished turns, alerts, errors and dragging.
+
 ## Global Constraints
 
 - Styles: Classic (0) no alternates, no continuity, no reactions; Subtle (1) `subtle` tier, gap 10–18 s, continuity on; Playful (2, **default**) `subtle` + `playful` tiers, gap 6–12 s, continuity and reactions.

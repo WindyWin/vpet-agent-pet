@@ -412,6 +412,14 @@ bool Player::decorate(const QString &target) {
     if (!continuity_ || phase_ != 1 || found == activity_.constEnd()) return false;
     const auto &art = *found;
     if (decoration_ != Decoration::None && target == pending_) return true; // Already on its way there.
+    if (decoration_ == Decoration::Handover) {
+        // Changing course mid-swap: it lands first, then acts on the latest request from that desk.
+        const auto landing = activity_.constFind(handoverTo_);
+        const bool desk = target == handoverTo_ || (landing != activity_.constEnd()
+            && (landing->handover.contains(target) || landing->linger.to == target));
+        if (desk) pending_ = target;
+        return desk;
+    }
     const bool lingering = decoration_ == Decoration::LingerIn || decoration_ == Decoration::Linger
         || decoration_ == Decoration::LingerOut;
     if (decoration_ == Decoration::None && !art.linger.to.isEmpty() && target == art.linger.to) {
@@ -429,7 +437,7 @@ bool Player::decorate(const QString &target) {
         return true;
     }
     if (decoration_ == Decoration::None && art.handover.contains(target)) {
-        pending_ = target; decoration_ = Decoration::Handover;
+        pending_ = handoverTo_ = target; decoration_ = Decoration::Handover;
         enterSequence(1, art.handover.value(target));
         return true;
     }
@@ -439,9 +447,9 @@ bool Player::decorate(const QString &target) {
 void Player::decorationEnded() {
     const auto &art = activity_[state_];
     if (decoration_ == Decoration::Handover) {
-        const auto target = pending_;
-        pending_.clear();
+        const auto target = std::exchange(handoverTo_, {}), next = std::exchange(pending_, {});
         enter(target, 1);
+        if (next != target) select(next); // The request moved on while the props swapped.
         return;
     }
     if (decoration_ == Decoration::LingerIn || (decoration_ == Decoration::Linger && lingerMs_ < art.linger.maxMs)) {
@@ -461,7 +469,7 @@ void Player::leaveLinger() {
     const auto &art = activity_[state_];
     if (pending_.isEmpty()) { decoration_ = Decoration::None; enterSequence(1); }
     else if (art.handover.contains(pending_)) {
-        decoration_ = Decoration::Handover;
+        decoration_ = Decoration::Handover; handoverTo_ = pending_;
         enterSequence(1, art.handover.value(pending_));
     } else beginEnd();
 }

@@ -168,6 +168,7 @@ private:
     std::function<bool()> reactionGate_;
     Decoration decoration_ = Decoration::None;
     QString welcome_, lingerLast_; // `welcome_`: the enter reaction waiting for the first loop pass.
+    QString handoverTo_; // Where a playing handover lands; the request may have moved on meanwhile.
     int lingerMs_ = 0;
     bool continuity_ = false;
     QStringList chosen_;
