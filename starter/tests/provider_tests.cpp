@@ -122,7 +122,7 @@ private slots:
         QVERIFY(apply(payload("PermissionRequest"))); QCOMPARE(sessions.aggregate(stamp), "attention");
         QVERIFY(apply(payload("PostToolUse", "patch"))); QCOMPARE(sessions.aggregate(stamp), "thinking");
     }
-#ifdef PET_TEST_LINUX
+#ifdef PET_TEST_POSIX
     void configurationPreservation() {
         for (const auto &provider : {QString("claude"), QString("codex")}) {
             const QString executable = "/tmp/Pet's folder/$(do-not-run)`x`/agent-pet";
@@ -145,9 +145,10 @@ private slots:
         }
     }
 #endif
-#ifdef PET_TEST_LINUX
+#ifdef PET_TEST_POSIX
     void commandAndTransport() {
-        QTemporaryDir temp; QVERIFY(temp.isValid());
+        // Short, so the socket path fits sockaddr_un (104 bytes on macOS) under any TMPDIR.
+        QTemporaryDir temp("/tmp/agent-pet-XXXXXX"); QVERIFY(temp.isValid());
         const auto previous = qgetenv("XDG_RUNTIME_DIR"); qputenv("XDG_RUNTIME_DIR", temp.path().toUtf8());
         pet::Receiver receiver; QString error; QVERIFY2(receiver.start(error), qPrintable(error));
         QVector<pet::Event> received;

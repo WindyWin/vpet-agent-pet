@@ -9,7 +9,7 @@
 #include <QProcess>
 #include <QDateTime>
 #include <QElapsedTimer>
-#ifdef PET_TEST_LINUX
+#ifdef PET_TEST_POSIX
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <sys/stat.h>
@@ -261,7 +261,7 @@ private slots:
         auto future = event("prompt"); future.timestamp = now + 60001;
         QVERIFY(!tools.apply(future, now));
     }
-#ifdef PET_TEST_LINUX
+#ifdef PET_TEST_POSIX
     void receiverValidatesTransportData() {
         struct Transport : pet::platform::EventTransport {
             bool start(QString &) override { return true; }
@@ -280,7 +280,8 @@ private slots:
         QCOMPARE(delivered, 1);
     }
     void transportAndCommands() {
-        QTemporaryDir temp; QVERIFY(temp.isValid());
+        // Short, so the socket path fits sockaddr_un (104 bytes on macOS) under any TMPDIR.
+        QTemporaryDir temp("/tmp/agent-pet-XXXXXX"); QVERIFY(temp.isValid());
         const auto previous = qgetenv("XDG_RUNTIME_DIR"); qputenv("XDG_RUNTIME_DIR", temp.path().toUtf8());
         auto run = [&](QStringList args, QByteArray data, bool closeInput = true) {
             QProcess process; process.setProgram(APP_PATH); process.setArguments(args);

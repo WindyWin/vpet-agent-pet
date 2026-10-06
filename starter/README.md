@@ -38,8 +38,23 @@ cmake --build build-core -j 4
 ctest --test-dir build-core --output-on-failure
 ```
 
-This checks platform boundaries; full application builds remain Linux-only.
+This checks platform boundaries. Full application builds run on Linux and macOS.
 See [platform services and extension points](src/platform/README.md).
+
+On macOS (11 or newer), install Ninja and Qt 6.5+ (for example with Homebrew or
+the Qt online installer); X11, D-Bus and libarchive are not needed:
+
+```bash
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$(qmake -query QT_INSTALL_PREFIX)"
+cmake --build build -j 4
+ctest --test-dir build --output-on-failure
+./build/agent-pet
+```
+
+Releases add `-DCMAKE_OSX_ARCHITECTURES="arm64;x86_64" -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0`
+for one universal app. On macOS, **Open** selects tmux and herdr panes but cannot
+bring windows forward yet, and updates are announced but installed by hand; see
+[macOS](docs/install.md#macos) and the [design notes](docs/architecture.md#macos).
 
 Left-drag to move; the original Raise animation plays while dragging and returns
 to the prior state on release. Right-click for the running sessions, today's recap,
@@ -178,7 +193,7 @@ Native Wayland placement and stacking support remain unverified.
 **Settings → Updates** offers daily release notifications, automatic downloads,
 optional installation on the next normal launch, and fully automatic download and install when idle (the default).
 Updates preserve settings and hooks and restore the previous version if startup
-fails. Development builds offer notifications and manual downloads.
+fails. Development builds and the macOS app offer notifications and manual downloads.
 See [update behavior and recovery](docs/install.md#update-notifications-and-automatic-updates).
 
 ## Local events
@@ -314,10 +329,25 @@ QT_QPA_PLATFORM=xcb ./build/desktop-tests
 Run it only when the desktop is free. Native X11 and broader manual acceptance
 evidence remain open.
 
+The macOS app is packaged on a Mac with Qt's `macdeployqt` (found through
+`qmake`), `codesign`, `ditto`, `otool`, `lipo`, `sips` and `iconutil`:
+
+```bash
+QMAKE=/path/to/qmake python3 scripts/package_macos.py --universal
+```
+
+It writes `dist/agent-pet-VERSION-macos-universal.zip` containing `Agent Pet.app`
+(signed ad hoc, not notarized) and `INSTALL.txt`, and
+`agent-pet-VERSION-macos-universal.dmg` with the same files plus an Applications
+shortcut. Before zipping it checks that every binary loads only bundled or system
+libraries and has both architectures, and runs `--version` and
+`--check-update-runtime` from the bundle; it then verifies and mounts the disk image
+read-only and checks its contents, signature and version.
+
 CI ([.github/workflows/release.yml](../.github/workflows/release.yml)) runs all of
-the above from a clean checkout on Ubuntu 22.04 with Qt 6.5.3, uploads the
-full tarball, component tarballs and manifest, and attaches them to a draft GitHub
-release for `v*` tags.
+the above from a clean checkout on Ubuntu 22.04 and macOS 14 with Qt 6.5.3,
+uploads the Linux full tarball, component tarballs and manifest and the macOS zip and dmg,
+and attaches them to a draft GitHub release for `v*` tags.
 
 ## Artwork and publishing
 

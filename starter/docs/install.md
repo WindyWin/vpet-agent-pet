@@ -1,9 +1,10 @@
-# Installing Agent Pet on Linux
+# Installing Agent Pet
 
-Agent Pet is released as a relocatable tarball,
+On Linux, Agent Pet is released as a relocatable tarball,
 `agent-pet-VERSION-linux-x86_64.tar.gz`, with a per-user installer. Qt, the
 artwork and every other library it needs are inside the package; no VPet
-installation, Qt, Python or other development runtime is required.
+installation, Qt, Python or other development runtime is required. For macOS, see
+[macOS](#macos); the rest of this page describes Linux unless it says otherwise.
 
 ## Requirements
 
@@ -244,6 +245,58 @@ confirm. `--yes` skips the questions.
 
 The installed version is shown by `agent-pet --version` and in **About**.
 
+## macOS
+
+macOS releases contain one `Agent Pet.app` for Apple silicon and Intel Macs running
+macOS 11 or newer, with Qt and the artwork inside, in two forms:
+
+- `agent-pet-VERSION-macos-universal.dmg`, a disk image: open it and drag the app
+  onto the **Applications** shortcut. Recommended.
+- `agent-pet-VERSION-macos-universal.zip`, the same app and `INSTALL.txt` in a zip.
+
+`INSTALL.txt` beside the app repeats these steps.
+
+1. Drag **Agent Pet.app** into **Applications** *before* opening it. macOS runs an
+   app opened straight from Downloads or the disk image from a temporary copy
+   ("App Translocation"); Agent Pet refuses to register hooks or login start from
+   that copy, because the path would stop working. Eject the disk image afterwards.
+2. Open it. The app is signed ad hoc but not notarized by Apple (that needs a paid
+   Apple Developer ID), so macOS blocks the first launch:
+   - macOS 15 or newer: open it once, then **System Settings → Privacy & Security →
+     Open Anyway**.
+   - macOS 14 or older: Control-click the app → **Open** → **Open**.
+   - Or remove the quarantine flag yourself:
+     `xattr -dr com.apple.quarantine "/Applications/Agent Pet.app"`.
+3. The pet appears with an icon in the menu bar and no Dock icon. Right-click the
+   pet → **Settings → Startup and agents** to connect Claude Code or Codex, then
+   restart the client.
+
+The command-line interface is the same as on Linux, from inside the bundle:
+
+```bash
+"/Applications/Agent Pet.app/Contents/MacOS/agent-pet" integration enable --provider claude
+"/Applications/Agent Pet.app/Contents/MacOS/agent-pet" autostart enable --when-idle hide
+"/Applications/Agent Pet.app/Contents/MacOS/agent-pet" autostart login enable
+```
+
+*Start at login* writes a launchd agent,
+`~/Library/LaunchAgents/io.github.windywin.agent-pet.plist`; macOS may show a
+"Background Items Added" notice. Settings, the recap and update state are under
+`~/Library/Application Support/agent-pet`.
+
+**Upgrade:** quit the pet, replace the app in Applications and open it again; the
+first launch may need approving again. Hooks and settings are kept as long as the
+app stays at the same path. The pet announces new releases, but installing them is
+manual on macOS.
+
+**Not yet on macOS:** bringing the agent's terminal or editor window to the front
+(**Open** still selects tmux and herdr panes) and automatic update installation.
+
+**Uninstall:** disable the hooks and *Start Agent Pet at login* in Settings (or
+`integration disable --provider …` and `autostart login disable`), quit the pet,
+move the app to the Trash, and optionally delete
+`~/Library/Application Support/agent-pet`.
+
 ## Licenses
 
 Agent Pet's application code is under the Apache License 2.0 (`share/agent-pet/LICENSE` and `NOTICE`).
@@ -252,4 +305,5 @@ VUP-Simulator team via [LorisYounger/VPet](https://github.com/LorisYounger/VPet)
 and keep their own terms (`share/agent-pet/THIRD_PARTY_NOTICES.md` and
 `share/agent-pet/licenses/`); they are not Apache-2.0. Bundled Qt and system libraries
 keep their own licenses, collected under `share/agent-pet/runtime-licenses/` and
-listed in `share/agent-pet/runtime-manifest.json`.
+listed in `share/agent-pet/runtime-manifest.json`. In the macOS app these files are
+under `Agent Pet.app/Contents/Resources/`.

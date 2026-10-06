@@ -42,9 +42,11 @@ Player::Player(QObject *parent, const QString &root) : QObject(parent) {
 bool Player::load(const QString &root) {
     if (root == ":/" && !QFile::exists(":/assets/vpet/animations.json")) {
         const QDir executable(QCoreApplication::applicationDirPath());
-        // Installed bundles keep it under share; local builds put it beside the executable.
-        const auto installed = executable.filePath("../share/agent-pet/artwork.rcc");
-        const auto artwork = QFile::exists(installed) ? installed : executable.filePath("artwork.rcc");
+        // Installed bundles keep it under share (Linux) or Resources (macOS application bundle);
+        // local builds put it beside the executable.
+        auto artwork = executable.filePath("artwork.rcc");
+        for (const auto *installed : {"../share/agent-pet/artwork.rcc", "../Resources/artwork.rcc"})
+            if (QFile::exists(executable.filePath(installed))) { artwork = executable.filePath(installed); break; }
         QStringList registered;
         auto registerPack = [&](const QString &path) {
             if (!QResource::registerResource(path)) return false;

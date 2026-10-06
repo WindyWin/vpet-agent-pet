@@ -527,7 +527,8 @@ focus requires KDE Plasma 6.").
 To add a host: write its `Capture` (detection, codec, label) in
 `src/hosts/adapters/<host>.*` and register it in `Registry::builtin()` at its
 precedence; give it an `Activation` if it can select a tab or pane and register
-that in `platform::createFocusService()` (`src/platform/linux/native.cpp`). Its
+that in `platform::createFocusService()` (`src/platform/linux/native.cpp`, and
+`src/platform/macos/native.cpp` where it applies). Its
 identifiers must fit v1 (`host_target` up to 256 characters); richer targets need a
 protocol change, and older pets reject unknown host IDs. To add a desktop backend:
 implement `platform::DesktopBackend` under `src/platform/desktop/<name>/`, add it to
@@ -539,10 +540,10 @@ test-only adapter and fake backends this way.
 ## Build and packaging
 
 The portable-core profile builds capture, focus contracts, state and animation
-without native implementations or application targets. The normal Linux profile
-adds headless services, native desktop backends, updates and UI. See the
+without native implementations or application targets. The normal Linux and macOS
+profiles add headless services, native desktop backends, updates and UI. See the
 [platform target map](../src/platform/README.md#build-registration) and README
-for core configure/test commands. The full app fails clearly on unsupported OSes.
+for core configure/test commands. The full app fails clearly on other OSes.
 
 
 See the starter README for exact commands. Build requirements: Linux C++17 compiler,
@@ -566,6 +567,56 @@ drivers remain operating-system dependencies. The packaging script collects
 Arch (`pacman`) or Debian/Ubuntu (`dpkg`) license notices for bundled libraries
 and a Qt/ICU notice when Qt comes from the online installer. Qt and transitive
 dependencies retain their own licenses. See [install.md](install.md).
+
+## macOS
+
+The macOS build reuses everything above the platform contracts unchanged: provider
+normalization, sessions, alerts, animation, the UI and the event protocol. Its
+platform layer (`src/platform/macos/`, with `src/platform/posix/` shared with Linux)
+supplies:
+
+- **Event transport.** The same Unix datagram socket, lock and permissions. With no
+  `XDG_RUNTIME_DIR`, the endpoint is under the per-user temporary directory from
+  `confstr(_CS_DARWIN_USER_TEMP_DIR)`, which does not depend on a shell's
+  environment, so hooks started by GUI editors and a pet started by launchd agree.
+  macOS caps local datagrams at 2 KiB (`net.local.dgram.maxdgram`) by default, so
+  both ends raise their socket buffers to carry 8 KiB events.
+- **Process services.** Ancestry and command names from `sysctl(KERN_PROC_PID)`;
+  terminal clients for tmux and herdr from `proc_listallpids`, `proc_pidpath`, the
+  controlling terminal and `KERN_PROCARGS2` (arguments and environment, readable for
+  the user's own processes).
+- **Login start.** A per-user launchd agent,
+  `~/Library/LaunchAgents/io.github.windywin.agent-pet.plist` (`RunAtLoad`, Aqua
+  sessions only). Hook-triggered autostart uses the shared double-fork launch.
+- **Native queries.** The left button from `CGEventSourceButtonState` (a system
+  window move can swallow the release before Qt sees it) and the screen lock from
+  the session dictionary (`CGSSessionScreenIsLocked`). The window origin keeps Qt's
+  value.
+- **Focus.** tmux and herdr panes are selected as on Linux. No desktop backend can
+  raise windows yet; the `macos` backend reports `Unsupported` with that reason.
+- **Updates.** Release assets are named `agent-pet-VERSION-macos-universal.zip`, so
+  the pet announces new versions and links the release page. There is no managed
+  install prefix, so nothing is downloaded or installed in place.
+
+Qt tool windows hide while another application is active on macOS; the pet and its
+bubbles set `WA_MacAlwaysShowToolWindow`. Artwork packs are found under
+`Contents/Resources` beside the executable's `Contents/MacOS`.
+
+`scripts/package_macos.py` assembles `Agent Pet.app` from a build (executable,
+artwork packs, notices, generated `.icns`, `Info.plist` with `LSUIElement`), runs
+`macdeployqt`, signs the bundle ad hoc, checks that every Mach-O file resolves
+inside the bundle or the OS and is universal, runs `--version` and
+`--check-update-runtime` from the bundle, and zips it with `ditto`. It also builds a
+compressed HFS+ disk image (`hdiutil create -format UDZO`) holding the app,
+`INSTALL.txt` and an `Applications` link to drag onto, retrying `hdiutil`'s
+occasional "Resource busy" on CI; it then verifies the image, mounts it read-only
+and checks the exact contents, the link target, the app's signature and its
+reported version. The zip remains the asset the update check matches. Without an
+Apple Developer ID the app is not notarized: users approve the first launch, and
+an ad hoc signature changes with every build, so permissions macOS ties to the
+signature would need granting again after each upgrade (none are used yet).
+Hook and login registration refuse an `AppTranslocation` path, where macOS runs an
+unmoved download from a temporary copy.
 
 ## M2 validation evidence (2026-10-04)
 
@@ -947,6 +998,27 @@ a waiting approval until it is answered, the click reaction, muted alerts holdin
 quiet hours dropping it and a break resetting it; and the settings group with
 persistence, legacy files and malformed values. Still open: how the cadence feels on
 a real desktop, and CI on Qt 6.5.3.
+
+## macOS port evidence — 2026-10-06
+
+- Linux, after moving shared code to `src/platform/posix/`: full build and all
+  eight CTest suites pass locally (Ubuntu 24.04, Qt 6.4.2 with the version floor
+  lowered only for that local check; CI uses Qt 6.5.3).
+- macOS: CI run 113 (`macos-14`, Qt 6.5.3, universal arm64 + x86_64, deployment
+  target 11.0) passes both profiles: the 4 portable-core suites and the providers,
+  events, alerts, focus and prototype suites. Packaging produced a 146 MiB
+  `agent-pet-0.10.0-macos-universal.zip`; every bundled Mach-O file is universal and
+  loads only bundled or system libraries, `codesign --verify --deep --strict` passes,
+  and the bundled binary reports `agent-pet 0.10.0` and "Update HTTPS runtime:
+  available". The first runs caught a compile error, an offscreen test reading the
+  hardware button, and a test socket path over the 104-byte macOS limit.
+- macOS disk image: CI run 114 built a 149 MiB
+  `agent-pet-0.10.0-macos-universal.dmg` beside the 146 MiB zip; `hdiutil verify`
+  passed and the image, mounted read-only, held exactly the app, `INSTALL.txt` and
+  the `Applications` link, with a valid signature and the expected version.
+- Not yet verified by hand on a Mac: the pet window over other apps and full-screen
+  spaces, the menu bar icon, dragging, login start, and hooks from Terminal, iTerm2
+  and VS Code.
 
 ## Active animation evidence — 2026-10-06
 

@@ -2,7 +2,7 @@
 
 A standalone desktop companion that animates in response to Claude Code and Codex hooks.
 
-Agent Pet 0.9 runs on Linux x86_64 (X11 and XWayland). It ships as a self-contained tarball with an installer, one-click Claude Code and Codex integration, and automatic updates; see the [install guide](starter/docs/install.md). The application lives in [starter/](starter/README.md). This repository root also keeps the full 749 MB VPet artwork archive as a source bundle; the app never reads it at runtime.
+Agent Pet runs on Linux x86_64 (X11 and XWayland) and macOS 11+ (Apple silicon and Intel). On Linux it ships as a self-contained tarball with an installer, one-click Claude Code and Codex integration, and automatic updates; on macOS as an app in a disk image (`.dmg`) or zip, with the same integration and update notifications. See the [install guide](starter/docs/install.md). The application lives in [starter/](starter/README.md). This repository root also keeps the full 749 MB VPet artwork archive as a source bundle; the app never reads it at runtime.
 
 Application code is licensed under Apache-2.0 ([LICENSE](starter/LICENSE)); the artwork keeps its own terms.
 
@@ -128,7 +128,7 @@ Right-click the pet (or its tray icon) for everyday actions: running sessions, t
 
 ### Install and updates
 
-A self-contained Linux x86_64 tarball includes an interactive installer that sets up the menu entry, the `agent-pet` command, agent hooks and autostart, plus an uninstaller that removes only Agent Pet's own hook entries. Updates download only the components that changed, down to individual animation sequences, so a new or edited animation fetches just its own frames. If the new version fails to start, the previous one is restored. See the [install guide](starter/docs/install.md).
+A self-contained Linux x86_64 tarball includes an interactive installer that sets up the menu entry, the `agent-pet` command, agent hooks and autostart, plus an uninstaller that removes only Agent Pet's own hook entries. Updates download only the components that changed, down to individual animation sequences, so a new or edited animation fetches just its own frames. If the new version fails to start, the previous one is restored. The macOS app is universal and signed ad hoc but not notarized, so the first launch needs approving in System Settings; it announces updates and installs them by hand. See the [install guide](starter/docs/install.md#macos).
 
 <img src="docs/media/installer.png" width="520" alt="Installer checklist in a terminal">
 
@@ -158,7 +158,7 @@ flowchart LR
 | **Animation** | Play the data-driven catalog in `animations.json`: phased sequences, weighted variants, mood art, fidgets, reactions, touch and moves |
 | **Desktop** | The pet window, alert toast, session list, speech bubble, wandering, wellness reminders and recap |
 | **Hosts** | Record where a session runs (Konsole tab, tmux or herdr pane, X11 window) and bring it forward on **Open** |
-| **Platform** | Small contracts for native services, with Linux implementations; X11 and D-Bus are linked only by `pet_native` |
+| **Platform** | Small contracts for native services, with POSIX, Linux and macOS implementations; X11 and D-Bus are linked only by the Linux `pet_native` |
 | **Updates** | Verified release metadata and component downloads (app, runtime, one pack per animation sequence) with rollback |
 
 Only preferences and the recap's daily counts are written to disk; sessions and alerts live in memory. A portable-core build (`AGENT_PET_PORTABLE_CORE=ON`) compiles the event, session, provider and focus logic with no X11, D-Bus, Widgets or libarchive, which keeps the door open for other platforms. For the details see the [architecture notes](starter/docs/architecture.md), the [event protocol](starter/docs/events.md), [integrations](starter/docs/integrations.md) and [platform services](starter/src/platform/README.md).

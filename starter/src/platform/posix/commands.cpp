@@ -12,7 +12,7 @@ static QString executable(const QString &program) {
                                                         "/usr/local/bin", "/opt/homebrew/bin"});
     return path;
 }
-Outcome LinuxCommandRunner::run(const Command &command, QByteArray *output) {
+Outcome PosixCommandRunner::run(const Command &command, QByteArray *output) {
     const auto program = executable(command.program);
     if (program.isEmpty()) return Outcome::Unsupported;
     QProcess process;

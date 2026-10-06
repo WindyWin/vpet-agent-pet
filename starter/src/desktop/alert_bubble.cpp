@@ -10,6 +10,7 @@ AlertBubble::AlertBubble(QWidget *parent) : QWidget(parent) {
                    Qt::X11BypassWindowManagerHint);
     setAttribute(Qt::WA_TranslucentBackground);
     setAttribute(Qt::WA_ShowWithoutActivating);
+    setAttribute(Qt::WA_MacAlwaysShowToolWindow);
     setAccessibleName("Agent Pet alert");
     setCursor(Qt::PointingHandCursor);
     auto *layout = new QHBoxLayout(this);
@@ -78,6 +79,7 @@ NoteBubble::NoteBubble(QWidget *parent) : QWidget(parent) {
                    Qt::X11BypassWindowManagerHint);
     setAttribute(Qt::WA_TranslucentBackground);
     setAttribute(Qt::WA_ShowWithoutActivating);
+    setAttribute(Qt::WA_MacAlwaysShowToolWindow);
     setAccessibleName("Agent Pet note");
     auto *layout = new QHBoxLayout(this);
     layout->setContentsMargins(16, 8, 16, 8);

@@ -1,16 +1,17 @@
 #include "platform/native.h"
-#include "commands.h"
+#include "platform/posix/commands.h"
 #include "hosts/adapters/herdr.h"
 #include "hosts/adapters/konsole.h"
 #include "hosts/adapters/tmux.h"
 #include "platform/desktop/kwin/kwin_desktop.h"
+#include "platform/desktop/screensaver/screen_lock.h"
 #include "platform/desktop/x11/x11_desktop.h"
 #include "process.h"
 
 namespace pet::platform {
 std::unique_ptr<hosts::FocusService> createFocusService() {
     auto service = std::make_unique<hosts::FocusService>(hosts::Registry::builtin());
-    const auto commands = std::make_shared<LinuxCommandRunner>();
+    const auto commands = std::make_shared<PosixCommandRunner>();
     const auto processes = std::make_shared<LinuxProcesses>();
     service->addActivation(hosts::konsole::activation());
     service->addActivation(hosts::tmux::activation(commands, processes));
@@ -22,5 +23,9 @@ std::unique_ptr<hosts::FocusService> createFocusService() {
     service->addBackend(std::make_unique<x11::X11Desktop>());
     service->addBackend(std::make_unique<kwin::KWinDesktop>());
     return service;
+}
+std::function<bool()> createScreenLockQuery(QObject *owner) {
+    const auto *lock = new ScreenLock(owner);
+    return [lock] { return lock->locked(); };
 }
 }

@@ -86,9 +86,11 @@ retry. The test budget is under 1 second per callback including process startup;
 OS scheduling and process loading prevent a hard real-time wall-clock guarantee.
 An unresponsive monitor drops events once its bounded kernel queue fills.
 
-The endpoint is `$XDG_RUNTIME_DIR/agent-pet-<uid>/events.sock`, falling back to
-`/tmp/agent-pet-<uid>/events.sock` when XDG_RUNTIME_DIR is unset. Sender and desktop
-must share that environment. The directory must be owned by the current UID
+The endpoint is `$XDG_RUNTIME_DIR/agent-pet-<uid>/events.sock`. When XDG_RUNTIME_DIR
+is unset it falls back to `/tmp/agent-pet-<uid>/events.sock` on Linux and, on macOS,
+to the per-user temporary directory (`getconf DARWIN_USER_TEMP_DIR`). Sender and
+desktop must share that environment. macOS limits local datagrams to 2 KiB by
+default, so both ends raise their socket buffers to carry 8 KiB events. The directory must be owned by the current UID
 with mode 0700 and must not be a symlink. The socket is mode 0600. A nonblocking
 file lock prevents competing monitors and permits stale socket recovery after a
 crash. The persistent lock file is intentionally not unlinked. This channel trusts

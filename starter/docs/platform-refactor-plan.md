@@ -4,7 +4,8 @@ Status, 2026-10-06: steps 1–5 are implemented. See
 [session focus](architecture.md#session-focus) for steps 1–3 and
 [platform services and build registration](../src/platform/README.md) for steps
 4–5. The portable-core profile excludes native services and the application.
-The refactor does not expand the supported platforms.
+The refactor does not expand the supported platforms; the macOS build was later
+added on top of these seams (see [macOS](architecture.md#macos)).
 
 Prepare extension points for other operating systems, Linux desktop environments,
 and applications hosting agent sessions. Move the existing implementations behind

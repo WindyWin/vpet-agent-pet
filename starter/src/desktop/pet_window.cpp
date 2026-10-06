@@ -53,6 +53,7 @@ PetWindow::PetWindow(QWidget *parent, const QString &path, bool persist)
     setWindowFlags(Qt::Tool | Qt::FramelessWindowHint);
     setWindowFlag(Qt::WindowStaysOnTopHint, preferences.onTop);
     setAttribute(Qt::WA_TranslucentBackground);
+    setAttribute(Qt::WA_MacAlwaysShowToolWindow); // macOS otherwise hides tool windows while another app is active.
     setAccessibleName("Agent Pet");
     setToolTip("Click for running sessions · Hold still to pet · Drag to move, or throw · Push past a screen edge to hide\n"
                "Right-click for controls · Esc to quit");
