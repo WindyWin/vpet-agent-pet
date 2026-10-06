@@ -100,6 +100,10 @@ PetWindow::PetWindow(QWidget *parent, const QString &path, bool persist)
     more->addAction("Recover pet position and input", this, &PetWindow::recover);
     more->addSeparator();
     updatesItem_ = more->addAction("Updates…"); updatesItem_->setVisible(false);
+    // Connected once; they open whichever controller setUpdates() handed over last.
+    const auto openUpdates = [this] { if (updates_) updates_->showSettings(this); };
+    connect(updatesItem_, &QAction::triggered, this, openUpdates);
+    connect(updateAction_, &QAction::triggered, this, openUpdates);
     more->addAction("About and artwork terms…", this, &PetWindow::showAbout);
     menu_.addSeparator();
     menu_.addAction("Quit", this, &PetWindow::requestQuit);
@@ -581,15 +585,13 @@ void PetWindow::keyPressEvent(QKeyEvent *event) {
 void PetWindow::setUpdates(updates::Controller *controller) {
     updates_ = controller;
     // "Updates…" always sits under More; a waiting update also shows at the top level.
-    const auto open = [this, controller] { controller->showSettings(this); };
-    updatesItem_->setVisible(true);
-    connect(updatesItem_, &QAction::triggered, this, open);
-    connect(updateAction_, &QAction::triggered, this, open);
-    const auto refresh = [this, controller] {
-        const auto text = controller->indicator();
-        updateAction_->setText(text); updateAction_->setVisible(text != "Updates…");
+    const auto refresh = [this] {
+        const auto text = updates_ ? updates_->indicator() : QString();
+        updatesItem_->setVisible(updates_);
+        updateAction_->setText(text); updateAction_->setVisible(updates_ && text != "Updates…");
     };
-    refresh(); connect(controller, &updates::Controller::changed, this, refresh);
+    refresh();
+    if (controller) connect(controller, &updates::Controller::changed, this, refresh);
 }
 void PetWindow::showSettings() {
     if (settingsDialog_) { settingsDialog_->show(); settingsDialog_->raise(); return; }
