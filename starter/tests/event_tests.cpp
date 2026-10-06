@@ -1,4 +1,5 @@
 #include "sessions/state.h"
+#include "sessions/recap.h"
 #include "ipc/local.h"
 #include <QTest>
 #include <QFile>
@@ -154,6 +155,75 @@ private slots:
         QVERIFY(state.apply(at("interrupt", 5, now + 90003), now + 90003)); QCOMPARE(record().turnStarted, qint64(0));
         QVERIFY(state.apply(at("prompt", 6, now + 90004), now + 90004));
         QVERIFY(state.apply(at("turn_finished", 7, now + 95004), now + 95004)); QCOMPARE(record().lastTurnMs, qint64(5000));
+    }
+    void dailyRecap() {
+        pet::Sessions state; pet::Recap recap;
+        const QDate today(2026, 10, 6), tomorrow(2026, 10, 7);
+        int seq = 0;
+        auto feed = [&](QString kind, QString session, QString project, qint64 at, QDate day, QString reason = {}) {
+            pet::Event e{"claude", session, QString::number(++seq), kind, {}, {}, project, {}, at, reason};
+            if (!state.apply(e, at)) return false;
+            const auto it = state.records().find(QString("claude") + QChar(0x1f) + session);
+            return recap.record(e, it == state.records().end() ? nullptr : &*it, day);
+        };
+        QCOMPARE(pet::Recap::summary(recap.day(today)), QString("No agent work yet today."));
+        // Turns count per project folder, with the longest one kept.
+        QVERIFY(!feed("prompt", "a", "/work/abc-web", now, today));
+        QVERIFY(feed("turn_finished", "a", "/work/abc-web", now + 22 * 60000, today));
+        QVERIFY(!feed("prompt", "a", {}, now + 22 * 60000 + 1, today));
+        QVERIFY(feed("turn_finished", "a", {}, now + 23 * 60000, today));
+        QVERIFY(feed("turn_finished", "b", "/work/vpet/", now + 23 * 60000 + 1, today));
+        auto day = recap.day(today);
+        QCOMPARE(day.turns, 3); QCOMPARE(day.longestTurnMs, qint64(22 * 60000));
+        QCOMPARE(day.projects, (QMap<QString, int>{{"abc-web", 2}, {"vpet", 1}}));
+        // An approval counts when asked, its wait when answered; questions for the user are not approvals.
+        const qint64 asked = now + 24 * 60000;
+        QVERIFY(feed("attention", "a", {}, asked, today, "approval"));
+        QVERIFY(!feed("attention", "a", {}, asked + 1, today, "approval")); // Still the same request.
+        QVERIFY(feed("prompt", "a", {}, asked + 11 * 60000, today)); // Answered by moving on.
+        QVERIFY(!feed("attention", "b", {}, asked, today, "input"));
+        QVERIFY(feed("attention", "c", "/work/abc-web", asked, today, "approval"));
+        QVERIFY(!feed("session_end", "c", {}, asked + 60000, today)); // Ended without an answer: no wait.
+        QVERIFY(feed("error", "b", {}, asked + 2, today));
+        day = recap.day(today);
+        QCOMPARE(day.approvals, 2); QCOMPARE(day.longWaits, 1); QCOMPARE(day.longestWaitMs, qint64(11 * 60000)); QCOMPARE(day.errors, 1);
+        QCOMPARE(pet::Recap::summary(day), QString("Today: 3 turns across 2 projects · 1 error · 1 approval waited 10+ min · longest run 22 min"));
+        QCOMPARE(pet::Recap::breakdown(day), QString("Today's recap\nabc-web · 2 turns\nvpet · 1 turn\n"
+                                                     "1 error · 2 approvals, longest wait 11 min · longest run 22 min"));
+        // Each local day has its own counters.
+        QVERIFY(feed("turn_finished", "b", {}, asked + 3, tomorrow));
+        QCOMPARE(pet::Recap::summary(recap.day(tomorrow)), QString("Today: 1 turn in vpet"));
+        QCOMPARE(recap.day(today).turns, 3);
+        // Only a few weeks are kept, oldest dropped first; a day older than all of them is not kept.
+        for (int i = 0; i < pet::Recap::keepDays; ++i) QVERIFY(feed("error", "b", {}, asked + 10 + i, tomorrow.addDays(i + 1)));
+        QCOMPARE(recap.days().size(), pet::Recap::keepDays); QCOMPARE(recap.days().first().date, tomorrow.addDays(1));
+        QVERIFY(feed("error", "b", {}, asked + 100, today));
+        QCOMPARE(recap.days().size(), pet::Recap::keepDays); QCOMPARE(recap.day(today).errors, 0);
+    }
+    void recapStore() {
+        QTemporaryDir directory; const auto path = directory.path() + "/data/recap.json";
+        pet::RecapStore store(path);
+        QCOMPARE(store.load().days().size(), 0); // Missing.
+        pet::Recap recap; pet::Sessions state;
+        pet::Event e{"codex", "s", "1", "turn_finished", {}, {}, "/work/abc-web", {}, now, {}};
+        QVERIFY(state.apply(e, now));
+        QVERIFY(recap.record(e, &state.records().first(), QDate(2026, 10, 6)));
+        QVERIFY(store.save(recap));
+        const auto loaded = store.load();
+        QCOMPARE(loaded.days().size(), 1); QCOMPARE(loaded.day(QDate(2026, 10, 6)).projects.value("abc-web"), 1);
+        QCOMPARE(QJsonDocument(loaded.toJson()), QJsonDocument(recap.toJson()));
+        // Nothing but counts, dates and folder names is written.
+        QFile file(path); QVERIFY(file.open(QIODevice::ReadOnly));
+        const auto bytes = file.readAll(); QVERIFY(!bytes.contains("/work")); QVERIFY(!bytes.contains("codex"));
+        file.close();
+        // An invalid file loads as empty.
+        for (const QByteArray &bad : {QByteArray("not json"), QByteArray(R"({"version":2,"days":[]})"),
+                                      QByteArray(R"({"version":1,"days":[{"date":"2026-13-01","turns":1,"errors":0,"approvals":0,"long_waits":0,"longest_turn_ms":0,"longest_wait_ms":0,"projects":{}}]})"),
+                                      QByteArray(R"({"version":1,"days":[{"date":"2026-10-06","turns":-1,"errors":0,"approvals":0,"long_waits":0,"longest_turn_ms":0,"longest_wait_ms":0,"projects":{}}]})")}) {
+            QVERIFY(file.open(QIODevice::WriteOnly | QIODevice::Truncate)); file.write(bad); file.close();
+            QCOMPARE(store.load().days().size(), 0);
+        }
+        QVERIFY(!pet::RecapStore({}).save(recap));
     }
     void riskyFlag() {
         const QByteArray base = R"({"version":1,"provider":"claude","session_id":"a","event_id":"b","timestamp_ms":1,)";
