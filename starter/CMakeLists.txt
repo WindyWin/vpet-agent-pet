@@ -96,7 +96,7 @@ target_link_libraries(pet_i18n PUBLIC Qt6::Core)
 set(pet_ts_files translations/agent-pet_vi.ts)
 file(GLOB_RECURSE pet_translated_sources CONFIGURE_DEPENDS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp" "src/*.h")
 list(SORT pet_translated_sources)
-qt_add_lupdate(pet_i18n TS_FILES ${pet_ts_files} SOURCES ${pet_translated_sources} OPTIONS -locations none -no-ui-lines)
+qt_add_lupdate(pet_i18n TS_FILES ${pet_ts_files} SOURCES ${pet_translated_sources} OPTIONS -locations none -no-ui-lines -no-obsolete)
 qt_add_lrelease(pet_i18n TS_FILES ${pet_ts_files} QM_FILES_OUTPUT_VARIABLE pet_qm_files)
 qt_add_resources(pet_i18n pet_translations PREFIX "/i18n" BASE "${CMAKE_CURRENT_BINARY_DIR}" FILES ${pet_qm_files})
 qt_add_library(pet_ui STATIC

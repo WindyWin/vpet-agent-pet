@@ -296,6 +296,18 @@
         <extracomment>%1 = &quot;2 approvals&quot;, %2 = a duration such as &quot;12 min&quot;</extracomment>
         <translation>%1, chờ lâu nhất %2</translation>
     </message>
+    <message>
+        <source>Too much petting! I need a break. Bye!</source>
+        <translation>Vuốt ve nhiều quá rồi! Em cần nghỉ một chút. Tạm biệt bạn!</translation>
+    </message>
+    <message>
+        <source>Put me down! I&apos;m leaving!</source>
+        <translation>Thả em xuống! Em đi đây!</translation>
+    </message>
+    <message>
+        <source>Stop throwing me! I&apos;m leaving!</source>
+        <translation>Đừng ném em nữa! Em đi đây!</translation>
+    </message>
 </context>
 <context>
     <name>Settings</name>
@@ -1202,8 +1214,16 @@ Các cài đặt và hook khác được giữ nguyên. Hãy đăng ký từ m�
         <translation>Không lưu được bản cập nhật đang chờ.</translation>
     </message>
     <message>
-        <source>Update %1 is ready. It installs as soon as no agent is waiting for you.</source>
-        <translation>Bản cập nhật %1 đã sẵn sàng. Nó sẽ được cài ngay khi không có agent nào chờ bạn.</translation>
+        <source>Update %1 is ready. The pet will restart and restore running sessions.</source>
+        <translation>Bản cập nhật %1 đã sẵn sàng. Thú cưng sẽ khởi động lại và khôi phục các phiên đang chạy.</translation>
+    </message>
+    <message>
+        <source>Could not save running sessions. Free disk space or check permissions, then retry the update.</source>
+        <translation>Không thể lưu các phiên đang chạy. Hãy giải phóng dung lượng đĩa hoặc kiểm tra quyền truy cập, rồi thử cập nhật lại.</translation>
+    </message>
+    <message>
+        <source>Download and install automatically (restore running sessions)</source>
+        <translation>Tự động tải và cài (khôi phục các phiên đang chạy)</translation>
     </message>
     <message>
         <source>Cannot save the download. Check free disk space.</source>
@@ -1221,10 +1241,6 @@ Các cài đặt và hook khác được giữ nguyên. Hãy đăng ký từ m�
     <message>
         <source>Download stopped or failed. You can retry.</source>
         <translation>Tải xuống bị dừng hoặc thất bại. Bạn có thể thử lại.</translation>
-    </message>
-    <message>
-        <source>An agent is waiting for your answer. Respond to it, then restart to update.</source>
-        <translation>Một agent đang chờ bạn trả lời. Hãy trả lời nó, rồi khởi động lại để cập nhật.</translation>
     </message>
     <message>
         <source>Could not start the update installer.</source>
@@ -1261,10 +1277,6 @@ Các cài đặt và hook khác được giữ nguyên. Hãy đăng ký từ m�
     <message>
         <source>Install automatically on next launch</source>
         <translation>Tự động cài ở lần mở tiếp theo</translation>
-    </message>
-    <message>
-        <source>Download and install automatically (restart when idle)</source>
-        <translation>Tự động tải và cài (khởi động lại khi rảnh)</translation>
     </message>
     <message>
         <source>This copy supports notifications and manual downloads. Install a release bundle to enable automatic updates.</source>

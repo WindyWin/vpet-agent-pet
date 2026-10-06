@@ -66,7 +66,7 @@ it is not split out the way `artwork.rcc` is.
 
 ### Localization evidence — 2026-10-06
 
-The Vietnamese translation covers all 302 strings in 14 contexts. With Qt 6.11.2, the
+The Vietnamese translation covers all 305 strings in 14 contexts. With Qt 6.11.2, the
 Release build passes all twelve CTest tests (prototype in four shards). Among them, the new `i18n` suite covers
 language names, system resolution (vi_VN, en_US, fr_FR, C), installing and removing the
 translator across contexts, and the marker check over every finished entry; a

@@ -3,6 +3,7 @@
 #include "platform/contracts/native_window.h"
 #include "ipc/autostart.h"
 #include "providers/integrations.h"
+#include "i18n/contexts.h"
 #include "i18n/language.h"
 #include "version.h"
 #include <QApplication>
@@ -144,9 +145,9 @@ PetWindow::PetWindow(QWidget *parent, const QString &path, bool persist)
         else if (!player_.held() && !pressTouch_.isEmpty() && pressTimer_.elapsed() >= touch::holdMs) player_.hold(pressTouch_);
         if (patience_.petting(touchEnabled_ && dragging_ && player_.held()
                              && !pressTouch_.isEmpty() && player_.state() == pressTouch_, touchClock_.elapsed()))
-            beginQuit("Too much petting! I need a break. Bye!");
+            beginQuit(Pet::tr("Too much petting! I need a break. Bye!"));
         if (patience_.dragging(touchEnabled_ && dragging_ && player_.isDragging(), touchClock_.elapsed()))
-            beginQuit("Put me down! I'm leaving!");
+            beginQuit(Pet::tr("Put me down! I'm leaving!"));
     });
     flightTimer_.setInterval(16);
     connect(&flightTimer_, &QTimer::timeout, this, [this] {
@@ -582,7 +583,7 @@ void PetWindow::letGo(QPointF velocity) {
     const auto &touch = player_.touch();
     const auto fall = velocity.x() < 0 ? touch.fallLeft : touch.fallRight;
     if (touchEnabled_ && !quitting_ && !fall.isEmpty() && qHypot(velocity.x(), velocity.y()) >= touch::throwSpeed) {
-        if (patience_.thrown(touchClock_.elapsed())) { beginQuit("Stop throwing me! I'm leaving!"); return; }
+        if (patience_.thrown(touchClock_.elapsed())) { beginQuit(Pet::tr("Stop throwing me! I'm leaving!")); return; }
         // The fall replaces the drag as what is held, so session changes still wait for the landing.
         const QRect window(nativePos(), size());
         player_.hold(fall);
