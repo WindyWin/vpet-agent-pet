@@ -280,7 +280,8 @@ private slots:
         QCOMPARE(delivered, 1);
     }
     void transportAndCommands() {
-        QTemporaryDir temp; QVERIFY(temp.isValid());
+        // Short, so the socket path fits sockaddr_un (104 bytes on macOS) under any TMPDIR.
+        QTemporaryDir temp("/tmp/agent-pet-XXXXXX"); QVERIFY(temp.isValid());
         const auto previous = qgetenv("XDG_RUNTIME_DIR"); qputenv("XDG_RUNTIME_DIR", temp.path().toUtf8());
         auto run = [&](QStringList args, QByteArray data, bool closeInput = true) {
             QProcess process; process.setProgram(APP_PATH); process.setArguments(args);

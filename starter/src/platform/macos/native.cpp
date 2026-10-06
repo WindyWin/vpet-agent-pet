@@ -5,6 +5,7 @@
 #include "hosts/adapters/herdr.h"
 #include "hosts/adapters/tmux.h"
 #include "process.h"
+#include <QGuiApplication>
 #include <CoreGraphics/CoreGraphics.h>
 
 namespace pet::platform {
@@ -29,8 +30,10 @@ std::function<bool()> createScreenLockQuery(QObject *) {
         return locked;
     };
 }
-// A system move (performWindowDrag) can consume the release before Qt sees it.
+// A system move (performWindowDrag) can consume the release before Qt sees it. Only the Cocoa
+// platform has a real pointer; other Qt platforms (offscreen tests) keep Qt's synthesized state.
 std::optional<bool> nativeLeftButtonDown() {
+    if (QGuiApplication::platformName() != QLatin1String("cocoa")) return std::nullopt;
     return CGEventSourceButtonState(kCGEventSourceStateCombinedSessionState, kCGMouseButtonLeft);
 }
 std::optional<QPoint> nativeWindowOrigin(quintptr) { return std::nullopt; }

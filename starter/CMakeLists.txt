@@ -112,7 +112,7 @@ target_link_libraries(pet_platform PUBLIC Qt6::Core)
 # X11 and D-Bus. On macOS: Core Graphics pointer and screen-lock queries, no window backend yet.
 if(APPLE)
     qt_add_library(pet_native STATIC src/platform/macos/native.cpp)
-    target_link_libraries(pet_native PUBLIC pet_hosts PRIVATE pet_platform "-framework CoreGraphics" "-framework CoreFoundation")
+    target_link_libraries(pet_native PUBLIC pet_hosts PRIVATE pet_platform Qt6::Gui "-framework CoreGraphics" "-framework CoreFoundation")
 else()
     qt_add_library(pet_native STATIC src/platform/linux/native.cpp
         src/platform/desktop/x11/connection.cpp src/platform/desktop/x11/pointer.cpp src/platform/desktop/x11/x11_desktop.cpp
