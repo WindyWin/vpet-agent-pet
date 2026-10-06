@@ -2207,6 +2207,8 @@ int main(int argc, char *argv[]) {
         int slow = 0;
         for (const auto *name : {"decorationFollowsEveryRequest", "everyIncludedFrameAndCacheBound", "everyHappyFrame", "everyPoorFrame"})
             if (const auto at = functions.indexOf(name); at >= 0) functions.move(at, slow++);
+        // QTest runs every function when none is named, so a shard left without any runs nothing instead.
+        if (shard > functions.size()) { qInfo("Shard %d/%d has no test functions", shard, shards); return 0; }
         for (int index = shard - 1; index < functions.size(); index += shards) arguments << functions.at(index);
     }
     return QTest::qExec(&tests, arguments);
