@@ -2,7 +2,7 @@
 
 A standalone desktop companion that animates in response to Claude Code and Codex hooks.
 
-Agent Pet runs on Linux x86_64 (X11 and XWayland) and macOS 11+ (Apple silicon and Intel). On Linux it ships as a self-contained tarball with an installer, one-click Claude Code and Codex integration, and automatic updates; on macOS as an app in a zip, with the same integration and update notifications. See the [install guide](starter/docs/install.md). The application lives in [starter/](starter/README.md). This repository root also keeps the full 749 MB VPet artwork archive as a source bundle; the app never reads it at runtime.
+Agent Pet runs on Linux x86_64 (X11 and XWayland) and macOS 11+ (Apple silicon and Intel). On Linux it ships as a self-contained tarball with an installer, one-click Claude Code and Codex integration, and automatic updates; on macOS as an app in a disk image (`.dmg`) or zip, with the same integration and update notifications. See the [install guide](starter/docs/install.md). The application lives in [starter/](starter/README.md). This repository root also keeps the full 749 MB VPet artwork archive as a source bundle; the app never reads it at runtime.
 
 Application code is licensed under Apache-2.0 ([LICENSE](starter/LICENSE)); the artwork keeps its own terms.
 

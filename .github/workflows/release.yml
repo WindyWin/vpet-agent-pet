@@ -135,14 +135,18 @@ jobs:
         run: |
           QMAKE="$QT_ROOT_DIR/bin/qmake" python3 scripts/package_macos.py --universal
           if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
-            test -f "dist/agent-pet-${GITHUB_REF_NAME#v}-macos-universal.zip" || { echo "Tag does not match project() version"; exit 1; }
+            for asset in zip dmg; do
+              test -f "dist/agent-pet-${GITHUB_REF_NAME#v}-macos-universal.$asset" || { echo "Tag does not match project() version"; exit 1; }
+            done
           fi
           ls -l dist
 
       - uses: actions/upload-artifact@v4
         with:
           name: agent-pet-macos-universal
-          path: starter/dist/*.zip
+          path: |
+            starter/dist/*.zip
+            starter/dist/*.dmg
           if-no-files-found: error
 
   release:
@@ -163,3 +167,4 @@ jobs:
             *.tar.gz
             *-components.json
             *.zip
+            *.dmg

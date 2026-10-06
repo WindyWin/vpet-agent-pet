@@ -325,13 +325,16 @@ QMAKE=/path/to/qmake python3 scripts/package_macos.py --universal
 ```
 
 It writes `dist/agent-pet-VERSION-macos-universal.zip` containing `Agent Pet.app`
-(signed ad hoc, not notarized) and `INSTALL.txt`. Before zipping it checks that
-every binary loads only bundled or system libraries and has both architectures, and
-runs `--version` and `--check-update-runtime` from the bundle.
+(signed ad hoc, not notarized) and `INSTALL.txt`, and
+`agent-pet-VERSION-macos-universal.dmg` with the same files plus an Applications
+shortcut. Before zipping it checks that every binary loads only bundled or system
+libraries and has both architectures, and runs `--version` and
+`--check-update-runtime` from the bundle; it then verifies and mounts the disk image
+read-only and checks its contents, signature and version.
 
 CI ([.github/workflows/release.yml](../.github/workflows/release.yml)) runs all of
 the above from a clean checkout on Ubuntu 22.04 and macOS 14 with Qt 6.5.3,
-uploads the Linux full tarball, component tarballs and manifest and the macOS zip,
+uploads the Linux full tarball, component tarballs and manifest and the macOS zip and dmg,
 and attaches them to a draft GitHub release for `v*` tags.
 
 ## Artwork and publishing

@@ -560,7 +560,12 @@ bubbles set `WA_MacAlwaysShowToolWindow`. Artwork packs are found under
 artwork packs, notices, generated `.icns`, `Info.plist` with `LSUIElement`), runs
 `macdeployqt`, signs the bundle ad hoc, checks that every Mach-O file resolves
 inside the bundle or the OS and is universal, runs `--version` and
-`--check-update-runtime` from the bundle, and zips it with `ditto`. Without an
+`--check-update-runtime` from the bundle, and zips it with `ditto`. It also builds a
+compressed HFS+ disk image (`hdiutil create -format UDZO`) holding the app,
+`INSTALL.txt` and an `Applications` link to drag onto, retrying `hdiutil`'s
+occasional "Resource busy" on CI; it then verifies the image, mounts it read-only
+and checks the exact contents, the link target, the app's signature and its
+reported version. The zip remains the asset the update check matches. Without an
 Apple Developer ID the app is not notarized: users approve the first launch, and
 an ad hoc signature changes with every build, so permissions macOS ties to the
 signature would need granting again after each upgrade (none are used yet).

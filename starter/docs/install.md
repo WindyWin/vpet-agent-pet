@@ -247,14 +247,19 @@ The installed version is shown by `agent-pet --version` and in **About**.
 
 ## macOS
 
-macOS releases are `agent-pet-VERSION-macos-universal.zip`: one `Agent Pet.app`
-for Apple silicon and Intel Macs running macOS 11 or newer, with Qt and the artwork
-inside. `INSTALL.txt` beside the app repeats these steps.
+macOS releases contain one `Agent Pet.app` for Apple silicon and Intel Macs running
+macOS 11 or newer, with Qt and the artwork inside, in two forms:
 
-1. Unzip it and drag **Agent Pet.app** into **Applications** *before* opening it.
-   macOS runs an app opened straight from Downloads from a temporary copy
+- `agent-pet-VERSION-macos-universal.dmg`, a disk image: open it and drag the app
+  onto the **Applications** shortcut. Recommended.
+- `agent-pet-VERSION-macos-universal.zip`, the same app and `INSTALL.txt` in a zip.
+
+`INSTALL.txt` beside the app repeats these steps.
+
+1. Drag **Agent Pet.app** into **Applications** *before* opening it. macOS runs an
+   app opened straight from Downloads or the disk image from a temporary copy
    ("App Translocation"); Agent Pet refuses to register hooks or login start from
-   that copy, because the path would stop working.
+   that copy, because the path would stop working. Eject the disk image afterwards.
 2. Open it. The app is signed ad hoc but not notarized by Apple (that needs a paid
    Apple Developer ID), so macOS blocks the first launch:
    - macOS 15 or newer: open it once, then **System Settings → Privacy & Security →

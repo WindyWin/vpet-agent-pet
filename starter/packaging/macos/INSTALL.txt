@@ -3,9 +3,10 @@ Agent Pet for macOS (Apple silicon and Intel)
 
 Install or upgrade:
 
- 1. Drag "Agent Pet.app" into Applications. Do this before the first launch:
-    macOS runs an app opened straight from Downloads from a temporary copy,
-    and hooks registered from that copy would stop working.
+ 1. Drag "Agent Pet.app" into Applications (in the disk image, drop it on the
+    Applications shortcut beside it). Do this before the first launch: macOS
+    runs an app opened straight from Downloads or the disk image from a
+    temporary copy, and hooks registered from that copy would stop working.
  2. Open it. This build is not notarized by Apple, so macOS blocks the first
     launch:
       - macOS 15 or newer: open it once, then System Settings > Privacy &

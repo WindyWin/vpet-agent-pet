@@ -12,7 +12,7 @@ Agent Pet is a desktop pet for Linux and macOS (C++17, Qt 6 Widgets, CMake/Ninja
 
 ## Commands (run from `starter/`)
 
-Build requirements: CMake 3.22+, Ninja, C++17, Qt 6.5+ (Widgets, DBus, Network, Test), libarchive, X11 (+ Xtst for desktop tests). macOS needs only Qt (no DBus), Ninja and the Xcode tools; `scripts/package_macos.py` builds the `.app` zip there.
+Build requirements: CMake 3.22+, Ninja, C++17, Qt 6.5+ (Widgets, DBus, Network, Test), libarchive, X11 (+ Xtst for desktop tests). macOS needs only Qt (no DBus), Ninja and the Xcode tools; `scripts/package_macos.py` builds the `.app` zip and `.dmg` there.
 
 ```bash
 python3 scripts/verify_assets.py          # asset manifest/catalog check (also run in CI)

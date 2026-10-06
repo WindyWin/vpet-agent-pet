@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the macOS release: an ad-hoc signed Agent Pet.app in a zip, from a trusted local build."""
+"""Build the macOS release from a trusted local build: an ad hoc signed Agent Pet.app in a zip and a dmg."""
 import argparse
 import json
 import os
@@ -9,6 +9,7 @@ import re
 import shutil
 import subprocess
 import tempfile
+import time
 
 ROOT = Path(__file__).resolve().parents[1]
 BUNDLE_ID = "io.github.windywin.agent-pet"
@@ -92,10 +93,55 @@ def check_bundle(bundle, universal):
     print(run(str(executable), "--check-update-runtime"))
 
 
+def make_dmg(stage, image):
+    """A compressed disk image with the app, an Applications link to drag it onto, and INSTALL.txt."""
+    with tempfile.TemporaryDirectory() as temp:
+        source = Path(temp) / "Agent Pet"
+        source.mkdir()
+        # ditto keeps the frameworks' symlinks and the bundle's signature intact.
+        run("ditto", str(stage / "Agent Pet.app"), str(source / "Agent Pet.app"))
+        shutil.copy2(stage / "INSTALL.txt", source / "INSTALL.txt")
+        (source / "Applications").symlink_to("/Applications")
+        # hdiutil occasionally reports "Resource busy" on CI runners; a retry succeeds.
+        for attempt in range(3):
+            result = subprocess.run(["hdiutil", "create", "-volname", "Agent Pet", "-srcfolder", str(source),
+                                     "-fs", "HFS+", "-format", "UDZO", "-imagekey", "zlib-level=9", str(image)],
+                                    text=True, capture_output=True)
+            if result.returncode == 0:
+                break
+            print(result.stdout + result.stderr)
+            if attempt == 2:
+                raise RuntimeError("hdiutil create failed")
+            image.unlink(missing_ok=True)
+            time.sleep(5)
+
+
+def check_dmg(image, version):
+    """Mount the image read-only and check what a user would drag out of it."""
+    run("hdiutil", "verify", str(image))
+    with tempfile.TemporaryDirectory() as mountpoint:
+        run("hdiutil", "attach", "-nobrowse", "-readonly", "-noautoopen", "-mountpoint", mountpoint, str(image))
+        try:
+            volume = Path(mountpoint)
+            names = sorted(path.name for path in volume.iterdir() if not path.name.startswith("."))
+            if names != ["Agent Pet.app", "Applications", "INSTALL.txt"]:
+                raise RuntimeError(f"Unexpected disk image contents: {names}")
+            if os.readlink(volume / "Applications") != "/Applications":
+                raise RuntimeError("Applications link does not point to /Applications")
+            bundle = volume / "Agent Pet.app"
+            run("codesign", "--verify", "--deep", "--strict", str(bundle))
+            reported = run(str(bundle / "Contents/MacOS/agent-pet"), "--version")
+            if not reported.startswith(f"agent-pet {version} "):
+                raise RuntimeError(f"Disk image app reports {reported!r}")
+            print(f"{image.name}: {reported}")
+        finally:
+            run("hdiutil", "detach", mountpoint)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--build", type=Path, default=ROOT / "build")
-    parser.add_argument("--output", type=Path, help="Directory for the zip (default: dist)")
+    parser.add_argument("--output", type=Path, help="Directory for the zip and dmg (default: dist)")
     parser.add_argument("--universal", action="store_true", help="Require arm64 and x86_64 in every binary")
     args = parser.parse_args()
     build = args.build.resolve()
@@ -104,13 +150,15 @@ def main():
     output = (args.output or ROOT / "dist").resolve()
     stage = output / name
     archive = output / f"{name}.zip"
-    if stage.exists() or archive.exists():
-        parser.error(f"{stage} or {archive} already exists; remove it or select another --output")
+    image = output / f"{name}.dmg"
+    existing = [str(path) for path in (stage, archive, image) if path.exists() or path.is_symlink()]
+    if existing:
+        parser.error(f"{', '.join(existing)} already exists; remove it or select another --output")
     qmake = os.environ.get("QMAKE") or shutil.which("qmake6") or shutil.which("qmake")
     if not qmake:
         parser.error("Missing build tool: qmake (or set QMAKE)")
     deploy = Path(run(qmake, "-query", "QT_INSTALL_BINS")) / "macdeployqt"
-    for tool in ("codesign", "ditto", "otool", "install_name_tool", "lipo", "sips", "iconutil", "file"):
+    for tool in ("codesign", "ditto", "hdiutil", "otool", "install_name_tool", "lipo", "sips", "iconutil", "file"):
         if not shutil.which(tool):
             parser.error(f"Missing macOS tool: {tool}")
     if not deploy.exists():
@@ -162,7 +210,10 @@ def main():
     shutil.copy2(ROOT / "packaging/macos/INSTALL.txt", stage / "INSTALL.txt")
     # ditto keeps the bundle's symlinks and extended attributes, as Finder's Archive Utility expects.
     subprocess.run(["ditto", "-c", "-k", "--sequesterRsrc", "--keepParent", str(stage), str(archive)], check=True)
+    make_dmg(stage, image)
+    check_dmg(image, version)
     print(archive)
+    print(image)
 
 
 if __name__ == "__main__":
