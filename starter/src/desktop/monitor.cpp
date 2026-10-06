@@ -82,7 +82,9 @@ bool Monitor::apply(const Event &event, qint64 now) {
 void Monitor::update(qint64 now) {
     if (!active_) return;
     sessions_.expire(now);
-    if (pointer && !(locked && locked())) {
+    // A locked screen is a break: both timers start over, and nothing counts until it is unlocked.
+    if (locked && locked()) window_.wellness().reset();
+    else if (pointer) {
         const auto position = pointer();
         if (position != lastPointer_) { lastPointer_ = position; window_.wellness().activity(now); }
     }

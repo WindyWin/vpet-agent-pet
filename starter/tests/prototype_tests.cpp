@@ -1354,11 +1354,13 @@ private slots:
         // A locked screen counts nothing, from the pointer or from agents, and shows nothing.
         bool locked = false; monitor.locked = [&] { return locked; };
         work(40); const auto before = window.wellness().waterActiveMs(t);
-        locked = true; QVERIFY(monitor.apply(event("prompt"), t)); work(4);
-        QCOMPARE(window.wellness().waterActiveMs(t - 4 * minute), before);
+        QVERIFY(before >= 40 * minute);
+        locked = true; QVERIFY(monitor.apply(event("prompt"), t)); work(1);
+        QCOMPARE(window.wellness().waterActiveMs(t), qint64(0)); // Locking is a break: both timers start over.
         QVERIFY(window.wellness().due(t).isEmpty()); QVERIFY(!monitor.note().isVisible());
-        work(30); QCOMPARE(window.wellness().waterActiveMs(t), qint64(0)); // Gone long enough to be a break.
-        locked = false; work(1); QVERIFY(!monitor.note().isVisible());
+        // Even a short lock: back after two minutes, the stretch starts from the first move.
+        locked = false; work(1); QCOMPARE(window.wellness().waterActiveMs(t), qint64(30000));
+        QVERIFY(!monitor.note().isVisible());
     }
     void wellnessPreference() {
         QTemporaryDir directory; const auto path = directory.path() + "/preferences.json";

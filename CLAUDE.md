@@ -62,7 +62,7 @@ CMake libraries enforce this split:
 | `pet_events` (Qt Core only) | `sessions/` (session/tool state machine, alerts, presence), `ipc/` (Unix datagram socket at `$XDG_RUNTIME_DIR/agent-pet-<uid>/events.sock`, autostart), `settings/` (atomic `preferences.json`), `providers/` (Claude/Codex hook → normalized event adapters, integration config merge) |
 | `pet_hosts` (Qt Core only) | `hosts/`: `HostContext` and v1 conversion, the host `Registry` (capture, target codecs, labels, detection order), `FocusService`, tmux/herdr selection; `platform/desktop/window_match` |
 | `pet_platform_linux` | `platform/linux/`: `/proc` process services and the `QProcess` command runner |
-| `pet_native` | The only target linking X11 and D-Bus: `platform/desktop/x11` and `kwin` backends, X11 pointer queries, Konsole's D-Bus selection, and `platform::createFocusService()` (composition) |
+| `pet_native` | The only target linking X11 and D-Bus: `platform/desktop/x11` and `kwin` backends, X11 pointer queries, Konsole's D-Bus selection, the D-Bus screen-lock watcher (`platform/desktop/screensaver`), and `platform::createFocusService()` (composition) |
 | `pet_updates` | release metadata validation, component manifests, libarchive installer; also used by the separate `agent-pet-updater` helper |
 | `pet_ui` | `animation/` (catalog-driven player, ambient fidgets, mood, easter eggs) and `desktop/` (`PetWindow`, `Monitor`, alert bubble, session list, touch, wander); no native includes |
 
