@@ -9,7 +9,9 @@
 #include <QCoreApplication>
 #include <QResource>
 #include <QRegularExpression>
+#include <algorithm>
 #include <tuple>
+#include <utility>
 
 namespace pet {
 namespace {
@@ -361,11 +363,13 @@ const ActivityArt *Player::activity(const QString &state) const {
 }
 void Player::finish() {
     if (stopped_ || held_ || animations_.value(state_).mode != "phased" || phase_ == 2) return;
-    enterSequence(2);
+    beginEnd();
 }
 QString Player::phase() const {
     if (stopped_) return "stopped";
     if (!animations_.contains(state_)) return "unavailable";
+    if (decoration_ == Decoration::Handover) return "handover";
+    if (decoration_ != Decoration::None) return "linger";
     if (animations_[state_].mode != "phased") return animations_[state_].mode;
     return QStringList{"start", "loop", "end"}.at(phase_);
 }
@@ -391,14 +395,110 @@ bool Player::select(const QString &state, bool interrupt) {
     if (isFidget(state_)) interrupt = true;
     // Update a queued transition without restarting the outgoing exit sequence.
     if (!interrupt && animations_.value(state_).mode == "phased" && !stopped_) {
+        if (decorate(state)) return true;
         pending_ = state;
-        if (phase_ != 2) enterSequence(2);
+        if (phase_ != 2) beginEnd();
         return true;
     }
     const auto resume = resumeTarget();
     if (animations_[state].mode == "once" && state != state_) previous_ = resume;
     pending_.clear();
     enter(state);
+    return true;
+}
+// A non-urgent change from an activity's loop phase that can stay at the desk; false plays the usual end.
+bool Player::decorate(const QString &target) {
+    const auto found = activity_.constFind(state_);
+    if (!continuity_ || phase_ != 1 || found == activity_.constEnd()) return false;
+    const auto &art = *found;
+    if (decoration_ != Decoration::None && target == pending_) return true; // Already on its way there.
+    const bool lingering = decoration_ == Decoration::LingerIn || decoration_ == Decoration::Linger
+        || decoration_ == Decoration::LingerOut;
+    if (decoration_ == Decoration::None && !art.linger.to.isEmpty() && target == art.linger.to) {
+        pending_ = target; lingerMs_ = 0; lingerLast_.clear();
+        decoration_ = art.linger.in.isEmpty() ? Decoration::Linger : Decoration::LingerIn;
+        enterSequence(1, art.linger.in.isEmpty() ? drawLinger() : art.linger.in);
+        return true;
+    }
+    if (lingering && (target == state_ || art.handover.contains(target))) {
+        // Back to work, or on to the other prop; a playing out decides what follows it.
+        pending_ = target == state_ ? QString() : target;
+        if (decoration_ == Decoration::LingerOut) return true;
+        if (art.linger.out.isEmpty()) leaveLinger();
+        else { decoration_ = Decoration::LingerOut; enterSequence(1, art.linger.out); }
+        return true;
+    }
+    if (decoration_ == Decoration::None && art.handover.contains(target)) {
+        pending_ = target; decoration_ = Decoration::Handover;
+        enterSequence(1, art.handover.value(target));
+        return true;
+    }
+    return false;
+}
+// A handover or a linger sequence just ended.
+void Player::decorationEnded() {
+    const auto &art = activity_[state_];
+    if (decoration_ == Decoration::Handover) {
+        const auto target = pending_;
+        pending_.clear();
+        enter(target, 1);
+        return;
+    }
+    if (decoration_ == Decoration::LingerIn || (decoration_ == Decoration::Linger && lingerMs_ < art.linger.maxMs)) {
+        decoration_ = Decoration::Linger;
+        enterSequence(1, drawLinger());
+        return;
+    }
+    if (decoration_ == Decoration::Linger && !art.linger.out.isEmpty()) {
+        decoration_ = Decoration::LingerOut;
+        enterSequence(1, art.linger.out);
+        return;
+    }
+    leaveLinger();
+}
+// After a linger: back to the loop, on to a handover, or the usual end and the pending state.
+void Player::leaveLinger() {
+    const auto &art = activity_[state_];
+    if (pending_.isEmpty()) { decoration_ = Decoration::None; enterSequence(1); }
+    else if (art.handover.contains(pending_)) {
+        decoration_ = Decoration::Handover;
+        enterSequence(1, art.handover.value(pending_));
+    } else beginEnd();
+}
+// The end phase, or a reaction drawn for leaving to the pending state when the gate allows one.
+void Player::beginEnd() {
+    decoration_ = Decoration::None;
+    QString farewell;
+    const auto found = activity_.constFind(state_);
+    if (found != activity_.constEnd() && reactionGate_)
+        if (const auto pool = found->exit.value(pending_); !pool.isEmpty() && reactionGate_()) farewell = drawChoice(pool);
+    enterSequence(2, farewell);
+}
+QString Player::drawChoice(const QVector<ActivityChoice> &pool) {
+    int total = 0;
+    for (const auto &choice : pool) total += choice.weight;
+    int roll = pool.size() == 1 ? 0 : qBound(0, random_(total), total - 1);
+    for (const auto &choice : pool) {
+        if (roll < choice.weight) return choice.sequence;
+        roll -= choice.weight;
+    }
+    return pool.first().sequence;
+}
+// Linger passes are drawn evenly, never the same one twice in a row unless it is the only one.
+QString Player::drawLinger() {
+    auto loop = activity_[state_].linger.loop;
+    if (loop.size() > 1) loop.removeAll(lingerLast_);
+    lingerLast_ = loop.size() == 1 ? loop.first() : loop.at(qBound(0, random_(int(loop.size())), int(loop.size()) - 1));
+    return lingerLast_;
+}
+bool Player::vary(const QString &sequence) {
+    const auto found = activity_.constFind(state_);
+    if (found == activity_.constEnd() || stopped_ || phase_ != 1 || decoration_ != Decoration::None || index_ != 0
+        || std::none_of(found->loops.begin(), found->loops.end(),
+                        [&](const ActivityChoice &choice) { return choice.sequence == sequence; }))
+        return false;
+    sequence_ = sequence;
+    display(); // In the same event-loop turn as the pass's first frame, so nothing is painted in between.
     return true;
 }
 void Player::hold(const QString &state) {
@@ -435,18 +535,25 @@ QStringList Player::choose(const QString &state) {
     }
     return choices.first().sequences;
 }
-void Player::enter(const QString &state) {
+void Player::enter(const QString &state, int phase) {
+    const auto from = state_;
     state_ = state;
     stopped_ = false;
     chosen_ = choose(state);
     loopCount_ = 0;
+    decoration_ = Decoration::None;
+    welcome_.clear();
+    // A welcome replaces the first loop pass when the pet comes from one of the listed states.
+    const auto art = activity_.constFind(state);
+    if (art != activity_.constEnd() && art->enterFrom.contains(from) && reactionGate_ && reactionGate_())
+        welcome_ = drawChoice(art->enter);
     emit entered(state);
-    enterSequence(0);
+    enterSequence(phase, phase == 1 ? std::exchange(welcome_, {}) : QString());
 }
-void Player::enterSequence(int phase) {
+void Player::enterSequence(int phase, const QString &sequence) {
     timer_.stop();
     phase_ = phase;
-    sequence_ = chosen_.value(phase);
+    sequence_ = sequence.isEmpty() ? chosen_.value(phase) : sequence;
     index_ = 0;
     pixmap_ = {};
     cache_.clear();
@@ -455,10 +562,13 @@ void Player::enterSequence(int phase) {
 void Player::advance() {
     timer_.stop();
     if (stopped_ || !sequences_.contains(sequence_)) return;
+    // Linger time is the frames shown, so a paused or hidden pet never runs it down.
+    if (decoration_ == Decoration::LingerIn || decoration_ == Decoration::Linger) lingerMs_ += duration_;
     if (++index_ < sequences_[sequence_].size()) { display(); return; }
+    if (decoration_ != Decoration::None) { decorationEnded(); return; }
     const auto &animation = animations_[state_];
     if (animation.mode == "phased") {
-        if (phase_ == 0) { enterSequence(1); return; }
+        if (phase_ == 0) { enterSequence(1, std::exchange(welcome_, {})); return; }
         if (phase_ == 1 && animation.loops > 0 && ++loopCount_ >= animation.loops) { enterSequence(2); return; }
         if (phase_ == 2) {
             auto target = pending_.isEmpty() ? QString("idle") : pending_;
@@ -481,14 +591,15 @@ void Player::advance() {
         return;
     }
     // Another pass of a loop. An idle loop may switch variant or mood here, between two identical first
-    // frames, and with variants off this is where it returns to the catalog's own entry.
+    // frames, and with variants off this is where it returns to the catalog's own entry. A phased loop
+    // returns to its own sequence: an alternate or a welcome lasts one pass.
     if (animation.mode == "loop") {
         chosen_ = choose(state_);
         sequence_ = chosen_.value(0);
-    }
+    } else sequence_ = chosen_.value(phase_);
     index_ = 0;
     display();
-    if (animation.mode == "loop") emit looped(state_); // Last: a listener may select a new state.
+    emit looped(state_); // Last: a listener may select a new state or vary this pass.
 }
 void Player::display() {
     const auto &frame = sequences_[sequence_].at(index_);

@@ -9,6 +9,7 @@
 #include <QSet>
 #include <QTimer>
 #include <QVector>
+#include <functional>
 
 namespace pet {
 struct Frame { QString path; int durationMs; };
@@ -118,6 +119,16 @@ public:
     int moveScale() const { return moveScale_; }
     // The decoration of an activity state, or null for a state without any.
     const ActivityArt *activity(const QString &state) const;
+    // Handover and linger keep the pet at its desk between activities. Off, every change plays the
+    // outgoing state's end, as without the section.
+    void setContinuity(bool enabled) { continuity_ = enabled; }
+    bool continuity() const { return continuity_; }
+    // Asked each time an enter or exit reaction could play; true spends that opportunity on it. Unset,
+    // none plays.
+    void setReactionGate(std::function<bool()> gate) { reactionGate_ = std::move(gate); }
+    // Plays one of the state's alternate loops for this pass instead of its own. Only at the first frame
+    // of a loop pass, as from a `looped` handler; false otherwise.
+    bool vary(const QString &sequence);
     // Ends a phased state's start or loop now: it plays its end, then goes on as it would have.
     void finish();
 signals:
@@ -126,12 +137,21 @@ signals:
     void completed(const QString &state);
     // A state was just entered; listeners must not select from this signal.
     void entered(const QString &state);
-    // A looping state started another pass; listeners may select a new state.
+    // A looping state, or a phased state's loop phase, started another pass; listeners may select a
+    // new state or vary the pass.
     void looped(const QString &state);
 private:
     bool load(const QString &resourceRoot);
-    void enter(const QString &state);
-    void enterSequence(int phase);
+    enum class Decoration { None, LingerIn, Linger, LingerOut, Handover };
+    void enter(const QString &state, int phase = 0);
+    // `sequence` replaces the phase's own for this pass, as an alternate or a reaction does.
+    void enterSequence(int phase, const QString &sequence = {});
+    bool decorate(const QString &target);
+    void decorationEnded();
+    void leaveLinger();
+    void beginEnd();
+    QString drawChoice(const QVector<ActivityChoice> &pool);
+    QString drawLinger();
     void display();
     void fail(const QString &message);
     QString resumeTarget() const;
@@ -145,6 +165,11 @@ private:
     Touch touch_;
     QMap<QString, Move> moves_;
     QMap<QString, ActivityArt> activity_;
+    std::function<bool()> reactionGate_;
+    Decoration decoration_ = Decoration::None;
+    QString welcome_, lingerLast_; // `welcome_`: the enter reaction waiting for the first loop pass.
+    int lingerMs_ = 0;
+    bool continuity_ = false;
     QStringList chosen_;
     Random random_ = systemRandom();
     QCache<QString, QPixmap> cache_{cacheLimitKiB};

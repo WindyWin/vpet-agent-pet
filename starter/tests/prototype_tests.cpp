@@ -14,6 +14,7 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QRandomGenerator>
 #include <QSignalSpy>
 #include <QTemporaryDir>
 #include <QTest>
@@ -523,6 +524,187 @@ private slots:
         QVERIFY(!loads(broken("reading", "handover", QJsonObject{{"idle", "work"}})));
         QVERIFY(!loads(broken("reading", "handover", QJsonObject{{"working", "missing"}})));
         QVERIFY(!loads(broken("reading", "handover", QJsonObject{})));
+    }
+    void phasedLoopsAnnounceEachPass() {
+        pet::Player player; player.setPaused(true);
+        QSignalSpy looped(&player, &pet::Player::looped);
+        player.select("reading", true);
+        QVERIFY(!player.vary("WORK/Study/B_2_Nomal")); // Start phase.
+        finishSequence(player); QCOMPARE(looped.size(), 0); // Its first pass is no new pass.
+        finishSequence(player);
+        QCOMPARE(looped.size(), 1); QCOMPARE(looped.last().first().toString(), QString("reading"));
+        QVERIFY(!player.vary("WORK/WorkONE/B_2_Nomal")); // Another state's alternate.
+        QVERIFY(!player.vary("WORK/Study/C_Nomal")); // Not an alternate at all.
+        QVERIFY(player.vary("WORK/Study/B_2_Nomal"));
+        QCOMPARE(player.sequence(), QString("WORK/Study/B_2_Nomal")); QCOMPARE(player.frameIndex(), 0);
+        QCOMPARE(player.state(), QString("reading")); QCOMPARE(player.phase(), QString("loop"));
+        player.advance(); QVERIFY(!player.vary("WORK/Study/B_3_Nomal")); // Mid-pass.
+        // An alternate lasts one pass.
+        finishSequence(player); QCOMPARE(player.sequence(), QString("WORK/Study/B_1_Nomal")); QCOMPARE(looped.size(), 2);
+        // A listener varies the pass it is told about.
+        const auto connection = connect(&player, &pet::Player::looped, &player,
+                                        [&] { QVERIFY(player.vary("WORK/Study/B_3_Nomal")); });
+        finishSequence(player); QCOMPARE(player.sequence(), QString("WORK/Study/B_3_Nomal"));
+        disconnect(connection);
+    }
+    void everyActivityAlternateDecodes() {
+        pet::Player player; player.setPaused(true); player.setRenderSize(640);
+        for (const auto *state : {"thinking", "reading", "working"})
+            for (const auto &loop : player.activity(state)->loops) {
+                player.select(state, true); finishSequence(player);
+                QVERIFY2(player.vary(loop.sequence), qPrintable(loop.sequence));
+                for (int i = 0, count = player.frameCount(); i < count; ++i) {
+                    QVERIFY2(!player.pixmap().isNull(), qPrintable(player.error()));
+                    QVERIFY(player.cacheKiB() <= pet::Player::cacheLimitKiB); player.advance();
+                }
+                QCOMPARE(player.state(), QString(state)); QVERIFY2(player.error().isEmpty(), qPrintable(player.error()));
+            }
+    }
+    void lingerKeepsThePetAtItsDesk() {
+        pet::Player player; player.setPaused(true); player.setRandom([](int) { return 0; }); player.setContinuity(true);
+        player.select("reading", true); finishSequence(player);
+        // A short thinking pause keeps the book open; the request counts as honoured.
+        player.select("thinking");
+        QCOMPARE(player.state(), QString("reading")); QCOMPARE(player.requestedState(), QString("thinking"));
+        QCOMPARE(player.phase(), QString("linger")); QCOMPARE(player.sequence(), QString("WORK/Study/B_4_Nomal"));
+        finishSequence(player); QCOMPARE(player.sequence(), QString("WORK/Study/B_3_Nomal")); // Never twice in a row.
+        player.advance(); player.select("thinking"); QCOMPARE(player.frameIndex(), 1); // The same request restarts nothing.
+        // Paused, nothing is shown, so no linger time passes.
+        QTest::qWait(30); QCOMPARE(player.frameIndex(), 1); QCOMPARE(player.phase(), QString("linger"));
+        // Reading again resumes the base loop: no end, no start.
+        QVERIFY(player.select("reading"));
+        QCOMPARE(player.phase(), QString("loop")); QCOMPARE(player.sequence(), QString("WORK/Study/B_1_Nomal"));
+        QCOMPARE(player.requestedState(), QString("reading"));
+        // A long pause ends at the first pass boundary at or past max_s, counted in frames shown:
+        // 1250 + 1500 + 1250 + 1500 + 1250 = 6750 ms, and the sixth pass reaches 8250 ms.
+        player.select("thinking");
+        for (int pass = 0; pass < 5; ++pass) { finishSequence(player); QCOMPARE(player.phase(), QString("linger")); }
+        finishSequence(player);
+        QCOMPARE(player.phase(), QString("end")); QCOMPARE(player.sequence(), QString("WORK/Study/C_Nomal"));
+        finishSequence(player); QCOMPARE(player.state(), QString("thinking")); QCOMPARE(player.phase(), QString("start"));
+        // Working ponders chin in hand, with an in and an out.
+        player.select("working", true); finishSequence(player);
+        player.select("thinking");
+        QCOMPARE(player.sequence(), QString("WORK/Desk/ponder_in")); QCOMPARE(player.phase(), QString("linger"));
+        finishSequence(player); QCOMPARE(player.sequence(), QString("WORK/Desk/ponder_loop"));
+        player.select("working");
+        QCOMPARE(player.sequence(), QString("WORK/Desk/ponder_out")); QCOMPARE(player.phase(), QString("linger"));
+        QCOMPARE(player.requestedState(), QString("working"));
+        finishSequence(player);
+        QCOMPARE(player.phase(), QString("loop")); QCOMPARE(player.sequence(), QString("WORK/WorkONE/B_1_Nomal"));
+        // 500 ms in, then 1000 ms passes: the eighth reaches 8500 ms, then out, end and thinking.
+        player.select("thinking"); finishSequence(player);
+        for (int pass = 0; pass < 7; ++pass) { finishSequence(player); QCOMPARE(player.sequence(), QString("WORK/Desk/ponder_loop")); }
+        finishSequence(player); QCOMPARE(player.sequence(), QString("WORK/Desk/ponder_out"));
+        finishSequence(player);
+        QCOMPARE(player.phase(), QString("end")); QCOMPARE(player.sequence(), QString("WORK/WorkONE/C_Nomal"));
+        finishSequence(player); QCOMPARE(player.state(), QString("thinking"));
+    }
+    void handoverSwapsPropsAtTheDesk() {
+        pet::Player player; player.setPaused(true); player.setRandom([](int) { return 0; }); player.setContinuity(true);
+        QSignalSpy entered(&player, &pet::Player::entered);
+        player.select("reading", true); finishSequence(player); entered.clear();
+        player.select("working");
+        QCOMPARE(player.state(), QString("reading")); QCOMPARE(player.phase(), QString("handover"));
+        QCOMPARE(player.sequence(), QString("WORK/Desk/reading_to_working"));
+        QCOMPARE(player.requestedState(), QString("working")); QCOMPARE(entered.size(), 0);
+        // No end and no start: straight into working's loop.
+        finishSequence(player);
+        QCOMPARE(player.state(), QString("working")); QCOMPARE(player.phase(), QString("loop"));
+        QCOMPARE(player.sequence(), QString("WORK/WorkONE/B_1_Nomal")); QCOMPARE(entered.size(), 1);
+        // From a linger too: the pen comes down first, then the props swap.
+        player.select("thinking"); QCOMPARE(player.sequence(), QString("WORK/Desk/ponder_in"));
+        finishSequence(player); player.select("reading");
+        QCOMPARE(player.sequence(), QString("WORK/Desk/ponder_out")); QCOMPARE(player.requestedState(), QString("reading"));
+        finishSequence(player);
+        QCOMPARE(player.phase(), QString("handover")); QCOMPARE(player.sequence(), QString("WORK/Desk/working_to_reading"));
+        finishSequence(player); QCOMPARE(player.state(), QString("reading")); QCOMPARE(player.phase(), QString("loop"));
+        // Reading's linger has no out, so its handover starts at once.
+        player.select("thinking"); player.select("working");
+        QCOMPARE(player.sequence(), QString("WORK/Desk/reading_to_working"));
+        // The same request again changes nothing; any other plays the usual end at once.
+        player.select("working"); QCOMPARE(player.phase(), QString("handover"));
+        player.select("idle");
+        QCOMPARE(player.phase(), QString("end")); QCOMPARE(player.sequence(), QString("WORK/Study/C_Nomal"));
+        QCOMPARE(player.requestedState(), QString("idle"));
+    }
+    void reactionsAskTheGate() {
+        pet::Player player; player.setPaused(true);
+        int asked = 0; bool allow = false;
+        player.setReactionGate([&] { ++asked; return allow; });
+        player.select("thinking", true); QCOMPARE(asked, 0); // Nothing reacts to coming from idle.
+        finishSequence(player);
+        // Leaving for reading asks once; refused, the usual end plays, and reading has no welcome.
+        player.select("reading"); QCOMPARE(asked, 1); QCOMPARE(player.sequence(), QString("Think/Nomal/C"));
+        finishSequence(player); QCOMPARE(player.state(), QString("reading")); QCOMPARE(asked, 1);
+        // Allowed: thinking leaves for working with a happy turn instead of its end...
+        player.select("thinking", true); finishSequence(player);
+        allow = true; player.select("working"); QCOMPARE(asked, 2);
+        QCOMPARE(player.phase(), QString("end")); QCOMPARE(player.sequence(), QString("Think/Happy/C_2"));
+        // ...and working, entered from thinking, asks for its welcome: the first loop pass.
+        finishSequence(player); QCOMPARE(asked, 3); QCOMPARE(player.sequence(), QString("WORK/WorkONE/A_Nomal"));
+        finishSequence(player); QCOMPARE(player.sequence(), QString("WORK/WorkONE/Happy/B"));
+        finishSequence(player); QCOMPARE(player.sequence(), QString("WORK/WorkONE/B_1_Nomal")); // One pass.
+        // Transitions without art never ask.
+        player.select("idle"); QCOMPARE(asked, 3); QCOMPARE(player.sequence(), QString("WORK/WorkONE/C_Nomal"));
+        // An urgent select skips the end and its reaction, but the welcome still asks.
+        player.select("thinking", true); finishSequence(player);
+        player.select("working", true); QCOMPARE(asked, 4);
+        finishSequence(player); QCOMPARE(player.sequence(), QString("WORK/WorkONE/Happy/B"));
+    }
+    void decorationNeverDelaysAlerts() {
+        pet::Player player; player.setPaused(true); player.setRandom([](int) { return 0; }); player.setContinuity(true);
+        auto lingerInReading = [&] {
+            player.select("reading", true); finishSequence(player); player.select("thinking");
+            QCOMPARE(player.phase(), QString("linger"));
+        };
+        // An alternate pass ends at once, for an urgent change or not.
+        player.select("reading", true); finishSequence(player); finishSequence(player);
+        QVERIFY(player.vary("WORK/Study/B_2_Nomal")); player.advance();
+        player.select("turn_finished");
+        QCOMPARE(player.phase(), QString("end")); QCOMPARE(player.sequence(), QString("WORK/Study/C_Nomal"));
+        player.select("reading", true); finishSequence(player); finishSequence(player);
+        QVERIFY(player.vary("WORK/Study/B_2_Nomal"));
+        player.select("needs_input", true);
+        QCOMPARE(player.state(), QString("needs_input")); QCOMPARE(player.phase(), QString("start"));
+        // So does a linger: an alert, an error, a drag, a finished turn or idle each act at once.
+        lingerInReading(); player.select("needs_input", true); QCOMPARE(player.state(), QString("needs_input"));
+        lingerInReading(); player.select("tool_error", true); QCOMPARE(player.state(), QString("tool_error"));
+        lingerInReading(); player.beginDrag(); QCOMPARE(player.state(), QString("dragging"));
+        player.endDrag(); QCOMPARE(player.requestedState(), QString("thinking")); // The request it was showing.
+        lingerInReading(); player.select("turn_finished");
+        QCOMPARE(player.phase(), QString("end")); QCOMPARE(player.requestedState(), QString("turn_finished"));
+        lingerInReading(); player.select("idle"); QCOMPARE(player.sequence(), QString("WORK/Study/C_Nomal"));
+        // Continuity off: a short thinking pause plays the usual end.
+        player.setContinuity(false); player.select("reading", true); finishSequence(player);
+        player.select("thinking"); QCOMPARE(player.phase(), QString("end"));
+    }
+    void decorationFollowsEveryRequest() {
+        // Tool calls can flip the request many times a second; whatever the timing, the latest one wins.
+        pet::Player player; player.setPaused(true); player.setContinuity(true);
+        QRandomGenerator generator(47);
+        player.setRandom([&](int bound) { return int(generator.bounded(bound)); });
+        int asked = 0; player.setReactionGate([&] { return ++asked % 2 == 0; });
+        // Mostly between activities, as tool calls flip it; now and then a finished turn or idle.
+        const QStringList requests{"thinking", "reading", "working", "thinking", "reading", "working", "idle", "turn_finished"};
+        QSet<QString> visited; // Every frame decodes full-size art, so the run is short but must reach each path.
+        for (int step = 0; step < 600; ++step) {
+            if (generator.bounded(10) < 4) {
+                const auto request = requests.at(int(generator.bounded(int(requests.size()))));
+                player.select(request);
+                QCOMPARE(player.requestedState(), request);
+            } else {
+                for (int i = int(generator.bounded(1, 8)); i > 0; --i) player.advance();
+            }
+            QVERIFY2(player.error().isEmpty(), qPrintable(player.error()));
+            visited << player.phase() << player.sequence();
+        }
+        for (const auto *path : {"linger", "handover", "WORK/Desk/ponder_out", "WORK/Desk/working_to_reading",
+                                 "WORK/Desk/reading_to_working", "Think/Happy/C_2", "WORK/WorkONE/Happy/B"})
+            QVERIFY2(visited.contains(path), path);
+        player.select("reading");
+        for (int i = 0; i < 40 && !(player.state() == "reading" && player.phase() == "loop"); ++i) finishSequence(player);
+        QCOMPARE(player.state(), QString("reading")); QCOMPARE(player.phase(), QString("loop"));
     }
     void moodArtReplacesChoices() {
         pet::Player player; player.setPaused(true); Draws draws; player.setRandom(draws.random());
