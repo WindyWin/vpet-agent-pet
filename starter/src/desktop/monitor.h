@@ -24,6 +24,8 @@ public:
     bool apply(const Event &event, qint64 now);
     void update(qint64 now);
     void stop();
+    void restoreSessions(const QString &path);
+    bool checkpointSessions();
     bool active() const { return active_; }
     Sessions &sessions() { return sessions_; }
     AlertQueue &queue() { return queue_; }
@@ -71,7 +73,7 @@ private:
     Recap recap_; // Persisted shortly after each change, and when monitoring stops.
     std::unique_ptr<Receiver> receiver_;
     QTimer timer_, rest_, recapTimer_;
-    QString lastAggregate_, reminder_;
+    QString lastAggregate_, reminder_, sessionPath_;
     QPoint lastPointer_;
     int restLeft_ = 0;
     qint64 lastTurnMs_ = 0; // How long the latest finished turn ran, for a long-turn celebration.

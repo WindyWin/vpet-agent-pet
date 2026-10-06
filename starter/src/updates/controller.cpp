@@ -122,7 +122,7 @@ void Controller::start() {
     QTimer::singleShot(15000, this, [this] { check(); autoInstall(); });
     auto *timer = new QTimer(this); timer->setInterval(60 * 60 * 1000);
     connect(timer, &QTimer::timeout, this, [this] { check(); }); timer->start();
-    // A finished download waits here while an agent is waiting for the user's answer.
+    // Retry a ready update if its session checkpoint could not be saved.
     auto *retry = new QTimer(this); retry->setInterval(5 * 60 * 1000);
     connect(retry, &QTimer::timeout, this, [this] { autoInstall(); }); retry->start();
 }
@@ -213,7 +213,7 @@ void Controller::finishDownload(const Release &target, bool components) {
     if (components) { pending["kind"] = "components"; pending["digest"] = target.componentsDigest; }
     downloading_ = false;
     if (!writeObject(directory_ + "/pending.json", pending)) { status("Cannot save the pending update."); return; }
-    ready_ = true; status("Update " + target.version + " is ready. It installs as soon as no agent is waiting for you.");
+    ready_ = true; status("Update " + target.version + " is ready. The pet will restart and restore running sessions.");
     autoInstall();
 }
 void Controller::fetch(const Release &target, const QString &path, std::function<void()> complete,
@@ -252,9 +252,14 @@ void Controller::fetch(const Release &target, const QString &path, std::function
     });
     status("Downloading update…");
 }
-void Controller::install() {
+void Controller::install() { installReady(false); }
+void Controller::installReady(bool automatic) {
     if (!ready_ || prefix_.isEmpty() || reply_ || downloading_) return;
-    if (sessionsActive && sessionsActive()) { status("An agent is waiting for your answer. Respond to it, then restart to update."); return; }
+    if (prepareRestart && !prepareRestart()) { status("Could not save running sessions. Free disk space or check permissions, then retry the update."); return; }
+    if (automatic) {
+        state_["autoInstalled"] = release_.version;
+        if (!save()) { state_.remove("autoInstalled"); return; }
+    }
     const auto pending = readObject(directory_ + "/pending.json");
     QStringList args{applyCommand(pending), prefix_, pendingFile(directory_, pending), pending["digest"].toString(), release_.version,
                      QString::number(QCoreApplication::applicationPid())};
@@ -266,9 +271,7 @@ void Controller::autoInstall() {
     const QString version = release_.version;
     // One attempt per version: a rolled-back update must not restart the pet in a loop.
     if (state_["skipped"].toString() == version || state_["autoInstalled"].toString() == version) return;
-    if (sessionsActive && sessionsActive()) return;
-    state_["autoInstalled"] = version;
-    if (save()) install();
+    installReady(true);
 }
 void Controller::showSettings(QWidget *parent) {
     if (dialog_) { dialog_->show(); dialog_->raise(); return; }
@@ -284,7 +287,7 @@ QWidget *Controller::settings(QWidget *parent) {
     auto *box = new QGroupBox("Updates", parent); auto *layout = new QVBoxLayout(box);
     auto *version = new QLabel("Installed version: " AGENT_PET_VERSION, box); layout->addWidget(version);
     auto *enabled = new QCheckBox("Check automatically once a day", box); enabled->setChecked(state_["enabled"].toBool(true)); layout->addWidget(enabled);
-    auto *mode = new QComboBox(box); mode->addItems({"Notify only", "Download automatically", "Install automatically on next launch", "Download and install automatically (restart when idle)"});
+    auto *mode = new QComboBox(box); mode->addItems({"Notify only", "Download automatically", "Install automatically on next launch", "Download and install automatically (restore running sessions)"});
     mode->setCurrentIndex(state_["mode"].toInt()); layout->addWidget(mode);
     enabled->setEnabled(writable_); mode->setEnabled(writable_ && !prefix_.isEmpty());
     if (prefix_.isEmpty()) { auto *hint = new QLabel("This copy supports notifications and manual downloads. Install a release bundle to enable automatic updates.", box); hint->setWordWrap(true); layout->addWidget(hint); }

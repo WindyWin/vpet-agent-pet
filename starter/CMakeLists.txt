@@ -123,7 +123,7 @@ else()
 endif()
 target_include_directories(pet_native PUBLIC src)
 # Headless code shared by the pet and its display-free commands (hook, integration, autostart).
-qt_add_library(pet_events STATIC src/ipc/local.cpp src/ipc/autostart.cpp src/providers/integrations.cpp)
+qt_add_library(pet_events STATIC src/ipc/local.cpp src/ipc/session_store.cpp src/ipc/autostart.cpp src/providers/integrations.cpp)
 target_include_directories(pet_events PUBLIC src)
 target_link_libraries(pet_events PUBLIC pet_core PRIVATE pet_platform)
 if(APPLE)

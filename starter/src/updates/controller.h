@@ -23,14 +23,15 @@ public:
     void check(bool manual = false);
     void download();
     void install();
-    // Installs a downloaded update in fully automatic mode unless an agent is waiting for the user.
+    // Installs a downloaded update in fully automatic mode after checkpointing monitored sessions.
     void autoInstall();
     QString indicator() const;
-    std::function<bool()> sessionsActive;
+    std::function<bool()> prepareRestart;
 signals:
     void changed();
     void restartRequested();
 private:
+    void installReady(bool automatic);
     void fetch(const Release &target, const QString &path, std::function<void()> complete,
                std::function<void()> fallback = {});
     void downloadFull(const Release &target);
