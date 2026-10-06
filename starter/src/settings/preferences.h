@@ -22,6 +22,10 @@ struct Preferences {
     // How much the idle pet does on its own: fidgets, alternate idle loops and dozing off.
     enum Ambient { AmbientOff = 0, AmbientSubtle = 1, AmbientLively = 2 };
     int ambient = AmbientSubtle;
+    // How sustained thinking, reading and working vary: one loop each as before, calm alternates with
+    // desk continuity, or also pen spinning and small reactions. Independent of `ambient`.
+    enum Activity { ActivityClassic = 0, ActivitySubtle = 1, ActivityPlayful = 2 };
+    int activity = ActivityPlayful;
     // Whether agent activity sets the pet's mood: never, only cheerful, or also droopy after errors.
     enum Mood { MoodOff = 0, MoodCheerful = 1, MoodFull = 2 };
     int mood = MoodFull;

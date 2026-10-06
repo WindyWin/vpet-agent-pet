@@ -418,6 +418,65 @@ private slots:
         pet::PreferencesStore invalid(path); QCOMPARE(invalid.load().ambient, int(pet::Preferences::AmbientSubtle));
         QVERIFY(!invalid.save(pet::Preferences{}));
     }
+    void activityPreference() {
+        QTemporaryDir directory; const auto path = directory.path() + "/preferences.json";
+        {
+            pet::PetWindow window(nullptr, path);
+            QCOMPARE(window.activityStyle(), int(pet::Preferences::ActivityPlayful)); QVERIFY(window.player().continuity());
+            window.showSettings(); auto *dialog = window.findChild<QDialog*>(); QVERIFY(dialog);
+            QComboBox *combo = nullptr;
+            for (auto *box : dialog->findChildren<QComboBox*>()) if (box->accessibleName() == "Active animation") combo = box;
+            QVERIFY(combo); QCOMPARE(combo->count(), 3); QCOMPARE(combo->currentIndex(), 2);
+            QVERIFY(combo->itemText(0).startsWith("Classic")); QVERIFY(combo->toolTip().contains("never delays alerts"));
+            combo->setCurrentIndex(0); // Live.
+            QCOMPARE(window.activity().style(), pet::ActivityStyle::Classic); QVERIFY(!window.player().continuity());
+            QVERIFY(window.savePreferences()); dialog->close();
+        }
+        QCOMPARE(pet::PreferencesStore(path).load().activity, int(pet::Preferences::ActivityClassic));
+        pet::PetWindow restored(nullptr, path); QCOMPARE(restored.activity().style(), pet::ActivityStyle::Classic);
+        // Independent of the idle animation, both ways.
+        restored.setAmbientLevel(0); QCOMPARE(restored.activityStyle(), 0);
+        restored.setActivityStyle(1); QCOMPARE(restored.ambientLevel(), 0); QVERIFY(restored.player().continuity());
+        restored.setActivityStyle(99); QCOMPARE(restored.activityStyle(), 2);
+        // Older files have no key; a bad value is refused like any other and preserved.
+        QFile file(path); QVERIFY(file.open(QIODevice::WriteOnly));
+        file.write(R"({"version":1,"size":200,"on_top":true})"); file.close();
+        pet::PreferencesStore legacy(path); QCOMPARE(legacy.load().activity, int(pet::Preferences::ActivityPlayful));
+        QVERIFY(file.open(QIODevice::WriteOnly));
+        file.write(R"({"version":1,"size":200,"on_top":true,"activity":3})"); file.close();
+        pet::PreferencesStore invalid(path); QCOMPARE(invalid.load().activity, int(pet::Preferences::ActivityPlayful));
+        QVERIFY(!invalid.save(pet::Preferences{}));
+    }
+    void monitorLeavesTheDeskAlone() {
+        QTemporaryDir directory;
+        pet::PetWindow window(nullptr, directory.path() + "/preferences.json"); window.show();
+        pet::Monitor monitor(window); auto &player = window.player(); player.setPaused(true);
+        player.setRandom([](int) { return 0; });
+        window.activity().setRandom([](int) { return 0; }); window.activity().setClock([] { return qint64(0); }); // Never due.
+        const qint64 now = QDateTime::currentMSecsSinceEpoch(); qint64 seq = 0;
+        auto event = [&](QString kind, qint64 at, QString tool = {}, QString activity = {}) {
+            ++seq; return pet::Event{"claude", "s1", QString::number(seq), kind, tool, {}, "/work/abc-web", activity, at, {}};
+        };
+        QVERIFY(monitor.apply(event("prompt", now), now));
+        QVERIFY(monitor.apply(event("tool_start", now + 1, "t1", "reading"), now + 1));
+        for (int i = 0; i < 6 && !(player.state() == "reading" && player.phase() == "loop"); ++i) finishSequence(player);
+        QCOMPARE(player.state(), QString("reading")); QCOMPARE(player.phase(), QString("loop"));
+        // The tool ends; after the activity hold the aggregate is thinking, and the pet stays at its book.
+        QVERIFY(monitor.apply(event("tool_end", now + 2, "t1"), now + 2));
+        monitor.update(now + 5002);
+        QCOMPARE(player.state(), QString("reading")); QCOMPARE(player.phase(), QString("linger"));
+        QCOMPARE(player.requestedState(), QString("thinking"));
+        // The periodic update sees its request honoured and restarts nothing.
+        player.advance(); const auto sequence = player.sequence(); const int frame = player.frameIndex();
+        monitor.update(now + 6000);
+        QCOMPARE(player.phase(), QString("linger")); QCOMPARE(player.sequence(), sequence); QCOMPARE(player.frameIndex(), frame);
+        // The next tool picks the book back up: no end, no start.
+        QVERIFY(monitor.apply(event("tool_start", now + 7000, "t2", "reading"), now + 7000));
+        QCOMPARE(player.phase(), QString("loop")); QCOMPARE(player.sequence(), QString("WORK/Study/B_1_Nomal"));
+        // A request for the user still cuts in at once.
+        QVERIFY(monitor.apply(event("attention", now + 7001), now + 7001));
+        QCOMPARE(player.state(), QString("needs_input"));
+    }
     void malformedVariantsAndFidgets() {
         QTemporaryDir fixtures; auto base = fixture(fixtures.path()); // "idle" and "work" sequences exist.
         auto with = [&](const QString &key, const QJsonValue &value) { auto catalog = base; catalog[key] = value; return catalog; };
