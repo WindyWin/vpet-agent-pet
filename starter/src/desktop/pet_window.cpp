@@ -38,6 +38,20 @@
 #include <QtMath>
 
 namespace pet {
+// Qt has no Vietnamese catalog for its standard buttons, so the button is labeled here.
+static void warn(QWidget *parent, const QString &title, const QString &text) {
+    QMessageBox box(QMessageBox::Warning, title, text, QMessageBox::NoButton, parent);
+    box.addButton(PetWindow::tr("OK"), QMessageBox::AcceptRole); box.exec();
+}
+// Dialogs are built in one go, so a language change rebuilds them rather than relabeling them, at the same place.
+// The old one is closed and deleted later: this may run inside one of its own signals. `open` builds the new one,
+// or returns null when it should not come back.
+static void rebuild(QPointer<QDialog> &slot, QObject *context, std::function<QDialog *()> open) {
+    auto *dialog = slot.data(); if (!dialog) return;
+    const auto position = dialog->pos();
+    slot.clear(); dialog->close();
+    QTimer::singleShot(0, context, [open = std::move(open), position] { if (auto *fresh = open()) fresh->move(position); });
+}
 // The persistent attention badge, drawn on the pet and on the tray icon.
 static void drawBadge(QPainter &painter, const QRect &badge, const QColor &color, const QString &text) {
     painter.save();
@@ -210,18 +224,18 @@ void PetWindow::retranslate() {
     setAccessibleDescription(attention_ == 1 ? tr("1 session waiting for you")
                              : attention_ > 1 ? tr("%1 sessions waiting for you").arg(attention_) : QString());
     setStatus(statusSessions_, statusAttention_, statusErrors_);
-    // Built in one go, so rebuilt rather than relabeled: same place, same tab.
-    if (auto *dialog = settingsDialog_.data()) {
-        auto *tabs = dialog->findChild<QTabWidget *>();
-        const int tab = tabs ? tabs->currentIndex() : 0;
-        const auto position = dialog->pos();
-        settingsDialog_.clear(); dialog->close(); // Deleted later: this may run inside one of its own signals.
-        QTimer::singleShot(0, this, [this, tab, position] {
-            if (quitting_) return;
-            showSettings(); settingsDialog_->move(position);
-            if (auto *tabs = settingsDialog_->findChild<QTabWidget *>()) tabs->setCurrentIndex(tab);
-        });
-    }
+    // Settings come back on the same tab.
+    const auto *tabs = settingsDialog_ ? settingsDialog_->findChild<QTabWidget *>() : nullptr;
+    const int tab = tabs ? tabs->currentIndex() : 0;
+    rebuild(settingsDialog_, this, [this, tab]() -> QDialog * {
+        if (quitting_) return nullptr;
+        showSettings();
+        if (auto *tabs = settingsDialog_->findChild<QTabWidget *>()) tabs->setCurrentIndex(tab);
+        return settingsDialog_;
+    });
+    rebuild(previewDialog_, this, [this]() -> QDialog * { if (quitting_) return nullptr; showPreview(); return previewDialog_; });
+    rebuild(aboutDialog_, this, [this]() -> QDialog * { if (quitting_) return nullptr; showAbout(); return aboutDialog_; });
+    if (updates_) updates_->retranslate(this);
 }
 void PetWindow::setLanguage(const QString &language) {
     language_ = language == "en" || language == "vi" ? language : "auto";
@@ -527,6 +541,7 @@ void PetWindow::beginQuit(const QString &remark) {
     emit quitRequested(); // Monitoring stops here; closing settings never reaches this.
     if (settingsDialog_) settingsDialog_->close();
     if (previewDialog_) previewDialog_->close();
+    if (aboutDialog_) aboutDialog_->close();
     menu_.setEnabled(false);
     if (petHidden()) { qApp->quit(); return; } // No one would see the closing animation.
     player_.setPaused(false);
@@ -862,7 +877,7 @@ QWidget *PetWindow::startupSettings(QWidget *parent) {
         QString error;
         if (setLoginStart(enabled, QCoreApplication::applicationFilePath(), &error)) return;
         QSignalBlocker blocker(login); login->setChecked(!enabled);
-        QMessageBox::warning(login, "Agent Pet", tr("Cannot change start at login: %1").arg(error));
+        warn(login, "Agent Pet", tr("Cannot change start at login: %1").arg(error));
     });
     auto *idle = new QComboBox(box); idle->setAccessibleName(tr("When no sessions remain"));
     idle->addItem(tr("Keep the pet running"), int(IdlePolicy::Keep));
@@ -916,7 +931,7 @@ QWidget *PetWindow::integrationSettings(QWidget *parent) {
             if (ask.exec(), ask.clickedButton() != confirm) return;
             QJsonObject report; QString error;
             if (!runIntegration(enable ? "enable" : "disable", provider, {}, executable, report, error))
-                QMessageBox::warning(this, tr("Agent integrations"), error);
+                warn(this, tr("Agent integrations"), error);
             refresh();
         });
         layout->addRow(provider == "claude" ? "Claude Code" : "Codex", row);
@@ -928,7 +943,8 @@ QWidget *PetWindow::integrationSettings(QWidget *parent) {
     return box;
 }
 void PetWindow::showAbout() {
-    auto *dialog = new QDialog(this); dialog->setAttribute(Qt::WA_DeleteOnClose);
+    if (aboutDialog_) { aboutDialog_->show(); aboutDialog_->raise(); return; }
+    auto *dialog = new QDialog(this); aboutDialog_ = dialog; dialog->setAttribute(Qt::WA_DeleteOnClose);
     dialog->setWindowTitle(tr("About Agent Pet — artwork and terms")); dialog->resize(560, 440);
     auto *layout = new QVBoxLayout(dialog);
     auto *credits = new QLabel(tr("<b>Agent Pet %1</b> (revision %2, Qt %3)<br>"

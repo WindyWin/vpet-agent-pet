@@ -19,6 +19,8 @@ public:
                         QString prefix = installedPrefix(), QString directory = dataDirectory());
     QWidget *settings(QWidget *parent);
     void showSettings(QWidget *parent);
+    // Rebuilds an open updates dialog in the current language, at the same place.
+    void retranslate(QWidget *parent);
     void start();
     void check(bool manual = false);
     void download();

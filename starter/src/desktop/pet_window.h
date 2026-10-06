@@ -169,7 +169,7 @@ private:
     QSystemTrayIcon tray_;
     QTimer recoveryTimer_, dragTimer_, saveTimer_, flightTimer_, walkTimer_, quitTimer_;
     QVariantAnimation slide_; // Eases a let-go pet to its hiding place before the hide plays, or a climber on and off its wall.
-    QPointer<QDialog> settingsDialog_, previewDialog_;
+    QPointer<QDialog> settingsDialog_, previewDialog_, aboutDialog_;
     QAction *clickAction_ = nullptr, *onTopAction_ = nullptr, *muteAction_ = nullptr, *showAction_ = nullptr;
     QAction *updateAction_ = nullptr, *updatesItem_ = nullptr;
     QAction *sessionsAction_ = nullptr, *recapAction_ = nullptr, *settingsAction_ = nullptr, *previewAction_ = nullptr;

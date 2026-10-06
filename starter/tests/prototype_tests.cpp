@@ -448,27 +448,34 @@ private slots:
                 const auto actions = window.findChild<QMenu *>()->actions();
                 return std::any_of(actions.begin(), actions.end(), [&](QAction *action) { return action->text() == text; });
             };
-            const auto settingsTitled = [&window](const QString &title) -> QDialog * {
+            const auto dialogTitled = [&window](const QString &title) -> QDialog * {
                 for (auto *dialog : window.findChildren<QDialog *>()) if (dialog->isVisible() && dialog->windowTitle() == title) return dialog;
                 return nullptr;
             };
             QVERIFY(menuHas("Settings…"));
             window.showSettings();
-            auto *dialog = settingsTitled("Agent Pet settings"); QVERIFY(dialog);
+            auto *dialog = dialogTitled("Agent Pet settings"); QVERIFY(dialog);
             dialog->findChild<QTabWidget *>()->setCurrentIndex(1);
             QComboBox *combo = nullptr;
             for (auto *box : dialog->findChildren<QComboBox *>()) if (box->accessibleName() == "Language") combo = box;
             QVERIFY(combo); QCOMPARE(combo->count(), 3); QCOMPARE(combo->itemText(2), "Tiếng Việt");
+            // Other open dialogs and a note on screen follow too.
+            window.showPreview();
+            for (auto *action : window.findChildren<QAction *>()) if (action->text() == "About and artwork terms…") action->trigger();
+            QVERIFY(dialogTitled("Animation preview")); QVERIFY(dialogTitled("About Agent Pet — artwork and terms"));
+            monitor.note().say("Hello", window.figure(), window.screenAreas()); QVERIFY(monitor.note().isVisible());
             combo->setCurrentIndex(combo->findData("vi")); // Live.
+            QTRY_VERIFY(!monitor.note().isVisible()); // Worded in English: it goes.
             QCOMPARE(pet::i18n::installed(), pet::i18n::Language::Vietnamese);
             QTRY_VERIFY(menuHas("Cài đặt…"));
             QCOMPARE(window.statusText(), "Agent Pet — 1 phiên · 1 phiên cần chú ý");
             monitor.update(now); QCOMPARE(monitor.bubble().title(), "Cần phê duyệt");
             // Settings come back in Vietnamese, on the tab that was open.
-            QTRY_VERIFY(settingsTitled("Cài đặt Agent Pet"));
-            QCOMPARE(settingsTitled("Cài đặt Agent Pet")->findChild<QTabWidget *>()->currentIndex(), 1);
-            auto *birthday = settingsTitled("Cài đặt Agent Pet")->findChild<QDateEdit *>();
+            QTRY_VERIFY(dialogTitled("Cài đặt Agent Pet"));
+            QCOMPARE(dialogTitled("Cài đặt Agent Pet")->findChild<QTabWidget *>()->currentIndex(), 1);
+            auto *birthday = dialogTitled("Cài đặt Agent Pet")->findChild<QDateEdit *>();
             QVERIFY(birthday); QCOMPARE(birthday->text(), "1 tháng 1"); // Month names follow the pet, not the system.
+            QVERIFY(dialogTitled("Xem trước hoạt ảnh")); QVERIFY(dialogTitled("Giới thiệu Agent Pet — hình ảnh và điều khoản"));
             window.setLanguage("en");
             QTRY_VERIFY(menuHas("Settings…"));
             monitor.update(now); QCOMPARE(monitor.bubble().title(), "Needs approval");
@@ -479,6 +486,11 @@ private slots:
         QFile file(path); QVERIFY(file.open(QIODevice::WriteOnly));
         file.write(R"({"version":1,"size":200,"on_top":true,"language":"klingon"})"); file.close();
         pet::PreferencesStore store(path); QCOMPARE(store.load().language, QString("auto")); QVERIFY(store.error().isEmpty());
+        // A value that is not a string is malformed: the file is kept as it is.
+        QVERIFY(file.open(QIODevice::WriteOnly));
+        file.write(R"({"version":1,"size":200,"on_top":true,"language":7})"); file.close();
+        pet::PreferencesStore malformed(path); malformed.load(); QVERIFY(!malformed.error().isEmpty());
+        QVERIFY(!malformed.save(pet::Preferences{}));
     }
     void activityPreference() {
         QTemporaryDir directory; const auto path = directory.path() + "/preferences.json";

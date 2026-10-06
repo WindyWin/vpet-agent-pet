@@ -68,6 +68,7 @@ Preferences PreferencesStore::load() {
         || (object.contains("water_minutes") && !integer(object["water_minutes"], 0, 1440))
         || (object.contains("recap") && !object["recap"].isBool())
         || (object.contains("autostart") && !object["autostart"].isBool())
+        || (object.contains("language") && !object["language"].isString())
         || (object.contains("when_idle") && !parseIdlePolicy(object["when_idle"].toString(), whenIdle))) {
         writable_ = false; error_ = Settings::tr("Invalid preferences; using defaults and preserving the file."); return result;
     }

@@ -3,7 +3,10 @@
 #include "updates/controller.h"
 #include "updates/components.h"
 #include "sessions/state.h"
+#include "i18n/language.h"
 #include <QTest>
+#include <QDialog>
+#include <QScopeGuard>
 #include <QSignalSpy>
 #include <memory>
 #include <QTemporaryDir>
@@ -243,6 +246,19 @@ private slots:
         QVERIFY(!QFile::exists(stage)); QVERIFY(!QFile::exists(prefix + ".update-transaction.json"));
         QDir().mkpath(stage); write(prefix + ".update-transaction.json", journal);
         QVERIFY(recoverInstallation(prefix, error)); QVERIFY(QFile::exists(prefix + "/version"));
+    }
+    void dialogFollowsLanguage() {
+        const auto english = qScopeGuard([] { pet::i18n::install(pet::i18n::Language::English); });
+        QTemporaryDir dir; Network network; Controller controller(nullptr, &network, {}, dir.path());
+        QWidget parent; controller.showSettings(&parent);
+        const auto titled = [&parent](const QString &title) {
+            for (auto *dialog : parent.findChildren<QDialog *>()) if (dialog->isVisible() && dialog->windowTitle() == title) return true;
+            return false;
+        };
+        QVERIFY(titled("Agent Pet updates"));
+        QVERIFY(pet::i18n::install(pet::i18n::Language::Vietnamese));
+        controller.retranslate(&parent);
+        QTRY_VERIFY(titled("Cập nhật Agent Pet")); QVERIFY(!titled("Agent Pet updates"));
     }
     void notificationCheckThrottleAndSkip() {
         QTemporaryDir dir; Network network; Controller controller(nullptr, &network, {}, dir.path());

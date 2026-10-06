@@ -38,8 +38,10 @@ it is not split out the way `artwork.rcc` is.
   Qt then sends `QEvent::LanguageChange` to every widget. `PetWindow`, `AlertBubble`,
   `NoteBubble` and `SessionList` relabel themselves in `retranslate()`. Menu actions
   are created without text and labeled only there, so there is one copy of each
-  label. The settings dialog closes and, on the next event loop turn, reopens at
-  the same place and tab: it may be inside its own combo box's signal. Bubble titles,
+  label. Open dialogs (settings, preview, About, and the update `Controller`'s own)
+  close and, on the next event loop turn, reopen at the same place, settings on the
+  same tab: the change may run inside the settings combo box's signal. A visible note
+  hides, because its speech was already worded in the old language. Bubble titles,
   tray status and the session list are recomputed from the sessions on every 250 ms
   update, and the update `Controller` builds its texts when asked.
 - **Persisted text.** `recap.json` stores English only ("Unknown project" is a
@@ -58,7 +60,6 @@ it is not split out the way `artwork.rcc` is.
   `.qm` to resolve `%n`.
 - Qt ships no Vietnamese catalog for its own dialogs, so buttons get explicit `tr()`
   text instead of standard labels.
-- The preview and About windows keep their language until they are reopened.
 - The pet's speech has its own `Pet` context, so a tone setting or generated
   conversation can replace it without touching interface labels.
 
@@ -66,7 +67,7 @@ it is not split out the way `artwork.rcc` is.
 
 ### Localization evidence — 2026-10-06
 
-The Vietnamese translation covers all 305 strings in 14 contexts. With Qt 6.11.2, the
+The Vietnamese translation covers all 306 strings in 14 contexts. With Qt 6.11.2, the
 Release build passes all twelve CTest tests (prototype in four shards). Among them, the new `i18n` suite covers
 language names, system resolution (vi_VN, en_US, fr_FR, C), installing and removing the
 translator across contexts, and the marker check over every finished entry; a

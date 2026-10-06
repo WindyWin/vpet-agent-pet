@@ -288,6 +288,12 @@ void Controller::showSettings(QWidget *parent) {
     connect(buttons, &QDialogButtonBox::rejected, dialog, &QDialog::close);
     layout->addWidget(buttons); dialog->resize(460, 500); dialog->show();
 }
+void Controller::retranslate(QWidget *parent) {
+    auto *dialog = dialog_.data(); if (!dialog) return;
+    const auto position = dialog->pos();
+    dialog_.clear(); dialog->close(); // Deleted later, so a new one is built rather than the old one raised.
+    QTimer::singleShot(0, parent, [this, parent, position] { showSettings(parent); dialog_->move(position); });
+}
 QWidget *Controller::settings(QWidget *parent) {
     auto *box = new QGroupBox(tr("Updates"), parent); auto *layout = new QVBoxLayout(box);
     auto *version = new QLabel(tr("Installed version: %1").arg(AGENT_PET_VERSION), box); layout->addWidget(version);

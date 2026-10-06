@@ -570,6 +570,10 @@
 <context>
     <name>pet::PetWindow</name>
     <message>
+        <source>OK</source>
+        <translation>Đồng ý</translation>
+    </message>
+    <message>
         <source>Click for running sessions · Hold still to pet · Drag to move, or throw · Push past a screen edge to hide
 Right-click for controls · Esc to quit</source>
         <translation>Nhấn để xem các phiên đang chạy · Giữ yên để vuốt ve · Kéo để di chuyển hoặc ném · Đẩy qua mép màn hình để trốn
