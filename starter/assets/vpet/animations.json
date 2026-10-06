@@ -199,6 +199,12 @@
       "MOVE/climb.right/A_Nomal",
       "MOVE/climb.right/B_Nomal",
       "MOVE/climb.right/C_Nomal"
+    ],
+    "angry": [
+      "Pinch/PoorCondition/B"
+    ],
+    "closing_angry": [
+      "Shutdown/PoorCondition"
     ]
   },
   "sequences": [
@@ -5584,6 +5590,96 @@
         }
       ],
       "duration_ms": 500
+    },
+    {
+      "path": "Pinch/PoorCondition/B",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/Pinch/PoorCondition/B/_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Pinch/PoorCondition/B/_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Pinch/PoorCondition/B/_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Pinch/PoorCondition/B/_003_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Pinch/PoorCondition/B/_004_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Pinch/PoorCondition/B/_005_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 750,
+      "state": "angry"
+    },
+    {
+      "path": "Shutdown/PoorCondition",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/Shutdown/PoorCondition/_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Shutdown/PoorCondition/_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Shutdown/PoorCondition/_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Shutdown/PoorCondition/_003_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Shutdown/PoorCondition/_004_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Shutdown/PoorCondition/_005_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Shutdown/PoorCondition/_006_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Shutdown/PoorCondition/_007_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Shutdown/PoorCondition/_008_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Shutdown/PoorCondition/_009_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Shutdown/PoorCondition/_010_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Shutdown/PoorCondition/_011_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Shutdown/PoorCondition/_012_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 1625,
+      "state": "closing_angry"
     }
   ],
   "playback": {
@@ -5783,6 +5879,14 @@
       "mode": "phased",
       "after": "idle",
       "loops": 7
+    },
+    "angry": {
+      "mode": "once",
+      "after": "stop"
+    },
+    "closing_angry": {
+      "mode": "once",
+      "after": "stop"
     }
   },
   "variants": {

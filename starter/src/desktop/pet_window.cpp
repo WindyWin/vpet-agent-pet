@@ -72,8 +72,17 @@ PetWindow::PetWindow(QWidget *parent, const QString &path, bool persist)
     autostart_ = preferences.autostart; presence_.setPolicy(preferences.whenIdle);
     connect(&player_, &Player::changed, this, qOverload<>(&PetWindow::update));
     connect(&player_, &Player::completed, this, [this](const QString &state) {
-        if (quitting_ && state == "closing") qApp->quit();
+        if (!quitting_ || state != quitState_) return;
+        // Leave time to read the pet's complaint before its departure animation.
+        if (state == "angry") quitTimer_.start(2250);
+        else qApp->quit();
     });
+    quitTimer_.setSingleShot(true);
+    connect(&quitTimer_, &QTimer::timeout, this, [this] {
+        if (quitState_ == "angry") playQuitAnimation("closing_angry");
+        else qApp->quit();
+    });
+    touchClock_.start();
     // Everyday actions stay at the top level; previews, troubleshooting, updates and credits go under More.
     showAction_ = menu_.addAction("Show pet");
     showAction_->setCheckable(true); showAction_->setChecked(true);
@@ -132,6 +141,11 @@ PetWindow::PetWindow(QWidget *parent, const QString &path, bool persist)
         else if (!player_.isDragging() && position != pressPosition_) player_.beginDrag();
         // Held still past a click, a press pets whatever it landed on until let go.
         else if (!player_.held() && !pressTouch_.isEmpty() && pressTimer_.elapsed() >= touch::holdMs) player_.hold(pressTouch_);
+        if (patience_.petting(touchEnabled_ && dragging_ && player_.held()
+                             && !pressTouch_.isEmpty() && player_.state() == pressTouch_, touchClock_.elapsed()))
+            beginQuit("Too much petting! I need a break. Bye!");
+        if (patience_.dragging(touchEnabled_ && dragging_ && player_.isDragging(), touchClock_.elapsed()))
+            beginQuit("Put me down! I'm leaving!");
     });
     flightTimer_.setInterval(16);
     connect(&flightTimer_, &QTimer::timeout, this, [this] {
@@ -278,6 +292,7 @@ void PetWindow::setMoodLevel(int level) {
 void PetWindow::setTouchEnabled(bool enabled) {
     if (enabled == touchEnabled_) return;
     touchEnabled_ = enabled;
+    if (!enabled) patience_.reset();
     if (ready_) saveTimer_.start();
 }
 void PetWindow::setWanderEnabled(bool enabled) {
@@ -319,6 +334,7 @@ void PetWindow::showAfterFlagChange(QPoint position) {
     if (!petHidden()) { show(); move(position); }
 }
 void PetWindow::recover() {
+    if (quitting_) return;
     slide_.stop();
     applyPresence(presence_.setUserHidden(false));
     if (hiding() || walking()) player_.select("idle", true); // Out from behind the edge, or off a walk, to be placed in plain view.
@@ -453,16 +469,31 @@ void PetWindow::paintEvent(QPaintEvent *) {
 }
 void PetWindow::requestQuit() {
     if (quitting_) { qApp->quit(); return; }
+    beginQuit();
+}
+void PetWindow::beginQuit(const QString &remark) {
+    if (quitting_) return;
     slide_.stop(); endDrag(); setClickThrough(false); savePreferences(); quitting_ = true;
+    stopWalk();
+    player_.release();
     emit quitRequested(); // Monitoring stops here; closing settings never reaches this.
     if (settingsDialog_) settingsDialog_->close();
     if (previewDialog_) previewDialog_->close();
     menu_.setEnabled(false);
     if (petHidden()) { qApp->quit(); return; } // No one would see the closing animation.
     player_.setPaused(false);
-    if (!player_.select("closing", true) || player_.stopped()) { qApp->quit(); return; }
+    if (!remark.isEmpty()) quitNote_.say(remark, figure(), screenAreas());
+    playQuitAnimation(remark.isEmpty() ? "closing" : "angry");
+}
+void PetWindow::playQuitAnimation(const QString &state) {
+    quitState_ = state;
+    if (!player_.select(state, true) || player_.stopped()) {
+        if (state == "angry") playQuitAnimation("closing_angry");
+        else qApp->quit();
+        return;
+    }
     // A broken shutdown asset must never prevent exit.
-    QTimer::singleShot(5000, this, [] { qApp->quit(); });
+    quitTimer_.start(5000);
 }
 void PetWindow::closeEvent(QCloseEvent *event) { event->ignore(); requestQuit(); }
 void PetWindow::contextMenuEvent(QContextMenuEvent *event) { menu_.popup(event->globalPos()); }
@@ -488,6 +519,8 @@ void PetWindow::endDrag(bool released) {
     if (flight_) land(); // Hiding, quitting or click-through: put it down where it is.
     if (!dragging_) return;
     dragging_ = false; fallbackDrag_ = false; dragTimer_.stop(); pressTouch_.clear();
+    patience_.petting(false, touchClock_.elapsed());
+    patience_.dragging(false, touchClock_.elapsed());
     // Every press starts a move, so a short press that left the pet in place is a click.
     const bool click = released && nativePos() == pressPosition_ && pressTimer_.isValid() && pressTimer_.elapsed() < touch::holdMs;
     if (released && !click) letGo(touch::velocity(samples_));
@@ -498,9 +531,11 @@ void PetWindow::endDrag(bool released) {
     if (click) QTimer::singleShot(150, this, &PetWindow::sessionsRequested);
 }
 void PetWindow::letGo(QPointF velocity) {
+    if (quitting_) return;
     const auto &touch = player_.touch();
     const auto fall = velocity.x() < 0 ? touch.fallLeft : touch.fallRight;
     if (touchEnabled_ && !quitting_ && !fall.isEmpty() && qHypot(velocity.x(), velocity.y()) >= touch::throwSpeed) {
+        if (patience_.thrown(touchClock_.elapsed())) { beginQuit("Stop throwing me! I'm leaving!"); return; }
         // The fall replaces the drag as what is held, so session changes still wait for the landing.
         const QRect window(nativePos(), size());
         player_.hold(fall);
@@ -516,6 +551,7 @@ void PetWindow::letGo(QPointF velocity) {
     constrainPosition();
 }
 void PetWindow::slideToEdge(touch::Edge edge) {
+    if (quitting_) return;
     const auto &touch = player_.touch();
     slideTo(touch::hidePosition(edge, QRect(nativePos(), size()), screenAreas(),
                                 edge == touch::Edge::Left ? touch.edgeLeftAt : touch.edgeRightAt, touch.scale), edge);

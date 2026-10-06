@@ -128,6 +128,13 @@ the edge. Agent activity brings it back out, and so does dragging it away. Setti
 Preview state (`touch_*`, `pinch`, `fall_*`, `edge_*`); see
 [the design record](docs/adr/0013-touch-reactions.md).
 
+Throw it five times within 30 seconds, pet it continuously for 8 seconds, or drag and
+hold it for 15 seconds, and it gets angry and quits. It stops accepting interactions,
+shows a speech bubble explaining why, plays `angry`, pauses briefly so you can read it,
+then plays `closing_angry` (a jump and disappearance) before exiting. Normal Quit keeps
+its usual animation. Releasing the pet resets the hold timers; throws expire after 30 seconds.
+Turning Touch off clears both counters and disables this reaction.
+
 ## Easter eggs
 
 A few surprises, on by default. On May 20 the idle pet greets you with a heart, and
