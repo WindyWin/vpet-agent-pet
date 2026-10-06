@@ -106,7 +106,7 @@ messages; oversized datagrams and invalid envelopes are dropped.
   the animation never reaches. Prompt begins a new turn and clears old tools. Attention persists through alert dismissal and the completion of unrelated
   tools. The tool awaiting an answer (the attention event's tool, or for Codex
   permission requests, which carry none, the tools already started) completing
-  means it was approved: attention clears to the remaining activity. A rejection
+  (or, when none had started, the first tool to complete) means it was approved: attention clears to the remaining activity. A rejection
   emits no callback; prompt, tool-start, interruption, completion or end resolves it. An error while
   waiting does not clear attention.
 - Duplicate event IDs are ignored within the bounded deduplication window. Older

@@ -384,8 +384,15 @@ opens controls. Walking and climbing move the window from the application too (s
 [walking](#walking)) and are off under native Wayland. Space switches preview state, Menu opens controls and Escape quits
 while the pet has focus. These are local shortcuts, not global desktop bindings.
 
+The pet and tray share one menu. Its top level keeps the everyday actions (Show pet,
+running sessions, today's recap, mute, always on top, Settings, Quit) plus an update
+entry only while an update is waiting; previews, click-through, recovery, Updates… and
+About sit under More. Settings is three tabs (General with alerts and reminders, Pet
+with idle behavior, Startup and agents), with the status line, Updates, Quit and Close
+below them, so the dialog fits small screens.
+
 Click-through remains a 15-second lease. A single-shot
-timer restores input whether or not a tray exists. The tray menu can immediately
+timer restores input whether or not a tray exists. The tray menu (under More) can immediately
 recover input and position, or quit. The context menu also quits. Closing the pet
 quits; closing About does not. Position recovery moves to the primary screen's lower right. Saved positions
 are clamped to an available monitor on startup and layout changes.

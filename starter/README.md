@@ -42,8 +42,10 @@ This checks platform boundaries; full application builds remain Linux-only.
 See [platform services and extension points](src/platform/README.md).
 
 Left-drag to move; the original Raise animation plays while dragging and returns
-to the prior state on release. Right-click for animation preview, settings,
-always-on-top, temporary click-through, recovery, artwork terms and Quit. A tray
+to the prior state on release. Right-click for the running sessions, today's recap,
+mute, always-on-top, Settings and Quit; **More** holds the animation preview,
+temporary click-through, recovery, updates and artwork terms. Settings is split into
+General, Pet, and Startup and agents tabs. A tray
 icon appears on supported desktops: left-click hides or shows the pet (it keeps
 monitoring while hidden), its tooltip shows session status and its icon carries
 the attention badge. Click-through automatically ends after 15 seconds. Space
@@ -70,7 +72,7 @@ now and then a rare meow). The bigger ones wait for more idle time, and a fidget
 repeating the one before it whenever another is eligible. The idle loop itself alternates between three variants.
 After ten quiet minutes the pet dozes off, and wakes through its usual end-of-sleep
 animation. Any agent activity, error, alert or drag replaces a fidget at once, and a
-hidden pet does nothing. Preview any fidget from the right-click menu → Preview state
+hidden pet does nothing. Preview any fidget from the right-click menu → More → Preview state
 (`fidget_*`). The catalog sections behind this are described in
 [the architecture notes](docs/architecture.md#idle-animation).
 

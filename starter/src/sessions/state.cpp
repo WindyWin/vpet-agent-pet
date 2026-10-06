@@ -90,8 +90,10 @@ bool Sessions::apply(const Event &e, qint64 now) {
     else if (e.kind == "tool_start") { s.tools[e.tool] = e.activity.isEmpty() ? "working" : e.activity; s.state = toolState(s); }
     else if (e.kind == "tool_end") {
         s.tools.remove(e.tool);
-        // A tool that was waiting on an answer has run, so the user answered.
-        if (s.state == "attention" && s.attentionTools.contains(e.tool)) s.state = toolState(s);
+        // A tool that was waiting on an answer has run, so the user answered. A request that named no
+        // tool and found none started (Codex apply_patch or MCP, which can skip PreToolUse) is answered
+        // by the first tool to finish.
+        if (s.state == "attention" && (s.attentionTools.isEmpty() || s.attentionTools.contains(e.tool))) s.state = toolState(s);
         else if (s.state != "attention" && s.state != "inactive" && s.state != "turn-finished" && (isNew || s.state != "idle")) {
             const auto next = toolState(s);
             if (next == "thinking" && (s.state == "working" || s.state == "reading")) s.activityUntil = now + activityHoldMs;
