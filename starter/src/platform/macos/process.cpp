@@ -42,7 +42,7 @@ static bool processArguments(pid_t pid, QStringList &arguments, QProcessEnvironm
     int argmax = 0; size_t size = sizeof(argmax);
     int mibArgmax[2] = {CTL_KERN, KERN_ARGMAX};
     if (sysctl(mibArgmax, 2, &argmax, &size, nullptr, 0) || argmax <= int(sizeof(int))) return false;
-    std::vector<char> buffer(size_t(argmax));
+    std::vector<char> buffer(static_cast<size_t>(argmax));
     size = buffer.size();
     int mib[3] = {CTL_KERN, KERN_PROCARGS2, int(pid)};
     if (sysctl(mib, 3, buffer.data(), &size, nullptr, 0) || size <= sizeof(int)) return false;
