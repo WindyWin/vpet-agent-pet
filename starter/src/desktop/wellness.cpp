@@ -17,7 +17,9 @@ QString Wellness::note(const QString &reminder) {
     if (reminder == "water") return "Time for some water 💧";
     return {};
 }
-void Wellness::activity(qint64 now) {
+void Wellness::activity(qint64 now, bool user) {
+    if (user) lastUser_ = std::max(lastUser_, now);
+    else if (lastUser_ < 0 || now - lastUser_ >= breakMs) return; // Nobody has been there for a while.
     if (last_ >= 0 && now < last_) return; // Out of order: already counted.
     const qint64 gap = last_ < 0 ? breakMs : now - last_;
     if (gap >= breakMs) eyes_ = water_ = 0; // Back from a real break.

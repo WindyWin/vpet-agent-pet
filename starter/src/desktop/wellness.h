@@ -4,8 +4,9 @@
 
 namespace pet {
 // Wellness reminders: rest your eyes (the 20-20-20 rule) and drink some water, each after its own
-// stretch of active time. Activity is anything the monitor sees: agent events, pointer movement and
-// touching the pet. Gaps between activities count up to `graceMs`, so a pause to read or think still
+// stretch of active time. Activity is what the monitor sees: the user's own (pointer movement, a
+// prompt) and the agent's other events. Agent events keep a stretch going only while the user was seen
+// within `breakMs`, so an agent working on behind a locked screen does not run the timers. Gaps between activities count up to `graceMs`, so a pause to read or think still
 // counts while a longer one pauses the timers; a gap of `breakMs` or more is a real break and starts
 // both over. Only the intervals are preferences; the timers live in memory. Time is passed in.
 class Wellness {
@@ -26,7 +27,9 @@ public:
     void setWaterMinutes(int minutes) { if (validWaterMinutes(minutes)) waterMinutes_ = minutes; }
     int eyeMinutes() const { return eyeMinutes_; }
     int waterMinutes() const { return waterMinutes_; }
-    void activity(qint64 now);
+    void activity(qint64 now, bool user = true);
+    // The user was seen within `graceMs`: someone is there to read a reminder.
+    bool present(qint64 now) const { return lastUser_ >= 0 && now >= lastUser_ && now - lastUser_ < graceMs; }
     // Active time counted toward each reminder, up to `now`; 0 once a real break has begun.
     qint64 eyesActiveMs(qint64 now) const { return counted(eyes_, now); }
     qint64 waterActiveMs(qint64 now) const { return counted(water_, now); }
@@ -38,6 +41,6 @@ private:
     qint64 pending(qint64 now) const;
     qint64 counted(qint64 base, qint64 now) const;
     int eyeMinutes_ = defaultEyeMinutes, waterMinutes_ = defaultWaterMinutes;
-    qint64 last_ = -1, eyes_ = 0, water_ = 0;
+    qint64 last_ = -1, lastUser_ = -1, eyes_ = 0, water_ = 0;
 };
 }

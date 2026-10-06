@@ -1244,6 +1244,14 @@ private slots:
         QCOMPARE(pet::Wellness::note("eyes"), QString("Look at something far away for 20 seconds"));
         QCOMPARE(pet::Wellness::note("water"), QString("Time for some water 💧"));
         QCOMPARE(pet::Wellness::note("snack"), QString());
+        // Agent events alone start nothing, and keep a stretch going only while the user was seen within
+        // five minutes, as behind a locked screen.
+        pet::Wellness agent; agent.activity(t0, false); QCOMPARE(agent.due(t0 + 30 * minute), QString());
+        QVERIFY(!agent.present(t0));
+        agent.activity(t0); QVERIFY(agent.present(t0)); QVERIFY(agent.present(t0 + 59000)); QVERIFY(!agent.present(t0 + minute));
+        for (qint64 at = t0 + 30000; at <= t0 + 20 * minute; at += 30000) agent.activity(at, false);
+        QCOMPARE(agent.eyesActiveMs(t0 + 4 * minute + 30000), 4 * minute + 30000);
+        QCOMPARE(agent.eyesActiveMs(t0 + 20 * minute), qint64(0)); QCOMPARE(agent.due(t0 + 20 * minute), QString());
     }
     void monitorWellnessReminders() {
         QTemporaryDir directory;
@@ -1287,7 +1295,9 @@ private slots:
         // Ignored, it fades; nothing more until the next interval. Muted alerts hold it.
         playOut(player); playOut(player); monitor.note().hide();
         window.setMuted(true); work(61); QVERIFY(!monitor.note().isVisible()); QCOMPARE(window.wellness().due(t), QString("water"));
-        window.setMuted(false); monitor.update(t); QVERIFY(monitor.note().isVisible()); monitor.note().hide();
+        // Unmuted while the user is away (no input for a minute and a half): it waits for them.
+        t += 90000; window.setMuted(false); monitor.update(t); QVERIFY(!monitor.note().isVisible());
+        pointer += QPoint(1, 0); monitor.update(t); QVERIFY(monitor.note().isVisible()); monitor.note().hide();
         // In quiet hours a due reminder is let go instead of waiting for the morning.
         local = QDateTime(QDate(2026, 10, 7), QTime(23, 0));
         // (The evening's own sleep note may show; the reminder does not.)

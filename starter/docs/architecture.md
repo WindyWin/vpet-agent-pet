@@ -295,15 +295,18 @@ active time with time passed in, and `Monitor` drives it:
   the 250 ms update (`Monitor::pointer`, `QCursor::pos` by default, replaced in tests)
   calls `Wellness::activity(now)`. A gap between activities counts up to one minute,
   so reading or thinking still counts while a longer pause holds the timers; a gap of
-  five minutes or more is a real break and resets both. A locked screen or an absent
-  user produces no activity, so the timers pause and then reset. Keyboard input
+  five minutes or more is a real break and resets both. Only pointer moves and
+  `prompt` events are the user's own; other agent events count only while the user was
+  seen within five minutes, so an agent working on behind a locked screen or for an
+  absent user pauses and then resets the timers. Keyboard input
   outside the pet is not seen: X11 idle time (XScreenSaver) would need a `pet_native`
   seam and was left out.
 - **Due.** An interval (`eye_minutes` 0/20/30/45, `water_minutes` 0/45/60/90; 0 is
   off; defaults 20 and 60) of counted time makes a reminder due, eyes first. Only the
   intervals are saved in `preferences.json`; an interval that is not a choice falls
   back to the default.
-- **Calm.** A due reminder waits until the pet is visible and free (not held,
+- **Calm.** A due reminder waits until the user was seen within the last minute
+  (`Wellness::present`, which also holds it behind a locked screen), the pet is visible and free (not held,
   walking, flying or mid-surprise), alerts are not muted, no alert bubble or note
   shows, and no session waits on the user or has a fresh error. During quiet hours
   (22:00 to 06:00 on the eggs' clock) it is dropped instead, so the morning does not
@@ -314,8 +317,9 @@ active time with time passed in, and `Monitor` drives it:
   new `clicked` signal answers it: water plays `reminder_done` at once; an eye break
   first counts 20 seconds down in the note (clicking again ends it), then plays
   `reminder_done` with a short note.
-- **Snacks.** A mood snack (`Mood::treat() == "snack"`) already shows the thirsty or
-  hungry art, so it counts as the water reminder and restarts that timer.
+- **Snacks.** A finished turn celebrated with a state from the `snack` pool already
+  shows the thirsty or hungry art, so it counts as the water reminder and restarts that
+  timer.
 
 | Pool | State | Art |
 | --- | --- | --- |

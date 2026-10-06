@@ -57,7 +57,7 @@ bool Monitor::apply(const Event &event, qint64 now) {
         lastTurnMs_ = sessions_.records().value(event.provider + QChar(0x1f) + event.session).lastTurnMs;
     }
     else if (event.kind == "error") window_.mood().failed(now);
-    window_.wellness().activity(now);
+    window_.wellness().activity(now, event.kind == "prompt"); // Only a prompt shows the user is there.
     observed_ = true; update(now);
     // The hook saw a destructive command start: the pet jumps, then shows the work going on. A session
     // waiting on the user, or a fresh error, matters more.
@@ -100,10 +100,12 @@ void Monitor::update(qint64 now) {
                                     showing != animation)) {
         // A turn that just finished is celebrated in one of several ways, or with a treat when one is due.
         const bool celebrate = state == "turn-finished" && lastAggregate_ != state;
-        window_.player().select(celebrate ? window_.mood().celebrate(window_.eggs().celebration(lastTurnMs_)) : animation,
-                                state == "attention" || state == "error");
-        // A snack break already says "have a drink"; the water reminder need not repeat it.
-        if (celebrate && window_.mood().treat() == "snack") window_.wellness().given("water", now);
+        const auto chosen = celebrate ? window_.mood().celebrate(window_.eggs().celebration(lastTurnMs_)) : animation;
+        window_.player().select(chosen, state == "attention" || state == "error");
+        // A snack that played already says "have a drink"; the water reminder need not repeat it.
+        const auto snacks = window_.player().reactions("snack");
+        if (celebrate && std::any_of(snacks.begin(), snacks.end(), [&](const auto &r) { return r.state == chosen; }))
+            window_.wellness().given("water", now);
         lastAggregate_ = state;
     }
 }
@@ -111,10 +113,11 @@ void Monitor::say(const QString &text, int ms) {
     reminder_.clear(); // Whatever the note said before is gone.
     note_.say(text, window_.figure(), window_.screenAreas(), ms);
 }
-// Nothing needs the user, nothing else is being said and the pet is free: a reminder will not get in the way.
+// The user is there, nothing needs them, nothing else is being said and the pet is free: a reminder will
+// not get in the way. A locked screen sees no pointer movement, so it holds reminders too.
 bool Monitor::calm(qint64 now) const {
     const auto state = sessions_.aggregate(now);
-    return !window_.petHidden() && !window_.muted() && !bubble_.isVisible() && !note_.isVisible() && restLeft_ == 0 &&
+    return window_.wellness().present(now) && !window_.petHidden() && !window_.muted() && !bubble_.isVisible() && !note_.isVisible() && restLeft_ == 0 &&
            sessions_.unresolvedAttention() == 0 && state != "attention" && state != "error" &&
            !window_.player().held() && !window_.eggs().surprising() && !window_.walking() && !window_.flying();
 }
