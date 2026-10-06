@@ -41,6 +41,11 @@ public:
     void setEyeMinutes(int minutes);
     void setWaterMinutes(int minutes);
     QString birthday() const { return eggs_.birthday(); }
+    // Today's recap rides on the go-home reminder; persisted. The menu shows it either way.
+    void setRecapEnabled(bool enabled);
+    bool recapEnabled() const { return recapEnabled_; }
+    QString recapPath() const; // recap.json beside the preferences; empty when nothing is persisted.
+    void showTrayMessage(const QString &title, const QString &text); // For a hidden pet's notes.
     // Petting, throwing and hiding at a screen edge; persisted. Off, the pet only drags.
     void setTouchEnabled(bool enabled);
     bool touchEnabled() const { return touchEnabled_; }
@@ -109,6 +114,7 @@ signals:
     void quitRequested();
     void presenceChanged(); // The pet was hidden or shown.
     void sessionsRequested(); // A click on the pet (press and release without moving it), or the menu.
+    void recapRequested(); // "Today's recap" in the menu.
 protected:
     bool event(QEvent *) override;
     void closeEvent(QCloseEvent *) override;
@@ -156,7 +162,7 @@ private:
     int trayAttention_ = 0; // Badge shown on the tray icon; -1 forces a redraw.
     bool trayError_ = false;
     QPoint dragOffset_;
-    bool fallbackDrag_ = false, dragging_ = false, clickThrough_ = false, touchEnabled_ = true, wanderEnabled_ = true;
+    bool fallbackDrag_ = false, dragging_ = false, clickThrough_ = false, touchEnabled_ = true, wanderEnabled_ = true, recapEnabled_ = true;
     bool persist_ = true, ready_ = false, quitting_ = false, muted_ = false, sound_ = false, autostart_ = false;
     int attention_ = 0, bubbles_ = Preferences::RequestsAndErrors;
     QPoint pressPosition_;

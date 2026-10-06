@@ -94,9 +94,11 @@ def write_components(output, version, architecture):
             component = "artwork"
         elif relative.startswith(("lib/", "plugins/", "share/agent-pet/runtime-licenses/")):
             component = "runtime"
-        groups[component].append(path)
+        if re.fullmatch(r"share/agent-pet/artwork-[0-9a-f]{64}\.rcc", relative):
+            component = path.stem
+        groups.setdefault(component, []).append(path)
     base = f"agent-pet-{version}-linux-{architecture}"
-    manifest = {"format": 1, "version": version, "architecture": architecture, "components": []}
+    manifest = {"format": 2 if any(name.startswith("artwork-") for name in groups) else 1, "version": version, "architecture": architecture, "components": []}
     for name, paths in groups.items():
         archive_path = output.parent / f"{base}-{name}.tar.gz"
         files = []

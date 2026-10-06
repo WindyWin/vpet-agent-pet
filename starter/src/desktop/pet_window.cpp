@@ -12,6 +12,7 @@
 #include <QDateEdit>
 #include <QDialogButtonBox>
 #include <QFile>
+#include <QFileInfo>
 #include <QFormLayout>
 #include <QGroupBox>
 #include <QJsonObject>
@@ -59,7 +60,7 @@ PetWindow::PetWindow(QWidget *parent, const QString &path, bool persist)
     ambient_.setLevel(AmbientLevel(qBound(0, preferences.ambient, 2)));
     mood_.setSetting(MoodSetting(qBound(0, preferences.mood, 2))); mood_.setTurns(preferences.turns);
     connect(&mood_, &Mood::counted, this, [this] { if (ready_) saveTimer_.start(); });
-    touchEnabled_ = preferences.touch; wanderEnabled_ = preferences.wander;
+    touchEnabled_ = preferences.touch; wanderEnabled_ = preferences.wander; recapEnabled_ = preferences.recap;
     ambient_.setMoveGate([this](const Move &move) { return canWander(move); });
     eggs_.setEnabled(preferences.easterEggs); eggs_.setBirthday(preferences.birthday);
     wellness_.setEyeMinutes(preferences.eyeMinutes); wellness_.setWaterMinutes(preferences.waterMinutes);
@@ -78,6 +79,7 @@ PetWindow::PetWindow(QWidget *parent, const QString &path, bool persist)
     for (const auto &state : player_.states())
         states->addAction(state, this, [this, state] { if (!quitting_) player_.select(state); });
     menu_.addAction("Running sessions…", this, &PetWindow::sessionsRequested);
+    menu_.addAction("Today's recap", this, &PetWindow::recapRequested);
     muteAction_ = menu_.addAction("Mute alerts");
     muteAction_->setCheckable(true); muteAction_->setChecked(muted_);
     connect(muteAction_, &QAction::toggled, this, &PetWindow::setMuted);
@@ -264,6 +266,15 @@ void PetWindow::setWanderEnabled(bool enabled) {
     if (!enabled && walking()) player_.select("idle", true); // Stops where it is.
     if (ready_) saveTimer_.start();
 }
+void PetWindow::setRecapEnabled(bool enabled) {
+    if (enabled == recapEnabled_) return;
+    recapEnabled_ = enabled;
+    if (ready_) saveTimer_.start();
+}
+QString PetWindow::recapPath() const { return persist_ ? QFileInfo(store_.path()).absolutePath() + "/recap.json" : QString(); }
+void PetWindow::showTrayMessage(const QString &title, const QString &text) {
+    if (tray_.isVisible()) tray_.showMessage(title, text, QSystemTrayIcon::NoIcon);
+}
 void PetWindow::setEasterEggsEnabled(bool enabled) {
     if (enabled == easterEggsEnabled()) return;
     eggs_.setEnabled(enabled);
@@ -391,6 +402,7 @@ bool PetWindow::writePreferences(const std::function<void(Preferences &)> &chang
     preferences.ambient = ambientLevel(); preferences.mood = moodLevel(); preferences.turns = mood_.turns();
     preferences.touch = touchEnabled_; preferences.wander = wanderEnabled_; preferences.easterEggs = easterEggsEnabled(); preferences.birthday = birthday();
     preferences.eyeMinutes = wellness_.eyeMinutes(); preferences.waterMinutes = wellness_.waterMinutes();
+    preferences.recap = recapEnabled_;
     change(preferences);
     autostart_ = preferences.autostart; presence_.setPolicy(preferences.whenIdle);
     return store_.save(preferences);
@@ -638,6 +650,13 @@ void PetWindow::showSettings() {
     };
     connect(hasBirthday, &QCheckBox::toggled, this, applyBirthday);
     connect(birthdayDate, &QDateEdit::dateChanged, this, applyBirthday);
+    auto *recap = new QCheckBox("Add today's recap to the &go-home reminder", dialog);
+    recap->setChecked(recapEnabled_); recap->setAccessibleName("Daily recap");
+    recap->setToolTip("At 4:45 PM on weekdays the pet sums up the day's agent work: finished turns, projects,\n"
+                      "errors, approvals that waited and the longest run. Needs easter eggs on. Today's recap\n"
+                      "in the menu shows it any time.");
+    layout->addRow("Re&cap", recap);
+    connect(recap, &QCheckBox::toggled, this, &PetWindow::setRecapEnabled);
     if (updates_) {
         auto *updatesButton = new QPushButton(updates_->indicator(), dialog); layout->addRow(updatesButton);
         connect(updatesButton, &QPushButton::clicked, this, [this] { updates_->showSettings(this); });

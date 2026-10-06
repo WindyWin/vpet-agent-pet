@@ -166,4 +166,25 @@ exit 1
     assert settings.read_text() == '{"preserve":"settings"}'
     assert "file=/unchanged/desktop\nlink=/unchanged/bin" in (app / ".agent-pet-install").read_text()
     assert not list(root.glob("installed pet.update-*"))
+    # Migrate the legacy monolith to packs, then change only one sequence.
+    packs = ["artwork-" + digit * 64 for digit in ("a", "b")]
+    for name in packs:
+        (bundle / f"share/agent-pet/{name}.rcc").write_bytes(name.encode())
+    (bundle / "share/agent-pet/artwork.rcc").write_bytes(b"catalog and pack index")
+    manifest = write_components(bundle, "99.1.0", platform.machine())
+    assert manifest["format"] == 2
+    for component in manifest["components"]:
+        if component["name"] in ("app", "runtime"):
+            (root / component["archive"]).unlink()
+    result = apply_components(manifest_path)
+    assert result.returncode == 0, result
+    (bundle / f"share/agent-pet/{packs[1]}.rcc").write_bytes(b"changed sequence")
+    manifest = write_components(bundle, "99.1.0", platform.machine())
+    for component in manifest["components"]:
+        if component["name"] != packs[1]:
+            (root / component["archive"]).unlink()
+    result = apply_components(manifest_path)
+    assert result.returncode == 0, result
+    assert (app / f"share/agent-pet/{packs[0]}.rcc").read_bytes() == packs[0].encode()
+    assert (app / f"share/agent-pet/{packs[1]}.rcc").read_bytes() == b"changed sequence"
 print("Full/component updates: checksums, reuse, corrupt files, path safety, rollback and replacement passed")

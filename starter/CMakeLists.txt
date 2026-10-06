@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
-project(AgentPet VERSION 0.8.1 LANGUAGES CXX)
+project(AgentPet VERSION 0.8.2 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(Qt6 6.5 REQUIRED COMPONENTS Widgets DBus Network)
@@ -12,21 +12,47 @@ include(GNUInstallDirs)
 set(AGENT_PET_REVISION "local" CACHE STRING "Source revision shown in About")
 configure_file(src/version.h.in "${CMAKE_CURRENT_BINARY_DIR}/generated/version.h" @ONLY)
 
-# Keep artwork outside the executable so code updates can reuse it.
-file(GLOB_RECURSE pet_resources CONFIGURE_DEPENDS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
+# Stable sequence packs keep additions from repacking unrelated artwork.
+function(add_artwork_pack target filename)
+    set(qrc "<RCC><qresource prefix=\"/\">\n")
+    foreach(resource IN LISTS ARGN)
+        string(APPEND qrc "<file alias=\"${resource}\">${CMAKE_CURRENT_SOURCE_DIR}/${resource}</file>\n")
+    endforeach()
+    string(APPEND qrc "</qresource></RCC>\n")
+    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/${filename}.qrc" "${qrc}")
+    qt_add_binary_resources(${target} "${CMAKE_CURRENT_BINARY_DIR}/${filename}.qrc"
+        DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/${filename}.rcc" OPTIONS --format-version 1 --no-compress)
+    install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${filename}.rcc" DESTINATION ${CMAKE_INSTALL_DATADIR}/agent-pet)
+endfunction()
+file(GLOB_RECURSE pet_frames CONFIGURE_DEPENDS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
     "assets/vpet/vup/*.png")
-list(APPEND pet_resources assets/vpet/animations.json)
-list(SORT pet_resources)
-set(artwork_qrc "<RCC><qresource prefix=\"/\">\n")
-foreach(resource IN LISTS pet_resources)
-    string(APPEND artwork_qrc "<file alias=\"${resource}\">${CMAKE_CURRENT_SOURCE_DIR}/${resource}</file>\n")
+list(SORT pet_frames)
+set(sequence_ids)
+foreach(frame IN LISTS pet_frames)
+    get_filename_component(sequence "${frame}" DIRECTORY)
+    string(SHA256 id "${sequence}")
+    list(APPEND sequence_ids "${id}")
+    list(APPEND sequence_${id} "${frame}")
 endforeach()
-string(APPEND artwork_qrc "</qresource></RCC>\n")
-file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/artwork.qrc" "${artwork_qrc}")
-# Format 1 omits file timestamps. PNGs are already compressed; the outer tar.gz
-# compresses the catalog. Identical artwork must have identical bytes across builds.
-qt_add_binary_resources(pet_artwork "${CMAKE_CURRENT_BINARY_DIR}/artwork.qrc"
+list(REMOVE_DUPLICATES sequence_ids)
+list(SORT sequence_ids)
+set(pack_index "[")
+set(pack_separator "")
+add_custom_target(pet_artwork)
+foreach(id IN LISTS sequence_ids)
+    add_artwork_pack(pet_artwork_${id} artwork-${id} ${sequence_${id}})
+    add_dependencies(pet_artwork pet_artwork_${id})
+    string(APPEND pack_index "${pack_separator}\"artwork-${id}.rcc\"")
+    set(pack_separator ",")
+endforeach()
+string(APPEND pack_index "]\n")
+file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/artwork-packs.json" "${pack_index}")
+# The small catalog and pack index change independently of the PNG packs.
+set(catalog_qrc "<RCC><qresource prefix=\"/\"><file alias=\"assets/vpet/animations.json\">${CMAKE_CURRENT_SOURCE_DIR}/assets/vpet/animations.json</file><file alias=\"assets/vpet/packs.json\">${CMAKE_CURRENT_BINARY_DIR}/artwork-packs.json</file></qresource></RCC>")
+file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/artwork.qrc" "${catalog_qrc}")
+qt_add_binary_resources(pet_artwork_catalog "${CMAKE_CURRENT_BINARY_DIR}/artwork.qrc"
     DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/artwork.rcc" OPTIONS --format-version 1 --no-compress)
+add_dependencies(pet_artwork pet_artwork_catalog)
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/artwork.rcc" DESTINATION ${CMAKE_INSTALL_DATADIR}/agent-pet)
 file(GLOB pet_notices CONFIGURE_DEPENDS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "licenses/*")
 list(APPEND pet_notices THIRD_PARTY_NOTICES.md LICENSE NOTICE)
@@ -59,7 +85,7 @@ qt_add_library(pet_native STATIC src/platform/linux/native.cpp
 target_include_directories(pet_native PUBLIC src)
 target_link_libraries(pet_native PUBLIC pet_hosts PRIVATE pet_platform_linux Qt6::Gui Qt6::DBus X11::X11)
 # Headless code shared by the pet and its display-free commands (hook, integration, autostart).
-qt_add_library(pet_events STATIC src/sessions/state.cpp src/sessions/alerts.cpp src/sessions/presence.cpp
+qt_add_library(pet_events STATIC src/sessions/state.cpp src/sessions/alerts.cpp src/sessions/presence.cpp src/sessions/recap.cpp
     src/ipc/local.cpp src/ipc/autostart.cpp src/settings/preferences.cpp
     src/providers/adapters.cpp src/providers/integrations.cpp)
 target_include_directories(pet_events PUBLIC src)

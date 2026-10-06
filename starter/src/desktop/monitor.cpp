@@ -8,7 +8,8 @@
 #include <utility>
 
 namespace pet {
-Monitor::Monitor(PetWindow &window, std::shared_ptr<hosts::FocusService> focus) : window_(window), focus_(std::move(focus)) {
+Monitor::Monitor(PetWindow &window, std::shared_ptr<hosts::FocusService> focus)
+    : window_(window), focus_(std::move(focus)), recapStore_(window.recapPath()), recap_(recapStore_.load()) {
     if (focus_) {
         hostActive = [this](const Session &s) { return focus_->active(s.host, s.project); };
         bringForward = [this](const Session &s) { return focus_->focus(s.host, s.project); };
@@ -31,6 +32,9 @@ Monitor::Monitor(PetWindow &window, std::shared_ptr<hosts::FocusService> focus) 
     });
     connect(&window_, &PetWindow::notificationsChanged, this, &Monitor::refreshAlerts);
     connect(&window_, &PetWindow::sessionsRequested, this, &Monitor::toggleSessions);
+    connect(&window_, &PetWindow::recapRequested, this, &Monitor::showRecap);
+    recapTimer_.setSingleShot(true); recapTimer_.setInterval(2000);
+    connect(&recapTimer_, &QTimer::timeout, this, [this] { recapStore_.save(recap_); });
     connect(&window_, &PetWindow::quitRequested, this, &Monitor::stop);
     connect(&window_, &PetWindow::presenceChanged, this, [this] {
         if (window_.petHidden()) { list_.hide(); note_.hide(); reminder_.clear(); rest_.stop(); restLeft_ = 0; }
@@ -51,6 +55,11 @@ void Monitor::listen(std::unique_ptr<Receiver> receiver) {
 }
 bool Monitor::apply(const Event &event, qint64 now) {
     if (!active_ || !sessions_.apply(event, now)) return false;
+    {
+        const auto it = sessions_.records().find(event.provider + QChar(0x1f) + event.session);
+        const Session *session = it == sessions_.records().end() ? nullptr : &*it;
+        if (recap_.record(event, session, QDateTime::fromMSecsSinceEpoch(now).date())) recapTimer_.start();
+    }
     // Only accepted events count: duplicates and stale callbacks of an interrupted turn are dropped above.
     if (event.kind == "turn_finished") {
         window_.mood().finished(now);
@@ -110,9 +119,9 @@ void Monitor::update(qint64 now) {
         lastAggregate_ = state;
     }
 }
-void Monitor::say(const QString &text, int ms) {
+void Monitor::say(const QString &text, const QString &details, int ms) {
     reminder_.clear(); // Whatever the note said before is gone.
-    note_.say(text, window_.figure(), window_.screenAreas(), ms);
+    note_.say(text, window_.figure(), window_.screenAreas(), details, ms);
 }
 // The user is there, nothing needs them, nothing else is being said and the pet is free: a reminder will
 // not get in the way. A locked screen sees no pointer movement, so it holds reminders too.
@@ -149,12 +158,19 @@ void Monitor::answered() {
 void Monitor::rest() {
     if (!active_ || window_.petHidden() || --restLeft_ < 0) { rest_.stop(); restLeft_ = 0; return; }
     if (restLeft_ > 0) {
-        note_.say(QString("Eyes on something far away… %1").arg(restLeft_), window_.figure(), window_.screenAreas(), 1500);
+        note_.say(QString("Eyes on something far away… %1").arg(restLeft_), window_.figure(), window_.screenAreas(), {}, 1500);
         return;
     }
     rest_.stop();
     window_.eggs().surprise("reminder_done", true);
-    say("Nice! Your eyes thank you.", 4000);
+    say("Nice! Your eyes thank you.", {}, 4000);
+}
+void Monitor::showRecap() {
+    if (!active_) return;
+    const auto today = recap_.day(QDate::currentDate());
+    // A hidden pet has no bubble to speak from; the tray says it instead.
+    if (window_.petHidden()) window_.showTrayMessage("Today's recap", Recap::breakdown(today));
+    else say(Recap::summary(today), today.turns ? Recap::breakdown(today) : QString());
 }
 // Monday blues, the go-home nudge and bedtime: said once each day, and kept for later while the pet is hidden.
 void Monitor::remind() {
@@ -162,7 +178,12 @@ void Monitor::remind() {
     const auto reminder = window_.eggs().reminder();
     if (reminder.isEmpty()) return;
     window_.eggs().surprise(reminder);
-    if (!window_.muted()) say(EasterEggs::reminderNote(reminder));
+    if (window_.muted()) return;
+    // The go-home nudge sums up the day, when there was agent work to sum up.
+    const auto today = recap_.day(QDate::currentDate());
+    if (reminder == "leave_work" && window_.recapEnabled() && today.turns)
+        say(EasterEggs::reminderNote(reminder) + "\n" + Recap::summary(today), Recap::breakdown(today));
+    else say(EasterEggs::reminderNote(reminder));
 }
 bool Monitor::shown(const Alert &alert) const {
     const int level = window_.bubbles();
@@ -237,5 +258,6 @@ void Monitor::focusCurrent() {
 }
 void Monitor::stop() {
     active_ = false; timer_.stop(); rest_.stop(); restLeft_ = 0; receiver_.reset(); bubble_.hide(); note_.hide(); list_.hide();
+    if (recapTimer_.isActive()) { recapTimer_.stop(); recapStore_.save(recap_); }
 }
 }

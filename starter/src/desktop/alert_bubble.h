@@ -35,21 +35,28 @@ private:
 };
 
 // A short speech bubble for the pet's own remarks (bedtime, Monday blues): the alert bubble's look
-// without buttons. It dismisses itself after `ms`, or when clicked.
+// without buttons. It dismisses itself after `ms`, or when clicked. A remark with `details`, such as the
+// daily recap, shows them on the first click instead and stays up a little longer.
 class NoteBubble : public QWidget {
     Q_OBJECT
 public:
     static constexpr int defaultMs = 7000;
     explicit NoteBubble(QWidget *parent = nullptr);
-    void say(const QString &text, const QRect &pet, const QVector<QRect> &screens, int ms = defaultMs);
+    void say(const QString &text, const QRect &pet, const QVector<QRect> &screens, const QString &details = {},
+             int ms = defaultMs);
     QString text() const { return label_->text(); }
+    bool hasDetails() const { return !details_.isEmpty(); }
 signals:
-    void clicked(); // Before it hides.
+    void clicked(); // A click that hides it, before it hides.
 protected:
     void paintEvent(QPaintEvent *) override;
     void mouseReleaseEvent(QMouseEvent *) override;
 private:
+    void present(const QString &text, int ms);
     QLabel *label_;
     QTimer hide_;
+    QString details_;
+    QRect pet_;
+    QVector<QRect> screens_;
 };
 }

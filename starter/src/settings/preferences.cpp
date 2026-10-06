@@ -64,6 +64,7 @@ Preferences PreferencesStore::load() {
         || (object.contains("birthday") && !Preferences::validBirthday(object["birthday"].toString()))
         || (object.contains("eye_minutes") && !integer(object["eye_minutes"], 0, 1440))
         || (object.contains("water_minutes") && !integer(object["water_minutes"], 0, 1440))
+        || (object.contains("recap") && !object["recap"].isBool())
         || (object.contains("autostart") && !object["autostart"].isBool())
         || (object.contains("when_idle") && !parseIdlePolicy(object["when_idle"].toString(), whenIdle))) {
         writable_ = false; error_ = "Invalid preferences; using defaults and preserving the file."; return result;
@@ -84,6 +85,7 @@ Preferences PreferencesStore::load() {
     result.birthday = object["birthday"].toString();
     result.eyeMinutes = object["eye_minutes"].toInt(result.eyeMinutes);
     result.waterMinutes = object["water_minutes"].toInt(result.waterMinutes);
+    result.recap = object["recap"].toBool(true);
     result.autostart = object["autostart"].toBool();
     result.whenIdle = whenIdle;
     return result;
@@ -98,7 +100,7 @@ bool PreferencesStore::save(const Preferences &preferences) {
     QJsonObject object{{"version", 1}, {"size", preferences.size}, {"on_top", preferences.onTop},
                        {"muted", preferences.muted}, {"sound", preferences.sound}, {"bubbles", preferences.bubbles}, {"ambient", preferences.ambient},
                        {"mood", preferences.mood}, {"turns", preferences.turns}, {"touch", preferences.touch},
-                       {"wander", preferences.wander}, {"easter_eggs", preferences.easterEggs},
+                       {"wander", preferences.wander}, {"easter_eggs", preferences.easterEggs}, {"recap", preferences.recap},
                        {"eye_minutes", preferences.eyeMinutes}, {"water_minutes", preferences.waterMinutes},
                        {"autostart", preferences.autostart}, {"when_idle", idlePolicyName(preferences.whenIdle)}};
     if (Preferences::validBirthday(preferences.birthday)) object["birthday"] = preferences.birthday;

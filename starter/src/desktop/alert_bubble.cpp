@@ -89,16 +89,27 @@ NoteBubble::NoteBubble(QWidget *parent) : QWidget(parent) {
     hide_.setSingleShot(true);
     connect(&hide_, &QTimer::timeout, this, &QWidget::hide);
 }
-void NoteBubble::say(const QString &text, const QRect &pet, const QVector<QRect> &screens, int ms) {
+void NoteBubble::say(const QString &text, const QRect &pet, const QVector<QRect> &screens, const QString &details, int ms) {
+    details_ = details; pet_ = pet; screens_ = screens;
+    setCursor(details.isEmpty() ? Qt::ArrowCursor : Qt::PointingHandCursor);
+    setToolTip(details.isEmpty() ? QString() : "Click for more");
+    present(text, ms);
+}
+void NoteBubble::present(const QString &text, int ms) {
     label_->setText(text);
     setAccessibleDescription(text);
     adjustSize();
-    QRect screen = screens.value(0, pet);
-    for (const auto &area : screens) if (area.contains(pet.center())) { screen = area; break; }
-    move(AlertBubble::placement(pet, size(), screen));
+    QRect screen = screens_.value(0, pet_);
+    for (const auto &area : screens_) if (area.contains(pet_.center())) { screen = area; break; }
+    move(AlertBubble::placement(pet_, size(), screen));
     show(); raise(); hide_.start(ms);
 }
-void NoteBubble::mouseReleaseEvent(QMouseEvent *) { hide(); emit clicked(); }
+void NoteBubble::mouseReleaseEvent(QMouseEvent *) {
+    if (details_.isEmpty()) { hide(); emit clicked(); return; }
+    const auto details = details_; details_.clear();
+    setCursor(Qt::ArrowCursor); setToolTip({});
+    present(details, 15000);
+}
 void NoteBubble::paintEvent(QPaintEvent *) {
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);

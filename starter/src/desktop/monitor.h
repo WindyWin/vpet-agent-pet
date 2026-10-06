@@ -5,6 +5,7 @@
 #include "pet_window.h"
 #include "session_list.h"
 #include "sessions/alerts.h"
+#include "sessions/recap.h"
 #include <QTimer>
 #include <functional>
 #include <memory>
@@ -29,6 +30,9 @@ public:
     AlertBubble &bubble() { return bubble_; }
     NoteBubble &note() { return note_; }
     SessionList &sessionList() { return list_; }
+    Recap &recap() { return recap_; }
+    // Says today's recap in the speech bubble; a click on it shows the per-project breakdown.
+    void showRecap();
     void dismiss();
     void toggleSessions();
     // Brings the session's terminal or editor forward; false when its window was not raised.
@@ -53,7 +57,7 @@ private:
     bool calm(qint64 now) const;
     void answered();
     void rest();
-    void say(const QString &text, int ms = NoteBubble::defaultMs);
+    void say(const QString &text, const QString &details = {}, int ms = NoteBubble::defaultMs);
     bool shown(const Alert &alert) const;
     PetWindow &window_;
     std::shared_ptr<hosts::FocusService> focus_;
@@ -62,8 +66,10 @@ private:
     AlertBubble bubble_;
     NoteBubble note_; // The pet's own remarks: easter-egg reminders and the bedtime note.
     SessionList list_;
+    RecapStore recapStore_;
+    Recap recap_; // Persisted shortly after each change, and when monitoring stops.
     std::unique_ptr<Receiver> receiver_;
-    QTimer timer_, rest_;
+    QTimer timer_, rest_, recapTimer_;
     QString lastAggregate_, reminder_;
     QPoint lastPointer_;
     int restLeft_ = 0;

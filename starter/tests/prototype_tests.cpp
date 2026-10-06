@@ -1172,6 +1172,51 @@ private slots:
         QCOMPARE(player.state(), QString("dance")); monitor.update(now + 14); QCOMPARE(player.state(), QString("dance"));
         QCOMPARE(draws.unexpected, 0); QCOMPARE(eggDraws.unexpected, 0);
     }
+    void dailyRecap() {
+        QTemporaryDir directory; const auto path = directory.path() + "/preferences.json";
+        const qint64 now = QDateTime::currentMSecsSinceEpoch();
+        const auto today = QDateTime::fromMSecsSinceEpoch(now).date();
+        {
+            pet::PetWindow window(nullptr, path); window.show(); QVERIFY(window.recapEnabled());
+            QCOMPARE(window.recapPath(), directory.path() + "/recap.json");
+            pet::Monitor monitor(window); window.player().setPaused(true);
+            QDateTime local(QDate(2026, 10, 7), QTime(12, 0)); window.eggs().setClock([&] { return local; });
+            // Asked for before any work, the pet says so and has nothing more to show.
+            emit window.recapRequested();
+            QVERIFY(monitor.note().isVisible()); QCOMPARE(monitor.note().text(), QString("No agent work yet today."));
+            QVERIFY(!monitor.note().hasDetails());
+            QVERIFY(monitor.apply({"claude", "s1", "1", "prompt", {}, {}, "/work/abc-web", {}, now - 22 * 60000, {}}, now));
+            QVERIFY(monitor.apply({"claude", "s1", "2", "turn_finished", {}, {}, {}, {}, now, {}}, now));
+            const auto summary = pet::Recap::summary(monitor.recap().day(today));
+            QCOMPARE(summary, QString("Today: 1 turn in abc-web · longest run 22 min"));
+            // From the menu: the summary, then the per-project breakdown on a click.
+            monitor.note().hide(); emit window.recapRequested();
+            QCOMPARE(monitor.note().text(), summary); QVERIFY(monitor.note().hasDetails());
+            QTest::mouseClick(&monitor.note(), Qt::LeftButton);
+            QVERIFY(monitor.note().isVisible());
+            QCOMPARE(monitor.note().text(), pet::Recap::breakdown(monitor.recap().day(today)));
+            QTest::mouseClick(&monitor.note(), Qt::LeftButton); QVERIFY(!monitor.note().isVisible());
+            // The go-home reminder sums up the day, unless that is turned off.
+            local = QDateTime(QDate(2026, 10, 7), QTime(16, 50)); monitor.update(now + 1);
+            QCOMPARE(monitor.note().text(), pet::EasterEggs::reminderNote("leave_work") + "\n" + summary);
+            QVERIFY(monitor.note().hasDetails());
+            window.setRecapEnabled(false); QVERIFY(window.savePreferences());
+            local = QDateTime(QDate(2026, 10, 8), QTime(16, 50)); monitor.update(now + 2);
+            QCOMPARE(monitor.note().text(), pet::EasterEggs::reminderNote("leave_work")); QVERIFY(!monitor.note().hasDetails());
+            monitor.stop(); // Writes the counters now rather than after the short delay.
+        }
+        QVERIFY(!pet::PreferencesStore(path).load().recap);
+        // The counters survive a restart; the setting is in the settings dialog.
+        pet::PetWindow window(nullptr, path); QVERIFY(!window.recapEnabled());
+        pet::Monitor monitor(window); QCOMPARE(monitor.recap().day(today).turns, 1);
+        window.showSettings(); auto *dialog = window.findChild<QDialog*>(); QVERIFY(dialog);
+        QCheckBox *box = nullptr;
+        for (auto *check : dialog->findChildren<QCheckBox*>()) if (check->accessibleName() == "Daily recap") box = check;
+        QVERIFY(box); QVERIFY(!box->isChecked()); box->setChecked(true); QVERIFY(window.recapEnabled());
+        dialog->close();
+        // Without persistence there is no recap file.
+        QVERIFY(pet::PetWindow(nullptr, path, false).recapPath().isEmpty());
+    }
     void easterEggPreference() {
         QTemporaryDir directory; const auto path = directory.path() + "/preferences.json";
         {
