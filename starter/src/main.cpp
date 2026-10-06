@@ -5,6 +5,7 @@
 #include "desktop/monitor.h"
 #include "ipc/autostart.h"
 #include "ipc/local.h"
+#include "platform/desktop/screensaver/screen_lock.h"
 #include "platform/native.h"
 #include "providers/integrations.h"
 #include "version.h"
@@ -104,7 +105,9 @@ int main(int argc, char **argv) {
             std::fprintf(stderr, "%s\n", qPrintable(window.player().error()));
             return 1;
         }
+        pet::platform::ScreenLock screenLock; // Outlives the monitor that asks it.
         pet::Monitor monitor(window, pet::platform::createFocusService());
+        monitor.locked = [&screenLock] { return screenLock.locked(); };
         if (receiver) monitor.listen(std::move(receiver));
         std::unique_ptr<pet::updates::Controller> updates;
         if (!parser.isSet("smoke-test") && !parser.isSet("no-persist")) {

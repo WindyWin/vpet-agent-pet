@@ -297,10 +297,13 @@ active time with time passed in, and `Monitor` drives it:
   so reading or thinking still counts while a longer pause holds the timers; a gap of
   five minutes or more is a real break and resets both. Only pointer moves and
   `prompt` events are the user's own; other agent events count only while the user was
-  seen within five minutes, so an agent working on behind a locked screen or for an
-  absent user pauses and then resets the timers. Keyboard input
-  outside the pet is not seen: X11 idle time (XScreenSaver) would need a `pet_native`
-  seam and was left out.
+  seen within five minutes, so an agent working for an absent user pauses and then
+  resets the timers. While the screen is locked nothing counts and no reminder shows:
+  `platform::ScreenLock` (`pet_native`, `src/platform/desktop/screensaver/`) follows
+  the `ActiveChanged` signal of `org.freedesktop.ScreenSaver` and
+  `org.gnome.ScreenSaver` after one asynchronous `GetActive`, and `main.cpp` hands it
+  to `Monitor::locked` (replaced in tests). Keyboard input outside the pet is not seen:
+  X11 idle time (XScreenSaver) would need another `pet_native` seam and was left out.
 - **Due.** An interval (`eye_minutes` 0/20/30/45, `water_minutes` 0/45/60/90; 0 is
   off; defaults 20 and 60) of counted time makes a reminder due, eyes first. Only the
   intervals are saved in `preferences.json`; an interval that is not a choice falls

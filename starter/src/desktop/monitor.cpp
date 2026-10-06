@@ -57,7 +57,8 @@ bool Monitor::apply(const Event &event, qint64 now) {
         lastTurnMs_ = sessions_.records().value(event.provider + QChar(0x1f) + event.session).lastTurnMs;
     }
     else if (event.kind == "error") window_.mood().failed(now);
-    window_.wellness().activity(now, event.kind == "prompt"); // Only a prompt shows the user is there.
+    // Only a prompt shows the user is there; nothing counts behind a locked screen.
+    if (!(locked && locked())) window_.wellness().activity(now, event.kind == "prompt");
     observed_ = true; update(now);
     // The hook saw a destructive command start: the pet jumps, then shows the work going on. A session
     // waiting on the user, or a fresh error, matters more.
@@ -72,7 +73,7 @@ bool Monitor::apply(const Event &event, qint64 now) {
 void Monitor::update(qint64 now) {
     if (!active_) return;
     sessions_.expire(now);
-    if (pointer) {
+    if (pointer && !(locked && locked())) {
         const auto position = pointer();
         if (position != lastPointer_) { lastPointer_ = position; window_.wellness().activity(now); }
     }
@@ -124,7 +125,7 @@ bool Monitor::calm(qint64 now) const {
 // An eye break or a sip of water, once its stretch of active time is up. A due reminder waits for calm; in
 // quiet hours it is let go, so the morning does not start with one.
 void Monitor::remindWellness(qint64 now) {
-    if (!active_) return; // The presence update may have just quit.
+    if (!active_ || (locked && locked())) return; // The presence update may have just quit.
     auto &wellness = window_.wellness();
     const auto due = wellness.due(now);
     if (due.isEmpty()) return;

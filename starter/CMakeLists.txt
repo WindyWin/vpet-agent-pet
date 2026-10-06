@@ -54,7 +54,8 @@ target_link_libraries(pet_platform_linux PUBLIC Qt6::Core)
 # (platform/native.h). Only this target links X11 and D-Bus.
 qt_add_library(pet_native STATIC src/platform/linux/native.cpp
     src/platform/desktop/x11/connection.cpp src/platform/desktop/x11/pointer.cpp src/platform/desktop/x11/x11_desktop.cpp
-    src/platform/desktop/kwin/kwin_desktop.cpp src/hosts/adapters/konsole_dbus.cpp)
+    src/platform/desktop/kwin/kwin_desktop.cpp src/platform/desktop/screensaver/screen_lock.cpp
+    src/hosts/adapters/konsole_dbus.cpp)
 target_include_directories(pet_native PUBLIC src)
 target_link_libraries(pet_native PUBLIC pet_hosts PRIVATE pet_platform_linux Qt6::Gui Qt6::DBus X11::X11)
 # Headless code shared by the pet and its display-free commands (hook, integration, autostart).

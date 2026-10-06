@@ -1306,6 +1306,14 @@ private slots:
         // Five minutes away starts the stretch over.
         local = QDateTime(QDate(2026, 10, 7), QTime(12, 0));
         work(50); t += 6 * minute; monitor.update(t); work(15); QVERIFY(!monitor.note().isVisible());
+        // A locked screen counts nothing, from the pointer or from agents, and shows nothing.
+        bool locked = false; monitor.locked = [&] { return locked; };
+        work(40); const auto before = window.wellness().waterActiveMs(t);
+        locked = true; QVERIFY(monitor.apply(event("prompt"), t)); work(4);
+        QCOMPARE(window.wellness().waterActiveMs(t - 4 * minute), before);
+        QVERIFY(window.wellness().due(t).isEmpty()); QVERIFY(!monitor.note().isVisible());
+        work(30); QCOMPARE(window.wellness().waterActiveMs(t), qint64(0)); // Gone long enough to be a break.
+        locked = false; work(1); QVERIFY(!monitor.note().isVisible());
     }
     void wellnessPreference() {
         QTemporaryDir directory; const auto path = directory.path() + "/preferences.json";

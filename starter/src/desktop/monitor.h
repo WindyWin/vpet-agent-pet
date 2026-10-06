@@ -40,6 +40,8 @@ public:
     std::function<hosts::FocusResult(const Session &)> bringForward;
     // Where the pointer is; moving it counts as activity for wellness reminders.
     std::function<QPoint()> pointer;
+    // Whether the screen is locked; while it is, nothing counts as activity and no reminder shows. Unset: never.
+    std::function<bool()> locked;
     static const QString bedtimeNote; // Shown once a night when a turn finishes late.
     // The wellness reminder whose note is showing, until it is answered or another note replaces it.
     QString reminder() const { return reminder_; }
