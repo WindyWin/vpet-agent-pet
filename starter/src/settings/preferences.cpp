@@ -62,6 +62,8 @@ Preferences PreferencesStore::load() {
         || (object.contains("wander") && !object["wander"].isBool())
         || (object.contains("easter_eggs") && !object["easter_eggs"].isBool())
         || (object.contains("birthday") && !Preferences::validBirthday(object["birthday"].toString()))
+        || (object.contains("eye_minutes") && !integer(object["eye_minutes"], 0, 1440))
+        || (object.contains("water_minutes") && !integer(object["water_minutes"], 0, 1440))
         || (object.contains("autostart") && !object["autostart"].isBool())
         || (object.contains("when_idle") && !parseIdlePolicy(object["when_idle"].toString(), whenIdle))) {
         writable_ = false; error_ = "Invalid preferences; using defaults and preserving the file."; return result;
@@ -80,6 +82,8 @@ Preferences PreferencesStore::load() {
     result.wander = object["wander"].toBool(true);
     result.easterEggs = object["easter_eggs"].toBool(true);
     result.birthday = object["birthday"].toString();
+    result.eyeMinutes = object["eye_minutes"].toInt(result.eyeMinutes);
+    result.waterMinutes = object["water_minutes"].toInt(result.waterMinutes);
     result.autostart = object["autostart"].toBool();
     result.whenIdle = whenIdle;
     return result;
@@ -95,6 +99,7 @@ bool PreferencesStore::save(const Preferences &preferences) {
                        {"muted", preferences.muted}, {"sound", preferences.sound}, {"bubbles", preferences.bubbles}, {"ambient", preferences.ambient},
                        {"mood", preferences.mood}, {"turns", preferences.turns}, {"touch", preferences.touch},
                        {"wander", preferences.wander}, {"easter_eggs", preferences.easterEggs},
+                       {"eye_minutes", preferences.eyeMinutes}, {"water_minutes", preferences.waterMinutes},
                        {"autostart", preferences.autostart}, {"when_idle", idlePolicyName(preferences.whenIdle)}};
     if (Preferences::validBirthday(preferences.birthday)) object["birthday"] = preferences.birthday;
     if (preferences.hasPosition) { object["x"] = preferences.position.x(); object["y"] = preferences.position.y(); }

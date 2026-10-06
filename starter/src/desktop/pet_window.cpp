@@ -62,6 +62,7 @@ PetWindow::PetWindow(QWidget *parent, const QString &path, bool persist)
     touchEnabled_ = preferences.touch; wanderEnabled_ = preferences.wander;
     ambient_.setMoveGate([this](const Move &move) { return canWander(move); });
     eggs_.setEnabled(preferences.easterEggs); eggs_.setBirthday(preferences.birthday);
+    wellness_.setEyeMinutes(preferences.eyeMinutes); wellness_.setWaterMinutes(preferences.waterMinutes);
     ambient_.setEasterEggs(&eggs_);
     connect(&player_, &Player::entered, this, &PetWindow::entered);
     autostart_ = preferences.autostart; presence_.setPolicy(preferences.whenIdle);
@@ -272,6 +273,16 @@ void PetWindow::setBirthday(const QString &monthDay) {
     if (monthDay == birthday() || !eggs_.setBirthday(monthDay)) return;
     if (ready_) saveTimer_.start();
 }
+void PetWindow::setEyeMinutes(int minutes) {
+    if (minutes == wellness_.eyeMinutes() || !Wellness::validEyeMinutes(minutes)) return;
+    wellness_.setEyeMinutes(minutes);
+    if (ready_) saveTimer_.start();
+}
+void PetWindow::setWaterMinutes(int minutes) {
+    if (minutes == wellness_.waterMinutes() || !Wellness::validWaterMinutes(minutes)) return;
+    wellness_.setWaterMinutes(minutes);
+    if (ready_) saveTimer_.start();
+}
 void PetWindow::showAfterFlagChange(QPoint position) {
     // Changing window flags hides the window; a hidden pet stays hidden until shown.
     if (!petHidden()) { show(); move(position); }
@@ -379,6 +390,7 @@ bool PetWindow::writePreferences(const std::function<void(Preferences &)> &chang
     preferences.muted = muted_; preferences.sound = sound_; preferences.bubbles = bubbles_;
     preferences.ambient = ambientLevel(); preferences.mood = moodLevel(); preferences.turns = mood_.turns();
     preferences.touch = touchEnabled_; preferences.wander = wanderEnabled_; preferences.easterEggs = easterEggsEnabled(); preferences.birthday = birthday();
+    preferences.eyeMinutes = wellness_.eyeMinutes(); preferences.waterMinutes = wellness_.waterMinutes();
     change(preferences);
     autostart_ = preferences.autostart; presence_.setPolicy(preferences.whenIdle);
     return store_.save(preferences);
@@ -631,6 +643,7 @@ void PetWindow::showSettings() {
         connect(updatesButton, &QPushButton::clicked, this, [this] { updates_->showSettings(this); });
         connect(updates_, &updates::Controller::changed, updatesButton, [this, updatesButton] { updatesButton->setText(updates_->indicator()); });
     }
+    layout->addRow(reminderSettings(dialog));
     layout->addRow(startupSettings(dialog));
     layout->addRow(integrationSettings(dialog));
     auto *recover = new QPushButton("&Recover position and input", dialog); layout->addRow(recover);
@@ -650,6 +663,28 @@ void PetWindow::showSettings() {
     connect(quit, &QPushButton::clicked, this, &PetWindow::requestQuit);
     connect(buttons, &QDialogButtonBox::rejected, dialog, &QDialog::close);
     layout->addRow(buttons); dialog->show();
+}
+QWidget *PetWindow::reminderSettings(QWidget *parent) {
+    auto *box = new QGroupBox("Reminders", parent); box->setObjectName("reminders");
+    box->setToolTip("While you are active (agent activity or moving the pointer), the pet now and then reminds you\n"
+                    "to rest your eyes and to drink some water. It waits while an alert or approval is waiting, while\n"
+                    "alerts are muted and from 22:00 to 06:00. Five minutes away counts as a break and starts both over.\n"
+                    "Click a reminder to say you did it.");
+    auto *layout = new QFormLayout(box);
+    const auto choices = [box](const auto &minutes, int current, const QString &name) {
+        auto *combo = new QComboBox(box); combo->setAccessibleName(name);
+        for (const int value : minutes) combo->addItem(value ? QString("Every %1 minutes").arg(value) : QString("Off"), value);
+        combo->setCurrentIndex(qMax(0, combo->findData(current)));
+        return combo;
+    };
+    auto *eyes = choices(Wellness::eyeChoices, wellness_.eyeMinutes(), "Eye break reminder");
+    eyes->setToolTip("The 20-20-20 rule: look at something about 20 feet (6 m) away for 20 seconds.");
+    layout->addRow("E&ye break", eyes);
+    connect(eyes, &QComboBox::currentIndexChanged, this, [this, eyes] { setEyeMinutes(eyes->currentData().toInt()); });
+    auto *water = choices(Wellness::waterChoices, wellness_.waterMinutes(), "Water reminder");
+    layout->addRow("W&ater", water);
+    connect(water, &QComboBox::currentIndexChanged, this, [this, water] { setWaterMinutes(water->currentData().toInt()); });
+    return box;
 }
 QWidget *PetWindow::startupSettings(QWidget *parent) {
     refreshStartup();

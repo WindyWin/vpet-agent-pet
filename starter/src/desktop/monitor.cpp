@@ -1,9 +1,11 @@
 #include "monitor.h"
 #include "session_playback.h"
 #include <QApplication>
+#include <QCursor>
 #include <QDateTime>
 #include <QToolTip>
 #include <algorithm>
+#include <utility>
 
 namespace pet {
 Monitor::Monitor(PetWindow &window, std::shared_ptr<hosts::FocusService> focus) : window_(window), focus_(std::move(focus)) {
@@ -11,6 +13,11 @@ Monitor::Monitor(PetWindow &window, std::shared_ptr<hosts::FocusService> focus) 
         hostActive = [this](const Session &s) { return focus_->active(s.host, s.project); };
         bringForward = [this](const Session &s) { return focus_->focus(s.host, s.project); };
     }
+    pointer = [] { return QCursor::pos(); };
+    lastPointer_ = pointer();
+    rest_.setInterval(1000);
+    connect(&rest_, &QTimer::timeout, this, &Monitor::rest);
+    connect(&note_, &NoteBubble::clicked, this, &Monitor::answered);
     timer_.setInterval(250);
     connect(&timer_, &QTimer::timeout, this, [this] { update(QDateTime::currentMSecsSinceEpoch()); });
     timer_.start();
@@ -26,7 +33,7 @@ Monitor::Monitor(PetWindow &window, std::shared_ptr<hosts::FocusService> focus) 
     connect(&window_, &PetWindow::sessionsRequested, this, &Monitor::toggleSessions);
     connect(&window_, &PetWindow::quitRequested, this, &Monitor::stop);
     connect(&window_, &PetWindow::presenceChanged, this, [this] {
-        if (window_.petHidden()) { list_.hide(); note_.hide(); }
+        if (window_.petHidden()) { list_.hide(); note_.hide(); reminder_.clear(); rest_.stop(); restLeft_ = 0; }
         refreshAlerts();
     });
 }
@@ -50,6 +57,7 @@ bool Monitor::apply(const Event &event, qint64 now) {
         lastTurnMs_ = sessions_.records().value(event.provider + QChar(0x1f) + event.session).lastTurnMs;
     }
     else if (event.kind == "error") window_.mood().failed(now);
+    window_.wellness().activity(now);
     observed_ = true; update(now);
     // The hook saw a destructive command start: the pet jumps, then shows the work going on. A session
     // waiting on the user, or a fresh error, matters more.
@@ -64,6 +72,10 @@ bool Monitor::apply(const Event &event, qint64 now) {
 void Monitor::update(qint64 now) {
     if (!active_) return;
     sessions_.expire(now);
+    if (pointer) {
+        const auto position = pointer();
+        if (position != lastPointer_) { lastPointer_ = position; window_.wellness().activity(now); }
+    }
     remind();
     refreshAlerts();
     if (list_.isVisible()) list_.present(sessionRows(sessions_, now));
@@ -72,6 +84,7 @@ void Monitor::update(qint64 now) {
     window_.setStatus(topLevelSessions(sessions_), sessions_.unresolvedAttention(), errors);
     window_.updatePresence(sessions_.records().size(), now); // May hide, show or quit the pet.
     window_.mood().refresh(now);
+    remindWellness(now);
     if (!active_ || !observed_ || window_.player().requestedState() == "closing") return;
     const auto state = sessions_.aggregate(now);
     const auto animation = sessionAnimation(state);
@@ -89,10 +102,56 @@ void Monitor::update(qint64 now) {
         const bool celebrate = state == "turn-finished" && lastAggregate_ != state;
         window_.player().select(celebrate ? window_.mood().celebrate(window_.eggs().celebration(lastTurnMs_)) : animation,
                                 state == "attention" || state == "error");
+        // A snack break already says "have a drink"; the water reminder need not repeat it.
+        if (celebrate && window_.mood().treat() == "snack") window_.wellness().given("water", now);
         lastAggregate_ = state;
     }
 }
-void Monitor::say(const QString &text) { note_.say(text, window_.figure(), window_.screenAreas()); }
+void Monitor::say(const QString &text, int ms) {
+    reminder_.clear(); // Whatever the note said before is gone.
+    note_.say(text, window_.figure(), window_.screenAreas(), ms);
+}
+// Nothing needs the user, nothing else is being said and the pet is free: a reminder will not get in the way.
+bool Monitor::calm(qint64 now) const {
+    const auto state = sessions_.aggregate(now);
+    return !window_.petHidden() && !window_.muted() && !bubble_.isVisible() && !note_.isVisible() && restLeft_ == 0 &&
+           sessions_.unresolvedAttention() == 0 && state != "attention" && state != "error" &&
+           !window_.player().held() && !window_.eggs().surprising() && !window_.walking() && !window_.flying();
+}
+// An eye break or a sip of water, once its stretch of active time is up. A due reminder waits for calm; in
+// quiet hours it is let go, so the morning does not start with one.
+void Monitor::remindWellness(qint64 now) {
+    if (!active_) return; // The presence update may have just quit.
+    auto &wellness = window_.wellness();
+    const auto due = wellness.due(now);
+    if (due.isEmpty()) return;
+    if (Wellness::quietAt(window_.eggs().now())) { wellness.given(due, now); return; }
+    if (!calm(now)) return;
+    wellness.given(due, now); // Ignored, it fades and comes back after the next interval.
+    window_.eggs().surprise(due == "eyes" ? "eye_break" : "water", true);
+    say(Wellness::note(due));
+    reminder_ = due;
+}
+// A click on the reminder means it was done: a sip earns a happy reaction at once, an eye break after its countdown.
+void Monitor::answered() {
+    if (restLeft_ > 0) { rest_.stop(); restLeft_ = 0; return; } // Clicking the countdown away ends it.
+    const auto reminder = std::exchange(reminder_, QString());
+    if (reminder == "water") window_.eggs().surprise("reminder_done", true);
+    if (reminder != "eyes" || !active_) return;
+    restLeft_ = Wellness::eyeRestSeconds + 1;
+    rest();
+    rest_.start();
+}
+void Monitor::rest() {
+    if (!active_ || window_.petHidden() || --restLeft_ < 0) { rest_.stop(); restLeft_ = 0; return; }
+    if (restLeft_ > 0) {
+        note_.say(QString("Eyes on something far away… %1").arg(restLeft_), window_.figure(), window_.screenAreas(), 1500);
+        return;
+    }
+    rest_.stop();
+    window_.eggs().surprise("reminder_done", true);
+    say("Nice! Your eyes thank you.", 4000);
+}
 // Monday blues, the go-home nudge and bedtime: said once each day, and kept for later while the pet is hidden.
 void Monitor::remind() {
     if (window_.petHidden()) return;
@@ -173,6 +232,6 @@ void Monitor::focusCurrent() {
     if (const auto *alert = queue_.current()) focusSession(QString(alert->session)); // A copy: the queue re-syncs.
 }
 void Monitor::stop() {
-    active_ = false; timer_.stop(); receiver_.reset(); bubble_.hide(); note_.hide(); list_.hide();
+    active_ = false; timer_.stop(); rest_.stop(); restLeft_ = 0; receiver_.reset(); bubble_.hide(); note_.hide(); list_.hide();
 }
 }

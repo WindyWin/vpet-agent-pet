@@ -38,11 +38,20 @@ public:
     // Is the user already looking at this session? Only Active suppresses its new alerts.
     std::function<platform::ActiveState(const Session &)> hostActive;
     std::function<hosts::FocusResult(const Session &)> bringForward;
+    // Where the pointer is; moving it counts as activity for wellness reminders.
+    std::function<QPoint()> pointer;
     static const QString bedtimeNote; // Shown once a night when a turn finishes late.
+    // The wellness reminder whose note is showing, until it is answered or another note replaces it.
+    QString reminder() const { return reminder_; }
+    int restLeft() const { return restLeft_; } // Seconds left of an eye break the user took; 0 for none.
 private:
     void refreshAlerts();
     void remind();
-    void say(const QString &text);
+    void remindWellness(qint64 now);
+    bool calm(qint64 now) const;
+    void answered();
+    void rest();
+    void say(const QString &text, int ms = NoteBubble::defaultMs);
     bool shown(const Alert &alert) const;
     PetWindow &window_;
     std::shared_ptr<hosts::FocusService> focus_;
@@ -52,8 +61,10 @@ private:
     NoteBubble note_; // The pet's own remarks: easter-egg reminders and the bedtime note.
     SessionList list_;
     std::unique_ptr<Receiver> receiver_;
-    QTimer timer_;
-    QString lastAggregate_;
+    QTimer timer_, rest_;
+    QString lastAggregate_, reminder_;
+    QPoint lastPointer_;
+    int restLeft_ = 0;
     qint64 lastTurnMs_ = 0; // How long the latest finished turn ran, for a long-turn celebration.
     quint64 heard_ = 0;
     bool observed_ = false, active_ = true;

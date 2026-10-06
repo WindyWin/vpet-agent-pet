@@ -86,19 +86,19 @@ NoteBubble::NoteBubble(QWidget *parent) : QWidget(parent) {
     label_->setStyleSheet("color:#453324; font-weight:600;");
     label_->setMaximumWidth(260);
     layout->addWidget(label_);
-    hide_.setSingleShot(true); hide_.setInterval(7000);
+    hide_.setSingleShot(true);
     connect(&hide_, &QTimer::timeout, this, &QWidget::hide);
 }
-void NoteBubble::say(const QString &text, const QRect &pet, const QVector<QRect> &screens) {
+void NoteBubble::say(const QString &text, const QRect &pet, const QVector<QRect> &screens, int ms) {
     label_->setText(text);
     setAccessibleDescription(text);
     adjustSize();
     QRect screen = screens.value(0, pet);
     for (const auto &area : screens) if (area.contains(pet.center())) { screen = area; break; }
     move(AlertBubble::placement(pet, size(), screen));
-    show(); raise(); hide_.start();
+    show(); raise(); hide_.start(ms);
 }
-void NoteBubble::mouseReleaseEvent(QMouseEvent *) { hide(); }
+void NoteBubble::mouseReleaseEvent(QMouseEvent *) { hide(); emit clicked(); }
 void NoteBubble::paintEvent(QPaintEvent *) {
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);

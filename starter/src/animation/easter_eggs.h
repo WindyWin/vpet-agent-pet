@@ -48,8 +48,9 @@ public:
     // The reaction pool to celebrate a finished turn of `turnMs` with (0 when unknown), or empty.
     QString celebration(qint64 turnMs);
     // Plays a pool now, such as "danger" or "konami". It plays out unless a session needs the user.
-    // False when skipped: turned off, no such pool, or the pet is held or stopped.
-    bool surprise(const QString &pool);
+    // False when skipped: turned off (unless `evenWhenOff`, for reminders the user chose elsewhere),
+    // no such pool, or the pet is held or stopped.
+    bool surprise(const QString &pool, bool evenWhenOff = false);
     bool surprising() const; // A surprise is still what the pet shows.
     bool bedtime(); // True once a night, the first time it is asked late at night.
     // Which of "monday", "leave_work" and "sleep" are due at this local time, whether or not already given.
@@ -61,6 +62,7 @@ public:
     QString reminder();
     bool key(int key); // Feeds a key press; true when it completes the Konami code.
     void setClock(std::function<QDateTime()> clock) { if (clock) clock_ = std::move(clock); }
+    QDateTime now() const { return clock_(); } // Local time, from the replaceable clock.
     // Replaceable for tests. A pool of one draws nothing; see `fidget` for the other draws.
     void setRandom(Random random) { random_ = random ? std::move(random) : systemRandom(); }
 private:

@@ -104,6 +104,21 @@ itself and sends only that verdict. There is at least one more to find. Settings
 Preview them from Preview state (`love_520`, `birthday`, `dance`, `startled`); see
 [the architecture notes](docs/architecture.md#easter-eggs).
 
+## Wellness reminders
+
+While you work, the pet reminds you to rest your eyes and to drink some water. After
+20 minutes of activity it says "Look at something far away for 20 seconds" and
+closes its eyes for a stretch (the 20-20-20 rule); click the note and it counts the 20 seconds down, then
+cheers. After 60 minutes it gets thirsty and says "Time for some water 💧"; click to
+say you had some and it cheers. Ignored, a reminder fades and comes back only after
+the next interval. Activity means agent events or moving the pointer: a few idle
+minutes pause the timers, and five minutes away counts as a break and starts both
+over. Reminders wait while an alert bubble shows, while an agent waits on you and
+while alerts are muted, and skip quiet hours (10 PM to 6 AM, which have the bedtime
+note). Settings → **Reminders** sets the eye break (off, 20, 30 or 45 minutes) and
+water (off, 45, 60 or 90 minutes); both are on by default. See
+[the architecture notes](docs/architecture.md#wellness-reminders).
+
 ## Wandering
 
 After about four quiet minutes the idle pet sometimes goes for a stroll: it walks or

@@ -60,8 +60,8 @@ QString EasterEggs::celebration(qint64 turnMs) {
     if (occasions.contains("friday_evening") && has("friday_evening")) return "friday_evening";
     return {};
 }
-bool EasterEggs::surprise(const QString &pool) {
-    if (!enabled_ || player_.held() || player_.stopped()) return false;
+bool EasterEggs::surprise(const QString &pool, bool evenWhenOff) {
+    if ((!enabled_ && !evenWhenOff) || player_.held() || player_.stopped()) return false;
     const auto state = draw(pool);
     if (state.isEmpty()) return false;
     surprise_ = state; // Before selecting: entering it must not count as something else showing.

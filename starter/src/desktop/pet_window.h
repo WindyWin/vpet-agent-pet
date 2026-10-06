@@ -5,6 +5,7 @@
 #include "animation/player.h"
 #include "desktop/touch.h"
 #include "desktop/wander.h"
+#include "desktop/wellness.h"
 #include "settings/preferences.h"
 #include <QDialog>
 #include <QElapsedTimer>
@@ -35,6 +36,10 @@ public:
     void setEasterEggsEnabled(bool enabled);
     bool easterEggsEnabled() const { return eggs_.enabled(); }
     void setBirthday(const QString &monthDay); // "MM-dd" or empty; persisted.
+    Wellness &wellness() { return wellness_; }
+    // Minutes of active time between eye-break and water reminders, from Wellness's choices; 0 is off. Persisted.
+    void setEyeMinutes(int minutes);
+    void setWaterMinutes(int minutes);
     QString birthday() const { return eggs_.birthday(); }
     // Petting, throwing and hiding at a screen edge; persisted. Off, the pet only drags.
     void setTouchEnabled(bool enabled);
@@ -132,11 +137,13 @@ private:
     void watchScreen(QScreen *screen);
     QWidget *integrationSettings(QWidget *parent);
     QWidget *startupSettings(QWidget *parent);
+    QWidget *reminderSettings(QWidget *parent);
     updates::Controller *updates_ = nullptr;
     Player player_;
     Ambient ambient_;
     Mood mood_;
     EasterEggs eggs_;
+    Wellness wellness_;
     PreferencesStore store_;
     QMenu menu_;
     QSystemTrayIcon tray_;

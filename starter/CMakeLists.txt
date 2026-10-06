@@ -33,7 +33,7 @@ list(APPEND pet_notices THIRD_PARTY_NOTICES.md LICENSE NOTICE)
 qt_add_library(pet_ui STATIC
     src/animation/player.cpp src/animation/ambient.cpp src/animation/mood.cpp src/animation/easter_eggs.cpp
     src/desktop/pet_window.cpp
-    src/desktop/touch.cpp src/desktop/wander.cpp src/desktop/alert_bubble.cpp src/desktop/monitor.cpp
+    src/desktop/touch.cpp src/desktop/wander.cpp src/desktop/wellness.cpp src/desktop/alert_bubble.cpp src/desktop/monitor.cpp
     src/desktop/session_list.cpp src/updates/controller.cpp)
 target_include_directories(pet_ui PUBLIC src "${CMAKE_CURRENT_BINARY_DIR}/generated")
 target_link_libraries(pet_ui PUBLIC Qt6::Widgets pet_events pet_updates Qt6::Network PRIVATE pet_native)

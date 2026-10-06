@@ -5207,6 +5207,24 @@
         "state": "startled",
         "weight": 1
       }
+    ],
+    "eye_break": [
+      {
+        "state": "fidget_yawn",
+        "weight": 1
+      }
+    ],
+    "water": [
+      {
+        "state": "snack_thirsty",
+        "weight": 1
+      }
+    ],
+    "reminder_done": [
+      {
+        "state": "cheer_shy",
+        "weight": 1
+      }
     ]
   },
   "ambient": {
