@@ -50,6 +50,7 @@ public:
     bool hasDetails() const { return !details_.isEmpty(); }
 signals:
     void clicked(); // A click that hides it, before it hides.
+    void outdated(); // The language changed while it showed; it hid, since its words were in the old one.
 protected:
     void changeEvent(QEvent *) override;
     void paintEvent(QPaintEvent *) override;

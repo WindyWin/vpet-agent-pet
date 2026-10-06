@@ -21,6 +21,11 @@ Monitor::Monitor(PetWindow &window, std::shared_ptr<hosts::FocusService> focus)
     rest_.setInterval(1000);
     connect(&rest_, &QTimer::timeout, this, &Monitor::rest);
     connect(&note_, &NoteBubble::clicked, this, &Monitor::answered);
+    // A reminder on screen is said again in the new language; anything else was a passing remark and goes.
+    connect(&note_, &NoteBubble::outdated, this, [this] {
+        if (reminder_.isEmpty()) return;
+        const auto reminder = reminder_; say(Wellness::note(reminder)); reminder_ = reminder;
+    });
     timer_.setInterval(250);
     connect(&timer_, &QTimer::timeout, this, [this] { update(QDateTime::currentMSecsSinceEpoch()); });
     timer_.start();

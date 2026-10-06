@@ -109,8 +109,9 @@ void NoteBubble::say(const QString &text, const QRect &pet, const QVector<QRect>
 void NoteBubble::changeEvent(QEvent *event) {
     if (event->type() == QEvent::LanguageChange) {
         setAccessibleName(tr("Agent Pet note"));
-        // What it says was worded in the old language and cannot be translated now: it goes, as if it had faded.
-        if (isVisible()) { hide_.stop(); details_.clear(); hide(); }
+        // What it says was worded in the old language and cannot be translated here: it goes, and whoever said it
+        // may say it again.
+        if (isVisible()) { hide_.stop(); details_.clear(); hide(); emit outdated(); }
     }
     QWidget::changeEvent(event);
 }

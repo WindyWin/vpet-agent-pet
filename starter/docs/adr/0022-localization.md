@@ -41,7 +41,9 @@ it is not split out the way `artwork.rcc` is.
   label. Open dialogs (settings, preview, About, and the update `Controller`'s own)
   close and, on the next event loop turn, reopen at the same place, settings on the
   same tab: the change may run inside the settings combo box's signal. A visible note
-  hides, because its speech was already worded in the old language. Bubble titles,
+  hides, because its speech was already worded in the old language, and emits
+  `outdated`; the `Monitor` says a wellness reminder again in the new language, so it
+  is not lost until the next interval. Bubble titles,
   tray status and the session list are recomputed from the sessions on every 250 ms
   update, and the update `Controller` builds its texts when asked.
 - **Persisted text.** `recap.json` stores English only ("Unknown project" is a
