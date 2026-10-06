@@ -1,4 +1,5 @@
 #include "platform/contracts/startup.h"
+#include "i18n/contexts.h"
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
@@ -18,10 +19,10 @@ static QString xmlText(const QString &text) {
 bool setLoginStart(bool enabled, const QString &executable, QString *error, const QString &directory) {
     const auto path = loginEntryPath(directory);
     auto fail = [&](const QString &message) { if (error) *error = message; return false; };
-    if (!enabled) return !QFile::exists(path) || QFile::remove(path) || fail("Cannot remove " + path);
+    if (!enabled) return !QFile::exists(path) || QFile::remove(path) || fail(Startup::tr("Cannot remove %1").arg(path));
     if (executable.contains("/AppTranslocation/"))
-        return fail("macOS is running Agent Pet from a temporary copy. Move Agent Pet to Applications and open it from there.");
-    if (!QDir().mkpath(QFileInfo(path).absolutePath())) return fail("Cannot create " + QFileInfo(path).absolutePath());
+        return fail(Startup::tr("macOS is running Agent Pet from a temporary copy. Move Agent Pet to Applications and open it from there."));
+    if (!QDir().mkpath(QFileInfo(path).absolutePath())) return fail(Startup::tr("Cannot create %1").arg(QFileInfo(path).absolutePath()));
     QSaveFile file(path);
     if (!file.open(QIODevice::WriteOnly)) return fail(file.errorString());
     const auto bytes = (QString("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"

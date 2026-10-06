@@ -54,7 +54,7 @@ bool Player::load(const QString &root) {
         };
         auto missingPack = [&] {
             for (const auto &path : registered) QResource::unregisterResource(path);
-            fail("Cannot load the artwork pack. Reinstall Agent Pet to restore it."); return false;
+            fail(tr("Cannot load the artwork pack. Reinstall Agent Pet to restore it.")); return false;
         };
         if (!registerPack(artwork)) return missingPack();
         QFile index(":/assets/vpet/packs.json");

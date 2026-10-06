@@ -3,6 +3,7 @@
 #include "platform/contracts/native_window.h"
 #include "ipc/autostart.h"
 #include "providers/integrations.h"
+#include "i18n/language.h"
 #include "version.h"
 #include <QApplication>
 #include <QCheckBox>
@@ -55,8 +56,6 @@ PetWindow::PetWindow(QWidget *parent, const QString &path, bool persist)
     setAttribute(Qt::WA_TranslucentBackground);
     setAttribute(Qt::WA_MacAlwaysShowToolWindow); // macOS otherwise hides tool windows while another app is active.
     setAccessibleName("Agent Pet");
-    setToolTip("Click for running sessions · Hold still to pet · Drag to move, or throw · Push past a screen edge to hide\n"
-               "Right-click for controls · Esc to quit");
     setPetSize(preferences.size);
     muted_ = preferences.muted; sound_ = preferences.sound; bubbles_ = qBound(0, preferences.bubbles, 2);
     ambient_.setLevel(AmbientLevel(qBound(0, preferences.ambient, 2)));
@@ -70,6 +69,7 @@ PetWindow::PetWindow(QWidget *parent, const QString &path, bool persist)
     ambient_.setEasterEggs(&eggs_);
     connect(&player_, &Player::entered, this, &PetWindow::entered);
     autostart_ = preferences.autostart; presence_.setPolicy(preferences.whenIdle);
+    language_ = preferences.language;
     connect(&player_, &Player::changed, this, qOverload<>(&PetWindow::update));
     connect(&player_, &Player::completed, this, [this](const QString &state) {
         if (!quitting_ || state != quitState_) return;
@@ -84,43 +84,43 @@ PetWindow::PetWindow(QWidget *parent, const QString &path, bool persist)
     });
     touchClock_.start();
     // Everyday actions stay at the top level; previews, troubleshooting, updates and credits go under More.
-    showAction_ = menu_.addAction("Show pet");
+    // retranslate() labels them.
+    showAction_ = menu_.addAction(QString());
     showAction_->setCheckable(true); showAction_->setChecked(true);
     connect(showAction_, &QAction::toggled, this, [this](bool shown) { setPetHidden(!shown); });
     menu_.addSeparator();
-    menu_.addAction("Running sessions…", this, &PetWindow::sessionsRequested);
-    menu_.addAction("Today's recap", this, &PetWindow::recapRequested);
-    muteAction_ = menu_.addAction("Mute alerts");
+    sessionsAction_ = menu_.addAction(QString(), this, &PetWindow::sessionsRequested);
+    recapAction_ = menu_.addAction(QString(), this, &PetWindow::recapRequested);
+    muteAction_ = menu_.addAction(QString());
     muteAction_->setCheckable(true); muteAction_->setChecked(muted_);
     connect(muteAction_, &QAction::toggled, this, &PetWindow::setMuted);
-    onTopAction_ = menu_.addAction("Always on top");
+    onTopAction_ = menu_.addAction(QString());
     onTopAction_->setCheckable(true); onTopAction_->setChecked(preferences.onTop);
     connect(onTopAction_, &QAction::toggled, this, &PetWindow::setOnTop);
     menu_.addSeparator();
     updateAction_ = menu_.addAction(QString()); updateAction_->setVisible(false); // Only while an update waits.
-    menu_.addAction("Settings…", this, &PetWindow::showSettings);
-    auto *more = menu_.addMenu("More");
-    auto *states = more->addMenu("Preview state");
-    for (const auto &state : player_.states())
-        states->addAction(state, this, [this, state] { if (!quitting_) player_.select(state); });
-    more->addAction("Animation preview…", this, &PetWindow::showPreview);
+    settingsAction_ = menu_.addAction(QString(), this, &PetWindow::showSettings);
+    auto *more = moreMenu_ = menu_.addMenu(QString());
+    statesMenu_ = more->addMenu(QString());
+    for (const auto &state : player_.states()) // Catalog names, for developers.
+        statesMenu_->addAction(state, this, [this, state] { if (!quitting_) player_.select(state); });
+    previewAction_ = more->addAction(QString(), this, &PetWindow::showPreview);
     more->addSeparator();
-    clickAction_ = more->addAction("Click-through for 15 seconds");
+    clickAction_ = more->addAction(QString());
     clickAction_->setCheckable(true);
     connect(clickAction_, &QAction::toggled, this, &PetWindow::setClickThrough);
-    more->addAction("Recover pet position and input", this, &PetWindow::recover);
+    recoverAction_ = more->addAction(QString(), this, &PetWindow::recover);
     more->addSeparator();
-    updatesItem_ = more->addAction("Updates…"); updatesItem_->setVisible(false);
+    updatesItem_ = more->addAction(QString()); updatesItem_->setVisible(false);
     // Connected once; they open whichever controller setUpdates() handed over last.
     const auto openUpdates = [this] { if (updates_) updates_->showSettings(this); };
     connect(updatesItem_, &QAction::triggered, this, openUpdates);
     connect(updateAction_, &QAction::triggered, this, openUpdates);
-    more->addAction("About and artwork terms…", this, &PetWindow::showAbout);
+    aboutAction_ = more->addAction(QString(), this, &PetWindow::showAbout);
     menu_.addSeparator();
-    menu_.addAction("Quit", this, &PetWindow::requestQuit);
+    quitAction_ = menu_.addAction(QString(), this, &PetWindow::requestQuit);
     trayBase_ = player_.pixmap();
     updateTrayIcon();
-    tray_.setToolTip("Agent Pet — idle");
     tray_.setContextMenu(&menu_);
     connect(&tray_, &QSystemTrayIcon::activated, this, [this](auto reason) {
         if (reason != QSystemTrayIcon::Trigger) return;
@@ -128,6 +128,7 @@ PetWindow::PetWindow(QWidget *parent, const QString &path, bool persist)
         else recover();
     });
     setTrayAvailable(QSystemTrayIcon::isSystemTrayAvailable());
+    retranslate();
     recoveryTimer_.setSingleShot(true);
     connect(&recoveryTimer_, &QTimer::timeout, this, [this] { setClickThrough(false); });
     dragTimer_.setInterval(40);
@@ -182,6 +183,50 @@ PetWindow::PetWindow(QWidget *parent, const QString &path, bool persist)
     player_.select("starting", true);
 }
 PetWindow::~PetWindow() { savePreferences(); }
+void PetWindow::changeEvent(QEvent *event) {
+    if (event->type() == QEvent::LanguageChange) retranslate();
+    QWidget::changeEvent(event);
+}
+void PetWindow::retranslate() {
+    setToolTip(tr("Click for running sessions · Hold still to pet · Drag to move, or throw · Push past a screen edge to hide\n"
+                  "Right-click for controls · Esc to quit"));
+    showAction_->setText(tr("Show pet"));
+    showAction_->setToolTip(showAction_->isEnabled() ? QString() : tr("Hiding needs a system tray to show the pet again"));
+    sessionsAction_->setText(tr("Running sessions…"));
+    recapAction_->setText(tr("Today's recap"));
+    muteAction_->setText(tr("Mute alerts"));
+    onTopAction_->setText(tr("Always on top"));
+    settingsAction_->setText(tr("Settings…"));
+    moreMenu_->setTitle(tr("More"));
+    statesMenu_->setTitle(tr("Preview state"));
+    previewAction_->setText(tr("Animation preview…"));
+    clickAction_->setText(tr("Click-through for 15 seconds"));
+    recoverAction_->setText(tr("Recover pet position and input"));
+    updatesItem_->setText(tr("Updates…"));
+    if (updates_) updateAction_->setText(updates_->indicator());
+    aboutAction_->setText(tr("About and artwork terms…"));
+    quitAction_->setText(tr("Quit"));
+    setAccessibleDescription(attention_ == 1 ? tr("1 session waiting for you")
+                             : attention_ > 1 ? tr("%1 sessions waiting for you").arg(attention_) : QString());
+    setStatus(statusSessions_, statusAttention_, statusErrors_);
+    // Built in one go, so rebuilt rather than relabeled: same place, same tab.
+    if (auto *dialog = settingsDialog_.data()) {
+        auto *tabs = dialog->findChild<QTabWidget *>();
+        const int tab = tabs ? tabs->currentIndex() : 0;
+        const auto position = dialog->pos();
+        settingsDialog_.clear(); dialog->close(); // Deleted later: this may run inside one of its own signals.
+        QTimer::singleShot(0, this, [this, tab, position] {
+            if (quitting_) return;
+            showSettings(); settingsDialog_->move(position);
+            if (auto *tabs = settingsDialog_->findChild<QTabWidget *>()) tabs->setCurrentIndex(tab);
+        });
+    }
+}
+void PetWindow::setLanguage(const QString &language) {
+    language_ = language == "en" || language == "vi" ? language : "auto";
+    writePreferences([this](Preferences &preferences) { preferences.language = language_; });
+    i18n::install(i18n::fromName(language_));
+}
 bool PetWindow::event(QEvent *event) {
     if (event->type() == QEvent::ScreenChangeInternal && ready_)
         QTimer::singleShot(0, this, [this] { player_.setRenderSize(qRound(width() * devicePixelRatioF())); });
@@ -250,7 +295,8 @@ void PetWindow::setAttention(int sessions) {
     sessions = qMax(0, sessions);
     if (sessions == attention_) return;
     attention_ = sessions;
-    setAccessibleDescription(sessions ? QString("%1 session(s) waiting for you").arg(sessions) : QString());
+    setAccessibleDescription(sessions == 1 ? tr("1 session waiting for you")
+                             : sessions > 1 ? tr("%1 sessions waiting for you").arg(sessions) : QString());
     update();
 }
 void PetWindow::setMuted(bool muted) {
@@ -345,7 +391,7 @@ void PetWindow::recover() {
 void PetWindow::setTrayAvailable(bool available) {
     presence_.setTrayAvailable(available);
     showAction_->setEnabled(available);
-    showAction_->setToolTip(available ? QString() : "Hiding needs a system tray to show the pet again");
+    showAction_->setToolTip(available ? QString() : tr("Hiding needs a system tray to show the pet again"));
     tray_.setVisible(available);
     if (!available) applyPresence(presence_.setUserHidden(false));
 }
@@ -384,10 +430,11 @@ void PetWindow::updatePresence(int sessions, qint64 now) {
     applyPresence(presence_.update(sessions, now));
 }
 void PetWindow::setStatus(int sessions, int attention, int errors) {
-    QString text = sessions == 0 ? QString("Agent Pet — idle")
-                                 : QString("Agent Pet — %1 session%2").arg(sessions).arg(sessions == 1 ? "" : "s");
-    if (attention > 0) text += QString(" · %1 need%2 attention").arg(attention).arg(attention == 1 ? "s" : "");
-    if (errors > 0) text += QString(" · %1 tool error%2").arg(errors).arg(errors == 1 ? "" : "s");
+    statusSessions_ = sessions; statusAttention_ = attention; statusErrors_ = errors;
+    QString text = sessions == 0 ? tr("Agent Pet — idle") : sessions == 1 ? tr("Agent Pet — 1 session")
+                                 : tr("Agent Pet — %1 sessions").arg(sessions);
+    if (attention > 0) text += " · " + (attention == 1 ? tr("1 needs attention") : tr("%1 need attention").arg(attention));
+    if (errors > 0) text += " · " + (errors == 1 ? tr("1 tool error") : tr("%1 tool errors").arg(errors));
     if (tray_.toolTip() != text) tray_.setToolTip(text);
     // Redraw only on a change: every icon update is a D-Bus round trip on desktop trays.
     const int badge = qBound(0, attention, 9);
@@ -455,7 +502,7 @@ void PetWindow::paintEvent(QPaintEvent *) {
         painter.setBrush(QColor("#fff2cf")); painter.setPen(QColor("#453324"));
         painter.drawRoundedRect(rect().adjusted(4, 4, -4, -4), 20, 20);
         painter.drawText(rect().adjusted(16, 16, -16, -16), Qt::AlignCenter | Qt::TextWordWrap,
-                         "Artwork unavailable\nRight-click for controls");
+                         tr("Artwork unavailable\nRight-click for controls"));
         return;
     }
     const auto size = player_.pixmap().size().scaled(this->size(), Qt::KeepAspectRatio);
@@ -632,7 +679,7 @@ void PetWindow::setUpdates(updates::Controller *controller) {
     const auto refresh = [this] {
         const auto text = updates_ ? updates_->indicator() : QString();
         updatesItem_->setVisible(updates_);
-        updateAction_->setText(text); updateAction_->setVisible(updates_ && text != "Updates…");
+        updateAction_->setText(text); updateAction_->setVisible(updates_ && updates_->waiting());
     };
     refresh();
     if (controller) connect(controller, &updates::Controller::changed, this, refresh);
@@ -640,7 +687,7 @@ void PetWindow::setUpdates(updates::Controller *controller) {
 void PetWindow::showSettings() {
     if (settingsDialog_) { settingsDialog_->show(); settingsDialog_->raise(); return; }
     auto *dialog = new QDialog(this); settingsDialog_ = dialog;
-    dialog->setAttribute(Qt::WA_DeleteOnClose); dialog->setWindowTitle("Agent Pet settings");
+    dialog->setAttribute(Qt::WA_DeleteOnClose); dialog->setWindowTitle(tr("Agent Pet settings"));
     // Three short tabs instead of one long form; status and Close/Quit stay below them.
     auto *outer = new QVBoxLayout(dialog);
     auto *tabs = new QTabWidget(dialog); outer->addWidget(tabs);
@@ -648,180 +695,192 @@ void PetWindow::showSettings() {
         auto *widget = new QWidget(tabs); tabs->addTab(widget, title);
         return new QFormLayout(widget);
     };
-    auto *layout = page("General");
+    auto *layout = page(tr("General"));
+    // Each language is named in itself, so it can be found whatever the current one is.
+    auto *language = new QComboBox(dialog); language->setAccessibleName(tr("Language"));
+    language->addItem(tr("Automatic (system)"), "auto");
+    language->addItem("English", "en");
+    language->addItem("Tiếng Việt", "vi");
+    language->setCurrentIndex(qMax(0, language->findData(language_)));
+    layout->addRow(tr("&Language"), language);
+    connect(language, &QComboBox::currentIndexChanged, this, [this, language] { setLanguage(language->currentData().toString()); });
     auto *size = new QSpinBox(dialog); size->setRange(160, 320); size->setSingleStep(20); size->setSuffix(" px"); size->setValue(width());
-    size->setAccessibleName("Pet size"); layout->addRow("&Size", size);
+    size->setAccessibleName(tr("Pet size")); layout->addRow(tr("&Size"), size);
     connect(size, &QSpinBox::valueChanged, this, &PetWindow::setPetSize);
-    auto *top = new QCheckBox("Always on &top", dialog); top->setChecked(onTopAction_->isChecked()); layout->addRow(top);
+    auto *top = new QCheckBox(tr("Always on &top"), dialog); top->setChecked(onTopAction_->isChecked()); layout->addRow(top);
     connect(top, &QCheckBox::toggled, this, &PetWindow::setOnTop);
     connect(onTopAction_, &QAction::toggled, top, &QCheckBox::setChecked);
-    auto *mute = new QCheckBox("&Mute alert bubbles (badge stays visible)", dialog); mute->setChecked(muted_); layout->addRow("Alerts", mute);
+    auto *mute = new QCheckBox(tr("&Mute alert bubbles (badge stays visible)"), dialog); mute->setChecked(muted_); layout->addRow(tr("Alerts"), mute);
     connect(mute, &QCheckBox::toggled, this, &PetWindow::setMuted);
     connect(muteAction_, &QAction::toggled, mute, &QCheckBox::setChecked);
-    auto *sound = new QCheckBox("Play a &sound for new alerts", dialog); sound->setChecked(sound_); layout->addRow(sound);
+    auto *sound = new QCheckBox(tr("Play a &sound for new alerts"), dialog); sound->setChecked(sound_); layout->addRow(sound);
     connect(sound, &QCheckBox::toggled, this, &PetWindow::setSound);
     auto *bubbles = new QComboBox(dialog);
-    bubbles->addItems({"Only when a session needs me", "When a session needs me or a tool fails", "Also when a turn finishes"});
-    bubbles->setCurrentIndex(bubbles_); bubbles->setAccessibleName("Show alert bubbles");
-    layout->addRow("Show &bubbles", bubbles);
+    bubbles->addItems({tr("Only when a session needs me"), tr("When a session needs me or a tool fails"), tr("Also when a turn finishes")});
+    bubbles->setCurrentIndex(bubbles_); bubbles->setAccessibleName(tr("Show alert bubbles"));
+    layout->addRow(tr("Show &bubbles"), bubbles);
     connect(bubbles, &QComboBox::currentIndexChanged, this, &PetWindow::setBubbles);
     layout->addRow(reminderSettings(dialog));
-    layout = page("Pet");
+    layout = page(tr("Pet"));
     auto *ambient = new QComboBox(dialog);
-    ambient->addItems({"Off (no fidgets or alternate idle loops)", "Subtle (a fidget about once a minute)", "Lively (a fidget every 15–25 seconds)"});
-    ambient->setCurrentIndex(ambientLevel()); ambient->setAccessibleName("Idle animation");
-    ambient->setToolTip("What the pet does on its own while no agent needs it: fidgets, alternate idle loops, wandering,\n"
-                        "and dozing off after about ten quiet minutes. Any agent activity ends it at once.");
-    layout->addRow("&Idle animation", ambient);
+    ambient->addItems({tr("Off (no fidgets or alternate idle loops)"), tr("Subtle (a fidget about once a minute)"), tr("Lively (a fidget every 15–25 seconds)")});
+    ambient->setCurrentIndex(ambientLevel()); ambient->setAccessibleName(tr("Idle animation"));
+    ambient->setToolTip(tr("What the pet does on its own while no agent needs it: fidgets, alternate idle loops, wandering,\n"
+                        "and dozing off after about ten quiet minutes. Any agent activity ends it at once."));
+    layout->addRow(tr("&Idle animation"), ambient);
     connect(ambient, &QComboBox::currentIndexChanged, this, &PetWindow::setAmbientLevel);
     auto *activity = new QComboBox(dialog);
-    activity->addItems({"Classic (one loop per activity, as before)",
-                        "Subtle (calm variations; stays at the desk for short thinking pauses)",
-                        "Playful (also pen spinning and small reactions)"});
-    activity->setCurrentIndex(activityStyle()); activity->setAccessibleName("Active animation");
-    activity->setToolTip("How the pet thinks, reads and works while an agent is busy: alternate loops now and then,\n"
+    activity->addItems({tr("Classic (one loop per activity, as before)"),
+                        tr("Subtle (calm variations; stays at the desk for short thinking pauses)"),
+                        tr("Playful (also pen spinning and small reactions)")});
+    activity->setCurrentIndex(activityStyle()); activity->setAccessibleName(tr("Active animation"));
+    activity->setToolTip(tr("How the pet thinks, reads and works while an agent is busy: alternate loops now and then,\n"
                          "staying at its desk through short thinking pauses, and (Playful) small reactions.\n"
                          "Independent of Idle animation. Requests, errors and finished turns still show at once:\n"
-                         "it never delays alerts.");
-    layout->addRow("&Active animation", activity);
+                         "it never delays alerts."));
+    layout->addRow(tr("&Active animation"), activity);
     connect(activity, &QComboBox::currentIndexChanged, this, &PetWindow::setActivityStyle);
-    auto *wander = new QCheckBox("Walk, crawl and climb along the screen after a while", dialog);
-    wander->setChecked(wanderEnabled_); wander->setAccessibleName("Wandering");
-    wander->setToolTip("After about four quiet minutes the idle pet sometimes walks or crawls along the screen, and\n"
+    auto *wander = new QCheckBox(tr("Walk, crawl and climb along the screen after a while"), dialog);
+    wander->setChecked(wanderEnabled_); wander->setAccessibleName(tr("Wandering"));
+    wander->setToolTip(tr("After about four quiet minutes the idle pet sometimes walks or crawls along the screen, and\n"
                        "climbs up or down a screen edge it has reached, then steps back into view. It goes with the\n"
                        "idle animation, so Off above keeps it still too. Native Wayland sessions cannot move it.\n"
-                       "Off, the pet stays where you put it.");
-    layout->addRow("&Wander", wander);
+                       "Off, the pet stays where you put it."));
+    layout->addRow(tr("&Wander"), wander);
     connect(wander, &QCheckBox::toggled, this, &PetWindow::setWanderEnabled);
     auto *mood = new QComboBox(dialog);
-    mood->addItems({"Off (always neutral)", "Cheerful only (happy after a run of finished turns)",
-                    "Full (also droopy after repeated tool errors)"});
-    mood->setCurrentIndex(moodLevel()); mood->setAccessibleName("Mood");
-    mood->setToolTip("Whether finished turns and tool errors change how the idle pet looks. The mood fades\n"
-                     "back to neutral over a few quiet minutes.");
-    layout->addRow("M&ood", mood);
+    mood->addItems({tr("Off (always neutral)"), tr("Cheerful only (happy after a run of finished turns)"),
+                    tr("Full (also droopy after repeated tool errors)")});
+    mood->setCurrentIndex(moodLevel()); mood->setAccessibleName(tr("Mood"));
+    mood->setToolTip(tr("Whether finished turns and tool errors change how the idle pet looks. The mood fades\n"
+                     "back to neutral over a few quiet minutes."));
+    layout->addRow(tr("M&ood"), mood);
     connect(mood, &QComboBox::currentIndexChanged, this, &PetWindow::setMoodLevel);
-    auto *touch = new QCheckBox("React to &petting, throwing and screen edges", dialog);
-    touch->setChecked(touchEnabled_); touch->setAccessibleName("Touch reactions");
-    touch->setToolTip("Hold the pet still on its head, cheek or body to pet it. Let go while dragging fast and it\n"
+    auto *touch = new QCheckBox(tr("React to &petting, throwing and screen edges"), dialog);
+    touch->setChecked(touchEnabled_); touch->setAccessibleName(tr("Touch reactions"));
+    touch->setToolTip(tr("Hold the pet still on its head, cheek or body to pet it. Let go while dragging fast and it\n"
                       "falls to the bottom of the screen. Push it past the left or right edge while it idles and it\n"
-                      "hides there until an agent needs it. Off, the pet is only dragged.");
-    layout->addRow("&Touch", touch);
+                      "hides there until an agent needs it. Off, the pet is only dragged."));
+    layout->addRow(tr("&Touch"), touch);
     connect(touch, &QCheckBox::toggled, this, &PetWindow::setTouchEnabled);
-    auto *eggs = new QCheckBox("Special days, late nights and surprises", dialog);
-    eggs->setChecked(easterEggsEnabled()); eggs->setAccessibleName("Easter eggs");
-    eggs->setToolTip("Small surprises: a greeting on May 20 and on your birthday, extra yawns late at night, a\n"
+    auto *eggs = new QCheckBox(tr("Special days, late nights and surprises"), dialog);
+    eggs->setChecked(easterEggsEnabled()); eggs->setAccessibleName(tr("Easter eggs"));
+    eggs->setToolTip(tr("Small surprises: a greeting on May 20 and on your birthday, extra yawns late at night, a\n"
                      "dance for turns finished on a Friday evening, a bigger celebration for a very long turn,\n"
-                     "and a startled jump when an agent runs a destructive command. Some are left to be found.");
-    layout->addRow("&Easter eggs", eggs);
+                     "and a startled jump when an agent runs a destructive command. Some are left to be found."));
+    layout->addRow(tr("&Easter eggs"), eggs);
     connect(eggs, &QCheckBox::toggled, this, &PetWindow::setEasterEggsEnabled);
     auto *birthdayRow = new QWidget(dialog); auto *birthdayLayout = new QHBoxLayout(birthdayRow);
     birthdayLayout->setContentsMargins(0, 0, 0, 0);
-    auto *hasBirthday = new QCheckBox("Celebrate on", birthdayRow); hasBirthday->setAccessibleName("Birthday");
-    auto *birthdayDate = new QDateEdit(birthdayRow); birthdayDate->setAccessibleName("Birthday date");
+    auto *hasBirthday = new QCheckBox(tr("Celebrate on"), birthdayRow); hasBirthday->setAccessibleName(tr("Birthday"));
+    auto *birthdayDate = new QDateEdit(birthdayRow); birthdayDate->setAccessibleName(tr("Birthday date"));
     // The year is never shown or kept; a leap year lets February 29 be picked.
-    birthdayDate->setDisplayFormat("MMMM d"); birthdayDate->setDateRange(QDate(2000, 1, 1), QDate(2000, 12, 31));
+    // Month names follow the pet's language, not the system's; Vietnamese puts the day first ("1 tháng 1").
+    const bool vietnamese = i18n::installed() == i18n::Language::Vietnamese;
+    birthdayDate->setLocale(QLocale(vietnamese ? QLocale::Vietnamese : QLocale::English));
+    birthdayDate->setDisplayFormat(vietnamese ? "d MMMM" : "MMMM d"); birthdayDate->setDateRange(QDate(2000, 1, 1), QDate(2000, 12, 31));
     const auto saved = QDate::fromString("2000-" + birthday(), "yyyy-MM-dd");
     hasBirthday->setChecked(saved.isValid()); birthdayDate->setDate(saved.isValid() ? saved : QDate(2000, 1, 1));
     birthdayDate->setEnabled(saved.isValid());
     birthdayLayout->addWidget(hasBirthday); birthdayLayout->addWidget(birthdayDate, 1);
-    layout->addRow("Birthday", birthdayRow);
+    layout->addRow(tr("Birthday"), birthdayRow);
     const auto applyBirthday = [this, hasBirthday, birthdayDate] {
         birthdayDate->setEnabled(hasBirthday->isChecked());
         setBirthday(hasBirthday->isChecked() ? birthdayDate->date().toString("MM-dd") : QString());
     };
     connect(hasBirthday, &QCheckBox::toggled, this, applyBirthday);
     connect(birthdayDate, &QDateEdit::dateChanged, this, applyBirthday);
-    auto *recap = new QCheckBox("Add today's recap to the &go-home reminder", dialog);
-    recap->setChecked(recapEnabled_); recap->setAccessibleName("Daily recap");
-    recap->setToolTip("At 4:45 PM on weekdays the pet sums up the day's agent work: finished turns, projects,\n"
+    auto *recap = new QCheckBox(tr("Add today's recap to the &go-home reminder"), dialog);
+    recap->setChecked(recapEnabled_); recap->setAccessibleName(tr("Daily recap"));
+    recap->setToolTip(tr("At 4:45 PM on weekdays the pet sums up the day's agent work: finished turns, projects,\n"
                       "errors, approvals that waited and the longest run. Needs easter eggs on. Today's recap\n"
-                      "in the menu shows it any time.");
-    layout->addRow("Re&cap", recap);
+                      "in the menu shows it any time."));
+    layout->addRow(tr("Re&cap"), recap);
     connect(recap, &QCheckBox::toggled, this, &PetWindow::setRecapEnabled);
-    layout = page("Startup and agents");
+    layout = page(tr("Startup and agents"));
     layout->addRow(startupSettings(dialog));
     layout->addRow(integrationSettings(dialog));
     auto *status = new QLabel(dialog); status->setWordWrap(true); status->setTextInteractionFlags(Qt::TextSelectableByMouse);
     const auto updateStatus = [this, status] {
-        status->setText(store_.error().isEmpty() ? "Preferences are saved automatically. Closing this window keeps monitoring; Quit stops it."
+        status->setText(store_.error().isEmpty() ? tr("Preferences are saved automatically. Closing this window keeps monitoring; Quit stops it.")
                                                : store_.error() + "\n" + store_.path());
     };
     updateStatus(); outer->addWidget(status);
     auto *statusTimer = new QTimer(dialog); statusTimer->setInterval(1000);
     connect(statusTimer, &QTimer::timeout, dialog, updateStatus); statusTimer->start();
     auto *buttons = new QDialogButtonBox(QDialogButtonBox::Close, dialog);
+    buttons->button(QDialogButtonBox::Close)->setText(tr("Close"));
     // Recover and the artwork credits live in the menu under More.
     if (updates_) {
         auto *updatesButton = buttons->addButton(updates_->indicator(), QDialogButtonBox::ActionRole);
         connect(updatesButton, &QPushButton::clicked, this, [this] { updates_->showSettings(this); });
         connect(updates_, &updates::Controller::changed, updatesButton, [this, updatesButton] { updatesButton->setText(updates_->indicator()); });
     }
-    auto *quit = buttons->addButton("&Quit Agent Pet", QDialogButtonBox::DestructiveRole);
+    auto *quit = buttons->addButton(tr("&Quit Agent Pet"), QDialogButtonBox::DestructiveRole);
     connect(quit, &QPushButton::clicked, this, &PetWindow::requestQuit);
     connect(buttons, &QDialogButtonBox::rejected, dialog, &QDialog::close);
     outer->addWidget(buttons); dialog->show();
 }
 QWidget *PetWindow::reminderSettings(QWidget *parent) {
-    auto *box = new QGroupBox("Reminders", parent); box->setObjectName("reminders");
-    box->setToolTip("While you are active (agent activity or moving the pointer), the pet now and then reminds you\n"
+    auto *box = new QGroupBox(tr("Reminders"), parent); box->setObjectName("reminders");
+    box->setToolTip(tr("While you are active (agent activity or moving the pointer), the pet now and then reminds you\n"
                     "to rest your eyes and to drink some water. It waits while an alert or approval is waiting, while\n"
                     "alerts are muted and from 22:00 to 06:00. Five minutes away counts as a break and starts both over.\n"
-                    "Click a reminder to say you did it.");
+                    "Click a reminder to say you did it."));
     auto *layout = new QFormLayout(box);
     const auto choices = [box](const auto &minutes, int current, const QString &name) {
         auto *combo = new QComboBox(box); combo->setAccessibleName(name);
-        for (const int value : minutes) combo->addItem(value ? QString("Every %1 minutes").arg(value) : QString("Off"), value);
+        for (const int value : minutes) combo->addItem(value ? tr("Every %1 minutes").arg(value) : tr("Off"), value);
         combo->setCurrentIndex(qMax(0, combo->findData(current)));
         return combo;
     };
-    auto *eyes = choices(Wellness::eyeChoices, wellness_.eyeMinutes(), "Eye break reminder");
-    eyes->setToolTip("The 20-20-20 rule: look at something about 20 feet (6 m) away for 20 seconds.");
-    layout->addRow("E&ye break", eyes);
+    auto *eyes = choices(Wellness::eyeChoices, wellness_.eyeMinutes(), tr("Eye break reminder"));
+    eyes->setToolTip(tr("The 20-20-20 rule: look at something about 20 feet (6 m) away for 20 seconds."));
+    layout->addRow(tr("E&ye break"), eyes);
     connect(eyes, &QComboBox::currentIndexChanged, this, [this, eyes] { setEyeMinutes(eyes->currentData().toInt()); });
-    auto *water = choices(Wellness::waterChoices, wellness_.waterMinutes(), "Water reminder");
-    layout->addRow("W&ater", water);
+    auto *water = choices(Wellness::waterChoices, wellness_.waterMinutes(), tr("Water reminder"));
+    layout->addRow(tr("W&ater"), water);
     connect(water, &QComboBox::currentIndexChanged, this, [this, water] { setWaterMinutes(water->currentData().toInt()); });
     return box;
 }
 QWidget *PetWindow::startupSettings(QWidget *parent) {
     refreshStartup();
-    auto *box = new QGroupBox("Startup", parent); box->setObjectName("startup");
+    auto *box = new QGroupBox(tr("Startup"), parent); box->setObjectName("startup");
     auto *layout = new QFormLayout(box);
-    auto *autostart = new QCheckBox("&Autostart on agent session start", box);
+    auto *autostart = new QCheckBox(tr("&Autostart on agent session start"), box);
     autostart->setChecked(autostart_);
-    autostart->setToolTip("When a connected agent starts a session and no pet is running, its hook launches the pet.\n"
-                          "Needs a graphical session; SSH and container sessions do not start it.");
+    autostart->setToolTip(tr("When a connected agent starts a session and no pet is running, its hook launches the pet.\n"
+                          "Needs a graphical session; SSH and container sessions do not start it."));
     layout->addRow(autostart);
     connect(autostart, &QCheckBox::toggled, this, &PetWindow::setAutostart);
-    auto *login = new QCheckBox("Start Agent Pet at &login", box);
+    auto *login = new QCheckBox(tr("Start Agent Pet at &login"), box);
     login->setChecked(loginStartEnabled());
-    login->setToolTip("Starts the pet whenever you log in to your desktop, even before an agent session.");
+    login->setToolTip(tr("Starts the pet whenever you log in to your desktop, even before an agent session."));
     layout->addRow(login);
     connect(login, &QCheckBox::toggled, this, [login](bool enabled) {
         QString error;
         if (setLoginStart(enabled, QCoreApplication::applicationFilePath(), &error)) return;
         QSignalBlocker blocker(login); login->setChecked(!enabled);
-        QMessageBox::warning(login, "Agent Pet", "Cannot change start at login: " + error);
+        QMessageBox::warning(login, "Agent Pet", tr("Cannot change start at login: %1").arg(error));
     });
-    auto *idle = new QComboBox(box); idle->setAccessibleName("When no sessions remain");
-    idle->addItem("Keep the pet running", int(IdlePolicy::Keep));
-    idle->addItem("Hide the pet (tray icon stays)", int(IdlePolicy::Hide));
-    idle->addItem("Quit Agent Pet", int(IdlePolicy::Quit));
+    auto *idle = new QComboBox(box); idle->setAccessibleName(tr("When no sessions remain"));
+    idle->addItem(tr("Keep the pet running"), int(IdlePolicy::Keep));
+    idle->addItem(tr("Hide the pet (tray icon stays)"), int(IdlePolicy::Hide));
+    idle->addItem(tr("Quit Agent Pet"), int(IdlePolicy::Quit));
     if (auto *model = qobject_cast<QStandardItemModel *>(idle->model()); model && !presence_.canHide()) {
         model->item(1)->setEnabled(false); // Without a tray nothing could show it again; it keeps running.
-        model->item(1)->setToolTip("Needs a system tray");
+        model->item(1)->setToolTip(tr("Needs a system tray"));
     }
     idle->setCurrentIndex(qMax(0, idle->findData(int(whenIdle()))));
-    layout->addRow("When no sessions &remain", idle);
+    layout->addRow(tr("When no sessions &remain"), idle);
     connect(idle, &QComboBox::currentIndexChanged, this, [this, idle] { setWhenIdle(IdlePolicy(idle->currentData().toInt())); });
-    auto *note = new QLabel("Applies two minutes after the last session ends; a new session cancels it. "
-                            "A pet hidden this way returns with the next session.", box);
+    auto *note = new QLabel(tr("Applies two minutes after the last session ends; a new session cancels it. "
+                            "A pet hidden this way returns with the next session."), box);
     note->setWordWrap(true); layout->addRow(note);
     return box;
 }
 QWidget *PetWindow::integrationSettings(QWidget *parent) {
-    auto *box = new QGroupBox("Agent integrations", parent); box->setObjectName("integrations");
+    auto *box = new QGroupBox(tr("Agent integrations"), parent); box->setObjectName("integrations");
     auto *layout = new QFormLayout(box);
     for (const QString provider : {"claude", "codex"}) {
         auto *row = new QWidget(box); auto *rowLayout = new QHBoxLayout(row); rowLayout->setContentsMargins(0, 0, 0, 0);
@@ -834,11 +893,11 @@ QWidget *PetWindow::integrationSettings(QWidget *parent) {
                 status->setText(error + "\n" + integrationConfigPath(provider)); toggle->setEnabled(false); return;
             }
             const int owned = report["owned_handlers"].toInt(), expected = report["expected_handlers"].toInt();
-            QString text = owned == expected ? "Enabled" : owned == 0 ? "Not enabled" : QString("Partial (%1 of %2 hooks)").arg(owned).arg(expected);
+            QString text = owned == expected ? tr("Enabled") : owned == 0 ? tr("Not enabled") : tr("Partial (%1 of %2 hooks)").arg(owned).arg(expected);
             if (report.contains("warning")) text += " · " + report["warning"].toString();
             status->setText(text + "\n" + report["config"].toString());
             status->setToolTip(report["setup"].toString());
-            toggle->setText(owned ? "Disable" : "Enable"); toggle->setEnabled(true);
+            toggle->setText(owned ? tr("Disable") : tr("Enable")); toggle->setEnabled(true);
             toggle->setProperty("enable", owned == 0);
         };
         refresh();
@@ -846,33 +905,37 @@ QWidget *PetWindow::integrationSettings(QWidget *parent) {
             const bool enable = toggle->property("enable").toBool();
             const auto executable = QCoreApplication::applicationFilePath();
             const auto question = enable
-                ? QString("Add Agent Pet hooks to %1?\n\nHook command: %2\nOther settings and hooks are preserved. "
+                ? tr("Add Agent Pet hooks to %1?\n\nHook command: %2\nOther settings and hooks are preserved. "
                           "Register from a permanent install location, then restart the client.").arg(integrationConfigPath(provider), executable)
-                : QString("Remove only Agent Pet hooks from %1?").arg(integrationConfigPath(provider));
-            if (QMessageBox::question(this, "Agent integrations", question) != QMessageBox::Yes) return;
+                : tr("Remove only Agent Pet hooks from %1?").arg(integrationConfigPath(provider));
+            // Own buttons: Qt has no Vietnamese for its standard Yes and No.
+            QMessageBox ask(QMessageBox::Question, tr("Agent integrations"), question, QMessageBox::NoButton, this);
+            auto *confirm = ask.addButton(enable ? tr("Add hooks") : tr("Remove hooks"), QMessageBox::AcceptRole);
+            ask.addButton(tr("Cancel"), QMessageBox::RejectRole);
+            if (ask.exec(), ask.clickedButton() != confirm) return;
             QJsonObject report; QString error;
             if (!runIntegration(enable ? "enable" : "disable", provider, {}, executable, report, error))
-                QMessageBox::warning(this, "Agent integrations", error);
+                QMessageBox::warning(this, tr("Agent integrations"), error);
             refresh();
         });
         layout->addRow(provider == "claude" ? "Claude Code" : "Codex", row);
     }
-    auto *coverage = new QLabel("Covers sessions on this machine that send events after setup. Restart the client "
+    auto *coverage = new QLabel(tr("Covers sessions on this machine that send events after setup. Restart the client "
                                 "after enabling; silent, remote and container sessions are not discovered. "
-                                "Reply to requests in the agent's own terminal or editor.", box);
+                                "Reply to requests in the agent's own terminal or editor."), box);
     coverage->setWordWrap(true); layout->addRow(coverage);
     return box;
 }
 void PetWindow::showAbout() {
     auto *dialog = new QDialog(this); dialog->setAttribute(Qt::WA_DeleteOnClose);
-    dialog->setWindowTitle("About Agent Pet — artwork and terms"); dialog->resize(560, 440);
+    dialog->setWindowTitle(tr("About Agent Pet — artwork and terms")); dialog->resize(560, 440);
     auto *layout = new QVBoxLayout(dialog);
-    auto *credits = new QLabel(QString("<b>Agent Pet %1</b> (revision %2, Qt %3)<br>"
+    auto *credits = new QLabel(tr("<b>Agent Pet %1</b> (revision %2, Qt %3)<br>"
                                        "Application code: Apache License 2.0. Artwork: VUP-Simulator team, via "
                                        "<a href='https://github.com/LorisYounger/VPet'>LorisYounger/VPet</a>, under its own terms below.")
                                    .arg(QString(AGENT_PET_VERSION).toHtmlEscaped(), QString(AGENT_PET_REVISION).toHtmlEscaped(), qVersion()), dialog);
     credits->setOpenExternalLinks(true); credits->setTextInteractionFlags(Qt::TextBrowserInteraction); layout->addWidget(credits);
-    auto *terms = new QTextBrowser(dialog); terms->setAccessibleName("Artwork terms and third-party notices");
+    auto *terms = new QTextBrowser(dialog); terms->setAccessibleName(tr("Artwork terms and third-party notices"));
     QString text;
     for (const auto &path : {":/NOTICE", ":/THIRD_PARTY_NOTICES.md", ":/licenses/VPET-ARTWORK-TERMS.md", ":/LICENSE"}) {
         QFile file(path);
@@ -880,28 +943,29 @@ void PetWindow::showAbout() {
     }
     terms->setPlainText(text); layout->addWidget(terms);
     auto *buttons = new QDialogButtonBox(QDialogButtonBox::Close, dialog);
+    buttons->button(QDialogButtonBox::Close)->setText(tr("Close"));
     connect(buttons, &QDialogButtonBox::rejected, dialog, &QDialog::close); layout->addWidget(buttons); dialog->show();
 }
 void PetWindow::showPreview() {
     if (previewDialog_) { previewDialog_->show(); previewDialog_->raise(); return; }
     auto *dialog = new QDialog(this); previewDialog_ = dialog;
-    dialog->setAttribute(Qt::WA_DeleteOnClose); dialog->setWindowTitle("Animation preview"); dialog->resize(540, 420);
+    dialog->setAttribute(Qt::WA_DeleteOnClose); dialog->setWindowTitle(tr("Animation preview")); dialog->resize(540, 420);
     auto *layout = new QVBoxLayout(dialog);
     auto *states = new QComboBox(dialog); states->addItems(player_.states()); states->setCurrentText(player_.state());
-    states->setAccessibleName("Animation state"); layout->addWidget(states);
-    auto *interrupt = new QCheckBox("Interrupt immediately (skip outgoing end)", dialog); layout->addWidget(interrupt);
-    auto *play = new QPushButton("&Play selected state", dialog); layout->addWidget(play);
+    states->setAccessibleName(tr("Animation state")); layout->addWidget(states);
+    auto *interrupt = new QCheckBox(tr("Interrupt immediately (skip outgoing end)"), dialog); layout->addWidget(interrupt);
+    auto *play = new QPushButton(tr("&Play selected state"), dialog); layout->addWidget(play);
     connect(play, &QPushButton::clicked, dialog, [this, states, interrupt] { player_.select(states->currentText(), interrupt->isChecked()); });
-    auto *pause = new QCheckBox("&Pause", dialog); pause->setChecked(player_.paused()); layout->addWidget(pause);
+    auto *pause = new QCheckBox(tr("&Pause"), dialog); pause->setChecked(player_.paused()); layout->addWidget(pause);
     connect(pause, &QCheckBox::toggled, &player_, &Player::setPaused);
-    auto *step = new QPushButton("Step one &frame", dialog); layout->addWidget(step);
+    auto *step = new QPushButton(tr("Step one &frame"), dialog); layout->addWidget(step);
     connect(step, &QPushButton::clicked, dialog, [this, pause] { pause->setChecked(true); player_.advance(); });
     auto *detail = new QLabel(dialog); detail->setWordWrap(true); detail->setTextInteractionFlags(Qt::TextSelectableByMouse); layout->addWidget(detail);
-    auto *log = new QPlainTextEdit(dialog); log->setReadOnly(true); log->setMaximumBlockCount(100); log->setAccessibleName("Transition history"); layout->addWidget(log);
+    auto *log = new QPlainTextEdit(dialog); log->setReadOnly(true); log->setMaximumBlockCount(100); log->setAccessibleName(tr("Transition history")); layout->addWidget(log);
     const auto refresh = [this, detail, log] {
         const QString transition = player_.state() + " / " + player_.phase() + " / " + player_.sequence();
         if (log->property("transition").toString() != transition) { log->appendPlainText(transition); log->setProperty("transition", transition); }
-        detail->setText(QString("%1\nRequested: %2 · frame %3/%4 · %5 ms\nCache: %6 / %7 KiB\n%8")
+        detail->setText(QString("%1\nRequested: %2 · frame %3/%4 · %5 ms\nCache: %6 / %7 KiB\n%8") // Developer detail: English.
             .arg(transition, player_.requestedState()).arg(player_.frameIndex() + 1).arg(player_.frameCount())
             .arg(player_.frameDuration()).arg(player_.cacheKiB()).arg(Player::cacheLimitKiB).arg(player_.error()));
     };

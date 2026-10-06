@@ -48,7 +48,7 @@ public:
     std::function<QPoint()> pointer;
     // Whether the screen is locked; while it is, nothing counts as activity and no reminder shows. Unset: never.
     std::function<bool()> locked;
-    static const QString bedtimeNote; // Shown once a night when a turn finishes late.
+    static QString bedtimeNote(); // Shown once a night when a turn finishes late.
     // The wellness reminder whose note is showing, until it is answered or another note replaces it.
     QString reminder() const { return reminder_; }
     int restLeft() const { return restLeft_; } // Seconds left of an eye break the user took; 0 for none.

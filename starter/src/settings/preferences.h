@@ -37,6 +37,9 @@ struct Preferences {
     // Wellness reminders: minutes of active time between eye breaks and between sips of water; 0 is off.
     int eyeMinutes = 20, waterMinutes = 60;
     bool recap = true; // Adds today's recap to the go-home reminder.
+    // Interface language: "auto" (the system's), "en" or "vi". An unknown value, perhaps from a newer
+    // version, reads as "auto" instead of invalidating the file.
+    QString language = "auto";
     // Startup keys. `agent-pet autostart` edits them without a display, possibly
     // while a pet runs, so the pet re-reads them before each save.
     bool autostart = false; // Hook launches the pet on a session start when none is running.

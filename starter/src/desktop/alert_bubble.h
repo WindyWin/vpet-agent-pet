@@ -25,9 +25,11 @@ signals:
     void listRequested();
     void dismissRequested();
 protected:
+    void changeEvent(QEvent *) override;
     void paintEvent(QPaintEvent *) override;
     void mouseReleaseEvent(QMouseEvent *) override;
 private:
+    void retranslate(); // Labels set once; the alert itself is presented again on the next refresh.
     QLabel *title_, *name_;
     QPushButton *more_, *open_, *dismiss_;
     QString label_;
@@ -49,6 +51,7 @@ public:
 signals:
     void clicked(); // A click that hides it, before it hides.
 protected:
+    void changeEvent(QEvent *) override;
     void paintEvent(QPaintEvent *) override;
     void mouseReleaseEvent(QMouseEvent *) override;
 private:

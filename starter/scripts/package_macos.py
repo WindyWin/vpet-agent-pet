@@ -182,6 +182,8 @@ def main():
     with (contents / "Info.plist").open("wb") as plist:
         plistlib.dump({
             "CFBundleDevelopmentRegion": "en",
+            # The languages Agent Pet translates; macOS reports only these to the app and its native menu.
+            "CFBundleLocalizations": ["en", "vi"],
             "CFBundleDisplayName": "Agent Pet",
             "CFBundleExecutable": "agent-pet",
             "CFBundleIconFile": "agent-pet",

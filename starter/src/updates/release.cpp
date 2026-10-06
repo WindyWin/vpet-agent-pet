@@ -1,4 +1,5 @@
 #include "release.h"
+#include "i18n/contexts.h"
 #include "components.h"
 #include "platform/contracts/update_layout.h"
 #include <QCoreApplication>
@@ -25,7 +26,7 @@ bool parseRelease(const QJsonObject &object, const QString &architecture, Releas
     QString version = tag.startsWith('v') ? tag.mid(1) : tag;
     if (!object.contains("draft") || !object.contains("prerelease") || object["draft"].toBool(true)
         || object["prerelease"].toBool(true) || !versionPattern.match(version).hasMatch()) {
-        error = "No supported stable release was returned."; return false;
+        error = Updater::tr("No supported stable release was returned."); return false;
     }
     const QString base = "https://github.com/WindyWin/vpet-agent-pet/releases/";
     release.version = version;
@@ -57,18 +58,18 @@ bool parseRelease(const QJsonObject &object, const QString &architecture, Releas
         if (!QRegularExpression("^sha256:[0-9a-f]{64}$").match(release.digest).hasMatch()) release.digest.clear();
         return true;
     }
-    error = "This release has no compatible package for this system."; return false;
+    error = Updater::tr("This release has no compatible package for this system."); return false;
 }
 bool verifiedArchive(const QString &path, const QString &digest, QString &error) {
-    if (QFileInfo(path).size() <= 0) { error = "Cannot read update package."; return false; }
+    if (QFileInfo(path).size() <= 0) { error = Updater::tr("Cannot read update package."); return false; }
     return verifiedFile(path, digest, MaxArchive, error);
 }
 bool verifiedFile(const QString &path, const QString &digest, qint64 limit, QString &error) {
-    if (!QRegularExpression("^sha256:[0-9a-f]{64}$").match(digest).hasMatch()) { error = "Release has no SHA-256 digest."; return false; }
+    if (!QRegularExpression("^sha256:[0-9a-f]{64}$").match(digest).hasMatch()) { error = Updater::tr("Release has no SHA-256 digest."); return false; }
     QFile file(path);
-    if (!file.open(QIODevice::ReadOnly) || file.size() > limit) { error = "Cannot read update package."; return false; }
+    if (!file.open(QIODevice::ReadOnly) || file.size() > limit) { error = Updater::tr("Cannot read update package."); return false; }
     QCryptographicHash hash(QCryptographicHash::Sha256);
-    if (!hash.addData(&file) || hash.result().toHex() != digest.mid(7).toLatin1()) { error = "Update checksum does not match the release."; return false; }
+    if (!hash.addData(&file) || hash.result().toHex() != digest.mid(7).toLatin1()) { error = Updater::tr("Update checksum does not match the release."); return false; }
     return true;
 }
 QString dataDirectory() { return QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/updates"; }

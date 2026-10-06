@@ -89,14 +89,14 @@ Controller::Controller(QObject *parent, QNetworkAccessManager *transport, QStrin
     state_ = readObject(directory_ + "/state.json");
     if (QFile::exists(directory_ + "/state.json") && (state_.isEmpty() || state_["format"].toInt() != 1
         || state_["mode"].toInt(-1) < 0 || state_["mode"].toInt(-1) > 3)) {
-        writable_ = false; message_ = "Update settings could not be read; automatic updates are disabled."; state_ = {};
+        writable_ = false; message_ = tr("Update settings could not be read; automatic updates are disabled."); state_ = {};
     }
     if (state_.isEmpty()) state_ = {{"format", 1}, {"mode", 3}, {"enabled", true}};
     QString cacheError;
     Release cached;
     if (parseRelease(state_["release"].toObject(), pet::platform::updateArchitecture(), cached, cacheError)
         && newer(cached.version, AGENT_PET_VERSION) && state_["skipped"].toString() != cached.version) {
-        release_ = cached; message_ = "Version " + cached.version + " is available.";
+        release_ = cached; message_ = tr("Version %1 is available.").arg(cached.version);
     }
     const auto pending = readObject(directory_ + "/pending.json");
     if (newer(pending["version"].toString(), AGENT_PET_VERSION)) {
@@ -104,19 +104,21 @@ Controller::Controller(QObject *parent, QNetworkAccessManager *transport, QStrin
         if (pending["kind"].toString() != "components") release_.digest = pending["digest"].toString();
         release_.page = QUrl("https://github.com/WindyWin/vpet-agent-pet/releases/tag/v" + release_.version);
         ready_ = pendingReady(directory_, prefix_, pending);
-        if (ready_) message_ = "Update " + release_.version + " is ready to install.";
+        if (ready_) message_ = tr("Update %1 is ready to install.").arg(release_.version);
     }
     QFile result(directory_ + "/result.txt");
     if (result.open(QIODevice::ReadOnly)) message_ = QString::fromUtf8(result.read(4096)) + "\n" + message_;
 }
 bool Controller::save() {
     if (writable_ && writeObject(directory_ + "/state.json", state_)) return true;
-    message_ = "Cannot save update settings. Check permissions and disk space."; emit changed(); return false;
+    message_ = tr("Cannot save update settings. Check permissions and disk space."); emit changed(); return false;
 }
 void Controller::status(QString text) { message_ = std::move(text); emit changed(); }
+bool Controller::waiting() const { return !release_.version.isEmpty() && state_["skipped"].toString() != release_.version; }
 QString Controller::indicator() const {
-    if (release_.version.isEmpty() || state_["skipped"].toString() == release_.version) return "Updates…";
-    return ready_ ? "Update ready — " + release_.version + "…" : "Update available — " + release_.version + "…";
+    if (!waiting()) return tr("Updates…");
+    //: %1 = version
+    return ready_ ? tr("Update ready — %1…").arg(release_.version) : tr("Update available — %1…").arg(release_.version);
 }
 void Controller::start() {
     QTimer::singleShot(15000, this, [this] { check(); autoInstall(); });
@@ -132,7 +134,7 @@ void Controller::check(bool manual) {
     const auto last = state_["attempt"].toInteger();
     if (!manual && (!state_["enabled"].toBool(true) || (last <= now && now - last < 86400))) return;
     state_["attempt"] = now; if (!save()) return;
-    if (manual) status("Checking for updates…");
+    if (manual) status(tr("Checking for updates…"));
     QNetworkRequest request(QUrl("https://api.github.com/repos/WindyWin/vpet-agent-pet/releases/latest"));
     request.setRawHeader("Accept", "application/vnd.github+json");
     request.setRawHeader("User-Agent", "Agent-Pet/" AGENT_PET_VERSION);
@@ -146,7 +148,7 @@ void Controller::check(bool manual) {
     connect(reply, &QNetworkReply::finished, this, [this, reply, bytes, manual] {
         reply_ = nullptr; reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError || reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() != 200) {
-            if (manual) status("Could not check for updates. Try again later."); else emit changed(); return;
+            if (manual) status(tr("Could not check for updates. Try again later.")); else emit changed(); return;
         }
         state_["checked"] = QDateTime::currentSecsSinceEpoch(); save();
         const auto object = QJsonDocument::fromJson(*bytes).object();
@@ -155,12 +157,14 @@ void Controller::check(bool manual) {
             if (manual) status(error); else emit changed(); return;
         }
         state_["release"] = object; save();
-        if (!newer(candidate.version, AGENT_PET_VERSION)) { if (manual) status("You’re up to date."); else emit changed(); return; }
+        if (!newer(candidate.version, AGENT_PET_VERSION)) { if (manual) status(tr("You’re up to date.")); else emit changed(); return; }
         if (!manual && candidate.version == state_["skipped"].toString()) { emit changed(); return; }
         if (manual) { state_.remove("skipped"); save(); }
         if (release_.version != candidate.version) ready_ = false;
         release_ = candidate;
-        status(ready_ ? "Update " + release_.version + " is ready to install." : "Version " + release_.version + " is available." + (release_.digest.isEmpty() ? " Use manual download; this release has no verification digest." : ""));
+        status(ready_ ? tr("Update %1 is ready to install.").arg(release_.version)
+                      : release_.digest.isEmpty() ? tr("Version %1 is available. Use manual download; this release has no verification digest.").arg(release_.version)
+                      : tr("Version %1 is available.").arg(release_.version));
         if (!ready_ && state_["mode"].toInt() > 0 && !prefix_.isEmpty() && !release_.digest.isEmpty()) download();
     });
     emit changed();
@@ -212,15 +216,15 @@ void Controller::finishDownload(const Release &target, bool components) {
     auto pending = target.json();
     if (components) { pending["kind"] = "components"; pending["digest"] = target.componentsDigest; }
     downloading_ = false;
-    if (!writeObject(directory_ + "/pending.json", pending)) { status("Cannot save the pending update."); return; }
-    ready_ = true; status("Update " + target.version + " is ready. The pet will restart and restore running sessions.");
+    if (!writeObject(directory_ + "/pending.json", pending)) { status(tr("Cannot save the pending update.")); return; }
+    ready_ = true; status(tr("Update %1 is ready. The pet will restart and restore running sessions.").arg(target.version));
     autoInstall();
 }
 void Controller::fetch(const Release &target, const QString &path, std::function<void()> complete,
                        std::function<void()> fallback) {
     downloading_ = true;
     auto file = std::make_shared<QSaveFile>(path);
-    if (!file->open(QIODevice::WriteOnly)) { downloading_ = false; status("Cannot save the download. Check free disk space."); return; }
+    if (!file->open(QIODevice::WriteOnly)) { downloading_ = false; status(tr("Cannot save the download. Check free disk space.")); return; }
     QNetworkRequest request(target.download); request.setTransferTimeout(30000);
     request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
     request.setMaximumRedirectsAllowed(5);
@@ -232,7 +236,8 @@ void Controller::fetch(const Release &target, const QString &path, std::function
         if (*received > target.size || file->write(bytes) != bytes.size()) reply->abort();
     });
     connect(reply, &QNetworkReply::downloadProgress, this, [this](qint64 bytes, qint64 total) {
-        status(total > 0 ? QString("Downloading update… %1%").arg(bytes * 100 / total) : "Downloading update…");
+        //: %1 = percent done
+        status(total > 0 ? tr("Downloading update… %1%").arg(bytes * 100 / total) : tr("Downloading update…"));
     });
     connect(reply, &QNetworkReply::finished, this, [this, reply, file, received, target, path, complete, fallback] {
         reply_ = nullptr; reply->deleteLater();
@@ -240,7 +245,7 @@ void Controller::fetch(const Release &target, const QString &path, std::function
             || *received != target.size || !file->commit()) {
             file->cancelWriting();
             if (fallback && reply->error() != QNetworkReply::OperationCanceledError) { fallback(); return; }
-            downloading_ = false; status("Download stopped or failed. You can retry."); return;
+            downloading_ = false; status(tr("Download stopped or failed. You can retry.")); return;
         }
         QString error;
         if (!verifiedArchive(path, target.digest, error)) {
@@ -250,12 +255,12 @@ void Controller::fetch(const Release &target, const QString &path, std::function
         }
         complete();
     });
-    status("Downloading update…");
+    status(tr("Downloading update…"));
 }
 void Controller::install() { installReady(false); }
 void Controller::installReady(bool automatic) {
     if (!ready_ || prefix_.isEmpty() || reply_ || downloading_) return;
-    if (prepareRestart && !prepareRestart()) { status("Could not save running sessions. Free disk space or check permissions, then retry the update."); return; }
+    if (prepareRestart && !prepareRestart()) { status(tr("Could not save running sessions. Free disk space or check permissions, then retry the update.")); return; }
     if (automatic) {
         state_["autoInstalled"] = release_.version;
         if (!save()) { state_.remove("autoInstalled"); return; }
@@ -263,7 +268,7 @@ void Controller::installReady(bool automatic) {
     const auto pending = readObject(directory_ + "/pending.json");
     QStringList args{applyCommand(pending), prefix_, pendingFile(directory_, pending), pending["digest"].toString(), release_.version,
                      QString::number(QCoreApplication::applicationPid())};
-    if (!QProcess::startDetached(helper(prefix_), args)) { status("Could not start the update installer."); return; }
+    if (!QProcess::startDetached(helper(prefix_), args)) { status(tr("Could not start the update installer.")); return; }
     emit restartRequested();
 }
 void Controller::autoInstall() {
@@ -276,32 +281,32 @@ void Controller::autoInstall() {
 void Controller::showSettings(QWidget *parent) {
     if (dialog_) { dialog_->show(); dialog_->raise(); return; }
     auto *dialog = new QDialog(parent); dialog_ = dialog;
-    dialog->setWindowTitle("Agent Pet updates"); dialog->setAttribute(Qt::WA_DeleteOnClose);
+    dialog->setWindowTitle(tr("Agent Pet updates")); dialog->setAttribute(Qt::WA_DeleteOnClose);
     auto *layout = new QVBoxLayout(dialog); layout->addWidget(settings(dialog));
     auto *buttons = new QDialogButtonBox(QDialogButtonBox::Close, dialog);
-    buttons->button(QDialogButtonBox::Close)->setText("Later / Close");
+    buttons->button(QDialogButtonBox::Close)->setText(tr("Later / Close"));
     connect(buttons, &QDialogButtonBox::rejected, dialog, &QDialog::close);
     layout->addWidget(buttons); dialog->resize(460, 500); dialog->show();
 }
 QWidget *Controller::settings(QWidget *parent) {
-    auto *box = new QGroupBox("Updates", parent); auto *layout = new QVBoxLayout(box);
-    auto *version = new QLabel("Installed version: " AGENT_PET_VERSION, box); layout->addWidget(version);
-    auto *enabled = new QCheckBox("Check automatically once a day", box); enabled->setChecked(state_["enabled"].toBool(true)); layout->addWidget(enabled);
-    auto *mode = new QComboBox(box); mode->addItems({"Notify only", "Download automatically", "Install automatically on next launch", "Download and install automatically (restore running sessions)"});
+    auto *box = new QGroupBox(tr("Updates"), parent); auto *layout = new QVBoxLayout(box);
+    auto *version = new QLabel(tr("Installed version: %1").arg(AGENT_PET_VERSION), box); layout->addWidget(version);
+    auto *enabled = new QCheckBox(tr("Check automatically once a day"), box); enabled->setChecked(state_["enabled"].toBool(true)); layout->addWidget(enabled);
+    auto *mode = new QComboBox(box); mode->addItems({tr("Notify only"), tr("Download automatically"), tr("Install automatically on next launch"), tr("Download and install automatically (restore running sessions)")});
     mode->setCurrentIndex(state_["mode"].toInt()); layout->addWidget(mode);
     enabled->setEnabled(writable_); mode->setEnabled(writable_ && !prefix_.isEmpty());
-    if (prefix_.isEmpty()) { auto *hint = new QLabel("This copy supports notifications and manual downloads. Install a release bundle to enable automatic updates.", box); hint->setWordWrap(true); layout->addWidget(hint); }
+    if (prefix_.isEmpty()) { auto *hint = new QLabel(tr("This copy supports notifications and manual downloads. Install a release bundle to enable automatic updates."), box); hint->setWordWrap(true); layout->addWidget(hint); }
     auto *last = new QLabel(box); layout->addWidget(last);
     auto *message = new QLabel(box); message->setWordWrap(true); message->setTextFormat(Qt::PlainText); layout->addWidget(message);
-    auto *checkButton = new QPushButton("Check now", box); layout->addWidget(checkButton);
-    auto *notes = new QPushButton("View release / manual download", box); layout->addWidget(notes);
-    auto *downloadButton = new QPushButton("Download update", box); layout->addWidget(downloadButton);
-    auto *installButton = new QPushButton("Restart and update", box); layout->addWidget(installButton);
-    auto *skip = new QPushButton("Skip this version", box); layout->addWidget(skip);
-    auto *cancelButton = new QPushButton("Cancel download / check", box); layout->addWidget(cancelButton);
+    auto *checkButton = new QPushButton(tr("Check now"), box); layout->addWidget(checkButton);
+    auto *notes = new QPushButton(tr("View release / manual download"), box); layout->addWidget(notes);
+    auto *downloadButton = new QPushButton(tr("Download update"), box); layout->addWidget(downloadButton);
+    auto *installButton = new QPushButton(tr("Restart and update"), box); layout->addWidget(installButton);
+    auto *skip = new QPushButton(tr("Skip this version"), box); layout->addWidget(skip);
+    auto *cancelButton = new QPushButton(tr("Cancel download / check"), box); layout->addWidget(cancelButton);
     const auto refresh = [=] {
         const auto checked = state_["checked"].toInteger();
-        last->setText(checked ? "Last checked: " + QDateTime::fromSecsSinceEpoch(checked).toLocalTime().toString("yyyy-MM-dd hh:mm") : "Not checked yet");
+        last->setText(checked ? tr("Last checked: %1").arg(QDateTime::fromSecsSinceEpoch(checked).toLocalTime().toString("yyyy-MM-dd hh:mm")) : tr("Not checked yet"));
         message->setText(message_); checkButton->setEnabled(!reply_ && !downloading_ && writable_);
         notes->setEnabled(!release_.page.isEmpty());
         downloadButton->setEnabled(!reply_ && !downloading_ && !ready_ && !prefix_.isEmpty() && !release_.digest.isEmpty() && !release_.download.isEmpty());
@@ -320,7 +325,7 @@ QWidget *Controller::settings(QWidget *parent) {
         QFile::remove(directory_ + "/pending.json"); QFile::remove(directory_ + "/package.tar.gz");
         QFile::remove(directory_ + "/components.json");
         pruneComponents(directory_);
-        status("This version will be skipped. Check now to see it again."); });
+        status(tr("This version will be skipped. Check now to see it again.")); });
     return box;
 }
 }

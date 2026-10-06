@@ -1,5 +1,6 @@
 #include "session_list.h"
 #include "alert_bubble.h"
+#include <QEvent>
 #include <QPainter>
 
 namespace pet {
@@ -19,15 +20,24 @@ static QIcon dot(const QColor &color) {
 SessionList::SessionList(QWidget *parent) : QWidget(parent) {
     setWindowFlags(Qt::Popup | Qt::FramelessWindowHint);
     setAttribute(Qt::WA_TranslucentBackground);
-    setAccessibleName("Running agent sessions");
     auto *layout = new QVBoxLayout(this);
     layout->setContentsMargins(10, 8, 10, 8); layout->setSpacing(2);
     header_ = new QLabel(this); header_->setStyleSheet("color:#453324; font-weight:600; padding:0 4px 4px 4px;");
-    empty_ = new QLabel("No sessions yet. A session appears after its next hook event.", this);
+    empty_ = new QLabel(this);
     empty_->setStyleSheet("color:#7a6450; padding:4px;"); empty_->setWordWrap(true); empty_->setFixedWidth(260);
     overflow_ = new QLabel(this); overflow_->setStyleSheet("color:#7a6450; padding:2px 4px;");
     rows_ = new QVBoxLayout; rows_->setSpacing(1);
     layout->addWidget(header_); layout->addWidget(empty_); layout->addLayout(rows_); layout->addWidget(overflow_);
+    retranslate();
+}
+void SessionList::retranslate() {
+    setAccessibleName(tr("Running agent sessions"));
+    empty_->setText(tr("No sessions yet. A session appears after its next hook event."));
+}
+void SessionList::changeEvent(QEvent *event) {
+    // Rows are built by present(); the next one rebuilds them even if no session changed.
+    if (event->type() == QEvent::LanguageChange) { retranslate(); presented_ = false; }
+    QWidget::changeEvent(event);
 }
 void SessionList::present(const QVector<SessionRow> &rows) {
     QString signature;
@@ -35,12 +45,12 @@ void SessionList::present(const QVector<SessionRow> &rows) {
     if (presented_ && signature == shown_) return; // Keep hover and keyboard focus stable.
     shown_ = signature; presented_ = true;
     qDeleteAll(buttons_); buttons_.clear();
-    header_->setText(rows.size() == 1 ? "1 session" : QString("%1 sessions").arg(rows.size()));
+    header_->setText(rows.size() == 1 ? tr("1 session") : tr("%1 sessions").arg(rows.size()));
     empty_->setVisible(rows.isEmpty());
     for (const auto &row : rows.mid(0, maxRows)) {
         auto *button = new QPushButton(dot(stateColor(row.state)), row.name + " — " + row.status + "\n" + row.detail, this);
         button->setFlat(true); button->setCursor(Qt::PointingHandCursor);
-        button->setToolTip(row.tooltip + "\nClick to bring its terminal or editor forward");
+        button->setToolTip(row.tooltip + "\n" + tr("Click to bring its terminal or editor forward"));
         button->setAccessibleName(row.name + ", " + row.status + ", " + row.detail);
         button->setStyleSheet("QPushButton{color:#453324; text-align:left; border:0; border-radius:8px; padding:4px 8px;}"
                               "QPushButton:hover, QPushButton:focus{background:#f3e3c3;}");
@@ -48,7 +58,7 @@ void SessionList::present(const QVector<SessionRow> &rows) {
         connect(button, &QPushButton::clicked, this, [this, key] { hide(); emit focusRequested(key); });
         rows_->addWidget(button); buttons_.append(button);
     }
-    overflow_->setText(QString("and %1 more").arg(rows.size() - maxRows));
+    overflow_->setText(tr("and %1 more").arg(rows.size() - maxRows));
     overflow_->setVisible(rows.size() > maxRows);
     adjustSize();
 }

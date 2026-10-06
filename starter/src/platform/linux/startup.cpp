@@ -1,4 +1,5 @@
 #include "platform/contracts/startup.h"
+#include "i18n/contexts.h"
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
@@ -24,8 +25,8 @@ static QString desktopExec(const QString &executable) {
 bool setLoginStart(bool enabled, const QString &executable, QString *error, const QString &directory) {
     const auto path = loginEntryPath(directory);
     auto fail = [&](const QString &message) { if (error) *error = message; return false; };
-    if (!enabled) return !QFile::exists(path) || QFile::remove(path) || fail("Cannot remove " + path);
-    if (!QDir().mkpath(QFileInfo(path).absolutePath())) return fail("Cannot create " + QFileInfo(path).absolutePath());
+    if (!enabled) return !QFile::exists(path) || QFile::remove(path) || fail(Startup::tr("Cannot remove %1").arg(path));
+    if (!QDir().mkpath(QFileInfo(path).absolutePath())) return fail(Startup::tr("Cannot create %1").arg(QFileInfo(path).absolutePath()));
     QSaveFile file(path);
     if (!file.open(QIODevice::WriteOnly)) return fail(file.errorString());
     const auto bytes = ("[Desktop Entry]\nType=Application\nName=Agent Pet\nComment=Start the Agent Pet desktop companion at login\n"

@@ -1,4 +1,5 @@
 #include "platform/native.h"
+#include "i18n/contexts.h"
 #include "platform/contracts/native_window.h"
 #include "platform/posix/commands.h"
 #include "platform/unsupported/unsupported.h"
@@ -17,7 +18,7 @@ std::unique_ptr<hosts::FocusService> createFocusService() {
     service->addActivation(hosts::tmux::activation(commands, processes));
     service->addActivation(hosts::herdr::activation(commands, processes));
     service->addLocator(hosts::herdr::locator(commands, hosts::herdr::clientSocket(QProcessEnvironment::systemEnvironment(), {})));
-    service->addBackend(std::make_unique<unsupported::Desktop>("macos", "Agent Pet cannot bring windows forward on macOS yet."));
+    service->addBackend(std::make_unique<unsupported::Desktop>("macos", Focus::tr("Agent Pet cannot bring windows forward on macOS yet.")));
     return service;
 }
 std::function<bool()> createScreenLockQuery(QObject *) {

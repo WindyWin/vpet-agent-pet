@@ -22,8 +22,10 @@ public:
 signals:
     void focusRequested(const QString &session);
 protected:
+    void changeEvent(QEvent *) override;
     void paintEvent(QPaintEvent *) override;
 private:
+    void retranslate();
     QVBoxLayout *rows_;
     QLabel *header_, *empty_, *overflow_;
     QVector<QPushButton *> buttons_;
