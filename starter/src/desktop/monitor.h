@@ -57,6 +57,7 @@ private:
     bool calm(qint64 now) const;
     void answered();
     void rest();
+    void dropReminder(); // Hides a shown reminder or countdown without counting it as answered.
     void say(const QString &text, const QString &details = {}, int ms = NoteBubble::defaultMs);
     bool shown(const Alert &alert) const;
     PetWindow &window_;

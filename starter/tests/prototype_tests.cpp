@@ -1367,6 +1367,14 @@ private slots:
         // Even a short lock: back after two minutes, the stretch starts from the first move.
         locked = false; work(1); QCOMPARE(window.wellness().waterActiveMs(t), qint64(30000));
         QVERIFY(!monitor.note().isVisible());
+        // Locking takes away a reminder on screen, and ends a countdown without the cheer.
+        playOut(player); window.setEyeMinutes(20); work(20); QCOMPARE(monitor.reminder(), QString("eyes"));
+        locked = true; monitor.update(t); QCOMPARE(monitor.reminder(), QString()); QVERIFY(!monitor.note().isVisible());
+        playOut(player); locked = false; work(21); QCOMPARE(monitor.reminder(), QString("eyes"));
+        emit monitor.note().clicked(); QCOMPARE(monitor.restLeft(), 20); playOut(player);
+        const auto playing = player.requestedState(); locked = true;
+        QTRY_COMPARE_WITH_TIMEOUT(monitor.restLeft(), 0, 2500);
+        QVERIFY(!monitor.note().isVisible()); QCOMPARE(player.requestedState(), playing);
     }
     void wellnessPreference() {
         QTemporaryDir directory; const auto path = directory.path() + "/preferences.json";

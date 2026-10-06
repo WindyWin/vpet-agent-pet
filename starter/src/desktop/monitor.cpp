@@ -37,7 +37,7 @@ Monitor::Monitor(PetWindow &window, std::shared_ptr<hosts::FocusService> focus)
     connect(&recapTimer_, &QTimer::timeout, this, [this] { recapStore_.save(recap_); });
     connect(&window_, &PetWindow::quitRequested, this, &Monitor::stop);
     connect(&window_, &PetWindow::presenceChanged, this, [this] {
-        if (window_.petHidden()) { list_.hide(); note_.hide(); reminder_.clear(); rest_.stop(); restLeft_ = 0; }
+        if (window_.petHidden()) { list_.hide(); note_.hide(); dropReminder(); }
         refreshAlerts();
     });
 }
@@ -82,8 +82,9 @@ bool Monitor::apply(const Event &event, qint64 now) {
 void Monitor::update(qint64 now) {
     if (!active_) return;
     sessions_.expire(now);
-    // A locked screen is a break: both timers start over, and nothing counts until it is unlocked.
-    if (locked && locked()) window_.wellness().reset();
+    // A locked screen is a break: both timers start over, nothing counts until it is unlocked, and a
+    // reminder or countdown on screen goes away.
+    if (locked && locked()) { window_.wellness().reset(); dropReminder(); }
     else if (pointer) {
         const auto position = pointer();
         if (position != lastPointer_) { lastPointer_ = position; window_.wellness().activity(now); }
@@ -157,7 +158,12 @@ void Monitor::answered() {
     rest();
     rest_.start();
 }
+void Monitor::dropReminder() {
+    if (reminder_.isEmpty() && restLeft_ == 0) return; // The note may be saying something else.
+    note_.hide(); reminder_.clear(); rest_.stop(); restLeft_ = 0;
+}
 void Monitor::rest() {
+    if (locked && locked()) { dropReminder(); return; }
     if (!active_ || window_.petHidden() || --restLeft_ < 0) { rest_.stop(); restLeft_ = 0; return; }
     if (restLeft_ > 0) {
         note_.say(QString("Eyes on something far away… %1").arg(restLeft_), window_.figure(), window_.screenAreas(), {}, 1500);
