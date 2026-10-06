@@ -6,9 +6,9 @@
   "source_commit": "6358445aa54587f9cd524264eaf17ef97bc826a8",
   "source_root": "VPet-Simulator.Windows/mod/0000_core/pet/vup",
   "bundled_catalog": "assets/vpet/animations.json",
-  "missing_sequence_count": 430,
-  "missing_frame_count": 4421,
-  "missing_size_bytes": 620888658,
+  "missing_sequence_count": 428,
+  "missing_frame_count": 4402,
+  "missing_size_bytes": 618796082,
   "sequences": [
     {
       "path": "Default/Happy/2",
@@ -1514,15 +1514,6 @@
       "timing_valid": true
     },
     {
-      "path": "Pinch/PoorCondition/B",
-      "category": "Pinch",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Pinch/PoorCondition/B",
-      "frame_count": 6,
-      "total_duration_ms": 750,
-      "size_bytes": 1020069,
-      "timing_valid": true
-    },
-    {
       "path": "Pinch/PoorCondition/C",
       "category": "Pinch",
       "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Pinch/PoorCondition/C",
@@ -1799,15 +1790,6 @@
       "frame_count": 12,
       "total_duration_ms": 1500,
       "size_bytes": 1138623,
-      "timing_valid": true
-    },
-    {
-      "path": "Shutdown/PoorCondition",
-      "category": "Shutdown",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Shutdown/PoorCondition",
-      "frame_count": 13,
-      "total_duration_ms": 1625,
-      "size_bytes": 1072507,
       "timing_valid": true
     },
     {

@@ -9,7 +9,7 @@ and thinking animations and provides drag, size, on-top, timed click-through,
 recovery and quit controls. CMake/CTest and a relocatable Linux prototype packager
 are available. Copied-package XWayland and filesystem-isolated runtime smoke
 checks pass. Native X11 and manual desktop acceptance remain open; see
-[architecture and evidence](docs/architecture.md) and [build commands](README.md).
+[M1 evidence](docs/adr/0001-desktop-stack.md) and [build commands](README.md).
 Provider payload adapters and integration management are implemented in M4; live acceptance is pending.
 
 M2 implemented 2026-10-04: all 23 bundled sequences and 215 frames now play through
@@ -19,7 +19,7 @@ XWayland drags and returns to the prior state. The decoded cache is bounded at
 recovery, settings, quit and artwork terms are available. Automated frame,
 transition, resource-error and settings tests pass, as do the real XWayland drag
 and isolated package checks. The user visually confirmed the result. See
-[architecture and evidence](docs/architecture.md). Native X11 and native Wayland
+[M2 evidence](docs/adr/0003-catalog-driven-playback.md). Native X11 and native Wayland
 are still untested as full desktop sessions.
 
 M3 implemented 2026-10-04: versioned normalized events, private bounded Unix
@@ -38,14 +38,14 @@ project, provider, short session ID and reason (needs approval/input, tool error
 turn finished), with a pending count and Next/Dismiss. A persistent badge marks
 unresolved requests independently of dismissal. Mute, optional sound and
 integration status/enable/disable live in settings and the context menu.
-Replay, queue and offscreen window tests pass; see [M5 evidence](docs/architecture.md).
+Replay, queue and offscreen window tests pass; see [M5 evidence](docs/adr/0007-alert-presentation.md).
 
 Idle animation, phase 1 of the animation epic ([issue 12](https://github.com/WindyWin/vpet-agent-pet/issues/12)),
 implemented 2026-10-04: weighted idle variants, one-shot fidgets chosen by idle time,
 a rare pool, dozing off after ten quiet minutes, and an Off / Subtle / Lively setting
 (default Subtle). Automated tests pass; pacing still needs a look on a real desktop.
 Mood, touch reactions, easter eggs and walking are later phases of that issue.
-See [the notes](docs/architecture.md#idle-animation).
+See [the notes](docs/adr/0011-idle-animation.md).
 
 Mood, phase 2 of that issue, implemented 2026-10-05: finished turns and tool errors
 move a mood score that picks happy or droopy idle and fidget art and fades back to
@@ -53,7 +53,7 @@ neutral; finished turns are celebrated three ways; a snack reaction after twenty
 turns without a break and a milestone every hundredth turn (count persisted); and an
 Off / Cheerful only / Full setting (default Full). Eat, Drink and Gift need a layered
 renderer and item art the archive lacks, so single-layer stand-ins play instead.
-Automated tests pass; tuning still needs real sessions. See [the notes](docs/architecture.md#mood).
+Automated tests pass; tuning still needs real sessions. See [the notes](docs/adr/0012-mood.md).
 
 Touch reactions, phase 3 of that issue, implemented 2026-10-05: holding the pet still
 for half a second pets its head, body or cheek (a click still opens the session list);
@@ -61,7 +61,7 @@ letting go of a fast drag throws it, so it falls to the bottom of its screen and
 up; letting go past an outer screen edge while idle makes it hide behind that edge
 until activity or a drag brings it out; and a Touch setting (default on). Automated
 tests pass; the feel of the hold, throw and edge thresholds still needs a real
-desktop. See [the notes](docs/architecture.md#touch-reactions).
+desktop. See [the notes](docs/adr/0013-touch-reactions.md).
 
 Easter eggs, phase 4 of that issue, implemented 2026-10-05: a May 20 and a birthday
 greeting (birthday set in settings), extra yawns and a bedtime note late at night, a
@@ -69,7 +69,7 @@ Friday-evening dance for finished turns, a bigger celebration for turns of fifte
 minutes or more, a startled jump when the hook sees a destructive shell command (only a
 flag leaves the hook), the Konami code, and an Easter eggs setting (default on).
 Automated tests pass; the cadence still needs a real desktop. Walking is the last
-phase. See [the notes](docs/architecture.md#easter-eggs).
+phase. See [the notes](docs/adr/0015-easter-eggs.md).
 
 Walking, phase 5 of that issue, implemented 2026-10-05: after four idle minutes the
 pet may walk or crawl along the screen (trotting when happy, trudging when droopy),
@@ -78,7 +78,7 @@ are ambient fidgets whose window travels during their loop; the speeds, room and
 lines are ported from `vup.lps`. Agent activity, a drag or Recover position stops a
 walk, and a Wander setting (default on) turns it off. Native Wayland is excluded
 because the app cannot place its window there. Automated tests pass; pace and
-distances still need a real X11/XWayland desktop. See [the notes](docs/architecture.md#walking).
+distances still need a real X11/XWayland desktop. See [the notes](docs/adr/0016-walking.md).
 
 1. Build a transparent, draggable desktop window and play the bundled `idle` sequence using frame durations from `assets/vpet/animations.json`. Test X11 and XWayland behavior before choosing a Linux package format.
 2. Add an animation controller that can start a sequence, hold its middle loop, play its ending, and return to idle. Keep decoded images in a bounded cache. The JSON state map has separate folders for each A/B/C phase.

@@ -10,6 +10,31 @@ namespace pet::touch {
 constexpr int holdMs = 500;
 // Let go while moving at least this fast (pixels per second) and the pet is thrown and falls.
 constexpr double throwSpeed = 900;
+// A short burst of throws, or one uninterrupted long pet, makes the pet leave.
+class Patience {
+public:
+    static constexpr int throwLimit = 5;
+    static constexpr qint64 throwWindowMs = 30000, petLimitMs = 8000, dragLimitMs = 15000;
+    bool thrown(qint64 now) {
+        while (!throws_.isEmpty() && now - throws_.first() >= throwWindowMs) throws_.removeFirst();
+        throws_.append(now);
+        return throws_.size() >= throwLimit;
+    }
+    bool petting(bool active, qint64 now) {
+        if (!active) { petSince_ = -1; return false; }
+        if (petSince_ < 0) petSince_ = now;
+        return now - petSince_ >= petLimitMs;
+    }
+    bool dragging(bool active, qint64 now) {
+        if (!active) { dragSince_ = -1; return false; }
+        if (dragSince_ < 0) dragSince_ = now;
+        return now - dragSince_ >= dragLimitMs;
+    }
+    void reset() { throws_.clear(); petSince_ = dragSince_ = -1; }
+private:
+    QVector<qint64> throws_;
+    qint64 petSince_ = -1, dragSince_ = -1;
+};
 // Window positions polled during a drag, with milliseconds since the press.
 struct Sample { qint64 ms; QPoint position; };
 // How fast the window was moving when let go: over the last `spanMs` of samples (two or three polls),

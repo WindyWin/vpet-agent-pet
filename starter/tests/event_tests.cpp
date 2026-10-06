@@ -14,6 +14,7 @@
 #include <sys/un.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include "ipc/session_store.h"
 #endif
 
 class EventTests : public QObject {
@@ -23,6 +24,70 @@ class EventTests : public QObject {
         return {"claude", "session", QString::number(seq), kind, "tool", {}, "/project", {}, now + seq};
     }
 private slots:
+    void checkpointRestoresPendingToolsAndDeduplication() {
+        pet::Sessions original;
+        QVERIFY(original.apply(event("prompt", 1), now + 1));
+        QVERIFY(original.apply(event("tool_start", 2), now + 2));
+        auto request = event("attention", 3); request.reason = "approval";
+        QVERIFY(original.apply(request, now + 3));
+        pet::Sessions restored;
+        QVERIFY(restored.restore(original.checkpoint(), now + 4, [](const pet::Session &) { return true; }));
+        QCOMPARE(restored.unresolvedAttention(), 1);
+        QCOMPARE(restored.pending().size(), 1);
+        QCOMPARE(restored.pending().first().reason, QString("approval"));
+        QVERIFY(!restored.apply(request, now + 4));
+        QVERIFY(restored.apply(event("tool_end", 5), now + 5));
+        QCOMPARE(restored.unresolvedAttention(), 0);
+        QCOMPARE(restored.aggregate(now + 5), QString("thinking"));
+        QVERIFY(restored.pending().isEmpty());
+        QVERIFY(restored.apply(event("turn_finished", 6), now + 6));
+        QCOMPARE(restored.records().first().lastTurnMs, qint64(5));
+    }
+    void checkpointFiltersDeadExpiredAndCorruptSessions() {
+        pet::Sessions original, restored;
+        QVERIFY(original.apply(event("attention"), now + 1));
+        QVERIFY(restored.restore(original.checkpoint(), now + 2, [](const pet::Session &) { return false; }));
+        QVERIFY(restored.records().isEmpty()); QVERIFY(restored.pending().isEmpty());
+        QVERIFY(restored.restore(original.checkpoint(), now + pet::Sessions::expiryMs + 1,
+                                  [](const pet::Session &) { return true; }));
+        QVERIFY(restored.records().isEmpty());
+        QVERIFY(!restored.restore(original.checkpoint().chopped(1), now + 2, [](const pet::Session &) { return true; }));
+        QVERIFY(!restored.restore("invalid", now + 2, [](const pet::Session &) { return true; }));
+        QVERIFY(restored.records().isEmpty());
+        original.dismiss("claude" + QString(QChar(0x1f)) + "session", "attention");
+        QVERIFY(restored.restore(original.checkpoint(), now + 2, [](const pet::Session &) { return true; }));
+        QCOMPARE(restored.unresolvedAttention(), 1); QVERIFY(restored.pending().isEmpty());
+    }
+#if defined(PET_TEST_POSIX) && defined(Q_OS_LINUX)
+    void checkpointChecksRealAgentProcess() {
+        QTemporaryDir dir;
+        // Give a harmless child the same executable name as an agent.
+        const auto executable = dir.filePath("claude");
+        QVERIFY(QFile::copy("/bin/sleep", executable));
+        QProcess child; child.start(executable, {"30"}); QVERIFY(child.waitForStarted());
+        auto e = event("attention"); e.host = "terminal"; e.hostPids = QString::number(child.processId());
+        pet::Sessions original, restored;
+        QVERIFY(original.apply(e, now + 1));
+        const auto path = dir.filePath("sessions.json");
+        QVERIFY(pet::saveSessions(path, original));
+        QVERIFY(pet::loadSessions(path, restored, now + 2));
+        QCOMPARE(restored.unresolvedAttention(), 1);
+        QFile file(path); QVERIFY(file.open(QIODevice::ReadOnly));
+        auto object = QJsonDocument::fromJson(file.readAll()).object(); file.close();
+        auto processes = object["processes"].toObject();
+        processes["claude" + QString(QChar(0x1f)) + "session"] = "different-boot-or-start-time";
+        object["processes"] = processes;
+        QVERIFY(file.open(QIODevice::WriteOnly | QIODevice::Truncate));
+        file.write(QJsonDocument(object).toJson()); file.close();
+        QVERIFY(pet::loadSessions(path, restored, now + 2));
+        QVERIFY(restored.records().isEmpty());
+        QVERIFY(pet::saveSessions(path, original));
+        child.terminate(); QVERIFY(child.waitForFinished());
+        QVERIFY(pet::loadSessions(path, restored, now + 3));
+        QVERIFY(restored.records().isEmpty()); QVERIFY(restored.pending().isEmpty());
+        QVERIFY(!pet::saveSessions(dir.path(), original));
+    }
+#endif
     void replay() {
         QFile file(FIXTURE_PATH); QVERIFY(file.open(QIODevice::ReadOnly));
         const auto rows = QJsonDocument::fromJson(file.readAll()).array(); QVERIFY(!rows.isEmpty());

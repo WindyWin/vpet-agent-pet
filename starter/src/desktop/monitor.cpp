@@ -1,4 +1,5 @@
 #include "monitor.h"
+#include "ipc/session_store.h"
 #include "session_playback.h"
 #include <QApplication>
 #include <QCursor>
@@ -53,6 +54,17 @@ void Monitor::listen(std::unique_ptr<Receiver> receiver) {
     receiver->received = [this](const Event &event) { apply(event, QDateTime::currentMSecsSinceEpoch()); };
     receiver_ = std::move(receiver);
 }
+void Monitor::restoreSessions(const QString &path) {
+    sessionPath_ = path;
+    const auto now = QDateTime::currentMSecsSinceEpoch();
+    if (loadSessions(path, sessions_, now)) {
+        observed_ = !sessions_.records().isEmpty();
+        update(now);
+    }
+}
+bool Monitor::checkpointSessions() {
+    return sessionPath_.isEmpty() || saveSessions(sessionPath_, sessions_);
+}
 bool Monitor::apply(const Event &event, qint64 now) {
     if (!active_ || !sessions_.apply(event, now)) return false;
     {
@@ -68,6 +80,7 @@ bool Monitor::apply(const Event &event, qint64 now) {
     else if (event.kind == "error") window_.mood().failed(now);
     // Only a prompt shows the user is there; nothing counts behind a locked screen.
     if (!(locked && locked())) window_.wellness().activity(now, event.kind == "prompt");
+    checkpointSessions();
     observed_ = true; update(now);
     // The hook saw a destructive command start: the pet jumps, then shows the work going on. A session
     // waiting on the user, or a fresh error, matters more.
@@ -227,7 +240,7 @@ void Monitor::refreshAlerts() {
     bubble_.place(window_.figure(), window_.screenAreas());
     if (!bubble_.isVisible()) bubble_.show();
 }
-void Monitor::dismiss() { queue_.dismiss(sessions_); refreshAlerts(); }
+void Monitor::dismiss() { queue_.dismiss(sessions_); checkpointSessions(); refreshAlerts(); }
 void Monitor::toggleSessions() {
     if (!active_) return;
     if (list_.isVisible()) { list_.hide(); return; }
@@ -262,6 +275,7 @@ bool Monitor::focusSession(const QString &key) {
     }
     // Going there answers its bubbles; a pending request keeps the badge until it resolves.
     for (const auto *kind : {"attention", "error", "turn_finished"}) sessions_.dismiss(key, kind);
+    checkpointSessions();
     refreshAlerts();
     return true;
 }
@@ -269,6 +283,7 @@ void Monitor::focusCurrent() {
     if (const auto *alert = queue_.current()) focusSession(QString(alert->session)); // A copy: the queue re-syncs.
 }
 void Monitor::stop() {
+    checkpointSessions();
     active_ = false; timer_.stop(); rest_.stop(); restLeft_ = 0; receiver_.reset(); bubble_.hide(); note_.hide(); list_.hide();
     if (recapTimer_.isActive()) { recapTimer_.stop(); recapStore_.save(recap_); }
 }

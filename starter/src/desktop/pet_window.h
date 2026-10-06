@@ -5,6 +5,7 @@
 #include "animation/mood.h"
 #include "animation/player.h"
 #include "desktop/touch.h"
+#include "desktop/alert_bubble.h"
 #include "desktop/wander.h"
 #include "desktop/wellness.h"
 #include "settings/preferences.h"
@@ -130,6 +131,8 @@ protected:
     void mouseReleaseEvent(QMouseEvent *) override;
     void keyPressEvent(QKeyEvent *) override;
 private:
+    void beginQuit(const QString &remark = {});
+    void playQuitAnimation(const QString &state);
     void endDrag(bool released = false);
     void land();
     void slideTo(QPoint target, touch::Edge hide); // Hides at `hide` on arrival, unless it is None.
@@ -158,7 +161,7 @@ private:
     PreferencesStore store_;
     QMenu menu_;
     QSystemTrayIcon tray_;
-    QTimer recoveryTimer_, dragTimer_, saveTimer_, flightTimer_, walkTimer_;
+    QTimer recoveryTimer_, dragTimer_, saveTimer_, flightTimer_, walkTimer_, quitTimer_;
     QVariantAnimation slide_; // Eases a let-go pet to its hiding place before the hide plays, or a climber on and off its wall.
     QPointer<QDialog> settingsDialog_, previewDialog_;
     QAction *clickAction_ = nullptr, *onTopAction_ = nullptr, *muteAction_ = nullptr, *showAction_ = nullptr;
@@ -175,6 +178,10 @@ private:
     QElapsedTimer pressTimer_, flightClock_, walkClock_;
     QString pressTouch_; // What a held press pets, decided where it landed.
     QVector<touch::Sample> samples_;
+    touch::Patience patience_;
+    QElapsedTimer touchClock_;
+    QString quitState_;
+    NoteBubble quitNote_{this};
     std::optional<touch::Flight> flight_;
     QString walk_; // The move playing, while it carries the window.
     QPointF walkPosition_; // Where the walk has taken the window, kept to fractions of a pixel.

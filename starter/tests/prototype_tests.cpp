@@ -183,7 +183,7 @@ private slots:
         for (const auto &region : touch.regions) touches.insert(region.state);
         QCOMPARE(touches.size(), 7);
         for (const auto &state : touches) QVERIFY2(player.isTouch(state), qPrintable(state));
-        QCOMPARE(player.states().size(), 11 + reactions.size() - 1 + player.fidgets().size() + touches.size());
+        QCOMPARE(player.states().size(), 13 + reactions.size() - 1 + player.fidgets().size() + touches.size());
         QVERIFY(!player.fidgets().isEmpty());
         // Walks in each mood, crawls and climbs up and down both edges: all fidgets that move the window.
         int moves = 0;
@@ -1249,6 +1249,90 @@ private slots:
         window.setTouchEnabled(false);
         QTest::mousePress(&window, Qt::LeftButton, {}, head); QTest::qWait(700);
         QCOMPARE(player.state(), QString("idle")); QTest::mouseRelease(&window, Qt::LeftButton, {}, head);
+    }
+    void touchPatience() {
+        using pet::touch::Patience;
+        Patience patience;
+        for (int i = 0; i < Patience::throwLimit - 1; ++i) QVERIFY(!patience.thrown(i * 100));
+        QVERIFY(patience.thrown(400));
+        patience.reset();
+        for (int i = 0; i < 10; ++i) QVERIFY(!patience.thrown(i * Patience::throwWindowMs));
+        patience.reset();
+        QVERIFY(!patience.petting(true, 100));
+        QVERIFY(!patience.petting(true, 100 + Patience::petLimitMs - 1));
+        QVERIFY(patience.petting(true, 100 + Patience::petLimitMs));
+        QVERIFY(!patience.petting(false, 20000));
+        QVERIFY(!patience.petting(true, 20001));
+        patience.reset();
+        QVERIFY(!patience.petting(true, 50000));
+        QVERIFY(!patience.dragging(true, 50000));
+        QVERIFY(!patience.dragging(true, 50000 + Patience::dragLimitMs - 1));
+        QVERIFY(patience.dragging(true, 50000 + Patience::dragLimitMs));
+        QVERIFY(!patience.dragging(false, 70000));
+        QVERIFY(!patience.dragging(true, 70001));
+        patience.reset();
+        QVERIFY(!patience.dragging(true, 100000));
+    }
+    void angryQuitAfterThrows() {
+        pet::PetWindow window(nullptr, {}, false);
+        pet::Monitor monitor(window);
+        auto &player = window.player();
+        player.setPaused(true);
+        QSignalSpy quitting(&window, &pet::PetWindow::quitRequested);
+        for (int i = 0; i < pet::touch::Patience::throwLimit; ++i) {
+            player.beginDrag();
+            window.letGo({1200, 0});
+            QCOMPARE(window.quitting(), i == pet::touch::Patience::throwLimit - 1);
+        }
+        QCOMPARE(quitting.size(), 1);
+        QVERIFY(!monitor.active());
+        QVERIFY(!window.flying()); QVERIFY(!player.held());
+        QCOMPARE(player.state(), QString("angry"));
+        auto *note = window.findChild<pet::NoteBubble*>(); QVERIFY(note); QVERIFY(note->isVisible());
+        QCOMPARE(note->text(), QString("Stop throwing me! I'm leaving!"));
+        window.recover(); window.letGo({1200, 0});
+        QCOMPARE(player.state(), QString("angry"));
+        finishSequence(player);
+        QCOMPARE(player.state(), QString("angry")); // The complaint stays readable before departure.
+        QTRY_COMPARE_WITH_TIMEOUT(player.state(), QString("closing_angry"), 3000);
+        QCOMPARE(player.sequence(), QString("Shutdown/PoorCondition"));
+        finishSequence(player); QVERIFY(player.stopped());
+        // Ordinary quit keeps its original animation, and disabled touch never counts throws.
+        pet::PetWindow normal(nullptr, {}, false);
+        normal.setTouchEnabled(false);
+        for (int i = 0; i < 10; ++i) normal.letGo({1200, 0});
+        QVERIFY(!normal.quitting());
+        normal.requestQuit();
+        QVERIFY(!normal.findChild<pet::NoteBubble*>()->isVisible());
+        QCOMPARE(normal.player().state(), QString("closing"));
+        QCOMPARE(normal.player().sequence(), QString("Shutdown/Nomal_1"));
+    }
+    void angryQuitAfterLongHold_data() {
+        QTest::addColumn<bool>("drag");
+        QTest::newRow("pet-for-eight-seconds") << false;
+        QTest::newRow("drag-for-fifteen-seconds") << true;
+    }
+    void angryQuitAfterLongHold() {
+        QFETCH(bool, drag);
+        pet::PetWindow window(nullptr, {}, false); window.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&window));
+        auto &player = window.player(); player.setPaused(true); playOut(player);
+        QSignalSpy quitting(&window, &pet::PetWindow::quitRequested);
+        const QPoint head(window.width() / 2, window.width() * 80 / 500);
+        QTest::mousePress(&window, Qt::LeftButton, {}, head);
+        if (drag) QTest::mouseMove(&window, head + QPoint(30, 0));
+        QTRY_COMPARE_WITH_TIMEOUT(player.state(), drag ? QString("dragging") : QString("touch_head"), 2000);
+        const auto limit = drag ? pet::touch::Patience::dragLimitMs : pet::touch::Patience::petLimitMs;
+        QElapsedTimer elapsed; elapsed.start();
+        QTRY_VERIFY_WITH_TIMEOUT(window.quitting(), limit + 1000);
+        QVERIFY(elapsed.elapsed() >= limit - 150); // Dragging must not use the shorter petting deadline.
+        QCOMPARE(player.state(), QString("angry"));
+        auto *note = window.findChild<pet::NoteBubble*>(); QVERIFY(note); QVERIFY(note->isVisible());
+        QCOMPARE(note->text(), drag ? QString("Put me down! I'm leaving!")
+                                   : QString("Too much petting! I need a break. Bye!"));
+        QCOMPARE(quitting.size(), 1); QVERIFY(!player.held());
+        QTest::mouseRelease(&window, Qt::LeftButton, {}, head);
+        QCOMPARE(player.state(), QString("angry"));
     }
     void touchPreference() {
         QTemporaryDir directory; const auto path = directory.path() + "/preferences.json";

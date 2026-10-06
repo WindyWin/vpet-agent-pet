@@ -1,9 +1,54 @@
 #include "state.h"
 #include <QJsonDocument>
+#include <QDataStream>
 #include <cmath>
 #include <algorithm>
 
 namespace pet {
+// A versioned private checkpoint preserves in-flight tools, dismissed alerts and event deduplication.
+QByteArray Sessions::checkpoint() const {
+    QByteArray data;
+    QDataStream out(&data, QIODevice::WriteOnly); out.setVersion(QDataStream::Qt_6_5);
+    out << quint32(1) << quint32(sessions_.size());
+    for (const auto &s : sessions_) {
+        out << s.provider << s.id << s.parent << s.project << s.state << s.resume << s.reason
+            << s.attentionTools << s.interrupted << s.host.adapter << s.host.pids
+            << s.host.window.backend << s.host.window.id << s.host.target << s.tools
+            << s.timestamp << s.seen << s.reactionUntil << s.activityUntil << s.turnStarted << s.lastTurnMs;
+    }
+    out << ended_ << events_ << serial_ << quint32(alerts_.size());
+    for (const auto &a : alerts_)
+        out << a.session << a.kind << a.project << a.provider << a.id << a.reason << a.created << a.count << a.serial << a.expires;
+    return data;
+}
+bool Sessions::restore(const QByteArray &data, qint64 now, const std::function<bool(const Session &)> &running) {
+    if (data.size() > 8 * 1024 * 1024 || !running) return false;
+    QDataStream in(data); in.setVersion(QDataStream::Qt_6_5);
+    quint32 version = 0, count = 0; in >> version >> count;
+    if (version != 1 || count > maxSessions) return false;
+    Sessions restored;
+    for (quint32 i = 0; i < count; ++i) {
+        Session s;
+        in >> s.provider >> s.id >> s.parent >> s.project >> s.state >> s.resume >> s.reason
+           >> s.attentionTools >> s.interrupted >> s.host.adapter >> s.host.pids
+           >> s.host.window.backend >> s.host.window.id >> s.host.target >> s.tools
+           >> s.timestamp >> s.seen >> s.reactionUntil >> s.activityUntil >> s.turnStarted >> s.lastTurnMs;
+        if (in.status() != QDataStream::Ok || s.tools.size() > maxTools || s.attentionTools.size() > maxTools) return false;
+        if (s.seen <= now && now - s.seen < expiryMs && running(s))
+            restored.sessions_.insert(s.provider + QChar(0x1f) + s.id, s);
+    }
+    in >> restored.ended_ >> restored.events_ >> restored.serial_ >> count;
+    if (count > maxAlerts || restored.ended_.size() > maxSessions || restored.events_.size() > maxEvents) return false;
+    for (quint32 i = 0; i < count; ++i) {
+        Alert a;
+        in >> a.session >> a.kind >> a.project >> a.provider >> a.id >> a.reason >> a.created >> a.count >> a.serial >> a.expires;
+        if (restored.sessions_.contains(a.session)) restored.alerts_.append(a);
+    }
+    if (in.status() != QDataStream::Ok || !in.atEnd()) return false;
+    restored.expire(now);
+    *this = std::move(restored);
+    return true;
+}
 bool Event::parse(const QByteArray &data, Event &e, QString &error, const hosts::Registry &hosts) {
     if (data.size() > 8192) { error = "Event exceeds 8192 bytes"; return false; }
     const auto doc = QJsonDocument::fromJson(data);

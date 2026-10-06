@@ -1,6 +1,7 @@
 #pragma once
 #include "hosts/registry.h"
 #include <QJsonObject>
+#include <functional>
 #include <QMap>
 #include <QSet>
 #include <QString>
@@ -48,6 +49,8 @@ public:
     // Tool calls are often shorter than an animation phase; the last activity is
     // held this long after its tool ends so back-to-back tools read as one stretch.
     static constexpr qint64 activityHoldMs = 4000;
+    QByteArray checkpoint() const;
+    bool restore(const QByteArray &data, qint64 now, const std::function<bool(const Session &)> &running);
     bool apply(const Event &event, qint64 now);
     void expire(qint64 now);
     QString aggregate(qint64 now) const;

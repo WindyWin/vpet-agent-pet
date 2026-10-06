@@ -14,7 +14,7 @@ python3 scripts/verify_assets.py
 git init
 ```
 
-The asset verifier uses only Python's standard library and works from any current directory. M3 local events and session tracking are implemented alongside the M2 animation and desktop controls. M4 provider adapters and integration setup are implemented; live-client acceptance remains open. M5 alerts and minimal settings are implemented. M6 adds the release package, installer and CI. See [PLAN.md](PLAN.md) and the [architecture and validation record](docs/architecture.md).
+The asset verifier uses only Python's standard library and works from any current directory. M3 local events and session tracking are implemented alongside the M2 animation and desktop controls. M4 provider adapters and integration setup are implemented; live-client acceptance remains open. M5 alerts and minimal settings are implemented. M6 adds the release package, installer and CI. See [PLAN.md](PLAN.md) and the [architecture overview](docs/architecture.md) and [decision records](docs/adr/README.md).
 
 ## Build and run
 
@@ -54,7 +54,7 @@ ctest --test-dir build --output-on-failure
 Releases add `-DCMAKE_OSX_ARCHITECTURES="arm64;x86_64" -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0`
 for one universal app. On macOS, **Open** selects tmux and herdr panes but cannot
 bring windows forward yet, and updates are announced but installed by hand; see
-[macOS](docs/install.md#macos) and the [design notes](docs/architecture.md#macos).
+[macOS](docs/install.md#macos) and the [design notes](docs/adr/0020-macos-port.md).
 
 Left-drag to move; the original Raise animation plays while dragging and returns
 to the prior state on release. Right-click for the running sessions, today's recap,
@@ -89,7 +89,7 @@ After ten quiet minutes the pet dozes off, and wakes through its usual end-of-sl
 animation. Any agent activity, error, alert or drag replaces a fidget at once, and a
 hidden pet does nothing. Preview any fidget from the right-click menu → More → Preview state
 (`fidget_*`). The catalog sections behind this are described in
-[the architecture notes](docs/architecture.md#idle-animation).
+[the design record](docs/adr/0011-idle-animation.md).
 
 ## Active animation
 
@@ -101,7 +101,7 @@ book and pen without getting up) or **Playful** (the default: variations every 6
 seconds, pen spinning, and now and then a small happy reaction when it gets to work).
 It is independent of Idle animation. Requests, errors, finished turns, pausing and
 dragging always take over at once. See
-[the architecture notes](docs/architecture.md#active-animation).
+[the design record](docs/adr/0021-active-animation.md).
 
 ## Mood
 
@@ -113,7 +113,7 @@ turns without a half-hour break) its tummy rumbles or it looks thirsty, a hint t
 a break, and every hundredth finished turn gets a bigger celebration. Settings →
 **Mood** chooses **Off** (always neutral), **Cheerful only** (never droopy) or **Full**
 (the default). Preview the reactions from Preview state (`cheer_*`, `snack_*`,
-`milestone`); see [the architecture notes](docs/architecture.md#mood).
+`milestone`); see [the design record](docs/adr/0012-mood.md).
 
 ## Touch
 
@@ -126,7 +126,14 @@ right edge of your screen while it idles and it hides there, peeking out from be
 the edge. Agent activity brings it back out, and so does dragging it away. Settings →
 **Touch** turns all of this off, leaving plain dragging. Preview the reactions from
 Preview state (`touch_*`, `pinch`, `fall_*`, `edge_*`); see
-[the architecture notes](docs/architecture.md#touch-reactions).
+[the design record](docs/adr/0013-touch-reactions.md).
+
+Throw it five times within 30 seconds, pet it continuously for 8 seconds, or drag and
+hold it for 15 seconds, and it gets angry and quits. It stops accepting interactions,
+shows a speech bubble explaining why, plays `angry`, pauses briefly so you can read it,
+then plays `closing_angry` (a jump and disappearance) before exiting. Normal Quit keeps
+its usual animation. Releasing the pet resets the hold timers; throws expire after 30 seconds.
+Turning Touch off clears both counters and disables this reaction.
 
 ## Easter eggs
 
@@ -143,7 +150,7 @@ such as `rm -rf` or `git push --force`, the pet jumps; the hook judges the comma
 itself and sends only that verdict. There is at least one more to find. Settings →
 **Easter eggs** turns them all off. The special-day fidgets need idle animation on.
 Preview them from Preview state (`love_520`, `birthday`, `dance`, `startled`); see
-[the architecture notes](docs/architecture.md#easter-eggs).
+[the design record](docs/adr/0015-easter-eggs.md).
 
 ## Wellness reminders
 
@@ -159,7 +166,7 @@ over. Reminders wait until you have moved the pointer in the last minute, and wh
 an alert bubble shows, an agent waits on you or alerts are muted. They skip quiet hours (10 PM to 6 AM, which have the bedtime
 note). Settings → **Reminders** sets the eye break (off, 20, 30 or 45 minutes) and
 water (off, 45, 60 or 90 minutes); both are on by default. See
-[the architecture notes](docs/architecture.md#wellness-reminders).
+[the design record](docs/adr/0019-wellness-reminders.md).
 
 ## Daily recap
 
@@ -169,7 +176,7 @@ Click the bubble for turns per project, errors, approvals with the longest wait,
 the longest run. On weekdays the 4:45 PM go-home reminder includes the summary too;
 Settings → **Recap** turns that off. The counters are kept for two weeks in
 `recap.json` next to the preferences: counts and project folder names only, never
-prompts, commands or paths. See [the architecture notes](docs/architecture.md#daily-recap).
+prompts, commands or paths. See [the design record](docs/adr/0018-daily-recap.md).
 
 ## Wandering
 
@@ -182,7 +189,7 @@ screen. Settings → **Wander** turns it off, so the pet stays where you put it;
 animation Off keeps it still too. Native Wayland does not let an application move its
 own window, so there the pet stays put. Preview the moves from Preview state
 (`walk_*`, `trot_*`, `trudge_*`, `crawl_*`, `climb_*`); see
-[the architecture notes](docs/architecture.md#walking).
+[the design record](docs/adr/0016-walking.md).
 
 The default uses X11/XWayland when DISPLAY is available. For a development-only
 native Wayland check: `QT_QPA_PLATFORM=wayland ./build/agent-pet`.
@@ -319,7 +326,7 @@ HOME, enables both integrations next to an unrelated hook, upgrades in place and
 uninstalls, checking that settings survive upgrades and only Agent Pet's hook
 entries are removed. The smoke test verifies idle/thinking, control changes and
 15-second recovery, then plays shutdown; it does not replace the desktop
-interaction checklist in [architecture.md](docs/architecture.md).
+interaction checklist in [ADR 0008](docs/adr/0008-window-behavior.md#manual-acceptance-checklist).
 The XWayland drag test runs separately because it moves the real pointer:
 
 ```bash

@@ -2,6 +2,7 @@
 #include "updates/installer.h"
 #include "updates/controller.h"
 #include "updates/components.h"
+#include "sessions/state.h"
 #include <QTest>
 #include <QSignalSpy>
 #include <memory>
@@ -282,26 +283,50 @@ private slots:
         QVERIFY(!QFile::exists(dir.filePath("pending.json")));
         QVERIFY(!QFile::exists(dir.filePath("package.tar.gz")));
     }
-    void automaticDownloadAndSessionGuard() {
+    void automaticDownloadAndCheckpointFailure() {
         QTemporaryDir dir; Network network;
         write(dir.filePath("state.json"), QJsonDocument(QJsonObject{{"format", 1}, {"mode", 1}, {"enabled", true}}).toJson());
         Controller controller(nullptr, &network, "/managed", dir.path()); controller.check(true);
         QTRY_VERIFY(QFile::exists(dir.filePath("pending.json"))); QCOMPARE(network.requests, 2);
-        QSignalSpy restart(&controller, &Controller::restartRequested); controller.sessionsActive = [] { return true; };
+        QSignalSpy restart(&controller, &Controller::restartRequested); controller.prepareRestart = [] { return false; };
         controller.install(); QCOMPARE(restart.size(), 0);
         QVERIFY(controller.indicator().contains("ready"));
     }
-    void fullyAutomaticWaitsForIdleSessions() {
+    void automaticRestartPreservesPendingRequest() {
+        QTemporaryDir dir; Network network;
+        const auto prefix = dir.filePath("install");
+        QVERIFY(QDir().mkpath(prefix + "/bin"));
+        const auto helper = prefix + "/bin/agent-pet-updater";
+        write(helper, "#!/bin/sh\nexit 0\n");
+        QVERIFY(QFile::setPermissions(helper, QFileDevice::ReadOwner | QFileDevice::WriteOwner | QFileDevice::ExeOwner));
+        write(dir.filePath("state.json"), QJsonDocument(QJsonObject{{"format", 1}, {"mode", 3}, {"enabled", true}}).toJson());
+        Controller controller(nullptr, &network, prefix, dir.path());
+        pet::Sessions sessions;
+        const auto now = QDateTime::currentMSecsSinceEpoch();
+        pet::Event request{"claude", "session", "approval", "attention"}; request.timestamp = now;
+        QVERIFY(sessions.apply(request, now));
+        QByteArray checkpoint;
+        controller.prepareRestart = [&] { checkpoint = sessions.checkpoint(); return true; };
+        QSignalSpy restart(&controller, &Controller::restartRequested);
+        controller.check(true);
+        QTRY_COMPARE(restart.size(), 1);
+        pet::Sessions restored;
+        QVERIFY(restored.restore(checkpoint, now + 1000, [](const pet::Session &) { return true; }));
+        QCOMPARE(restored.unresolvedAttention(), 1);
+        QCOMPARE(restored.pending().size(), 1);
+        controller.autoInstall(); QCOMPARE(restart.size(), 1);
+    }
+    void fullyAutomaticRequiresCheckpoint() {
         QTemporaryDir dir; Network network;
         write(dir.filePath("state.json"), QJsonDocument(QJsonObject{{"format", 1}, {"mode", 3}, {"enabled", true}}).toJson());
         Controller controller(nullptr, &network, "/managed", dir.path());
-        bool busy = true; controller.sessionsActive = [&busy] { return busy; };
+        bool saved = false; controller.prepareRestart = [&saved] { return saved; };
         controller.check(true);
         QTRY_VERIFY(QFile::exists(dir.filePath("pending.json")));
-        // Active sessions must never be interrupted by an automatic restart.
+        // A failed checkpoint must prevent a restart.
         QTest::qWait(50); QVERIFY(!readState(dir).contains("autoInstalled"));
-        // Once idle, the install is attempted exactly once per version.
-        busy = false; controller.autoInstall();
+        // Once saved, the install is attempted exactly once per version.
+        saved = true; controller.autoInstall();
         QCOMPARE(readState(dir)["autoInstalled"].toString(), QString("99.1.0"));
     }
 };

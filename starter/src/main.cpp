@@ -109,9 +109,8 @@ int main(int argc, char **argv) {
         std::unique_ptr<pet::updates::Controller> updates;
         if (!parser.isSet("smoke-test") && !parser.isSet("no-persist")) {
             updates = std::make_unique<pet::updates::Controller>();
-            // Only a pending approval or input request is lost by a restart; working and idle
-            // sessions reappear with their next hook event.
-            updates->sessionsActive = [&monitor] { return monitor.sessions().unresolvedAttention() > 0; };
+            monitor.restoreSessions(pet::updates::dataDirectory() + "/sessions.json");
+            updates->prepareRestart = [&monitor] { return monitor.checkpointSessions(); };
             window.setUpdates(updates.get());
             QObject::connect(updates.get(), &pet::updates::Controller::restartRequested, &window, &pet::PetWindow::requestQuit);
             updates->start();

@@ -1,11 +1,11 @@
 # Platform and session focus refactor plan
 
 Status, 2026-10-06: steps 1–5 are implemented. See
-[session focus](architecture.md#session-focus) for steps 1–3 and
+[session focus](adr/0017-session-focus.md) for steps 1–3 and
 [platform services and build registration](../src/platform/README.md) for steps
 4–5. The portable-core profile excludes native services and the application.
 The refactor does not expand the supported platforms; the macOS build was later
-added on top of these seams (see [macOS](architecture.md#macos)).
+added on top of these seams (see [macOS](adr/0020-macos-port.md)).
 
 Prepare extension points for other operating systems, Linux desktop environments,
 and applications hosting agent sessions. Move the existing implementations behind
