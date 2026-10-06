@@ -114,6 +114,7 @@ private slots:
             QCOMPARE(restarted.aggregate(stamp), "thinking");
         }
     }
+#ifdef PET_TEST_LINUX
     void configurationPreservation() {
         for (const auto &provider : {QString("claude"), QString("codex")}) {
             const QString executable = "/tmp/Pet's folder/$(do-not-run)`x`/agent-pet";
@@ -135,6 +136,8 @@ private slots:
             QVERIFY(!pet::mergeIntegration(QJsonObject{{"hooks", "bad"}}, provider, executable, true, again, owned, error));
         }
     }
+#endif
+#ifdef PET_TEST_LINUX
     void commandAndTransport() {
         QTemporaryDir temp; QVERIFY(temp.isValid());
         const auto previous = qgetenv("XDG_RUNTIME_DIR"); qputenv("XDG_RUNTIME_DIR", temp.path().toUtf8());
@@ -179,6 +182,7 @@ private slots:
         QTRY_COMPARE(received.size(), 3);
         if (previous.isNull()) qunsetenv("XDG_RUNTIME_DIR"); else qputenv("XDG_RUNTIME_DIR", previous);
     }
+#endif
 };
 QTEST_GUILESS_MAIN(ProviderTests)
 #include "provider_tests.moc"

@@ -1,3 +1,4 @@
+#include "platform/contracts/update_layout.h"
 #include "controller.h"
 #include "components.h"
 #include "version.h"
@@ -20,7 +21,6 @@
 #include <QPushButton>
 #include <QSaveFile>
 #include <QStandardPaths>
-#include <QSysInfo>
 #include <QTimer>
 #include <QVBoxLayout>
 #include <QRegularExpression>
@@ -41,7 +41,7 @@ static QString applyCommand(const QJsonObject &pending) {
     return pending["kind"].toString() == "components" ? "--apply-components" : "--apply";
 }
 static void pruneComponents(const QString &directory, const QStringList &keep = {}) {
-    const QStringList patterns{"agent-pet-*-linux-*-app.tar.gz", "agent-pet-*-linux-*-runtime.tar.gz", "agent-pet-*-linux-*-artwork.tar.gz"};
+    const auto patterns = platform::obsoleteComponentPatterns();
     for (const auto &name : QDir(directory).entryList(patterns, QDir::Files))
         if (!keep.contains(name)) QFile::remove(directory + '/' + name);
 }
@@ -51,10 +51,10 @@ static bool pendingReady(const QString &directory, const QString &prefix, const 
         return verifiedArchive(pendingFile(directory, pending), pending["digest"].toString(), error);
     Components components;
     return readComponents(pendingFile(directory, pending), pending["digest"].toString(),
-                          pending["version"].toString(), QSysInfo::buildCpuArchitecture(), components, error)
+                          pending["version"].toString(), pet::platform::updateArchitecture(), components, error)
         && componentsAvailable(components, prefix, directory);
 }
-static QString helper(const QString &prefix) { return prefix + "/bin/agent-pet-updater"; }
+static QString helper(const QString &prefix) { return prefix + '/' + pet::platform::updaterRelativePath(); }
 bool prepareStartup(const QStringList &args) {
     if (args.contains("--smoke-test") || args.contains("--no-persist")) return false;
     const QString prefix = installedPrefix(); if (prefix.isEmpty()) return false;
@@ -71,7 +71,7 @@ bool prepareStartup(const QStringList &args) {
     lock.unlock();
     if (QFile::exists(journal)) {
         if (QProcess::execute(helper(prefix), {"--recover", prefix}) != 0) return true;
-        QProcess::startDetached(prefix + "/bin/agent-pet", args.mid(1)); return true;
+        QProcess::startDetached(prefix + '/' + pet::platform::applicationRelativePath(), args.mid(1)); return true;
     }
     const auto state = readObject(dataDirectory() + "/state.json");
     const auto pending = readObject(dataDirectory() + "/pending.json");
@@ -94,7 +94,7 @@ Controller::Controller(QObject *parent, QNetworkAccessManager *transport, QStrin
     if (state_.isEmpty()) state_ = {{"format", 1}, {"mode", 3}, {"enabled", true}};
     QString cacheError;
     Release cached;
-    if (parseRelease(state_["release"].toObject(), QSysInfo::buildCpuArchitecture(), cached, cacheError)
+    if (parseRelease(state_["release"].toObject(), pet::platform::updateArchitecture(), cached, cacheError)
         && newer(cached.version, AGENT_PET_VERSION) && state_["skipped"].toString() != cached.version) {
         release_ = cached; message_ = "Version " + cached.version + " is available.";
     }
@@ -151,7 +151,7 @@ void Controller::check(bool manual) {
         state_["checked"] = QDateTime::currentSecsSinceEpoch(); save();
         const auto object = QJsonDocument::fromJson(*bytes).object();
         Release candidate; QString error;
-        if (!parseRelease(object, QSysInfo::buildCpuArchitecture(), candidate, error)) {
+        if (!parseRelease(object, pet::platform::updateArchitecture(), candidate, error)) {
             if (manual) status(error); else emit changed(); return;
         }
         state_["release"] = object; save();
@@ -176,7 +176,7 @@ void Controller::download() {
         fetch(manifest, directory_ + "/components.json", [this, target] {
             Components components; QString error;
             if (!readComponents(directory_ + "/components.json", target.componentsDigest, target.version,
-                                QSysInfo::buildCpuArchitecture(), components, error)) {
+                                pet::platform::updateArchitecture(), components, error)) {
                 downloadFull(target); return;
             }
             QStringList keep;

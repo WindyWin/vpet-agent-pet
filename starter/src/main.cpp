@@ -7,6 +7,7 @@
 #include "ipc/local.h"
 #include "platform/desktop/screensaver/screen_lock.h"
 #include "platform/native.h"
+#include "platform/headless.h"
 #include "providers/integrations.h"
 #include "version.h"
 #include <QApplication>
@@ -62,9 +63,7 @@ int main(int argc, char **argv) {
         QCoreApplication startup(argc, argv); startup.setApplicationName("agent-pet");
         if (pet::updates::prepareStartup(startup.arguments())) return 0;
     }
-    // XWayland is the prototype default; native Wayland is opt-in for testing.
-    if (qEnvironmentVariableIsEmpty("QT_QPA_PLATFORM") && !qEnvironmentVariableIsEmpty("DISPLAY"))
-        qputenv("QT_QPA_PLATFORM", "xcb");
+    pet::platform::bootstrapGui();
     QApplication app(argc, argv);
     app.setQuitOnLastWindowClosed(false);
     app.setApplicationName("agent-pet");

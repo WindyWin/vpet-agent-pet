@@ -53,6 +53,14 @@ jobs:
           key: linux-qt6.5.3
           max-size: 500M
 
+      - name: Build and test portable core
+        run: |
+          cmake -S . -B build-core -G Ninja -DAGENT_PET_PORTABLE_CORE=ON -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_DISABLE_FIND_PACKAGE_X11=TRUE -DCMAKE_DISABLE_FIND_PACKAGE_LibArchive=TRUE \
+            -DCMAKE_DISABLE_FIND_PACKAGE_Qt6Widgets=TRUE -DCMAKE_DISABLE_FIND_PACKAGE_Qt6Network=TRUE
+          cmake --build build-core
+          ctest --test-dir build-core --output-on-failure
+
       - name: Build
         run: |
           cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_LIBDIR=lib \

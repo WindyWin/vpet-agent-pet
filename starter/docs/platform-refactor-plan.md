@@ -1,9 +1,10 @@
 # Platform and session focus refactor plan
 
-Status, 2026-10-05: steps 1–3 below are implemented (characterization tests, host
-registry, focus service with adapters and X11/KWin backends); see
-[session focus](architecture.md#session-focus) for the result. Steps 4 and 5 remain
-proposed. The refactor does not expand the supported platforms.
+Status, 2026-10-06: steps 1–5 are implemented. See
+[session focus](architecture.md#session-focus) for steps 1–3 and
+[platform services and build registration](../src/platform/README.md) for steps
+4–5. The portable-core profile excludes native services and the application.
+The refactor does not expand the supported platforms.
 
 Prepare extension points for other operating systems, Linux desktop environments,
 and applications hosting agent sessions. Move the existing implementations behind
@@ -14,7 +15,7 @@ Windows, macOS, additional compositors, and new application integrations are fut
 work. “Plug in” means adding a compiled adapter and registering it; a dynamic
 plugin loader, binary ABI, and external plugin SDK are unnecessary for this scope.
 
-## Current coupling
+## Original coupling (before extraction)
 
 | Location | Responsibility to separate |
 | --- | --- |
@@ -62,7 +63,7 @@ flowchart LR
     Desktop --> Native[Existing X11 / KWin implementations]
 ```
 
-Proposed organization, with files split only as their existing code is moved:
+Organization guiding extraction (actual files and targets are listed in the platform README):
 
 ```text
 src/
@@ -268,3 +269,31 @@ Acceptance evidence:
   logic or Qt presentation.
 - Supported platforms remain unchanged. Additional OS and application support
   is delivered and validated in later work.
+
+## Phase 4–5 verification (2026-10-06)
+
+Local validation used Linux x86_64, GCC 16.2.1 and Qt 6.11.2:
+
+- Full application and updater built; all eight CTest suites passed, including
+  the added fake transport parsing and registered-host event/session tests.
+- Portable-core built; all four suites passed. The test executables link only
+  Qt Core/Test and portable project libraries. Configuration also succeeds with
+  X11, libarchive, Widgets and Network discovery disabled. System Qt Gui itself
+  has a D-Bus dependency on this machine; no project core code uses it.
+- An unsupported full-app target fails with the explicit Linux-only diagnostic.
+- Linux packaging and the bubblewrap-isolated package check passed, including
+  offscreen playback, HTTPS runtime and display-free hook/integration commands.
+- Package install, upgrade, hook autostart and uninstall passed in temporary
+  directories, including paths with spaces and interactive plain prompts.
+- KWin Wayland focus passed in a private virtual compositor: the target was
+  restored/activated, the backend reported `Confirmed`, and a missing target
+  failed as expected.
+- The XWayland drag check failed its movement assertion in that virtual session.
+  The original checkout's existing build failed the same assertion under the
+  same setup; this comparison did not identify a refactor regression. Drag still
+  needs verification in a desktop session that supports the test's synthetic input.
+- CI now includes the portable-core profile; its Qt 6.5.3 run is pending.
+
+Socket/namespace tests need permission outside a sandbox that denies those
+operations. The initial sandbox IPC failures were environmental; the full Linux
+suite and isolated package check passed with those permissions.

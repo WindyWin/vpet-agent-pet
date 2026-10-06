@@ -1,7 +1,3 @@
 #pragma once
-#include <QString>
-namespace pet::updates {
-bool extractArchive(const QString &archive, const QString &destination, QString &error);
-bool exchangeDirectories(const QString &first, const QString &second, QString &error);
-bool recoverInstallation(const QString &prefix, QString &error);
-}
+// Compatibility include; installation mechanics belong to the selected platform.
+#include "platform/contracts/update_install.h"

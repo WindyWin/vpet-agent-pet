@@ -1,5 +1,6 @@
 #include "integrations.h"
 #include "adapters.h"
+#include "platform/contracts/hook_command.h"
 #include <QCoreApplication>
 #include <QDir>
 #include <QFile>
@@ -13,18 +14,6 @@
 #include <cstdio>
 
 namespace pet {
-QString hookCommand(const QString &executable, const QString &provider) {
-    auto escaped = executable;
-    escaped.replace("'", "'\\''");
-    return "'" + escaped + "' hook --provider " + provider + " --registration agent-pet-v1";
-}
-static bool ownedHandler(const QJsonObject &handler, const QString &provider) {
-    // Match our entire shell command grammar, not an executable basename or a
-    // substring that could accidentally claim someone else's hook.
-    static const QRegularExpression command(R"(^'(?:[^']|'\\'')*' hook --provider (claude|codex) --registration agent-pet-v1$)");
-    const auto match = command.match(handler.value("command").toString());
-    return handler.value("type").toString() == "command" && match.hasMatch() && match.captured(1) == provider;
-}
 bool mergeIntegration(const QJsonObject &input, const QString &provider, const QString &executable,
                       bool enable, QJsonObject &output, int &owned, QString &error) {
     owned = 0; output = input;
@@ -47,7 +36,7 @@ bool mergeIntegration(const QJsonObject &input, const QString &provider, const Q
                     (object.value("type").toString() == "command" && !object.value("command").isString())) {
                     error = "Invalid hook handler fields; configuration unchanged"; return false;
                 }
-                if (ownedHandler(object, provider)) { ++owned; removed = true; }
+                if (ownedHookHandler(object, provider)) { ++owned; removed = true; }
                 else handlers.append(handler);
             }
             if (!removed) groups.append(group);
@@ -119,7 +108,7 @@ bool runIntegration(const QString &operation, const QString &provider, QString p
             QJsonArray handlers;
             for (const auto &group : input.value("hooks").toObject().value(name).toArray())
                 for (const auto &handler : group.toObject().value("hooks").toArray())
-                    if (ownedHandler(handler.toObject(), provider)) handlers.append(handler);
+                    if (ownedHookHandler(handler.toObject(), provider)) handlers.append(handler);
             if (!handlers.isEmpty()) registered[name] = handlers;
         }
         report["entries"] = registered;
