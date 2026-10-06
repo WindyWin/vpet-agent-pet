@@ -79,6 +79,11 @@ jobs:
       - name: Test
         run: ctest --test-dir build --output-on-failure -j"$(nproc)"
 
+      - name: Check translations are current
+        run: |
+          cmake --build build --target update_translations
+          python3 scripts/check_translations.py
+
       - name: Package
         run: |
           QMAKE="$QT_ROOT_DIR/bin/qmake" python3 scripts/package.py
