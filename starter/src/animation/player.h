@@ -48,6 +48,18 @@ struct Move {
     Sides near; // ...and less than this much on these.
     Sides keep; // Ends early once the space on these sides is this much or less.
 };
+// Decoration of a sustained activity (thinking, reading, working) from the catalog's "activity" section.
+// It changes which sequence plays inside the state, never the state itself.
+struct ActivityChoice { QString sequence; int weight = 1; bool playful = false; };
+// Staying at the desk while another activity is requested: `in`, passes of `loop`, then `out`.
+struct ActivityLinger { QString to; int maxMs = 0; QString in, out; QStringList loop; };
+struct ActivityArt {
+    QVector<ActivityChoice> loops; // Alternate loop passes; `playful` ones only in the Playful style.
+    QStringList enterFrom; QVector<ActivityChoice> enter; // A first loop pass after one of these states.
+    QMap<QString, QVector<ActivityChoice>> exit; // An end phase for leaving to that state.
+    ActivityLinger linger; // None while `linger.to` is empty.
+    QMap<QString, QString> handover; // To that state without leaving the desk.
+};
 
 class Player : public QObject {
     Q_OBJECT
@@ -104,6 +116,8 @@ public:
     // The move a state plays, or null. Moves are in the artwork's square space of moveScale() units.
     const Move *move(const QString &state) const;
     int moveScale() const { return moveScale_; }
+    // The decoration of an activity state, or null for a state without any.
+    const ActivityArt *activity(const QString &state) const;
     // Ends a phased state's start or loop now: it plays its end, then goes on as it would have.
     void finish();
 signals:
@@ -130,6 +144,7 @@ private:
     QSet<QString> fidgetStates_, touchStates_;
     Touch touch_;
     QMap<QString, Move> moves_;
+    QMap<QString, ActivityArt> activity_;
     QStringList chosen_;
     Random random_ = systemRandom();
     QCache<QString, QPixmap> cache_{cacheLimitKiB};

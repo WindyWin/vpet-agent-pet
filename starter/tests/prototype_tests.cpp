@@ -448,6 +448,82 @@ private slots:
         // A looping state never ends by itself, so it cannot be a fidget.
         auto looping = base; looping["ambient"] = ambient({fidget("working")}); QVERIFY(!loads(looping));
     }
+    void activitySectionIsShipped() {
+        pet::Player player;
+        QVERIFY(!player.activity("idle")); QVERIFY(!player.activity("needs_input"));
+        const auto *thinking = player.activity("thinking"), *reading = player.activity("reading"),
+                   *working = player.activity("working");
+        QVERIFY(thinking && reading && working);
+        QCOMPARE(thinking->loops.size(), 6); QCOMPARE(reading->loops.size(), 2); QCOMPARE(working->loops.size(), 3);
+        QVERIFY(thinking->loops.at(4).playful); QVERIFY(!thinking->loops.at(0).playful);
+        QCOMPARE(thinking->exit.value("working").first().sequence, QString("Think/Happy/C_2"));
+        QCOMPARE(working->enterFrom, QStringList{"thinking"});
+        QCOMPARE(reading->linger.to, QString("thinking")); QCOMPARE(reading->linger.maxMs, 8000);
+        QVERIFY(reading->linger.in.isEmpty()); QCOMPARE(reading->linger.loop.size(), 2);
+        QCOMPARE(working->linger.in, QString("WORK/Desk/ponder_in"));
+        QCOMPARE(working->linger.out, QString("WORK/Desk/ponder_out"));
+        QCOMPARE(reading->handover.value("working"), QString("WORK/Desk/reading_to_working"));
+        QCOMPARE(working->handover.value("reading"), QString("WORK/Desk/working_to_reading"));
+    }
+    void malformedActivity() {
+        QTemporaryDir fixtures; auto base = fixture(fixtures.path()); // "idle" and "work" sequences exist.
+        auto states = base["states"].toObject(); auto playback = base["playback"].toObject();
+        for (const auto *state : {"thinking", "reading", "working"}) {
+            states[state] = QJsonArray{"work", "work", "work"};
+            playback[state] = QJsonObject{{"mode", "phased"}, {"after", "idle"}};
+        }
+        states["blink"] = QJsonArray{"work"}; playback["blink"] = QJsonObject{{"mode", "once"}, {"after", "idle"}};
+        base["states"] = states; base["playback"] = playback;
+        auto choice = [](const QString &sequence, int weight = 1) { return QJsonObject{{"sequence", sequence}, {"weight", weight}}; };
+        const QJsonObject good{
+            {"thinking", QJsonObject{
+                {"loops", QJsonArray{choice("work"), QJsonObject{{"sequence", "idle"}, {"weight", 2}, {"style", "playful"}}}},
+                {"exit", QJsonObject{{"working", QJsonArray{choice("idle")}}}}}},
+            {"reading", QJsonObject{
+                {"linger", QJsonObject{{"to", "thinking"}, {"max_s", 8}, {"loop", QJsonArray{"work", "idle"}}}},
+                {"handover", QJsonObject{{"working", "idle"}}}}},
+            {"working", QJsonObject{
+                {"enter", QJsonObject{{"from", QJsonArray{"thinking"}}, {"choices", QJsonArray{choice("idle")}}}},
+                {"linger", QJsonObject{{"to", "thinking"}, {"max_s", 60}, {"in", "work"}, {"loop", QJsonArray{"idle"}}, {"out", "work"}}}}}};
+        auto with = [&](const QJsonObject &activity) { auto catalog = base; catalog["activity"] = activity; return catalog; };
+        auto broken = [&](const QString &state, const QString &key, const QJsonValue &value) {
+            auto activity = good; auto entry = activity[state].toObject(); entry[key] = value; activity[state] = entry;
+            return with(activity);
+        };
+        // Without the section, or with an empty entry, everything plays as before.
+        QVERIFY(loads(base)); QVERIFY(loads(with(good))); QVERIFY(loads(with(QJsonObject{{"reading", QJsonObject{}}})));
+        {
+            QTemporaryDir directory; fixture(directory.path()); writeCatalog(directory.path(), base);
+            pet::Player plain(nullptr, directory.path()); QVERIFY(plain.valid()); QVERIFY(!plain.activity("working"));
+        }
+        // Only phased states that end when asked can be decorated.
+        QVERIFY(!loads(with(QJsonObject{{"idle", QJsonObject{}}})));
+        QVERIFY(!loads(with(QJsonObject{{"blink", QJsonObject{}}})));
+        QVERIFY(!loads(with(QJsonObject{{"nobody", QJsonObject{}}})));
+        auto counted = with(good); auto policies = counted["playback"].toObject();
+        policies["thinking"] = QJsonObject{{"mode", "phased"}, {"after", "idle"}, {"loops", 2}};
+        counted["playback"] = policies; QVERIFY(!loads(counted));
+        // Each broken part is refused.
+        QVERIFY(!loads(broken("thinking", "loops", QJsonArray{})));
+        QVERIFY(!loads(broken("thinking", "loops", QJsonArray{choice("missing")})));
+        QVERIFY(!loads(broken("thinking", "loops", QJsonArray{choice("work", 0)})));
+        QVERIFY(!loads(broken("thinking", "loops", QJsonArray{choice("work", 1001)})));
+        QVERIFY(!loads(broken("thinking", "loops", QJsonArray{QJsonObject{{"sequence", "work"}, {"weight", 1}, {"style", "wild"}}})));
+        QVERIFY(!loads(broken("thinking", "exit", QJsonObject{{"thinking", QJsonArray{choice("idle")}}}))); // Itself.
+        QVERIFY(!loads(broken("thinking", "exit", QJsonObject{{"idle", QJsonArray{choice("idle")}}})));
+        QVERIFY(!loads(broken("thinking", "exit", QJsonObject{{"working", QJsonArray{}}})));
+        QVERIFY(!loads(broken("working", "enter", QJsonObject{{"from", QJsonArray{"idle"}}, {"choices", QJsonArray{choice("idle")}}})));
+        QVERIFY(!loads(broken("working", "enter", QJsonObject{{"from", QJsonArray{"thinking"}}, {"choices", QJsonArray{}}})));
+        QVERIFY(!loads(broken("working", "enter", QJsonObject{{"from", QJsonArray{}}, {"choices", QJsonArray{choice("idle")}}})));
+        QVERIFY(!loads(broken("reading", "linger", QJsonObject{{"to", "idle"}, {"max_s", 8}, {"loop", QJsonArray{"work"}}})));
+        QVERIFY(!loads(broken("reading", "linger", QJsonObject{{"to", "thinking"}, {"max_s", 0}, {"loop", QJsonArray{"work"}}})));
+        QVERIFY(!loads(broken("reading", "linger", QJsonObject{{"to", "thinking"}, {"max_s", 61}, {"loop", QJsonArray{"work"}}})));
+        QVERIFY(!loads(broken("reading", "linger", QJsonObject{{"to", "thinking"}, {"max_s", 8}, {"loop", QJsonArray{}}})));
+        QVERIFY(!loads(broken("reading", "linger", QJsonObject{{"to", "thinking"}, {"max_s", 8}, {"in", "missing"}, {"loop", QJsonArray{"work"}}})));
+        QVERIFY(!loads(broken("reading", "handover", QJsonObject{{"idle", "work"}})));
+        QVERIFY(!loads(broken("reading", "handover", QJsonObject{{"working", "missing"}})));
+        QVERIFY(!loads(broken("reading", "handover", QJsonObject{})));
+    }
     void moodArtReplacesChoices() {
         pet::Player player; player.setPaused(true); Draws draws; player.setRandom(draws.random());
         // A happy idle loop picks up its art on the next pass, without drawing among the plain variants.

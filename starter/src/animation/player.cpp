@@ -71,7 +71,7 @@ bool Player::load(const QString &root) {
     }
     QFile file(QDir(root).filePath("assets/vpet/animations.json"));
     auto invalid = [this](const QString &reason) {
-        sequences_.clear(); animations_.clear(); fail(reason); return false;
+        sequences_.clear(); animations_.clear(); activity_.clear(); fail(reason); return false;
     };
     if (!file.open(QIODevice::ReadOnly) || file.size() > 1024 * 1024)
         return invalid("Animation catalog is missing or too large.");
@@ -282,11 +282,82 @@ bool Player::load(const QString &root) {
             moves_.insert(move.state, move);
         }
     }
+    // Activity decoration: alternate loops, reactions and desk continuity for states that end only when
+    // asked. Every part is optional; a state without an entry plays only its own sequences.
+    if (catalog.contains("activity")) {
+        const auto activity = catalog["activity"].toObject();
+        auto decorated = [&](const QString &state) {
+            const auto found = animations_.constFind(state);
+            return found != animations_.constEnd() && found->mode == "phased" && found->loops == 0 && state != "idle"
+                && state != "dragging" && !fidgetStates_.contains(state) && !touchStates_.contains(state);
+        };
+        auto pool = [&](const QJsonValue &value, QVector<ActivityChoice> &choices, bool styled) {
+            if (!value.isArray() || value.toArray().isEmpty()) return false;
+            for (const auto &item : value.toArray()) {
+                const auto object = item.toObject();
+                const auto style = object.value("style");
+                const ActivityChoice choice{object["sequence"].toString(), object["weight"].toInt(0), style == "playful"};
+                if (!sequences_.contains(choice.sequence) || choice.weight < 1 || choice.weight > maxWeight
+                    || (!style.isUndefined() && (!styled || (style != "subtle" && style != "playful"))))
+                    return false;
+                choices.append(choice);
+            }
+            return true;
+        };
+        if (!catalog["activity"].isObject()) return invalid("Invalid activity section.");
+        for (auto it = activity.begin(); it != activity.end(); ++it) {
+            const auto object = it.value().toObject();
+            auto other = [&](const QString &state) { return state != it.key() && activity.contains(state); };
+            ActivityArt art;
+            bool ok = decorated(it.key()) && it.value().isObject();
+            if (ok && object.contains("loops")) ok = pool(object["loops"], art.loops, true);
+            if (ok && object.contains("enter")) {
+                const auto enter = object["enter"].toObject();
+                ok = !enter["from"].toArray().isEmpty() && pool(enter["choices"], art.enter, false);
+                for (const auto &state : enter["from"].toArray()) {
+                    ok = ok && other(state.toString());
+                    art.enterFrom.append(state.toString());
+                }
+            }
+            if (ok && object.contains("exit")) {
+                const auto exit = object["exit"].toObject();
+                ok = !exit.isEmpty();
+                for (auto target = exit.begin(); ok && target != exit.end(); ++target)
+                    ok = other(target.key()) && pool(target.value(), art.exit[target.key()], false);
+            }
+            if (ok && object.contains("linger")) {
+                const auto linger = object["linger"].toObject();
+                const int maxS = linger["max_s"].toInt(0);
+                art.linger = {linger["to"].toString(), maxS * 1000, linger["in"].toString(), linger["out"].toString(), {}};
+                ok = other(art.linger.to) && maxS >= 1 && maxS <= 60 && !linger["loop"].toArray().isEmpty()
+                    && (!linger.contains("in") || sequences_.contains(art.linger.in))
+                    && (!linger.contains("out") || sequences_.contains(art.linger.out));
+                for (const auto &id : linger["loop"].toArray()) {
+                    ok = ok && sequences_.contains(id.toString());
+                    art.linger.loop.append(id.toString());
+                }
+            }
+            if (ok && object.contains("handover")) {
+                const auto handover = object["handover"].toObject();
+                ok = !handover.isEmpty();
+                for (auto target = handover.begin(); ok && target != handover.end(); ++target) {
+                    ok = other(target.key()) && sequences_.contains(target.value().toString());
+                    art.handover.insert(target.key(), target.value().toString());
+                }
+            }
+            if (!ok) return invalid("Invalid activity for " + it.key());
+            activity_.insert(it.key(), art);
+        }
+    }
     return true;
 }
 const Move *Player::move(const QString &state) const {
     const auto found = moves_.constFind(state);
     return found == moves_.constEnd() ? nullptr : &*found;
+}
+const ActivityArt *Player::activity(const QString &state) const {
+    const auto found = activity_.constFind(state);
+    return found == activity_.constEnd() ? nullptr : &*found;
 }
 void Player::finish() {
     if (stopped_ || held_ || animations_.value(state_).mode != "phased" || phase_ == 2) return;
