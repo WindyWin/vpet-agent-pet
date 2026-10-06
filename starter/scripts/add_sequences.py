@@ -20,7 +20,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 ASSETS = ROOT / 'assets/vpet'
-FRAME = re.compile(r'_(\d+)_(\d+)\.png$')
+FRAME = re.compile(r'(?:^|_)(\d+)_(\d+)\.png$')  # WORK/Study/B_4_Nomal names its frame 000_1250.png
 
 
 def load(name):
@@ -35,7 +35,9 @@ def frames_of(directory):
     """Frames of one sequence folder as (index, duration_ms, path), ordered by index.
 
     A few folders join two numbered runs, such as FLA_000.. then FLB_000.. in MOVE/fall.*/C_*;
-    when indexes repeat, frames are ordered by the name before the index, then by index."""
+    when indexes repeat, frames are ordered by the name before the index, then by index.
+    WORK/Study/B_3_Nomal stores one picture twice under the same index with two durations; a
+    repeated index is accepted only for byte-identical files, which then play in name order."""
     if not directory.is_dir():
         raise SystemExit(f'Source folder not found: {directory} (point --source at the original VPet sequences)')
     found = []
@@ -44,11 +46,13 @@ def frames_of(directory):
         if file.is_symlink() or not file.is_file() or file.suffix != '.png' or not match:
             raise SystemExit(f'Unexpected entry in {directory}: {file.name}')
         found.append((file.name[:match.start()], int(match[1]), int(match[2]), file))
-    keys = {(prefix, index) for prefix, index, _, _ in found}
-    if not found or len(keys) != len(found):
+    pictures = {}
+    for prefix, index, _, file in found:
+        pictures.setdefault((prefix, index), set()).add(file.read_bytes())
+    if not found or any(len(same) != 1 for same in pictures.values()):
         raise SystemExit(f'No frames or duplicate frame indexes in {directory}')
-    by_run = len({index for _, index, _, _ in found}) != len(found)
-    found.sort(key=lambda frame: (frame[0], frame[1]) if by_run else frame[1])
+    by_run = len({index for _, index, _, _ in found}) != len(pictures)
+    found.sort(key=lambda frame: (frame[0], frame[1], frame[3].name) if by_run else (frame[1], frame[3].name))
     return [(index, duration, file) for _, index, duration, file in found]
 
 
