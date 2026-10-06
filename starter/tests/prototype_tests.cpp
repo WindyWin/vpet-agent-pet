@@ -1,3 +1,4 @@
+#include "animation/activity.h"
 #include "desktop/monitor.h"
 #include "desktop/pet_window.h"
 #include "desktop/session_playback.h"
@@ -705,6 +706,118 @@ private slots:
         player.select("reading");
         for (int i = 0; i < 40 && !(player.state() == "reading" && player.phase() == "loop"); ++i) finishSequence(player);
         QCOMPARE(player.state(), QString("reading")); QCOMPARE(player.phase(), QString("loop"));
+    }
+    void activityAlternatesOnePassAtATime() {
+        pet::Player player; player.setPaused(true); player.setRandom([](int) { return 0; });
+        pet::Activity activity(player); Draws draws; qint64 now = 1000000;
+        activity.setRandom(draws.random()); activity.setClock([&] { return now; });
+        QCOMPARE(activity.style(), pet::ActivityStyle::Playful); QVERIFY(player.continuity());
+        QCOMPARE(pet::Activity::gapSeconds(pet::ActivityStyle::Playful), (QPair<int, int>{6, 12}));
+        QCOMPARE(pet::Activity::gapSeconds(pet::ActivityStyle::Subtle), (QPair<int, int>{10, 18}));
+        // Entering thinking starts the clock: a gap draw of 0 is the shortest wait, 6 s.
+        draws.values = {0}; player.select("thinking", true); finishSequence(player);
+        QCOMPARE(player.sequence(), QString("Think/Nomal/B"));
+        now += 5999; finishSequence(player); QCOMPARE(player.sequence(), QString("Think/Nomal/B"));
+        // Due: thinking's loops weigh 2+2+1+1+1+1; a roll of 2 is B_3. Then the next gap.
+        now += 1; draws.values = {2, 0}; finishSequence(player);
+        QCOMPARE(player.sequence(), QString("Think/Nomal/B_3")); QCOMPARE(player.frameIndex(), 0);
+        QCOMPARE(player.state(), QString("thinking")); QCOMPARE(player.phase(), QString("loop"));
+        finishSequence(player); QCOMPARE(player.sequence(), QString("Think/Nomal/B")); // One pass only.
+        // Never the same alternate twice in a row: without B_3 (2,1,1,1,1) a roll of 2 is B_4.
+        now += 6000; draws.values = {2, 0}; finishSequence(player); QCOMPARE(player.sequence(), QString("Think/Nomal/B_4"));
+        // Subtle waits 10 to 18 s and never draws the playful tier: the highest roll is B_5.
+        draws.values = {0}; activity.setStyle(pet::ActivityStyle::Subtle); // A new pace starts from now.
+        finishSequence(player); now += 9999; finishSequence(player); QCOMPARE(player.sequence(), QString("Think/Nomal/B"));
+        now += 1; draws.values = {99, 0}; finishSequence(player); QCOMPARE(player.sequence(), QString("Think/Nomal/B_5"));
+        // Playful reaches the happy loops with the same roll.
+        draws.values = {0}; activity.setStyle(pet::ActivityStyle::Playful); finishSequence(player);
+        now += 6000; draws.values = {99, 0}; finishSequence(player); QCOMPARE(player.sequence(), QString("Think/Happy/B_4"));
+        // Classic varies nothing, ever, and draws nothing.
+        activity.setStyle(pet::ActivityStyle::Classic); QVERIFY(!player.continuity());
+        finishSequence(player); now += 3600000; finishSequence(player); QCOMPARE(player.sequence(), QString("Think/Nomal/B"));
+        QCOMPARE(draws.unexpected, 0);
+    }
+    void activityReactionsShareTheClock() {
+        pet::Player player; player.setPaused(true); player.setRandom([](int) { return 0; });
+        pet::Activity activity(player); Draws draws; qint64 now = 1000000;
+        activity.setRandom(draws.random()); activity.setClock([&] { return now; });
+        draws.values = {0}; player.select("thinking", true); finishSequence(player); // Due in 6 s.
+        // Not due: the usual end, and no welcome.
+        player.select("working"); QCOMPARE(player.sequence(), QString("Think/Nomal/C"));
+        finishSequence(player); finishSequence(player); QCOMPARE(player.sequence(), QString("WORK/WorkONE/B_1_Nomal"));
+        // Due: the exit reaction spends the opportunity (next gap drawn)...
+        player.select("thinking", true); finishSequence(player);
+        now += 6000; draws.values = {0}; player.select("working");
+        QCOMPARE(player.phase(), QString("end")); QCOMPARE(player.sequence(), QString("Think/Happy/C_2"));
+        // ...so working's welcome does not follow: one reaction per transition.
+        finishSequence(player); finishSequence(player); QCOMPARE(player.sequence(), QString("WORK/WorkONE/B_1_Nomal"));
+        // Straight in from thinking, only the welcome can play, for one pass.
+        player.select("thinking", true); finishSequence(player);
+        now += 6000; draws.values = {0}; player.select("working", true);
+        finishSequence(player); QCOMPARE(player.sequence(), QString("WORK/WorkONE/Happy/B"));
+        finishSequence(player); QCOMPARE(player.sequence(), QString("WORK/WorkONE/B_1_Nomal"));
+        // Subtle never reacts, however long it waits.
+        draws.values = {0}; activity.setStyle(pet::ActivityStyle::Subtle);
+        player.select("thinking", true); finishSequence(player);
+        now += 3600000; player.select("working"); QCOMPARE(player.sequence(), QString("Think/Nomal/C"));
+        finishSequence(player); finishSequence(player); QCOMPARE(player.sequence(), QString("WORK/WorkONE/B_1_Nomal"));
+        QCOMPARE(draws.unexpected, 0);
+    }
+    void classicActivityIsTodaysPlayback() {
+        // The same requests show the same sequences with a Classic pace as with no pacing at all.
+        auto script = [](pet::Player &player) {
+            QStringList shown;
+            auto note = [&] { shown << player.state() + " " + player.phase() + " " + player.sequence(); };
+            auto step = [&](int passes) { for (int i = 0; i < passes; ++i) { finishSequence(player); note(); } };
+            player.select("reading", true); note(); step(3);
+            player.select("thinking"); note(); step(3);
+            player.select("working"); note(); step(3);
+            player.select("reading"); note(); step(3);
+            player.select("working"); player.select("reading"); note(); step(3);
+            return shown;
+        };
+        pet::Player plain; plain.setPaused(true); plain.setRandom([](int) { return 0; });
+        pet::Player classic; classic.setPaused(true); classic.setRandom([](int) { return 0; });
+        pet::Activity activity(classic); Draws draws; qint64 now = 0;
+        activity.setRandom(draws.random()); activity.setClock([&] { return now += 60000; }); // Always due.
+        activity.setStyle(pet::ActivityStyle::Classic);
+        const auto expected = script(plain);
+        QCOMPARE(script(classic), expected);
+        QCOMPARE(draws.unexpected, 0);
+        QVERIFY(expected.contains("reading end WORK/Study/C_Nomal"));
+        QVERIFY(expected.contains("thinking start Think/Nomal/A"));
+        // Playful, the same requests stay at the desk.
+        pet::Player playful; playful.setPaused(true); playful.setRandom([](int) { return 0; });
+        pet::Activity paced(playful); paced.setRandom([](int) { return 0; }); paced.setClock([] { return qint64(0); });
+        const auto desk = script(playful);
+        QVERIFY(desk.contains("reading linger WORK/Study/B_4_Nomal"));
+        QVERIFY(desk.contains("reading handover WORK/Desk/reading_to_working"));
+    }
+    void activityStyleChangesMidDesk() {
+        pet::Player player; player.setPaused(true); player.setRandom([](int) { return 0; });
+        pet::Activity activity(player); activity.setRandom([](int) { return 0; }); activity.setClock([] { return qint64(0); });
+        player.select("reading", true); finishSequence(player); player.select("thinking");
+        QCOMPARE(player.phase(), QString("linger"));
+        // Switched to Classic mid-linger, the next change plays the usual end at once...
+        activity.setStyle(pet::ActivityStyle::Classic); player.select("reading");
+        QCOMPARE(player.phase(), QString("end")); QCOMPARE(player.requestedState(), QString("reading"));
+        for (int i = 0; i < 4 && !(player.state() == "reading" && player.phase() == "loop"); ++i) finishSequence(player);
+        QCOMPARE(player.state(), QString("reading")); QCOMPARE(player.phase(), QString("loop"));
+        // ...and a handover in progress still lands where it was going.
+        activity.setStyle(pet::ActivityStyle::Playful); player.select("working");
+        QCOMPARE(player.phase(), QString("handover"));
+        activity.setStyle(pet::ActivityStyle::Classic); finishSequence(player);
+        QCOMPARE(player.state(), QString("working")); QCOMPARE(player.phase(), QString("loop"));
+    }
+    void activityWithoutArtIsClassic() {
+        // A catalog without the section: a Playful pace has nothing to vary or react with.
+        QTemporaryDir directory; auto catalog = fixture(directory.path()); writeCatalog(directory.path(), catalog);
+        pet::Player player(nullptr, directory.path()); player.setPaused(true);
+        pet::Activity activity(player); Draws draws; qint64 now = 0;
+        activity.setRandom(draws.random()); activity.setClock([&] { return now += 60000; });
+        player.select("working", true);
+        for (int i = 0; i < 5; ++i) { finishSequence(player); QCOMPARE(player.sequence(), QString("work")); }
+        QCOMPARE(draws.unexpected, 0);
     }
     void moodArtReplacesChoices() {
         pet::Player player; player.setPaused(true); Draws draws; player.setRandom(draws.random());
