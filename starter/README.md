@@ -104,6 +104,16 @@ itself and sends only that verdict. There is at least one more to find. Settings
 Preview them from Preview state (`love_520`, `birthday`, `dance`, `startled`); see
 [the architecture notes](docs/architecture.md#easter-eggs).
 
+## Daily recap
+
+Right-click → **Today's recap** and the pet sums up what your agents did today:
+"Today: 38 turns across 3 projects · 2 approvals waited 10+ min · longest run 22 min".
+Click the bubble for turns per project, errors, approvals with the longest wait, and
+the longest run. On weekdays the 4:45 PM go-home reminder includes the summary too;
+Settings → **Recap** turns that off. The counters are kept for two weeks in
+`recap.json` next to the preferences: counts and project folder names only, never
+prompts, commands or paths. See [the architecture notes](docs/architecture.md#daily-recap).
+
 ## Wandering
 
 After about four quiet minutes the idle pet sometimes goes for a stroll: it walks or

@@ -84,7 +84,7 @@ qt_add_library(pet_native STATIC src/platform/linux/native.cpp
 target_include_directories(pet_native PUBLIC src)
 target_link_libraries(pet_native PUBLIC pet_hosts PRIVATE pet_platform_linux Qt6::Gui Qt6::DBus X11::X11)
 # Headless code shared by the pet and its display-free commands (hook, integration, autostart).
-qt_add_library(pet_events STATIC src/sessions/state.cpp src/sessions/alerts.cpp src/sessions/presence.cpp
+qt_add_library(pet_events STATIC src/sessions/state.cpp src/sessions/alerts.cpp src/sessions/presence.cpp src/sessions/recap.cpp
     src/ipc/local.cpp src/ipc/autostart.cpp src/settings/preferences.cpp
     src/providers/adapters.cpp src/providers/integrations.cpp)
 target_include_directories(pet_events PUBLIC src)

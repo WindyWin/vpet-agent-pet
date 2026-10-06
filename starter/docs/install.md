@@ -221,7 +221,8 @@ This removes Agent Pet's own hook entries from both clients, the menu entry, ico
 `~/.local/bin` link and the application directory. Other hooks and settings in
 the client configuration files are left as they were. Add `--keep-integrations`
 to leave the hook entries in place, or `--purge-settings` to also delete the
-pet's saved size, position, alert and startup preferences.
+pet's saved size, position, alert and startup preferences and its daily recap
+counters (`recap.json`).
 
 From a terminal without options it shows a checklist instead: *remove hooks*
 (on), *delete settings* (off) and *remove command link* (on), then asks to

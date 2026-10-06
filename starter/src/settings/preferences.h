@@ -30,6 +30,7 @@ struct Preferences {
     bool wander = true; // Walks, crawls and climbs along the screen after a long idle spell.
     bool easterEggs = true; // Special days, late nights and a few rare surprises.
     QString birthday; // "MM-dd" for a birthday surprise, or empty.
+    bool recap = true; // Adds today's recap to the go-home reminder.
     // Startup keys. `agent-pet autostart` edits them without a display, possibly
     // while a pet runs, so the pet re-reads them before each save.
     bool autostart = false; // Hook launches the pet on a session start when none is running.
