@@ -2,11 +2,9 @@
 
 A standalone desktop companion that animates in response to Claude Code and Codex hooks.
 
-**For a new public repository, use [starter/](starter/).** It is a self-contained 23 MB selection of the needed sprites with its own manifest, notices, and plan. Initialize Git inside `starter/` to keep the 749 MB archive outside that repository.
+Agent Pet 0.9 runs on Linux x86_64 (X11 and XWayland). It ships as a self-contained tarball with an installer, one-click Claude Code and Codex integration, and automatic updates; see the [install guide](starter/docs/install.md). The application lives in [starter/](starter/README.md). This repository root also keeps the full 749 MB VPet artwork archive as a source bundle; the app never reads it at runtime.
 
-Status: M3 local events and session tracking, plus M2 animation and desktop controls, are implemented in [starter/](starter/README.md), including the original dragging animation, persistent settings and a development package. XWayland has been tested; native X11 and native Wayland remain open. M4 provider adapters and integration management are implemented with automated checks; live-client acceptance remains open. M5 alerts (bubble with Next/Dismiss, attention badge, mute, optional sound and integration settings) are implemented. M6 packaging is implemented: a Linux x86_64 tarball with installer, uninstaller and CI; see [install guide](starter/docs/install.md). Application code is licensed under Apache-2.0 ([LICENSE](starter/LICENSE)); the artwork keeps its own terms.
-
-This directory is the new project root and can be moved into its own repository. The bundled artwork is a real copy. Development and future releases must resolve assets relative to this project or the installed application's resources, without requiring an existing VPet installation or command.
+Application code is licensed under Apache-2.0 ([LICENSE](starter/LICENSE)); the artwork keeps its own terms.
 
 ## Features
 
@@ -88,14 +86,40 @@ Special days, Friday evenings, late nights, long turns and every hundredth finis
   </tr>
 </table>
 
-### Settings, menu and developer preview
+### Wellness reminders
 
-Right-click the pet (or its tray icon) for preview states, running sessions, mute, settings, always-on-top, click-through and recovery. Settings cover size, alerts, idle animation, wandering, mood, touch, easter eggs, startup behavior and one-click Claude Code and Codex integration. `--preview` opens a developer window that plays any state and steps through frames.
+While you work, the pet looks after you too. After 20 minutes of activity it suggests looking at something far away for 20 seconds (click the note and it counts the seconds down), and after an hour it gets thirsty and reminds you to drink some water. Reminders wait until you are at the computer, stay out of the way while an agent needs you or alerts are muted, pause while the screen is locked and skip quiet hours. Settings → **Reminders** sets both intervals or turns them off.
 
 <table>
   <tr>
-    <td align="center" valign="top"><img src="docs/media/context-menu.png" width="300" alt="Right-click menu"><br>Right-click menu</td>
-    <td align="center" valign="top"><img src="docs/media/settings.png" width="340" alt="Settings window"><br>Settings</td>
+    <td align="center"><img src="docs/media/eye-break.png" width="300" alt="Eye break reminder in a speech bubble beside the yawning pet"><br>Eye break</td>
+    <td align="center"><img src="docs/media/water.png" width="300" alt="Water reminder in a speech bubble beside the thirsty pet"><br>Time for water</td>
+  </tr>
+</table>
+
+### Daily recap
+
+Right-click → **Today's recap** and the pet sums up what your agents did today, such as "Today: 38 turns across 3 projects · 2 approvals waited 10+ min · longest run 22 min". Click the note for turns per project, errors, approvals with the longest wait and the longest run. On weekdays the 4:45 PM go-home reminder includes the summary. Only counts and project folder names are kept, for two weeks, never prompts, commands or paths.
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/media/recap.png" width="300" alt="Recap summary: 11 turns across 3 projects, 1 error, 1 approval"><br>Summary</td>
+    <td align="center"><img src="docs/media/recap-breakdown.png" width="300" alt="Recap breakdown with turns per project"><br>Click for the breakdown</td>
+  </tr>
+</table>
+
+### Remarks
+
+Reminders, the recap and the pet's own comments (Monday blues, time to go home, time for bed) appear in a small speech bubble that fades on its own or when clicked, so they never cover your work for long.
+
+### Menu, settings and developer preview
+
+Right-click the pet (or its tray icon) for everyday actions: running sessions, today's recap, mute, always on top, Settings and Quit. **More** holds the animation preview, temporary click-through, position recovery, updates and the artwork terms. Settings has three tabs: **General** (size, alerts, reminders), **Pet** (idle animation, wandering, mood, touch, easter eggs, birthday, recap) and **Startup and agents** (autostart and one-click Claude Code and Codex integration). `--preview` opens a developer window that plays any state and steps through frames.
+
+<table>
+  <tr>
+    <td align="center" valign="top"><img src="docs/media/menus/after-menu.png" width="380" alt="Right-click menu with the More submenu open"><br>Right-click menu</td>
+    <td align="center" valign="top"><img src="docs/media/menus/after-settings.png" width="340" alt="Settings window, General tab"><br>Settings</td>
   </tr>
   <tr>
     <td align="center" colspan="2"><img src="docs/media/animation-preview.png" width="520" alt="Animation preview window beside the pet"><br>Animation preview</td>
@@ -104,9 +128,40 @@ Right-click the pet (or its tray icon) for preview states, running sessions, mut
 
 ### Install and updates
 
-A self-contained Linux x86_64 tarball includes an interactive installer that sets up the menu entry, the `agent-pet` command, agent hooks and autostart, plus an uninstaller that removes only Agent Pet's own hook entries. Updates download only the components that changed and roll back if the new version fails to start. See the [install guide](starter/docs/install.md).
+A self-contained Linux x86_64 tarball includes an interactive installer that sets up the menu entry, the `agent-pet` command, agent hooks and autostart, plus an uninstaller that removes only Agent Pet's own hook entries. Updates download only the components that changed, down to individual animation sequences, so a new or edited animation fetches just its own frames. If the new version fails to start, the previous one is restored. See the [install guide](starter/docs/install.md).
 
 <img src="docs/media/installer.png" width="520" alt="Installer checklist in a terminal">
+
+## Architecture
+
+Agent Pet is one C++17 / Qt 6 binary, `agent-pet`, with two roles. Inside Claude Code and Codex it runs as a tiny headless **hook**: it turns the client's hook JSON into a normalized event, sends one datagram over a private Unix socket and exits, always silently and within 150 ms, never sending prompts or tool content. On the desktop it is the **pet**: it receives those events, tracks every session, and picks what to animate and when to alert.
+
+```mermaid
+flowchart LR
+    C[Claude Code / Codex hooks] --> H["agent-pet hook<br/>(headless, fail-open)"]
+    E["agent-pet emit<br/>(scripts, demos)"] --> S
+    H -->|protocol v1 datagram| S[(Unix socket)]
+    S --> R[Receiver]
+    R --> M[Monitor]
+    M --> SE["Sessions<br/>ordering, dedup, expiry, priority"]
+    SE --> P["Pet window + Player<br/>animations.json"]
+    SE --> A[Alert toast and badge]
+    SE --> RC[Daily recap]
+    A -->|Open| F["Focus service<br/>Konsole, tmux, herdr, VS Code"]
+    F --> D[X11 / KWin backends]
+```
+
+| Layer | What it does |
+| --- | --- |
+| **Providers** | Map each client's hook events onto protocol v1 and merge Agent Pet's own entries into the client config without touching anyone else's hooks |
+| **Sessions** | Track concurrent sessions and tools and pick one aggregate state: attention > error > turn finished > working > reading > thinking > idle |
+| **Animation** | Play the data-driven catalog in `animations.json`: phased sequences, weighted variants, mood art, fidgets, reactions, touch and moves |
+| **Desktop** | The pet window, alert toast, session list, speech bubble, wandering, wellness reminders and recap |
+| **Hosts** | Record where a session runs (Konsole tab, tmux or herdr pane, X11 window) and bring it forward on **Open** |
+| **Platform** | Small contracts for native services, with Linux implementations; X11 and D-Bus are linked only by `pet_native` |
+| **Updates** | Verified release metadata and component downloads (app, runtime, one pack per animation sequence) with rollback |
+
+Only preferences and the recap's daily counts are written to disk; sessions and alerts live in memory. A portable-core build (`AGENT_PET_PORTABLE_CORE=ON`) compiles the event, session, provider and focus logic with no X11, D-Bus, Widgets or libarchive, which keeps the door open for other platforms. For the details see the [architecture notes](starter/docs/architecture.md), the [event protocol](starter/docs/events.md), [integrations](starter/docs/integrations.md) and [platform services](starter/src/platform/README.md).
 
 ## Included
 
