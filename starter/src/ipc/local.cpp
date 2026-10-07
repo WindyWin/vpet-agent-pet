@@ -4,7 +4,6 @@
 #include "hosts/registry.h"
 #include "platform/contracts/hook_input.h"
 #include "platform/headless.h"
-#include <QCoreApplication>
 #include <QDateTime>
 #include <QJsonDocument>
 #include <QUuid>
@@ -63,7 +62,7 @@ int eventCommand(const QStringList &args) {
     if (!sendEvent(data, error)) {
         // No pet is listening. A session start may launch one, which applies this event.
         if (hook) autostartPet(data, event.kind, {}, QProcessEnvironment::systemEnvironment(),
-                               QCoreApplication::applicationFilePath(), launchDetached);
+                               petExecutable(), launchDetached);
         return fail();
     }
     return 0;

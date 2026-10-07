@@ -1,6 +1,6 @@
 # Out-of-quota animation — design
 
-Date: 2026-10-07. Status: approved in conversation; ADR 0023 records the decision.
+Date: 2026-10-07. Status: approved in conversation; ADR 0025 records the decision.
 
 ## Intent
 
@@ -137,7 +137,7 @@ fields in `recap.json`.
 ## Docs
 
 `docs/events.md` (kind, reason, state rules, priority, alerts), `docs/integrations.md`
-(Claude `StopFailure` row, Codex gap), ADR `0023-out-of-quota.md` plus its
+(Claude `StopFailure` row, Codex gap), ADR `0025-out-of-quota.md` plus its
 `adr/README.md` row, and a `starter/README.md` section.
 
 ## Out of scope

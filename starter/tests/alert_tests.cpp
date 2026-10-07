@@ -4,7 +4,7 @@
 #include "hosts/adapters/konsole.h"
 #include "hosts/adapters/tmux.h"
 #include "platform/desktop/window_match.h"
-#ifdef PET_TEST_POSIX
+#ifdef PET_TEST_NATIVE
 #include "platform/headless.h"
 #endif
 #include <QFileInfo>
@@ -231,7 +231,7 @@ private slots:
         QVERIFY(!host.contains("host_target")); QVERIFY(!host.contains("host_window"));
         QCOMPARE(capture(code, {50, 40}, {"bash", "herdr"})["host"].toString(), "herdr"); // herdr inside VS Code.
         QVERIFY(capture({}, {}, {}).isEmpty());
-#ifdef PET_TEST_POSIX
+#ifdef PET_TEST_NATIVE
         const auto processes = pet::platform::createProcessServices();
         QCOMPARE(processes->names({QCoreApplication::applicationPid()}).value(0),
                  QFileInfo(QCoreApplication::applicationFilePath()).fileName().left(15));

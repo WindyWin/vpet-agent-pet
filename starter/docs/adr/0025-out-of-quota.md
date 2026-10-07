@@ -1,4 +1,4 @@
-# 0023. Out-of-quota animation
+# 0025. Out-of-quota animation
 
 - Status: Accepted
 - Date: 2026-10-07

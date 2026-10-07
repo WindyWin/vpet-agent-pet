@@ -923,7 +923,7 @@ QWidget *PetWindow::integrationSettings(QWidget *parent) {
             const auto executable = QCoreApplication::applicationFilePath();
             const auto question = enable
                 ? tr("Add Agent Pet hooks to %1?\n\nHook command: %2\nOther settings and hooks are preserved. "
-                          "Register from a permanent install location, then restart the client.").arg(integrationConfigPath(provider), executable)
+                          "Register from a permanent install location, then restart the client.").arg(integrationConfigPath(provider), hookExecutable(executable))
                 : tr("Remove only Agent Pet hooks from %1?").arg(integrationConfigPath(provider));
             // Own buttons: Qt has no Vietnamese for its standard Yes and No.
             QMessageBox ask(QMessageBox::Question, tr("Agent integrations"), question, QMessageBox::NoButton, this);

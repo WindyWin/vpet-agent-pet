@@ -38,7 +38,7 @@ cmake --build build-core -j 4
 ctest --test-dir build-core --output-on-failure
 ```
 
-This checks platform boundaries. Full application builds run on Linux and macOS.
+This checks platform boundaries. Full application builds run on Linux, macOS and Windows.
 See [platform services and extension points](src/platform/README.md).
 
 On macOS (11 or newer), install Ninja and Qt 6.5+ (for example with Homebrew or
@@ -55,6 +55,21 @@ Releases add `-DCMAKE_OSX_ARCHITECTURES="arm64;x86_64" -DCMAKE_OSX_DEPLOYMENT_TA
 for one universal app. On macOS, **Open** selects tmux and herdr panes but cannot
 bring windows forward yet, and updates are announced but installed by hand; see
 [macOS](docs/install.md#macos) and the [design notes](docs/adr/0020-macos-port.md).
+
+On Windows (10 1809 or newer, x64), build from a Visual Studio 2019/2022 developer
+prompt with Ninja and Qt 6.5+ for MSVC 2019 64-bit:
+
+```powershell
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="C:\Qt\6.5.3\msvc2019_64"
+cmake --build build
+ctest --test-dir build --output-on-failure
+.\build\agent-pet.exe
+```
+
+Windows builds `agent-pet.exe` (the pet, no console window) and `agent-pet-cli.exe` (the
+same program for hooks and commands). Updates are announced and installed with the setup
+program; see [Windows](docs/install.md#windows) and the
+[design notes](docs/adr/0024-windows-port.md).
 
 Left-drag to move; the original Raise animation plays while dragging and returns
 to the prior state on release. Right-click for the running sessions, today's recap,
@@ -203,12 +218,19 @@ without a restart. In Vietnamese the pet speaks as "em" and calls you "bạn". T
 command line, the installer and these docs stay in English. To add or fix
 translations, see [translations](docs/i18n.md).
 
+## Arch Linux
+
+Arch users can build the package with `makepkg -si` from `packaging/arch/` once a
+release has attached its source tarball. The same `PKGBUILD` is planned for the AUR as
+`agent-pet`, but it is not published there yet. It uses the system Qt and pacman owns
+upgrades and removal. See [Arch Linux](docs/install.md#arch-linux).
+
 ## Updates
 
 **Settings → Updates** offers daily release notifications, automatic downloads,
 optional installation on the next normal launch, and fully automatic download and install when idle (the default).
 Updates preserve settings and hooks and restore the previous version if startup
-fails. Development builds and the macOS app offer notifications and manual downloads.
+fails. Development builds and the macOS and Windows apps offer notifications and manual downloads.
 See [update behavior and recovery](docs/install.md#update-notifications-and-automatic-updates).
 
 ## Local events
@@ -376,10 +398,27 @@ libraries and has both architectures, and runs `--version` and
 `--check-update-runtime` from the bundle; it then verifies and mounts the disk image
 read-only and checks its contents, signature and version.
 
+The Windows release is packaged from a Visual Studio developer prompt with Qt's
+`windeployqt` (found through `qmake`) and Inno Setup 6:
+
+```powershell
+$env:QMAKE = "C:\Qt\6.5.3\msvc2019_64\bin\qmake.exe"; python scripts/package_windows.py --smoke-test
+python scripts/check_install_windows.py dist\agent-pet-VERSION-windows-x86_64-setup.exe
+```
+
+It writes `dist/agent-pet-VERSION-windows-x86_64.zip` (both executables, artwork, Qt,
+the Visual C++ runtime, notices and `INSTALL.txt`) and the per-user setup program
+`agent-pet-VERSION-windows-x86_64-setup.exe`, after running `--version`,
+`--check-update-runtime` and the smoke test with only Windows on `PATH`. The install check
+installs into a folder with spaces against throwaway Claude Code and Codex
+configurations, runs each registered hook the way its agent does, upgrades and
+uninstalls.
+
 CI ([.github/workflows/release.yml](../.github/workflows/release.yml)) runs all of
-the above from a clean checkout on Ubuntu 22.04 and macOS 14 with Qt 6.5.3,
-uploads the Linux full tarball, component tarballs and manifest and the macOS zip and dmg,
-and attaches them to a draft GitHub release for `v*` tags.
+the above from a clean checkout on Ubuntu 22.04, macOS 14 and Windows Server 2022 with
+Qt 6.5.3, uploads the Linux full tarball, component tarballs and manifest, the macOS zip
+and dmg and the Windows zip and setup program, and attaches them to a draft GitHub
+release for `v*` tags.
 
 ## Artwork and publishing
 

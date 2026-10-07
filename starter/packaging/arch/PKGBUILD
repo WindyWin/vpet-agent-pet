@@ -1,0 +1,45 @@
+# Maintainer: WindyWind <dangdinhdno@gmail.com>
+pkgname=agent-pet
+pkgver=0.12.0
+pkgrel=1
+pkgdesc='Desktop pet that animates in response to Claude Code and Codex hooks'
+arch=('x86_64')
+url='https://github.com/WindyWin/vpet-agent-pet'
+# The application is Apache-2.0; the artwork is under the separate VPet terms (licenses/).
+license=('Apache-2.0' 'LicenseRef-VPet-artwork')
+depends=('qt6-base' 'libarchive' 'libx11' 'libxtst' 'hicolor-icon-theme')
+makedepends=('cmake' 'ninja' 'qt6-tools' 'python') # python: CMake configure and the update-install test
+# Not GitHub's /archive tarball: that one carries the 749 MB upstream artwork bundle at the repository root.
+source=("$pkgname-$pkgver-source.tar.gz::$url/releases/download/v$pkgver/$pkgname-$pkgver-source.tar.gz")
+sha256sums=('SKIP') # updpkgsums
+
+build() {
+  cmake -S "$pkgname-$pkgver" -B build -G Ninja \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DCMAKE_INSTALL_LIBDIR=lib \
+    -DAGENT_PET_REVISION="arch-$pkgrel"
+  cmake --build build
+}
+
+check() {
+  # desktop-tests moves the real pointer and is not registered with CTest.
+  QT_QPA_PLATFORM=offscreen ctest --test-dir build --output-on-failure
+}
+
+package() {
+  DESTDIR="$pkgdir" cmake --install build
+
+  # The tarball installer and its prompts belong to the portable release; pacman owns install and removal here.
+  rm -f "$pkgdir/usr/install.sh" "$pkgdir/usr/uninstall.sh" "$pkgdir/usr/INSTALL.txt"
+  rm -f "$pkgdir/usr/share/agent-pet/tui.sh" "$pkgdir/usr/share/agent-pet/dialogrc"
+
+  # Updates come from pacman: no .agent-pet-install receipt is written, so the app can notify but never installs.
+  sed 's|@EXEC@|agent-pet|' "$pkgname-$pkgver/packaging/agent-pet.desktop.in" > agent-pet.desktop
+  install -Dm644 agent-pet.desktop -t "$pkgdir/usr/share/applications"
+  rm -f "$pkgdir/usr/share/agent-pet/agent-pet.desktop.in"
+
+  install -Dm644 "$pkgname-$pkgver/LICENSE" -t "$pkgdir/usr/share/licenses/$pkgname"
+  install -Dm644 "$pkgname-$pkgver/NOTICE" "$pkgname-$pkgver/THIRD_PARTY_NOTICES.md" -t "$pkgdir/usr/share/licenses/$pkgname"
+  install -Dm644 "$pkgname-$pkgver"/licenses/* -t "$pkgdir/usr/share/licenses/$pkgname"
+}
