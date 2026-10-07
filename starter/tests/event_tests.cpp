@@ -168,7 +168,8 @@ private slots:
             auto toolless = event("error", 6); toolless.tool.clear();
             QVERIFY(state.apply(toolless, now + 6)); QCOMPARE(state.aggregate(now + 6), "exhausted");
             auto asking = event("attention", 7); asking.reason = "input";
-            QVERIFY(state.apply(asking, now + 7)); QCOMPARE(state.aggregate(now + 7), "attention");
+            QVERIFY(state.apply(asking, now + 7)); QCOMPARE(state.aggregate(now + 7), "exhausted");
+            QCOMPARE(state.unresolvedAttention(), 0);
             QVERIFY(state.apply(failed(8, "billing"), now + 8)); QCOMPARE(state.records().first().reason, "billing");
             // Auto-resume or a retry: the next sign of work clears it.
             QVERIFY(state.apply(event(resume, 9), now + 9));
@@ -183,9 +184,16 @@ private slots:
         auto failed = event("turn_failed", 3); failed.tool.clear();
         QVERIFY(state.apply(failed, now + 3)); QCOMPARE(state.aggregate(now + 3), "error");
         QVERIFY(state.records().first().tools.isEmpty());
-        state.expire(now + 3 + 4000); QCOMPARE(state.aggregate(now + 3 + 4000), "idle");
+        QCOMPARE(state.records().first().reason, "turn");
+        // A tool error in the same session stays a separate alert.
+        auto toolError = event("error", 4); toolError.tool.clear();
+        QVERIFY(state.apply(toolError, now + 4));
+        int errors = 0; for (const auto &a : state.pending()) errors += a.kind == "error";
+        QCOMPARE(errors, 2);
+        state.expire(now + 4 + 4000); QCOMPARE(state.aggregate(now + 4 + 4000), "idle");
+        QVERIFY(state.records().first().reason.isEmpty());
         // Work after the failure is still tracked: nothing about it is stale.
-        QVERIFY(state.apply(event("tool_start", 4), now + 4)); QCOMPARE(state.aggregate(now + 4), "working");
+        QVERIFY(state.apply(event("tool_start", 5), now + 5)); QCOMPARE(state.aggregate(now + 5), "working");
     }
     void exhaustedPriority() {
         pet::Sessions state;

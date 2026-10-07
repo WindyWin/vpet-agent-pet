@@ -239,8 +239,7 @@ Pets set up with an earlier version show the Claude integration as **Partial** i
 Settings; click **Update** to add the new hook, then restart Claude Code.
 
 ```bash
-printf '%s
-' '{"version":1,"provider":"claude","session_id":"a1b2c3","kind":"turn_failed","reason":"limit","project_path":"/projects/demo"}' | ./build/agent-pet emit
+printf '%s\n' '{"version":1,"provider":"claude","session_id":"a1b2c3","kind":"turn_failed","reason":"limit","project_path":"/projects/demo"}' | ./build/agent-pet emit
 ```
 
 ## Alerts and running sessions

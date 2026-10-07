@@ -132,6 +132,7 @@ bool Sessions::apply(const Event &e, qint64 now) {
     if (!e.parent.isEmpty()) s.parent = e.parent;
     if (!e.project.isEmpty()) s.project = e.project;
     if (!e.host.isEmpty()) s.host = hosts::fromV1(e.host, e.hostPids, e.hostWindow, e.hostTarget);
+    const bool ignored = e.kind == "attention" && s.state == "exhausted";
     const bool held = s.activityUntil != 0; // Showing a finished tool's activity.
     if (e.kind != "session_start" && e.kind != "tool_end") s.activityUntil = 0;
     if (e.kind == "session_start") { /* Metadata refresh only for existing sessions. */ }
@@ -150,6 +151,7 @@ bool Sessions::apply(const Event &e, qint64 now) {
             else s.state = next;
         }
     }
+    else if (e.kind == "attention" && s.state == "exhausted") { /* Only resumed work ends a quota stop. */ }
     else if (e.kind == "attention") { s.state = "attention"; s.reason = e.reason;
         // Codex permission requests carry no tool identity: the pending tools are those already started.
         s.attentionTools = e.tool.isEmpty() ? QSet<QString>(s.tools.keyBegin(), s.tools.keyEnd()) : QSet<QString>{e.tool}; }
@@ -158,7 +160,7 @@ bool Sessions::apply(const Event &e, qint64 now) {
         if (s.state != "attention" && s.state != "exhausted") {
             if (!e.tool.isEmpty()) s.resume = toolState(s);
             else if (s.state != "error") s.resume = held ? "thinking" : s.state;
-            s.state = "error"; s.reactionUntil = now + 4000;
+            s.state = "error"; s.reason.clear(); s.reactionUntil = now + 4000;
         }
     }
     else if (e.kind == "turn_finished") {
@@ -171,19 +173,19 @@ bool Sessions::apply(const Event &e, qint64 now) {
         // first tool or finish. Any other failure reacts like an error, then rests.
         s.tools.clear(); s.turnStarted = 0;
         if (!e.reason.isEmpty()) { s.state = "exhausted"; s.reason = e.reason; }
-        else { s.state = "error"; s.resume = "idle"; s.reactionUntil = now + 4000; }
+        else { s.state = "error"; s.reason = "turn"; s.resume = "idle"; s.reactionUntil = now + 4000; }
     }
     if (s.state != "attention") {
-        if (s.state != "exhausted") s.reason.clear();
+        if (s.state != "exhausted" && s.state != "error") s.reason.clear();
         s.attentionTools.clear(); dismiss(k, "attention");
     }
     if (s.state != "exhausted") dismiss(k, "exhausted");
-    if (e.kind == "attention" || e.kind == "error" || e.kind == "turn_finished" || e.kind == "turn_failed") {
+    if ((e.kind == "attention" && !ignored) || e.kind == "error" || e.kind == "turn_finished" || e.kind == "turn_failed") {
         // A failed turn is reported as a quota stop, or as an error titled by the reason "turn".
         const QString kind = e.kind != "turn_failed" ? e.kind : e.reason.isEmpty() ? "error" : "exhausted";
         const QString reason = e.kind == "turn_failed" && e.reason.isEmpty() ? "turn" : e.reason;
         const qint64 expires = kind == "turn_finished" ? now + finishedAlertMs : kind == "error" ? now + errorAlertMs : 0;
-        auto it = std::find_if(alerts_.begin(), alerts_.end(), [&](const Alert &a) { return a.session == k && a.kind == kind; });
+        auto it = std::find_if(alerts_.begin(), alerts_.end(), [&](const Alert &a) { return a.session == k && a.kind == kind && (kind != "error" || a.reason == reason); });
         if (it != alerts_.end()) {
             it->count = std::min(it->count + 1, 1000000); it->serial = ++serial_;
             if (!s.project.isEmpty()) it->project = s.project;
@@ -209,7 +211,7 @@ void Sessions::expire(qint64 now) {
                 it->activityUntil = 0;
             }
             if (it->reactionUntil && now >= it->reactionUntil) {
-                if (it->state == "error") it->state = it->tools.isEmpty() ? it->resume : toolState(*it);
+                if (it->state == "error") { it->state = it->tools.isEmpty() ? it->resume : toolState(*it); it->reason.clear(); }
                 else if (it->state == "turn-finished") it->state = "idle";
                 it->reactionUntil = 0;
             }

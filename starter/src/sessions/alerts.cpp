@@ -90,7 +90,7 @@ static int stateRank(const QString &state) {
 static QString statusText(const Session &s, qint64 now) {
     if (s.state == "attention") return alertTitle({{}, "attention", {}, {}, {}, s.reason});
     if (s.state == "exhausted") return alertTitle({{}, "exhausted", {}, {}, {}, s.reason});
-    if (s.state == "error") return Alerts::tr("Tool error");
+    if (s.state == "error") return s.reason == "turn" ? Alerts::tr("Turn failed") : Alerts::tr("Tool error");
     if (s.state == "working") return Alerts::tr("Working");
     if (s.state == "reading") return Alerts::tr("Reading");
     if (s.state == "thinking") return Alerts::tr("Thinking");
