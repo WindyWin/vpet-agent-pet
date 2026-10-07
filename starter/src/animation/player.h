@@ -11,7 +11,12 @@ namespace pet {
 class Player : public QObject {
     Q_OBJECT
 public:
-    explicit Player(QObject *parent = nullptr, const QString &resourceRoot = ":/");
+    // Plays PetLibrary::shared()'s active pet, activating VPet first when none is active.
+    explicit Player(QObject *parent = nullptr);
+    // Plays the pet in a folder holding assets/<pet>/animations.json and its frames (tests).
+    Player(QObject *parent, const QString &root, const QString &pet = "vpet");
+    // Plays a catalog that was already loaded, such as a PetLibrary's.
+    Player(QObject *parent, const Catalog &catalog);
     // Normal changes finish the current held state's exit; urgent changes cut immediately.
     bool select(const QString &state, bool interrupt = false);
     // A held state stays until released, whatever else is selected meanwhile; release() then plays
@@ -87,7 +92,8 @@ signals:
     // new state or vary the pass.
     void looped(const QString &state);
 private:
-    bool load(const QString &resourceRoot);
+    // Plays `catalog`, or shows `error` (the "Artwork unavailable" placeholder) when it is empty.
+    void open(const Catalog &catalog, const QString &error);
     enum class Decoration { None, LingerIn, Linger, LingerOut, Handover };
     void enter(const QString &state, int phase = 0);
     // `sequence` replaces the phase's own for this pass, as an alternate or a reaction does.

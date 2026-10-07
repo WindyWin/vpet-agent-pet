@@ -1,4 +1,6 @@
 #include "animation/catalog.h"
+#include "animation/pet_library.h"
+#include "animation/player.h"
 #include <QCryptographicHash>
 #include <QDir>
 #include <QFile>
@@ -6,10 +8,12 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QPixmap>
 #include <QResource>
 #include <QScopeGuard>
 #include <QTemporaryDir>
 #include <QTest>
+#include <algorithm>
 #include <utility>
 
 namespace {
@@ -165,6 +169,95 @@ private slots:
         }
         const auto duo = QJsonDocument::fromJson(contents(QFileInfo(FIXTURE_INDEX).absolutePath() + "/pets/duo/packs.json")).object();
         QCOMPARE(duo["packs"].toArray().size(), 2); // One pack per frame folder.
+    }
+    void libraryListsPetsWithoutTheirFrames() {
+        pet::PetLibrary library(FIXTURE_INDEX, "/listing");
+        QVERIFY2(library.error().isEmpty(), qPrintable(library.error()));
+        QCOMPARE(library.root(), QString(":/listing"));
+        const auto pets = library.pets();
+        QCOMPARE(pets.size(), 3);
+        QCOMPARE(pets[0].id, QString("broken")); QCOMPARE(pets[1].id, QString("duo")); QCOMPARE(pets[2].id, QString("mini"));
+        QCOMPARE(pets[2].name, QString("Mini")); QCOMPARE(pets[2].author, QString("Agent Pet tests"));
+        QCOMPARE(pets[2].terms, QString("LICENSE")); QVERIFY(pets[2].url.isEmpty());
+        QCOMPARE(pets[2].preview, QString(":/listing/assets/mini/preview.png"));
+        QVERIFY(!QPixmap(pets[2].preview).isNull()); // Previews come from the index.
+        QVERIFY(!QFile::exists(":/listing/assets/mini/idle/_000_100.png")); // No pack is registered.
+        QVERIFY(library.active().isEmpty()); QVERIFY(!library.catalog().valid());
+        QVERIFY(library.info("nosuch").id.isEmpty()); QVERIFY(library.info("../x").id.isEmpty());
+        pet::PetLibrary missing("/nonexistent/artwork.rcc", "/missing");
+        QVERIFY(!missing.error().isEmpty()); QVERIFY(missing.pets().isEmpty());
+        QString error; QVERIFY(!missing.activate("mini", &error)); QVERIFY(!error.isEmpty());
+    }
+    void activateRegistersOnlyThatPet() {
+        pet::PetLibrary library(FIXTURE_INDEX, "/activate");
+        QString error;
+        QVERIFY2(library.activate("duo", &error), qPrintable(error));
+        QCOMPARE(library.active(), QString("duo"));
+        QVERIFY(QFile::exists(":/activate/assets/duo/idle/_000_100.png"));
+        QVERIFY(QFile::exists(":/activate/assets/duo/wave/_000_50.png"));
+        QVERIFY(!QFile::exists(":/activate/assets/mini/idle/_000_100.png"));
+        QVERIFY(library.catalog().valid());
+        QCOMPARE(library.catalog().sequences.value("wave").first().path, QString(":/activate/assets/duo/wave/_000_50.png"));
+        QVERIFY(!library.activate("mini", &error)); QVERIFY2(error.contains("already active"), qPrintable(error));
+        QVERIFY(!QFile::exists(":/activate/assets/mini/idle/_000_100.png"));
+        QVERIFY(QFile::exists(":/activate/assets/duo/wave/_000_50.png")); // The active pet keeps its packs.
+    }
+    void failedActivationRollsBack() {
+        // A copy of the fixture build that lacks duo's second pack.
+        QTemporaryDir directory;
+        const QDir built(QFileInfo(FIXTURE_INDEX).absolutePath());
+        for (const auto &name : built.entryList({"*.rcc"}, QDir::Files))
+            QVERIFY(QFile::copy(built.filePath(name), directory.filePath(name)));
+        const auto tree = QJsonDocument::fromJson(contents(built.filePath("pets/duo/packs.json"))).object();
+        const auto last = tree["packs"].toArray().last().toObject()["name"].toString();
+        QVERIFY(QFile::remove(directory.filePath(last + ".rcc")));
+        pet::PetLibrary library(directory.filePath("artwork.rcc"), "/rollback");
+        QString error;
+        QVERIFY(!library.activate("duo", &error)); QVERIFY2(error.contains(last), qPrintable(error));
+        QVERIFY(library.active().isEmpty()); QVERIFY(!library.catalog().valid());
+        QVERIFY(!QFile::exists(":/rollback/assets/duo/idle/_000_100.png"));
+        QVERIFY(!QFile::exists(":/rollback/assets/duo/wave/_000_50.png"));
+        QVERIFY2(library.activate("mini", &error), qPrintable(error)); // A failure leaves the library usable.
+    }
+    void brokenPetIsRefused() {
+        pet::PetLibrary library(FIXTURE_INDEX, "/broken");
+        QString error;
+        QVERIFY(!library.activate("broken", &error));
+        QCOMPARE(error, QString("Missing core state: sleeping"));
+        QVERIFY(!QFile::exists(":/broken/assets/broken/idle/_000_100.png"));
+        QVERIFY(!library.activate("nosuch", &error)); QVERIFY(!error.isEmpty());
+        QVERIFY2(library.activate("mini", &error), qPrintable(error));
+    }
+    void miniPlaysEveryCoreState() {
+        pet::PetLibrary library(FIXTURE_INDEX, "/mini");
+        QString error; QVERIFY2(library.activate("mini", &error), qPrintable(error));
+        pet::Player player(nullptr, library.catalog()); player.setPaused(true);
+        QVERIFY2(player.valid(), qPrintable(player.error()));
+        for (const auto &core : pet::coreStates()) {
+            QVERIFY(player.select(core.name, true));
+            QVERIFY2(!player.pixmap().isNull(), qPrintable(core.name + ": " + player.error()));
+            QVERIFY2(player.error().isEmpty(), qPrintable(core.name + ": " + player.error()));
+        }
+    }
+    void bundledPetsMeetTheContract() {
+        pet::PetLibrary library(PET_INDEX, "/bundled");
+        const auto pets = library.pets();
+        QVERIFY(std::any_of(pets.begin(), pets.end(), [](const pet::PetInfo &pet) { return pet.id == "vpet"; }));
+        for (const auto &pet : pets) {
+            QString error;
+            const auto catalog = pet::Catalog::load(library.root(), pet.id, &error);
+            QVERIFY2(catalog.valid(), qPrintable(pet.id + ": " + error));
+            QVERIFY2(catalog.contractError().isEmpty(), qPrintable(pet.id + ": " + catalog.contractError()));
+        }
+        const auto vpet = library.info("vpet");
+        QCOMPARE(vpet.author, QString("VUP-Simulator team"));
+        QCOMPARE(vpet.url, QString("https://github.com/LorisYounger/VPet"));
+        QCOMPARE(vpet.terms, QString("VPET-ARTWORK-TERMS.md"));
+        // The app's default player activates VPet in the shared library.
+        pet::Player player; player.setPaused(true);
+        QVERIFY2(player.valid(), qPrintable(player.error())); QVERIFY(!player.pixmap().isNull());
+        QCOMPARE(pet::PetLibrary::shared().active(), QString("vpet"));
+        QCOMPARE(pet::PetLibrary::shared().root(), QString(":/"));
     }
 };
 QTEST_MAIN(PetsTests)

@@ -1,64 +1,36 @@
 #include "player.h"
-#include <QCoreApplication>
-#include <QDir>
-#include <QFile>
-#include <QFileInfo>
+#include "pet_library.h"
+#include <QDebug>
 #include <QImageReader>
-#include <QJsonArray>
-#include <QJsonDocument>
-#include <QJsonObject>
-#include <QRegularExpression>
-#include <QResource>
-#include <QSet>
 #include <algorithm>
 #include <utility>
 
 namespace pet {
-Player::Player(QObject *parent, const QString &root) : QObject(parent) {
+Player::Player(QObject *parent) : QObject(parent) {
+    auto &library = PetLibrary::shared();
+    QString error;
+    if (library.active().isEmpty() && !library.activate("vpet", &error)) {
+        qWarning().noquote() << "Cannot load pet vpet:" << error;
+        error = tr("Cannot load the artwork pack. Reinstall Agent Pet to restore it.");
+    }
+    open(library.catalog(), error);
+}
+Player::Player(QObject *parent, const QString &root, const QString &pet) : QObject(parent) {
+    QString error;
+    const auto catalog = Catalog::load(root, pet, &error);
+    open(catalog, error);
+}
+Player::Player(QObject *parent, const Catalog &catalog) : QObject(parent) {
+    open(catalog, "Empty animation catalog.");
+}
+void Player::open(const Catalog &catalog, const QString &error) {
     timer_.setSingleShot(true);
     timer_.setTimerType(Qt::PreciseTimer);
     connect(&timer_, &QTimer::timeout, this, &Player::advance);
+    if (!catalog.valid()) { fail(error); return; }
+    catalog_ = catalog;
     // The first idle is always the catalog's own entry; variants start with the second pass.
-    if (load(root)) { variants_ = false; enter("idle"); variants_ = true; }
-}
-bool Player::load(const QString &root) {
-    if (root == ":/" && !QFile::exists(":/assets/vpet/animations.json")) {
-        const QDir executable(QCoreApplication::applicationDirPath());
-        // Installed bundles keep it under share (Linux) or Resources (macOS application bundle);
-        // local builds put it beside the executable.
-        auto artwork = executable.filePath("artwork.rcc");
-        for (const auto *installed : {"../share/agent-pet/artwork.rcc", "../Resources/artwork.rcc"})
-            if (QFile::exists(executable.filePath(installed))) { artwork = executable.filePath(installed); break; }
-        QStringList registered;
-        auto registerPack = [&](const QString &path) {
-            if (!QResource::registerResource(path)) return false;
-            registered.append(path); return true;
-        };
-        auto missingPack = [&] {
-            for (const auto &path : registered) QResource::unregisterResource(path);
-            fail(tr("Cannot load the artwork pack. Reinstall Agent Pet to restore it.")); return false;
-        };
-        if (!registerPack(artwork)) return missingPack();
-        QFile index(":/assets/vpet/packs.json");
-        // Legacy bundles contain all frames in artwork.rcc and have no index.
-        if (index.exists()) {
-            if (!index.open(QIODevice::ReadOnly) || index.size() > 1024 * 1024) return missingPack();
-            const auto packs = QJsonDocument::fromJson(index.readAll()).object()["packs"].toArray();
-            if (packs.isEmpty() || packs.size() > 4093) return missingPack();
-            const QDir directory(QFileInfo(artwork).absolutePath());
-            QSet<QString> seen;
-            for (const auto &value : packs) {
-                const auto name = value.toObject()["name"].toString() + ".rcc";
-                if (!QRegularExpression("^artwork-[0-9a-f]{64}\\.rcc$").match(name).hasMatch()
-                    || seen.contains(name) || !registerPack(directory.filePath(name))) return missingPack();
-                seen.insert(name);
-            }
-        }
-    }
-    QString error;
-    catalog_ = Catalog::load(root, "vpet", &error);
-    if (!catalog_.valid()) { fail(error); return false; }
-    return true;
+    variants_ = false; enter("idle"); variants_ = true;
 }
 const Move *Player::move(const QString &state) const {
     const auto found = catalog_.moves.constFind(state);
