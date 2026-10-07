@@ -107,6 +107,7 @@ private slots:
         QVERIFY2(error.contains("Invalid pet identifier"), qPrintable(error));
         QVERIFY(!pet::Catalog::load(PET_SOURCE, "nosuch", &error).valid());
         QVERIFY(pet::validPetId("vpet")); QVERIFY(pet::validPetId("cat-2"));
+        QVERIFY(!pet::validPetId("cat\n")); QVERIFY(!pet::validPetId(QString(32, 'a') + "\n")); // `$` would let these pass.
         QVERIFY(!pet::validPetId("Cat")); QVERIFY(!pet::validPetId("")); QVERIFY(!pet::validPetId(QString(33, 'a')));
     }
 };

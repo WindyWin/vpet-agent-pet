@@ -28,7 +28,8 @@ QString drawReaction(const QVector<Reaction> &pool, const Random &random) {
     return pool.first().state;
 }
 bool validPetId(const QString &id) {
-    static const QRegularExpression pattern("^[a-z0-9-]{1,32}$");
+    // Fully anchored: a plain `$` would also accept a trailing newline.
+    static const QRegularExpression pattern(QRegularExpression::anchoredPattern("[a-z0-9-]{1,32}"));
     return pattern.match(id).hasMatch();
 }
 const QVector<CoreState> &coreStates() {
