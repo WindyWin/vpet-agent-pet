@@ -1921,7 +1921,7 @@ private slots:
             auto *sleep = dialog->findChild<QTimeEdit*>("sleepTime");
             QVERIFY(monday && leave && sleep);
             monday->setTime(QTime(9, 15)); leave->setTime(QTime(19, 30)); sleep->setTime(QTime(23, 15));
-            QVERIFY(window.savePreferences()); dialog->close();
+            dialog->close(); QVERIFY(window.savePreferences());
         }
         pet::PetWindow restored(nullptr, path);
         const auto schedule = restored.eggs().reminderSchedule();
@@ -1949,6 +1949,26 @@ private slots:
             file.write(QByteArray(R"({"version":1,"size":200,"on_top":true,"leave_work_time":)") + bad + "}"); file.close();
             pet::PreferencesStore invalid(path); invalid.load(); QVERIFY(!invalid.save(pet::Preferences{}));
         }
+    }
+    void editingClockTimeDoesNotConsumeReminder() {
+        pet::PetWindow window(nullptr, {}, false);
+        auto schedule = window.eggs().reminderSchedule(); schedule.sleep = QTime(23, 15);
+        window.eggs().setReminderSchedule(schedule);
+        QDateTime local(QDate(2026, 10, 10), QTime(21, 30));
+        window.eggs().setClock([&] { return local; });
+        window.showSettings(); auto *dialog = window.findChild<QDialog*>(); QVERIFY(dialog);
+        auto *sleep = dialog->findChild<QTimeEdit*>("sleepTime"); QVERIFY(sleep);
+        // Changing the hour before the minute produces a temporarily overdue value.
+        sleep->setTime(QTime(21, 15));
+        QCOMPARE(window.eggs().reminderSchedule().sleep, QTime(23, 15));
+        QVERIFY(window.eggs().reminder().isEmpty());
+        sleep->setTime(QTime(21, 45));
+        emit sleep->editingFinished();
+        QCOMPARE(window.eggs().reminderSchedule().sleep, QTime(21, 45));
+        QVERIFY(window.eggs().reminder().isEmpty());
+        local.setTime(QTime(21, 45)); QCOMPARE(window.eggs().reminder(), QString("sleep"));
+        QVERIFY(window.eggs().reminder().isEmpty());
+        dialog->close();
     }
     void easterEggPreference() {
         QTemporaryDir directory; const auto path = directory.path() + "/preferences.json";

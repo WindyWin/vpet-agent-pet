@@ -813,10 +813,13 @@ void PetWindow::showSettings() {
         auto *time = new QTimeEdit(eggs_.reminderSchedule().*field, dialog);
         time->setDisplayFormat("HH:mm"); time->setAccessibleName(label); time->setObjectName(name);
         layout->addRow(label, time);
-        connect(time, &QTimeEdit::timeChanged, this, [this, field](QTime value) {
-            auto schedule = eggs_.reminderSchedule(); schedule.*field = value;
+        // Commit a complete edit: intermediate hour/minute values must not consume today's reminder.
+        const auto applyTime = [this, time, field] {
+            auto schedule = eggs_.reminderSchedule(); schedule.*field = time->time();
             eggs_.setReminderSchedule(schedule); saveTimer_.start();
-        });
+        };
+        connect(time, &QTimeEdit::editingFinished, this, applyTime);
+        connect(dialog, &QDialog::finished, this, applyTime);
     };
     clockTime(tr("Monday reminder"), &ReminderSchedule::monday, "mondayTime");
     clockTime(tr("Go-home reminder"), &ReminderSchedule::leaveWork, "leaveWorkTime");

@@ -20,9 +20,9 @@ replaceable local-time clock and random source:
 | May 20 | That day: the first ambient fidget greets with it, then one later fidget in four | `may20`: `love_520` (`IDEL/happy_like520`) |
 | Birthday | The date set in settings (`MM-dd`; February 29 falls on the 28th in other years): the same greeting, and the day's first finished turn | `birthday`: `birthday` (`BDay`) |
 | Late night | 01:00 to 05:00: one fidget in two, and one bedtime tooltip a night when a turn finishes (not while muted or hidden) | `late_night`: `fidget_yawn` |
-| Monday blues | Monday 06:00 to noon, once a day: a yawn or bored fidget and a tired tooltip (not while muted or hidden) | `monday`: `fidget_yawn` 2, `fidget_boring` 1 |
-| Go home | Monday to Friday from 16:45 to 18:00, once a day: a tooltip to get ready to leave | `leave_work`: `fidget_bubbles` |
-| Bedtime | From 22:00, once a day: a yawn and a tooltip telling you to sleep | `sleep`: `fidget_yawn` |
+| Monday blues | Monday from the configured time (default 06:00) for six hours, ending at midnight, once a day: a yawn or bored fidget and a tired tooltip (not while muted or hidden) | `monday`: `fidget_yawn` 2, `fidget_boring` 1 |
+| Go home | Monday to Friday from the configured time (default 16:45) for 75 minutes, ending at midnight, once a day: a tooltip to get ready to leave | `leave_work`: `fidget_bubbles` |
+| Bedtime | From the configured time (default 22:00) until midnight, once a day: a yawn and a tooltip telling you to sleep | `sleep`: `fidget_yawn` |
 | Friday evening | Friday from 17:00: every finished turn | `friday_evening`: `dance` (`Music`) |
 | Long turn | A turn of 15 minutes or more from its prompt | `long_turn`: `milestone` 2, `dance` 1 |
 | Danger | A tool start flagged `risky` by the hook | `danger`: `startled` |
