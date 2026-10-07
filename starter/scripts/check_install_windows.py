@@ -62,6 +62,15 @@ with tempfile.TemporaryDirectory(prefix="agent pet check ") as temporary:
     claude.write_text(json.dumps(seeded, indent=4) + "\n")
     codex = root / "codex/hooks.json"
 
+    # Refuse to write into a folder that holds another program's files.
+    foreign = root / "Other App"
+    foreign.mkdir()
+    (foreign / "notes.txt").write_text("not ours")
+    refused = subprocess.run([str(args.setup), "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART", f"/DIR={foreign}",
+                              f"/LOG={root / 'foreign.log'}"], env=env, text=True, capture_output=True, timeout=300)
+    if refused.returncode == 0 or (foreign / "agent-pet.exe").exists() or (foreign / "notes.txt").read_text() != "not ours":
+        raise SystemExit(f"Setup wrote into a foreign folder (exit {refused.returncode})")
+
     install("claude,codex,login", "install.log")
     for name in ("agent-pet.exe", "agent-pet-cli.exe", "artwork.rcc", "INSTALL.txt", "LICENSE", "unins000.exe"):
         if not (prefix / name).is_file():

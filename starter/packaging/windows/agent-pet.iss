@@ -78,6 +78,35 @@ begin
 end;
 
 const
+  UninstallKey = 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{8441EED6-7EE4-4267-AADE-8840188C4202}_is1';
+
+// Installs into a new or empty folder, or over this program's own earlier installation (its uninstall
+// entry names the folder); never into another program's folder, whose files could be replaced.
+function PrepareToInstall(var NeedsRestart: Boolean): String;
+var
+  Folder, Previous: String;
+  Found: TFindRec;
+  Empty: Boolean;
+begin
+  Result := '';
+  Folder := ExpandConstant('{app}');
+  if not DirExists(Folder) then Exit;
+  if RegQueryStringValue(HKCU, UninstallKey, 'Inno Setup: App Path', Previous)
+     and (CompareText(RemoveBackslashUnlessRoot(Previous), RemoveBackslashUnlessRoot(Folder)) = 0) then Exit;
+  Empty := True;
+  if FindFirst(AddBackslash(Folder) + '*', Found) then
+    try
+      repeat
+        if (Found.Name <> '.') and (Found.Name <> '..') then Empty := False;
+      until (not Empty) or (not FindNext(Found));
+    finally
+      FindClose(Found);
+    end;
+  if not Empty then
+    Result := 'The folder ' + Folder + ' already contains other files. Choose a new or empty folder for Agent Pet.';
+end;
+
+const
   RunKey = 'Software\Microsoft\Windows\CurrentVersion\Run';
 
 // Stops pets started from this installation only; a portable copy elsewhere keeps running.

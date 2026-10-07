@@ -87,7 +87,9 @@ update check matches and compiles `packaging/windows/agent-pet.iss` with Inno Se
 into `agent-pet-VERSION-windows-x86_64-setup.exe`.
 
 The setup program installs per user without administrator rights into
-`%LOCALAPPDATA%\Programs\AgentPet` (no spaces, for Codex), adds a Start menu entry and
+`%LOCALAPPDATA%\Programs\AgentPet` (no spaces, for Codex), only into a new or empty folder
+or over its own earlier installation (the folder its uninstall entry names), adds a Start
+menu entry and
 optionally a desktop shortcut, and offers to connect Claude Code and Codex, start at
 sign-in and start with agent sessions, reporting a failed step instead of hiding it. An
 upgrade closes a running pet through the Restart Manager and deletes nothing beforehand:

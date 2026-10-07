@@ -50,10 +50,10 @@ public:
         return GetForegroundWindow() == window ? Outcome::Confirmed : Outcome::Requested;
     }
     ActiveState active(const WindowRequest &request) override {
-        const auto foreground = GetForegroundWindow();
-        if (!foreground) return ActiveState::Inactive;
-        return handle(matchWindow(preferred(request), request.pids, request.project, windows())) == foreground
-            ? ActiveState::Active : ActiveState::Inactive;
+        // A window that cannot be identified is not known to be inactive.
+        const auto id = matchWindow(preferred(request), request.pids, request.project, windows());
+        if (id.isEmpty()) return ActiveState::Unknown;
+        return handle(id) == GetForegroundWindow() ? ActiveState::Active : ActiveState::Inactive;
     }
 };
 }

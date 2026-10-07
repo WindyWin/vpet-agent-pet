@@ -1,6 +1,7 @@
 #include "platform/contracts/event_transport.h"
 #include <QCryptographicHash>
 #include <QObject>
+#include <QTimer>
 #include <QWinEventNotifier>
 #include <array>
 #include <vector>
@@ -127,8 +128,11 @@ void PipeEventTransport::listen(Instance &instance) {
     ResetEvent(instance.overlapped.hEvent);
     if (ConnectNamedPipe(instance.pipe, &instance.overlapped)) return; // Completion signals the event.
     const auto code = GetLastError();
-    if (code == ERROR_PIPE_CONNECTED || code == ERROR_NO_DATA) read(instance);
-    else if (code != ERROR_IO_PENDING) DisconnectNamedPipe(instance.pipe); // Leave a broken instance idle rather than spin.
+    if (code == ERROR_PIPE_CONNECTED || code == ERROR_NO_DATA) { read(instance); return; }
+    if (code == ERROR_IO_PENDING) return;
+    // Nothing is pending, so no completion will come: try again shortly rather than spin or lose the instance.
+    DisconnectNamedPipe(instance.pipe);
+    QTimer::singleShot(250, this, [this, &instance] { listen(instance); });
 }
 void PipeEventTransport::read(Instance &instance) {
     instance.reading = true;
