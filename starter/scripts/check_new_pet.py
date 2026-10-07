@@ -96,7 +96,10 @@ def main():
         (assets / 'cat/notes.txt').write_text('stray\n')
         expect('Unexpected file at the pet folder root' in run('verify_assets.py', *common, ok=False), 'Stray file')
         (assets / 'cat/notes.txt').unlink()
-        for odd in ('a;b_000_80.png', 'a[1]_000_80.png', 'a\nb_000_80.png'):
+        odd_names = ['a;b_000_80.png', 'a[1]_000_80.png']
+        if sys.platform != 'win32':  # Windows file names cannot hold control characters
+            odd_names.append('a\nb_000_80.png')
+        for odd in odd_names:
             write_png(assets / 'cat/idle' / odd, 16, 16, (0, 0, 0, 255))
             expect('Frames are PNG files without' in run('verify_assets.py', *common, ok=False), f'Frame name {odd!r}')
             (assets / 'cat/idle' / odd).unlink()
