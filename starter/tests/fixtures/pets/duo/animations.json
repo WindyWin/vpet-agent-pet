@@ -1,0 +1,159 @@
+{
+  "schema_version": 1,
+  "asset_root": "assets/duo",
+  "states": {
+    "idle": [
+      "idle"
+    ],
+    "starting": [
+      "wave"
+    ],
+    "turn_finished": [
+      "idle"
+    ],
+    "tool_error": [
+      "idle"
+    ],
+    "closing": [
+      "idle"
+    ],
+    "closing_angry": [
+      "idle"
+    ],
+    "angry": [
+      "idle"
+    ],
+    "thinking": [
+      "idle",
+      "idle",
+      "idle"
+    ],
+    "reading": [
+      "idle",
+      "idle",
+      "idle"
+    ],
+    "working": [
+      "idle",
+      "idle",
+      "idle"
+    ],
+    "waiting": [
+      "idle",
+      "idle",
+      "idle"
+    ],
+    "needs_input": [
+      "idle",
+      "idle",
+      "idle"
+    ],
+    "sleeping": [
+      "idle",
+      "idle",
+      "idle"
+    ],
+    "dragging": [
+      "idle",
+      "idle",
+      "idle"
+    ],
+    "out_of_quota": [
+      "idle"
+    ]
+  },
+  "sequences": [
+    {
+      "state": "idle",
+      "path": "idle",
+      "frames": [
+        {
+          "path": "assets/duo/idle/_000_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/duo/idle/_001_100.png",
+          "duration_ms": 100
+        }
+      ],
+      "duration_ms": 200
+    },
+    {
+      "path": "wave",
+      "frames": [
+        {
+          "path": "assets/duo/wave/_000_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/duo/wave/_001_50.png",
+          "duration_ms": 50
+        }
+      ],
+      "duration_ms": 100,
+      "state": "starting"
+    }
+  ],
+  "playback": {
+    "idle": {
+      "mode": "loop",
+      "after": "idle"
+    },
+    "starting": {
+      "mode": "once",
+      "after": "idle"
+    },
+    "turn_finished": {
+      "mode": "once",
+      "after": "idle"
+    },
+    "tool_error": {
+      "mode": "once",
+      "after": "previous"
+    },
+    "closing": {
+      "mode": "once",
+      "after": "stop"
+    },
+    "closing_angry": {
+      "mode": "once",
+      "after": "stop"
+    },
+    "angry": {
+      "mode": "once",
+      "after": "stop"
+    },
+    "thinking": {
+      "mode": "phased",
+      "after": "idle"
+    },
+    "reading": {
+      "mode": "phased",
+      "after": "idle"
+    },
+    "working": {
+      "mode": "phased",
+      "after": "idle"
+    },
+    "waiting": {
+      "mode": "phased",
+      "after": "idle"
+    },
+    "needs_input": {
+      "mode": "phased",
+      "after": "idle"
+    },
+    "sleeping": {
+      "mode": "phased",
+      "after": "idle"
+    },
+    "dragging": {
+      "mode": "phased",
+      "after": "idle"
+    },
+    "out_of_quota": {
+      "mode": "loop",
+      "after": "idle"
+    }
+  }
+}

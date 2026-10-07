@@ -1,11 +1,16 @@
 #include "animation/catalog.h"
+#include <QCryptographicHash>
 #include <QDir>
 #include <QFile>
+#include <QFileInfo>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QResource>
+#include <QScopeGuard>
 #include <QTemporaryDir>
 #include <QTest>
+#include <utility>
 
 namespace {
 // A catalog for pet "test" in which every core state plays one idle frame with its contract shape.
@@ -45,6 +50,40 @@ pet::Catalog load(const QJsonObject &catalog, QString *error = nullptr) {
     auto loaded = pet::Catalog::load(root.path(), "test", &reason);
     if (error) *error = reason;
     return loaded;
+}
+QString sha256(const QByteArray &bytes) { return QCryptographicHash::hash(bytes, QCryptographicHash::Sha256).toHex(); }
+QByteArray contents(const QString &path) {
+    QFile file(path);
+    return file.open(QIODevice::ReadOnly) ? file.readAll() : QByteArray();
+}
+// Recomputes pet `id`'s hash tree from the index mounted at `root` and the packs in `directory`, and compares
+// it with the pet's packs.json. Empty when everything matches; otherwise what differs.
+QString treeMismatch(const QString &root, const QString &id, const QString &directory) {
+    const QDir pet(QDir(root).filePath("assets/" + id));
+    const auto tree = QJsonDocument::fromJson(contents(pet.filePath("packs.json"))).object();
+    const auto preview = QJsonDocument::fromJson(contents(pet.filePath("pet.json"))).object()["preview"].toString();
+    const auto catalog = sha256(QString("pet.json %1\nanimations.json %2\n%3 %4\n")
+        .arg(sha256(contents(pet.filePath("pet.json"))), sha256(contents(pet.filePath("animations.json"))),
+             preview, sha256(contents(pet.filePath(preview)))).toUtf8());
+    if (tree["catalog"].toString() != "sha256:" + catalog) return id + ": catalog digest";
+    QString text = "agent-pet-pet-tree 1\ncatalog " + catalog + "\n", previous;
+    const auto packs = tree["packs"].toArray();
+    if (packs.isEmpty()) return id + ": no packs";
+    for (const auto &value : packs) {
+        const auto pack = value.toObject();
+        const auto name = pack["name"].toString();
+        const auto bytes = contents(QDir(directory).filePath(name + ".rcc"));
+        // A pack's name is the SHA-256 of its frame folder's resource path, as the updater has always seen it.
+        if (name != "artwork-" + sha256(("assets/" + id + "/" + pack["sequence"].toString()).toUtf8()))
+            return id + ": name of " + pack["sequence"].toString();
+        if (bytes.isEmpty() || pack["sha256"].toString() != sha256(bytes) || pack["bytes"].toInteger() != bytes.size())
+            return id + ": leaf " + name;
+        if (name <= previous) return id + ": packs out of order";
+        previous = name;
+        text += name + " " + sha256(bytes) + "\n";
+    }
+    if (tree["root"].toString() != "sha256:" + sha256(text.toUtf8())) return id + ": root digest";
+    return {};
 }
 }
 class PetsTests : public QObject {
@@ -109,6 +148,22 @@ private slots:
         QVERIFY(pet::validPetId("vpet")); QVERIFY(pet::validPetId("cat-2"));
         QVERIFY(!pet::validPetId("cat\n")); QVERIFY(!pet::validPetId(QString(32, 'a') + "\n")); // `$` would let these pass.
         QVERIFY(!pet::validPetId("Cat")); QVERIFY(!pet::validPetId("")); QVERIFY(!pet::validPetId(QString(33, 'a')));
+    }
+    void hashTreesMatchTheBuiltPacks() {
+        for (const auto &[index, pets] : {std::pair{QString(PET_INDEX), QStringList{"vpet"}},
+                                          std::pair{QString(FIXTURE_INDEX), QStringList{"broken", "duo", "mini"}}}) {
+            QVERIFY2(QResource::registerResource(index, "/tree"), qPrintable(index));
+            const auto unregister = qScopeGuard([&] { QResource::unregisterResource(index, "/tree"); });
+            QCOMPARE(QDir(":/tree/assets").entryList(QDir::Dirs | QDir::NoDotAndDotDot, QDir::Name), pets);
+            for (const auto &id : pets) {
+                const auto mismatch = treeMismatch(":/tree", id, QFileInfo(index).absolutePath());
+                QVERIFY2(mismatch.isEmpty(), qPrintable(mismatch));
+            }
+            // Listing pets reads the index only: no frame of any pet is a resource yet.
+            QVERIFY(!QFile::exists(":/tree/assets/" + pets.first() + "/" + (pets.first() == "vpet" ? "vup/Default/Nomal/1/_000_250.png" : "idle/_000_100.png")));
+        }
+        const auto duo = QJsonDocument::fromJson(contents(QFileInfo(FIXTURE_INDEX).absolutePath() + "/pets/duo/packs.json")).object();
+        QCOMPARE(duo["packs"].toArray().size(), 2); // One pack per frame folder.
     }
 };
 QTEST_MAIN(PetsTests)

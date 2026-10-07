@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "file_count": 2,
+  "total_bytes": 166,
+  "files": [
+    {
+      "path": "assets/broken/idle/_000_100.png",
+      "bytes": 83,
+      "sha256": "3d922e068592410ac08cc5b6c39f859954a8141af30b1978c401245c6287464c"
+    },
+    {
+      "path": "assets/broken/idle/_001_100.png",
+      "bytes": 83,
+      "sha256": "e8e574266b026fe04c270843eea2439367102a6f4347079351327348a468e91c"
+    }
+  ]
+}

@@ -106,7 +106,17 @@ def main():
         run('verify_assets.py', *common)
         write_png(assets / 'cat/odd name/_000_80.png', 16, 16, (0, 0, 0, 255))
         expect('Folder names use' in run('verify_assets.py', *common, ok=False), 'Folder with a space')
-    print('OK: new_pet.py, add_sequences.py --pet and verify_assets.py')
+        # Scaffolding the mini test fixture again reproduces it; tests/pets_tests.cpp plays every core state of it.
+        fixture = ROOT / 'tests/fixtures/pets/mini'
+        again = base / 'again'
+        again.mkdir()
+        run('new_pet.py', 'mini', '--name', 'Mini', '--author', 'Agent Pet tests', '--terms', 'LICENSE',
+            '--idle', fixture / 'idle', '--assets', again, '--licenses', ROOT)
+        for name in ('pet.json', 'animations.json', 'manifest.json'):  # Parsed: checkouts may convert line endings.
+            expect(json.loads((again / 'mini' / name).read_text()) == json.loads((fixture / name).read_text()),
+                   f'new_pet.py no longer reproduces tests/fixtures/pets/mini/{name}')
+        expect((again / 'mini/preview.png').read_bytes() == (fixture / 'preview.png').read_bytes(), 'mini preview')
+    print('OK: new_pet.py, add_sequences.py --pet, verify_assets.py and the mini fixture')
 
 
 if __name__ == '__main__':

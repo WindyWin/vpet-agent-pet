@@ -6,6 +6,7 @@
 #include <QImageReader>
 #include <QJsonArray>
 #include <QJsonDocument>
+#include <QJsonObject>
 #include <QRegularExpression>
 #include <QResource>
 #include <QSet>
@@ -42,12 +43,12 @@ bool Player::load(const QString &root) {
         // Legacy bundles contain all frames in artwork.rcc and have no index.
         if (index.exists()) {
             if (!index.open(QIODevice::ReadOnly) || index.size() > 1024 * 1024) return missingPack();
-            const auto packs = QJsonDocument::fromJson(index.readAll());
-            if (!packs.isArray() || packs.array().isEmpty() || packs.array().size() > 4093) return missingPack();
+            const auto packs = QJsonDocument::fromJson(index.readAll()).object()["packs"].toArray();
+            if (packs.isEmpty() || packs.size() > 4093) return missingPack();
             const QDir directory(QFileInfo(artwork).absolutePath());
             QSet<QString> seen;
-            for (const auto &value : packs.array()) {
-                const auto name = value.toString();
+            for (const auto &value : packs) {
+                const auto name = value.toObject()["name"].toString() + ".rcc";
                 if (!QRegularExpression("^artwork-[0-9a-f]{64}\\.rcc$").match(name).hasMatch()
                     || seen.contains(name) || !registerPack(directory.filePath(name))) return missingPack();
                 seen.insert(name);
