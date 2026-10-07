@@ -40,6 +40,7 @@ private:
     void fetch(const Release &target, const QString &path, std::function<void()> complete,
                std::function<void()> fallback = {});
     void downloadFull(const Release &target);
+    void scanComponents(const Release &target, const Components &components, int index, QList<Component> queue, qint64 total);
     void downloadComponent(const Release &target, const QList<Component> &queue, int index);
     void finishDownload(const Release &target, bool components);
     // Starts counting bytes across every file of one update; total 0 leaves the percentage unknown.

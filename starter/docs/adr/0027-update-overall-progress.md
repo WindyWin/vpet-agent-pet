@@ -27,7 +27,9 @@ update… 0–100%” repeat several times with no sign of how much remained.
 ## Consequences
 
 Files already present are checked once, before downloading, instead of lazily per
-file; the cost is the same hashing done earlier. The bar is per update, not per
+file; the cost is the same hashing done earlier. It runs one component per
+event-loop turn under "Checking installed files…", so a large component set
+(about 130 artwork packs) cannot freeze the window. The bar is per update, not per
 byte rate: no speed or time estimate.
 
 ## Validation

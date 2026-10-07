@@ -191,13 +191,8 @@ void Controller::download() {
             pruneComponents(directory_, keep);
             QFile::remove(directory_ + "/package.tar.gz");
             // Only what is missing counts, so the bar covers the whole update once and never restarts per file.
-            QList<Component> queue; qint64 total = 0; QString ignored;
-            for (const auto &component : components.entries) {
-                if (componentMatches(component, prefix_) || verifiedArchive(directory_ + '/' + component.archive, component.digest, ignored)) continue;
-                queue.append(component); total += component.size;
-            }
-            beginProgress(total, queue.size(), false);
-            downloadComponent(target, queue, 0);
+            status(tr("Checking installed files…"));
+            scanComponents(target, components, 0, {}, 0);
         }, [this, target] { downloadFull(target); });
     } else {
         downloadFull(target);
@@ -208,6 +203,16 @@ void Controller::downloadFull(const Release &target) {
     QFile::remove(directory_ + "/components.json");
     beginProgress(target.size, 1, true); // Also the fallback after components: the total is now the whole package.
     fetch(target, directory_ + "/package.tar.gz", [this, target] { finishDownload(target, false); });
+}
+void Controller::scanComponents(const Release &target, const Components &components, int index,
+                                QList<Component> queue, qint64 total) {
+    if (index == components.entries.size()) { beginProgress(total, queue.size(), false); downloadComponent(target, queue, 0); return; }
+    const auto &component = components.entries[index]; QString ignored;
+    if (!componentMatches(component, prefix_) && !verifiedArchive(directory_ + '/' + component.archive, component.digest, ignored)) {
+        queue.append(component); total += component.size;
+    }
+    // One component per event-loop turn: hashing everything at once would freeze the window.
+    QTimer::singleShot(0, this, [this, target, components, index, queue, total] { scanComponents(target, components, index + 1, queue, total); });
 }
 void Controller::downloadComponent(const Release &target, const QList<Component> &queue, int index) {
     if (index == queue.size()) { finishDownload(target, true); return; }
