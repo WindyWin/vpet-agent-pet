@@ -25,6 +25,11 @@ QVector<pet::platform::Command> selection(const QString &host, const QString &ta
     return {};
 }
 QString label(const QString &host) { return pet::hosts::Registry::builtin().label(host); }
+// $WINDOWID names an X11 window, sent as host_window only where X11 is the native backend
+// (on Windows host_window is the console's HWND).
+QString x11Wire(const QString &id) {
+    return QString(pet::platform::nativeWindowBackend) == pet::platform::x11Backend ? id : QString();
+}
 }
 
 class AlertTests : public QObject {
@@ -214,7 +219,7 @@ private slots:
         env.insert("KONSOLE_DBUS_SESSION", "/Sessions/5"); env.insert("WINDOWID", "6291463");
         auto host = capture(env, {300, 200, 100}, {"bash", "konsole", "plasmashell"});
         QCOMPARE(host["host"].toString(), "konsole"); QCOMPARE(host["host_pids"].toString(), "300,200,100");
-        QCOMPARE(host["host_window"].toString(), "6291463");
+        QCOMPARE(host["host_window"].toString(), x11Wire("6291463"));
         pet::hosts::konsole::Target konsole;
         QVERIFY(pet::hosts::konsole::decode(host["host_target"].toString(), konsole));
         QCOMPARE(konsole.service, "org.kde.konsole-42"); QCOMPARE(konsole.window, "/Windows/1"); QCOMPARE(konsole.session, 5);
@@ -309,7 +314,7 @@ private slots:
         for (const auto *bad : {"0", "0x1a", "-5", "12a", "123456789012345678901"}) {
             env.insert("WINDOWID", bad); QVERIFY2(!capture(env, {1}).contains("host_window"), bad);
         }
-        env.insert("WINDOWID", "4194311"); QCOMPARE(capture(env, {1})["host_window"].toString(), "4194311");
+        env.insert("WINDOWID", "4194311"); QCOMPARE(capture(env, {1})["host_window"].toString(), x11Wire("4194311"));
     }
     void hostTargetCodecs() {
         // Konsole: D-Bus unique or well-known service, window and session paths.
@@ -367,7 +372,7 @@ private slots:
         QVERIFY(apply(state, hosted("tool_start", {}, "1", "2", "x")));
         auto s = state.records().value(key);
         QCOMPARE(s.host.adapter, "konsole"); QCOMPARE(s.host.pids, (QVector<qint64>{10, 9}));
-        QCOMPARE(s.host.window.backend, "x11"); QCOMPARE(s.host.window.id, "77");
+        QCOMPARE(s.host.window.backend, QString(pet::platform::nativeWindowBackend)); QCOMPARE(s.host.window.id, "77");
         // A new host replaces every field, also clearing ones it lacks.
         QVERIFY(apply(state, hosted("tool_end", "tmux", "20", {}, "/s|%3")));
         s = state.records().value(key);
