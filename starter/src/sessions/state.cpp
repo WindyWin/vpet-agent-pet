@@ -55,9 +55,13 @@ bool Event::parse(const QByteArray &data, Event &e, QString &error, const hosts:
     if (!doc.isObject()) { error = "Expected a JSON object"; return false; }
     const auto o = doc.object();
     const QSet<QString> fields{"version", "provider", "session_id", "event_id", "kind", "timestamp_ms", "tool_id", "parent_id", "project_path", "activity", "reason",
-                              "host", "host_pids", "host_window", "host_target", "risky"};
+                              "host", "host_pids", "host_window", "host_target", "risky", "waiting"};
     for (auto it = o.begin(); it != o.end(); ++it) {
         if (!fields.contains(it.key())) { error = "Unknown event field"; return false; }
+        if (it.key() == "waiting") {
+            if (!it.value().isBool() || !it.value().toBool()) { error = "Invalid waiting flag"; return false; }
+            continue;
+        }
         if (it.key() == "risky") {
             if (!it.value().isBool()) { error = "Invalid risky flag"; return false; }
             continue;
@@ -77,7 +81,7 @@ bool Event::parse(const QByteArray &data, Event &e, QString &error, const hosts:
          o.value("kind").toString(), o.value("tool_id").toString(), o.value("parent_id").toString(),
          o.value("project_path").toString(), o.value("activity").toString(), static_cast<qint64>(stamp),
          o.value("reason").toString(), o.value("host").toString(), o.value("host_pids").toString(),
-         o.value("host_window").toString(), o.value("host_target").toString(), o.value("risky").toBool()};
+         o.value("host_window").toString(), o.value("host_target").toString(), o.value("risky").toBool(), o.value("waiting").toBool()};
     const QSet<QString> kinds{"session_start", "prompt", "tool_start", "tool_end", "attention", "error", "turn_finished", "turn_failed",
                               "interrupt", "session_end"};
     const bool reasonValid = e.reason.isEmpty() ||
@@ -87,7 +91,8 @@ bool Event::parse(const QByteArray &data, Event &e, QString &error, const hosts:
         ((e.kind == "tool_start" || e.kind == "tool_end") && e.tool.isEmpty()) ||
         (!e.activity.isEmpty() && e.activity != "reading" && e.activity != "working") ||
         !reasonValid || (e.kind == "turn_failed" && !e.tool.isEmpty()) ||
-        (o.contains("risky") && e.kind != "tool_start")) {
+        (o.contains("risky") && e.kind != "tool_start") ||
+        (o.contains("waiting") && e.kind != "turn_finished")) {
         error = "Missing identity or unsupported event kind/activity"; return false;
     }
     if (!hosts.validV1(e.host, e.hostPids, e.hostWindow)) { error = "Invalid host identification"; return false; }
@@ -132,10 +137,13 @@ bool Sessions::apply(const Event &e, qint64 now) {
     if (!e.parent.isEmpty()) s.parent = e.parent;
     if (!e.project.isEmpty()) s.project = e.project;
     if (!e.host.isEmpty()) s.host = hosts::fromV1(e.host, e.hostPids, e.hostWindow, e.hostTarget);
-    const bool ignored = e.kind == "attention" && s.state == "exhausted";
+    const bool ignored = (e.kind == "attention" && (s.state == "exhausted" ||
+                         (s.state == "waiting" && e.reason == "input"))) ||
+                         (e.kind == "error" && s.state == "waiting" && !s.tools.contains(e.tool));
     const bool held = s.activityUntil != 0; // Showing a finished tool's activity.
     if (e.kind != "session_start" && e.kind != "tool_end") s.activityUntil = 0;
     if (e.kind == "session_start") { /* Metadata refresh only for existing sessions. */ }
+    else if (ignored) { /* Background waiting ignores idle prompts and unmatched errors. */ }
     else if (e.kind == "prompt") { s.tools.clear(); s.state = "thinking"; s.interrupted = false; s.turnStarted = e.timestamp; }
     else if (e.kind == "tool_start") { s.tools[e.tool] = e.activity.isEmpty() ? "working" : e.activity; s.state = toolState(s); }
     else if (e.kind == "tool_end") {
@@ -144,14 +152,13 @@ bool Sessions::apply(const Event &e, qint64 now) {
         // tool and found none started (Codex apply_patch or MCP, which can skip PreToolUse) is answered
         // by the first tool to finish.
         if (s.state == "attention" && (s.attentionTools.isEmpty() || s.attentionTools.contains(e.tool))) s.state = toolState(s);
-        else if (s.state != "attention" && s.state != "exhausted" && s.state != "inactive" && s.state != "turn-finished" &&
+        else if (s.state != "attention" && s.state != "exhausted" && s.state != "inactive" && s.state != "turn-finished" && s.state != "waiting" &&
                  (isNew || s.state != "idle")) {
             const auto next = toolState(s);
             if (next == "thinking" && (s.state == "working" || s.state == "reading")) s.activityUntil = now + activityHoldMs;
             else s.state = next;
         }
     }
-    else if (e.kind == "attention" && s.state == "exhausted") { /* Only resumed work ends a quota stop. */ }
     else if (e.kind == "attention") { s.state = "attention"; s.reason = e.reason;
         // Codex permission requests carry no tool identity: the pending tools are those already started.
         s.attentionTools = e.tool.isEmpty() ? QSet<QString>(s.tools.keyBegin(), s.tools.keyEnd()) : QSet<QString>{e.tool}; }
@@ -164,8 +171,11 @@ bool Sessions::apply(const Event &e, qint64 now) {
         }
     }
     else if (e.kind == "turn_finished") {
-        s.tools.clear(); s.state = "turn-finished"; s.reactionUntil = now + 4000;
-        s.lastTurnMs = s.turnStarted ? e.timestamp - s.turnStarted : 0; s.turnStarted = 0;
+        s.tools.clear(); s.state = e.waiting ? "waiting" : "turn-finished";
+        s.reactionUntil = e.waiting ? 0 : now + 4000;
+        if (!e.waiting) {
+            s.lastTurnMs = s.turnStarted ? e.timestamp - s.turnStarted : 0; s.turnStarted = 0;
+        }
     }
     else if (e.kind == "interrupt") { s.tools.clear(); s.state = "idle"; s.interrupted = true; s.turnStarted = 0; }
     else if (e.kind == "turn_failed") {
@@ -180,7 +190,8 @@ bool Sessions::apply(const Event &e, qint64 now) {
         s.attentionTools.clear(); dismiss(k, "attention");
     }
     if (s.state != "exhausted") dismiss(k, "exhausted");
-    if ((e.kind == "attention" && !ignored) || e.kind == "error" || e.kind == "turn_finished" || e.kind == "turn_failed") {
+    if (!ignored && (e.kind == "attention" || e.kind == "error" ||
+                     (e.kind == "turn_finished" && !e.waiting) || e.kind == "turn_failed")) {
         // A failed turn is reported as a quota stop, or as an error titled by the reason "turn".
         const QString kind = e.kind != "turn_failed" ? e.kind : e.reason.isEmpty() ? "error" : "exhausted";
         const QString reason = e.kind == "turn_failed" && e.reason.isEmpty() ? "turn" : e.reason;
@@ -223,7 +234,7 @@ void Sessions::expire(qint64 now) {
     for (auto it = events_.begin(); it != events_.end();) if (now - it.value() >= expiryMs) it = events_.erase(it); else ++it;
 }
 QString Sessions::aggregate(qint64) const {
-    const QStringList priority{"attention", "exhausted", "error", "turn-finished", "working", "reading", "thinking", "idle", "inactive"};
+    const QStringList priority{"attention", "exhausted", "error", "turn-finished", "working", "reading", "thinking", "waiting", "idle", "inactive"};
     for (const auto &state : priority) for (const auto &s : sessions_) if (s.state == state) return state;
     return "idle";
 }

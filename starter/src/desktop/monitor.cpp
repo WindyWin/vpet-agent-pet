@@ -75,17 +75,15 @@ bool Monitor::checkpointSessions() {
 }
 bool Monitor::apply(const Event &event, qint64 now) {
     if (!active_ || !sessions_.apply(event, now)) return false;
-    {
-        const auto it = sessions_.records().find(event.provider + QChar(0x1f) + event.session);
-        const Session *session = it == sessions_.records().end() ? nullptr : &*it;
-        if (recap_.record(event, session, QDateTime::fromMSecsSinceEpoch(now).date())) recapTimer_.start();
-    }
+    const auto it = sessions_.records().find(event.provider + QChar(0x1f) + event.session);
+    const Session *session = it == sessions_.records().end() ? nullptr : &*it;
+    if (recap_.record(event, session, QDateTime::fromMSecsSinceEpoch(now).date())) recapTimer_.start();
     // Only accepted events count: duplicates and stale callbacks of an interrupted turn are dropped above.
-    if (event.kind == "turn_finished") {
+    if (event.kind == "turn_finished" && !event.waiting) {
         window_.mood().finished(now);
         lastTurnMs_ = sessions_.records().value(event.provider + QChar(0x1f) + event.session).lastTurnMs;
     }
-    else if (event.kind == "error" || event.kind == "turn_failed") window_.mood().failed(now);
+    else if (failure(event, session)) window_.mood().failed(now);
     // Only a prompt shows the user is there; nothing counts behind a locked screen.
     if (!(locked && locked())) window_.wellness().activity(now, event.kind == "prompt");
     checkpointSessions();
@@ -96,7 +94,7 @@ bool Monitor::apply(const Event &event, qint64 now) {
     if (event.kind == "tool_start" && event.risky && !window_.petHidden() && !urgent(aggregate))
         window_.eggs().surprise("danger");
     // Work going on deep into the night earns one gentle note.
-    if (event.kind == "turn_finished" && !window_.muted() && !window_.petHidden() && window_.eggs().bedtime())
+    if (event.kind == "turn_finished" && !event.waiting && !window_.muted() && !window_.petHidden() && window_.eggs().bedtime())
         say(bedtimeNote());
     return true;
 }

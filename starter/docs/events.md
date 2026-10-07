@@ -15,15 +15,17 @@ One UTF-8 JSON object per Unix datagram, at most 8192 bytes:
 Required fields: `version` (integer 1), `provider` (`claude` or `codex`),
 `session_id`, `event_id`, `kind`, and positive integer Unix `timestamp_ms`.
 Optional fields: `tool_id`, `parent_id`, `project_path`, `activity`, `reason`,
-`risky`, and the host fields below.
+`risky`, `waiting`, and the host fields below.
 `tool_start` and `tool_end` require `tool_id`; activity is `reading` or `working`
 (default working). `reason` is allowed on `attention`, as `approval` or `input`
 (without it alerts say "Needs attention"), and on `turn_failed`, as `limit` (the
 provider's usage or rate limit) or `billing` (out of credits). `turn_failed` never
 carries `tool_id`. `risky` is a boolean allowed only
 on `tool_start`: the hook found a destructive shell command (see
-[adapter policy](integrations.md#adapter-policy)), and the pet looks startled. It is
-the only non-string field besides the version and timestamp. Strings are limited to 256 UTF-16 units, except project paths
+[adapter policy](integrations.md#adapter-policy)), and the pet looks startled.
+`waiting` is a boolean allowed only as `true` on `turn_finished`: background work
+is still running. These flags, version and timestamp are the non-string fields.
+Strings are limited to 256 UTF-16 units, except project paths
 (2048); control characters and unknown fields are rejected. No prompt, tool
 arguments, output, or raw provider payload is retained or transmitted; `risky` is
 a one-bit judgment made inside the hook.
@@ -145,7 +147,7 @@ Limits: 256 sessions, 128 simultaneous tools per session, 4096 recent event IDs,
 dropped until space is available; oldest event IDs/tombstones are evicted.
 
 Aggregate animation priority is attention > exhausted > error > turn-finished > working >
-reading > thinking > idle > inactive. Exhausted plays `out_of_quota`, the pet sick in bed. No observed sessions means idle. The
+reading > thinking > waiting > idle > inactive. Exhausted plays `out_of_quota`, the pet sick in bed. No observed sessions means idle. The
 aggregate feeds playback, including the state restored after dragging. Preview
 is most useful without an active event stream; monitoring takes precedence once
 fresh events have been observed.
@@ -182,8 +184,22 @@ itself remains until the session resolves it.
 
 `sessionRows()` builds the running-sessions list from session records:
 subagents fold into their parent (whose status shows the busiest child), and
-rows sort attention, exhausted, error, working, reading, thinking, finished, idle, stopped,
+rows sort attention, exhausted, error, working, reading, thinking, waiting, finished, idle, stopped,
 then most recently seen first.
+
+### Background waiting
+
+A `turn_finished` carrying `waiting: true` clears tools and enters `waiting` with
+no reaction timer, alert, badge, celebration or recap turn. The prompt timestamp
+survives; the final plain finish counts once, including time spent waiting.
+While waiting, input attention (including Claude `idle_prompt` and
+`elicitation_dialog`) is ignored. Approval and reasonless attention still show.
+Prompt, tool start, interrupt, turn failure and session end follow their usual
+rules. Unmatched tool ends and errors keep waiting; another waiting finish keeps
+waiting, and a plain finish gives the normal finished reaction.
+The existing 30-minute session expiry still applies. Checkpoints preserve waiting
+and its start time. The session list shows **Waiting** in indigo (`#4c6ef5`), and
+the pet loops the Bubbles animation. Ambient fidgets and wander remain idle-only.
 
 ## Verification
 

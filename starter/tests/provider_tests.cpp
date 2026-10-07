@@ -26,6 +26,51 @@ class ProviderTests : public QObject {
         return e;
     }
 private slots:
+    void backgroundWaitingStops() {
+        auto input = payload("Stop");
+        input["background_tasks"] = QJsonArray{QJsonObject{{"id", "PRIVATE"}, {"type", "shell"},
+            {"command", "PRIVATE command"}, {"description", "PRIVATE description"}}};
+        auto out = pet::normalizeHook("claude", input, now);
+        QCOMPARE(out["kind"].toString(), QString("turn_finished"));
+        QVERIFY(out["waiting"].toBool());
+        QVERIFY(!QJsonDocument(out).toJson().contains("PRIVATE"));
+        QVERIFY(!out.contains("background_tasks"));
+        QVERIFY(!pet::normalizeHook("codex", input, now).contains("waiting"));
+        input["agent_id"] = "child";
+        out = pet::normalizeHook("claude", input, now);
+        QCOMPARE(out["kind"].toString(), QString("session_end")); QVERIFY(!out.contains("waiting"));
+        input.remove("agent_id");
+        for (const auto &value : {QJsonValue(QJsonArray{}), QJsonValue("bad"), QJsonValue(QJsonObject{}), QJsonValue()}) {
+            input["background_tasks"] = value;
+            out = pet::normalizeHook("claude", input, now);
+            QCOMPARE(out["kind"].toString(), QString("turn_finished")); QVERIFY(!out.contains("waiting"));
+        }
+        input.remove("background_tasks");
+        QVERIFY(!pet::normalizeHook("claude", input, now).contains("waiting"));
+        // Through Sessions: the parent waits, a child's Stop ends only the child, and any other
+        // background_tasks value finishes the turn.
+        const QJsonArray tasks{QJsonObject{{"id", "PRIVATE"}, {"type", "shell"}}};
+        pet::Sessions sessions; qint64 stamp = now;
+        auto apply = [&](QJsonObject in) { const auto e = event("claude", in, ++stamp); return sessions.apply(e, stamp); };
+        QVERIFY(apply(payload("UserPromptSubmit")));
+        auto child = payload("SubagentStart"); child["agent_id"] = "child";
+        QVERIFY(apply(child)); QCOMPARE(sessions.records().size(), 2);
+        child["hook_event_name"] = "Stop"; child["background_tasks"] = tasks;
+        QVERIFY(apply(child)); QCOMPARE(sessions.records().size(), 1);
+        QCOMPARE(sessions.records().first().id, QString("parent")); QCOMPARE(sessions.aggregate(stamp), QString("thinking"));
+        auto stop = payload("Stop"); stop["background_tasks"] = tasks;
+        QVERIFY(apply(stop)); QCOMPARE(sessions.aggregate(stamp), QString("waiting"));
+        QVERIFY(sessions.pending().isEmpty());
+        for (const auto &value : {QJsonValue(QJsonArray{}), QJsonValue("bad"), QJsonValue(QJsonObject{}), QJsonValue(),
+                                  QJsonValue(QJsonValue::Undefined)}) { // Undefined: the field is missing.
+            pet::Sessions plain; stamp = now;
+            QVERIFY(plain.apply(event("claude", payload("UserPromptSubmit"), ++stamp), stamp));
+            stop = payload("Stop"); stop.insert("background_tasks", value);
+            QVERIFY(plain.apply(event("claude", stop, ++stamp), stamp));
+            QCOMPARE(plain.aggregate(stamp), QString("turn-finished"));
+            QCOMPARE(plain.pending().size(), 1);
+        }
+    }
     void fixtures() {
         QFile file(PROVIDER_FIXTURE_PATH); QVERIFY(file.open(QIODevice::ReadOnly));
         const auto rows = QJsonDocument::fromJson(file.readAll()).array(); QVERIFY(rows.size() > 20);

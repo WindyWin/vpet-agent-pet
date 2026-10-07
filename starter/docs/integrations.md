@@ -117,7 +117,7 @@ Codex hosted tools can lack tool hooks. There is no universal input-request even
 | PreToolUse | Track tool ID; known reading tools select reading, others working |
 | PostToolUse | Remove that tool; the last tool's activity is held 4 s before thinking resumes |
 | PermissionRequest | Attention (reason approval); never return an approval decision |
-| Stop | Turn finished, without claiming success |
+| Stop | Turn finished, without claiming success; Claude adds `waiting: true` when `background_tasks` is a non-empty array |
 | SessionEnd | Remove session and its alerts |
 | SubagentStart / SubagentStop | Create/remove a child using agent_id and parent session_id |
 | Claude PostToolUseFailure | Error with failed tool removed; is_interrupt maps to interrupt (idle) |
@@ -193,3 +193,14 @@ Coverage is limited to enabled, supported local clients sharing the current
 user's runtime environment. No silent-session discovery, retrospective replay,
 remote/container transport, cross-user monitoring, or blanket editor-extension
 support is promised. Pending acceptance items keep the overall M4 milestone open.
+
+### Background jobs
+
+Claude parent `Stop` callbacks with a non-empty `background_tasks` array send only
+`waiting: true`; task IDs, descriptions and commands never enter the envelope.
+Missing, empty or non-array values preserve the ordinary finish. A child `Stop`
+still ends only the child session. No hook registration changes are required.
+While waiting, input notifications are ignored; approvals still ask for attention.
+Codex has no background-task signal or idle notification hook and never sets this
+flag. Live Claude payload validation remains a pre-release check in
+[ADR 0026](adr/0026-background-waiting.md#validation).

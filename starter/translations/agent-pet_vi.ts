@@ -56,6 +56,10 @@
         <translation>Đang suy nghĩ</translation>
     </message>
     <message>
+        <source>Waiting</source>
+        <translation>Đang chờ</translation>
+    </message>
+    <message>
         <source>Finished</source>
         <translation>Đã xong</translation>
     </message>

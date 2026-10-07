@@ -107,6 +107,57 @@ class PrototypeTests : public QObject {
     Q_OBJECT
     QTemporaryDir clients;
 private slots:
+    void monitorWaitsWithoutCelebrating() {
+        QTemporaryDir directory;
+        pet::PetWindow window(nullptr, directory.path() + "/preferences.json"); window.show();
+        window.setBubbles(pet::Preferences::AllAlerts);
+        window.eggs().setClock([] { return QDateTime(QDate(2026, 10, 7), QTime(2, 0)); });
+        pet::Monitor monitor(window);
+        const qint64 now = QDateTime::currentMSecsSinceEpoch();
+        pet::Event e{"claude", "background", "1", "prompt", {}, {}, "/project", {}, now};
+        QVERIFY(monitor.apply(e, now));
+        const int turns = window.mood().turns();
+        e.id = "2"; e.kind = "turn_finished"; e.waiting = true; e.timestamp = now + 1;
+        QVERIFY(monitor.apply(e, now + 1));
+        QCOMPARE(window.mood().turns(), turns);
+        QCOMPARE(window.player().requestedState(), QString("waiting"));
+        QVERIFY(!monitor.bubble().isVisible()); QVERIFY(!monitor.note().isVisible());
+        QCOMPARE(window.attention(), 0);
+        e.id = "3"; e.kind = "attention"; e.waiting = false; e.reason = "input"; e.timestamp = now + 2;
+        QVERIFY(monitor.apply(e, now + 2));
+        QCOMPARE(window.player().requestedState(), QString("waiting"));
+        QVERIFY(!monitor.bubble().isVisible()); QCOMPARE(window.attention(), 0);
+        // A late failure of a tool the waiting finish cleared is ignored: no mood loss, no recap error.
+        const int score = window.mood().score(now + 2);
+        e.id = "late"; e.kind = "error"; e.tool = "cleared"; e.reason.clear(); e.timestamp = now + 3;
+        QVERIFY(monitor.apply(e, now + 3)); e.tool.clear();
+        QCOMPARE(window.player().requestedState(), QString("waiting"));
+        QCOMPARE(window.mood().score(now + 3), score);
+        QCOMPARE(monitor.recap().day(QDateTime::fromMSecsSinceEpoch(now + 3).date()).errors, 0);
+        e.id = "4"; e.kind = "turn_finished"; e.timestamp = now + 100;
+        QVERIFY(monitor.apply(e, now + 100));
+        QCOMPARE(window.mood().turns(), turns + 1);
+        QCOMPARE(monitor.bubble().title(), QString("Turn finished"));
+        QVERIFY(monitor.note().isVisible());
+        QCOMPARE(monitor.recap().day(QDateTime::fromMSecsSinceEpoch(now + 100).date()).turns, 1);
+    }
+    void waitingPlaysBubblesInEveryMood() {
+        for (const auto *mood : {"normal", "happy", "poor"}) {
+            pet::Player player; player.setPaused(true); player.setMood(mood);
+            QSet<QString> loops;
+            for (int i = 0; i < 2; ++i) {
+                player.setRandom([i](int bound) { return i ? bound - 1 : 0; });
+                QVERIFY(player.select("waiting", true));
+                QCOMPARE(player.sequence(), QString("IDEL/Bubbles/A"));
+                finishSequence(player); loops.insert(player.sequence());
+                QVERIFY(player.sequence() == "IDEL/Bubbles/B" || player.sequence() == "IDEL/Bubbles/B_2");
+                const auto loop = player.sequence(); finishSequence(player); QCOMPARE(player.sequence(), loop);
+                QVERIFY(player.select("idle")); QCOMPARE(player.sequence(), QString("IDEL/Bubbles/C"));
+                finishSequence(player); QCOMPARE(player.state(), QString("idle"));
+            }
+            QCOMPARE(loops.size(), 2);
+        }
+    }
     void initTestCase() {
         // Settings inspect integration files; keep them away from the real client configuration.
         qputenv("CLAUDE_CONFIG_DIR", QFile::encodeName(clients.path() + "/claude"));
@@ -124,7 +175,7 @@ private slots:
     }
     void sessionAnimationMapping() {
         pet::Player player;
-        const QStringList states{"attention", "exhausted", "error", "turn-finished", "working", "reading", "thinking", "idle", "inactive"};
+        const QStringList states{"attention", "exhausted", "error", "turn-finished", "working", "reading", "thinking", "waiting", "idle", "inactive"};
         QCOMPARE(pet::sessionAnimation("exhausted"), QString("out_of_quota"));
         for (const auto &state : states) {
             const auto animation = pet::sessionAnimation(state);
@@ -190,7 +241,7 @@ private slots:
         for (const auto &region : touch.regions) touches.insert(region.state);
         QCOMPARE(touches.size(), 7);
         for (const auto &state : touches) QVERIFY2(player.isTouch(state), qPrintable(state));
-        QCOMPARE(player.states().size(), 14 + reactions.size() - 1 + player.fidgets().size() + touches.size());
+        QCOMPARE(player.states().size(), 15 + reactions.size() - 1 + player.fidgets().size() + touches.size());
         QVERIFY(!player.fidgets().isEmpty());
         // Walks in each mood, crawls and climbs up and down both edges: all fidgets that move the window.
         int moves = 0;

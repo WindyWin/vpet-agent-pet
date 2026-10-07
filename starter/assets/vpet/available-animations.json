@@ -6,9 +6,9 @@
   "source_commit": "6358445aa54587f9cd524264eaf17ef97bc826a8",
   "source_root": "VPet-Simulator.Windows/mod/0000_core/pet/vup",
   "bundled_catalog": "assets/vpet/animations.json",
-  "missing_sequence_count": 426,
-  "missing_frame_count": 4369,
-  "missing_size_bytes": 615875971,
+  "missing_sequence_count": 422,
+  "missing_frame_count": 4301,
+  "missing_size_bytes": 590955765,
   "sequences": [
     {
       "path": "Default/Happy/2",
@@ -233,42 +233,6 @@
       "frame_count": 8,
       "total_duration_ms": 3250,
       "size_bytes": 448720,
-      "timing_valid": true
-    },
-    {
-      "path": "IDEL/Bubbles/A",
-      "category": "IDEL",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/IDEL/Bubbles/A",
-      "frame_count": 12,
-      "total_duration_ms": 1500,
-      "size_bytes": 3071704,
-      "timing_valid": true
-    },
-    {
-      "path": "IDEL/Bubbles/B",
-      "category": "IDEL",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/IDEL/Bubbles/B",
-      "frame_count": 24,
-      "total_duration_ms": 3000,
-      "size_bytes": 9688896,
-      "timing_valid": true
-    },
-    {
-      "path": "IDEL/Bubbles/B_2",
-      "category": "IDEL",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/IDEL/Bubbles/B_2",
-      "frame_count": 24,
-      "total_duration_ms": 3000,
-      "size_bytes": 9721298,
-      "timing_valid": true
-    },
-    {
-      "path": "IDEL/Bubbles/C",
-      "category": "IDEL",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/IDEL/Bubbles/C",
-      "frame_count": 8,
-      "total_duration_ms": 1000,
-      "size_bytes": 2438308,
       "timing_valid": true
     },
     {
