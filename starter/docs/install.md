@@ -256,6 +256,23 @@ survives upgrades. The command-line interface and the installer are always in En
 
 The installed version is shown by `agent-pet --version` and in **About**.
 
+## Arch Linux
+
+Build the package from `packaging/arch/PKGBUILD`, once a release has attached its
+source tarball. The same recipe is planned for the AUR as `agent-pet`, but it is not
+published there yet. From the `starter/` directory, run:
+
+```bash
+cd packaging/arch
+makepkg -si
+```
+
+It builds against the system Qt and installs into `/usr` with pacman owning the files,
+so upgrade and removal go through pacman. There is no `.agent-pet-install` receipt, so
+the app behaves like a development build: it still notifies you of new releases and
+offers a manual download, but never installs one. Upgrade through pacman instead. See
+[ADR 0023](adr/0023-arch-aur-package.md).
+
 ## macOS
 
 macOS releases contain one `Agent Pet.app` for Apple silicon and Intel Macs running
