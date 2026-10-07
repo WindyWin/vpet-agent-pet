@@ -89,8 +89,10 @@ void playsEveryFrame(pet::Player &player, const char *mood) {
             for (int pass = 0; pass < 10 && player.state() == state; ++pass) checkSequence();
             QCOMPARE(player.state(), QString("idle"));
         } else if (player.state() == state && player.phase() == "loop" && state != "idle") {
-            checkSequence(); player.select("idle"); QCOMPARE(player.phase(), QString("end"));
-            checkSequence(); QCOMPARE(player.state(), QString("idle"));
+            checkSequence(); player.select("idle");
+            // A phased state plays its end; a plain loop, such as out_of_quota, has none and leaves at once.
+            if (player.state() == state) { QCOMPARE(player.phase(), QString("end")); checkSequence(); }
+            QCOMPARE(player.state(), QString("idle"));
         }
         QVERIFY2(player.error().isEmpty(), qPrintable(player.error()));
     }
@@ -122,7 +124,8 @@ private slots:
     }
     void sessionAnimationMapping() {
         pet::Player player;
-        const QStringList states{"attention", "error", "turn-finished", "working", "reading", "thinking", "idle", "inactive"};
+        const QStringList states{"attention", "exhausted", "error", "turn-finished", "working", "reading", "thinking", "idle", "inactive"};
+        QCOMPARE(pet::sessionAnimation("exhausted"), QString("out_of_quota"));
         for (const auto &state : states) {
             const auto animation = pet::sessionAnimation(state);
             QVERIFY2(player.select(animation, true), qPrintable(player.error()));
@@ -187,7 +190,7 @@ private slots:
         for (const auto &region : touch.regions) touches.insert(region.state);
         QCOMPARE(touches.size(), 7);
         for (const auto &state : touches) QVERIFY2(player.isTouch(state), qPrintable(state));
-        QCOMPARE(player.states().size(), 13 + reactions.size() - 1 + player.fidgets().size() + touches.size());
+        QCOMPARE(player.states().size(), 14 + reactions.size() - 1 + player.fidgets().size() + touches.size());
         QVERIFY(!player.fidgets().isEmpty());
         // Walks in each mood, crawls and climbs up and down both edges: all fidgets that move the window.
         int moves = 0;

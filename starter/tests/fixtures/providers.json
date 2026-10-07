@@ -486,5 +486,86 @@
       "hook_event_name": "Notification"
     },
     "kind": ""
+  },
+  {
+    "provider": "claude",
+    "input": {
+      "session_id": "sample-session",
+      "cwd": "/projects/example",
+      "transcript_path": "/PRIVATE/transcript",
+      "prompt": "PRIVATE",
+      "tool_input": {
+        "command": "PRIVATE"
+      },
+      "last_assistant_message": "PRIVATE",
+      "hook_event_name": "StopFailure",
+      "error_type": "rate_limit"
+    },
+    "kind": "turn_failed",
+    "reason": "limit"
+  },
+  {
+    "provider": "claude",
+    "input": {
+      "session_id": "sample-session",
+      "cwd": "/projects/example",
+      "transcript_path": "/PRIVATE/transcript",
+      "prompt": "PRIVATE",
+      "tool_input": {
+        "command": "PRIVATE"
+      },
+      "last_assistant_message": "PRIVATE",
+      "hook_event_name": "StopFailure",
+      "error_type": "billing_error"
+    },
+    "kind": "turn_failed",
+    "reason": "billing"
+  },
+  {
+    "provider": "claude",
+    "input": {
+      "session_id": "sample-session",
+      "cwd": "/projects/example",
+      "transcript_path": "/PRIVATE/transcript",
+      "prompt": "PRIVATE",
+      "tool_input": {
+        "command": "PRIVATE"
+      },
+      "last_assistant_message": "PRIVATE",
+      "hook_event_name": "StopFailure",
+      "error_type": "overloaded"
+    },
+    "kind": "turn_failed"
+  },
+  {
+    "provider": "claude",
+    "input": {
+      "session_id": "sample-session",
+      "cwd": "/projects/example",
+      "transcript_path": "/PRIVATE/transcript",
+      "prompt": "PRIVATE",
+      "tool_input": {
+        "command": "PRIVATE"
+      },
+      "last_assistant_message": "PRIVATE",
+      "hook_event_name": "StopFailure"
+    },
+    "kind": "turn_failed"
+  },
+  {
+    "provider": "codex",
+    "input": {
+      "session_id": "sample-session",
+      "cwd": "/projects/example",
+      "transcript_path": "/PRIVATE/transcript",
+      "prompt": "PRIVATE",
+      "tool_input": {
+        "command": "PRIVATE"
+      },
+      "last_assistant_message": "PRIVATE",
+      "hook_event_name": "StopFailure",
+      "error_type": "rate_limit"
+    },
+    "kind": ""
   }
 ]

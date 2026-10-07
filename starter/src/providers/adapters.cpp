@@ -11,7 +11,7 @@
 namespace pet {
 QStringList hookEvents(const QString &provider) {
     QStringList events{"SessionStart", "UserPromptSubmit", "PreToolUse", "PostToolUse", "PermissionRequest", "Stop", "SessionEnd", "SubagentStart", "SubagentStop"};
-    if (provider == "claude") events << "PostToolUseFailure" << "Notification";
+    if (provider == "claude") events << "PostToolUseFailure" << "Notification" << "StopFailure";
     else if (provider == "codex") events << "Interrupt";
     else return {};
     return events;
@@ -29,6 +29,7 @@ static QString commonKind(const QString &name) {
 static QString claudeKind(const QJsonObject &in) {
     const auto name = in.value("hook_event_name").toString();
     if (name == "PostToolUseFailure") return in.value("is_interrupt").toBool() ? "interrupt" : "error";
+    if (name == "StopFailure") return "turn_failed";
     if (name == "Notification") {
         const auto type = in.value("notification_type").toString();
         if (type == "permission_prompt" || type == "idle_prompt" || type == "elicitation_dialog") return "attention";
@@ -101,8 +102,8 @@ QJsonObject normalizeHook(const QString &provider, const QJsonObject &in, qint64
     if (!agent.isEmpty()) {
         out["parent_id"] = session;
         out["session_id"] = agent;
-        // A child stop must never announce completion of the parent turn.
-        if (name == "Stop") out["kind"] = "session_end";
+        // A child stop must never announce completion, or failure, of the parent turn.
+        if (name == "Stop" || name == "StopFailure") out["kind"] = "session_end";
     }
     const auto tool = in.value("tool_use_id").toString();
     if (kind == "tool_start" || kind == "tool_end" || name == "PostToolUseFailure" || (name == "PostToolUse" && kind == "error")) {
@@ -115,6 +116,12 @@ QJsonObject normalizeHook(const QString &provider, const QJsonObject &in, qint64
         const auto type = in.value("notification_type").toString();
         if (name == "PermissionRequest" || type == "permission_prompt") out["reason"] = "approval";
         else if (type == "idle_prompt" || type == "elicitation_dialog") out["reason"] = "input";
+    }
+    if (out["kind"] == "turn_failed") {
+        // Only the quota categories are named; the provider's error type itself stays here.
+        const auto type = in.value("error_type").toString();
+        if (type == "rate_limit") out["reason"] = "limit";
+        else if (type == "billing_error") out["reason"] = "billing";
     }
     if (kind == "tool_start") {
         const QSet<QString> reading{"Read", "Grep", "Glob", "WebFetch", "WebSearch", "read_file", "list_dir"};

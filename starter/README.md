@@ -225,9 +225,27 @@ See [the event protocol](docs/events.md) for all events, identity fallbacks,
 ordering, limits, expiry, and command behavior. See [integration setup and coverage](docs/integrations.md) for raw Claude/Codex
 hooks and preview/enable/inspect/disable commands.
 
+## Out of quota
+
+When a Claude Code turn stops because the usage limit or the credits ran out, the
+pet takes to bed with a thermometer and a cough, and a bubble says **Usage limit
+reached** or **Out of credits**. Both stay until that session works again: your next
+prompt, or Claude resuming on its own. Requests that need your answer still show
+first. Other provider failures, such as an overloaded API, raise a short **Turn
+failed** reaction and then let the pet rest, instead of leaving it thinking. Codex has
+no hook for this, so its limits are not shown.
+
+Pets set up with an earlier version show the Claude integration as **Partial** in
+Settings; click **Update** to add the new hook, then restart Claude Code.
+
+```bash
+printf '%s
+' '{"version":1,"provider":"claude","session_id":"a1b2c3","kind":"turn_failed","reason":"limit","project_path":"/projects/demo"}' | ./build/agent-pet emit
+```
+
 ## Alerts and running sessions
 
-Approval/input requests and tool errors raise a one-line toast beside the pet,
+Approval/input requests, quota stops and tool errors raise a one-line toast beside the pet,
 for example `● Needs approval  abc-web  +2  Open  ×`. Hover it for the
 provider, short session ID and full project path. When several projects share a
 folder name, the parent folder is added. Click the toast or **Open** to bring
@@ -263,8 +281,8 @@ An orange badge stays on the pet while any observed session waits for approval
 or input, even after its alert is dismissed. It clears on that session's next
 prompt, tool start, interruption, stop or end. Right-click → Mute alerts hides
 bubbles (the badge remains). Settings also offer an optional sound for new
-alerts and show each integration's status with Enable/Disable buttons that
-merge only Agent Pet's hook entries. Closing settings keeps monitoring; Quit
+alerts and show each integration's status with Enable/Disable (or Update, for a
+partial setup) buttons that merge only Agent Pet's hook entries. Closing settings keeps monitoring; Quit
 stops it. Alerts live only in memory and are not replayed after restart.
 
 ```bash

@@ -33,7 +33,9 @@ QString projectName(const QString &path, const QVector<Alert> &context) {
     return ambiguous && !parent.isEmpty() ? name + " (" + parent + ")" : name;
 }
 QString alertTitle(const Alert &alert) {
-    return alert.kind == "error" ? Alerts::tr("Tool error") : alert.kind == "turn_finished" ? Alerts::tr("Turn finished")
+    if (alert.kind == "exhausted") return alert.reason == "billing" ? Alerts::tr("Out of credits") : Alerts::tr("Usage limit reached");
+    if (alert.kind == "error") return alert.reason == "turn" ? Alerts::tr("Turn failed") : Alerts::tr("Tool error");
+    return alert.kind == "turn_finished" ? Alerts::tr("Turn finished")
          : alert.reason == "approval" ? Alerts::tr("Needs approval") : alert.reason == "input" ? Alerts::tr("Needs input")
          : Alerts::tr("Needs attention");
 }
@@ -81,12 +83,13 @@ void AlertQueue::dismiss(Sessions &sessions) {
     sync(sessions.pending());
 }
 static int stateRank(const QString &state) {
-    static const QStringList order{"attention", "error", "working", "reading", "thinking", "turn-finished", "idle", "inactive"};
+    static const QStringList order{"attention", "exhausted", "error", "working", "reading", "thinking", "turn-finished", "idle", "inactive"};
     const int i = order.indexOf(state);
     return i < 0 ? order.size() : i;
 }
 static QString statusText(const Session &s, qint64 now) {
     if (s.state == "attention") return alertTitle({{}, "attention", {}, {}, {}, s.reason});
+    if (s.state == "exhausted") return alertTitle({{}, "exhausted", {}, {}, {}, s.reason});
     if (s.state == "error") return Alerts::tr("Tool error");
     if (s.state == "working") return Alerts::tr("Working");
     if (s.state == "reading") return Alerts::tr("Reading");

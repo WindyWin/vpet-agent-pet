@@ -913,8 +913,9 @@ QWidget *PetWindow::integrationSettings(QWidget *parent) {
             if (report.contains("warning")) text += " · " + report["warning"].toString();
             status->setText(text + "\n" + report["config"].toString());
             status->setToolTip(report["setup"].toString());
-            toggle->setText(owned ? tr("Disable") : tr("Enable")); toggle->setEnabled(true);
-            toggle->setProperty("enable", owned == 0);
+            // A partial install, such as one from before a hook was added, is completed rather than removed.
+            toggle->setText(owned == expected ? tr("Disable") : owned ? tr("Update") : tr("Enable")); toggle->setEnabled(true);
+            toggle->setProperty("enable", owned != expected);
         };
         refresh();
         connect(toggle, &QPushButton::clicked, box, [this, provider, toggle, refresh] {

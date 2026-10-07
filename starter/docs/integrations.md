@@ -26,7 +26,9 @@ again from its new location, then review the updated client hook definitions.
 
 The pet's Settings window shows the same inspect result for each provider
 (Enabled, Not enabled or Partial, plus the configuration path) and offers
-Enable/Disable buttons after a confirmation naming the file and hook command.
+Enable/Disable buttons after a confirmation naming the file and hook command. A
+partial setup, such as one made before Claude's `StopFailure` hook was added, offers
+Update, which runs enable and so replaces Agent Pet's entries with the full set.
 They run the same operation as the command line, registering the running
 executable, so launch the pet from its permanent location before enabling.
 
@@ -93,7 +95,7 @@ the client. For setup verification, restart the client, inspect `/hooks`, and
 submit a fresh test turn. Existing-session reload behavior remains unverified.
 
 Both references define session, prompt, tool, permission, stop, and child events.
-Claude adds `PostToolUseFailure` and typed notifications; Codex adds `Interrupt`.
+Claude adds `PostToolUseFailure`, `StopFailure` and typed notifications; Codex adds `Interrupt`.
 Codex hosted tools can lack tool hooks. There is no universal input-request event.
 
 ## Adapter policy
@@ -109,13 +111,14 @@ Codex hosted tools can lack tool hooks. There is no universal input-request even
 | SessionEnd | Remove session and its alerts |
 | SubagentStart / SubagentStop | Create/remove a child using agent_id and parent session_id |
 | Claude PostToolUseFailure | Error with failed tool removed; is_interrupt maps to interrupt (idle) |
+| Claude StopFailure | Turn failed: error_type rate_limit maps to reason limit, billing_error to billing (out of quota, sticky); any other type has no reason (error reaction, then idle). The error type itself is not sent |
 | Claude Notification | Attention for permission_prompt (approval), idle_prompt and elicitation_dialog (input) only |
 | Codex PostToolUse with structured isError=true or nonzero numeric exit_code | Error with failed tool removed |
 | Codex Interrupt | Idle, never finished; stale tool callbacks ignored until the next prompt |
 | Unknown event or notification | Silent no-op |
 
-A callback carrying `agent_id` uses that child identity; a child Stop cannot
-finish its parent's turn. Concurrent tools retain their own IDs. Unknown tool
+A callback carrying `agent_id` uses that child identity; a child Stop or StopFailure
+cannot finish or fail its parent's turn. Concurrent tools retain their own IDs. Unknown tool
 names are treated as working. The one argument examined is a tool start's
 `tool_input.command` (a string, or a list of strings): the hook checks it in
 memory against a fixed list of destructive patterns (`rm` with recursive and force
@@ -133,6 +136,7 @@ the supported contract has no common event timestamp. Delayed callbacks cannot
 be reliably reordered across processes. No content is hashed for identity.
 
 Failure detection is deliberately limited to the typed fields above. Codex
+has no signal for a usage limit or a failed turn, so its quota stops are not shown. Codex
 text-only shell failures remain a gap, as do general Claude interruptions without
 a failure callback, unsupported input requests, and tool paths that omit hooks.
 Attention clears when the tool that was waiting completes (approval; a Codex request with no tool started yet is answered by the next tool to complete), or on a new

@@ -44,6 +44,41 @@ private slots:
         o["reason"] = "input"; QVERIFY(pet::Event::parse(QJsonDocument(o).toJson(), e, error));
         o["reason"] = "other"; QVERIFY(!pet::Event::parse(QJsonDocument(o).toJson(), e, error));
         o["reason"] = "approval"; o["kind"] = "error"; QVERIFY(!pet::Event::parse(QJsonDocument(o).toJson(), e, error));
+        o["kind"] = "turn_failed"; QVERIFY(!pet::Event::parse(QJsonDocument(o).toJson(), e, error));
+        for (const auto *reason : {"limit", "billing"}) {
+            o["reason"] = reason; QVERIFY2(pet::Event::parse(QJsonDocument(o).toJson(), e, error), qPrintable(error));
+            o["kind"] = "error"; QVERIFY(!pet::Event::parse(QJsonDocument(o).toJson(), e, error));
+            o["kind"] = "turn_failed";
+        }
+        o.remove("reason"); QVERIFY(pet::Event::parse(QJsonDocument(o).toJson(), e, error));
+        o["tool_id"] = "call"; QVERIFY(!pet::Event::parse(QJsonDocument(o).toJson(), e, error)); // A turn, not a tool.
+    }
+    void quotaAlertsStayUntilWorkResumes() {
+        pet::Sessions state; pet::AlertQueue queue;
+        QVERIFY(apply(state, event("claude", "done", "turn_finished")));
+        QVERIFY(apply(state, event("claude", "tool", "error")));
+        QVERIFY(apply(state, event("claude", "limit", "turn_failed", "/work/api", "limit")));
+        QVERIFY(apply(state, event("claude", "credits", "turn_failed", "/work/web", "billing")));
+        QVERIFY(apply(state, event("claude", "flaky", "turn_failed")));
+        QVERIFY(apply(state, event("claude", "asking", "attention", {}, "input")));
+        const auto pending = state.pending();
+        QStringList kinds; for (const auto &a : pending) kinds << a.kind;
+        QCOMPARE(kinds, QStringList({"attention", "exhausted", "exhausted", "error", "error", "turn_finished"}));
+        QCOMPARE(pet::alertTitle(pending[1]), "Usage limit reached");
+        QCOMPARE(pet::alertTitle(pending[2]), "Out of credits");
+        QCOMPARE(pet::alertTitle(pending[3]), "Tool error");
+        QCOMPARE(pet::alertTitle(pending[4]), "Turn failed");
+        QVERIFY(pet::AlertQueue::rank("exhausted") < pet::AlertQueue::rank("error"));
+        QVERIFY(pet::AlertQueue::rank("attention") < pet::AlertQueue::rank("exhausted"));
+        // Reports fade; quota stops stay until their session works again.
+        state.expire(now + seq + pet::Sessions::errorAlertMs);
+        kinds.clear(); for (const auto &a : state.pending()) kinds << a.kind;
+        QCOMPARE(kinds, QStringList({"attention", "exhausted", "exhausted"}));
+        QVERIFY(apply(state, event("claude", "limit", "prompt")));
+        QCOMPARE(state.pending().size(), 2); QCOMPARE(state.pending()[1].id, "credits");
+        const auto rows = pet::sessionRows(state, now + seq);
+        QCOMPARE(rows[0].status, "Needs input"); QCOMPARE(rows[1].status, "Out of credits");
+        QCOMPARE(rows[1].state, "exhausted");
     }
     void concurrentIdentityAndPriority() {
         pet::Sessions state; pet::AlertQueue queue;

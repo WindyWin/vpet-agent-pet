@@ -78,11 +78,15 @@ bool Event::parse(const QByteArray &data, Event &e, QString &error, const hosts:
          o.value("project_path").toString(), o.value("activity").toString(), static_cast<qint64>(stamp),
          o.value("reason").toString(), o.value("host").toString(), o.value("host_pids").toString(),
          o.value("host_window").toString(), o.value("host_target").toString(), o.value("risky").toBool()};
-    const QSet<QString> kinds{"session_start", "prompt", "tool_start", "tool_end", "attention", "error", "turn_finished", "interrupt", "session_end"};
+    const QSet<QString> kinds{"session_start", "prompt", "tool_start", "tool_end", "attention", "error", "turn_finished", "turn_failed",
+                              "interrupt", "session_end"};
+    const bool reasonValid = e.reason.isEmpty() ||
+        (e.kind == "attention" && (e.reason == "approval" || e.reason == "input")) ||
+        (e.kind == "turn_failed" && (e.reason == "limit" || e.reason == "billing"));
     if ((e.provider != "claude" && e.provider != "codex") || e.session.isEmpty() || e.id.isEmpty() || !kinds.contains(e.kind) ||
         ((e.kind == "tool_start" || e.kind == "tool_end") && e.tool.isEmpty()) ||
         (!e.activity.isEmpty() && e.activity != "reading" && e.activity != "working") ||
-        (!e.reason.isEmpty() && (e.kind != "attention" || (e.reason != "approval" && e.reason != "input"))) ||
+        !reasonValid || (e.kind == "turn_failed" && !e.tool.isEmpty()) ||
         (o.contains("risky") && e.kind != "tool_start")) {
         error = "Missing identity or unsupported event kind/activity"; return false;
     }
@@ -139,7 +143,8 @@ bool Sessions::apply(const Event &e, qint64 now) {
         // tool and found none started (Codex apply_patch or MCP, which can skip PreToolUse) is answered
         // by the first tool to finish.
         if (s.state == "attention" && (s.attentionTools.isEmpty() || s.attentionTools.contains(e.tool))) s.state = toolState(s);
-        else if (s.state != "attention" && s.state != "inactive" && s.state != "turn-finished" && (isNew || s.state != "idle")) {
+        else if (s.state != "attention" && s.state != "exhausted" && s.state != "inactive" && s.state != "turn-finished" &&
+                 (isNew || s.state != "idle")) {
             const auto next = toolState(s);
             if (next == "thinking" && (s.state == "working" || s.state == "reading")) s.activityUntil = now + activityHoldMs;
             else s.state = next;
@@ -150,7 +155,7 @@ bool Sessions::apply(const Event &e, qint64 now) {
         s.attentionTools = e.tool.isEmpty() ? QSet<QString>(s.tools.keyBegin(), s.tools.keyEnd()) : QSet<QString>{e.tool}; }
     else if (e.kind == "error") {
         if (!e.tool.isEmpty()) s.tools.remove(e.tool);
-        if (s.state != "attention") {
+        if (s.state != "attention" && s.state != "exhausted") {
             if (!e.tool.isEmpty()) s.resume = toolState(s);
             else if (s.state != "error") s.resume = held ? "thinking" : s.state;
             s.state = "error"; s.reactionUntil = now + 4000;
@@ -161,18 +166,32 @@ bool Sessions::apply(const Event &e, qint64 now) {
         s.lastTurnMs = s.turnStarted ? e.timestamp - s.turnStarted : 0; s.turnStarted = 0;
     }
     else if (e.kind == "interrupt") { s.tools.clear(); s.state = "idle"; s.interrupted = true; s.turnStarted = 0; }
-    if (s.state != "attention") { s.reason.clear(); s.attentionTools.clear(); dismiss(k, "attention"); }
-    if (e.kind == "attention" || e.kind == "error" || e.kind == "turn_finished") {
-        const qint64 expires = e.kind == "turn_finished" ? now + finishedAlertMs : e.kind == "error" ? now + errorAlertMs : 0;
-        auto it = std::find_if(alerts_.begin(), alerts_.end(), [&](const Alert &a) { return a.session == k && a.kind == e.kind; });
+    else if (e.kind == "turn_failed") {
+        // The turn is over. Out of quota, nothing changes until work resumes: a retry, or an auto-resume's
+        // first tool or finish. Any other failure reacts like an error, then rests.
+        s.tools.clear(); s.turnStarted = 0;
+        if (!e.reason.isEmpty()) { s.state = "exhausted"; s.reason = e.reason; }
+        else { s.state = "error"; s.resume = "idle"; s.reactionUntil = now + 4000; }
+    }
+    if (s.state != "attention") {
+        if (s.state != "exhausted") s.reason.clear();
+        s.attentionTools.clear(); dismiss(k, "attention");
+    }
+    if (s.state != "exhausted") dismiss(k, "exhausted");
+    if (e.kind == "attention" || e.kind == "error" || e.kind == "turn_finished" || e.kind == "turn_failed") {
+        // A failed turn is reported as a quota stop, or as an error titled by the reason "turn".
+        const QString kind = e.kind != "turn_failed" ? e.kind : e.reason.isEmpty() ? "error" : "exhausted";
+        const QString reason = e.kind == "turn_failed" && e.reason.isEmpty() ? "turn" : e.reason;
+        const qint64 expires = kind == "turn_finished" ? now + finishedAlertMs : kind == "error" ? now + errorAlertMs : 0;
+        auto it = std::find_if(alerts_.begin(), alerts_.end(), [&](const Alert &a) { return a.session == k && a.kind == kind; });
         if (it != alerts_.end()) {
             it->count = std::min(it->count + 1, 1000000); it->serial = ++serial_;
             if (!s.project.isEmpty()) it->project = s.project;
-            if (!e.reason.isEmpty()) it->reason = e.reason;
+            if (!reason.isEmpty() || kind == "error") it->reason = reason;
             it->expires = expires;
         } else {
             if (alerts_.size() == maxAlerts) alerts_.removeFirst();
-            alerts_.append({k, e.kind, s.project, e.provider, e.session, e.reason, now, 1, ++serial_, expires});
+            alerts_.append({k, kind, s.project, e.provider, e.session, reason, now, 1, ++serial_, expires});
         }
     }
     return true;
@@ -202,14 +221,13 @@ void Sessions::expire(qint64 now) {
     for (auto it = events_.begin(); it != events_.end();) if (now - it.value() >= expiryMs) it = events_.erase(it); else ++it;
 }
 QString Sessions::aggregate(qint64) const {
-    const QStringList priority{"attention", "error", "turn-finished", "working", "reading", "thinking", "idle", "inactive"};
+    const QStringList priority{"attention", "exhausted", "error", "turn-finished", "working", "reading", "thinking", "idle", "inactive"};
     for (const auto &state : priority) for (const auto &s : sessions_) if (s.state == state) return state;
     return "idle";
 }
 QVector<Alert> Sessions::pending() const {
     auto result = alerts_;
-    auto rank = [](const QString &kind) { return kind == "attention" ? 0 : kind == "error" ? 1 : 2; };
-    std::stable_sort(result.begin(), result.end(), [&](const Alert &a, const Alert &b) { return rank(a.kind) < rank(b.kind); });
+    std::stable_sort(result.begin(), result.end(), [&](const Alert &a, const Alert &b) { return alertRank(a.kind) < alertRank(b.kind); });
     return result;
 }
 int Sessions::unresolvedAttention() const {

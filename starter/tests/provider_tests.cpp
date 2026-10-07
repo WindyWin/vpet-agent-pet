@@ -114,6 +114,26 @@ private slots:
             QCOMPARE(restarted.aggregate(stamp), "thinking");
         }
     }
+    void stopFailure() {
+        QVERIFY(pet::hookEvents("claude").contains("StopFailure")); QVERIFY(!pet::hookEvents("codex").contains("StopFailure"));
+        auto failed = payload("StopFailure"); failed["error_type"] = "rate_limit";
+        auto out = pet::normalizeHook("claude", failed, now);
+        QCOMPARE(out["kind"].toString(), "turn_failed"); QCOMPARE(out["reason"].toString(), "limit");
+        QVERIFY(!QJsonDocument(out).toJson().contains("rate_limit")); // The category is mapped, never sent.
+        failed["error_type"] = "server_error";
+        QVERIFY(!pet::normalizeHook("claude", failed, now).contains("reason"));
+        // A subagent's failure ends the subagent; it never marks the parent's turn.
+        failed["error_type"] = "billing_error"; failed["agent_id"] = "child";
+        out = pet::normalizeHook("claude", failed, now);
+        QCOMPARE(out["kind"].toString(), "session_end"); QCOMPARE(out["session_id"].toString(), "child");
+        QVERIFY(!out.contains("reason"));
+        pet::Sessions sessions; qint64 stamp = now;
+        auto apply = [&](QJsonObject in) { return sessions.apply(event("claude", in, ++stamp), stamp); };
+        QVERIFY(apply(payload("UserPromptSubmit"))); QVERIFY(apply(payload("PreToolUse", "a")));
+        failed.remove("agent_id"); failed["error_type"] = "billing_error";
+        QVERIFY(apply(failed)); QCOMPARE(sessions.aggregate(stamp), "exhausted");
+        QCOMPARE(sessions.records().first().reason, "billing");
+    }
     void codexApprovalWithoutPreToolUseClears() {
         // apply_patch and MCP approvals can arrive with no PreToolUse; the tool's PostToolUse is the answer.
         pet::Sessions sessions; qint64 stamp = now;

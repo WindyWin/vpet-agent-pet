@@ -8,8 +8,20 @@
         <translation>Dự án không rõ</translation>
     </message>
     <message>
+        <source>Out of credits</source>
+        <translation>Hết tín dụng</translation>
+    </message>
+    <message>
+        <source>Usage limit reached</source>
+        <translation>Đã chạm giới hạn sử dụng</translation>
+    </message>
+    <message>
         <source>Tool error</source>
         <translation>Lỗi công cụ</translation>
+    </message>
+    <message>
+        <source>Turn failed</source>
+        <translation>Lượt bị lỗi</translation>
     </message>
     <message>
         <source>Turn finished</source>
@@ -1060,6 +1072,10 @@ Cần một phiên đồ họa; phiên SSH và container không mở được.</
     <message>
         <source>Enable</source>
         <translation>Bật</translation>
+    </message>
+    <message>
+        <source>Update</source>
+        <translation>Cập nhật</translation>
     </message>
     <message>
         <source>Add Agent Pet hooks to %1?
