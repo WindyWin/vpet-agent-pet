@@ -87,9 +87,11 @@ The setup program installs per user without administrator rights into
 `%LOCALAPPDATA%\Programs\AgentPet` (no spaces, for Codex), adds a Start menu entry and
 optionally a desktop shortcut, and offers to connect Claude Code and Codex, start at
 sign-in and start with agent sessions, reporting a failed step instead of hiding it. An
-upgrade replaces the artwork packs as a set and closes a running pet through the Restart
-Manager. The uninstaller stops the pet and removes only Agent Pet's hook entries and its
-login value. `scripts/check_install_windows.py` installs into a folder with spaces with
+upgrade closes a running pet through the Restart Manager and deletes nothing beforehand:
+packs a new version no longer lists stay until uninstall (the pet loads only the packs
+`artwork.rcc` names), so a failed or cancelled upgrade still leaves working artwork. The
+uninstaller stops only pets started from its own folder, removes the login value only when
+it names its own `agent-pet.exe`, and removes only Agent Pet's hook entries. `scripts/check_install_windows.py` installs into a folder with spaces with
 throwaway Claude Code and Codex configurations, runs each registered hook the way its
 agent does, upgrades, uninstalls, and checks that unrelated settings survive.
 

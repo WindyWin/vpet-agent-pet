@@ -46,11 +46,9 @@ Name: "codex"; Description: "Connect Codex (adds Agent Pet's hooks; trust them i
 Name: "login"; Description: "Start Agent Pet when I sign in"; GroupDescription: "Startup:"; Flags: unchecked
 Name: "autostart"; Description: "Start the pet when an agent session starts"; GroupDescription: "Startup:"; Flags: unchecked
 
-[InstallDelete]
-; Artwork packs are named by content; an upgrade replaces the whole set.
-Type: files; Name: "{app}\artwork-*.rcc"
-
 [Files]
+; Artwork packs are named by content. Packs an upgrade no longer lists stay until uninstall (the pet loads
+; only those artwork.rcc names), so a failed or cancelled upgrade never leaves the old version without artwork.
 Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
@@ -61,11 +59,10 @@ Name: "{autodesktop}\Agent Pet"; Filename: "{app}\agent-pet.exe"; Tasks: desktop
 Filename: "{app}\agent-pet.exe"; Description: "{cm:LaunchProgram,Agent Pet}"; Flags: nowait postinstall skipifsilent
 
 [UninstallRun]
-; Only Agent Pet's own hook entries and login value are removed; other hooks are left as they were.
-Filename: "{sys}\taskkill.exe"; Parameters: "/im agent-pet.exe /f"; Flags: runhidden; RunOnceId: "StopPet"
+; Only Agent Pet's own hook entries are removed; other hooks are left as they were. The running pet and
+; the login value are handled in [Code], limited to this installation.
 Filename: "{app}\agent-pet-cli.exe"; Parameters: "integration disable --provider claude"; Flags: runhidden; RunOnceId: "DisableClaude"
 Filename: "{app}\agent-pet-cli.exe"; Parameters: "integration disable --provider codex"; Flags: runhidden; RunOnceId: "DisableCodex"
-Filename: "{app}\agent-pet-cli.exe"; Parameters: "autostart login disable"; Flags: runhidden; RunOnceId: "DisableLogin"
 
 [Code]
 // Runs one setup command for a selected task and reports a failure instead of hiding it.
@@ -78,6 +75,41 @@ begin
      or (ResultCode <> 0) then
     SuppressibleMsgBox(Failure + #13#10#13#10 + 'You can retry from the pet: right-click it > Settings > Startup and agents.',
                        mbError, MB_OK, IDOK);
+end;
+
+const
+  RunKey = 'Software\Microsoft\Windows\CurrentVersion\Run';
+
+// Stops pets started from this installation only; a portable copy elsewhere keeps running.
+procedure StopInstalledPet();
+var
+  Folder: String;
+  ResultCode: Integer;
+begin
+  Folder := ExpandConstant('{app}') + '\';
+  StringChangeEx(Folder, '''', '''''', True);
+  Exec(ExpandConstant('{sys}\WindowsPowerShell\v1.0\powershell.exe'),
+       '-NoProfile -NonInteractive -Command "Get-Process -Name agent-pet -ErrorAction SilentlyContinue | ' +
+       'Where-Object { $_.Path -and $_.Path.StartsWith(''' + Folder + ''', [StringComparison]::OrdinalIgnoreCase) } | ' +
+       'Stop-Process -Force"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+end;
+
+// Removes the login value only when it starts this installation, not another copy's registration.
+procedure RemoveInstalledLogin();
+var
+  Value: String;
+begin
+  if RegQueryStringValue(HKCU, RunKey, 'Agent Pet', Value)
+     and (CompareText(Value, '"' + ExpandConstant('{app}\agent-pet.exe') + '"') = 0) then
+    RegDeleteValue(HKCU, RunKey, 'Agent Pet');
+end;
+
+procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
+begin
+  if CurUninstallStep = usUninstall then begin
+    StopInstalledPet();
+    RemoveInstalledLogin();
+  end;
 end;
 
 procedure CurStepChanged(CurStep: TSetupStep);

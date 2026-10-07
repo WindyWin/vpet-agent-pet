@@ -213,10 +213,22 @@ jobs:
 
       - name: Show failed native tests
         if: failure()
+        working-directory: starter/build
         run: |
-          foreach ($test in "provider-tests", "event-tests") {
-            & "build\$test.exe" -v1 2>&1 | Out-Host
-            Write-Host ("{0} exit code: 0x{1:X8}" -f $test, $LASTEXITCODE)
+          Get-Content Testing/Temporary/LastTest.log -Tail 80
+          # Both suites pass alone; run them together, as ctest -j does, with Qt Test writing to files.
+          foreach ($round in 1..4) {
+            $runs = foreach ($test in "provider-tests", "event-tests") {
+              $log = "$env:RUNNER_TEMP\$test-$round.txt"
+              $process = Start-Process ".\$test.exe" -ArgumentList "-o", "$log,txt" -NoNewWindow -PassThru
+              $null = $process.Handle
+              [pscustomobject]@{ Test = $test; Process = $process; Log = $log }
+            }
+            foreach ($run in $runs) {
+              $run.Process.WaitForExit()
+              Write-Host ("round {0}: {1} exit code 0x{2:X8}" -f $round, $run.Test, $run.Process.ExitCode)
+              if ($run.Process.ExitCode -ne 0 -and (Test-Path $run.Log)) { Get-Content $run.Log | Out-Host }
+            }
           }
 
       - name: Package
