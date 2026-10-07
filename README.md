@@ -1,5 +1,7 @@
 # Agent Pet
 
+**English** | [Tiếng Việt](README.vi.md)
+
 **A little desktop pet that keeps you company while Claude Code and Codex work.**
 
 It sits on your screen, thinks when your agent thinks, gets busy when it runs tools, and waves at you when a session needs your approval, so you can look away from the terminal without missing anything.
@@ -17,7 +19,7 @@ It sits on your screen, thinks when your agent thinks, gets busy when it runs to
 - **Looks after you**: gentle reminders to rest your eyes and drink water, and a recap of your day.
 - **Private**: it only learns *what kind* of thing is happening, never your prompts, code or commands.
 
-Works on **Linux** x86_64 (X11, or Wayland desktops with XWayland such as GNOME and KDE) and **macOS 11+** (Apple silicon and Intel).
+Works on **Linux** x86_64 (X11, or Wayland desktops with XWayland such as GNOME and KDE), **macOS 11+** (Apple silicon and Intel), and **Windows 10 version 1809+ / Windows 11** (x64).
 
 ## Get started
 
@@ -36,6 +38,14 @@ Download the latest version from the [Releases page](https://github.com/WindyWin
 1. Download the `.dmg`, open it and drag **Agent Pet** into **Applications**.
 2. Open it. The first time, macOS asks you to confirm: go to **System Settings → Privacy & Security → Open Anyway** (on macOS 14 or older, Control-click the app → **Open**).
 3. Right-click the pet → **Settings → Startup and agents**, press **Enable** next to Claude Code or Codex, then restart the client.
+
+**Windows**
+
+1. Download and run `agent-pet-<version>-windows-x86_64-setup.exe`. It installs for your user without administrator rights and adds **Agent Pet** to the Start menu. Qt, the Visual C++ runtime and the artwork are included.
+2. In setup, choose whether to connect Claude Code and/or Codex and start the pet at sign-in or when an agent session starts. You can also connect them later from **Settings → Startup and agents**.
+3. Restart Claude Code or Codex and send a prompt. Claude Code hooks need **2.1.139+**; in Codex, trust the hooks in `/hooks`.
+
+The Windows build is not code-signed yet. If SmartScreen warns, choose **More info → Run anyway**. For portable use, extract `agent-pet-<version>-windows-x86_64.zip` into a folder whose path has no spaces, then run `agent-pet.exe`. See the [Windows install guide](starter/docs/install.md#windows) for details.
 
 Need more detail, or something isn't working? See the [install guide](starter/docs/install.md) and its [troubleshooting table](starter/docs/install.md#troubleshooting).
 
@@ -165,6 +175,8 @@ Right-click the pet (or its tray / menu bar icon) for everything: your sessions,
 - connect Claude Code and Codex with one click, and have it start with your agents or at login;
 - choose how updates are installed.
 
+The interface supports **English and Vietnamese**. It follows your system language by default; choose **Settings → General → Language** to switch immediately.
+
 If it ever gets in the way, click the tray icon to hide it. It keeps watching your sessions and shows a badge on the icon instead.
 
 <table>
@@ -176,7 +188,7 @@ If it ever gets in the way, click the tray icon to hide it. It keeps watching yo
 
 ### Stays up to date
 
-On Linux the pet updates itself in the background by default, downloading only what changed and keeping your settings. If a new version fails to start, it goes back to the previous one. On macOS it tells you when a new version is out, and you install it by replacing the app.
+On Linux the pet updates itself in the background by default, downloading only what changed and keeping your settings. If a new version fails to start, it goes back to the previous one. On macOS and Windows it tells you when a new version is out: replace the macOS app or run the newer Windows setup program. Settings and enabled hooks are kept when upgrading in place.
 
 ## Your privacy
 
@@ -190,6 +202,7 @@ On Linux the pet updates itself in the background by default, downloading only w
 - **Not reacting?** Restart Claude Code or Codex after connecting, then send a new prompt. In Codex, approve the new hooks in `/hooks`.
 - **Lost the pet?** Click the tray icon, or right-click it → **More → Recover pet position and input**.
 - **macOS:** jumping to a terminal window and automatic updates aren't available yet. **Open** still switches tmux and herdr panes.
+- **Windows:** **Open** brings the agent's Windows Terminal or classic console window to the front, with an editor/terminal fallback based on process ancestry. Automatic update installation isn't available yet; run the newer setup program. For hook commands and console output, use `agent-pet-cli.exe`.
 - **Linux on Wayland:** the pet runs through XWayland, which GNOME and KDE provide by default. Pure Wayland isn't supported yet.
 
 ## For developers
