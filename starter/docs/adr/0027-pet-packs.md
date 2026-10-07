@@ -39,9 +39,9 @@ frame folder's resource path ([0010](0010-application-updates.md), [0014](0014-a
 - A new pet needs no code changes, and `scripts/new_pet.py` scaffolds one that runs at once. Users
   see nothing new until a second pet ships.
 - Only the running pet's packs are registered. Previews come from the index.
-- The index ships with the binary, so its format may change in any release. The catalog format may
-  too, given a migration of the catalogs in the repository. The planned event refactor (#64) will
-  replace `core-states.json` that way.
+- `artwork.rcc` ships and updates with each release, so the index format may change in any
+  release. The catalog format may too, given a migration of the catalogs in the repository. The
+  planned event refactor (#64) will replace `core-states.json` that way.
 - Every install still carries every bundled pet's packs. On-demand download of non-bundled pets, using
   the hash tree, is part 2 of #62.
 
@@ -55,8 +55,8 @@ frame folder's resource path ([0010](0010-application-updates.md), [0014](0014-a
   `pet-scaffold` (`new_pet.py`, `add_sequences.py --pet`, `verify_assets.py`). `verify_assets.py`
   reported `OK: vpet (141 sequences).` and `check_translations.py` exited 0.
 - VPet's 136 sequence packs were byte-identical before and after the build change: the SHA-256 of
-  every `build/artwork-<hex>.rcc` was compared (Task 3 of the implementation plan). The built index
-  lists 136 packs for VPet.
+  every `build/artwork-<hex>.rcc` was compared (Task 3 of
+  `docs/superpowers/plans/2026-10-07-pet-packs.md`). The built index lists 136 packs for VPet.
 - `agent-pet --smoke-test --pet nosuch` logged `Pet "nosuch" is unavailable: Unknown pet or invalid
   pet.json: nosuch; using vpet` and kept running as VPet until the 5 s timeout ended it.
 - No `.cpp` or `.h` file under `src` names `assets/vpet` any more; `"vpet"` remains only as the default id.

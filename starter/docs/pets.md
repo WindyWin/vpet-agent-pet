@@ -58,7 +58,7 @@ licenses/<terms>    the art's terms
 
 Unknown keys are errors. Frames live only in subfolders; the folder's root holds only the files above
 (VPet also keeps its `available-animations.json` there). Folder names use `A–Z`, `a–z`, `0–9`, `.`, `_`
-and `-`. Frame file names are PNGs without any of `" & ' < > ; \ [ ] : * ? |` or control characters, which
+and `-`, and do not start with `.`. Frame file names are PNGs without any of `" & ' < > ; \ [ ] : * ? |` or control characters, which
 the build and Windows cannot carry. `new_pet.py` and `add_sequences.py` refuse such names before copying
 anything, and `verify_assets.py` rejects them. The catalog's `asset_root` (default `assets/<id>`) must lie
 inside the pet's folder, and every frame lies under it.
@@ -76,12 +76,12 @@ and shows VPet instead.
 
 | State | When | Mode, then |
 | --- | --- | --- |
-| `idle` | nothing is happening | loop |
+| `idle` | nothing is happening | loop, then idle |
 | `starting` | Agent Pet starts | once, then idle |
 | `thinking`, `reading`, `working` | an agent thinks, reads files, runs tools | phased, then idle |
 | `waiting` | an agent waits for background jobs | phased, then idle |
 | `needs_input` | a session needs you | phased, then idle |
-| `out_of_quota` | the agent's usage limit is reached | loop |
+| `out_of_quota` | the agent's usage limit is reached | loop, then idle |
 | `tool_error` | a tool failed | once, then back to what was playing |
 | `turn_finished` | a turn finished | once, then idle |
 | `sleeping` | a long quiet spell | phased, then idle |
