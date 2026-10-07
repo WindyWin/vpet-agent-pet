@@ -27,4 +27,7 @@ QJsonObject toV1(const HostContext &context) {
     if (context.window.backend == platform::nativeWindowBackend && !context.window.id.isEmpty()) out["host_window"] = context.window.id;
     return out;
 }
+bool needsNativeWindow(const HostContext &context) {
+    return !context.isNull() && context.window.backend != platform::nativeWindowBackend;
+}
 }

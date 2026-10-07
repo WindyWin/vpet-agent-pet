@@ -316,6 +316,20 @@ private slots:
         }
         env.insert("WINDOWID", "4194311"); QCOMPARE(capture(env, {1})["host_window"].toString(), x11Wire("4194311"));
     }
+    void consoleLookupRunsUnlessAWindowIsNative() {
+        using namespace pet::hosts;
+        using pet::platform::nativeWindowBackend; using pet::platform::x11Backend;
+        QProcessEnvironment env; env.insert("TMUX", "/tmp/tmux-1/default,1,0"); env.insert("WINDOWID", "4194311");
+        auto context = Registry::builtin().capture(env, {1}, {});
+        QVERIFY(!context.isNull());
+        // An inherited $WINDOWID is an X11 window: it only satisfies the lookup where X11 is native.
+        QCOMPARE(needsNativeWindow(context), QString(nativeWindowBackend) != x11Backend);
+        context.window = {};
+        QVERIFY(needsNativeWindow(context));
+        context.window = {nativeWindowBackend, "1"};
+        QVERIFY(!needsNativeWindow(context));
+        QVERIFY(!needsNativeWindow({}));
+    }
     void hostTargetCodecs() {
         // Konsole: D-Bus unique or well-known service, window and session paths.
         pet::hosts::konsole::Target konsole;

@@ -28,6 +28,9 @@ constexpr int maxPids = 16, maxTarget = 256;
 // Converts already validated v1 fields (see Registry::validV1).
 HostContext fromV1(const QString &host, const QString &pids, const QString &window, const QString &target);
 QJsonObject toV1(const HostContext &context);
+// Whether the hook should still look for a native window: the context names a host but no
+// window v1 can carry. An inherited $WINDOWID (X11) does not count where X11 is not native.
+bool needsNativeWindow(const HostContext &context);
 QString joinPids(const QVector<qint64> &pids);
 QVector<qint64> splitPids(const QString &pids);
 }
