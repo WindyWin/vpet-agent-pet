@@ -80,8 +80,9 @@ end;
 const
   UninstallKey = 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{8441EED6-7EE4-4267-AADE-8840188C4202}_is1';
 
-// Installs into a new or empty folder, or over this program's own earlier installation (its uninstall
-// entry names the folder); never into another program's folder, whose files could be replaced.
+// Installs into a new or empty folder, or over this program's own earlier installation: its uninstall
+// entry names the folder, which still holds the program and its uninstall log (a stale entry for a folder
+// since deleted and reused does not count). Never into another program's folder, whose files could be replaced.
 function PrepareToInstall(var NeedsRestart: Boolean): String;
 var
   Folder, Previous: String;
@@ -92,7 +93,8 @@ begin
   Folder := ExpandConstant('{app}');
   if not DirExists(Folder) then Exit;
   if RegQueryStringValue(HKCU, UninstallKey, 'Inno Setup: App Path', Previous)
-     and (CompareText(RemoveBackslashUnlessRoot(Previous), RemoveBackslashUnlessRoot(Folder)) = 0) then Exit;
+     and (CompareText(RemoveBackslashUnlessRoot(Previous), RemoveBackslashUnlessRoot(Folder)) = 0)
+     and FileExists(AddBackslash(Folder) + 'agent-pet.exe') and FileExists(AddBackslash(Folder) + 'unins000.dat') then Exit;
   Empty := True;
   if FindFirst(AddBackslash(Folder) + '*', Found) then
     try
