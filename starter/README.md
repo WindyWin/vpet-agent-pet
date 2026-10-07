@@ -203,6 +203,12 @@ without a restart. In Vietnamese the pet speaks as "em" and calls you "bạn". T
 command line, the installer and these docs stay in English. To add or fix
 translations, see [translations](docs/i18n.md).
 
+## Arch Linux
+
+Arch users can build the package with `makepkg -si` from `packaging/arch/`; the same
+`PKGBUILD` is published to the AUR as `agent-pet`. It uses the system Qt and pacman
+owns upgrades and removal. See [Arch Linux](docs/install.md#arch-linux).
+
 ## Updates
 
 **Settings → Updates** offers daily release notifications, automatic downloads,

@@ -28,7 +28,9 @@ CMake `install()` rules, into `/usr`.
   entry is generated with `Exec=agent-pet` into `/usr/share/applications`.
 - **Updater.** The in-app updater only acts on a prefix holding an
   `.agent-pet-install` receipt, which only `install.sh` writes. A pacman install has
-  none, so updates stay with pacman and nothing in the code changes.
+  none, so the app behaves like a development build: it still checks for releases and
+  shows the notification and manual download, but never installs, and upgrades stay
+  with pacman. Nothing in the code changes.
 - **Licences.** `LICENSE`, `NOTICE`, `THIRD_PARTY_NOTICES.md` and `licenses/` go to
   `/usr/share/licenses/agent-pet`; the artwork is `LicenseRef-VPet-artwork`.
 - **Publishing.** The AUR package `agent-pet` is a git repository holding `PKGBUILD`

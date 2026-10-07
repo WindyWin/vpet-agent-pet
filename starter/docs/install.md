@@ -259,15 +259,18 @@ The installed version is shown by `agent-pet --version` and in **About**.
 ## Arch Linux
 
 Build the package from `packaging/arch/PKGBUILD` (the AUR package `agent-pet` carries
-the same recipe):
+the same recipe). From the `starter/` directory, run:
 
 ```bash
+cd packaging/arch
 makepkg -si
 ```
 
 It builds against the system Qt and installs into `/usr` with pacman owning the files,
 so upgrade and removal go through pacman. There is no `.agent-pet-install` receipt, so
-the in-app updater stays inactive. See [ADR 0023](adr/0023-arch-aur-package.md).
+the app behaves like a development build: it still notifies you of new releases and
+offers a manual download, but never installs one. Upgrade through pacman instead. See
+[ADR 0023](adr/0023-arch-aur-package.md).
 
 ## macOS
 
