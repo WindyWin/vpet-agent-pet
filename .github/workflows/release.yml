@@ -211,6 +211,14 @@ jobs:
       - name: Test
         run: ctest --test-dir build --output-on-failure -j $env:NUMBER_OF_PROCESSORS
 
+      - name: Show failed native tests
+        if: failure()
+        run: |
+          foreach ($test in "provider-tests", "event-tests") {
+            & "build\$test.exe" -v1 2>&1 | Out-Host
+            Write-Host ("{0} exit code: 0x{1:X8}" -f $test, $LASTEXITCODE)
+          }
+
       - name: Package
         run: |
           $env:QMAKE = "$env:QT_ROOT_DIR\bin\qmake.exe"
