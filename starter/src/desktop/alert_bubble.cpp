@@ -50,7 +50,8 @@ void AlertBubble::present(const AlertText &text, const QString &kind, int more) 
     label_ = text.label;
     setToolTip(text.label + "\n" + text.tooltip);
     more_->setText(QString("+%1").arg(more)); more_->setVisible(more > 0);
-    accent_ = kind == "attention" ? QColor("#d9480f") : kind == "error" ? QColor("#c92a2a") : QColor("#2b8a3e");
+    accent_ = kind == "attention" ? QColor("#d9480f") : kind == "exhausted" ? QColor("#e67700")
+            : kind == "error" ? QColor("#c92a2a") : QColor("#2b8a3e");
     setAccessibleDescription(text.title + ": " + text.label);
     adjustSize();
     update();

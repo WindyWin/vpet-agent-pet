@@ -49,6 +49,8 @@ Monitor::Monitor(PetWindow &window, std::shared_ptr<hosts::FocusService> focus)
     });
 }
 QString Monitor::bedtimeNote() { return Pet::tr("It's getting late. Maybe finish up and get some sleep?"); }
+// States that interrupt whatever the pet is doing and keep reminders and surprises away.
+static bool urgent(const QString &state) { return state == "attention" || state == "exhausted" || state == "error"; }
 // Subagents fold into their parent, as in the running-sessions list.
 static int topLevelSessions(const Sessions &sessions) {
     const auto &records = sessions.records();
@@ -83,15 +85,15 @@ bool Monitor::apply(const Event &event, qint64 now) {
         window_.mood().finished(now);
         lastTurnMs_ = sessions_.records().value(event.provider + QChar(0x1f) + event.session).lastTurnMs;
     }
-    else if (event.kind == "error") window_.mood().failed(now);
+    else if (event.kind == "error" || event.kind == "turn_failed") window_.mood().failed(now);
     // Only a prompt shows the user is there; nothing counts behind a locked screen.
     if (!(locked && locked())) window_.wellness().activity(now, event.kind == "prompt");
     checkpointSessions();
     observed_ = true; update(now);
     // The hook saw a destructive command start: the pet jumps, then shows the work going on. A session
-    // waiting on the user, or a fresh error, matters more.
+    // waiting on the user, out of quota, or a fresh error, matters more.
     const auto aggregate = sessions_.aggregate(now);
-    if (event.kind == "tool_start" && event.risky && !window_.petHidden() && aggregate != "attention" && aggregate != "error")
+    if (event.kind == "tool_start" && event.risky && !window_.petHidden() && !urgent(aggregate))
         window_.eggs().surprise("danger");
     // Work going on deep into the night earns one gentle note.
     if (event.kind == "turn_finished" && !window_.muted() && !window_.petHidden() && window_.eggs().bedtime())
@@ -130,14 +132,14 @@ void Monitor::update(qint64 now) {
     const bool resting = window_.ambient().resting() || window_.player().isTouch(window_.player().requestedState());
     const auto showing = animation == "idle" && resting ? animation : window_.player().requestedState();
     // A surprise, such as a startled jump or a dance, plays out unless a session needs the user.
-    if (window_.eggs().surprising() && state != "attention" && state != "error") return;
+    if (window_.eggs().surprising() && !urgent(state)) return;
     // While the user holds the pet, or it is falling, the player keeps the latest request for afterwards.
     if (state != lastAggregate_ || (!window_.player().held() && state != "error" && state != "turn-finished" &&
                                     showing != animation)) {
         // A turn that just finished is celebrated in one of several ways, or with a treat when one is due.
         const bool celebrate = state == "turn-finished" && lastAggregate_ != state;
         const auto chosen = celebrate ? window_.mood().celebrate(window_.eggs().celebration(lastTurnMs_)) : animation;
-        window_.player().select(chosen, state == "attention" || state == "error");
+        window_.player().select(chosen, urgent(state));
         // A snack that played already says "have a drink"; the water reminder need not repeat it.
         const auto snacks = window_.player().reactions("snack");
         if (celebrate && std::any_of(snacks.begin(), snacks.end(), [&](const auto &r) { return r.state == chosen; }))
@@ -154,7 +156,7 @@ void Monitor::say(const QString &text, const QString &details, int ms) {
 bool Monitor::calm(qint64 now) const {
     const auto state = sessions_.aggregate(now);
     return window_.wellness().present(now) && !window_.petHidden() && !window_.muted() && !bubble_.isVisible() && !note_.isVisible() && restLeft_ == 0 &&
-           sessions_.unresolvedAttention() == 0 && state != "attention" && state != "error" &&
+           sessions_.unresolvedAttention() == 0 && !urgent(state) &&
            !window_.player().held() && !window_.eggs().surprising() && !window_.walking() && !window_.flying();
 }
 // An eye break or a sip of water, once its stretch of active time is up. A due reminder waits for calm; in
@@ -219,7 +221,7 @@ void Monitor::remind() {
 }
 bool Monitor::shown(const Alert &alert) const {
     const int level = window_.bubbles();
-    return alert.kind == "attention" || (alert.kind == "error" && level >= Preferences::RequestsAndErrors) ||
+    return alert.kind == "attention" || ((alert.kind == "error" || alert.kind == "exhausted") && level >= Preferences::RequestsAndErrors) ||
            level >= Preferences::AllAlerts;
 }
 void Monitor::refreshAlerts() {
@@ -281,7 +283,7 @@ bool Monitor::focusSession(const QString &key) {
         return false;
     }
     // Going there answers its bubbles; a pending request keeps the badge until it resolves.
-    for (const auto *kind : {"attention", "error", "turn_finished"}) sessions_.dismiss(key, kind);
+    for (const auto *kind : {"attention", "exhausted", "error", "turn_finished"}) sessions_.dismiss(key, kind);
     checkpointSessions();
     refreshAlerts();
     return true;

@@ -150,6 +150,68 @@ private slots:
         QVERIFY(state.apply(event("prompt", 7), now + 7)); QCOMPARE(state.aggregate(now + 7), "thinking");
         QVERIFY(state.apply(event("tool_start", 8), now + 8)); QCOMPARE(state.aggregate(now + 8), "working");
     }
+    void quotaStopStaysUntilWorkResumes() {
+        auto failed = [&](int seq, QString reason) { auto e = event("turn_failed", seq); e.tool.clear(); e.reason = reason; return e; };
+        for (const auto *resume : {"prompt", "tool_start", "turn_finished", "session_end"}) {
+            pet::Sessions state;
+            QVERIFY(state.apply(event("prompt", 1), now + 1));
+            QVERIFY(state.apply(event("tool_start", 2), now + 2));
+            auto request = event("attention", 3); request.reason = "approval";
+            QVERIFY(state.apply(request, now + 3));
+            QVERIFY(state.apply(failed(4, "limit"), now + 4));
+            QCOMPARE(state.aggregate(now + 4), "exhausted");
+            QVERIFY(state.records().first().tools.isEmpty()); QCOMPARE(state.unresolvedAttention(), 0);
+            QCOMPARE(state.records().first().reason, "limit");
+            // No timer, no late report clears it.
+            state.expire(now + 20 * 60000); QCOMPARE(state.aggregate(now + 20 * 60000), "exhausted");
+            QVERIFY(state.apply(event("tool_end", 5), now + 5)); QCOMPARE(state.aggregate(now + 5), "exhausted");
+            auto toolless = event("error", 6); toolless.tool.clear();
+            QVERIFY(state.apply(toolless, now + 6)); QCOMPARE(state.aggregate(now + 6), "exhausted");
+            auto asking = event("attention", 7); asking.reason = "input";
+            QVERIFY(state.apply(asking, now + 7)); QCOMPARE(state.aggregate(now + 7), "exhausted");
+            QCOMPARE(state.unresolvedAttention(), 0);
+            QVERIFY(state.apply(failed(8, "billing"), now + 8)); QCOMPARE(state.records().first().reason, "billing");
+            // Auto-resume or a retry: the next sign of work clears it.
+            QVERIFY(state.apply(event(resume, 9), now + 9));
+            QVERIFY(state.records().isEmpty() || state.records().first().state != "exhausted");
+            QVERIFY(state.records().isEmpty() || state.records().first().reason.isEmpty());
+        }
+    }
+    void failedTurnReactsThenIdles() {
+        pet::Sessions state;
+        QVERIFY(state.apply(event("prompt", 1), now + 1));
+        QVERIFY(state.apply(event("tool_start", 2), now + 2));
+        auto failed = event("turn_failed", 3); failed.tool.clear();
+        QVERIFY(state.apply(failed, now + 3)); QCOMPARE(state.aggregate(now + 3), "error");
+        QVERIFY(state.records().first().tools.isEmpty());
+        QCOMPARE(state.records().first().reason, "turn");
+        // A tool error in the same session stays a separate alert.
+        auto toolError = event("error", 4); toolError.tool.clear();
+        QVERIFY(state.apply(toolError, now + 4));
+        int errors = 0; for (const auto &a : state.pending()) errors += a.kind == "error";
+        QCOMPARE(errors, 2);
+        state.expire(now + 4 + 4000); QCOMPARE(state.aggregate(now + 4 + 4000), "idle");
+        QVERIFY(state.records().first().reason.isEmpty());
+        // Work after the failure is still tracked: nothing about it is stale.
+        QVERIFY(state.apply(event("tool_start", 5), now + 5)); QCOMPARE(state.aggregate(now + 5), "working");
+    }
+    void exhaustedPriority() {
+        pet::Sessions state;
+        auto at = [&](QString session, QString kind, int seq, QString reason = {}) {
+            auto e = event(kind, seq); e.session = session; e.tool.clear(); e.reason = reason; return e;
+        };
+        QVERIFY(state.apply(at("a", "turn_failed", 1, "limit"), now + 1));
+        QVERIFY(state.apply(at("b", "error", 2), now + 2));
+        QVERIFY(state.apply(at("c", "prompt", 3), now + 3));
+        QCOMPARE(state.aggregate(now + 3), "exhausted");
+        QVERIFY(state.apply(at("d", "attention", 4, "approval"), now + 4));
+        QCOMPARE(state.aggregate(now + 4), "attention");
+        // The state and its reason survive a restart.
+        pet::Sessions restored;
+        QVERIFY(restored.restore(state.checkpoint(), now + 5, [](const pet::Session &) { return true; }));
+        QCOMPARE(restored.records().value(QString("claude") + QChar(0x1f) + "a").state, "exhausted");
+        QCOMPARE(restored.records().value(QString("claude") + QChar(0x1f) + "a").reason, "limit");
+    }
     void activityHold() {
         pet::Sessions state;
         auto tool = [&](QString kind, QString id, int seq) { auto e = event(kind, seq); e.tool = id; e.activity = "working"; return e; };

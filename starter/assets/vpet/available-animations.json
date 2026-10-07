@@ -6,9 +6,9 @@
   "source_commit": "6358445aa54587f9cd524264eaf17ef97bc826a8",
   "source_root": "VPet-Simulator.Windows/mod/0000_core/pet/vup",
   "bundled_catalog": "assets/vpet/animations.json",
-  "missing_sequence_count": 428,
-  "missing_frame_count": 4402,
-  "missing_size_bytes": 618796082,
+  "missing_sequence_count": 426,
+  "missing_frame_count": 4369,
+  "missing_size_bytes": 615875971,
   "sequences": [
     {
       "path": "Default/Happy/2",
@@ -26,24 +26,6 @@
       "frame_count": 13,
       "total_duration_ms": 1875,
       "size_bytes": 2177559,
-      "timing_valid": true
-    },
-    {
-      "path": "Default/Ill/1",
-      "category": "Default",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Default/Ill/1",
-      "frame_count": 13,
-      "total_duration_ms": 3000,
-      "size_bytes": 1151425,
-      "timing_valid": true
-    },
-    {
-      "path": "Default/Ill/2",
-      "category": "Default",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Default/Ill/2",
-      "frame_count": 20,
-      "total_duration_ms": 3000,
-      "size_bytes": 1768686,
       "timing_valid": true
     },
     {

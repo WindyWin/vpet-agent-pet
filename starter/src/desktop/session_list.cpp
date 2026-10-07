@@ -6,6 +6,7 @@
 namespace pet {
 QColor SessionList::stateColor(const QString &state) {
     if (state == "attention") return QColor("#d9480f");
+    if (state == "exhausted") return QColor("#e67700");
     if (state == "error") return QColor("#c92a2a");
     if (state == "working" || state == "reading" || state == "thinking") return QColor("#1971c2");
     if (state == "turn-finished") return QColor("#2b8a3e");

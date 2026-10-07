@@ -66,7 +66,7 @@ bool Recap::record(const Event &e, const Session *s, const QDate &date) {
         waiting_[k] = e.timestamp; ++at(date).approvals;
         return true;
     }
-    if (e.kind == "error") { ++at(date).errors; return true; }
+    if (e.kind == "error" || e.kind == "turn_failed") { ++at(date).errors; return true; }
     if (e.kind == "turn_finished") {
         auto &d = at(date);
         ++d.turns; d.longestTurnMs = std::max(d.longestTurnMs, s->lastTurnMs);

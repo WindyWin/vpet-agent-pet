@@ -11,7 +11,7 @@ namespace pet {
 struct Event {
     QString provider, session, id, kind, tool, parent, project, activity;
     qint64 timestamp = 0;
-    QString reason; // attention only: "approval" or "input"; empty when unknown
+    QString reason; // attention: "approval" or "input"; turn_failed: "limit" or "billing"; empty when unknown
     // Where the agent runs, captured by the hook so the pet can bring it forward:
     // the v1 wire fields, converted to a hosts::HostContext when applied.
     QString host, hostPids, hostWindow, hostTarget;
@@ -23,7 +23,7 @@ struct Event {
 };
 struct Session {
     QString provider, id, parent, project, state = "idle", resume = "idle";
-    QString reason; // Reason of the current attention request, if any.
+    QString reason; // Reason of the current attention request or quota stop, if any.
     QSet<QString> attentionTools; // Tools awaiting the user's answer; the first to finish resolves the attention.
     bool interrupted = false; // Set by an interrupt; tool callbacks of that turn are stale until the next prompt.
     hosts::HostContext host; // Null until an event identifies the host; kept until another one does.
@@ -32,6 +32,10 @@ struct Session {
     qint64 turnStarted = 0; // Timestamp of the prompt that started the current turn; 0 when unknown.
     qint64 lastTurnMs = 0; // How long the last finished turn ran, from its prompt; 0 when unknown.
 };
+// Bubble order: requests, then quota stops, then errors, then finished turns.
+inline int alertRank(const QString &kind) {
+    return kind == "attention" ? 0 : kind == "exhausted" ? 1 : kind == "error" ? 2 : 3;
+}
 struct Alert {
     QString session, kind, project, provider, id, reason;
     qint64 created = 0;

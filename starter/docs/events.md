@@ -17,8 +17,10 @@ Required fields: `version` (integer 1), `provider` (`claude` or `codex`),
 Optional fields: `tool_id`, `parent_id`, `project_path`, `activity`, `reason`,
 `risky`, and the host fields below.
 `tool_start` and `tool_end` require `tool_id`; activity is `reading` or `working`
-(default working). `reason` is allowed only on `attention` and is `approval` or
-`input`; without it alerts say "Needs attention". `risky` is a boolean allowed only
+(default working). `reason` is allowed on `attention`, as `approval` or `input`
+(without it alerts say "Needs attention"), and on `turn_failed`, as `limit` (the
+provider's usage or rate limit) or `billing` (out of credits). `turn_failed` never
+carries `tool_id`. `risky` is a boolean allowed only
 on `tool_start`: the hook found a destructive shell command (see
 [adapter policy](integrations.md#adapter-policy)), and the pet looks startled. It is
 the only non-string field besides the version and timestamp. Strings are limited to 256 UTF-16 units, except project paths
@@ -27,8 +29,9 @@ arguments, output, or raw provider payload is retained or transmitted; `risky` i
 a one-bit judgment made inside the hook.
 
 Kinds: `session_start`, `prompt`, `tool_start`, `tool_end`, `attention`, `error`,
-`turn_finished`, `interrupt`, `session_end`. A finished turn indicates only that
-it stopped; it says nothing about success or test results.
+`turn_finished`, `turn_failed`, `interrupt`, `session_end`. A finished turn indicates only that
+it stopped; it says nothing about success or test results. A failed turn ended on a
+provider error; with a `limit` or `billing` reason the provider is out of quota.
 
 Adapters must preserve stable provider session/tool/event IDs when supplied.
 Never invent a common session ID for unidentified callbacks: drop events without
@@ -125,6 +128,13 @@ messages; oversized datagrams and invalid envelopes are dropped.
   turns react for up to 4 seconds then become idle. The animation's own one-shot
   may finish sooner. Interrupt clears tools and becomes idle, never finished; later
   tool callbacks and errors from the interrupted turn are ignored until the next prompt.
+- A failed turn clears tools and attention. With a `limit` or `billing` reason the
+  session is `exhausted`, with no timer: a prompt, tool start, finished turn,
+  interrupt, end or expiry leaves it, while tool ends, errors and attention do not
+  (attention shows over it, and a later failure of the same session replaces the
+  reason). Late tool callbacks are still accepted, because Claude can resume a
+  quota-stopped turn on its own without a new prompt. Without a reason, the failure
+  reacts as an error for up to 4 seconds and then becomes idle.
 - After 30 minutes without an accepted event, records and their alerts expire.
   This is memory reclamation, not evidence of success or disconnection. Fresh
   events can recreate a record. No records or alerts are persisted or replayed
@@ -134,15 +144,15 @@ Limits: 256 sessions, 128 simultaneous tools per session, 4096 recent event IDs,
 256 end/expiry tombstones, 64 pending alerts. New sessions/tools at capacity are
 dropped until space is available; oldest event IDs/tombstones are evicted.
 
-Aggregate animation priority is attention > error > turn-finished > working >
-reading > thinking > idle > inactive. No observed sessions means idle. The
+Aggregate animation priority is attention > exhausted > error > turn-finished > working >
+reading > thinking > idle > inactive. Exhausted plays `out_of_quota`, the pet sick in bed. No observed sessions means idle. The
 aggregate feeds playback, including the state restored after dragging. Preview
 is most useful without an active event stream; monitoring takes precedence once
 fresh events have been observed.
 
 The pending queue aggregates alerts by session and reason, saturating counts at
 1,000,000. At capacity the oldest alert is evicted. Selection sorts attention,
-then error, then finished, with FIFO ordering within each priority. Dismissal
+then exhausted, then error, then finished, with FIFO ordering within each priority. Dismissal
 removes the alert only, and never clears session attention. Resolving attention,
 ending a session or expiry clears its relevant alerts.
 
@@ -161,8 +171,10 @@ attention, so dismissal never clears it. Mute hides the bubble only; sound is a
 system beep when a shown alert is raised or re-raised while not muted.
 
 Finished-turn alerts expire 6 seconds after they are raised and error alerts
-after 10 seconds; attention alerts stay until resolved. The `bubbles`
-preference (0 requests only, 1 requests and errors, default, 2 everything)
+after 10 seconds; attention alerts stay until resolved, and exhausted alerts ("Usage
+limit reached", "Out of credits") until the session leaves that state. A failed turn
+without a quota reason raises an error alert titled "Turn failed". The `bubbles`
+preference (0 requests only, 1 requests and errors, which include quota stops, default, 2 everything)
 filters which alerts reach the toast. A newly raised alert whose session window
 is the active X11 window is dismissed on arrival. Bringing a session forward
 from the toast or the session list dismisses that session's alerts; attention
@@ -170,7 +182,7 @@ itself remains until the session resolves it.
 
 `sessionRows()` builds the running-sessions list from session records:
 subagents fold into their parent (whose status shows the busiest child), and
-rows sort attention, error, working, reading, thinking, finished, idle, stopped,
+rows sort attention, exhausted, error, working, reading, thinking, finished, idle, stopped,
 then most recently seen first.
 
 ## Verification

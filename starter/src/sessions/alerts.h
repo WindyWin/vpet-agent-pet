@@ -4,7 +4,7 @@
 namespace pet {
 // Display text for one pending alert. The label never contains prompt text or tool data.
 struct AlertText {
-    QString title;   // "Needs approval", "Needs input", "Tool error", "Turn finished"
+    QString title;   // "Needs approval", "Usage limit reached", "Tool error", "Turn finished", ...
     QString label;   // "abc-web · Claude Code · b72c"
     QString tooltip; // Full project path, or an explicit "unavailable" note.
     QString name;    // "abc-web": the short form shown in the bubble itself.
@@ -27,7 +27,7 @@ struct SessionRow {
     QString tooltip; // Project path
     int children = 0;
 };
-// Sorted: waiting on the user, then errors, then active, then idle and stopped.
+// Sorted: waiting on the user, then out of quota, then errors, then active, then idle and stopped.
 // Hosts are named by the registry that validated them.
 QVector<SessionRow> sessionRows(const Sessions &sessions, qint64 now,
                                 const hosts::Registry &hosts = hosts::Registry::builtin());
@@ -45,7 +45,7 @@ public:
     void next();
     // Hides the current alert. Session attention remains until the session resolves it.
     void dismiss(Sessions &sessions);
-    static int rank(const QString &kind) { return kind == "attention" ? 0 : kind == "error" ? 1 : 2; }
+    static int rank(const QString &kind) { return alertRank(kind); }
 private:
     int index() const;
     QVector<Alert> pending_;
