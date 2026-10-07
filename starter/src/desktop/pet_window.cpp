@@ -85,6 +85,7 @@ PetWindow::PetWindow(QWidget *parent, const QString &path, bool persist)
     connect(&player_, &Player::entered, this, &PetWindow::entered);
     autostart_ = preferences.autostart; presence_.setPolicy(preferences.whenIdle);
     language_ = preferences.language;
+    pet_ = preferences.pet;
     connect(&player_, &Player::changed, this, qOverload<>(&PetWindow::update));
     connect(&player_, &Player::completed, this, [this](const QString &state) {
         if (!quitting_ || state != quitState_) return;
@@ -488,6 +489,11 @@ void PetWindow::setAutostart(bool enabled) {
 void PetWindow::setWhenIdle(IdlePolicy policy) {
     presence_.setPolicy(policy);
     writePreferences([policy](Preferences &preferences) { preferences.whenIdle = policy; });
+}
+void PetWindow::setPet(const QString &id) {
+    if (!Preferences::validPet(id)) return;
+    pet_ = id;
+    writePreferences([id](Preferences &preferences) { preferences.pet = id; });
 }
 bool PetWindow::savePreferences() { return writePreferences([](Preferences &) {}); }
 bool PetWindow::writePreferences(const std::function<void(Preferences &)> &change) {

@@ -6,6 +6,7 @@
 #include <QFileInfo>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QRegularExpression>
 #include <QSaveFile>
 #include <QStandardPaths>
 #include <cmath>
@@ -29,6 +30,10 @@ QPoint Preferences::visiblePosition(QPoint position, QSize size, const QVector<Q
 bool Preferences::validBirthday(const QString &monthDay) {
     // A leap year, so February 29 is a date.
     return monthDay.size() == 5 && QDate::fromString("2000-" + monthDay, "yyyy-MM-dd").isValid();
+}
+bool Preferences::validPet(const QString &id) {
+    static const QRegularExpression pattern(QRegularExpression::anchoredPattern("[a-z0-9-]{1,32}"));
+    return pattern.match(id).hasMatch();
 }
 PreferencesStore::PreferencesStore(QString path) : path_(std::move(path)) {
     if (path_.isEmpty()) path_ = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/preferences.json";
@@ -69,6 +74,7 @@ Preferences PreferencesStore::load() {
         || (object.contains("recap") && !object["recap"].isBool())
         || (object.contains("autostart") && !object["autostart"].isBool())
         || (object.contains("language") && !object["language"].isString())
+        || (object.contains("pet") && !object["pet"].isString())
         || (object.contains("when_idle") && !parseIdlePolicy(object["when_idle"].toString(), whenIdle))) {
         writable_ = false; error_ = Settings::tr("Invalid preferences; using defaults and preserving the file."); return result;
     }
@@ -94,6 +100,7 @@ Preferences PreferencesStore::load() {
     result.whenIdle = whenIdle;
     const auto language = object["language"].toString();
     if (language == "en" || language == "vi") result.language = language;
+    if (const auto pet = object["pet"].toString(); Preferences::validPet(pet)) result.pet = pet;
     return result;
 }
 bool PreferencesStore::save(const Preferences &preferences) {
@@ -109,7 +116,8 @@ bool PreferencesStore::save(const Preferences &preferences) {
                        {"wander", preferences.wander}, {"easter_eggs", preferences.easterEggs}, {"recap", preferences.recap},
                        {"eye_minutes", preferences.eyeMinutes}, {"water_minutes", preferences.waterMinutes},
                        {"autostart", preferences.autostart}, {"when_idle", idlePolicyName(preferences.whenIdle)},
-                       {"language", preferences.language}};
+                       {"language", preferences.language},
+                       {"pet", Preferences::validPet(preferences.pet) ? preferences.pet : QString("vpet")}};
     if (Preferences::validBirthday(preferences.birthday)) object["birthday"] = preferences.birthday;
     if (preferences.hasPosition) { object["x"] = preferences.position.x(); object["y"] = preferences.position.y(); }
     const auto bytes = QJsonDocument(object).toJson();

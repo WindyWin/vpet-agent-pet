@@ -2,6 +2,7 @@
 #include <QSaveFile>
 #include <QSslSocket>
 #include <QRegularExpression>
+#include "animation/pet_library.h"
 #include "desktop/monitor.h"
 #include "ipc/autostart.h"
 #include "ipc/local.h"
@@ -74,6 +75,7 @@ int main(int argc, char **argv) {
     parser.addHelpOption();
     parser.addVersionOption();
     parser.addOption({"state", "Initial animation state (default: starting)", "state", "starting"});
+    parser.addOption({"pet", "Pet to show for this run, by id (default: the one chosen in Settings)", "id"});
     parser.addOption({"preview", "Open the developer animation preview"});
     parser.addOption({"settings", "Open desktop settings"});
     parser.addOption({"no-persist", "Do not read or write preferences (testing)"});
@@ -101,9 +103,16 @@ int main(int argc, char **argv) {
             }
         }
         const bool persist = !parser.isSet("smoke-test") && !parser.isSet("no-persist");
+        const auto preferences = persist ? pet::PreferencesStore().load() : pet::Preferences{};
         // Before any window exists, so everything is created in the chosen language. Headless commands
         // above never translate: the CLI stays English and `hook` stays silent.
-        pet::i18n::install(pet::i18n::fromName(persist ? pet::PreferencesStore().load().language : QString()));
+        pet::i18n::install(pet::i18n::fromName(preferences.language));
+        // The pet for this run: --pet, else the saved choice. One that cannot load is skipped for this run only;
+        // the window's player then shows VPet.
+        const auto chosen = parser.isSet("pet") ? parser.value("pet") : preferences.pet;
+        QString petError;
+        if (!pet::PetLibrary::shared().activate(chosen, &petError) && chosen != "vpet")
+            qWarning().noquote() << QString("Pet \"%1\" is unavailable: %2; using vpet").arg(chosen, petError);
         pet::PetWindow window(nullptr, {}, persist);
         if (!window.player().select(parser.value("state"), true)) {
             std::fprintf(stderr, "%s\n", qPrintable(window.player().error()));

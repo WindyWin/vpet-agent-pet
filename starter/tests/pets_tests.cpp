@@ -1,7 +1,11 @@
 #include "animation/catalog.h"
 #include "animation/pet_library.h"
+#include "animation/easter_eggs.h"
 #include "animation/player.h"
+#include "desktop/pet_window.h"
+#include "settings/preferences.h"
 #include <QCryptographicHash>
+#include <QDateTime>
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
@@ -92,7 +96,13 @@ QString treeMismatch(const QString &root, const QString &id, const QString &dire
 }
 class PetsTests : public QObject {
     Q_OBJECT
+    QTemporaryDir clients;
 private slots:
+    void initTestCase() {
+        qputenv("CLAUDE_CONFIG_DIR", QFile::encodeName(clients.path() + "/claude"));
+        qputenv("CODEX_HOME", QFile::encodeName(clients.path() + "/codex"));
+        pet::EasterEggs::defaultClock = [] { return QDateTime(QDate(2026, 10, 7), QTime(12, 0)); };
+    }
     void contractComesFromItsDataFile() {
         const auto &states = pet::coreStates();
         QCOMPARE(states.size(), 15);
@@ -258,6 +268,42 @@ private slots:
         QVERIFY2(player.valid(), qPrintable(player.error())); QVERIFY(!player.pixmap().isNull());
         QCOMPARE(pet::PetLibrary::shared().active(), QString("vpet"));
         QCOMPARE(pet::PetLibrary::shared().root(), QString(":/"));
+    }
+    void petPreference() {
+        QTemporaryDir directory; const auto path = directory.path() + "/preferences.json";
+        pet::PreferencesStore store(path); pet::Preferences preferences;
+        QCOMPARE(preferences.pet, QString("vpet"));
+        preferences.pet = "cat-2"; QVERIFY(store.save(preferences));
+        QCOMPARE(pet::PreferencesStore(path).load().pet, QString("cat-2")); // Unknown to this build, but kept.
+        auto write = [&](const QByteArray &json) {
+            QFile file(path); QVERIFY(file.open(QIODevice::WriteOnly)); file.write(json);
+        };
+        write(R"({"version": 1, "size": 240, "on_top": true, "pet": "../Cat"})");
+        pet::PreferencesStore invalidId(path);
+        QCOMPARE(invalidId.load().pet, QString("vpet")); QVERIFY(invalidId.error().isEmpty()); // Reads as VPet.
+        write(R"({"version": 1, "size": 240, "on_top": true, "pet": 3})");
+        pet::PreferencesStore wrongType(path);
+        QCOMPARE(wrongType.load().pet, QString("vpet")); QVERIFY(!wrongType.error().isEmpty()); // An invalid file.
+        write(R"({"version": 1, "size": 240, "on_top": true})");
+        QCOMPARE(pet::PreferencesStore(path).load().pet, QString("vpet")); // Files from earlier versions.
+        QVERIFY(pet::Preferences::validPet("mini")); QVERIFY(!pet::Preferences::validPet("Mini"));
+        QVERIFY(!pet::Preferences::validPet("")); QVERIFY(!pet::Preferences::validPet(QString(33, 'a')));
+        QVERIFY(!pet::Preferences::validPet("cat\n")); // A trailing newline is not part of an id.
+    }
+    void windowSavesTheChosenPet() {
+        QTemporaryDir directory; const auto path = directory.path() + "/preferences.json";
+        {
+            pet::PetWindow window(nullptr, path);
+            QCOMPARE(window.pet(), QString("vpet"));
+            window.setPet("mini");
+            QCOMPARE(window.pet(), QString("mini"));
+            QCOMPARE(pet::PetLibrary::shared().active(), QString("vpet")); // Applies on the next start.
+            window.setPet("Not valid"); QCOMPARE(window.pet(), QString("mini"));
+            window.setOnTop(false); // Any later save keeps the choice.
+        }
+        QCOMPARE(pet::PreferencesStore(path).load().pet, QString("mini"));
+        pet::PetWindow again(nullptr, path);
+        QCOMPARE(again.pet(), QString("mini"));
     }
 };
 QTEST_MAIN(PetsTests)

@@ -40,12 +40,16 @@ struct Preferences {
     // Interface language: "auto" (the system's), "en" or "vi". An unknown value, perhaps from a newer
     // version, reads as "auto" instead of invalidating the file.
     QString language = "auto";
+    // The pet shown from the next start, by id ([a-z0-9-]{1,32}). An id this build does not know, perhaps
+    // from a newer version, is kept and runs VPet meanwhile; an invalid one reads as "vpet".
+    QString pet = "vpet";
     // Startup keys. `agent-pet autostart` edits them without a display, possibly
     // while a pet runs, so the pet re-reads them before each save.
     bool autostart = false; // Hook launches the pet on a session start when none is running.
     IdlePolicy whenIdle = IdlePolicy::Keep;
     static QPoint visiblePosition(QPoint position, QSize size, const QVector<QRect> &screens);
     static bool validBirthday(const QString &monthDay); // "MM-dd" of a real date; February 29 counts.
+    static bool validPet(const QString &id); // The rule of pet::validPetId, which this headless library cannot link.
 };
 class PreferencesStore {
 public:

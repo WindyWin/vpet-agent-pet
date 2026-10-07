@@ -80,6 +80,9 @@ public:
     // bubbles relabel themselves and an open settings dialog reopens on the same tab.
     void setLanguage(const QString &language);
     QString language() const { return language_; }
+    // The pet shown from the next start, by id; persisted. The running pet never changes.
+    void setPet(const QString &id);
+    QString pet() const { return pet_; }
     void showSettings();
     void setUpdates(updates::Controller *controller);
     void showPreview();
@@ -176,6 +179,7 @@ private:
     QAction *recoverAction_ = nullptr, *aboutAction_ = nullptr, *quitAction_ = nullptr;
     QMenu *moreMenu_ = nullptr, *statesMenu_ = nullptr;
     QString language_ = "auto";
+    QString pet_ = "vpet";
     int statusSessions_ = 0, statusAttention_ = 0, statusErrors_ = 0; // The tray tooltip's last counts.
     Presence presence_;
     QPixmap trayBase_;
