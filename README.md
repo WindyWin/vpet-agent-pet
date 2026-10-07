@@ -192,6 +192,10 @@ On Linux the pet updates itself in the background by default, downloading only w
 - **macOS:** jumping to a terminal window and automatic updates aren't available yet. **Open** still switches tmux and herdr panes.
 - **Linux on Wayland:** the pet runs through XWayland, which GNOME and KDE provide by default. Pure Wayland isn't supported yet.
 
+## Issues and discussion
+
+Open an issue from the [template chooser](https://github.com/WindyWin/vpet-agent-pet/issues/new/choose): **Bug report** for a problem, **Feature request** for an improvement, or **Discussion topic** for a question or idea. Search existing issues first and keep each issue focused on one topic. The forms guide you through the relevant context; bug reports ask for your version, environment and steps to reproduce.
+
 ## For developers
 
 The app lives in [`starter/`](starter/README.md): building from source, running tests, command-line options, sending demo events and packaging. Further reading:

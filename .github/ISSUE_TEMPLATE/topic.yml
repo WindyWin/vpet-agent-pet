@@ -1,0 +1,36 @@
+name: Discussion topic
+description: Ask a question or discuss an idea, design decision or workflow.
+title: "[Topic] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Search [existing issues](https://github.com/WindyWin/vpet-agent-pet/issues) for related topics first.
+        Use **Bug report** for broken behavior or **Feature request** for a concrete improvement.
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: What is this topic about, and why does it matter? Include the relevant workflow or current behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: questions
+    attributes:
+      label: Questions to discuss
+      description: State the questions you want answered or the decision you want to reach.
+      placeholder: |
+        1. ...
+        2. ...
+    validations:
+      required: true
+  - type: textarea
+    id: approaches
+    attributes:
+      label: Ideas or approaches considered
+      description: Share possible approaches, what you have already tried, and any tradeoffs.
+  - type: textarea
+    id: references
+    attributes:
+      label: Related issues and references
+      description: Link relevant issues, documentation or examples. Include your environment if the question depends on it.

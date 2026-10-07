@@ -1,0 +1,41 @@
+name: Feature request
+description: Suggest a new feature or an improvement to Agent Pet.
+title: "[Feature] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Search [existing issues](https://github.com/WindyWin/vpet-agent-pet/issues) before proposing a feature.
+        Describe the use case so we can discuss the intended behavior.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+      description: What are you trying to do, who would benefit, and what is difficult today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: Describe what Agent Pet should do. A concrete example or mockup is welcome.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Describe any workarounds or other approaches you have considered.
+  - type: textarea
+    id: success-criteria
+    attributes:
+      label: Success criteria
+      description: What observable results would make this feature useful? Add a checklist if you have one.
+      placeholder: |
+        - [ ] When..., Agent Pet...
+        - [ ] Users can...
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Include relevant platforms, agent clients, screenshots or links to related issues.
