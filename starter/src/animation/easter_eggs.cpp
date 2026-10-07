@@ -79,25 +79,28 @@ bool EasterEggs::bedtime() {
     bedtimeOn_ = now.date();
     return true;
 }
-QStringList EasterEggs::remindersAt(const QDateTime &local) {
+QStringList EasterEggs::remindersAt(const QDateTime &local, const ReminderSchedule &schedule) {
     QStringList due;
     const int day = local.date().dayOfWeek(), hour = local.time().hour();
     const int minutes = hour * 60 + local.time().minute();
-    if (day == Qt::Monday && hour >= mondayFrom && hour < mondayUntil) due << "monday";
-    if (day <= Qt::Friday && minutes >= leaveWorkAt && minutes < leaveWorkUntil) due << "leave_work";
-    if (hour >= sleepFrom) due << "sleep";
+    const auto minuteOfDay = [](QTime time) { return time.hour() * 60 + time.minute(); };
+    const int monday = minuteOfDay(schedule.monday), leave = minuteOfDay(schedule.leaveWork);
+    // Keep the original reminder windows, shifted with the configured start and ending at midnight.
+    if (day == Qt::Monday && minutes >= monday && minutes < monday + 6 * 60) due << "monday";
+    if (day <= Qt::Friday && minutes >= leave && minutes < leave + 75) due << "leave_work";
+    if (minutes >= minuteOfDay(schedule.sleep)) due << "sleep";
     return due;
 }
-QString EasterEggs::reminderNote(const QString &reminder) {
+QString EasterEggs::reminderNote(const QString &reminder, const ReminderSchedule &schedule) {
     if (reminder == "monday") return Pet::tr("Monday again... I'm so tired. Let's take it slow today.");
-    if (reminder == "leave_work") return Pet::tr("It's 4:45 PM. Time to wrap up and get ready to head home!");
-    if (reminder == "sleep") return Pet::tr("It's 10 PM. Time to put everything down and go to sleep!");
+    if (reminder == "leave_work") return Pet::tr("It's %1. Time to wrap up and get ready to head home!").arg(schedule.leaveWork.toString("HH:mm"));
+    if (reminder == "sleep") return Pet::tr("It's %1. Time to put everything down and go to sleep!").arg(schedule.sleep.toString("HH:mm"));
     return {};
 }
 QString EasterEggs::reminder() {
     if (!enabled_) return {};
     const auto now = clock_();
-    for (const auto &due : remindersAt(now)) {
+    for (const auto &due : remindersAt(now, schedule_)) {
         if (reminded_.value(due) == now.date()) continue;
         reminded_.insert(due, now.date());
         return due;

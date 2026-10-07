@@ -28,8 +28,9 @@ introduces a calm state until Claude resumes.
   unmatched tool error it ignores costs no mood and counts no recap error. The
   final finish measures the whole duration and counts once. Checkpoint format and
   recap schema need no changes.
-- Bubbles uses phased start A, loop B (or B_2), end C in every mood. Waiting is
-  non-urgent and keeps idle-only ambient fidgets and wander quiet.
+- Waiting remains non-urgent and uses idle playback, with the usual ambient
+  behavior. Bubbles now belongs to the go-home reminder: phased start A, one
+  loop B (or B_2), then end C in every mood.
 
 ## Consequences
 

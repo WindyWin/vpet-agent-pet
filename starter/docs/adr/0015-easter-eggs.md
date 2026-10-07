@@ -20,9 +20,9 @@ replaceable local-time clock and random source:
 | May 20 | That day: the first ambient fidget greets with it, then one later fidget in four | `may20`: `love_520` (`IDEL/happy_like520`) |
 | Birthday | The date set in settings (`MM-dd`; February 29 falls on the 28th in other years): the same greeting, and the day's first finished turn | `birthday`: `birthday` (`BDay`) |
 | Late night | 01:00 to 05:00: one fidget in two, and one bedtime tooltip a night when a turn finishes (not while muted or hidden) | `late_night`: `fidget_yawn` |
-| Monday blues | Monday 06:00 to noon, once a day: a yawn or bored fidget and a tired tooltip (not while muted or hidden) | `monday`: `fidget_yawn` 2, `fidget_boring` 1 |
-| Go home | Monday to Friday from 16:45 to 18:00, once a day: a tooltip to get ready to leave | `leave_work`: `fidget_aside` |
-| Bedtime | From 22:00, once a day: a yawn and a tooltip telling you to sleep | `sleep`: `fidget_yawn` |
+| Monday blues | Monday from the configured time (default 06:00) for six hours, ending at midnight, once a day: a yawn or bored fidget and a tired tooltip (not while muted or hidden) | `monday`: `fidget_yawn` 2, `fidget_boring` 1 |
+| Go home | Monday to Friday from the configured time (default 16:45) for 75 minutes, ending at midnight, once a day: a tooltip to get ready to leave | `leave_work`: `fidget_bubbles` |
+| Bedtime | From the configured time (default 22:00) until midnight, once a day: a yawn and a tooltip telling you to sleep | `sleep`: `fidget_yawn` |
 | Friday evening | Friday from 17:00: every finished turn | `friday_evening`: `dance` (`Music`) |
 | Long turn | A turn of 15 minutes or more from its prompt | `long_turn`: `milestone` 2, `dance` 1 |
 | Danger | A tool start flagged `risky` by the hook | `danger`: `startled` |
@@ -52,6 +52,15 @@ so it needs no art of its own. The hook-side check (`destructiveCommand` in
 matches the patterns listed in [integrations](../integrations.md#adapter-policy).
 It is a heuristic for an animation:
 it errs toward a false alarm, and an obfuscated command passes unnoticed.
+
+Monday, go-home and sleep reminder times are configurable in Settings, in local
+time. Preferences store `monday_time`, `leave_work_time` and `sleep_time` as
+`HH:mm`, defaulting to `06:00`, `16:45` and `22:00` for older files. Monday is
+eligible for six hours after its configured time, go-home for 75 minutes on
+weekdays, and sleep until midnight; windows never carry into the next day.
+Changing a time does not repeat a reminder already given that day. The go-home
+and sleep notes display their configured times. These settings do not change the
+late-night or Friday celebration windows or wellness quiet hours.
 
 The setting (`easter_eggs`, default on) and the birthday (`birthday`, omitted when
 unset) are saved in preferences. Off, no egg plays and the Konami code does nothing.
@@ -90,3 +99,16 @@ legacy and malformed files, turn length in the state engine, the `risky` field's
 validation, and destructive-command detection with the command never leaving the hook.
 The frame test now plays every egg state. Still open: whether the cadence feels right
 on a real desktop, and CI on Qt 6.5.3.
+
+### Configurable clock reminder evidence — 2026-10-07
+
+- The local build passed, and all 12 CTest suites passed for the initial change.
+- `configurableClockReminders` passed with Monday at 09:15, weekday go-home at
+  19:30 and sleep at 23:15. It verified due-time boundaries, once-per-day behavior,
+  weekend suppression, configured note text, Settings close and restart persistence,
+  legacy defaults, and preserving files with malformed times (`24:00`, `9:15`,
+  null and numeric values).
+- `editingClockTimeDoesNotConsumeReminder` passed: at 21:30, editing sleep from
+  23:15 through 21:15 to 21:45 did not consume the reminder; it fired once at 21:45.
+- Linux, macOS and Windows build/test/package CI passed for commit `811d7c8`.
+  Linux also passed isolated-package and install/upgrade/uninstall checks.

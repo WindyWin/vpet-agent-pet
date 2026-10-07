@@ -41,7 +41,7 @@ Right-click → **Today's recap** says the summary; clicking that bubble swaps i
 breakdown (turns per project, busiest first, then errors, approvals with the longest
 wait, and the longest run) and keeps it up for 15 seconds. The menu works while muted.
 A hidden pet shows the breakdown as a tray notification instead. The go-home reminder
-(`leave_work`, weekdays from 16:45) appends the summary when the day has finished
+(`leave_work`, weekdays at the configured time, default 16:45) appends the summary when the day has finished
 turns and the `recap` preference (default on, Settings → **Recap**) allows it; it
 follows the reminder's own rules, so easter eggs must be on and the pet visible and
 unmuted.

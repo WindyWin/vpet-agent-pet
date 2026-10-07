@@ -12,6 +12,7 @@
 #include <QComboBox>
 #include <QContextMenuEvent>
 #include <QDateEdit>
+#include <QTimeEdit>
 #include <QDialogButtonBox>
 #include <QFile>
 #include <QFileInfo>
@@ -79,6 +80,7 @@ PetWindow::PetWindow(QWidget *parent, const QString &path, bool persist)
     connect(&mood_, &Mood::counted, this, [this] { if (ready_) saveTimer_.start(); });
     touchEnabled_ = preferences.touch; wanderEnabled_ = preferences.wander; recapEnabled_ = preferences.recap;
     ambient_.setMoveGate([this](const Move &move) { return canWander(move); });
+    eggs_.setReminderSchedule(preferences.reminderSchedule);
     eggs_.setEnabled(preferences.easterEggs); eggs_.setBirthday(preferences.birthday);
     wellness_.setEyeMinutes(preferences.eyeMinutes); wellness_.setWaterMinutes(preferences.waterMinutes);
     ambient_.setEasterEggs(&eggs_);
@@ -500,6 +502,7 @@ bool PetWindow::writePreferences(const std::function<void(Preferences &)> &chang
     preferences.ambient = ambientLevel(); preferences.activity = activityStyle(); preferences.mood = moodLevel(); preferences.turns = mood_.turns();
     preferences.touch = touchEnabled_; preferences.wander = wanderEnabled_; preferences.easterEggs = easterEggsEnabled(); preferences.birthday = birthday();
     preferences.eyeMinutes = wellness_.eyeMinutes(); preferences.waterMinutes = wellness_.waterMinutes();
+    preferences.reminderSchedule = eggs_.reminderSchedule();
     preferences.recap = recapEnabled_;
     change(preferences);
     autostart_ = preferences.autostart; presence_.setPolicy(preferences.whenIdle);
@@ -806,9 +809,24 @@ void PetWindow::showSettings() {
     };
     connect(hasBirthday, &QCheckBox::toggled, this, applyBirthday);
     connect(birthdayDate, &QDateEdit::dateChanged, this, applyBirthday);
+    const auto clockTime = [this, dialog, layout](const QString &label, QTime ReminderSchedule::*field, const QString &name) {
+        auto *time = new QTimeEdit(eggs_.reminderSchedule().*field, dialog);
+        time->setDisplayFormat("HH:mm"); time->setAccessibleName(label); time->setObjectName(name);
+        layout->addRow(label, time);
+        // Commit a complete edit: intermediate hour/minute values must not consume today's reminder.
+        const auto applyTime = [this, time, field] {
+            auto schedule = eggs_.reminderSchedule(); schedule.*field = time->time();
+            eggs_.setReminderSchedule(schedule); saveTimer_.start();
+        };
+        connect(time, &QTimeEdit::editingFinished, this, applyTime);
+        connect(dialog, &QDialog::finished, this, applyTime);
+    };
+    clockTime(tr("Monday reminder"), &ReminderSchedule::monday, "mondayTime");
+    clockTime(tr("Go-home reminder"), &ReminderSchedule::leaveWork, "leaveWorkTime");
+    clockTime(tr("Sleep reminder"), &ReminderSchedule::sleep, "sleepTime");
     auto *recap = new QCheckBox(tr("Add today's recap to the &go-home reminder"), dialog);
     recap->setChecked(recapEnabled_); recap->setAccessibleName(tr("Daily recap"));
-    recap->setToolTip(tr("At 4:45 PM on weekdays the pet sums up the day's agent work: finished turns, projects,\n"
+    recap->setToolTip(tr("At the go-home reminder time on weekdays the pet sums up the day's agent work: finished turns, projects,\n"
                       "errors, approvals that waited and the longest run. Needs easter eggs on. Today's recap\n"
                       "in the menu shows it any time."));
     layout->addRow(tr("Re&cap"), recap);

@@ -18,8 +18,8 @@ The asset verifier uses only Python's standard library and works from any curren
 
 ## Waiting for background jobs
 
-When Claude ends a turn with background tasks still running, the pet calmly blows
-bubbles and the session says **Waiting**. It shows no completion celebration or
+When Claude ends a turn with background tasks still running, the pet uses its idle
+animation and the session says **Waiting**. It shows no completion celebration or
 “Needs input” bubble for idle notifications during the wait. Approvals still show
 normally. Once Claude resumes and finishes without background work, the pet gives
 its normal finished reaction and counts one turn, including the waiting time.
@@ -168,8 +168,10 @@ on your birthday (Settings → **Birthday**, day and month only) it celebrates, 
 when it idles and on the day's first finished turn. Late at night it yawns more, and
 the first turn that finishes after 1 AM brings a gentle bedtime note. The pet also
 keeps time: on Monday morning it is tired and down about the week, at 4:45 PM on
-weekdays it tells you to get ready to go home, and at 10 PM it tells you to go to
-sleep (each once a day, while it is running and visible). Turns finished
+weekdays it blows bubbles and tells you to get ready to go home, and at 10 PM it
+tells you to go to sleep (each once a day, while it is running and visible).
+Settings → **Monday reminder**, **Go-home reminder** and **Sleep reminder** let
+you change these local times; the times above are the defaults. Turns finished
 on a Friday evening end in a dance, and a turn that ran for a quarter of an hour or
 more gets a bigger celebration. When an agent starts a destructive shell command,
 such as `rm -rf` or `git push --force`, the pet jumps; the hook judges the command
@@ -199,7 +201,7 @@ water (off, 45, 60 or 90 minutes); both are on by default. See
 Right-click → **Today's recap** and the pet sums up what your agents did today:
 "Today: 38 turns across 3 projects · 2 approvals waited 10+ min · longest run 22 min".
 Click the bubble for turns per project, errors, approvals with the longest wait, and
-the longest run. On weekdays the 4:45 PM go-home reminder includes the summary too;
+the longest run. On weekdays the go-home reminder (default 4:45 PM) includes the summary too;
 Settings → **Recap** turns that off. The counters are kept for two weeks in
 `recap.json` next to the preferences: counts and project folder names only, never
 prompts, commands or paths. See [the design record](docs/adr/0018-daily-recap.md).
