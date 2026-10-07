@@ -349,6 +349,25 @@ private slots:
         QSignalSpy quiet(&unknown, &pet::PetPicker::chosen);
         QCOMPARE(quiet.size(), 0);
     }
+    void pickerShowsNamesAndAuthorsAsWritten() {
+        const pet::PetInfo vpet{"vpet", "VUP", "VUP-Simulator team", {}, "VPET-ARTWORK-TERMS.md", {}};
+        const pet::PetInfo odd{"odd", "Tom & <b>Jerry</b>", "<i>A</i>", {}, "LICENSE", {}};
+        QWidget page;
+        pet::PetPicker picker({odd, vpet}, "vpet", "vpet", &page);
+        QToolButton *tile = nullptr;
+        for (auto *candidate : picker.findChildren<QToolButton *>())
+            if (candidate->property("pet").toString() == "odd") tile = candidate;
+        QVERIFY(tile);
+        QCOMPARE(tile->text(), QString("Tom && <b>Jerry</b>")); // `&&` shows one `&`, not a mnemonic.
+        QCOMPARE(tile->accessibleName(), QString("Tom & <b>Jerry</b>"));
+        QVERIFY(tile->toolTip().contains("&lt;i&gt;"));
+        tile->click();
+        QCOMPARE(tile->text(), QString("✓ Tom && <b>Jerry</b>"));
+        auto *note = picker.findChild<QLabel *>();
+        QVERIFY(note);
+        QCOMPARE(note->textFormat(), Qt::PlainText);
+        QVERIFY(note->text().contains("Tom & <b>Jerry</b>"));
+    }
     void settingsShowNoPickerWithOnePet() {
         QTemporaryDir directory;
         pet::PetWindow window(nullptr, directory.path() + "/preferences.json", false);

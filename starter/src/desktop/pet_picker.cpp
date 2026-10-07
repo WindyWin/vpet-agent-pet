@@ -26,11 +26,13 @@ PetPicker::PetPicker(const QVector<PetInfo> &pets, const QString &saved, const Q
             tile->setIcon(QIcon(preview.scaled(96, 96, Qt::KeepAspectRatio, Qt::SmoothTransformation)));
         tile->setIconSize({96, 96});
         tile->setAccessibleName(pet.name);
-        tile->setToolTip(tr("by %1").arg(pet.author));
+        tile->setToolTip(tr("by %1").arg(pet.author.toHtmlEscaped())); // Tooltips detect rich text.
         tile->setProperty("pet", pet.id);
         tile->setStyleSheet("QToolButton:checked { border: 2px solid palette(highlight); border-radius: 6px; }");
-        // Names are shown as written; the checked tile also carries a check mark.
-        const auto label = [tile, name = pet.name](bool checked) { tile->setText(checked ? "✓ " + name : name); };
+        // Names are shown as written (`&&` is a literal `&`, not a mnemonic); the checked tile also carries a check mark.
+        const auto label = [tile, name = QString(pet.name).replace('&', "&&")](bool checked) {
+            tile->setText(checked ? "✓ " + name : name);
+        };
         connect(tile, &QToolButton::toggled, tile, label);
         tile->setChecked(pet.id == selected_);
         label(tile->isChecked());
@@ -39,6 +41,7 @@ PetPicker::PetPicker(const QVector<PetInfo> &pets, const QString &saved, const Q
         tiles->addWidget(tile);
     }
     tiles->addStretch();
+    note_->setTextFormat(Qt::PlainText); // The pet's name is shown as written.
     note_->setWordWrap(true);
     layout->addWidget(note_);
     connect(group_, &QButtonGroup::buttonClicked, this, [this](QAbstractButton *tile) {
