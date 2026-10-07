@@ -53,7 +53,7 @@ is that exact `args` array. Codex runs a command through `cmd.exe /d /c`, where 
 quoted program never starts, so its command names the program unquoted, by its 8.3
 short path when the folder has spaces or `cmd.exe` metacharacters; enabling fails
 with an explanation when no short name exists. Ownership is then the exact command
-grammar with an unquoted program. See [0023](adr/0023-windows-port.md). Each generated
+grammar with an unquoted program. See [0024](adr/0024-windows-port.md). Each generated
 handler has a one-second client timeout and runs synchronously to reduce event
 reordering. The callback itself reads for at most 150 ms, sends once, and exits
 zero silently, even on invalid input or an unavailable monitor.

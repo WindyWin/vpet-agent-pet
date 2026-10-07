@@ -69,7 +69,7 @@ ctest --test-dir build --output-on-failure
 Windows builds `agent-pet.exe` (the pet, no console window) and `agent-pet-cli.exe` (the
 same program for hooks and commands). Updates are announced and installed with the setup
 program; see [Windows](docs/install.md#windows) and the
-[design notes](docs/adr/0023-windows-port.md).
+[design notes](docs/adr/0024-windows-port.md).
 
 Left-drag to move; the original Raise animation plays while dragging and returns
 to the prior state on release. Right-click for the running sessions, today's recap,
