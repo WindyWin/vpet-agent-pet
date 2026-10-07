@@ -18,7 +18,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 PET_ID = re.compile(r'[a-z0-9-]{1,32}')
 NAME = re.compile(r'[A-Za-z0-9_-][A-Za-z0-9._-]*')  # terms and preview files, and frame folders
-UNSAFE = set('"&\'<>;\\')  # characters a frame file name cannot carry into the build's resource lists
+# Characters a frame file name cannot carry: they break the build's resource lists (CMake lists, qrc XML),
+# the catalog's path check or Windows file names. Control characters, newlines included, are refused too.
+UNSAFE = set('"&\'<>;\\[]:*?|')
+UNSAFE_TEXT = f'{" ".join(sorted(UNSAFE))} or control characters'
 PET_KEYS = {'schema_version', 'id', 'name', 'author', 'url', 'terms', 'preview'}
 METADATA = {'pet.json', 'animations.json', 'manifest.json', 'available-animations.json'}
 
@@ -29,6 +32,11 @@ def png_size(path):
     if len(header) < 24 or header[:8] != b'\x89PNG\r\n\x1a\n' or header[12:16] != b'IHDR':
         return None
     return int.from_bytes(header[16:20], 'big'), int.from_bytes(header[20:24], 'big')
+
+
+def unsafe_frame_name(name):
+    """True when a frame file name holds a character the build cannot carry (see UNSAFE)."""
+    return any(char in UNSAFE or ord(char) < 32 for char in name)
 
 
 def check_pet(folder, licenses, errors):
@@ -96,8 +104,8 @@ def check_files(folder, assets, pet, animations, errors):
                 errors.append(f'Unexpected file at the pet folder root: {path.name}')
         elif path.is_file():
             actual.add(prefix + relative.as_posix())
-            if UNSAFE & set(path.name) or path.suffix != '.png':
-                errors.append(f'Frames are PNG files without {"".join(sorted(UNSAFE))} in their names: {relative.as_posix()}')
+            if unsafe_frame_name(path.name) or path.suffix != '.png':
+                errors.append(f'Frames are PNG files without {UNSAFE_TEXT} in their names: {relative.as_posix()!r}')
     errors.extend(f'Unlisted file: {path}' for path in sorted(actual - expected))
     if len(expected) != manifest['file_count'] or sum(f['bytes'] for f in manifest['files']) != manifest['total_bytes']:
         errors.append('Manifest count or size mismatch')

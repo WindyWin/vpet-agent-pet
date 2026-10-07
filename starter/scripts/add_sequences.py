@@ -21,6 +21,8 @@ import re
 import shutil
 from pathlib import Path
 
+from verify_assets import UNSAFE_TEXT, unsafe_frame_name
+
 ROOT = Path(__file__).resolve().parents[1]
 FRAME = re.compile(r'(?:^|_)(\d+)_(\d+)\.png$')  # WORK/Study/B_4_Nomal names its frame 000_1250.png
 SEQUENCE = re.compile(r'[A-Za-z0-9_-][A-Za-z0-9._-]*(?:/[A-Za-z0-9_-][A-Za-z0-9._-]*)*')
@@ -47,7 +49,9 @@ def frames_of(directory):
     for file in directory.iterdir():
         match = FRAME.search(file.name)
         if file.is_symlink() or not file.is_file() or file.suffix != '.png' or not match:
-            raise SystemExit(f'Unexpected entry in {directory}: {file.name}')
+            raise SystemExit(f'Unexpected entry in {directory}: {file.name!r}')
+        if unsafe_frame_name(file.name):
+            raise SystemExit(f'Frames are PNG files without {UNSAFE_TEXT} in their names: {file.name!r} in {directory}')
         found.append((file.name[:match.start()], int(match[1]), int(match[2]), file))
     pictures = {}
     for prefix, index, _, file in found:

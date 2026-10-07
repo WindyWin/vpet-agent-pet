@@ -52,6 +52,7 @@ def main():
         write_png(art / 'wave/_000_80.png', 16, 16, (40, 120, 200, 255))
         write_png(art / 'bad name/_000_80.png', 16, 16, (0, 0, 0, 255))
         write_png(art / 'huge/_000_100.png', 600, 600, (0, 0, 0, 255))
+        write_png(art / 'semi/a;b_000_80.png', 16, 16, (0, 0, 0, 255))
         common = ['--assets', assets, '--licenses', licenses]
         cat = ['--name', 'Cat', '--author', 'Tester', '--terms', 'CAT-TERMS.md']
 
@@ -84,11 +85,22 @@ def main():
         expect(not (assets / 'dog').exists() and not (assets / 'big').exists(), 'Refused pets leave no folder')
         expect('Sequence folders use' in run('add_sequences.py', '--pet', 'cat', '--assets', assets, '--source', art,
                                              'bad name', ok=False), 'A folder name with a space')
+        expect('Frames are PNG files without' in run('add_sequences.py', '--pet', 'cat', '--assets', assets,
+                                                     '--source', art, 'semi', ok=False), 'A frame name with ";"')
+        expect(not (assets / 'cat/semi').exists(), 'A refused sequence leaves no folder')
+        expect('Frames are PNG files without' in run('new_pet.py', 'semi', *cat, '--idle', art / 'semi', *common,
+                                                     ok=False), 'new_pet.py refuses the same frame name')
+        expect(not (assets / 'semi').exists(), 'A refused pet leaves no folder')
 
         # Files the build cannot carry are reported.
         (assets / 'cat/notes.txt').write_text('stray\n')
         expect('Unexpected file at the pet folder root' in run('verify_assets.py', *common, ok=False), 'Stray file')
         (assets / 'cat/notes.txt').unlink()
+        for odd in ('a;b_000_80.png', 'a[1]_000_80.png', 'a\nb_000_80.png'):
+            write_png(assets / 'cat/idle' / odd, 16, 16, (0, 0, 0, 255))
+            expect('Frames are PNG files without' in run('verify_assets.py', *common, ok=False), f'Frame name {odd!r}')
+            (assets / 'cat/idle' / odd).unlink()
+        run('verify_assets.py', *common)
         write_png(assets / 'cat/odd name/_000_80.png', 16, 16, (0, 0, 0, 255))
         expect('Folder names use' in run('verify_assets.py', *common, ok=False), 'Folder with a space')
     print('OK: new_pet.py, add_sequences.py --pet and verify_assets.py')
