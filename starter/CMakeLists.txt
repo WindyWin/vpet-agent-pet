@@ -28,6 +28,10 @@ include(GNUInstallDirs)
 # Release builds pass -DAGENT_PET_REVISION=<git commit>; local builds say "local".
 set(AGENT_PET_REVISION "local" CACHE STRING "Source revision shown in About")
 configure_file(src/version.h.in "${CMAKE_CURRENT_BINARY_DIR}/generated/version.h" @ONLY)
+# The core state contract (docs/pets.md), embedded so the catalog needs no resource file to read it.
+file(READ src/animation/core-states.json PET_CORE_STATES)
+configure_file(src/animation/core_states.h.in "${CMAKE_CURRENT_BINARY_DIR}/generated/core_states.h" @ONLY)
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS src/animation/core-states.json)
 
 # Capture/codecs link independently of focus coordination and native activation.
 qt_add_library(pet_host_capture STATIC src/hosts/context.cpp src/hosts/registry.cpp
@@ -44,9 +48,9 @@ qt_add_library(pet_core STATIC
 target_include_directories(pet_core PUBLIC src)
 target_link_libraries(pet_core PUBLIC Qt6::Core pet_host_capture)
 qt_add_library(pet_animation STATIC
-    src/animation/player.cpp src/animation/ambient.cpp src/animation/activity.cpp src/animation/mood.cpp
-    src/animation/easter_eggs.cpp)
-target_include_directories(pet_animation PUBLIC src)
+    src/animation/catalog.cpp src/animation/player.cpp src/animation/ambient.cpp src/animation/activity.cpp
+    src/animation/mood.cpp src/animation/easter_eggs.cpp)
+target_include_directories(pet_animation PUBLIC src PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/generated")
 target_link_libraries(pet_animation PUBLIC Qt6::Gui)
 
 if(NOT AGENT_PET_PORTABLE_CORE)
@@ -252,6 +256,12 @@ if(BUILD_TESTING)
         target_link_libraries(i18n-tests PRIVATE pet_i18n Qt6::Test)
         target_compile_definitions(i18n-tests PRIVATE TS_PATH="${CMAKE_CURRENT_SOURCE_DIR}/translations/agent-pet_vi.ts")
         add_test(NAME i18n COMMAND i18n-tests)
+        # Pet packs: the catalog and its core state contract, the pet library over fixture pets, choosing a pet.
+        qt_add_executable(pets-tests tests/pets_tests.cpp)
+        target_link_libraries(pets-tests PRIVATE pet_ui Qt6::Test)
+        target_compile_definitions(pets-tests PRIVATE PET_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}")
+        add_test(NAME pets COMMAND pets-tests)
+        set_tests_properties(pets PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
     endif()
     if(NOT AGENT_PET_PORTABLE_CORE AND NOT APPLE AND NOT WIN32)
         qt_add_executable(update-tests tests/update_tests.cpp)
