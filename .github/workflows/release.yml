@@ -171,10 +171,16 @@ jobs:
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
           pattern: agent-pet-*
           merge-multiple: true
+      # Source for the Arch AUR package: only starter/, without the repository's 749 MB artwork bundle.
+      - name: Source tarball
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          git archive --prefix="agent-pet-$version/" -o "agent-pet-$version-source.tar.gz" "$GITHUB_SHA:starter"
       - uses: softprops/action-gh-release@v2
         with:
           draft: true

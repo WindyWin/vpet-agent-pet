@@ -256,6 +256,19 @@ survives upgrades. The command-line interface and the installer are always in En
 
 The installed version is shown by `agent-pet --version` and in **About**.
 
+## Arch Linux
+
+Build the package from `packaging/arch/PKGBUILD` (the AUR package `agent-pet` carries
+the same recipe):
+
+```bash
+makepkg -si
+```
+
+It builds against the system Qt and installs into `/usr` with pacman owning the files,
+so upgrade and removal go through pacman. There is no `.agent-pet-install` receipt, so
+the in-app updater stays inactive. See [ADR 0023](adr/0023-arch-aur-package.md).
+
 ## macOS
 
 macOS releases contain one `Agent Pet.app` for Apple silicon and Intel Macs running
