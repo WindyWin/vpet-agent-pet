@@ -29,11 +29,14 @@ update… 0–100%” repeat several times with no sign of how much remained.
 Files already present are checked once, before downloading, instead of lazily per
 file; the cost is the same hashing done earlier. It runs one component per
 event-loop turn under "Checking installed files…", so a large component set
-(about 130 artwork packs) cannot freeze the window. The bar is per update, not per
+(about 130 artwork packs) cannot freeze the window. Cancel works during the scan:
+each scan has a generation number that cancelling bumps, so its next turn stops. The bar is per update, not per
 byte rate: no speed or time estimate.
 
 ## Validation
 
 - 2026-10-07: `update-tests` `progressSpansAllComponents`,
   `progressCountsOnlyMissingComponents` and `progressRestartsForFullPackageFallback`
-  (monotonic percentage, file counts, hidden bar when done, fallback label).
+  (monotonic percentage, file counts, hidden bar when done, fallback label);
+  `componentScanCanBeCancelled` (Cancel enabled mid-scan, no component fetched,
+  retry still completes).

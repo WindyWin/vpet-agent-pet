@@ -40,7 +40,9 @@ private:
     void fetch(const Release &target, const QString &path, std::function<void()> complete,
                std::function<void()> fallback = {});
     void downloadFull(const Release &target);
-    void scanComponents(const Release &target, const Components &components, int index, QList<Component> queue, qint64 total);
+    // Checks one component per event-loop turn; `scan` is the generation, so a cancelled scan stops at its next turn.
+    void scanComponents(const Release &target, const Components &components, int scan, int index,
+                        QList<Component> queue, qint64 total);
     void downloadComponent(const Release &target, const QList<Component> &queue, int index);
     void finishDownload(const Release &target, bool components);
     // Starts counting bytes across every file of one update; total 0 leaves the percentage unknown.
@@ -59,7 +61,8 @@ private:
     // Whole-update progress: bytes of finished files, the total, and which file is being fetched.
     qint64 done_ = 0, total_ = 0;
     int file_ = 0, files_ = 0, percent_ = -1;
-    bool full_ = false;
+    bool full_ = false, scanning_ = false;
+    int scan_ = 0; // Bumped by each scan and by cancelling one.
     bool ready_ = false, writable_ = true, downloading_ = false;
 };
 }

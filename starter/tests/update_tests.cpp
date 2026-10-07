@@ -288,6 +288,34 @@ private slots:
         QVERIFY(shown.texts.join('\n').contains("Downloading full update"));
         QCOMPARE(shown.percents.last() , -1);
     }
+    void componentScanCanBeCancelled() {
+        QTemporaryDir dir, installed; Network network;
+        const auto manifest = componentManifest(); network.manifest = QJsonDocument(manifest).toJson();
+        write(dir.filePath("state.json"), QJsonDocument(QJsonObject{{"format", 1}, {"mode", 0}, {"enabled", true}}).toJson());
+        Controller controller(nullptr, &network, installed.path(), dir.path());
+        std::unique_ptr<QWidget> settings(controller.settings(nullptr));
+        controller.check(true); QTRY_VERIFY(controller.indicator().contains("99.1.0"));
+        QPushButton *cancel = nullptr;
+        for (auto *button : settings->findChildren<QPushButton *>()) if (button->text().startsWith("Cancel")) cancel = button;
+        QVERIFY(cancel);
+        bool clicked = false;
+        // Click Cancel on the next event-loop turn after the scan starts, while it is still checking files.
+        connect(&controller, &Controller::changed, settings.get(), [&] {
+            for (auto *label : settings->findChildren<QLabel *>())
+                if (!clicked && label->text() == "Checking installed files…") {
+                    clicked = true; QVERIFY(cancel->isEnabled()); QTimer::singleShot(0, cancel, &QPushButton::click);
+                }
+        });
+        const int before = network.requests;
+        controller.download();
+        QTRY_VERIFY(clicked); QTest::qWait(50);
+        QCOMPARE(network.requests, before + 1); // The manifest only: no component was fetched.
+        QVERIFY(!QFile::exists(dir.filePath("pending.json")));
+        QCOMPARE(controller.progress(), -1);
+        QVERIFY(settings->findChild<QProgressBar *>()->isHidden());
+        QVERIFY(!cancel->isEnabled());
+        controller.download(); QTRY_VERIFY(controller.indicator().contains("ready")); // Retrying still works.
+    }
     void checksum() {
         QTemporaryDir dir; QString error; const QString path = dir.filePath("package"); write(path, "package");
         Release release; QVERIFY(parseRelease(releaseObject(), QSysInfo::buildCpuArchitecture(), release, error));
