@@ -380,9 +380,19 @@ def main():
         pet = check_pet(folder, args.licenses, errors)
         missing = [name for name in ('animations.json', 'manifest.json') if not (folder / name).is_file()]
         if missing:
+            failures.extend(f'{folder.name}: {error}' for error in errors)
             failures.extend(f'{folder.name}: Missing {name}' for name in missing)
             continue
         catalog = args.catalog if args.catalog and folder.name == 'vpet' else folder / 'animations.json'
+        unreadable = []
+        for name, path in (('animations.json', catalog), ('manifest.json', folder / 'manifest.json')):
+            try:
+                json.loads(path.read_text(encoding='utf-8'))
+            except (OSError, ValueError):
+                unreadable.append(f'{name} is not valid JSON')
+        if unreadable:
+            failures.extend(f'{folder.name}: {error}' for error in errors + unreadable)
+            continue
         animations = json.loads(catalog.read_text(encoding='utf-8'))
         check_files(folder, args.assets, pet, animations, errors)
         check_catalog(animations, errors)

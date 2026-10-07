@@ -98,8 +98,14 @@ def main():
             raise SystemExit(f'Listed twice: {path}')
         requested.append(path)
 
+    # Read and validate every sequence's frames before copying any, so a refusal leaves nothing behind.
+    found = {path: frames_of(source / path) for path in requested}
     for path in requested:
-        frames = frames_of(source / path)
+        if vpet and (len(found[path]) != listed[path]['frame_count']
+                     or sum(duration for _, duration, _ in found[path]) != listed[path]['total_duration_ms']):
+            raise SystemExit(f'{path} does not match its available-animations.json entry')
+    for path in requested:
+        frames = found[path]
         entry = {'path': path, 'frames': [], 'duration_ms': 0}
         target = args.assets / asset_root.removeprefix('assets/') / path
         target.mkdir(parents=True, exist_ok=True)
@@ -112,8 +118,6 @@ def main():
             entry['frames'].append({'path': relative, 'duration_ms': duration})
             entry['duration_ms'] += duration
             size += len(data)
-        if vpet and (len(frames) != listed[path]['frame_count'] or entry['duration_ms'] != listed[path]['total_duration_ms']):
-            raise SystemExit(f'{path} does not match its available-animations.json entry')
         animations['sequences'].append(entry)
         print(f'{path}: {len(frames)} frames, {entry["duration_ms"]} ms, {size / 1e6:.1f} MB')
 

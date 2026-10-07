@@ -5,6 +5,7 @@ Run by CTest (pet-scaffold). Also checks what the scripts refuse: an existing fo
 oversized preview, and folder names the build cannot carry.
 """
 import json
+import shutil
 import struct
 import subprocess
 import sys
@@ -53,6 +54,7 @@ def main():
         write_png(art / 'bad name/_000_80.png', 16, 16, (0, 0, 0, 255))
         write_png(art / 'huge/_000_100.png', 600, 600, (0, 0, 0, 255))
         write_png(art / 'semi/a;b_000_80.png', 16, 16, (0, 0, 0, 255))
+        write_png(art / 'good/_000_80.png', 16, 16, (90, 90, 90, 255))
         common = ['--assets', assets, '--licenses', licenses]
         cat = ['--name', 'Cat', '--author', 'Tester', '--terms', 'CAT-TERMS.md']
 
@@ -91,6 +93,25 @@ def main():
         expect('Frames are PNG files without' in run('new_pet.py', 'semi', *cat, '--idle', art / 'semi', *common,
                                                      ok=False), 'new_pet.py refuses the same frame name')
         expect(not (assets / 'semi').exists(), 'A refused pet leaves no folder')
+
+        # One call with a good and a bad sequence copies neither, and changes no catalog or manifest.
+        kept = {name: (assets / 'cat' / name).read_bytes() for name in ('animations.json', 'manifest.json')}
+        expect('Frames are PNG files without' in run('add_sequences.py', '--pet', 'cat', '--assets', assets, '--source', art,
+                                                     'good', 'semi', ok=False), 'A good and a bad sequence')
+        expect(not (assets / 'cat/good').exists(), 'The good sequence was copied before the bad one was refused')
+        expect(all((assets / 'cat' / name).read_bytes() == data for name, data in kept.items()), 'Catalog or manifest changed')
+
+        # A pet folder without its catalog fails, by name, together with its pet.json errors.
+        (assets / 'nocat').mkdir()
+        (assets / 'nocat/pet.json').write_text('{"schema_version": 1, "id": "nocat", "name": "No catalog", "author": "Tester",'
+                                               ' "terms": "NONE.md", "preview": "preview.png"}\n')
+        message = run('verify_assets.py', *common, ok=False)
+        expect('nocat: Missing animations.json' in message and 'nocat: pet.json terms must name' in message,
+               f'A pet without animations.json must fail by name, with its pet.json errors:\n{message}')
+        (assets / 'nocat/animations.json').write_text('{')
+        (assets / 'nocat/manifest.json').write_text('{}')
+        expect('nocat: animations.json is not valid JSON' in run('verify_assets.py', *common, ok=False), 'Malformed catalog')
+        shutil.rmtree(assets / 'nocat')
 
         # Files the build cannot carry are reported.
         (assets / 'cat/notes.txt').write_text('stray\n')
