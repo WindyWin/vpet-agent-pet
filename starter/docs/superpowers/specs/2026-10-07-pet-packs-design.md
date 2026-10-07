@@ -100,7 +100,25 @@ path must start with `asset_root + "/"`. That replaces today's hard-coded
 ### Core state contract
 
 The app selects these states by name, so every catalog must define them with this
-playback shape (VPet's current shape):
+playback shape (VPet's current shape). The contract is **one data file**,
+`src/animation/core-states.json`, the single source for `Catalog`, `new_pet.py` and the
+contributor guide; CMake embeds it into `pet_animation` as a generated header, so
+`Catalog` needs no resource registration to read it:
+
+```json
+{
+  "schema_version": 1,
+  "states": {
+    "idle": { "mode": "loop", "after": "idle" },
+    "starting": { "mode": "once", "after": "idle" },
+    "thinking": { "mode": "phased", "after": "idle" }
+  }
+}
+```
+
+(abridged; the file lists every row of the table below). It is the only place where
+the event side and pets meet, and it is provisional until the planned event refactor
+(see "Future: event refactor").
 
 | State | Mode | `after` |
 | --- | --- | --- |
@@ -130,7 +148,8 @@ All new code lives in `pet_animation` (`src/animation/`).
 - `static Catalog load(const QString &root, const QString &pet, QString *error)` reads
   `<root>/assets/<pet>/animations.json`, resolves frame paths against `root`, and runs
   today's validation unchanged, plus the `asset_root` containment rule and the core
-  state contract. On failure it returns an empty catalog and sets `error`.
+  state contract from `core-states.json`. On failure it returns an empty catalog and
+  sets `error`.
 - `bool valid() const` (non-empty with an idle loop).
 
 ### `PetLibrary` (`pet_library.h`, `pet_library.cpp`)
@@ -258,8 +277,8 @@ are proven by a test.
 - **`scripts/new_pet.py <id> --name N --author A --terms FILE --idle FOLDER
   [--preview PNG]`** (stdlib only). It creates `assets/<id>/`, copies the idle frames
   into `assets/<id>/idle/`, and writes `pet.json`, `manifest.json` and an
-  `animations.json` in which every core state uses that sequence with its contract
-  shape. The preview defaults to the first idle frame if it fits 512 × 512; otherwise
+  `animations.json` in which every core state listed in `core-states.json` uses that
+  sequence with its contract shape. The preview defaults to the first idle frame if it fits 512 × 512; otherwise
   the script asks for `--preview`. It refuses an existing folder or a missing terms
   file, and the result verifies and runs.
 - **`scripts/add_sequences.py --pet <id> [--source DIR] SEQUENCE…`.** Without `--pet`
@@ -272,7 +291,8 @@ are proven by a test.
   512 × 512; the manifest matches the files; every frame is used by the catalog; frame
   paths lie under `asset_root`; sequence timing is consistent. VPet's
   `available-animations.json` checks stay. Catalog semantics, including the core state
-  contract, belong to C++ `Catalog` alone, so the list lives in one place.
+  contract, are validated by C++ `Catalog` alone; the contract itself lives only in
+  `core-states.json`.
 
 ## Error handling
 
@@ -319,11 +339,33 @@ Existing suites run unchanged; `prototype-tests` keeps exercising VPet through
 ## Documentation
 
 - `starter/docs/pets.md`: contributor guide (a minimal pet with `new_pet.py`, the
-  format, the core state contract, licensing, adding sequences, the hash tree).
+  format, the core state contract, licensing, adding sequences, the hash tree). It marks
+  the core state contract as provisional until the event refactor, which will ship a
+  migration for existing catalogs.
 - `starter/docs/adr/0027-pet-packs.md` and its row in `adr/README.md`.
 - `starter/docs/architecture.md` (code map: `Catalog`, `PetLibrary`), the
   `starter/README.md` "Pets" section, and the asset notes in `CLAUDE.md`.
 - Issue #62 updated with the restart-to-apply and core-state decisions.
+
+## Future: event refactor
+
+A later refactor will rework how events choose animations. Today events reach the pet
+as names: `Sessions` → `Monitor` (`sessionAnimation()`) → `Player::select("needs_input")`,
+plus direct requests from `PetWindow`, `Mood`, `EasterEggs` and `Ambient`
+(`select("closing")`, `reactions("snack")`). This design keeps that path untouched and
+leaves these seams for it:
+
+- **One meeting point.** `core-states.json` is the whole contract between the event
+  side and pets. The refactor edits or replaces that one file; nothing else in pet packs
+  names an event.
+- **One parser.** `Catalog` is where a per-pet mapping section (for example events or
+  roles to states) would be parsed and validated, apart from playback.
+- **Free to change the catalog format.** The index is version-locked to the binary
+  (it ships in `artwork.rcc`), and every catalog lives in the repository (VPet and the
+  test fixtures), so a new catalog section or a `schema_version` bump needs only a
+  migration script run over them, shipped with that refactor.
+- **Reaction pools stay optional.** Pool names (`snack`, `danger`, `milestone`, …) are
+  already soft: an empty pool plays nothing, so a pet may omit them.
 
 ## Out of scope (Part 2 or later)
 
@@ -331,4 +373,5 @@ Existing suites run unchanged; `prototype-tests` keeps exercising VPet through
   release tag; a download state in the picker.
 - Switching pets without a restart, or a "Restart now" button.
 - More than one pet on screen; code or scripts in packs; packs from user folders (#43).
+- The event refactor itself (see above).
 - Shipping a second pet.
