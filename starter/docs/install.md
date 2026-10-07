@@ -162,7 +162,10 @@ Choose one of four modes:
 **Later / Close** leaves the update available. **Skip this version** suppresses
 that version and discards its pending package; **Check now** shows it again.
 The update window shows the installed version, last successful check, download
-progress, and release-page link. Updates never replace agent approval bubbles.
+progress, and release-page link. Progress is one bar for the whole update: the
+percentage covers every missing component together and never restarts per file,
+with “file 2 of 5” beside it when several are fetched. A fallback to the full
+archive is labelled “Downloading full update” and counts from its own total. Updates never replace agent approval bubbles.
 Downloads can be cancelled or retried. Completed, verified components are kept
 for retries; the interrupted component restarts from zero.
 

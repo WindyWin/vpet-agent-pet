@@ -15,6 +15,7 @@
 #include <QJsonArray>
 #include <QCryptographicHash>
 #include <QNetworkReply>
+#include <QProgressBar>
 #include <QPushButton>
 #include <QComboBox>
 #include <QLabel>
@@ -42,7 +43,10 @@ public:
         QTimer::singleShot(0, this, [this, fail] {
             if (isFinished()) return;
             if (fail) setError(QNetworkReply::ConnectionRefusedError, "offline");
-            else { setAttribute(QNetworkRequest::HttpStatusCodeAttribute, 200); emit readyRead(); }
+            else {
+                setAttribute(QNetworkRequest::HttpStatusCodeAttribute, 200); emit readyRead();
+                emit downloadProgress(data_.size() / 2, data_.size()); emit downloadProgress(data_.size(), data_.size());
+            }
             if (!isFinished()) { setFinished(true); emit finished(); }
         });
     }
@@ -96,6 +100,15 @@ protected:
         return new Reply(request, bytes, fail || (!failSuffix.isEmpty() && request.url().fileName().endsWith(failSuffix)), this);
     }
 };
+// Collects what the dialog shows after every change: progress, status text and whether the bar is visible.
+struct Shown { QList<int> percents; QStringList texts; QList<bool> bars; };
+static void follow(Controller &controller, QWidget *settings, Shown &shown) {
+    QObject::connect(&controller, &Controller::changed, settings, [&controller, settings, &shown] {
+        shown.percents << controller.progress();
+        for (auto *label : settings->findChildren<QLabel *>()) if (label->text().startsWith("Downloading")) shown.texts << label->text();
+        shown.bars << !settings->findChild<QProgressBar *>()->isHidden();
+    });
+}
 class UpdateTests : public QObject {
     Q_OBJECT
 private slots:
@@ -228,6 +241,52 @@ private slots:
             QVERIFY(!QJsonDocument::fromJson(pending.readAll()).object().contains("kind"));
             QVERIFY(!QFile::exists(dir.filePath("components.json")));
         }
+    }
+    void progressSpansAllComponents() {
+        QTemporaryDir dir, installed; Network network;
+        const auto manifest = componentManifest(); network.manifest = QJsonDocument(manifest).toJson();
+        write(dir.filePath("state.json"), QJsonDocument(QJsonObject{{"format", 1}, {"mode", 1}, {"enabled", true}}).toJson());
+        Controller controller(nullptr, &network, installed.path(), dir.path());
+        std::unique_ptr<QWidget> settings(controller.settings(nullptr));
+        Shown shown; follow(controller, settings.get(), shown);
+        controller.check(true);
+        QTRY_VERIFY(QFile::exists(dir.filePath("pending.json")));
+        int last = 0;
+        for (const int percent : shown.percents) if (percent >= 0) { QVERIFY2(percent >= last, "progress went backwards"); last = percent; }
+        QCOMPARE(last, 100);
+        QVERIFY(shown.percents.contains(-1)); // The manifest is fetched before the total is known.
+        for (const auto &text : {"file 1 of 3", "file 2 of 3", "file 3 of 3"})
+            QVERIFY2(shown.texts.join('\n').contains(text), text);
+        QVERIFY(shown.bars.contains(true));
+        QVERIFY(!shown.bars.last()); // Hidden again once the download is done.
+        QCOMPARE(controller.progress(), -1);
+    }
+    void progressCountsOnlyMissingComponents() {
+        QTemporaryDir dir, installed; Network network;
+        const auto manifest = componentManifest(); network.manifest = QJsonDocument(manifest).toJson();
+        installFiles(installed.path(), manifest); write(installed.filePath("bin/agent-pet"), "old");
+        write(dir.filePath("state.json"), QJsonDocument(QJsonObject{{"format", 1}, {"mode", 1}, {"enabled", true}}).toJson());
+        Controller controller(nullptr, &network, installed.path(), dir.path());
+        std::unique_ptr<QWidget> settings(controller.settings(nullptr));
+        Shown shown; follow(controller, settings.get(), shown);
+        controller.check(true);
+        QTRY_VERIFY(QFile::exists(dir.filePath("pending.json")));
+        const auto text = shown.texts.join('\n');
+        QVERIFY(!text.contains("file")); // One component left: a plain percentage.
+        QVERIFY(text.contains("100%"));
+    }
+    void progressRestartsForFullPackageFallback() {
+        QTemporaryDir dir, installed; Network network;
+        const auto manifest = componentManifest(); network.manifest = QJsonDocument(manifest).toJson();
+        network.failSuffix = "-runtime.tar.gz";
+        write(dir.filePath("state.json"), QJsonDocument(QJsonObject{{"format", 1}, {"mode", 1}, {"enabled", true}}).toJson());
+        Controller controller(nullptr, &network, installed.path(), dir.path());
+        std::unique_ptr<QWidget> settings(controller.settings(nullptr));
+        Shown shown; follow(controller, settings.get(), shown);
+        controller.check(true);
+        QTRY_VERIFY(QFile::exists(dir.filePath("pending.json")));
+        QVERIFY(shown.texts.join('\n').contains("Downloading full update"));
+        QCOMPARE(shown.percents.last() , -1);
     }
     void checksum() {
         QTemporaryDir dir; QString error; const QString path = dir.filePath("package"); write(path, "package");

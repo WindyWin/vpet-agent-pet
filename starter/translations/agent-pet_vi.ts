@@ -1275,6 +1275,16 @@ Các cài đặt và hook khác được giữ nguyên. Hãy đăng ký từ m�
         <translation>Đang tải bản cập nhật…</translation>
     </message>
     <message>
+        <source>Downloading update… %1% (file %2 of %3)</source>
+        <extracomment>%1 = percent of the whole update, %2 = number of the file being downloaded, %3 = how many files</extracomment>
+        <translation>Đang tải bản cập nhật… %1% (tệp %2/%3)</translation>
+    </message>
+    <message>
+        <source>Downloading full update… %1%</source>
+        <extracomment>%1 = percent done</extracomment>
+        <translation>Đang tải toàn bộ bản cập nhật… %1%</translation>
+    </message>
+    <message>
         <source>Download stopped or failed. You can retry.</source>
         <translation>Tải xuống bị dừng hoặc thất bại. Bạn có thể thử lại.</translation>
     </message>

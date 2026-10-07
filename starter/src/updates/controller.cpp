@@ -18,12 +18,14 @@
 #include <QLockFile>
 #include <QNetworkReply>
 #include <QProcess>
+#include <QProgressBar>
 #include <QPushButton>
 #include <QSaveFile>
 #include <QStandardPaths>
 #include <QTimer>
 #include <QVBoxLayout>
 #include <QRegularExpression>
+#include <algorithm>
 #include <memory>
 namespace pet::updates {
 static QJsonObject readObject(const QString &path) {
@@ -174,6 +176,7 @@ void Controller::download() {
     if (reply_ || downloading_ || ready_ || prefix_.isEmpty() || release_.digest.isEmpty() || release_.download.isEmpty()) return;
     QFile::remove(directory_ + "/pending.json");
     const Release target = release_;
+    beginProgress(0, 0, false); // The manifest is tiny and its size is not part of the total.
     if (!target.componentsDownload.isEmpty()) {
         Release manifest;
         manifest.download = target.componentsDownload; manifest.digest = target.componentsDigest; manifest.size = target.componentsSize;
@@ -187,7 +190,14 @@ void Controller::download() {
             for (const auto &component : components.entries) keep.append(component.archive);
             pruneComponents(directory_, keep);
             QFile::remove(directory_ + "/package.tar.gz");
-            downloadComponent(target, components, 0);
+            // Only what is missing counts, so the bar covers the whole update once and never restarts per file.
+            QList<Component> queue; qint64 total = 0; QString ignored;
+            for (const auto &component : components.entries) {
+                if (componentMatches(component, prefix_) || verifiedArchive(directory_ + '/' + component.archive, component.digest, ignored)) continue;
+                queue.append(component); total += component.size;
+            }
+            beginProgress(total, queue.size(), false);
+            downloadComponent(target, queue, 0);
         }, [this, target] { downloadFull(target); });
     } else {
         downloadFull(target);
@@ -196,35 +206,49 @@ void Controller::download() {
 void Controller::downloadFull(const Release &target) {
     pruneComponents(directory_);
     QFile::remove(directory_ + "/components.json");
+    beginProgress(target.size, 1, true); // Also the fallback after components: the total is now the whole package.
     fetch(target, directory_ + "/package.tar.gz", [this, target] { finishDownload(target, false); });
 }
-void Controller::downloadComponent(const Release &target, const Components &components, int index) {
-    if (index == components.entries.size()) { finishDownload(target, true); return; }
-    const auto component = components.entries[index];
-    const QString path = directory_ + '/' + component.archive;
-    QString error;
-    if (componentMatches(component, prefix_) || verifiedArchive(path, component.digest, error)) {
-        downloadComponent(target, components, index + 1); return;
-    }
+void Controller::downloadComponent(const Release &target, const QList<Component> &queue, int index) {
+    if (index == queue.size()) { finishDownload(target, true); return; }
+    const auto component = queue[index];
+    file_ = index + 1;
     Release asset;
     asset.download = target.componentsDownload.resolved(QUrl(component.archive));
     asset.digest = component.digest; asset.size = component.size;
-    fetch(asset, path, [this, target, components, index] { downloadComponent(target, components, index + 1); },
+    fetch(asset, directory_ + '/' + component.archive, [this, target, queue, index] { downloadComponent(target, queue, index + 1); },
           [this, target] { downloadFull(target); });
 }
 void Controller::finishDownload(const Release &target, bool components) {
     auto pending = target.json();
     if (components) { pending["kind"] = "components"; pending["digest"] = target.componentsDigest; }
-    downloading_ = false;
+    downloading_ = false; percent_ = -1;
     if (!writeObject(directory_ + "/pending.json", pending)) { status(tr("Cannot save the pending update.")); return; }
     ready_ = true; status(tr("Update %1 is ready. The pet will restart and restore running sessions.").arg(target.version));
     autoInstall();
+}
+void Controller::beginProgress(qint64 total, int files, bool full) {
+    done_ = 0; total_ = total; files_ = files; file_ = files > 0 ? 1 : 0; full_ = full; percent_ = -1;
+}
+void Controller::reportProgress(qint64 current) {
+    if (total_ <= 0) { percent_ = -1; status(tr("Downloading update…")); return; }
+    percent_ = int(std::min(done_ + current, total_) * 100 / total_);
+    if (files_ > 1) {
+        //: %1 = percent of the whole update, %2 = number of the file being downloaded, %3 = how many files
+        status(tr("Downloading update… %1% (file %2 of %3)").arg(percent_).arg(file_).arg(files_));
+    } else if (full_) {
+        //: %1 = percent done
+        status(tr("Downloading full update… %1%").arg(percent_));
+    } else {
+        //: %1 = percent done
+        status(tr("Downloading update… %1%").arg(percent_));
+    }
 }
 void Controller::fetch(const Release &target, const QString &path, std::function<void()> complete,
                        std::function<void()> fallback) {
     downloading_ = true;
     auto file = std::make_shared<QSaveFile>(path);
-    if (!file->open(QIODevice::WriteOnly)) { downloading_ = false; status(tr("Cannot save the download. Check free disk space.")); return; }
+    if (!file->open(QIODevice::WriteOnly)) { downloading_ = false; percent_ = -1; status(tr("Cannot save the download. Check free disk space.")); return; }
     QNetworkRequest request(target.download); request.setTransferTimeout(30000);
     request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
     request.setMaximumRedirectsAllowed(5);
@@ -235,27 +259,25 @@ void Controller::fetch(const Release &target, const QString &path, std::function
         const auto bytes = reply->readAll(); *received += bytes.size();
         if (*received > target.size || file->write(bytes) != bytes.size()) reply->abort();
     });
-    connect(reply, &QNetworkReply::downloadProgress, this, [this](qint64 bytes, qint64 total) {
-        //: %1 = percent done
-        status(total > 0 ? tr("Downloading update… %1%").arg(bytes * 100 / total) : tr("Downloading update…"));
-    });
+    connect(reply, &QNetworkReply::downloadProgress, this, [this, target](qint64 bytes, qint64) { reportProgress(std::min(bytes, target.size)); });
     connect(reply, &QNetworkReply::finished, this, [this, reply, file, received, target, path, complete, fallback] {
         reply_ = nullptr; reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError || reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() != 200
             || *received != target.size || !file->commit()) {
             file->cancelWriting();
             if (fallback && reply->error() != QNetworkReply::OperationCanceledError) { fallback(); return; }
-            downloading_ = false; status(tr("Download stopped or failed. You can retry.")); return;
+            downloading_ = false; percent_ = -1; status(tr("Download stopped or failed. You can retry.")); return;
         }
         QString error;
         if (!verifiedArchive(path, target.digest, error)) {
             QFile::remove(path);
             if (fallback) { fallback(); return; }
-            downloading_ = false; status(error); return;
+            downloading_ = false; percent_ = -1; status(error); return;
         }
+        done_ += target.size;
         complete();
     });
-    status(tr("Downloading update…"));
+    reportProgress(0);
 }
 void Controller::install() { installReady(false); }
 void Controller::installReady(bool automatic) {
@@ -304,6 +326,7 @@ QWidget *Controller::settings(QWidget *parent) {
     if (prefix_.isEmpty()) { auto *hint = new QLabel(tr("This copy supports notifications and manual downloads. Install a release bundle to enable automatic updates."), box); hint->setWordWrap(true); layout->addWidget(hint); }
     auto *last = new QLabel(box); layout->addWidget(last);
     auto *message = new QLabel(box); message->setWordWrap(true); message->setTextFormat(Qt::PlainText); layout->addWidget(message);
+    auto *bar = new QProgressBar(box); bar->setRange(0, 100); bar->setVisible(false); layout->addWidget(bar);
     auto *checkButton = new QPushButton(tr("Check now"), box); layout->addWidget(checkButton);
     auto *notes = new QPushButton(tr("View release / manual download"), box); layout->addWidget(notes);
     auto *downloadButton = new QPushButton(tr("Download update"), box); layout->addWidget(downloadButton);
@@ -313,7 +336,9 @@ QWidget *Controller::settings(QWidget *parent) {
     const auto refresh = [=] {
         const auto checked = state_["checked"].toInteger();
         last->setText(checked ? tr("Last checked: %1").arg(QDateTime::fromSecsSinceEpoch(checked).toLocalTime().toString("yyyy-MM-dd hh:mm")) : tr("Not checked yet"));
-        message->setText(message_); checkButton->setEnabled(!reply_ && !downloading_ && writable_);
+        message->setText(message_);
+        bar->setVisible(downloading_); bar->setRange(0, percent_ < 0 ? 0 : 100); if (percent_ >= 0) bar->setValue(percent_); // 0-0 = busy
+        checkButton->setEnabled(!reply_ && !downloading_ && writable_);
         notes->setEnabled(!release_.page.isEmpty());
         downloadButton->setEnabled(!reply_ && !downloading_ && !ready_ && !prefix_.isEmpty() && !release_.digest.isEmpty() && !release_.download.isEmpty());
         installButton->setEnabled(ready_ && !reply_ && !downloading_ && !prefix_.isEmpty()); skip->setEnabled(!release_.version.isEmpty() && !reply_ && !downloading_);

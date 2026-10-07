@@ -29,6 +29,8 @@ public:
     void autoInstall();
     QString indicator() const;
     bool waiting() const; // A release is known and not skipped: the indicator names it.
+    // Share of the whole update downloaded, 0-100, or -1 when idle or the total is not known yet.
+    int progress() const { return percent_; }
     std::function<bool()> prepareRestart;
 signals:
     void changed();
@@ -38,8 +40,11 @@ private:
     void fetch(const Release &target, const QString &path, std::function<void()> complete,
                std::function<void()> fallback = {});
     void downloadFull(const Release &target);
-    void downloadComponent(const Release &target, const Components &components, int index);
+    void downloadComponent(const Release &target, const QList<Component> &queue, int index);
     void finishDownload(const Release &target, bool components);
+    // Starts counting bytes across every file of one update; total 0 leaves the percentage unknown.
+    void beginProgress(qint64 total, int files, bool full);
+    void reportProgress(qint64 current);
     bool save();
     void status(QString text);
     void cancel();
@@ -50,6 +55,10 @@ private:
     QNetworkAccessManager *network_;
     QPointer<QNetworkReply> reply_;
     QPointer<QDialog> dialog_;
+    // Whole-update progress: bytes of finished files, the total, and which file is being fetched.
+    qint64 done_ = 0, total_ = 0;
+    int file_ = 0, files_ = 0, percent_ = -1;
+    bool full_ = false;
     bool ready_ = false, writable_ = true, downloading_ = false;
 };
 }
