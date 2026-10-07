@@ -31,7 +31,10 @@ and the event protocol unchanged. Its platform layer, `src/platform/windows/`, s
   can deny service but cannot receive events or impersonate the hook. The 8192-byte
   limit is kept: a longer message fails its read with `ERROR_MORE_DATA` and is dropped.
   `XDG_RUNTIME_DIR`, normally unset on Windows, selects a separate pipe as it selects a
-  separate socket on POSIX, which keeps tests away from a running pet.
+  separate socket on POSIX, which keeps tests away from a running pet. Events that wait on
+  different instances while the pet is busy can be delivered in either order; sessions
+  already order events by `timestamp_ms`, as [events](../events.md) specifies, so no
+  ordering is added in the transport.
 - **Two executables.** `agent-pet.exe` is a GUI-subsystem program, so starting the pet
   opens no console window; `agent-pet-cli.exe` is the same `main.cpp` linked as a console
   program. Hooks and commands run the console program, whose standard streams work

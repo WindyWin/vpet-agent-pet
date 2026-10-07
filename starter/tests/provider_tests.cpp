@@ -9,6 +9,7 @@
 #include <QDir>
 #include <QTemporaryDir>
 #include <QProcess>
+#include <QSet>
 #include <QDateTime>
 
 class ProviderTests : public QObject {
@@ -200,7 +201,10 @@ private slots:
             QCOMPARE(run({"hook", "--provider", provider}, QJsonDocument(input).toJson()), QByteArray());
         }
         QTRY_COMPARE(received.size(), 2);
-        QCOMPARE(received[0].kind, "prompt"); QCOMPARE(received[1].provider, "codex");
+        // Events queued while the receiver is busy may arrive in either order on Windows, where each
+        // waits on its own pipe instance; sessions order them by timestamp.
+        QCOMPARE(received[0].kind, "prompt"); QCOMPARE(received[1].kind, "prompt");
+        QCOMPARE((QSet<QString>{received[0].provider, received[1].provider}), (QSet<QString>{"claude", "codex"}));
         QCOMPARE(run({"hook", "--provider", "claude"}, "invalid"), QByteArray());
         auto result = run({"integration", "preview", "--provider", "claude", "--config", config});
         QVERIFY(QJsonDocument::fromJson(result).isObject()); QVERIFY(!QFile::exists(config));
