@@ -24,7 +24,8 @@ introduces a calm state until Claude resumes.
 - Aggregate priority is attention > exhausted > error > turn-finished > working >
   reading > thinking > waiting > idle > inactive. Session rows place waiting
   between thinking and finished, with a translated title and indigo colour.
-- Waiting produces no finish alert, mood reward, bedtime note or recap turn. The
+- Waiting produces no finish alert, mood reward, bedtime note or recap turn. An
+  unmatched tool error it ignores costs no mood and counts no recap error. The
   final finish measures the whole duration and counts once. Checkpoint format and
   recap schema need no changes.
 - Bubbles uses phased start A, loop B (or B_2), end C in every mood. Waiting is
@@ -48,6 +49,17 @@ moods. Linux Release build with Qt 6.11.2 passes all twelve CTest suites
 Asset verification passes for 1,197 PNGs and 141 sequences. `update_translations`
 adds the Vietnamese “Đang chờ” entry; translation consistency is checked after
 committing, as the checker compares generated strings against HEAD.
+
+### Review follow-up — 2026-10-07
+
+Review found that a late tool error ignored by a waiting session still lowered
+mood and counted a recap error. Both now go through `failure()`, which excludes
+an error that leaves its session waiting. Tests cover it at the session, recap
+and monitor level (the monitor test fails without the fix), and drive Claude
+Stop payloads through `normalizeHook` and `Sessions::apply`: the parent waits, a
+child's Stop ends only the child, and empty, malformed or missing
+`background_tasks` finish normally. All twelve CTest suites pass on Linux
+(Release, built against Qt 6.4 with a local-only version override).
 
 ### Live Claude payload — pending before release
 

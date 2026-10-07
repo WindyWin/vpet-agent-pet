@@ -56,7 +56,10 @@ private slots:
             QVERIFY(sessions.apply(e, now + i));
             QCOMPARE(sessions.aggregate(now + i), QString("waiting"));
             QVERIFY(sessions.pending().isEmpty());
+            QVERIFY(!pet::failure(e, &sessions.records().first()));
+            recap.record(e, &sessions.records().first(), date);
         }
+        QCOMPARE(recap.day(date).errors, 0); QCOMPARE(recap.day(date).approvals, 0);
         stop = event("turn_finished", 8); stop.waiting = true;
         QVERIFY(sessions.apply(stop, now + 8));
         sessions.expire(now + 60000);

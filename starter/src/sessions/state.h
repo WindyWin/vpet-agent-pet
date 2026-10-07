@@ -34,6 +34,11 @@ struct Session {
     qint64 turnStarted = 0; // Timestamp of the prompt that started the current turn; 0 when unknown.
     qint64 lastTurnMs = 0; // How long the last finished turn ran, from its prompt; 0 when unknown.
 };
+// An accepted error or failed turn that counts as a failure (mood, recap) once applied to its session `s`.
+// An error a waiting session ignored, a late callback of a tool its waiting finish cleared, does not.
+inline bool failure(const Event &e, const Session *s) {
+    return e.kind == "turn_failed" || (e.kind == "error" && !(s && s->state == "waiting"));
+}
 // Bubble order: requests, then quota stops, then errors, then finished turns.
 inline int alertRank(const QString &kind) {
     return kind == "attention" ? 0 : kind == "exhausted" ? 1 : kind == "error" ? 2 : 3;

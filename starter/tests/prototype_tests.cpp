@@ -127,7 +127,14 @@ private slots:
         QVERIFY(monitor.apply(e, now + 2));
         QCOMPARE(window.player().requestedState(), QString("waiting"));
         QVERIFY(!monitor.bubble().isVisible()); QCOMPARE(window.attention(), 0);
-        e.id = "4"; e.kind = "turn_finished"; e.reason.clear(); e.timestamp = now + 100;
+        // A late failure of a tool the waiting finish cleared is ignored: no mood loss, no recap error.
+        const int score = window.mood().score(now + 2);
+        e.id = "late"; e.kind = "error"; e.tool = "cleared"; e.reason.clear(); e.timestamp = now + 3;
+        QVERIFY(monitor.apply(e, now + 3)); e.tool.clear();
+        QCOMPARE(window.player().requestedState(), QString("waiting"));
+        QCOMPARE(window.mood().score(now + 3), score);
+        QCOMPARE(monitor.recap().day(QDateTime::fromMSecsSinceEpoch(now + 3).date()).errors, 0);
+        e.id = "4"; e.kind = "turn_finished"; e.timestamp = now + 100;
         QVERIFY(monitor.apply(e, now + 100));
         QCOMPARE(window.mood().turns(), turns + 1);
         QCOMPARE(monitor.bubble().title(), QString("Turn finished"));
