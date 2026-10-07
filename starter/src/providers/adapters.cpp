@@ -105,6 +105,8 @@ QJsonObject normalizeHook(const QString &provider, const QJsonObject &in, qint64
         // A child stop must never announce completion, or failure, of the parent turn.
         if (name == "Stop" || name == "StopFailure") out["kind"] = "session_end";
     }
+    if (provider == "claude" && name == "Stop" && agent.isEmpty() &&
+        !in.value("background_tasks").toArray().isEmpty()) out["waiting"] = true;
     const auto tool = in.value("tool_use_id").toString();
     if (kind == "tool_start" || kind == "tool_end" || name == "PostToolUseFailure" || (name == "PostToolUse" && kind == "error")) {
         if (tool.isEmpty()) return {}; // No invented identity for overlapping tools.

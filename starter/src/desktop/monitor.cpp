@@ -81,7 +81,7 @@ bool Monitor::apply(const Event &event, qint64 now) {
         if (recap_.record(event, session, QDateTime::fromMSecsSinceEpoch(now).date())) recapTimer_.start();
     }
     // Only accepted events count: duplicates and stale callbacks of an interrupted turn are dropped above.
-    if (event.kind == "turn_finished") {
+    if (event.kind == "turn_finished" && !event.waiting) {
         window_.mood().finished(now);
         lastTurnMs_ = sessions_.records().value(event.provider + QChar(0x1f) + event.session).lastTurnMs;
     }
@@ -96,7 +96,7 @@ bool Monitor::apply(const Event &event, qint64 now) {
     if (event.kind == "tool_start" && event.risky && !window_.petHidden() && !urgent(aggregate))
         window_.eggs().surprise("danger");
     // Work going on deep into the night earns one gentle note.
-    if (event.kind == "turn_finished" && !window_.muted() && !window_.petHidden() && window_.eggs().bedtime())
+    if (event.kind == "turn_finished" && !event.waiting && !window_.muted() && !window_.petHidden() && window_.eggs().bedtime())
         say(bedtimeNote());
     return true;
 }

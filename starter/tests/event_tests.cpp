@@ -24,6 +24,73 @@ class EventTests : public QObject {
         return {"claude", "session", QString::number(seq), kind, "tool", {}, "/project", {}, now + seq};
     }
 private slots:
+    void waitingWireValidation() {
+        QJsonObject o{{"version", 1}, {"provider", "claude"}, {"session_id", "s"}, {"event_id", "1"},
+                      {"kind", "turn_finished"}, {"timestamp_ms", double(now)}, {"waiting", true}};
+        pet::Event e; QString error;
+        QVERIFY(pet::Event::parse(QJsonDocument(o).toJson(), e, error)); QVERIFY(e.waiting);
+        for (const auto &value : {QJsonValue(false), QJsonValue(1), QJsonValue("true"), QJsonValue()}) {
+            o["waiting"] = value; QVERIFY(!pet::Event::parse(QJsonDocument(o).toJson(), e, error));
+        }
+        o["waiting"] = true; o["tool_id"] = "tool";
+        for (const auto *kind : {"session_start", "prompt", "tool_start", "tool_end", "attention", "error",
+                                 "turn_failed", "interrupt", "session_end"}) {
+            o["kind"] = kind; QVERIFY(!pet::Event::parse(QJsonDocument(o).toJson(), e, error));
+        }
+    }
+    void waitingPreservesTurnAndRecap() {
+        pet::Sessions sessions; pet::Recap recap; const QDate date(2026, 10, 7);
+        QVERIFY(sessions.apply(event("prompt", 1), now + 1));
+        QVERIFY(sessions.apply(event("tool_start", 2), now + 2));
+        auto stop = event("turn_finished", 3); stop.waiting = true;
+        QVERIFY(sessions.apply(stop, now + 3));
+        QCOMPARE(sessions.aggregate(now + 3), QString("waiting"));
+        QVERIFY(sessions.records().first().tools.isEmpty());
+        QCOMPARE(sessions.records().first().reactionUntil, qint64(0));
+        QCOMPARE(sessions.records().first().lastTurnMs, qint64(0));
+        QVERIFY(!recap.record(stop, &sessions.records().first(), date));
+        for (int i = 4; i < 8; ++i) {
+            auto e = event(i == 4 ? "tool_end" : i == 5 ? "error" : "attention", i);
+            if (i == 6 || i == 7) e.reason = "input";
+            if (i == 5) e.tool.clear();
+            QVERIFY(sessions.apply(e, now + i));
+            QCOMPARE(sessions.aggregate(now + i), QString("waiting"));
+            QVERIFY(sessions.pending().isEmpty());
+        }
+        stop = event("turn_finished", 8); stop.waiting = true;
+        QVERIFY(sessions.apply(stop, now + 8));
+        sessions.expire(now + 60000);
+        QCOMPARE(sessions.aggregate(now + 60000), QString("waiting"));
+        pet::Sessions restored;
+        QVERIFY(restored.restore(sessions.checkpoint(), now + 60000, [](const pet::Session &) { return true; }));
+        QCOMPARE(restored.aggregate(now + 60000), QString("waiting"));
+        QCOMPARE(restored.records().first().turnStarted, now + 1);
+        auto finish = event("turn_finished", 60001);
+        QVERIFY(restored.apply(finish, now + 60001));
+        QCOMPARE(restored.aggregate(now + 60001), QString("turn-finished"));
+        QCOMPARE(restored.records().first().lastTurnMs, qint64(60000));
+        QVERIFY(recap.record(finish, &restored.records().first(), date));
+        QCOMPARE(recap.day(date).turns, 1); QCOMPARE(recap.day(date).longestTurnMs, qint64(60000));
+        QCOMPARE(restored.pending().size(), 1);
+        sessions.expire(now + 8 + pet::Sessions::expiryMs); QVERIFY(sessions.records().isEmpty());
+    }
+    void waitingTransitionsAndPriority() {
+        for (const auto *kind : {"prompt", "tool_start", "interrupt", "turn_failed", "session_end", "attention"}) {
+            for (const auto &reason : {QString(), QString("approval")}) {
+                pet::Sessions s; auto stop = event("turn_finished", 1); stop.waiting = true;
+                QVERIFY(s.apply(stop, now + 1));
+                auto next = event(kind, 2); if (next.kind == "attention") next.reason = reason;
+                QVERIFY(s.apply(next, now + 2)); QVERIFY(s.aggregate(now + 2) != "waiting");
+                if (next.kind == "attention") QCOMPARE(s.unresolvedAttention(), 1);
+            }
+        }
+        pet::Sessions s; auto stop = event("turn_finished", 1); stop.waiting = true;
+        QVERIFY(s.apply(stop, now + 1));
+        auto other = event("session_start", 2); other.session = "other";
+        QVERIFY(s.apply(other, now + 2)); QCOMPARE(s.aggregate(now + 2), QString("waiting"));
+        other = event("prompt", 3); other.session = "other";
+        QVERIFY(s.apply(other, now + 3)); QCOMPARE(s.aggregate(now + 3), QString("thinking"));
+    }
     void checkpointRestoresPendingToolsAndDeduplication() {
         pet::Sessions original;
         QVERIFY(original.apply(event("prompt", 1), now + 1));

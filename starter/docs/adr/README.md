@@ -32,6 +32,7 @@ the order the decisions were made. For a map of the code, start with the
 | [0023](0023-arch-aur-package.md) | Arch Linux package for the AUR, built from a starter-only source tarball | 2026-10-07 |
 | [0024](0024-windows-port.md) | Windows port and setup program | 2026-10-07 |
 | [0025](0025-out-of-quota.md) | Out-of-quota animation from Claude StopFailure | 2026-10-07 |
+| [0026](0026-background-waiting.md) | Background-job waiting from Claude Stop | 2026-10-07 |
 
 ## Writing a record
 

@@ -83,7 +83,7 @@ void AlertQueue::dismiss(Sessions &sessions) {
     sync(sessions.pending());
 }
 static int stateRank(const QString &state) {
-    static const QStringList order{"attention", "exhausted", "error", "working", "reading", "thinking", "turn-finished", "idle", "inactive"};
+    static const QStringList order{"attention", "exhausted", "error", "working", "reading", "thinking", "waiting", "turn-finished", "idle", "inactive"};
     const int i = order.indexOf(state);
     return i < 0 ? order.size() : i;
 }
@@ -94,6 +94,7 @@ static QString statusText(const Session &s, qint64 now) {
     if (s.state == "working") return Alerts::tr("Working");
     if (s.state == "reading") return Alerts::tr("Reading");
     if (s.state == "thinking") return Alerts::tr("Thinking");
+    if (s.state == "waiting") return Alerts::tr("Waiting");
     if (s.state == "turn-finished") return Alerts::tr("Finished");
     if (s.state == "inactive") return Alerts::tr("Stopped");
     const qint64 minutes = std::max<qint64>(0, now - s.seen) / 60000;

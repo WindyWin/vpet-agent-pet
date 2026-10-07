@@ -26,6 +26,28 @@ class ProviderTests : public QObject {
         return e;
     }
 private slots:
+    void backgroundWaitingStops() {
+        auto input = payload("Stop");
+        input["background_tasks"] = QJsonArray{QJsonObject{{"id", "PRIVATE"}, {"type", "shell"},
+            {"command", "PRIVATE command"}, {"description", "PRIVATE description"}}};
+        auto out = pet::normalizeHook("claude", input, now);
+        QCOMPARE(out["kind"].toString(), QString("turn_finished"));
+        QVERIFY(out["waiting"].toBool());
+        QVERIFY(!QJsonDocument(out).toJson().contains("PRIVATE"));
+        QVERIFY(!out.contains("background_tasks"));
+        QVERIFY(!pet::normalizeHook("codex", input, now).contains("waiting"));
+        input["agent_id"] = "child";
+        out = pet::normalizeHook("claude", input, now);
+        QCOMPARE(out["kind"].toString(), QString("session_end")); QVERIFY(!out.contains("waiting"));
+        input.remove("agent_id");
+        for (const auto &value : {QJsonValue(QJsonArray{}), QJsonValue("bad"), QJsonValue(QJsonObject{}), QJsonValue()}) {
+            input["background_tasks"] = value;
+            out = pet::normalizeHook("claude", input, now);
+            QCOMPARE(out["kind"].toString(), QString("turn_finished")); QVERIFY(!out.contains("waiting"));
+        }
+        input.remove("background_tasks");
+        QVERIFY(!pet::normalizeHook("claude", input, now).contains("waiting"));
+    }
     void fixtures() {
         QFile file(PROVIDER_FIXTURE_PATH); QVERIFY(file.open(QIODevice::ReadOnly));
         const auto rows = QJsonDocument::fromJson(file.readAll()).array(); QVERIFY(rows.size() > 20);

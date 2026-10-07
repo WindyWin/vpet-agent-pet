@@ -17,6 +17,8 @@ struct Event {
     QString host, hostPids, hostWindow, hostTarget;
     // tool_start only: the hook saw a destructive shell command. A flag, never the command.
     bool risky = false;
+    // turn_finished only: background work remains in flight.
+    bool waiting = false;
     // Host fields are checked against the registry's hosts (the built-in ones by default).
     static bool parse(const QByteArray &data, Event &event, QString &error,
                       const hosts::Registry &hosts = hosts::Registry::builtin());

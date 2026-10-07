@@ -36,6 +36,21 @@ class AlertTests : public QObject {
     }
     bool apply(pet::Sessions &state, const pet::Event &e) { return state.apply(e, now + seq); }
 private slots:
+    void backgroundWaitingIsQuietAndListed() {
+        pet::Sessions s;
+        auto stop = event("claude", "waiting", "turn_finished"); stop.waiting = true;
+        QVERIFY(apply(s, stop)); QVERIFY(s.pending().isEmpty());
+        QVERIFY(apply(s, event("claude", "waiting", "attention", {}, "input")));
+        QVERIFY(s.pending().isEmpty()); QCOMPARE(s.unresolvedAttention(), 0);
+        QVERIFY(apply(s, event("claude", "finished", "turn_finished")));
+        QVERIFY(apply(s, event("claude", "idle", "session_start")));
+        QVERIFY(apply(s, event("claude", "thinking", "prompt")));
+        const auto rows = pet::sessionRows(s, now + seq);
+        QCOMPARE(rows.size(), 4);
+        QCOMPARE(rows[0].state, QString("thinking"));
+        QCOMPARE(rows[1].state, QString("waiting")); QCOMPARE(rows[1].status, QString("Waiting"));
+        QCOMPARE(rows[2].state, QString("turn-finished")); QCOMPARE(rows[3].state, QString("idle"));
+    }
     void reasonValidation() {
         pet::Event e; QString error;
         QJsonObject o{{"version", 1}, {"provider", "claude"}, {"session_id", "s"}, {"event_id", "1"},

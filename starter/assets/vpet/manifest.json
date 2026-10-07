@@ -3,8 +3,8 @@
   "upstream": "https://github.com/LorisYounger/VPet",
   "source_commit": "6358445aa54587f9cd524264eaf17ef97bc826a8",
   "source_note": "Selected unmodified files from local checkout; per-file hashes identify copied bytes, including any local changes.",
-  "file_count": 1129,
-  "total_bytes": 155087822,
+  "file_count": 1197,
+  "total_bytes": 180008028,
   "files": [
     {
       "path": "assets/vpet/vup/Default/Nomal/1/_000_250.png",
@@ -5650,6 +5650,346 @@
       "path": "assets/vpet/vup/Default/Ill/2/\u751f\u75c5\u54b3\u55fd_019_125.png",
       "bytes": 86424,
       "sha256": "9a27ec937c9ab20c66ecfdf587e8983cf7c983dd0248aecc6f584facd383b42d"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/A/A_000_125.png",
+      "bytes": 155532,
+      "sha256": "ce8076e8507b837f8423b0b3f92d65f4d4846f3dde1b9df2c4245ff0d3efd237"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/A/A_001_125.png",
+      "bytes": 147649,
+      "sha256": "c2e82f755d5f000869cee5caae536a8fb3124e2d1d9888354cfb25c442bf3a36"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/A/A_002_125.png",
+      "bytes": 165775,
+      "sha256": "92545fddc13e9f8b8ed81a72928918c279a19a676a98d899208a2fa9f31c4f3e"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/A/A_003_125.png",
+      "bytes": 167060,
+      "sha256": "a767376659ef7914d6e83e69911f3d7866fa158f83aacf845b612e2a356d8096"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/A/A_004_125.png",
+      "bytes": 233812,
+      "sha256": "bc239f340ac79044256627c279f6dd460ce6e9bdc9cb10c17daa9844beb0765f"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/A/A_005_125.png",
+      "bytes": 264558,
+      "sha256": "c2cfce96c81269c95e397e65b8d48e75aee9505adc84cd49956198a4192d6235"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/A/A_006_125.png",
+      "bytes": 285655,
+      "sha256": "56b537705ca742a1d62b1c3dd4868a46b64e6c713bec127e0dee79a7acd575bb"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/A/A_007_125.png",
+      "bytes": 301601,
+      "sha256": "1041e3cc23c3af667062fa45de88447878ad7c52fa61ab77b63713d82ee447a8"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/A/A_008_125.png",
+      "bytes": 298633,
+      "sha256": "d4c65d8ac948c8e766840ba8e16fe92c054f51ae0f91bf896b691b39358fb0ec"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/A/A_009_125.png",
+      "bytes": 348319,
+      "sha256": "63ffa61d8d3ef023b7303e250ddb5647a86e2856e5a0aebeca91897ace50e970"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/A/A_010_125.png",
+      "bytes": 325423,
+      "sha256": "e965d72c76cddc8558a00cfce45fa6d58d87be21d6a200e5680f2b49225921b1"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/A/A_011_125.png",
+      "bytes": 377687,
+      "sha256": "e7238da4441e8ea5da0a89b12580d9202ca30d88322b8f22b6b23ce64f463288"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/B/B_000_125.png",
+      "bytes": 378172,
+      "sha256": "6afa7968eeca1600790fd90fddfd10076666df1b25bf8854493c9cd3be6cb6a8"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/B/B_001_125.png",
+      "bytes": 451624,
+      "sha256": "80dd9e5629c465708ee88b57b6a0d72152070da90c8cdbbd1cfe320dbf090fc4"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/B/B_002_125.png",
+      "bytes": 429082,
+      "sha256": "3a1e39d27528c660ea5e0d3e6337e2c79ed2c7413b601baa140e47fa90f442f6"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/B/B_003_125.png",
+      "bytes": 390423,
+      "sha256": "468b39da631e1b4a83b089c1555d89eb664ede4248fa27864e1add4683361876"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/B/B_004_125.png",
+      "bytes": 377400,
+      "sha256": "04ab97e7e2c030fb9565a01ca1c65c87481c8b9c4f45c41a9868870c922ec3a5"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/B/B_005_125.png",
+      "bytes": 394670,
+      "sha256": "07c8f75e71206ae87d83c7c99c25c5b3db06a519825681467599e08be40c5bf3"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/B/B_006_125.png",
+      "bytes": 388826,
+      "sha256": "0a3d28516f0e4131d2a85e8fcf345e0424dbb584e8cf6e25e7cf01eaee672f83"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/B/B_007_125.png",
+      "bytes": 419435,
+      "sha256": "d65e3ad8c46fa2ebafd428494cabc2b68c1fd598f56b6b61a16b3a6c69c564e5"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/B/B_008_125.png",
+      "bytes": 378172,
+      "sha256": "6afa7968eeca1600790fd90fddfd10076666df1b25bf8854493c9cd3be6cb6a8"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/B/B_009_125.png",
+      "bytes": 451624,
+      "sha256": "80dd9e5629c465708ee88b57b6a0d72152070da90c8cdbbd1cfe320dbf090fc4"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/B/B_010_125.png",
+      "bytes": 429082,
+      "sha256": "3a1e39d27528c660ea5e0d3e6337e2c79ed2c7413b601baa140e47fa90f442f6"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/B/B_011_125.png",
+      "bytes": 390423,
+      "sha256": "468b39da631e1b4a83b089c1555d89eb664ede4248fa27864e1add4683361876"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/B/B_012_125.png",
+      "bytes": 377400,
+      "sha256": "04ab97e7e2c030fb9565a01ca1c65c87481c8b9c4f45c41a9868870c922ec3a5"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/B/B_013_125.png",
+      "bytes": 394670,
+      "sha256": "07c8f75e71206ae87d83c7c99c25c5b3db06a519825681467599e08be40c5bf3"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/B/B_014_125.png",
+      "bytes": 388826,
+      "sha256": "0a3d28516f0e4131d2a85e8fcf345e0424dbb584e8cf6e25e7cf01eaee672f83"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/B/B_015_125.png",
+      "bytes": 419435,
+      "sha256": "d65e3ad8c46fa2ebafd428494cabc2b68c1fd598f56b6b61a16b3a6c69c564e5"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/B/B_016_125.png",
+      "bytes": 378172,
+      "sha256": "6afa7968eeca1600790fd90fddfd10076666df1b25bf8854493c9cd3be6cb6a8"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/B/B_017_125.png",
+      "bytes": 451624,
+      "sha256": "80dd9e5629c465708ee88b57b6a0d72152070da90c8cdbbd1cfe320dbf090fc4"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/B/B_018_125.png",
+      "bytes": 429082,
+      "sha256": "3a1e39d27528c660ea5e0d3e6337e2c79ed2c7413b601baa140e47fa90f442f6"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/B/B_019_125.png",
+      "bytes": 390423,
+      "sha256": "468b39da631e1b4a83b089c1555d89eb664ede4248fa27864e1add4683361876"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/B/B_020_125.png",
+      "bytes": 377400,
+      "sha256": "04ab97e7e2c030fb9565a01ca1c65c87481c8b9c4f45c41a9868870c922ec3a5"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/B/B_021_125.png",
+      "bytes": 394670,
+      "sha256": "07c8f75e71206ae87d83c7c99c25c5b3db06a519825681467599e08be40c5bf3"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/B/B_022_125.png",
+      "bytes": 388826,
+      "sha256": "0a3d28516f0e4131d2a85e8fcf345e0424dbb584e8cf6e25e7cf01eaee672f83"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/B/B_023_125.png",
+      "bytes": 419435,
+      "sha256": "d65e3ad8c46fa2ebafd428494cabc2b68c1fd598f56b6b61a16b3a6c69c564e5"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/B_2/B2_000_125.png",
+      "bytes": 380001,
+      "sha256": "0e8a6bd4bcccc1f5ad2872218560c6f38e92e089f8ebf247fe81545821b5b43f"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/B_2/B2_001_125.png",
+      "bytes": 454172,
+      "sha256": "35aef8ed6973fcea13dbb5d0d890f0d92b253e93e2be050d31e89f5f8121714e"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/B_2/B2_002_125.png",
+      "bytes": 429082,
+      "sha256": "3a1e39d27528c660ea5e0d3e6337e2c79ed2c7413b601baa140e47fa90f442f6"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/B_2/B2_003_125.png",
+      "bytes": 390423,
+      "sha256": "468b39da631e1b4a83b089c1555d89eb664ede4248fa27864e1add4683361876"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/B_2/B2_004_125.png",
+      "bytes": 377388,
+      "sha256": "30cc0f2108fb8cccac802ac271c57bbe6044c279dd3a9d817aefe8b59938afeb"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/B_2/B2_005_125.png",
+      "bytes": 398307,
+      "sha256": "9b56d272ba1191a6f1d7db533cfa11fea3ccf862f7d1c702ff0876ca949744f1"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/B_2/B2_006_125.png",
+      "bytes": 390310,
+      "sha256": "7ceca984ac6587452bb9169966cbd494547bcec3a604b98ebad565c5d6198f6f"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/B_2/B2_007_125.png",
+      "bytes": 420731,
+      "sha256": "c24df1c40b7b4a7ef227c30859dcb7a95da1b2ab51dc94f1498c7cdde38900ec"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/B_2/B2_008_125.png",
+      "bytes": 380001,
+      "sha256": "0e8a6bd4bcccc1f5ad2872218560c6f38e92e089f8ebf247fe81545821b5b43f"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/B_2/B2_009_125.png",
+      "bytes": 454172,
+      "sha256": "35aef8ed6973fcea13dbb5d0d890f0d92b253e93e2be050d31e89f5f8121714e"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/B_2/B2_010_125.png",
+      "bytes": 429138,
+      "sha256": "8a2fb6a85b0d01218fd9aa0f860cdc1785405c680d8e69e1c1f3d43f216d6333"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/B_2/B2_011_125.png",
+      "bytes": 390423,
+      "sha256": "468b39da631e1b4a83b089c1555d89eb664ede4248fa27864e1add4683361876"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/B_2/B2_012_125.png",
+      "bytes": 377388,
+      "sha256": "30cc0f2108fb8cccac802ac271c57bbe6044c279dd3a9d817aefe8b59938afeb"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/B_2/B2_013_125.png",
+      "bytes": 398307,
+      "sha256": "9b56d272ba1191a6f1d7db533cfa11fea3ccf862f7d1c702ff0876ca949744f1"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/B_2/B2_014_125.png",
+      "bytes": 390310,
+      "sha256": "7ceca984ac6587452bb9169966cbd494547bcec3a604b98ebad565c5d6198f6f"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/B_2/B2_015_125.png",
+      "bytes": 420731,
+      "sha256": "c24df1c40b7b4a7ef227c30859dcb7a95da1b2ab51dc94f1498c7cdde38900ec"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/B_2/B2_016_125.png",
+      "bytes": 380001,
+      "sha256": "0e8a6bd4bcccc1f5ad2872218560c6f38e92e089f8ebf247fe81545821b5b43f"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/B_2/B2_017_125.png",
+      "bytes": 454172,
+      "sha256": "35aef8ed6973fcea13dbb5d0d890f0d92b253e93e2be050d31e89f5f8121714e"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/B_2/B2_018_125.png",
+      "bytes": 429082,
+      "sha256": "3a1e39d27528c660ea5e0d3e6337e2c79ed2c7413b601baa140e47fa90f442f6"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/B_2/B2_019_125.png",
+      "bytes": 390423,
+      "sha256": "468b39da631e1b4a83b089c1555d89eb664ede4248fa27864e1add4683361876"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/B_2/B2_020_125.png",
+      "bytes": 377388,
+      "sha256": "30cc0f2108fb8cccac802ac271c57bbe6044c279dd3a9d817aefe8b59938afeb"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/B_2/B2_021_125.png",
+      "bytes": 398307,
+      "sha256": "9b56d272ba1191a6f1d7db533cfa11fea3ccf862f7d1c702ff0876ca949744f1"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/B_2/B2_022_125.png",
+      "bytes": 390310,
+      "sha256": "7ceca984ac6587452bb9169966cbd494547bcec3a604b98ebad565c5d6198f6f"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/B_2/B2_023_125.png",
+      "bytes": 420731,
+      "sha256": "c24df1c40b7b4a7ef227c30859dcb7a95da1b2ab51dc94f1498c7cdde38900ec"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/C/C_000_125.png",
+      "bytes": 384164,
+      "sha256": "127e8ec5ddb50b438b8e6fa0da49d69cb11d2f080190005fed760cc1a5a16057"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/C/C_001_125.png",
+      "bytes": 336393,
+      "sha256": "77c1eca60c979944dbb0bc3fe6b1821e4873289c52752f647b2d03f0cfa03429"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/C/C_002_125.png",
+      "bytes": 360714,
+      "sha256": "24a28df604b7be703ee6047c56a00f9ee90165e3a9f698d59dc37444996e7baa"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/C/C_003_125.png",
+      "bytes": 331894,
+      "sha256": "575e8f889ca2125ab1e1c9254e9a34ce10e676197cd1ce73e5e233b58da42e8b"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/C/C_004_125.png",
+      "bytes": 320379,
+      "sha256": "ddfc14c2ec6b97191bfca5c7606e2cdc1b5c191cfefbb3ebc21a2bb4401fc270"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/C/C_005_125.png",
+      "bytes": 259389,
+      "sha256": "455279d1e69656bb858609f7b9c7e3c319ce986c8fd6db3c04b95261907f663d"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/C/C_006_125.png",
+      "bytes": 233133,
+      "sha256": "d0ed27d861cbb17d00cfb006445c77f40e6c78da3dc8cc984e8effcdc66c4247"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Bubbles/C/C_007_125.png",
+      "bytes": 212242,
+      "sha256": "a3893a1c568d6eb80b3bb5f27a1e22893952155d2403de752544518b5bd26ce2"
     }
   ]
 }

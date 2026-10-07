@@ -67,7 +67,7 @@ bool Recap::record(const Event &e, const Session *s, const QDate &date) {
         return true;
     }
     if (e.kind == "error" || e.kind == "turn_failed") { ++at(date).errors; return true; }
-    if (e.kind == "turn_finished") {
+    if (e.kind == "turn_finished" && !e.waiting) {
         auto &d = at(date);
         ++d.turns; d.longestTurnMs = std::max(d.longestTurnMs, s->lastTurnMs);
         const auto project = projectFolder(s->project);
