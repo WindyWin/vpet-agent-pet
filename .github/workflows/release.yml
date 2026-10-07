@@ -271,7 +271,7 @@ jobs:
           version="${GITHUB_REF_NAME#v}"
           package="agent-pet-$version"
           download="https://github.com/$GITHUB_REPOSITORY/releases/download/$GITHUB_REF_NAME"
-          docs="https://github.com/$GITHUB_REPOSITORY/blob/$GITHUB_REF_NAME"
+          docs="https://github.com/$GITHUB_REPOSITORY/blob/main"
           # Every download link must point to a nonempty asset in this release.
           for suffix in windows-x86_64-setup.exe macos-universal.dmg linux-x86_64.tar.gz \
                         windows-x86_64.zip macos-universal.zip source.tar.gz; do
