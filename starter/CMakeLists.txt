@@ -3,13 +3,20 @@ project(AgentPet VERSION 0.12.0 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 option(AGENT_PET_PORTABLE_CORE "Build portable libraries and tests only (no application or native services)" OFF)
-if(NOT AGENT_PET_PORTABLE_CORE AND NOT CMAKE_SYSTEM_NAME MATCHES "^(Linux|Darwin)$")
-    message(FATAL_ERROR "The full Agent Pet application supports Linux and macOS. Use -DAGENT_PET_PORTABLE_CORE=ON for core libraries/tests.")
+if(NOT AGENT_PET_PORTABLE_CORE AND NOT CMAKE_SYSTEM_NAME MATCHES "^(Linux|Darwin|Windows)$")
+    message(FATAL_ERROR "The full Agent Pet application supports Linux, macOS and Windows. Use -DAGENT_PET_PORTABLE_CORE=ON for core libraries/tests.")
+endif()
+if(WIN32)
+    # Wide Win32 APIs, without windows.h's min/max macros; sources are UTF-8.
+    add_compile_definitions(UNICODE _UNICODE NOMINMAX WIN32_LEAN_AND_MEAN)
+    if(MSVC)
+        add_compile_options(/utf-8)
+    endif()
 endif()
 find_package(Qt6 6.5 REQUIRED COMPONENTS Core Gui)
 if(NOT AGENT_PET_PORTABLE_CORE)
     find_package(Qt6 6.5 REQUIRED COMPONENTS Widgets Network LinguistTools)
-    if(NOT APPLE)
+    if(NOT APPLE AND NOT WIN32)
         find_package(Qt6 6.5 REQUIRED COMPONENTS DBus)
         find_package(LibArchive REQUIRED)
         find_package(X11 REQUIRED)
@@ -109,13 +116,20 @@ qt_add_resources(pet_ui pet_assets PREFIX "/" FILES ${pet_notices})
 add_dependencies(pet_ui pet_artwork)
 # Headless platform services shared by the hook and the pet: POSIX event transport, hook input,
 # detached launch and the QProcess command runner, plus process inspection (/proc on Linux,
-# sysctl on macOS) and login registration (XDG autostart on Linux, launchd on macOS).
-set(pet_platform_sources src/platform/posix/commands.cpp src/platform/posix/event_transport.cpp
-    src/platform/posix/hook_input.cpp src/platform/posix/hook_command.cpp src/platform/posix/launch.cpp)
-if(APPLE)
-    list(APPEND pet_platform_sources src/platform/macos/process.cpp src/platform/macos/headless.cpp src/platform/macos/login.cpp)
+# sysctl on macOS) and login registration (XDG autostart on Linux, launchd on macOS). Windows
+# has its own: a named-pipe transport, Toolhelp processes, CreateProcess and the Run key.
+if(WIN32)
+    set(pet_platform_sources src/platform/windows/event_transport.cpp src/platform/windows/hook_input.cpp
+        src/platform/windows/hook_command.cpp src/platform/windows/launch.cpp src/platform/windows/login.cpp
+        src/platform/windows/process.cpp src/platform/windows/headless.cpp)
+elseif(APPLE)
+    set(pet_platform_sources src/platform/posix/commands.cpp src/platform/posix/event_transport.cpp
+        src/platform/posix/hook_input.cpp src/platform/posix/hook_command.cpp src/platform/posix/launch.cpp
+        src/platform/macos/process.cpp src/platform/macos/headless.cpp src/platform/macos/login.cpp)
 else()
-    list(APPEND pet_platform_sources src/platform/linux/process.cpp src/platform/linux/headless.cpp src/platform/linux/startup.cpp)
+    set(pet_platform_sources src/platform/posix/commands.cpp src/platform/posix/event_transport.cpp
+        src/platform/posix/hook_input.cpp src/platform/posix/hook_command.cpp src/platform/posix/launch.cpp
+        src/platform/linux/process.cpp src/platform/linux/headless.cpp src/platform/linux/startup.cpp)
 endif()
 qt_add_library(pet_platform STATIC ${pet_platform_sources})
 target_include_directories(pet_platform PUBLIC src)
@@ -123,7 +137,11 @@ target_link_libraries(pet_platform PUBLIC Qt6::Core)
 # Native desktop services and their composition (platform/native.h). On Linux: X11 and KWin backends,
 # Konsole's D-Bus tab selection, pointer queries and the screen-lock watcher; only this target links
 # X11 and D-Bus. On macOS: Core Graphics pointer and screen-lock queries, no window backend yet.
-if(APPLE)
+# On Windows: a Win32 window backend, pointer and screen-lock queries.
+if(WIN32)
+    qt_add_library(pet_native STATIC src/platform/windows/native.cpp)
+    target_link_libraries(pet_native PUBLIC pet_hosts PRIVATE pet_platform Qt6::Gui user32)
+elseif(APPLE)
     qt_add_library(pet_native STATIC src/platform/macos/native.cpp)
     target_link_libraries(pet_native PUBLIC pet_hosts PRIVATE pet_platform Qt6::Gui "-framework CoreGraphics" "-framework CoreFoundation")
 else()
@@ -138,7 +156,11 @@ target_include_directories(pet_native PUBLIC src)
 qt_add_library(pet_events STATIC src/ipc/local.cpp src/ipc/session_store.cpp src/ipc/autostart.cpp src/providers/integrations.cpp)
 target_include_directories(pet_events PUBLIC src)
 target_link_libraries(pet_events PUBLIC pet_core PRIVATE pet_platform)
-if(APPLE)
+if(WIN32)
+    # Releases are announced; the setup program installs them.
+    qt_add_library(pet_update_platform STATIC src/platform/windows/update_install.cpp src/platform/windows/update_layout.cpp)
+    target_link_libraries(pet_update_platform PUBLIC Qt6::Core)
+elseif(APPLE)
     # Releases are announced and downloaded manually; nothing is extracted or installed in place.
     qt_add_library(pet_update_platform STATIC src/platform/macos/update_install.cpp src/platform/macos/update_layout.cpp)
     target_link_libraries(pet_update_platform PUBLIC Qt6::Core)
@@ -152,7 +174,19 @@ target_include_directories(pet_updates PUBLIC src "${CMAKE_CURRENT_BINARY_DIR}/g
 target_link_libraries(pet_updates PUBLIC Qt6::Core PRIVATE pet_update_platform)
 qt_add_executable(agent-pet src/main.cpp)
 target_link_libraries(agent-pet PRIVATE pet_ui pet_events pet_native pet_i18n)
-if(APPLE)
+set(pet_cli_target agent-pet) # The executable tests run as hooks and commands.
+if(WIN32)
+    # agent-pet.exe opens no console window; agent-pet-cli.exe, the same program as a console
+    # application, runs hooks and commands with working standard streams.
+    set(AGENT_PET_ICON "${CMAKE_CURRENT_SOURCE_DIR}/packaging/windows/agent-pet.ico")
+    configure_file(packaging/windows/agent-pet.rc.in "${CMAKE_CURRENT_BINARY_DIR}/generated/agent-pet.rc" @ONLY)
+    target_sources(agent-pet PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/generated/agent-pet.rc")
+    set_target_properties(agent-pet PROPERTIES WIN32_EXECUTABLE ON)
+    qt_add_executable(agent-pet-cli src/main.cpp "${CMAKE_CURRENT_BINARY_DIR}/generated/agent-pet.rc")
+    target_link_libraries(agent-pet-cli PRIVATE pet_ui pet_events pet_native pet_i18n)
+    set(pet_cli_target agent-pet-cli)
+    # scripts/package_windows.py assembles the installation directory and the setup program.
+elseif(APPLE)
     # A plain executable, so local builds find artwork.rcc beside it; scripts/package_macos.py assembles the
     # application bundle from it.
     set_target_properties(agent-pet PROPERTIES MACOSX_BUNDLE OFF)
@@ -171,7 +205,7 @@ else()
     install(FILES packaging/INSTALL.txt DESTINATION .)
     install(DIRECTORY licenses DESTINATION ${CMAKE_INSTALL_DATADIR}/agent-pet)
     # scripts/package.py copies only the required plugins and their library closure.
-endif() # Linux installation
+endif() # Platform installation
 
 endif() # Application
 
@@ -194,12 +228,18 @@ if(BUILD_TESTING)
     target_link_libraries(focus-tests PRIVATE pet_hosts pet_core Qt6::Test)
     add_test(NAME focus COMMAND focus-tests)
     if(NOT AGENT_PET_PORTABLE_CORE)
+        # PET_TEST_NATIVE sections run with every platform's services; PET_TEST_POSIX and PET_TEST_WINDOWS ones with one family.
+        if(WIN32)
+            set(pet_test_platform PET_TEST_WINDOWS)
+        else()
+            set(pet_test_platform PET_TEST_POSIX)
+        endif()
         foreach(target provider-tests event-tests alert-tests focus-tests)
             target_link_libraries(${target} PRIVATE pet_events pet_platform)
-            target_compile_definitions(${target} PRIVATE PET_TEST_POSIX APP_PATH="$<TARGET_FILE:agent-pet>")
+            target_compile_definitions(${target} PRIVATE PET_TEST_NATIVE ${pet_test_platform} APP_PATH="$<TARGET_FILE:${pet_cli_target}>")
         endforeach()
-        add_dependencies(provider-tests agent-pet)
-        add_dependencies(event-tests agent-pet)
+        add_dependencies(provider-tests ${pet_cli_target})
+        add_dependencies(event-tests ${pet_cli_target})
         qt_add_executable(prototype-tests tests/prototype_tests.cpp)
         target_link_libraries(prototype-tests PRIVATE pet_ui Qt6::Test)
         # The slowest suite runs as shards, so ctest -j spreads it over the cores (prototype-1 … prototype-N).
@@ -213,7 +253,7 @@ if(BUILD_TESTING)
         target_compile_definitions(i18n-tests PRIVATE TS_PATH="${CMAKE_CURRENT_SOURCE_DIR}/translations/agent-pet_vi.ts")
         add_test(NAME i18n COMMAND i18n-tests)
     endif()
-    if(NOT AGENT_PET_PORTABLE_CORE AND NOT APPLE)
+    if(NOT AGENT_PET_PORTABLE_CORE AND NOT APPLE AND NOT WIN32)
         qt_add_executable(update-tests tests/update_tests.cpp)
         target_link_libraries(update-tests PRIVATE pet_ui Qt6::Test)
         add_test(NAME updates COMMAND update-tests)

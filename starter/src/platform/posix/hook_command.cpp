@@ -1,10 +1,10 @@
 #include "platform/contracts/hook_command.h"
 #include <QRegularExpression>
 namespace pet {
-QString hookCommand(const QString &executable, const QString &provider) {
+QJsonObject hookHandler(const QString &executable, const QString &provider, QString &) {
     auto escaped = executable;
     escaped.replace("'", "'\\''");
-    return "'" + escaped + "' hook --provider " + provider + " --registration agent-pet-v1";
+    return {{"type", "command"}, {"command", "'" + escaped + "' hook --provider " + provider + " --registration agent-pet-v1"}};
 }
 bool ownedHookHandler(const QJsonObject &handler, const QString &provider) {
     // Match our entire shell command grammar, not an executable basename or a
@@ -13,4 +13,5 @@ bool ownedHookHandler(const QJsonObject &handler, const QString &provider) {
     const auto match = command.match(handler.value("command").toString());
     return handler.value("type").toString() == "command" && match.hasMatch() && match.captured(1) == provider;
 }
+QString hookExecutable(const QString &application) { return application; }
 }

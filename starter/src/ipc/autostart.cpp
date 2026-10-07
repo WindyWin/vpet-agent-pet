@@ -1,7 +1,6 @@
 #include "autostart.h"
 #include "settings/preferences.h"
 #include "platform/headless.h"
-#include <QCoreApplication>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <cstdio>
@@ -21,7 +20,7 @@ static int loginCommand(const QStringList &args) {
         std::fprintf(stderr, "Usage: agent-pet autostart login enable|disable|status\n"); return 1;
     }
     QString error;
-    if (operation != "status" && !setLoginStart(operation == "enable", QCoreApplication::applicationFilePath(), &error)) {
+    if (operation != "status" && !setLoginStart(operation == "enable", petExecutable(), &error)) {
         std::fprintf(stderr, "%s\n", qPrintable(error)); return 1;
     }
     const QJsonObject report{{"start_at_login", loginStartEnabled()}, {"entry", loginEntryPath()}};

@@ -9,8 +9,8 @@ bool mergeIntegration(const QJsonObject &input, const QString &provider, const Q
 // Default client configuration file, honoring CLAUDE_CONFIG_DIR and CODEX_HOME.
 QString integrationConfigPath(const QString &provider);
 // preview|inspect|enable|disable shared by the command line and settings window.
-// An empty path selects integrationConfigPath(provider).
-bool runIntegration(const QString &operation, const QString &provider, QString path, const QString &executable,
+// An empty path selects integrationConfigPath(provider). Hooks run hookExecutable(application).
+bool runIntegration(const QString &operation, const QString &provider, QString path, const QString &application,
                     QJsonObject &report, QString &error);
 int integrationCommand(const QStringList &args);
 }

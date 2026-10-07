@@ -52,9 +52,12 @@ bool mergeIntegration(const QJsonObject &input, const QString &provider, const Q
         if (!QDir::isAbsolutePath(executable) || executable.contains(QChar('\n')) || executable.contains(QChar('\r')) || executable.contains(QChar(0))) {
             error = Integrations::tr("Executable must be an absolute path without control characters"); return false;
         }
+        auto handler = hookHandler(executable, provider, error);
+        if (handler.isEmpty()) return false;
+        handler["timeout"] = 1;
         for (const auto &name : events) {
             auto groups = hooks.value(name).toArray();
-            groups.append(QJsonObject{{"hooks", QJsonArray{QJsonObject{{"type", "command"}, {"command", hookCommand(executable, provider)}, {"timeout", 1}}}}});
+            groups.append(QJsonObject{{"hooks", QJsonArray{handler}}});
             hooks[name] = groups;
         }
     }
@@ -66,9 +69,10 @@ QString integrationConfigPath(const QString &provider) {
                                            QDir::homePath() + (provider == "claude" ? "/.claude" : "/.codex"));
     return root + (provider == "claude" ? "/settings.json" : "/hooks.json");
 }
-bool runIntegration(const QString &operation, const QString &provider, QString path, const QString &executable,
+bool runIntegration(const QString &operation, const QString &provider, QString path, const QString &application,
                     QJsonObject &report, QString &error) {
     auto fail = [] { return false; };
+    const auto executable = hookExecutable(application);
     if (!QStringList{"preview", "inspect", "enable", "disable"}.contains(operation) || hookEvents(provider).isEmpty()) {
         error = "Usage: agent-pet integration preview|inspect|enable|disable --provider claude|codex [--config PATH] [--executable PATH]"; return fail();
     }
@@ -82,7 +86,8 @@ bool runIntegration(const QString &operation, const QString &provider, QString p
     }
     if (path.isEmpty()) path = integrationConfigPath(provider);
     path = QFileInfo(path).absoluteFilePath();
-    const bool write = operation == "enable" || operation == "disable";
+    // Disabling with no configuration file creates neither the file nor its directory.
+    const bool write = operation == "enable" || (operation == "disable" && QFileInfo::exists(path));
     if (QFileInfo(path).isSymLink()) { error = Integrations::tr("Refusing a symlink configuration; specify its real path"); return fail(); }
     if (write && !QDir().mkpath(QFileInfo(path).absolutePath())) { error = Integrations::tr("Cannot create configuration directory"); return fail(); }
     // Lock our writers; compare bytes again before atomic replacement to detect
