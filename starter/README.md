@@ -98,7 +98,8 @@ transition history and decoded-frame cache use; you can pause and step frames.
 `--state thinking` starts with another state. `--settings` opens the settings
 window. Size, position and always-on-top are saved in the user's application data
 directory and restored on restart. Click-through always starts disabled. Closing
-settings or preview leaves the pet running. About shows the bundled artwork terms.
+settings or preview leaves the pet running. `--pet <id>` runs another installed pet once.
+About shows the running pet's artwork credit and terms.
 Settings → Startup (or `agent-pet autostart enable [--when-idle keep|hide|quit]`)
 lets a connected agent's session start launch the pet, and chooses whether it
 stays, hides or quits once no sessions remain; see [install guide](docs/install.md#autostart).
@@ -220,6 +221,16 @@ own window, so there the pet stays put. Preview the moves from Preview state
 The default uses X11/XWayland when DISPLAY is available. For a development-only
 native Wayland check: `QT_QPA_PLATFORM=wayland ./build/agent-pet`.
 Native Wayland placement and stacking support remain unverified.
+
+## Pets
+
+VPet is the bundled pet, and the app is built for more. A pet is a folder of frames, a catalog, a
+preview and its own art terms under `assets/`, and a rebuild picks up every such folder with no code
+changes. Once two or more pets are installed, Settings → Pet → **Character** shows a tile per pet. The
+chosen pet appears the next time Agent Pet starts, and only its artwork is loaded. `--pet <id>` runs
+another installed pet once without saving the choice. A pet that cannot load is skipped and VPet runs
+instead. To make a pet, see [the pet guide](docs/pets.md) and
+[the design record](docs/adr/0027-pet-packs.md).
 
 ## Language
 
@@ -361,8 +372,8 @@ based on its path. Adding or editing a sequence only replaces that pack and the
 small catalog; other sequences and the runtime are reused when their installed
 files still match. Editing animation timing alone only changes the catalog.
 
-`share/agent-pet/artwork.rcc` contains the catalog and pack index, and
-`share/agent-pet/artwork-<sequence-hash>.rcc` contains each sequence's frames.
+`share/agent-pet/artwork.rcc` is the pet index (each pet's metadata, catalog, preview and pack
+list), and `share/agent-pet/artwork-<sequence-hash>.rcc` contains each sequence's frames.
 Local builds load the same files from `build/`. Component manifest format 2
 supports these packs; the updater also accepts legacy format 1 bundles.
 Older updaters fall back to the full archive for the first upgrade to this layout.

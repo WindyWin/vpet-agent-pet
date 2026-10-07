@@ -33,6 +33,7 @@ the order the decisions were made. For a map of the code, start with the
 | [0024](0024-windows-port.md) | Windows port and setup program | 2026-10-07 |
 | [0025](0025-out-of-quota.md) | Out-of-quota animation from Claude StopFailure | 2026-10-07 |
 | [0026](0026-background-waiting.md) | Background-job waiting from Claude Stop | 2026-10-07 |
+| [0027](0027-pet-packs.md) | Pet packs: selectable pet characters | 2026-10-07 |
 
 ## Writing a record
 
