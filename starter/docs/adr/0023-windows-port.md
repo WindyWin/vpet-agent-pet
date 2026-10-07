@@ -115,3 +115,17 @@ agent does, upgrades, uninstalls, and checks that unrelated settings survive.
   check), after the hook-handler contract change: full build and all 12 CTest suites pass.
 - Windows sources syntax-checked with MinGW-w64 GCC 13 (`-Wall -Wextra`) against Qt
   headers before the first CI run.
+- Windows: CI run 139 (`windows-2022`, MSVC 2022, Qt 6.5.3 msvc2019_64) passes both
+  profiles: the 4 portable-core suites and the providers, events, alerts, focus,
+  prototype (4 shards) and i18n suites, including the named-pipe transport, the
+  single-instance lock, a 20-hook burst against an undrained pet, and both hook handlers
+  run from a folder with spaces as Claude Code and Codex start them. With only Windows on
+  `PATH`, the staged `agent-pet-cli.exe` reports `agent-pet 0.12.0`, "Update HTTPS runtime:
+  available", and passes `--smoke-test` on the `windows` platform plugin. Packaging
+  produced a 177 MiB `agent-pet-0.12.0-windows-x86_64.zip` and a 137 MiB
+  `agent-pet-0.12.0-windows-x86_64-setup.exe`; the silent install, hook, upgrade and
+  uninstall check passed, leaving unrelated Claude Code settings unchanged. Linux and macOS
+  passed in the same run.
+- Not yet verified by hand on a Windows desktop: the pet over other windows and across
+  monitors and DPI scales, dragging, the tray icon, **Open** from Windows Terminal and VS
+  Code, sign-in start, SmartScreen's prompt, and hooks from real Claude Code and Codex sessions.
