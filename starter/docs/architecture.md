@@ -22,6 +22,7 @@ that validated each one, are recorded as [architecture decision records](adr/REA
 | Recap, wellness | `src/sessions/recap.*`, `src/desktop/wellness.*` | [0018](adr/0018-daily-recap.md), [0019](adr/0019-wellness-reminders.md) |
 | Packaging, updates | `scripts/package*.py`, `src/updates`, [install](install.md) | [0009](adr/0009-linux-packaging.md), [0010](adr/0010-application-updates.md) |
 | macOS | `src/platform/macos`, `src/platform/posix` | [0020](adr/0020-macos-port.md) |
+| Windows | `src/platform/windows`, `packaging/windows` | [0024](adr/0024-windows-port.md) |
 | Translations, language choice | `src/i18n`, `translations/`, [translations](i18n.md) | [0022](adr/0022-localization.md) |
 
 The [platform refactor plan](platform-refactor-plan.md) describes the platform

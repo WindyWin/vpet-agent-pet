@@ -1,4 +1,5 @@
 #include "platform/contracts/startup.h"
+#include <QCoreApplication>
 #include <QFile>
 #include <algorithm>
 #include <cerrno>
@@ -67,4 +68,5 @@ bool launchDetached(const QString &executable, const QStringList &arguments) {
     close(report[0]);
     return WIFEXITED(status) && WEXITSTATUS(status) == 0 && size == 0;
 }
+QString petExecutable() { return QCoreApplication::applicationFilePath(); }
 }

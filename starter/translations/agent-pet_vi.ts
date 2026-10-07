@@ -173,6 +173,10 @@
         <source>Unknown integration option</source>
         <translation>Tùy chọn integration không xác định</translation>
     </message>
+    <message>
+        <source>Codex cannot run a program from this folder. Install Agent Pet in a folder without spaces or symbols.</source>
+        <translation>Codex không thể chạy chương trình từ thư mục này. Hãy cài Agent Pet vào một thư mục không có dấu cách hay ký hiệu.</translation>
+    </message>
 </context>
 <context>
     <name>Pet</name>
@@ -337,6 +341,10 @@
     <message>
         <source>macOS is running Agent Pet from a temporary copy. Move Agent Pet to Applications and open it from there.</source>
         <translation>macOS đang chạy Agent Pet từ một bản sao tạm. Hãy chuyển Agent Pet vào Applications rồi mở từ đó.</translation>
+    </message>
+    <message>
+        <source>Cannot change %1</source>
+        <translation>Không thể thay đổi %1</translation>
     </message>
 </context>
 <context>
@@ -504,6 +512,10 @@
     <message>
         <source>Update checksum does not match the release.</source>
         <translation>Mã kiểm tra của bản cập nhật không khớp với bản phát hành.</translation>
+    </message>
+    <message>
+        <source>Automatic installation is not available on Windows.</source>
+        <translation>Cài đặt tự động không khả dụng trên Windows.</translation>
     </message>
 </context>
 <context>

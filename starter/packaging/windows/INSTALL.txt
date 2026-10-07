@@ -1,0 +1,47 @@
+Agent Pet for Windows (x64)
+===========================
+
+Install or upgrade for the current user (no administrator rights needed):
+
+    Run agent-pet-VERSION-windows-x86_64-setup.exe. It installs to
+    %LOCALAPPDATA%\Programs\AgentPet, adds "Agent Pet" to the Start menu and
+    can connect Claude Code and Codex, start the pet when you sign in, or
+    start it when an agent session starts. Running a newer setup upgrades in
+    place; settings and enabled hooks are kept. The setup closes a running pet.
+
+    This build is not code-signed, so Windows SmartScreen may warn on first
+    run: choose "More info" > "Run anyway".
+
+Portable use: extract agent-pet-VERSION-windows-x86_64.zip to a folder whose
+path has no spaces (Codex runs hooks through cmd.exe), then run agent-pet.exe.
+
+Connect an agent later (preview first; only Agent Pet's own hook entries change),
+from the installation folder:
+
+    agent-pet-cli.exe integration preview --provider claude
+    agent-pet-cli.exe integration enable --provider claude
+    agent-pet-cli.exe autostart enable --when-idle hide
+
+Use --provider codex for Codex, or right-click the pet > Settings > Startup and
+agents. Restart the agent client and submit a new prompt to see the pet react.
+Claude Code hooks need Claude Code 2.1.139 or newer; trust Codex's hooks in
+Codex /hooks.
+
+agent-pet.exe is the pet and opens no console window; agent-pet-cli.exe is the
+same program for hooks and commands, with working console output.
+
+Click the tray icon to hide or show the pet; it keeps monitoring while hidden.
+
+Not yet available on Windows: automatic update installation (the pet announces
+new versions; run the newer setup program to upgrade).
+
+Remove: Settings > Apps > Installed apps > Agent Pet > Uninstall. It removes
+only Agent Pet's hook entries and its sign-in entry; other hooks are left as
+they were. Settings are in %APPDATA%\agent-pet.
+
+Requirements: Windows 10 version 1809 or newer, or Windows 11, on x64. Qt and
+the Visual C++ runtime are bundled.
+
+License: application code is Apache-2.0 (LICENSE, NOTICE). The pet artwork is
+by the VUP-Simulator team and keeps its own terms; see THIRD_PARTY_NOTICES.md
+and licenses\. Bundled Qt notices are in runtime-licenses\.

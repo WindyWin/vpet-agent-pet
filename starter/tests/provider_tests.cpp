@@ -6,8 +6,10 @@
 #include <QFile>
 #include <QJsonArray>
 #include <QJsonDocument>
+#include <QDir>
 #include <QTemporaryDir>
 #include <QProcess>
+#include <QSet>
 #include <QDateTime>
 
 class ProviderTests : public QObject {
@@ -122,10 +124,14 @@ private slots:
         QVERIFY(apply(payload("PermissionRequest"))); QCOMPARE(sessions.aggregate(stamp), "attention");
         QVERIFY(apply(payload("PostToolUse", "patch"))); QCOMPARE(sessions.aggregate(stamp), "thinking");
     }
-#ifdef PET_TEST_POSIX
+#ifdef PET_TEST_NATIVE
     void configurationPreservation() {
         for (const auto &provider : {QString("claude"), QString("codex")}) {
+#ifdef PET_TEST_WINDOWS
+            const QString executable = "C:/Users/Pet/AgentPet/agent-pet-cli.exe"; // Expressible in Codex's cmd.exe grammar.
+#else
             const QString executable = "/tmp/Pet's folder/$(do-not-run)`x`/agent-pet";
+#endif
             const QJsonObject foreign{{"type", "command"}, {"command", "echo agent-pet is not ours"}};
             const QJsonObject original{{"permissions", QJsonObject{{"allow", QJsonArray{"Read"}}}},
                 {"hooks", QJsonObject{{"Stop", QJsonArray{QJsonObject{{"matcher", "*"}, {"hooks", QJsonArray{foreign}}}}}}}};
@@ -145,10 +151,38 @@ private slots:
         }
     }
 #endif
-#ifdef PET_TEST_POSIX
+#ifdef PET_TEST_WINDOWS
+    void windowsHookHandlers() {
+        // Claude Code spawns exec-form handlers without a shell: nothing is quoted.
+        QString error;
+        const auto claude = pet::hookHandler("C:/Program Files/Agent Pet (x86)/agent-pet-cli.exe", "claude", error);
+        QCOMPARE(claude["command"].toString(), QString("C:\\Program Files\\Agent Pet (x86)\\agent-pet-cli.exe"));
+        QCOMPARE(claude["args"].toArray(), (QJsonArray{"hook", "--provider", "claude", "--registration", "agent-pet-v1"}));
+        QVERIFY(pet::ownedHookHandler(claude, "claude")); QVERIFY(!pet::ownedHookHandler(claude, "codex"));
+        auto extra = claude; extra["args"] = QJsonArray{"hook", "--provider", "claude", "--registration", "agent-pet-v1", "-x"};
+        QVERIFY(!pet::ownedHookHandler(extra, "claude"));
+        // Codex runs cmd.exe /c, where a quoted program never starts: a path with spaces needs a short name.
+        const auto codex = pet::hookHandler("C:/Users/Pet/agent-pet-cli.exe", "codex", error);
+        QCOMPARE(codex["command"].toString(), QString("C:\\Users\\Pet\\agent-pet-cli.exe hook --provider codex --registration agent-pet-v1"));
+        QVERIFY(pet::ownedHookHandler(codex, "codex")); QVERIFY(!pet::ownedHookHandler(codex, "claude"));
+        QVERIFY(pet::hookHandler("C:/No Such Folder/agent-pet-cli.exe", "codex", error).isEmpty()); QVERIFY(!error.isEmpty());
+        QVERIFY(!pet::ownedHookHandler({{"type", "command"}, {"command", "\"C:\\x.exe\" hook --provider codex --registration agent-pet-v1"}}, "codex"));
+        QVERIFY(!pet::ownedHookHandler({{"type", "command"}, {"command", "x.exe & y hook --provider codex --registration agent-pet-v1"}}, "codex"));
+        // Hooks run the console companion; the pet itself is the GUI program.
+        QTemporaryDir temp; QVERIFY(temp.isValid());
+        for (const auto *name : {"agent-pet.exe", "agent-pet-cli.exe"}) { QFile file(temp.filePath(name)); QVERIFY(file.open(QIODevice::WriteOnly)); }
+        QCOMPARE(pet::hookExecutable(temp.filePath("agent-pet.exe")), temp.filePath("agent-pet-cli.exe"));
+        QCOMPARE(pet::hookExecutable(temp.filePath("agent-pet-cli.exe")), temp.filePath("agent-pet-cli.exe"));
+    }
+#endif
+#ifdef PET_TEST_NATIVE
     void commandAndTransport() {
+#ifdef PET_TEST_POSIX
         // Short, so the socket path fits sockaddr_un (104 bytes on macOS) under any TMPDIR.
         QTemporaryDir temp("/tmp/agent-pet-XXXXXX"); QVERIFY(temp.isValid());
+#else
+        QTemporaryDir temp; QVERIFY(temp.isValid()); // Selects a separate pipe, away from a running pet.
+#endif
         const auto previous = qgetenv("XDG_RUNTIME_DIR"); qputenv("XDG_RUNTIME_DIR", temp.path().toUtf8());
         pet::Receiver receiver; QString error; QVERIFY2(receiver.start(error), qPrintable(error));
         QVector<pet::Event> received;
@@ -167,7 +201,14 @@ private slots:
             QCOMPARE(run({"hook", "--provider", provider}, QJsonDocument(input).toJson()), QByteArray());
         }
         QTRY_COMPARE(received.size(), 2);
-        QCOMPARE(received[0].kind, "prompt"); QCOMPARE(received[1].provider, "codex");
+#ifdef PET_TEST_POSIX
+        QCOMPARE(received[0].kind, "prompt"); QCOMPARE(received[1].provider, "codex"); // One socket keeps send order.
+#else
+        // Events queued while the receiver is busy may arrive in either order on Windows, where each
+        // waits on its own pipe instance; sessions order them by timestamp.
+        QCOMPARE(received[0].kind, "prompt"); QCOMPARE(received[1].kind, "prompt");
+        QCOMPARE((QSet<QString>{received[0].provider, received[1].provider}), (QSet<QString>{"claude", "codex"}));
+#endif
         QCOMPARE(run({"hook", "--provider", "claude"}, "invalid"), QByteArray());
         auto result = run({"integration", "preview", "--provider", "claude", "--config", config});
         QVERIFY(QJsonDocument::fromJson(result).isObject()); QVERIFY(!QFile::exists(config));
@@ -182,13 +223,43 @@ private slots:
         QVERIFY(file.open(QIODevice::WriteOnly | QIODevice::Truncate)); file.write("{broken"); file.close();
         QCOMPARE(run({"integration", "disable", "--provider", "claude", "--config", config}), QByteArray("REJECTED"));
         QVERIFY(file.open(QIODevice::ReadOnly)); QCOMPARE(file.readAll(), QByteArray("{broken")); file.close();
+        // Disabling where no client is configured creates neither a file nor its directory.
+        result = run({"integration", "disable", "--provider", "codex", "--config", temp.path() + "/absent/hooks.json"});
+        QVERIFY(!QJsonDocument::fromJson(result).object()["changed"].toBool()); QVERIFY(!QFile::exists(temp.path() + "/absent"));
+#ifdef PET_TEST_POSIX
         // Execute generated shell syntax with spaces, apostrophes and metacharacters.
         const auto link = temp.path() + "/Pet's $(false) `false`";
         QVERIFY(QFile::link(APP_PATH, link));
-        QProcess shell; shell.start("/bin/sh", {"-c", pet::hookCommand(link, "codex")}); QVERIFY(shell.waitForStarted());
+        const auto command = pet::hookHandler(link, "codex", error)["command"].toString();
+        QProcess shell; shell.start("/bin/sh", {"-c", command}); QVERIFY(shell.waitForStarted());
         shell.write(QJsonDocument(payload("SessionStart")).toJson()); shell.closeWriteChannel(); QVERIFY(shell.waitForFinished(2000));
         QCOMPARE(shell.exitCode(), 0); QCOMPARE(shell.readAllStandardOutput(), QByteArray());
         QTRY_COMPARE(received.size(), 3);
+#else
+        // Run each handler the way its agent does, from a folder with spaces and an apostrophe:
+        // Claude Code spawns the exec form directly, Codex runs cmd.exe /e:ON /v:OFF /d /c "<command>".
+        QVERIFY(QDir(temp.path()).mkdir("Pet's folder"));
+        const auto copy = temp.path() + "/Pet's folder/agent-pet-cli.exe";
+        QVERIFY(QFile::copy(APP_PATH, copy));
+        auto deliver = [&](const QString &program, const QStringList &arguments) {
+            QProcess process; process.start(program, arguments); QVERIFY(process.waitForStarted());
+            process.write(QJsonDocument(payload("SessionStart")).toJson()); process.closeWriteChannel(); QVERIFY(process.waitForFinished(5000));
+            QCOMPARE(process.exitCode(), 0); QCOMPARE(process.readAllStandardOutput(), QByteArray());
+        };
+        const auto claude = pet::hookHandler(copy, "claude", error);
+        QStringList arguments;
+        for (const auto &argument : claude["args"].toArray()) arguments << argument.toString();
+        deliver(claude["command"].toString(), arguments);
+        QTRY_COMPARE(received.size(), 3);
+        auto codex = pet::hookHandler(copy, "codex", error);
+        if (codex.isEmpty()) { // This volume keeps no 8.3 names; such a folder is refused, a plain one works.
+            QVERIFY(!error.isEmpty());
+            QVERIFY(QFile::copy(APP_PATH, temp.path() + "/plain-agent-pet-cli.exe"));
+            codex = pet::hookHandler(temp.path() + "/plain-agent-pet-cli.exe", "codex", error);
+        }
+        deliver("cmd.exe", {"/e:ON", "/v:OFF", "/d", "/c", codex["command"].toString()});
+        QTRY_COMPARE(received.size(), 4);
+#endif
         if (previous.isNull()) qunsetenv("XDG_RUNTIME_DIR"); else qputenv("XDG_RUNTIME_DIR", previous);
     }
 #endif

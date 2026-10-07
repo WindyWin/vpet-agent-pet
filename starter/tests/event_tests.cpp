@@ -326,7 +326,7 @@ private slots:
         auto future = event("prompt"); future.timestamp = now + 60001;
         QVERIFY(!tools.apply(future, now));
     }
-#ifdef PET_TEST_POSIX
+#ifdef PET_TEST_NATIVE
     void receiverValidatesTransportData() {
         struct Transport : pet::platform::EventTransport {
             bool start(QString &) override { return true; }
@@ -345,8 +345,12 @@ private slots:
         QCOMPARE(delivered, 1);
     }
     void transportAndCommands() {
+#ifdef PET_TEST_POSIX
         // Short, so the socket path fits sockaddr_un (104 bytes on macOS) under any TMPDIR.
         QTemporaryDir temp("/tmp/agent-pet-XXXXXX"); QVERIFY(temp.isValid());
+#else
+        QTemporaryDir temp; QVERIFY(temp.isValid()); // Selects a separate pipe, away from a running pet.
+#endif
         const auto previous = qgetenv("XDG_RUNTIME_DIR"); qputenv("XDG_RUNTIME_DIR", temp.path().toUtf8());
         auto run = [&](QStringList args, QByteArray data, bool closeInput = true) {
             QProcess process; process.setProgram(APP_PATH); process.setArguments(args);
@@ -379,9 +383,11 @@ private slots:
             QCOMPARE(run({"hook", "--provider", "claude"}, "malformed"), 0);
         }
         { pet::Receiver restarted; QString error; QVERIFY(restarted.start(error)); }
+#ifdef PET_TEST_POSIX
         const QString directory = temp.path() + "/agent-pet-" + QString::number(getuid());
         QVERIFY(chmod(QFile::encodeName(directory).constData(), 0755) == 0);
         { pet::Receiver unsafe; QString error; QVERIFY(!unsafe.start(error)); }
+#endif
         if (previous.isNull()) qunsetenv("XDG_RUNTIME_DIR"); else qputenv("XDG_RUNTIME_DIR", previous);
     }
 #endif
