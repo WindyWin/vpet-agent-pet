@@ -99,3 +99,16 @@ legacy and malformed files, turn length in the state engine, the `risky` field's
 validation, and destructive-command detection with the command never leaving the hook.
 The frame test now plays every egg state. Still open: whether the cadence feels right
 on a real desktop, and CI on Qt 6.5.3.
+
+### Configurable clock reminder evidence — 2026-10-07
+
+- The local build passed, and all 12 CTest suites passed for the initial change.
+- `configurableClockReminders` passed with Monday at 09:15, weekday go-home at
+  19:30 and sleep at 23:15. It verified due-time boundaries, once-per-day behavior,
+  weekend suppression, configured note text, Settings close and restart persistence,
+  legacy defaults, and preserving files with malformed times (`24:00`, `9:15`,
+  null and numeric values).
+- `editingClockTimeDoesNotConsumeReminder` passed: at 21:30, editing sleep from
+  23:15 through 21:15 to 21:45 did not consume the reminder; it fired once at 21:45.
+- Linux, macOS and Windows build/test/package CI passed for commit `811d7c8`.
+  Linux also passed isolated-package and install/upgrade/uninstall checks.
