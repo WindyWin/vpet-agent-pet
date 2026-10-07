@@ -596,6 +596,21 @@
     </message>
 </context>
 <context>
+    <name>pet::PetPicker</name>
+    <message>
+        <source>Pet character</source>
+        <translation>Nhân vật thú cưng</translation>
+    </message>
+    <message>
+        <source>by %1</source>
+        <translation>của %1</translation>
+    </message>
+    <message>
+        <source>%1 will appear the next time Agent Pet starts.</source>
+        <translation>%1 sẽ xuất hiện vào lần khởi động Agent Pet tiếp theo.</translation>
+    </message>
+</context>
+<context>
     <name>pet::PetWindow</name>
     <message>
         <source>OK</source>
@@ -776,6 +791,10 @@ Nhấp chuột phải để điều khiển</translation>
     <message>
         <source>Pet</source>
         <translation>Thú cưng</translation>
+    </message>
+    <message>
+        <source>&amp;Character</source>
+        <translation>&amp;Nhân vật</translation>
     </message>
     <message>
         <source>Off (no fidgets or alternate idle loops)</source>
@@ -1128,12 +1147,24 @@ Các cài đặt và hook khác được giữ nguyên. Hãy đăng ký từ m�
         <translation>Giới thiệu Agent Pet — hình ảnh và điều khoản</translation>
     </message>
     <message>
-        <source>&lt;b&gt;Agent Pet %1&lt;/b&gt; (revision %2, Qt %3)&lt;br&gt;Application code: Apache License 2.0. Artwork: VUP-Simulator team, via &lt;a href=&apos;https://github.com/LorisYounger/VPet&apos;&gt;LorisYounger/VPet&lt;/a&gt;, under its own terms below.</source>
-        <translation>&lt;b&gt;Agent Pet %1&lt;/b&gt; (bản sửa đổi %2, Qt %3)&lt;br&gt;Mã ứng dụng: Apache License 2.0. Hình ảnh: nhóm VUP-Simulator, qua &lt;a href=&apos;https://github.com/LorisYounger/VPet&apos;&gt;LorisYounger/VPet&lt;/a&gt;, theo điều khoản riêng bên dưới.</translation>
+        <source>&lt;b&gt;Agent Pet %1&lt;/b&gt; (revision %2, Qt %3)&lt;br&gt;Application code: Apache License 2.0.</source>
+        <translation>&lt;b&gt;Agent Pet %1&lt;/b&gt; (bản sửa đổi %2, Qt %3)&lt;br&gt;Mã ứng dụng: Apache License 2.0.</translation>
+    </message>
+    <message>
+        <source>Artwork: %1, under its own terms below.</source>
+        <translation>Hình ảnh: %1, theo điều khoản riêng bên dưới.</translation>
+    </message>
+    <message>
+        <source>Artwork: %1, via %2, under its own terms below.</source>
+        <translation>Hình ảnh: %1, qua %2, theo điều khoản riêng bên dưới.</translation>
     </message>
     <message>
         <source>Artwork terms and third-party notices</source>
         <translation>Điều khoản hình ảnh và thông báo bên thứ ba</translation>
+    </message>
+    <message>
+        <source>Artwork terms unavailable.</source>
+        <translation>Không có điều khoản của hình ảnh.</translation>
     </message>
     <message>
         <source>Animation preview</source>

@@ -74,6 +74,7 @@ qt_add_lrelease(pet_i18n TS_FILES ${pet_ts_files} QM_FILES_OUTPUT_VARIABLE pet_q
 qt_add_resources(pet_i18n pet_translations PREFIX "/i18n" BASE "${CMAKE_CURRENT_BINARY_DIR}" FILES ${pet_qm_files})
 qt_add_library(pet_ui STATIC
     src/desktop/pet_window.cpp
+    src/desktop/pet_picker.cpp
     src/desktop/touch.cpp src/desktop/wander.cpp src/desktop/wellness.cpp src/desktop/alert_bubble.cpp src/desktop/monitor.cpp
     src/desktop/session_list.cpp src/updates/controller.cpp)
 target_include_directories(pet_ui PUBLIC src "${CMAKE_CURRENT_BINARY_DIR}/generated")

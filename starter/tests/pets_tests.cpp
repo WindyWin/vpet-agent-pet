@@ -2,21 +2,28 @@
 #include "animation/pet_library.h"
 #include "animation/easter_eggs.h"
 #include "animation/player.h"
+#include "desktop/pet_picker.h"
 #include "desktop/pet_window.h"
 #include "settings/preferences.h"
+#include <QAction>
 #include <QCryptographicHash>
 #include <QDateTime>
+#include <QDialog>
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QLabel>
 #include <QPixmap>
 #include <QResource>
 #include <QScopeGuard>
+#include <QSignalSpy>
 #include <QTemporaryDir>
 #include <QTest>
+#include <QTextBrowser>
+#include <QToolButton>
 #include <algorithm>
 #include <utility>
 
@@ -304,6 +311,68 @@ private slots:
         QCOMPARE(pet::PreferencesStore(path).load().pet, QString("mini"));
         pet::PetWindow again(nullptr, path);
         QCOMPARE(again.pet(), QString("mini"));
+    }
+    void pickerChoosesForTheNextStart() {
+        // Previews that do not exist: a tile still shows the pet's name and works.
+        const pet::PetInfo vpet{"vpet", "VUP", "VUP-Simulator team", {}, "VPET-ARTWORK-TERMS.md", ":/missing/vpet.png"};
+        const pet::PetInfo mini{"mini", "Mini", "Agent Pet tests", {}, "LICENSE", ":/missing/mini.png"};
+        // A parentless widget counts as hidden until shown, so the pickers sit in a stand-in Settings page.
+        QWidget page;
+        pet::PetPicker alone({vpet}, "vpet", "vpet", &page);
+        QVERIFY(!alone.isVisibleTo(&page)); // Nothing to choose from.
+        pet::PetPicker picker({mini, vpet}, "vpet", "vpet", &page);
+        QVERIFY(picker.isVisibleTo(&page));
+        QToolButton *miniTile = nullptr, *vpetTile = nullptr;
+        for (auto *tile : picker.findChildren<QToolButton *>())
+            (tile->property("pet").toString() == "mini" ? miniTile : vpetTile) = tile;
+        QVERIFY(miniTile && vpetTile);
+        QVERIFY(vpetTile->isChecked()); QVERIFY(!miniTile->isChecked());
+        QCOMPARE(miniTile->accessibleName(), QString("Mini"));
+        QCOMPARE(miniTile->toolTip(), QString("by Agent Pet tests"));
+        QVERIFY(miniTile->text().contains("Mini"));
+        auto *note = picker.findChild<QLabel *>();
+        QVERIFY(note); QVERIFY(!note->isVisibleTo(&page));
+        QSignalSpy chosen(&picker, &pet::PetPicker::chosen);
+        miniTile->click();
+        QCOMPARE(chosen.size(), 1); QCOMPARE(chosen.first().first().toString(), QString("mini"));
+        QVERIFY(miniTile->isChecked()); QVERIFY(!vpetTile->isChecked()); // Exclusive.
+        QCOMPARE(picker.selected(), QString("mini"));
+        QVERIFY(note->isVisibleTo(&page));
+        QCOMPARE(note->text(), QString("Mini will appear the next time Agent Pet starts."));
+        vpetTile->click();
+        QCOMPARE(chosen.size(), 2); QVERIFY(!note->isVisibleTo(&page)); // Back to the running pet.
+        vpetTile->click();
+        QCOMPARE(chosen.size(), 2); // The checked tile again changes nothing.
+        // A saved choice this build does not know shows the running pet and saves nothing by itself.
+        pet::PetPicker unknown({mini, vpet}, "cat", "vpet", &page);
+        QCOMPARE(unknown.selected(), QString("vpet"));
+        QSignalSpy quiet(&unknown, &pet::PetPicker::chosen);
+        QCOMPARE(quiet.size(), 0);
+    }
+    void settingsShowNoPickerWithOnePet() {
+        QTemporaryDir directory;
+        pet::PetWindow window(nullptr, directory.path() + "/preferences.json", false);
+        window.showSettings();
+        QVERIFY(!window.findChild<pet::PetPicker *>()); // VPet is the only bundled pet.
+    }
+    void aboutCreditsTheRunningPet() {
+        QTemporaryDir directory;
+        pet::PetWindow window(nullptr, directory.path() + "/preferences.json", false);
+        for (auto *action : window.findChildren<QAction *>())
+            if (action->text() == "About and artwork terms…") action->trigger();
+        QDialog *about = nullptr;
+        for (auto *dialog : window.findChildren<QDialog *>())
+            if (dialog->windowTitle() == "About Agent Pet — artwork and terms") about = dialog;
+        QVERIFY(about);
+        bool credited = false;
+        for (auto *label : about->findChildren<QLabel *>())
+            credited = credited || label->text().contains(
+                "Artwork: VUP-Simulator team, via <a href=\"https://github.com/LorisYounger/VPet\">github.com/LorisYounger/VPet</a>, "
+                "under its own terms below.");
+        QVERIFY(credited);
+        auto *terms = about->findChild<QTextBrowser *>();
+        QVERIFY(terms); QVERIFY(terms->toPlainText().contains("Animation copyright notice"));
+        QVERIFY(!terms->toPlainText().contains("Artwork terms unavailable."));
     }
 };
 QTEST_MAIN(PetsTests)
