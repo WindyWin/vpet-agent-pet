@@ -1,5 +1,9 @@
 # Agent Pet first release
 
+Historical first-release plan and acceptance evidence. For current work, use the
+[architecture and issue-linked roadmap](../README.md#roadmap-mapped-to-the-architecture).
+The scope and implementation notes below describe their recorded milestones.
+
 Build a standalone desktop pet with assets loaded from this repository and later from its installed application resources. The original VPet app and command are outside the runtime path.
 
 Scope revised 2026-10-04: a passive local session monitor with an animated pet, compact attention notifications, and minimal settings. Users keep working in their existing terminals/editors; Agent Pet does not launch, focus, resume, embed, or control those sessions.

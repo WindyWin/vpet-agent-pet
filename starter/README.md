@@ -440,6 +440,21 @@ Qt 6.5.3, uploads the Linux full tarball, component tarballs and manifest, the m
 and dmg and the Windows zip and setup program, and attaches them to a draft GitHub
 release for `v*` tags.
 
+### CI commit rules
+
+- Use `docs: ...` or `docs(scope): ...` for documentation-only commits. On a push
+  to `main`, a head commit message starting with `docs` skips all three platform
+  build/test/package jobs. GitHub may still show a workflow run with skipped jobs.
+- The rule checks the pushed head commit. For a squash merge, keep the `docs`
+  prefix in its commit title; a default `Merge pull request ...` title does not
+  match. Use the prefix only when the whole push is documentation-only.
+- Documentation-only pull requests already skip builds by changed paths;
+  bundled notices and licenses still trigger PR builds. Use a non-`docs` title
+  for changes that affect the shipped app or build, including CI configuration.
+- Version tags and **Run workflow** still build, even on a `docs` commit. A docs
+  push does not cancel an already running code build. Existing `release/*`
+  branch/merge skips remain in place; the version tag builds the release.
+
 ## Artwork and publishing
 
 Artwork credit: **VUP-Simulator team**, via [LorisYounger/VPet](https://github.com/LorisYounger/VPet). See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and the [upstream artwork terms](licenses/VPET-ARTWORK-TERMS.md).

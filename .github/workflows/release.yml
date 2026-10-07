@@ -5,7 +5,7 @@ on:
     branches: [main]
     tags: ["v*"]
   pull_request:
-    # Docs-only PRs need no build; main still builds every merge, and it gates releases.
+    # Docs-only PRs need no build; docs-prefixed main pushes skip jobs below.
     # Later patterns win: the notices and licenses compiled into the app still build.
     paths: ["**", "!**.md", "!docs/**", "!starter/docs/**", "!.claude/**",
             "starter/THIRD_PARTY_NOTICES.md", "starter/licenses/**"]
@@ -15,8 +15,9 @@ permissions:
   contents: read
 
 # Superseded branch/PR runs are cancelled; tag runs always finish.
+# A skipped docs push must not cancel the preceding main build.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && startsWith(github.event.head_commit.message, 'docs') && '-docs' || '' }}
   cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
 
 jobs:
@@ -24,8 +25,11 @@ jobs:
     # Skip PRs from release/* branches (version bumps already built on the feature branches), and their
     # merge into main: the release tag on that same commit builds it. head_ref is empty for push/tag/dispatch
     # runs, and only the main branch push checks the merge message.
+    # Docs-prefixed main pushes skip all platforms; tags and manual builds still run.
     if: >-
-      ${{ !startsWith(github.head_ref, 'release/') && !(github.ref == 'refs/heads/main'
+      ${{ !(github.event_name == 'push' && github.ref == 'refs/heads/main'
+      && startsWith(github.event.head_commit.message, 'docs'))
+      && !startsWith(github.head_ref, 'release/') && !(github.ref == 'refs/heads/main'
       && startsWith(github.event.head_commit.message, 'Merge pull request') && contains(github.event.head_commit.message, format('from {0}/release/', github.repository_owner))) }}
     # Ubuntu 22.04 sets the glibc 2.35 baseline for the released binary.
     runs-on: ubuntu-22.04
@@ -108,7 +112,9 @@ jobs:
 
   macos:
     if: >-
-      ${{ !startsWith(github.head_ref, 'release/') && !(github.ref == 'refs/heads/main'
+      ${{ !(github.event_name == 'push' && github.ref == 'refs/heads/main'
+      && startsWith(github.event.head_commit.message, 'docs'))
+      && !startsWith(github.head_ref, 'release/') && !(github.ref == 'refs/heads/main'
       && startsWith(github.event.head_commit.message, 'Merge pull request') && contains(github.event.head_commit.message, format('from {0}/release/', github.repository_owner))) }}
     # One universal (arm64 + x86_64) bundle for macOS 11 and newer.
     runs-on: macos-14
@@ -166,7 +172,9 @@ jobs:
 
   windows:
     if: >-
-      ${{ !startsWith(github.head_ref, 'release/') && !(github.ref == 'refs/heads/main'
+      ${{ !(github.event_name == 'push' && github.ref == 'refs/heads/main'
+      && startsWith(github.event.head_commit.message, 'docs'))
+      && !startsWith(github.head_ref, 'release/') && !(github.ref == 'refs/heads/main'
       && startsWith(github.event.head_commit.message, 'Merge pull request') && contains(github.event.head_commit.message, format('from {0}/release/', github.repository_owner))) }}
     # x64 with MSVC, for Windows 10 1809 and newer.
     runs-on: windows-2022

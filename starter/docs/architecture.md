@@ -6,6 +6,11 @@ Agent Pet is one C++17 / Qt 6 Widgets binary, built with CMake and Ninja
 socket, the window and the update controller. Design decisions, with the evidence
 that validated each one, are recorded as [architecture decision records](adr/README.md).
 
+The root README has the [end-to-end architecture chart](../../README.md#architecture-at-a-glance)
+and [issue-linked roadmap](../../README.md#roadmap-mapped-to-the-architecture), including
+the planned pet library, cue mapping, behavior runtime and plugin boundaries.
+The code map below describes the current implementation.
+
 ## Code map
 
 | Area | Code | Decision |

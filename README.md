@@ -194,10 +194,86 @@ On Linux the pet updates itself in the background by default, downloading only w
 
 ## For developers
 
+### Architecture at a glance
+
+End-to-end target architecture. **Dashed boxes are planned**; the remaining pieces
+exist today. Until #64 and #67 land, `Monitor`, `PetWindow` and behavior modules
+share cue selection and arbitration. Arrows show runtime flow, not build order.
+
+```mermaid
+flowchart TB
+  agents["Claude Code / Codex"] --> input["Provider adapters · headless hook / emit"]
+  input --> ipc["Private local IPC · validated events"]
+  ipc --> sessions["Sessions · aggregate activity / attention"]
+  sessions --> runtime["#67 Behavior runtime<br/>Intents → eligibility / priority / interruption"]
+  life["Touch / wander / mood / wellness<br/>Easter eggs / startup / quit"] --> runtime
+  custom["#43 Custom events / rules"] --> runtime
+  runtime --> cues["#64 Cue mapping<br/>Semantic cue → pet state / reaction"]
+  cues --> player["Player · phases / frames / transitions"]
+  player --> window["PetWindow · pet / movement / input"]
+  player -. presentation outcomes .-> runtime
+  window --> life
+
+  sessions --> alerts["Alerts / session list / tray"]
+  alerts --> focus["Open session · host adapters"]
+  focus --> platform["Platform services · Linux / macOS / Windows"]
+  window --> platform
+  sessions --> recap["Daily recap / session checkpoint"]
+
+  packs["#62 PetLibrary / Catalog<br/>Active pet · artwork / credits / cue overrides"] --> cues
+  packs --> player
+  plugins["#43 Plugin packs<br/>Catalog fragments / rule data"] --> packs
+  plugins --> custom
+  updates["App updates / packaging"] --> packs
+  downloads["#62 Part 2<br/>Verified pet downloads"] --> packs
+  settings["Settings / preferences"] -. configure .-> life
+  settings -. select pet / plugins .-> packs
+
+  classDef planned fill:#fff4d6,stroke:#9a6700,stroke-dasharray:5 5,color:#24292f
+  class runtime,cues,packs,custom,plugins,downloads planned
+```
+
+Session priority belongs to `Sessions`; #67 chooses among behavior intents; #64
+chooses how the pet expresses the winning cue. Alerts keep their own delivery path.
+Movement and native window operations stay in `PetWindow` and platform services.
+See the [code map](starter/docs/architecture.md#code-map) for source paths and decisions.
+
+### Roadmap mapped to the architecture
+
+Open work, checked against GitHub on 2026-10-07. Each issue owns its detailed
+acceptance checklist; check a row here when that phase lands and update the chart
+when a planned layer becomes implemented.
+
+```mermaid
+flowchart LR
+  packs["#62 Part 1 · pet packs"] --> cues["#64 · cue mapping"]
+  cues --> runtime["#67 · arbitration"]
+  runtime --> rules["#43 · custom events / rules"]
+  packs --> fragments["#43 · catalog fragments"]
+  fragments --> rules
+  packs --> downloads["#62 Part 2 · downloads"]
+```
+
+| Done | Architecture area | Task / issue | Depends on |
+| --- | --- | --- | --- |
+| ☐ | PetLibrary / Catalog | [#62 Part 1 — selectable pet packs](https://github.com/WindyWin/vpet-agent-pet/issues/62) | Standalone foundation |
+| ☐ | Cue mapping | [#64 — semantic cues and per-pet mapping](https://github.com/WindyWin/vpet-agent-pet/issues/64) | #62 Part 1 |
+| ☐ | Behavior runtime | [#67 — intent arbitration and lifecycle](https://github.com/WindyWin/vpet-agent-pet/issues/67) | #64 |
+| ☐ | Plugin catalog | [#43 Phase 1 — catalog fragments and plugin settings](https://github.com/WindyWin/vpet-agent-pet/issues/43) | #62 Part 1 |
+| ☐ | Plugin rules → runtime | [#43 Phases 2–3 — custom events and data-driven triggers](https://github.com/WindyWin/vpet-agent-pet/issues/43) | Catalog fragments, #64 and #67 |
+| ☐ | Pet distribution | [#62 Part 2 — verified on-demand downloads](https://github.com/WindyWin/vpet-agent-pet/issues/62) | #62 Part 1 |
+| ☐ | Provider adapters | [#36 — third agent client](https://github.com/WindyWin/vpet-agent-pet/issues/36) | Existing event contract |
+| ☐ | Alerts / settings | [#34 — snooze / focus mode](https://github.com/WindyWin/vpet-agent-pet/issues/34) | Existing alert delivery |
+| ☐ | Alerts / attention | [#35 — escalating approval nudges](https://github.com/WindyWin/vpet-agent-pet/issues/35) | Existing attention tracking |
+| ☐ | Mood / interaction | [#37 — earned treats to feed the pet](https://github.com/WindyWin/vpet-agent-pet/issues/37) | Existing mood counters; coordinate reactions with #67 |
+
+### Build and contribution guides
+
 The app lives in [`starter/`](starter/README.md): building from source, running tests, command-line options, sending demo events and packaging. Further reading:
 
 - [Architecture overview](starter/docs/architecture.md) and [design decision records](starter/docs/adr/README.md)
 - [Event protocol](starter/docs/events.md) and [Claude Code / Codex integrations](starter/docs/integrations.md)
+- [CI commit rules](starter/README.md#ci-commit-rules)
 
 This repository root also keeps the original VPet artwork archive (about 5,500 frames, 735 MiB) as a source bundle for adding new animations. The app itself doesn't need it. Check it with `python3 scripts/assets.py verify`, or list every sequence with `python3 scripts/assets.py catalog`.
 
