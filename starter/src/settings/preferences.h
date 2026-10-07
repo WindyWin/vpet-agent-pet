@@ -4,9 +4,13 @@
 #include <QRect>
 #include <QSize>
 #include <QString>
+#include <QTime>
 #include <QVector>
 
 namespace pet {
+struct ReminderSchedule {
+    QTime monday = QTime(6, 0), leaveWork = QTime(16, 45), sleep = QTime(22, 0);
+};
 struct Preferences {
     static constexpr int defaultSize = 240;
     static constexpr int recoveryMs = 15000;
@@ -36,6 +40,7 @@ struct Preferences {
     QString birthday; // "MM-dd" for a birthday surprise, or empty.
     // Wellness reminders: minutes of active time between eye breaks and between sips of water; 0 is off.
     int eyeMinutes = 20, waterMinutes = 60;
+    ReminderSchedule reminderSchedule; // Local clock times; reminders fire at most once a day.
     bool recap = true; // Adds today's recap to the go-home reminder.
     // Interface language: "auto" (the system's), "en" or "vi". An unknown value, perhaps from a newer
     // version, reads as "auto" instead of invalidating the file.

@@ -8,6 +8,7 @@
 #include <QCheckBox>
 #include <QComboBox>
 #include <QDateEdit>
+#include <QTimeEdit>
 #include <QDateTime>
 #include <QGroupBox>
 #include <QDir>
@@ -120,18 +121,18 @@ private slots:
         e.id = "2"; e.kind = "turn_finished"; e.waiting = true; e.timestamp = now + 1;
         QVERIFY(monitor.apply(e, now + 1));
         QCOMPARE(window.mood().turns(), turns);
-        QCOMPARE(window.player().requestedState(), QString("waiting"));
+        QCOMPARE(window.player().requestedState(), QString("idle"));
         QVERIFY(!monitor.bubble().isVisible()); QVERIFY(!monitor.note().isVisible());
         QCOMPARE(window.attention(), 0);
         e.id = "3"; e.kind = "attention"; e.waiting = false; e.reason = "input"; e.timestamp = now + 2;
         QVERIFY(monitor.apply(e, now + 2));
-        QCOMPARE(window.player().requestedState(), QString("waiting"));
+        QCOMPARE(window.player().requestedState(), QString("idle"));
         QVERIFY(!monitor.bubble().isVisible()); QCOMPARE(window.attention(), 0);
         // A late failure of a tool the waiting finish cleared is ignored: no mood loss, no recap error.
         const int score = window.mood().score(now + 2);
         e.id = "late"; e.kind = "error"; e.tool = "cleared"; e.reason.clear(); e.timestamp = now + 3;
         QVERIFY(monitor.apply(e, now + 3)); e.tool.clear();
-        QCOMPARE(window.player().requestedState(), QString("waiting"));
+        QCOMPARE(window.player().requestedState(), QString("idle"));
         QCOMPARE(window.mood().score(now + 3), score);
         QCOMPARE(monitor.recap().day(QDateTime::fromMSecsSinceEpoch(now + 3).date()).errors, 0);
         e.id = "4"; e.kind = "turn_finished"; e.timestamp = now + 100;
@@ -141,18 +142,18 @@ private slots:
         QVERIFY(monitor.note().isVisible());
         QCOMPARE(monitor.recap().day(QDateTime::fromMSecsSinceEpoch(now + 100).date()).turns, 1);
     }
-    void waitingPlaysBubblesInEveryMood() {
+    void goHomePlaysBubblesInEveryMood() {
         for (const auto *mood : {"normal", "happy", "poor"}) {
             pet::Player player; player.setPaused(true); player.setMood(mood);
             QSet<QString> loops;
             for (int i = 0; i < 2; ++i) {
                 player.setRandom([i](int bound) { return i ? bound - 1 : 0; });
-                QVERIFY(player.select("waiting", true));
+                QCOMPARE(player.reactions("leave_work").first().state, QString("fidget_bubbles"));
+                QVERIFY(player.select("fidget_bubbles", true));
                 QCOMPARE(player.sequence(), QString("IDEL/Bubbles/A"));
                 finishSequence(player); loops.insert(player.sequence());
                 QVERIFY(player.sequence() == "IDEL/Bubbles/B" || player.sequence() == "IDEL/Bubbles/B_2");
-                const auto loop = player.sequence(); finishSequence(player); QCOMPARE(player.sequence(), loop);
-                QVERIFY(player.select("idle")); QCOMPARE(player.sequence(), QString("IDEL/Bubbles/C"));
+                finishSequence(player); QCOMPARE(player.sequence(), QString("IDEL/Bubbles/C"));
                 finishSequence(player); QCOMPARE(player.state(), QString("idle"));
             }
             QCOMPARE(loops.size(), 2);
@@ -176,6 +177,7 @@ private slots:
     void sessionAnimationMapping() {
         pet::Player player;
         const QStringList states{"attention", "exhausted", "error", "turn-finished", "working", "reading", "thinking", "waiting", "idle", "inactive"};
+        QCOMPARE(pet::sessionAnimation("waiting"), QString("idle"));
         QCOMPARE(pet::sessionAnimation("exhausted"), QString("out_of_quota"));
         for (const auto &state : states) {
             const auto animation = pet::sessionAnimation(state);
@@ -1908,6 +1910,45 @@ private slots:
         dialog->close();
         // Without persistence there is no recap file.
         QVERIFY(pet::PetWindow(nullptr, path, false).recapPath().isEmpty());
+    }
+    void configurableClockReminders() {
+        QTemporaryDir directory; const auto path = directory.path() + "/preferences.json";
+        {
+            pet::PetWindow window(nullptr, path);
+            window.showSettings(); auto *dialog = window.findChild<QDialog*>(); QVERIFY(dialog);
+            auto *monday = dialog->findChild<QTimeEdit*>("mondayTime");
+            auto *leave = dialog->findChild<QTimeEdit*>("leaveWorkTime");
+            auto *sleep = dialog->findChild<QTimeEdit*>("sleepTime");
+            QVERIFY(monday && leave && sleep);
+            monday->setTime(QTime(9, 15)); leave->setTime(QTime(19, 30)); sleep->setTime(QTime(23, 15));
+            QVERIFY(window.savePreferences()); dialog->close();
+        }
+        pet::PetWindow restored(nullptr, path);
+        const auto schedule = restored.eggs().reminderSchedule();
+        QCOMPARE(schedule.monday, QTime(9, 15)); QCOMPARE(schedule.leaveWork, QTime(19, 30)); QCOMPARE(schedule.sleep, QTime(23, 15));
+        QDateTime local(QDate(2026, 10, 5), QTime(9, 14));
+        restored.eggs().setClock([&] { return local; });
+        QVERIFY(restored.eggs().reminder().isEmpty());
+        local = local.addSecs(60); QCOMPARE(restored.eggs().reminder(), QString("monday"));
+        QVERIFY(restored.eggs().reminder().isEmpty());
+        local.setTime(QTime(16, 45)); QVERIFY(restored.eggs().reminder().isEmpty());
+        local.setTime(QTime(19, 29)); QVERIFY(restored.eggs().reminder().isEmpty());
+        local = local.addSecs(60); QCOMPARE(restored.eggs().reminder(), QString("leave_work"));
+        QVERIFY(restored.eggs().reminder().isEmpty());
+        QVERIFY(pet::EasterEggs::reminderNote("leave_work", schedule).contains("19:30"));
+        local.setTime(QTime(23, 14)); QVERIFY(restored.eggs().reminder().isEmpty());
+        local = local.addSecs(60); QCOMPARE(restored.eggs().reminder(), QString("sleep"));
+        QVERIFY(pet::EasterEggs::reminderNote("sleep", schedule).contains("23:15"));
+        local = QDateTime(QDate(2026, 10, 10), QTime(19, 30)); QVERIFY(restored.eggs().reminder().isEmpty());
+        // Earlier preferences keep the established schedule; malformed clock values preserve the file.
+        QFile file(path); QVERIFY(file.open(QIODevice::WriteOnly));
+        file.write(R"({"version":1,"size":200,"on_top":true})"); file.close();
+        QCOMPARE(pet::PreferencesStore(path).load().reminderSchedule.leaveWork, QTime(16, 45));
+        for (const auto *bad : {R"("24:00")", R"("9:15")", "null", "123"}) {
+            QVERIFY(file.open(QIODevice::WriteOnly));
+            file.write(QByteArray(R"({"version":1,"size":200,"on_top":true,"leave_work_time":)") + bad + "}"); file.close();
+            pet::PreferencesStore invalid(path); invalid.load(); QVERIFY(!invalid.save(pet::Preferences{}));
+        }
     }
     void easterEggPreference() {
         QTemporaryDir directory; const auto path = directory.path() + "/preferences.json";

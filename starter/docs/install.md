@@ -387,3 +387,12 @@ and keep their own terms (`share/agent-pet/THIRD_PARTY_NOTICES.md` and
 keep their own licenses, collected under `share/agent-pet/runtime-licenses/` and
 listed in `share/agent-pet/runtime-manifest.json`. In the macOS app these files are
 under `Agent Pet.app/Contents/Resources/`; on Windows they are in the installation folder.
+
+### Clock reminder times
+
+In Settings, set **Monday reminder**, **Go-home reminder** and **Sleep reminder**
+to local times. Defaults are 06:00 on Mondays, 16:45 on weekdays and 22:00 daily.
+These reminders require Easter eggs to be enabled and run at most once per day
+while the pet is running. The go-home reminder plays the bubble-blowing animation.
+Times are saved automatically as `monday_time`, `leave_work_time` and `sleep_time`
+(`HH:mm`) in `preferences.json`.

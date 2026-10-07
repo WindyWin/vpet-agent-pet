@@ -199,7 +199,8 @@ rules. Unmatched tool ends and errors keep waiting; another waiting finish keeps
 waiting, and a plain finish gives the normal finished reaction.
 The existing 30-minute session expiry still applies. Checkpoints preserve waiting
 and its start time. The session list shows **Waiting** in indigo (`#4c6ef5`), and
-the pet loops the Bubbles animation. Ambient fidgets and wander remain idle-only.
+the pet uses its idle animation, including ambient fidgets and wander when enabled.
+Bubble-blowing now plays once for the go-home reminder (default 16:45 on weekdays).
 
 ## Verification
 
