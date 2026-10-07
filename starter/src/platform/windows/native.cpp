@@ -72,7 +72,7 @@ std::function<bool()> createScreenLockQuery(QObject *) {
         wchar_t name[64] = {};
         const bool named = GetUserObjectInformationW(desktop, UOI_NAME, name, sizeof(name), nullptr);
         CloseDesktop(desktop);
-        return named && _wcsicmp(name, L"Default") != 0;
+        return named && lstrcmpiW(name, L"Default") != 0;
     };
 }
 // A system move (startSystemMove) runs a modal loop that can swallow the release before Qt sees it.

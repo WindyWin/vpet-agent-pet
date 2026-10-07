@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository layout
 
-Agent Pet is a desktop pet for Linux and macOS (C++17, Qt 6 Widgets, CMake/Ninja) that animates in response to Claude Code and Codex hooks.
+Agent Pet is a desktop pet for Linux, macOS and Windows (C++17, Qt 6 Widgets, CMake/Ninja) that animates in response to Claude Code and Codex hooks.
 
 - **`starter/` is the application.** All source, tests, packaging and app docs live there; CI runs with `working-directory: starter`. Almost all work happens in this directory.
 - The repository root holds the full 749 MB upstream VPet artwork archive (`assets/vpet/pet/vup/`, ~5,500 frames) as a source bundle, its verifier (`scripts/assets.py`), the original `PLAN.md`, and README media (`docs/media/`). The app never reads root assets at runtime.
@@ -12,7 +12,7 @@ Agent Pet is a desktop pet for Linux and macOS (C++17, Qt 6 Widgets, CMake/Ninja
 
 ## Commands (run from `starter/`)
 
-Build requirements: CMake 3.22+, Ninja, C++17, Qt 6.5+ (Widgets, DBus, Network, Test, LinguistTools), libarchive, X11 (+ Xtst for desktop tests). macOS needs only Qt (no DBus), Ninja and the Xcode tools; `scripts/package_macos.py` builds the `.app` zip and `.dmg` there.
+Build requirements: CMake 3.22+, Ninja, C++17, Qt 6.5+ (Widgets, DBus, Network, Test, LinguistTools), libarchive, X11 (+ Xtst for desktop tests). macOS needs only Qt (no DBus), Ninja and the Xcode tools; `scripts/package_macos.py` builds the `.app` zip and `.dmg` there. Windows needs MSVC (a VS developer prompt), Ninja and Qt for msvc2019_64; `scripts/package_windows.py` (windeployqt + Inno Setup 6) builds the zip and per-user `-setup.exe`, and `scripts/check_install_windows.py` checks install/upgrade/uninstall.
 
 ```bash
 python3 scripts/verify_assets.py          # asset manifest/catalog check (also run in CI)
@@ -22,7 +22,7 @@ ctest --test-dir build --output-on-failure
 ./build/agent-pet                         # run the pet (--preview, --settings, --state thinking, --no-persist)
 ```
 
-Tests are Qt Test executables registered with CTest (`updates`, `update-install`, `providers`, `events`, `alerts`, `focus`, `startup`, `prototype-1`…`prototype-4`, `i18n`; macOS registers all but `updates`, `update-install` and `startup`):
+Tests are Qt Test executables registered with CTest (`updates`, `update-install`, `providers`, `events`, `alerts`, `focus`, `startup`, `prototype-1`…`prototype-4`, `i18n`; macOS and Windows register all but `updates`, `update-install` and `startup`):
 
 ```bash
 ctest --test-dir build -R events --output-on-failure            # one CTest suite
@@ -52,7 +52,7 @@ The version comes only from `project(AgentPet VERSION …)` in `starter/CMakeLis
 
 One binary, `agent-pet`, has two personalities chosen in `src/main.cpp` before any `QApplication` exists:
 
-- **Headless subcommands** (`hook`, `emit`, `integration`, `autostart`, `--version`) use `QCoreApplication` and link only `pet_events`. `hook` runs inside agent clients: it must always exit 0 with no stdout/stderr (Qt message output is suppressed), finish fast (150 ms stdin deadline, one nonblocking send), and never transmit prompt/tool content. The hook only sends a one-bit `risky` verdict for destructive commands.
+- **Headless subcommands** (`hook`, `emit`, `integration`, `autostart`, `--version`) use `QCoreApplication` and link only `pet_events`. On Windows the same `main.cpp` builds `agent-pet.exe` (GUI subsystem, the pet) and `agent-pet-cli.exe` (console, for hooks and commands); `hookExecutable()`/`petExecutable()` map between them. `hook` runs inside agent clients: it must always exit 0 with no stdout/stderr (Qt message output is suppressed), finish fast (150 ms stdin deadline, one nonblocking send), and never transmit prompt/tool content. The hook only sends a one-bit `risky` verdict for destructive commands.
 - **GUI pet**: takes the single-instance lock (the IPC `Receiver`), builds `PetWindow`, wires a `Monitor`, and starts the update `Controller`. On Linux it defaults to `xcb` when `DISPLAY` is set (XWayland); native Wayland is opt-in and unverified.
 
 CMake libraries enforce this split:
@@ -61,8 +61,8 @@ CMake libraries enforce this split:
 | --- | --- |
 | `pet_events` (Qt Core only) | `sessions/` (session/tool state machine, alerts, presence), `ipc/` (event orchestration over the Unix datagram socket at `$XDG_RUNTIME_DIR/agent-pet-<uid>/events.sock`, or the per-user temp dir on macOS; autostart), `settings/` (atomic `preferences.json`), `providers/` (Claude/Codex hook → normalized event adapters, integration config merge) |
 | `pet_hosts` (Qt Core only) | `hosts/`: `HostContext` and v1 conversion, the host `Registry` (capture, target codecs, labels, detection order), `FocusService`, tmux/herdr selection; `platform/desktop/window_match` |
-| `pet_platform` | `platform/posix/` (event socket, hook input, detached launch, `QProcess` command runner) plus `platform/linux/` (`/proc` processes, XDG autostart) or `platform/macos/` (sysctl/libproc processes, launchd agent) |
-| `pet_native` | Linux: the only target linking X11 and D-Bus: `platform/desktop/x11` and `kwin` backends, X11 pointer queries, Konsole's D-Bus selection, the D-Bus screen-lock watcher (`platform/desktop/screensaver`). macOS: `platform/macos/native.cpp` (Core Graphics pointer and screen-lock queries, no window backend yet). Both provide `platform::createFocusService()` (composition) |
+| `pet_platform` | `platform/posix/` (event socket, hook input, detached launch, `QProcess` command runner) plus `platform/linux/` (`/proc` processes, XDG autostart) or `platform/macos/` (sysctl/libproc processes, launchd agent); or `platform/windows/` (named-pipe events, Toolhelp processes, CreateProcess, HKCU Run key, hook handlers) |
+| `pet_native` | Linux: the only target linking X11 and D-Bus: `platform/desktop/x11` and `kwin` backends, X11 pointer queries, Konsole's D-Bus selection, the D-Bus screen-lock watcher (`platform/desktop/screensaver`). macOS: `platform/macos/native.cpp` (Core Graphics pointer and screen-lock queries, no window backend yet). Windows: `platform/windows/native.cpp` (Win32 window backend, pointer and screen-lock queries). Each provides `platform::createFocusService()` (composition) |
 | `pet_updates` | release metadata validation, component manifests, libarchive installer (Linux; macOS only announces releases); also used by the separate Linux `agent-pet-updater` helper |
 | `pet_ui` | `animation/` (catalog-driven player, ambient fidgets, mood, easter eggs) and `desktop/` (`PetWindow`, `Monitor`, alert bubble, session list, touch, wander); no native includes |
 
@@ -78,6 +78,7 @@ Event flow: provider hook JSON → `providers/adapters.cpp` normalizes to protoc
 - `preferences.json` can be written concurrently by the headless `autostart` command, so the pet re-reads it before every save. Keep that when touching settings.
 - Integration enable/disable must merge only Agent Pet's own hook entries (recognized by command markers) and preserve foreign handlers. `check_install.py` enforces this.
 - Interface text is translated (English source, Vietnamese in `starter/translations/agent-pet_vi.ts`; see `starter/docs/i18n.md`). Wrap user-visible strings in `tr()`: the class's own in QObjects, otherwise a context from `src/i18n/contexts.h` (`Pet` is the pet's own voice). Use `%1` with `.arg()`, singular/plural pairs instead of `%n`, and give dialog buttons explicit `tr()` text (Qt has no Vietnamese catalog). CLI output, the hook, logs and developer diagnostics stay plain English. After changing strings run `cmake --build build --target update_translations`, translate the new entries and commit the `.ts`; CI runs `scripts/check_translations.py` to catch a stale file. Widgets relabel in `changeEvent(QEvent::LanguageChange)` → `retranslate()`.
-- Docs are kept in step with features: `starter/docs/events.md` (protocol is authoritative there), `integrations.md` (provider mappings), `install.md`, `i18n.md` (translation workflow), and `architecture.md` (short overview and code map). Each design decision or feature gets an ADR in `starter/docs/adr/` (`NNNN-slug.md`: Context, Decision, Consequences, and a Validation section of dated evidence) plus a row in `adr/README.md`; later evidence is appended to the existing ADR. User-visible features also get a section in `starter/README.md`. `starter/docs/platform-refactor-plan.md` is the platform refactor plan (steps 1–5 implemented); the macOS port builds on it (`adr/0020-macos-port.md`).
+- Docs are kept in step with features: `starter/docs/events.md` (protocol is authoritative there), `integrations.md` (provider mappings), `install.md`, `i18n.md` (translation workflow), and `architecture.md` (short overview and code map). Each design decision or feature gets an ADR in `starter/docs/adr/` (`NNNN-slug.md`: Context, Decision, Consequences, and a Validation section of dated evidence) plus a row in `adr/README.md`; later evidence is appended to the existing ADR. User-visible features also get a section in `starter/README.md`. `starter/docs/platform-refactor-plan.md` is the platform refactor plan (steps 1–5 implemented); the macOS and Windows ports build on it (`adr/0020-macos-port.md`, `adr/0023-windows-port.md`).
+- Hook registration differs on Windows: Claude Code gets the exec form (`command` + `args`, no shell), Codex an unquoted `cmd.exe` command (8.3 short path for folders with spaces). Change `hookHandler()` and `ownedHookHandler()` together.
 - Platform code shared by Linux and macOS goes in `platform/posix/`; keep OS-specific `#ifdef`s there minimal and put larger differences in `platform/linux/` or `platform/macos/`. Qt tool windows need `WA_MacAlwaysShowToolWindow` or macOS hides them while another app is active.
 - Artwork is under the separate VPet artwork terms, not the app's Apache-2.0 license. Keep `licenses/`, `THIRD_PARTY_NOTICES.md` and the credit with any distribution.

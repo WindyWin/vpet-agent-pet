@@ -4,7 +4,8 @@ On Linux, Agent Pet is released as a relocatable tarball,
 `agent-pet-VERSION-linux-x86_64.tar.gz`, with a per-user installer. Qt, the
 artwork and every other library it needs are inside the package; no VPet
 installation, Qt, Python or other development runtime is required. For macOS, see
-[macOS](#macos); the rest of this page describes Linux unless it says otherwise.
+[macOS](#macos), and for Windows, [Windows](#windows); the rest of this page describes
+Linux unless it says otherwise.
 
 ## Requirements
 
@@ -308,6 +309,54 @@ manual on macOS.
 move the app to the Trash, and optionally delete
 `~/Library/Application Support/agent-pet`.
 
+## Windows
+
+Windows releases are for x64 Windows 10 version 1809 or newer and Windows 11, with Qt,
+the Visual C++ runtime and the artwork included, in two forms:
+
+- `agent-pet-VERSION-windows-x86_64-setup.exe`, a setup program. Recommended.
+- `agent-pet-VERSION-windows-x86_64.zip`, the same files for portable use.
+
+**Install or upgrade:** run the setup program. It installs for the current user without
+administrator rights into `%LOCALAPPDATA%\Programs\AgentPet` and adds **Agent Pet** to
+the Start menu. Its optional tasks connect Claude Code and Codex, start the pet when you
+sign in, and start it when an agent session starts; a step that fails is reported, and
+can be retried from the pet's **Settings → Startup and agents**. Running a newer setup
+program upgrades in place, closing a running pet; settings and enabled hooks are kept.
+The programs are not code-signed yet, so SmartScreen may warn on first run: choose
+**More info → Run anyway**.
+
+For portable use, extract the zip into a folder whose path has no spaces and run
+`agent-pet.exe` (Codex starts hooks through `cmd.exe`, which cannot run a program from a
+quoted path; Agent Pet uses the folder's short 8.3 name where Windows keeps one, and
+refuses to register Codex hooks otherwise).
+
+There are two programs: `agent-pet.exe` is the pet and opens no console window;
+`agent-pet-cli.exe` is the same program for hooks and the command line:
+
+```powershell
+& "$env:LOCALAPPDATA\Programs\AgentPet\agent-pet-cli.exe" integration enable --provider claude
+& "$env:LOCALAPPDATA\Programs\AgentPet\agent-pet-cli.exe" autostart enable --when-idle hide
+& "$env:LOCALAPPDATA\Programs\AgentPet\agent-pet-cli.exe" autostart login enable
+```
+
+Claude Code hooks are registered in exec form (a program and its arguments, run without a
+shell) and need Claude Code 2.1.139 or newer. Codex hooks need trusting in Codex `/hooks`,
+as on other systems. *Start at login* writes an `Agent Pet` value under
+`HKCU\Software\Microsoft\Windows\CurrentVersion\Run`, which Task Manager's **Startup
+apps** also lists. Settings, the recap and update state are under `%APPDATA%\agent-pet`.
+
+**Open** brings the agent's Windows Terminal, editor or other terminal window to the front
+by its process ancestry; classic console windows may not be found. tmux and herdr are not
+used on Windows.
+
+**Not yet on Windows:** automatic update installation (the pet announces new versions; run
+the newer setup program).
+
+**Uninstall:** **Settings → Apps → Installed apps → Agent Pet → Uninstall**. It stops the
+pet and removes only Agent Pet's hook entries and its sign-in value; other hooks are left as
+they were. Delete `%APPDATA%\agent-pet` to remove settings too.
+
 ## Licenses
 
 Agent Pet's application code is under the Apache License 2.0 (`share/agent-pet/LICENSE` and `NOTICE`).
@@ -317,4 +366,4 @@ and keep their own terms (`share/agent-pet/THIRD_PARTY_NOTICES.md` and
 `share/agent-pet/licenses/`); they are not Apache-2.0. Bundled Qt and system libraries
 keep their own licenses, collected under `share/agent-pet/runtime-licenses/` and
 listed in `share/agent-pet/runtime-manifest.json`. In the macOS app these files are
-under `Agent Pet.app/Contents/Resources/`.
+under `Agent Pet.app/Contents/Resources/`; on Windows they are in the installation folder.
