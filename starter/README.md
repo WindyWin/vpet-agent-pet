@@ -205,9 +205,10 @@ translations, see [translations](docs/i18n.md).
 
 ## Arch Linux
 
-Arch users can build the package with `makepkg -si` from `packaging/arch/`; the same
-`PKGBUILD` is published to the AUR as `agent-pet`. It uses the system Qt and pacman
-owns upgrades and removal. See [Arch Linux](docs/install.md#arch-linux).
+Arch users can build the package with `makepkg -si` from `packaging/arch/` once a
+release has attached its source tarball. The same `PKGBUILD` is planned for the AUR as
+`agent-pet`, but it is not published there yet. It uses the system Qt and pacman owns
+upgrades and removal. See [Arch Linux](docs/install.md#arch-linux).
 
 ## Updates
 

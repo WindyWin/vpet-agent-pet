@@ -258,8 +258,9 @@ The installed version is shown by `agent-pet --version` and in **About**.
 
 ## Arch Linux
 
-Build the package from `packaging/arch/PKGBUILD` (the AUR package `agent-pet` carries
-the same recipe). From the `starter/` directory, run:
+Build the package from `packaging/arch/PKGBUILD`, once a release has attached its
+source tarball. The same recipe is planned for the AUR as `agent-pet`, but it is not
+published there yet. From the `starter/` directory, run:
 
 ```bash
 cd packaging/arch
