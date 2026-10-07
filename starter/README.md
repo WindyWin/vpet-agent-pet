@@ -438,7 +438,11 @@ CI ([.github/workflows/release.yml](../.github/workflows/release.yml)) runs all 
 the above from a clean checkout on Ubuntu 22.04, macOS 14 and Windows Server 2022 with
 Qt 6.5.3, uploads the Linux full tarball, component tarballs and manifest, the macOS zip
 and dmg and the Windows zip and setup program, and attaches them to a draft GitHub
-release for `v*` tags.
+release for `v*` tags. CI adds an English/Vietnamese download table for the three
+operating systems above GitHub's generated release notes, with portable and source
+downloads in a collapsible section. It verifies that all six linked packages exist
+and are nonempty before creating the draft. Component assets remain available for
+automatic updates.
 
 ### CI commit rules
 

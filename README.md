@@ -23,7 +23,7 @@ Works on **Linux** x86_64 (X11, or Wayland desktops with XWayland such as GNOME 
 
 ## Get started
 
-Download the latest version from the [Releases page](https://github.com/WindyWin/vpet-agent-pet/releases).
+Download the latest version from the [Releases page](https://github.com/WindyWin/vpet-agent-pet/releases/latest). Choose your operating system in the **Download / Tải xuống** table at the top of the release; each package includes the pet artwork.
 
 **Linux**
 

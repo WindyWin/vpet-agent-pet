@@ -23,7 +23,7 @@ Hỗ trợ **Linux** x86_64 (X11 hoặc desktop Wayland có XWayland như GNOME 
 
 ## Bắt đầu
 
-Tải phiên bản mới nhất từ [trang Releases](https://github.com/WindyWin/vpet-agent-pet/releases).
+Tải phiên bản mới nhất từ [trang Releases](https://github.com/WindyWin/vpet-agent-pet/releases/latest). Chọn hệ điều hành trong bảng **Download / Tải xuống** ở đầu release; mỗi gói đã bao gồm hình ảnh thú cưng.
 
 **Linux**
 
