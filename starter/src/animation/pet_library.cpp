@@ -36,7 +36,11 @@ PetLibrary &PetLibrary::shared() {
 QVector<PetInfo> PetLibrary::pets() const {
     QVector<PetInfo> found;
     for (const auto &id : QDir(QDir(root()).filePath("assets")).entryList(QDir::Dirs | QDir::NoDotAndDotDot, QDir::Name))
+    {
         if (const auto pet = info(id); !pet.id.isEmpty()) found.append(pet);
+        else if (QFile::exists(QDir(root()).filePath("assets/" + id + "/pet.json")))
+            qWarning().noquote() << "Ignoring pet" << id << "with an invalid pet.json";
+    }
     return found;
 }
 PetInfo PetLibrary::info(const QString &id) const {
@@ -56,10 +60,7 @@ PetInfo PetLibrary::info(const QString &id) const {
         && (!object.contains("url") || (pet.url.startsWith("https://") && pet.url.size() <= 256))
         && fileName.match(pet.terms).hasMatch() && fileName.match(pet.preview).hasMatch() && pet.preview.endsWith(".png");
     for (auto it = object.begin(); ok && it != object.end(); ++it) ok = keys.contains(it.key());
-    if (!ok) {
-        qWarning().noquote() << "Ignoring pet" << id << "with an invalid pet.json";
-        return {};
-    }
+    if (!ok) return {}; // Silent: pets() warns for a listed folder, activate() reports the reason.
     pet.preview = folder.filePath(pet.preview);
     return pet;
 }
