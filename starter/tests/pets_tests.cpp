@@ -171,7 +171,13 @@ private slots:
         QVERIFY(!pet::validPetId("Cat")); QVERIFY(!pet::validPetId("")); QVERIFY(!pet::validPetId(QString(33, 'a')));
     }
     void hashTreesMatchTheBuiltPacks() {
-        for (const auto &[index, pets] : {std::pair{QString(PET_INDEX), QStringList{"vpet"}},
+        // Every bundled pet folder is a pet, so adding one needs no edit here.
+        QStringList bundled;
+        const QDir assets(QString(PET_SOURCE) + "/assets");
+        for (const auto &id : assets.entryList(QDir::Dirs | QDir::NoDotAndDotDot, QDir::Name))
+            if (QFileInfo::exists(assets.filePath(id + "/pet.json"))) bundled.append(id);
+        QVERIFY(bundled.contains("vpet"));
+        for (const auto &[index, pets] : {std::pair{QString(PET_INDEX), bundled},
                                           std::pair{QString(FIXTURE_INDEX), QStringList{"broken", "duo", "mini"}}}) {
             QVERIFY2(QResource::registerResource(index, "/tree"), qPrintable(index));
             const QString indexPath = index; // A lambda cannot capture a structured binding in C++17.
@@ -182,7 +188,9 @@ private slots:
                 QVERIFY2(mismatch.isEmpty(), qPrintable(mismatch));
             }
             // Listing pets reads the index only: no frame of any pet is a resource yet.
-            QVERIFY(!QFile::exists(":/tree/assets/" + pets.first() + "/" + (pets.first() == "vpet" ? "vup/Default/Nomal/1/_000_250.png" : "idle/_000_100.png")));
+            // (Any other bundled pet's frames are unknown here; the tree check above covers its packs.)
+            const bool isVpet = pets.contains("vpet");
+            QVERIFY(!QFile::exists(":/tree/assets/" + (isVpet ? QString("vpet") : pets.first()) + "/" + (isVpet ? "vup/Default/Nomal/1/_000_250.png" : "idle/_000_100.png")));
         }
         const auto duo = QJsonDocument::fromJson(contents(QFileInfo(FIXTURE_INDEX).absolutePath() + "/pets/duo/packs.json")).object();
         QCOMPARE(duo["packs"].toArray().size(), 2); // One pack per frame folder.
@@ -368,11 +376,12 @@ private slots:
         QCOMPARE(note->textFormat(), Qt::PlainText);
         QVERIFY(note->text().contains("Tom & <b>Jerry</b>"));
     }
-    void settingsShowNoPickerWithOnePet() {
+    void settingsShowThePickerOnlyWithSeveralPets() {
         QTemporaryDir directory;
         pet::PetWindow window(nullptr, directory.path() + "/preferences.json", false);
         window.showSettings();
-        QVERIFY(!window.findChild<pet::PetPicker *>()); // VPet is the only bundled pet.
+        // One bundled pet leaves nothing to choose; the picker-level cases cover that.
+        QCOMPARE(window.findChild<pet::PetPicker *>() != nullptr, pet::PetLibrary::shared().pets().size() > 1);
     }
     void aboutCreditsTheRunningPet() {
         QTemporaryDir directory;
