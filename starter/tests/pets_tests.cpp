@@ -153,7 +153,8 @@ private slots:
         for (const auto &[index, pets] : {std::pair{QString(PET_INDEX), QStringList{"vpet"}},
                                           std::pair{QString(FIXTURE_INDEX), QStringList{"broken", "duo", "mini"}}}) {
             QVERIFY2(QResource::registerResource(index, "/tree"), qPrintable(index));
-            const auto unregister = qScopeGuard([&] { QResource::unregisterResource(index, "/tree"); });
+            const QString indexPath = index; // A lambda cannot capture a structured binding in C++17.
+            const auto unregister = qScopeGuard([indexPath] { QResource::unregisterResource(indexPath, "/tree"); });
             QCOMPARE(QDir(":/tree/assets").entryList(QDir::Dirs | QDir::NoDotAndDotDot, QDir::Name), pets);
             for (const auto &id : pets) {
                 const auto mismatch = treeMismatch(":/tree", id, QFileInfo(index).absolutePath());
