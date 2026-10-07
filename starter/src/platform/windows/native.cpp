@@ -8,7 +8,6 @@
 
 namespace pet::platform {
 namespace {
-constexpr auto windowsBackend = "windows";
 // Top-level application windows, as the taskbar shows them: visible, unowned, not tool windows.
 // Explorer's windows are left out: it is an ancestor of anything started from the Start menu,
 // and never the agent's terminal.

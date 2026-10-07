@@ -5,6 +5,7 @@
 #include <cerrno>
 namespace pet::platform {
 qint64 parentProcessId() { return getppid(); }
+WindowRef agentConsoleWindow(const QVector<qint64> &) { return {}; }
 bool readHookInput(int inputLimit, QByteArray &data, QString &error) {
     data.clear();
     QElapsedTimer deadline; deadline.start();

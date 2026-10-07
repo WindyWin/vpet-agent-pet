@@ -366,9 +366,10 @@ as on other systems. *Start at login* writes an `Agent Pet` value under
 `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`, which Task Manager's **Startup
 apps** also lists. Settings, the recap and update state are under `%APPDATA%\agent-pet`.
 
-**Open** brings the agent's Windows Terminal, editor or other terminal window to the front
-by its process ancestry; classic console windows may not be found. tmux and herdr are not
-used on Windows.
+**Open** brings the agent's terminal window to the front: the console window the agent runs
+in (Windows Terminal, including PowerShell or Command Prompt windows handed off to it, or a
+classic console window), otherwise the editor or terminal found by process ancestry. tmux
+and herdr are not used on Windows.
 
 **Not yet on Windows:** automatic update installation (the pet announces new versions; run
 the newer setup program).

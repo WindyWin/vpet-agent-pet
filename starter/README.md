@@ -311,6 +311,11 @@ tab or pane could not be selected, the window was not found, or this desktop can
 raise windows at all. Sessions that
 started before this version appear without a host until their next event.
 
+On Windows the hook also records the console window the agent runs in, and Open raises
+it (Windows Terminal, including PowerShell or Command Prompt windows handed off to it, or
+a classic console window). When no console window is found, it falls back to the window
+that owns the agent's parent processes. tmux and herdr are not used on Windows.
+
 An orange badge stays on the pet while any observed session waits for approval
 or input, even after its alert is dismissed. It clears on that session's next
 prompt, tool start, interruption, stop or end. Right-click → Mute alerts hides
