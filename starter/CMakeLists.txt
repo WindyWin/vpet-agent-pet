@@ -134,6 +134,9 @@ endif()
 qt_add_library(pet_platform STATIC ${pet_platform_sources})
 target_include_directories(pet_platform PUBLIC src)
 target_link_libraries(pet_platform PUBLIC Qt6::Core)
+if(WIN32)
+    target_link_libraries(pet_platform PRIVATE user32) # The hook reads the agent's console window.
+endif()
 # Native desktop services and their composition (platform/native.h). On Linux: X11 and KWin backends,
 # Konsole's D-Bus tab selection, pointer queries and the screen-lock watcher; only this target links
 # X11 and D-Bus. On macOS: Core Graphics pointer and screen-lock queries, no window backend yet.

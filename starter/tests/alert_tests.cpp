@@ -379,12 +379,15 @@ private slots:
     }
     void hostContextConversion() {
         auto context = pet::hosts::fromV1("konsole", "12,7", "8388617", "org.kde.konsole-12|/Windows/1|/Sessions/3");
-        QCOMPARE(context.pids, (QVector<qint64>{12, 7})); QCOMPARE(context.window.backend, "x11");
+        // host_window is the native desktop's window: X11, or an HWND on Windows.
+        const QString native = pet::platform::nativeWindowBackend;
+        QCOMPARE(context.pids, (QVector<qint64>{12, 7})); QCOMPARE(context.window.backend, native);
         const auto v1 = pet::hosts::toV1(context);
         QCOMPARE(v1["host"].toString(), "konsole"); QCOMPARE(v1["host_pids"].toString(), "12,7");
         QCOMPARE(v1["host_window"].toString(), "8388617"); QCOMPARE(v1["host_target"].toString(), context.target);
-        // v1 has no field for another backend's window: it is left out, never reinterpreted as X11.
+        // v1 has no field for another backend's window: it is left out, never reinterpreted.
         context.window = {"kwin", "{6f1c}"}; QVERIFY(!pet::hosts::toV1(context).contains("host_window"));
+        context.window = {native == "x11" ? "windows" : "x11", "8388617"}; QVERIFY(!pet::hosts::toV1(context).contains("host_window"));
         QVERIFY(pet::hosts::toV1({}).isEmpty());
         QVERIFY(pet::hosts::fromV1("terminal", {}, {}, {}).window.isNull());
         // Targets are decoded by their adapter; hosts without one need none.

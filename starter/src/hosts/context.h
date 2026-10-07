@@ -22,7 +22,7 @@ struct HostContext {
 // Event protocol v1 carries the context as four strings (see docs/events.md):
 //   host        adapter ID
 //   host_pids   comma-separated process hints, at most 16
-//   host_window decimal X11 window ($WINDOWID)
+//   host_window decimal native window: X11 ($WINDOWID), or the console's HWND on Windows
 //   host_target adapter-owned target, at most 256 characters
 constexpr int maxPids = 16, maxTarget = 256;
 // Converts already validated v1 fields (see Registry::validV1).
