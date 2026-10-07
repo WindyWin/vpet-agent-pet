@@ -1,0 +1,72 @@
+name: Bug report
+description: Report something in Agent Pet that is not working as expected.
+title: "[Bug] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Search [existing issues](https://github.com/WindyWin/vpet-agent-pet/issues) before opening a new report.
+        For installation or connection problems, check the [troubleshooting guide](https://github.com/WindyWin/vpet-agent-pet/blob/main/starter/docs/install.md#troubleshooting) first.
+  - type: textarea
+    id: actual-behavior
+    attributes:
+      label: What happened?
+      description: Describe the problem and how it affects you.
+    validations:
+      required: true
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected behavior
+      description: What did you expect Agent Pet to do?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Include relevant settings. If the problem is intermittent, describe when it happens and how often.
+      placeholder: |
+        1. Start Agent Pet...
+        2. ...
+        3. Observe...
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Agent Pet version
+      description: Use the release version or commit SHA for a source build. Enter "unknown" if unavailable.
+      placeholder: Release version or commit SHA
+    validations:
+      required: true
+  - type: dropdown
+    id: operating-system
+    attributes:
+      label: Operating system
+      options:
+        - Linux
+        - macOS
+        - Windows
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Include OS version, CPU architecture and installation method. For Linux, include desktop environment and X11 or Wayland. For agent issues, include Claude Code or Codex version and your terminal or editor.
+      placeholder: |
+        OS version:
+        CPU architecture:
+        Installation method (release / source):
+        Desktop environment and display server (Linux):
+        Agent client and version (if relevant):
+        Terminal or editor (if relevant):
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Logs, screenshots or additional context
+      description: Paste relevant output or attach screenshots and recordings. Remove private information before sharing.

@@ -205,6 +205,10 @@ On Linux the pet updates itself in the background by default, downloading only w
 - **Windows:** **Open** brings the agent's Windows Terminal or classic console window to the front, with an editor/terminal fallback based on process ancestry. Automatic update installation isn't available yet; run the newer setup program. For hook commands and console output, use `agent-pet-cli.exe`.
 - **Linux on Wayland:** the pet runs through XWayland, which GNOME and KDE provide by default. Pure Wayland isn't supported yet.
 
+## Issues and discussion
+
+Open an issue from the [template chooser](https://github.com/WindyWin/vpet-agent-pet/issues/new/choose): **Bug report** for a problem, **Feature request** for an improvement, or **Discussion topic** for a question or idea. Search existing issues first and keep each issue focused on one topic. The forms guide you through the relevant context; bug reports ask for your version, environment and steps to reproduce.
+
 ## For developers
 
 ### Architecture at a glance
