@@ -506,6 +506,10 @@ private slots:
             {{rule("prompt", "wave.dance", {{"weight", 1001}})}, "weight"},
             {{rule("prompt", "wave.dance", {{"cooldown_ms", 999}})}, "cooldown_ms"},
             {{rule("prompt", "wave.dance", {{"cooldown_ms", 3600001}})}, "cooldown_ms"},
+            {{rule("prompt", "wave.dance", {{"cooldown_ms", 1e300}})}, "cooldown_ms"}, // Out of range for an integer.
+            {{rule("prompt", "wave.dance", {{"cooldown_ms", -1e300}})}, "cooldown_ms"},
+            {{rule("prompt", "wave.dance", {{"cooldown_ms", 1500.5}})}, "cooldown_ms"}, // Not a whole number.
+            {{rule("prompt", "wave.dance", {{"cooldown_ms", "5000"}})}, "cooldown_ms"},
             {{rule("prompt", "wave.dance", {{"sound", "bark.wav"}})}, "unknown key sound"},
             {QJsonArray(), "between 1 and"},
         };
@@ -577,6 +581,26 @@ private slots:
         QCOMPARE(status(packs, "d"), QString("other pet"));
         QCOMPARE(rules.size(), 2);
         QCOMPARE(rules.rules()[0].pack, QString("a")); QCOMPARE(rules.rules()[1].pack, QString("b"));
+    }
+    void aLaterPackCannotBreakAnEarlierPacksRule() {
+        QTemporaryDir folder;
+        writePack(folder.path(), "a", danceFragment("a"));
+        writeRules(folder.path(), "a", {rule("prompt", "a.dance")});
+        // Pack b replaces a's state with one that never ends. The catalog is still fine, but a's rule would not be.
+        writePack(folder.path(), "b", QJsonObject{{"schema_version", pet::catalogSchema}, {"sequences", QJsonArray{sequence("hold")}},
+                                                  {"states", QJsonObject{{"a.dance", QJsonArray{"hold"}}}},
+                                                  {"playback", QJsonObject{{"a.dance", QJsonObject{{"mode", "loop"}, {"after", "idle"}}}}},
+                                                  {"overrides", QJsonArray{"states.a.dance"}}});
+        for (const bool collect : {true, false}) {
+            QString error;
+            auto source = pet::Catalog::read(base_.path(), "test", &error);
+            auto packs = pet::plugins::scan(folder.path(), "1.0.0");
+            pet::EventRules rules;
+            pet::plugins::apply(source, "test", {"a", "b"}, packs, collect ? &rules : nullptr);
+            QCOMPARE(status(packs, "a"), QString("applied"));
+            QVERIFY2(status(packs, "b").startsWith("rejected: Replaces state a.dance, which a rule of plugin a plays"), qPrintable(status(packs, "b")));
+            if (collect) QCOMPARE(rules.size(), 1);
+        }
     }
     void rulesPickByWeightAndRest() {
         pet::EventRules rules;
@@ -694,6 +718,23 @@ private slots:
         event.id = "4"; event.timestamp = now + 3;
         QVERIFY(monitor.apply(event, now + 3));
         QCOMPARE(monitor.note().text(), QString("Hi"));
+    }
+    void staleAgentEventsDoNotReact() {
+        QTemporaryDir directory;
+        pet::PetWindow window(nullptr, directory.path() + "/preferences.json"); window.show();
+        window.eggs().setClock([] { return QDateTime(QDate(2026, 10, 7), QTime(14, 0)); });
+        pet::Monitor monitor(window);
+        pet::EventRules rules;
+        rules.add({{"fun", "prompt", window.player().pool("celebrate").first().state, "On it!", 1, 5000}});
+        monitor.setRules(rules);
+        const qint64 now = QDateTime::currentMSecsSinceEpoch();
+        // The sessions accept a callback that is minutes late, but it is no longer news.
+        pet::Event late{"claude", "late", "1", "prompt", {}, {}, "/project", {}, now - 5 * 60 * 1000};
+        QVERIFY(monitor.apply(late, now));
+        QVERIFY(!monitor.note().isVisible());
+        pet::Event fresh{"claude", "fresh", "2", "prompt", {}, {}, "/project", {}, now};
+        QVERIFY(monitor.apply(fresh, now));
+        QCOMPARE(monitor.note().text(), QString("On it!"));
     }
     void agentEventsCanTriggerRules() {
         QTemporaryDir directory;

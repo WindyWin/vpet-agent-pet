@@ -11,6 +11,7 @@
 #include <QSet>
 #include <QStandardPaths>
 #include <QVersionNumber>
+#include <cmath>
 
 namespace pet::plugins {
 namespace {
@@ -254,6 +255,12 @@ bool merge(CatalogSource &source, const PluginPack &pack, QHash<QString, QString
     source.document = document;
     return true;
 }
+// Whether `state` can answer a rule: it ends by itself and hands back to idle, as a reaction pool's entries do.
+bool endsItself(const Catalog &catalog, const QString &state) {
+    const auto found = catalog.animations.constFind(state);
+    return found != catalog.animations.constEnd() && state != "idle" && found->after == "idle"
+        && (found->mode == "once" || (found->mode == "phased" && found->loops > 0));
+}
 // Reads <folder>/events.json, if there is one: rules that react to custom or agent events (docs/plugins.md). A rule can
 // play any state of the merged `catalog` that ends by itself, as a reaction pool's entries do.
 bool readRules(const PluginPack &pack, const Catalog &catalog, QVector<EventRule> *rules, QString *error) {
@@ -288,10 +295,8 @@ bool readRules(const PluginPack &pack, const Catalog &catalog, QVector<EventRule
             return fail(QString("Invalid \"on\": %1. Use custom:<name> or one of %2.").arg(rule.on, EventRules::agentEvents().join(", ")));
         if (object.contains("state")) {
             rule.state = object.value("state").toString();
-            const auto found = catalog.animations.constFind(rule.state);
             // Like a reaction pool's entries: it must end by itself and hand back to idle.
-            if (found == catalog.animations.constEnd() || rule.state == "idle" || found->after != "idle"
-                || !(found->mode == "once" || (found->mode == "phased" && found->loops > 0)))
+            if (!endsItself(catalog, rule.state))
                 return fail("the state of a rule must be a state that ends by itself and returns to idle: " + rule.state);
         }
         if (object.contains("say")) {
@@ -304,9 +309,14 @@ bool readRules(const PluginPack &pack, const Catalog &catalog, QVector<EventRule
         if (rule.state.isEmpty() && rule.say.isEmpty()) return fail("a rule needs a state, a say, or both: " + rule.on);
         rule.weight = object.contains("weight") ? object.value("weight").toInt(0) : 1;
         if (rule.weight < 1 || rule.weight > EventRules::maxWeight) return fail("weight must be 1 to 1000.");
-        rule.cooldownMs = object.contains("cooldown_ms") ? qint64(object.value("cooldown_ms").toDouble(0)) : EventRules::defaultCooldownMs;
-        if (rule.cooldownMs < EventRules::minCooldownMs || rule.cooldownMs > EventRules::maxCooldownMs)
-            return fail("cooldown_ms must be 1000 to 3600000.");
+        rule.cooldownMs = EventRules::defaultCooldownMs;
+        if (object.contains("cooldown_ms")) {
+            // Checked as the number it is: converting an out-of-range double to an integer is undefined.
+            const double cooldown = object.value("cooldown_ms").toDouble(-1);
+            if (cooldown < EventRules::minCooldownMs || cooldown > EventRules::maxCooldownMs || cooldown != std::floor(cooldown))
+                return fail("cooldown_ms must be a whole number from 1000 to 3600000.");
+            rule.cooldownMs = qint64(cooldown);
+        }
         rules->append(rule);
     }
     return true;
@@ -333,6 +343,7 @@ QVector<PluginPack> scan(const QString &folder, const QString &appVersion) {
 }
 void apply(CatalogSource &source, const QString &pet, const QStringList &enabled, QVector<PluginPack> &packs, EventRules *rules) {
     QHash<QString, QString> claims;
+    QVector<EventRule> accepted; // The rules of the packs applied so far.
     for (auto &pack : packs) {
         if (pack.status == PluginPack::Invalid) {
             if (enabled.contains(pack.id)) qWarning().noquote() << "Plugin" << pack.id << "cannot be used:" << pack.error;
@@ -348,6 +359,10 @@ void apply(CatalogSource &source, const QString &pet, const QStringList &enabled
             const auto catalog = Catalog::build(candidate, &error);
             if (catalog.valid()) {
                 error = catalog.contractError();
+                // A pack may replace a state an earlier pack's rule plays, so those rules are checked again.
+                for (const auto &rule : std::as_const(accepted))
+                    if (error.isEmpty() && !rule.state.isEmpty() && !endsItself(catalog, rule.state))
+                        error = QString("Replaces state %1, which a rule of plugin %2 plays, with one that does not end.").arg(rule.state, rule.pack);
                 if (error.isEmpty()) readRules(pack, catalog, &candidateRules, &error);
             } else if (error.isEmpty()) error = "Invalid animation catalog.";
         }
@@ -359,6 +374,7 @@ void apply(CatalogSource &source, const QString &pet, const QStringList &enabled
         }
         source = candidate;
         claims = candidateClaims;
+        accepted += candidateRules;
         if (rules) rules->add(candidateRules);
         pack.status = PluginPack::Applied;
         pack.error.clear();

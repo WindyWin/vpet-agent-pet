@@ -17,8 +17,8 @@ flood the pet with reactions, and the `hook` path must stay fast, silent and con
 - **Protocol: version 1 plus one kind.** `custom` has the provider `custom` (and only custom events do),
   a required `name` (`[a-z0-9_-]{1,64}`) and the identity every event has (`session_id` as the sender's
   label, `event_id`, `timestamp_ms`). Other optional fields are rejected. The envelope, limits and
-  unknown-field rule are unchanged, so no version bump is needed: an older pet rejects the unknown kind, and
-  `emit` already reports delivery failures. `Event` gains `name`; `validEventName` is a header both the parser
+  unknown-field rule are unchanged, so no version bump is needed: an older pet drops the unknown kind
+  (`emit` only learns that the datagram was delivered, as for any event). `Event` gains `name`; `validEventName` is a header both the parser
   and the rule loader use.
 - **A reaction, not session state.** `Monitor::apply` takes a custom event before `Sessions`, and
   `Sessions::apply` refuses one. It creates no session, alert or badge, and leaves the aggregate, the recap and

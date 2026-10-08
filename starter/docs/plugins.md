@@ -188,7 +188,7 @@ reaction urgent, and nothing in `events.json` changes what the sessions show.
 | `state` | one of `state` and `say` | A state to play, the pack's own or the pet's. It must end by itself and return to idle, like a reaction pool's entries (`once`, or `phased` with `loops`, and `after: idle`) |
 | `say` | one of `state` and `say` | A remark for the speech bubble, 1–120 characters. It is plain text in the pack's own language, so it is not translated, and it is not shown while the pet is muted |
 | `weight` | no | 1–1000, default 1. When several rules (from any packs) match one event, one is drawn by weight |
-| `cooldown_ms` | no | 1,000–3,600,000, default 10,000. After a reaction plays, the same `on` rests this long |
+| `cooldown_ms` | no | A whole number, 1,000–3,600,000, default 10,000. After a reaction plays, the same `on` rests this long |
 
 Up to 128 rules and 64 KiB per pack, and any other key is an error. The rules are checked against the
 merged catalog when the pack loads, so a state that does not exist or does not end is reported in Settings and the

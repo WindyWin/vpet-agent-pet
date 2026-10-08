@@ -48,8 +48,9 @@ not infer provider coverage; see the M4 mapping and acceptance record.
 ### Custom events
 
 A script, build or CI job can tell the pet that something happened with a `custom` event. It is
-still protocol version 1 and an ordinary datagram under the same limits; older pets reject the
-unknown kind, which `emit` reports and the hook never sends.
+still protocol version 1 and an ordinary datagram under the same limits. An older pet drops the
+unknown kind without a word: `emit` only knows that the datagram was delivered, as for any event.
+The hook never sends custom events.
 
 ```bash
 agent-pet emit --custom deploy_succeeded

@@ -106,7 +106,7 @@ bool Monitor::apply(const Event &event, qint64 now) {
     if (event.kind == "turn_finished" && !event.waiting && !window_.muted() && !window_.petHidden() && window_.eggs().bedtime())
         say(bedtimeNote());
     // Background work that is still running is not a finished turn.
-    if (!(event.kind == "turn_finished" && event.waiting)) react(event.kind, now, now);
+    if (!(event.kind == "turn_finished" && event.waiting)) react(event.kind, event.timestamp, now);
     return true;
 }
 // What a plugin pack says should happen now (events.json). Only an event from the last minute is worth a reaction.
