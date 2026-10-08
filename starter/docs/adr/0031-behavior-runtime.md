@@ -109,5 +109,7 @@ reminder when it was chosen, whether or not it played.
     off while it waits never shows, and the birthday cheer is not lost when its celebration is dropped. The
     first three each have a test (`stagePresentsTheRuntime`, `waitingIntentsExpireBeforeAnyTick`,
     `monitorWithdrawsTurnedOffReminders`) that fails without its fix.
+  - A held state whose art fails to decode recovers to idle and now says the pet was let go, so the runtime
+    does not keep holding everything back (`brokenResourcesRecover`, which fails without the fix).
 - Open: macOS and Windows CI runs; a manual pass of the acceptance checklist in
   [0008](0008-window-behavior.md#manual-acceptance-checklist) on a desktop.

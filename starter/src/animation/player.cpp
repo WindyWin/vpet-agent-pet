@@ -332,7 +332,9 @@ void Player::fail(const QString &message) {
     emit failed(error_);
     // A damaged activity can recover to idle. A damaged idle remains a visible UI fallback.
     if (state_ != "idle" && catalog_.animations.contains("idle")) {
-        pending_.clear(); held_ = false; enter("idle");
+        const bool was = std::exchange(held_, false);
+        pending_.clear(); enter("idle");
+        if (was) emit heldChanged(false); // After the recovery, so nothing re-enters the player before it is done.
     } else emit changed();
 }
 void Player::setRenderSize(int pixels) {

@@ -271,6 +271,10 @@ private slots:
         QVERIFY(broken.open(QIODevice::WriteOnly)); broken.write("not a PNG"); broken.close();
         QSignalSpy failed(&player, &pet::Player::failed); player.select("working", true);
         QCOMPARE(failed.size(), 1); QCOMPARE(player.state(), QString("idle")); QVERIFY(!player.pixmap().isNull());
+        // Recovering lets go of a held state, and says so: the behavior runtime would otherwise wait for a release.
+        QSignalSpy held(&player, &pet::Player::heldChanged); player.hold("working");
+        QCOMPARE(failed.size(), 2); QVERIFY(!player.held()); QCOMPARE(player.state(), QString("idle"));
+        QCOMPARE(held.size(), 2); QCOMPARE(held.at(1).at(0).toBool(), false);
         QVERIFY(QFile::remove(directory.path() + "/assets/vpet/vup/idle.png"));
         pet::Player noIdle(nullptr, directory.path()); QVERIFY(noIdle.stopped());
         QVERIFY(noIdle.pixmap().isNull()); QVERIFY(!noIdle.error().isEmpty());
