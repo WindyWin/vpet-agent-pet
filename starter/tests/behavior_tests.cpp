@@ -2,6 +2,8 @@
 // with a hand-set clock and a fake presentation that records requests and answers with feedback, so no
 // desktop, Player or artwork is involved. The policy table these tests pin down is in
 // docs/superpowers/specs/2026-10-08-behavior-runtime-design.md.
+// Cues are #64's (src/animation/cues.json); "fidget" and "edge-left" stand for states from a pet's own
+// ambient and touch sections, which are not cues.
 #include "behavior/runtime.h"
 #include <QTest>
 
@@ -22,9 +24,11 @@ QString name(Outcome outcome) {
     return "?";
 }
 bool urgent(const QString &cue) { return cue == "attention" || cue == "exhausted" || cue == "error"; }
-// Session activity, as the monitor will submit Sessions' aggregate.
+// Session activity, as the monitor will submit Sessions' aggregate: cues of the "once" shape are moments.
 Intent activity(const QString &cue) {
-    return {"session", "activity", cue, urgent(cue) ? Policy::Urgent : Policy::Activity, Lifetime::Persistent};
+    const bool once = cue == "turn-finished" || cue == "error";
+    return {"session", "activity", cue, urgent(cue) ? Policy::Urgent : Policy::Activity,
+            once ? Lifetime::Moment : Lifetime::Persistent};
 }
 Intent oneShot(const QString &source, const QString &key, Policy policy, qint64 expiresAt = 0, QStringList effects = {}) {
     return {source, key, key, policy, Lifetime::OneShot, expiresAt, std::move(effects)};
@@ -222,8 +226,9 @@ private slots:
         QCOMPARE(rig.lastCue(), QString("snack")); // Equal rank: submitted first, shown first.
         rig.answer(Feedback::Completed);
         QCOMPARE(rig.lastCue(), QString("birthday"));
+        const auto requests = rig.requests.size();
         rig.answer(Feedback::Completed);
-        QCOMPARE(rig.lastCue(), QString("turn-finished"));
+        QCOMPARE(rig.requests.size(), requests); // The finished turn was shown before the surprise.
     }
 
     void sameIdentityIsNotRestartedOrQueuedTwice() {
@@ -250,8 +255,10 @@ private slots:
         rig.runtime.tick();
         QCOMPARE(rig.history("mood/snack"), QString("expired"));
         QCOMPARE(rig.runtime.deferred(), 0);
+        const auto requests = rig.requests.size();
         rig.answer(Feedback::Completed);
-        QCOMPARE(rig.lastCue(), QString("turn-finished"));
+        QCOMPARE(rig.requests.size(), requests);
+        QCOMPARE(rig.runtime.currentCue(), QString("turn-finished"));
     }
 
     void waitingIsBounded() {
@@ -276,6 +283,94 @@ private slots:
         QCOMPARE(rig.history("mood/snack"), QString("dropped"));
         rig.answer(Feedback::Completed);
         QCOMPARE(rig.lastCue(), QString("working"));
+    }
+
+    // --- Moments: activity that plays once ---------------------------------------------------------
+
+    void celebrationTakesTheFinishedTurnsPlace() {
+        Rig rig;
+        rig.runtime.submit(activity("working"));
+        // The monitor submits the finished turn, then how Mood celebrates it, in the same tick. Player
+        // replaces a "once" state at once, so the turn-finished state never shows.
+        rig.runtime.submit(activity("turn-finished"));
+        QCOMPARE(rig.lastCue(), QString("turn-finished"));
+        QCOMPARE(rig.runtime.submit(oneShot("mood", "celebrate", Policy::Celebration)), Submission::Admitted);
+        QCOMPARE(rig.lastCue(), QString("celebrate"));
+        QVERIFY(!rig.requests.last().interrupt);
+        rig.play();
+        const auto requests = rig.requests.size();
+        rig.answer(Feedback::Completed);
+        QCOMPARE(rig.requests.size(), requests); // Not celebrated twice.
+        QCOMPARE(rig.runtime.activity(), QString("turn-finished"));
+    }
+
+    void momentDuringAReactionShowsAfterIt() {
+        Rig rig;
+        rig.runtime.submit(activity("idle"));
+        rig.runtime.submit(konami());
+        rig.play();
+        const auto requests = rig.requests.size();
+        rig.runtime.submit(activity("turn-finished"));
+        QCOMPARE(rig.requests.size(), requests);
+        rig.answer(Feedback::Completed);
+        QCOMPARE(rig.lastCue(), QString("turn-finished"));
+    }
+
+    void waitingCelebrationStandsInForTheMoment() {
+        Rig rig;
+        rig.runtime.submit(activity("idle"));
+        rig.runtime.submit(konami());
+        rig.play();
+        rig.runtime.submit(activity("turn-finished"));
+        QCOMPARE(rig.runtime.submit(oneShot("mood", "snack", Policy::Celebration, rig.now + 10000)), Submission::Deferred);
+        rig.answer(Feedback::Completed);
+        QCOMPARE(rig.lastCue(), QString("snack"));
+        rig.play();
+        const auto requests = rig.requests.size();
+        rig.answer(Feedback::Completed);
+        QCOMPARE(rig.requests.size(), requests);
+    }
+
+    void unavailableCelebrationLeavesTheMomentToShow() {
+        Rig rig;
+        rig.runtime.submit(activity("idle"));
+        rig.runtime.submit(konami());
+        rig.play();
+        rig.runtime.submit(activity("turn-finished"));
+        rig.runtime.submit(oneShot("mood", "milestone", Policy::Celebration, rig.now + 10000));
+        rig.answer(Feedback::Completed);
+        QCOMPARE(rig.lastCue(), QString("milestone"));
+        rig.answer(Feedback::Unavailable); // Never started, so it stood in for nothing.
+        QCOMPARE(rig.lastCue(), QString("turn-finished"));
+    }
+
+    void momentIsShownOnceAcrossHandling() {
+        Rig rig;
+        rig.runtime.submit(activity("working"));
+        rig.change([](Context &c) { c.handled = true; });
+        rig.runtime.submit(activity("error"));
+        rig.change([](Context &c) { c.handled = false; });
+        QCOMPARE(rig.lastCue(), QString("error"));
+        const auto requests = rig.requests.size();
+        // Picked up and put down again while the error is still the aggregate: it is not replayed.
+        rig.change([](Context &c) { c.handled = true; });
+        rig.change([](Context &c) { c.handled = false; });
+        QCOMPARE(rig.requests.size(), requests);
+        QCOMPARE(rig.runtime.activity(), QString("error"));
+    }
+
+    void presentationMayAnswerBeforeItReturns() {
+        Rig rig;
+        rig.runtime.present = [&rig](const Request &request) {
+            rig.requests.append(request);
+            if (request.cue == "may20") rig.runtime.report(request.instance, Feedback::Unavailable); // No pool.
+        };
+        rig.runtime.submit(activity("idle"));
+        QCOMPARE(rig.runtime.submit(oneShot("eggs", "may20", Policy::Ambient)), Submission::Admitted);
+        QCOMPARE(rig.history("eggs/may20"), QString("admitted unavailable"));
+        QCOMPARE(rig.runtime.currentCue(), QString("idle"));
+        QCOMPARE(rig.runtime.submit(konami()), Submission::Admitted);
+        QCOMPARE(rig.lastCue(), QString("konami"));
     }
 
     // --- Presentation feedback ----------------------------------------------------------------------
@@ -508,7 +603,7 @@ private slots:
         // Nothing else gets in, not even urgent activity or a second quit.
         QCOMPARE(rig.runtime.submit(activity("attention")), Submission::Rejected);
         QCOMPARE(rig.runtime.submit(konami()), Submission::Rejected);
-        QCOMPARE(rig.runtime.submit({"lifecycle", "quit", "quit-angry", Policy::Shutdown}), Submission::Duplicate);
+        QCOMPARE(rig.runtime.submit({"lifecycle", "quit", "annoyed", Policy::Shutdown}), Submission::Duplicate);
         QCOMPARE(rig.requests.size(), requests);
         QCOMPARE(rig.finished, 0);
         rig.play();
@@ -522,7 +617,7 @@ private slots:
     void shutdownFinishesWhenItsCueIsUnavailable() {
         Rig rig;
         rig.runtime.submit(activity("idle"));
-        rig.runtime.submit({"lifecycle", "quit", "quit-angry", Policy::Shutdown});
+        rig.runtime.submit({"lifecycle", "quit", "annoyed", Policy::Shutdown});
         rig.answer(Feedback::Unavailable);
         QCOMPARE(rig.finished, 1);
     }

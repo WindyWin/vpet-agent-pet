@@ -10,7 +10,8 @@
 // show. Producers (session activity, lifecycle, mood, easter eggs, wellness, ambient, touch) submit
 // semantic intents; the runtime admits, defers, interrupts and expires them against the policy table in
 // docs/superpowers/specs/2026-10-08-behavior-runtime-design.md and hands one cue at a time to
-// presentation, which maps it to the active pet's animation (#64) and reports back how it went.
+// presentation, which maps it to the active pet's animation (#64, docs/adr/0029-cues.md) and reports back
+// how it went.
 //
 // Design stage: this header is the contract the tests in tests/behavior_tests.cpp are written against.
 // The implementation (src/behavior/runtime.cpp, Qt Core only) lands with the migration.
@@ -20,19 +21,25 @@ namespace pet::behavior {
 // their intent is; they never pick a number. A higher class may interrupt a lower one where the policy
 // table allows it.
 enum class Policy {
-    Shutdown,    // quit, quit-angry: cancels everything else and always finishes
+    Shutdown,    // quit, annoyed (then quit-angry): cancels everything else and always finishes
     Urgent,      // session activity that needs the user: attention, exhausted, error
     Startup,     // start: the pet arriving
     Surprise,    // danger, konami, reminder-done: a reaction to something that just happened
     Reminder,    // eye-break, water, monday, leave-work, sleep: art with a note, shown only when calm
-    Celebration, // a finished turn's treat or occasion: snack, milestone, long-turn, birthday, friday-evening
+    Celebration, // how a finished turn is celebrated: celebrate, snack, milestone, long-turn, birthday, friday-evening
     Activity,    // other session activity: working, reading, thinking, turn-finished, waiting, idle, inactive
-    Ambient,     // fidgets, occasion fidgets, wander moves, naps and hiding at a screen edge
+    Ambient,     // nap, occasion fidgets (may20, birthday, late-night), the pet's fidgets and moves, edge hiding
 };
 
 enum class Lifetime {
-    // Valid until withdrawn or replaced by a submission with the same identity. Session activity always is.
+    // Valid until withdrawn or replaced by a submission with the same identity, and shown again whenever
+    // presentation comes back to it: session activity that loops (working, attention, idle, …) and rests.
     Persistent,
+    // Session activity whose cue plays once (turn-finished, error): current until replaced, so it still
+    // governs admission, but presented at most once. Coming back to it after a reaction or a hold shows
+    // nothing new; presentation has already moved on by itself. A Celebration that starts while it is
+    // current and unshown stands in for it.
+    Moment,
     // Plays once, then gives presentation back. Ends on completion, interruption, unavailability or timeout.
     OneShot,
 };
@@ -40,7 +47,10 @@ enum class Lifetime {
 struct Intent {
     QString source;   // The producer: "session", "lifecycle", "mood", "eggs", "wellness", "ambient", "touch"
     QString key;      // Stable within the source; source + key is the intent's identity for deduplication.
-    QString cue;      // The semantic cue (#64), never an animation name.
+    // A cue from src/animation/cues.json, never an animation name. Ambient and touch intents may instead
+    // name a state from the pet's own ambient, move or touch sections (fidgets, moves, edges), which
+    // belong to each pet rather than to the cue vocabulary.
+    QString cue;
     Policy policy = Policy::Activity;
     Lifetime lifetime = Lifetime::OneShot;
     // A one-shot that cannot run at once may wait until this time (ms, the runtime's clock); 0 or a past
@@ -53,7 +63,7 @@ struct Intent {
 
 // What submit() decided at once.
 enum class Submission {
-    Admitted,  // Claimed presentation now (or, for a persistent intent, became the current one).
+    Admitted,  // Claimed presentation now (or, for session activity or a rest, became the current one).
     Deferred,  // Waiting for its turn, until it expires.
     Duplicate, // The same identity is already waiting or showing, or a persistent intent did not change.
     Rejected,  // Not allowed now and not allowed to wait.
@@ -101,7 +111,7 @@ class Runtime {
 public:
     // Presentation that reports nothing within this time is taken to have finished.
     static constexpr qint64 oneShotTimeoutMs = 15000; // EasterEggs::surpriseMs today.
-    static constexpr qint64 shutdownTimeoutMs = 10000; // Covers quit-angry's remark and both of its animations.
+    static constexpr qint64 shutdownTimeoutMs = 10000; // annoyed, a pause to read the remark, then quit-angry.
     static constexpr int maxDeferred = 4;            // Waiting one-shots, all sources together.
 
     // `clock` gives milliseconds; tests drive it by hand.
@@ -127,7 +137,8 @@ public:
     int deferred() const;
     bool closing() const { return closing_; } // Shutdown was submitted.
 
-    // Hands a cue to presentation. Unset, nothing is presented, and every request times out.
+    // Hands a cue to presentation. It may report() before it returns, as for an optional cue the pet has
+    // no pool for. Unset, nothing is presented, and every request times out.
     std::function<void(const Request &)> present;
     std::function<void(const Intent &, Outcome)> outcome;
     // Shutdown is complete: its presentation finished, failed, timed out or was not needed (hidden pet).

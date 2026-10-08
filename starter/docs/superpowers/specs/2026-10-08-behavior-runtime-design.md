@@ -1,8 +1,9 @@
 # Behavior runtime — design
 
 Date: 2026-10-08. Status: draft for review; design and tests only, no implementation yet.
-Tracking: issue #67. Builds on #62 Part 1 (pet packs, PR #68, the base of this branch) and on #64
-(cues decoupled from animations), which has not started. Order: #62 Part 1 → #64 → #67 → #43.
+Tracking: issue #67, PR #69. Builds on #62 Part 1 (pet packs, ADR 0028) and #64 (cues, ADR 0029), both
+on `main`; this design uses #64's cue vocabulary (`src/animation/cues.json`) and its `Player::play`,
+`pool` and `stateFor` mapping API. Order: #62 Part 1 → #64 → #67 → #43.
 
 What this branch carries:
 
@@ -10,11 +11,11 @@ What this branch carries:
 | --- | --- |
 | this document | the policy, the contract and the migration plan |
 | `src/behavior/runtime.h` | the runtime's interface, declarations only |
-| `tests/behavior_tests.cpp` | the policy as executable tests (34 functions, 40 cases with data rows) |
+| `tests/behavior_tests.cpp` | the policy as executable tests (40 functions, 46 cases with data rows) |
 | `CMakeLists.txt` | compiles the tests against the header (`behavior-tests-spec`, an object library) without linking or registering them |
 
 The tests were run against a throwaway reference implementation (not committed) to prove the policy
-is self-consistent: all 40 cases passed. The implementation work replaces the object library with a
+is self-consistent: all 46 cases passed. The implementation work replaces the object library with a
 `pet_behavior` library and a registered `behavior` CTest suite.
 
 ## Intent
@@ -22,8 +23,9 @@ is self-consistent: all 40 cases passed. The implementation work replaces the ob
 The pet has many behaviors that want to show something: session activity, startup and shutdown,
 touch and dragging, ambient fidgets and naps, wandering, hiding at a screen edge, mood treats,
 easter-egg surprises and celebrations, clock reminders and wellness reminders. Today each decides
-for itself whether it may run by inspecting the others or the `Player`'s state names. This design
-puts one small runtime between the producers and the #64 cue mapping:
+for itself whether it may run by inspecting the others or the `Player`'s requests. #64 took animation
+names out of event code; this design takes the arbitration out of it, with one small runtime between
+the producers and the cue mapping:
 
 ```text
 producer (Monitor, PetWindow, Mood, EasterEggs, Wellness, Ambient)
@@ -32,7 +34,7 @@ producer (Monitor, PetWindow, Mood, EasterEggs, Wellness, Ambient)
 behavior::Runtime ── admission, rank, interruption, deferral, expiry, timeouts
         │  Request {instance, cue, interrupt}           ▲ Feedback {Started, Completed,
         ▼                                               │          Interrupted, Unavailable}
-Stage (adapter) ── #64 cue mapping ── Player ───────────┘
+Stage (adapter) ── Player::play / pool (#64) ──────────┘
         │
         ▼  Outcome {Admitted, Started, Completed, Interrupted, Unavailable, TimedOut, Expired, Dropped}
 producer bookkeeping (notes, cooldowns, treats, effects)
@@ -55,7 +57,7 @@ Success (issue #67, "Done when"):
 
 - `Sessions` keeps ranking sessions (attention > exhausted > error > turn-finished > working >
   reading > thinking > idle, plus waiting and inactive). The runtime receives the aggregate as one
-  persistent intent and never ranks sessions again.
+  intent (persistent, or a moment for cues of the "once" shape) and never ranks sessions again.
 - `hook`, protocol v1, session aggregation, alert delivery (`AlertQueue`, the bubble, the tray badge)
   and the notification system are untouched. An attention bubble still appears however the pet is
   animated.
@@ -71,20 +73,20 @@ Success (issue #67, "Done when"):
 
 | Where | Guard | Replaced by |
 | --- | --- | --- |
-| `Monitor::update` | returns while `requestedState() == "closing"` | Shutdown rejects every later submission (rule 1) |
-| `Monitor::update` | treats `ambient().resting()` and `isTouch(requestedState())` as idle | rests are persistent Ambient intents shown while activity is idle-like (rule 9); petting is handling (rule 2) |
+| `Monitor::update` | returns while `window_.quitting()` | Shutdown rejects every later submission (rule 1) |
+| `Monitor::update` | leaves an idle pet alone while `window_.resting()` (ambient fidget or nap, or a touch state requested) | rests are persistent Ambient intents shown while activity is idle-like (rule 9); petting is handling (rule 2) |
 | `Monitor::update` | yields to `eggs().surprising()` unless urgent | rank and interruption (rules 3, 4) |
-| `Monitor::update` | `!held()` and the `lastAggregate_` dance to re-select after a hold | handling withholds presentation and resolves once on release (rule 2) |
-| `Monitor::update` | `mood().celebrate(eggs().celebration(…))` chooses one celebration | Mood and EasterEggs each submit a Celebration; rank and submission order pick (rule 5) |
-| `Monitor::update` | scans `reactions("snack")` for the chosen state to mark water given | the snack intent carries the `water` effect, applied on Started (rule 11) |
+| `Monitor::update` | `!player.held()`, the `lastAggregate_` dance, and never re-selecting `error` or `turn-finished` | handling withholds presentation and resolves once on release (rule 2); moments are presented at most once (rule 12) |
+| `Monitor::update` | selects `mood().celebrate(…)`'s state instead of playing `turn-finished` | `Mood` still picks one celebration cue; `Monitor` submits it as a Celebration, which takes the moment's place (rule 12) |
+| `Monitor::update` | `celebration.cue == "snack"` marks water given at selection | the snack intent carries the `water` effect, applied on Started (rule 11) |
 | `Monitor::calm` | attention, bubble/note, held, surprising, walking, flying | the Reminder admission condition over `Context` (rule 7) |
 | `Monitor::remindWellness` | quiet hours mark the reminder given | Reminder is Rejected in quiet hours; the producer treats that as given (rule 10) |
 | `Monitor::apply` | no danger surprise while urgent or hidden | Surprise is Rejected while urgent, handled or hidden (rule 3) |
-| `EasterEggs::surprise` | refuses while `held()` or `stopped()`; draws and selects itself | Surprise admission; the draw moves to #64's mapping |
+| `EasterEggs::surprise` | refuses while `held()` or `stopped()`; draws from `pool(cue)` and selects itself | Surprise admission; `Stage` draws from the pool |
 | `EasterEggs::surprising` | infers the surprise's lifetime from `requestedState()` and a 15 s clock | outcomes correlated by instance, with `oneShotTimeoutMs` (rule 8) |
-| `Ambient::looped` | `held()`, `stopped()`, selects fidgets and naps itself | Ambient admission; Ambient keeps its clocks and draws, then submits |
-| `PetWindow` slide end, `letGo` | hides at the edge only if `requestedState() == "idle"` | the edge is a persistent Ambient intent, refused unless idle-like |
-| `PetWindow::playQuitAnimation` | `select` failure and a 5 s timer per step | Shutdown's Unavailable/TimedOut outcomes and `shutdownTimeoutMs` (rule 1) |
+| `Ambient::looped` | `held()`, `stopped()`, plays fidgets and `nap` itself | Ambient admission; Ambient keeps its clocks and draws, then submits |
+| `PetWindow` slide end, `letGo` | hides at the edge only if `player_.requested("idle")` | the edge is a persistent Ambient intent, refused unless idle-like |
+| `PetWindow::playQuitAnimation` | `play` failure, `quitCue_` matched against `completed`, a 5 s timer per step | Shutdown's Unavailable/TimedOut outcomes and `shutdownTimeoutMs` (rule 1) |
 
 ## Ownership
 
@@ -92,8 +94,8 @@ Success (issue #67, "Done when"):
 | --- | --- |
 | Producers (`Monitor`, `PetWindow` lifecycle and touch, `Mood`, `EasterEggs`, `Wellness`, `Ambient`) | triggers, counters, schedules, which cue and policy class to submit, bookkeeping on outcomes |
 | `behavior::Runtime` | admission, rank, interruption, deferral and its bound, expiry, timeouts, returning to the current activity, the shutdown guarantee |
-| `Stage` (new adapter in `pet_ui`) | turns a `Request` into a #64 mapping lookup and a `Player` call; turns `Player` signals into `Feedback` for that request's instance |
-| #64 cue mapping | cue → state or reaction pool for the active pet, fallback for required cues, "unavailable" for optional ones |
+| `Stage` (new adapter in `pet_ui`) | turns a `Request` into `Player::play(cue)` or a draw from `Player::pool(cue)`; turns `Player` signals into `Feedback` for that request's instance |
+| #64 cue mapping (`Catalog`, `cues.json`) | cue → state or reaction pool for the active pet; every state cue is guaranteed to play, a reaction cue without a pool plays nothing |
 | `Player` | phases, frames, held states and their release, presentation signals |
 | `PetWindow` / platform | pointer handling, flight, walking and sliding physics, geometry, native windows |
 
@@ -105,17 +107,19 @@ through `window_.behavior()`. Each fact in `Context` has one writer: `PetWindow`
 
 The full declarations are in `src/behavior/runtime.h`. In short:
 
-- **`Intent`**: `source` + `key` is the identity (deduplication, withdrawal); `cue` is a #64 cue,
-  never an animation name; `policy` is one of the central classes below; `lifetime` is `Persistent`
-  or `OneShot`; `expiresAt` is how long a one-shot may wait (0: now or never); `effects` are semantic
-  side effects reported with Started.
+- **`Intent`**: `source` + `key` is the identity (deduplication, withdrawal); `cue` is a cue from
+  `cues.json`, never an animation name (Ambient and touch intents may name a fidget, move or edge
+  state instead, since those catalog sections belong to each pet, per ADR 0029); `policy` is one of
+  the central classes below; `lifetime` is `Persistent`, `Moment` (session activity of the "once"
+  shape: `turn-finished`, `error`) or `OneShot`; `expiresAt` is how long a one-shot may wait (0: now
+  or never); `effects` are semantic side effects reported with Started.
 - **`submit()`** answers at once: `Admitted`, `Deferred`, `Duplicate` or `Rejected`.
 - **`outcome`** reports each instance's history: at most one `Admitted`, then optionally `Started`,
   then exactly one terminal outcome (`Completed`, `Interrupted`, `Unavailable`, `TimedOut`), or
   `Expired`/`Dropped` without ever being admitted.
 - **`present`** hands presentation a `Request {instance, cue, interrupt}`; **`report(instance,
-  feedback)`** answers it. A report for anything but the instance holding presentation is stale and
-  ignored.
+  feedback)`** answers it, possibly before `present` returns (an optional cue without a pool). A report
+  for anything but the instance holding presentation is stale and ignored.
 - **`setContext()`** and **`tick()`** re-evaluate: a waiting reminder starts once things are calm, and
   timeouts and expiry are enforced.
 - **`finished`** is called exactly once when shutdown is done.
@@ -126,30 +130,31 @@ Producers choose a class, never a number. Rank, from highest:
 
 | Rank | Class | Cues | Lifetime | Admitted when | May wait | Interrupt flag |
 | --- | --- | --- | --- | --- | --- | --- |
-| 1 | Shutdown | `quit`, `quit-angry` | one-shot, `shutdownTimeoutMs` | always, even while handled | — | yes |
-| 2 | Urgent | `attention`, `exhausted`, `error` | persistent (session activity) | always; presented after handling | — | yes |
+| 1 | Shutdown | `quit`, `annoyed` (then `quit-angry`) | one-shot, `shutdownTimeoutMs` | always, even while handled | — | yes |
+| 2 | Urgent | `attention`, `exhausted`, `error` | persistent; `error` a moment | always; presented after handling | — | yes |
 | 3 | Startup | `start` | one-shot | always | — | yes |
 | 4 | Surprise | `danger`, `konami`, `reminder-done` | one-shot | visible, not handled, not urgent | no (refused) | yes |
 | 5 | Reminder | `eye-break`, `water`, `monday`, `leave-work`, `sleep` | one-shot | calm (below); refused in quiet hours | yes, until `expiresAt` | yes |
-| 6 | Celebration | `snack`, `milestone`, `long-turn`, `birthday`, `friday-evening` | one-shot | visible, not urgent; waits while handled | yes, until `expiresAt` or the activity changes | no |
-| 7 | Activity | `working`, `reading`, `thinking`, `turn-finished`, `waiting`, `idle`, `inactive` | persistent (session activity) | always | — | no |
-| 8 | Ambient | fidgets, occasion fidgets, wander moves; `nap`, `edge-left`, `edge-right` as rests | one-shot or persistent rest | visible, not handled, not urgent, activity idle-like | no | no |
+| 6 | Celebration | `celebrate`, `snack`, `milestone`, `long-turn`, `birthday`, `friday-evening` | one-shot | visible, not urgent; waits while handled | yes, until `expiresAt` or the activity changes | no |
+| 7 | Activity | `working`, `reading`, `thinking`, `turn-finished`, `waiting`, `idle`, `inactive` | persistent; `turn-finished` a moment | always | — | no |
+| 8 | Ambient | occasion fidgets (`may20`, `birthday`, `late-night`), the pet's fidgets and moves; `nap` and the pet's edge states as rests | one-shot or persistent rest | visible, not handled, not urgent, activity idle-like | no | no |
 
 "Calm" (Reminder admission): the user is present, the pet is visible, not muted, no bubble or note
 is showing, no session waits on the user, the pet is not handled or moving, and the activity is not
 urgent. "Idle-like" activity: `idle`, `waiting`, or none yet.
 
-The interrupt flag is `Player::select`'s: cut the current state instead of letting it finish its
+The interrupt flag is `Player::play`'s: cut the current state instead of letting it finish its
 exit. Returning to the activity after a one-shot never interrupts.
 
-Cue names here are placeholders for #64's vocabulary; the classes, not the spellings, are the design.
+Urgency now lives here: `Monitor::urgent()` (ADR 0029 kept it on the event side) becomes the choice
+between the Urgent and Activity classes.
 
 ## Rules
 
 1. **Shutdown.** It interrupts the showing one-shot, drops every waiting one, ends any rest and is
    presented even while the pet is handled (`PetWindow` ends the drag first, as today). Every later
    submission is `Rejected`, except the same identity, which is a `Duplicate` (a second Quit, or
-   `quit-angry` after `quit`). `finished` fires exactly once: on Completed, on Unavailable, after
+   `annoyed` after `quit`). `finished` fires exactly once: on Completed, on Unavailable, after
    `shutdownTimeoutMs` without a terminal report, at once when the pet is hidden (no request is
    made), and also when nobody presents at all (the request times out).
 2. **Handling.** While `handled` (dragged, petted while held, falling), the runtime makes no requests
@@ -186,6 +191,14 @@ Cue names here are placeholders for #64's vocabulary; the classes, not the spell
     `maxDeferred` one-shots wait; beyond that a new one is Rejected.
 11. **Effects** apply on Started only, so a refused, dropped or unavailable reaction never counts as
     shown.
+12. **Moments.** Session activity of the "once" shape (`turn-finished`, `error`) is presented at most
+    once per submission. Coming back to it after a reaction or a hold shows nothing new: `Player`
+    already went on to the cue's `after` state by itself, as `Monitor`'s `turn-finished`/`error`
+    exception does today. A Celebration stands in for the moment it celebrates: `Monitor` submits the
+    `turn-finished` moment and then `Mood`'s celebration in the same tick, and since `Player` replaces a
+    "once" state at once, only the celebration shows. A Celebration that waited (behind a surprise)
+    and then starts marks the still-unshown moment as shown; one that ends Unavailable without
+    starting leaves the moment to show.
 
 ## Bookkeeping on outcomes
 
@@ -196,42 +209,49 @@ names:
 | --- | --- | --- |
 | Wellness reminder (`eye-break`, `water`) | Admitted (the note is shown, with or without art); Rejected in quiet hours, as today | Expired: still due, resubmitted on the next tick (one identity, so bounded) |
 | Clock reminder (`monday`, `leave-work`, `sleep`) | Admitted (once a day) | waits within its window (`expiresAt` = window end); Expired: not given today, as when the pet was not running |
-| Mood treat (`snack`, `milestone`) | Admitted | Rejected, Dropped, Expired: the treat stays pending for the next finished turn, as a passed-over snack does today |
+| Mood treat (`snack`, `milestone`) | Admitted (`Mood::celebrate()` already reports the cue it drew from) | Rejected, Dropped, Expired: the treat stays pending for the next finished turn, as a passed-over snack does today |
 | Birthday cheer | Admitted (once a day) | not consumed |
 | Snack's `water` effect | Started: `Wellness::given("water")` | nothing |
 | `reminder-done`, `danger`, `konami` | nothing to consume | — |
 
 `EasterEggs::reminder()` and `Mood::celebrate()` split into "what is due" and "mark it given", so the
-mark waits for the outcome. The bedtime note and the recap note are passing remarks with no art: they
+mark waits for the outcome. `Mood` keeps choosing exactly one celebration cue per finished turn
+(a milestone, else the occasion `EasterEggs::celebration()` names, else a snack, else `celebrate`); the
+runtime never shows two. The bedtime note and the recap note are passing remarks with no art: they
 stay with `Monitor` and are not intents.
 
 ## Presentation adapter (`Stage`)
 
 `Stage` receives `Request`s and drives `Player` through #64's mapping:
 
-- A persistent cue maps to a state; a one-shot cue maps to a reaction pool or a one-shot state.
-- Unavailable: the optional cue maps to nothing, its pool is empty, or `select` fails. Required cues
-  fall back inside #64 and are never Unavailable unless the pet is broken.
+- A state cue goes to `Player::play(cue, interrupt)`; a reaction cue draws a state from
+  `Player::pool(cue)` and selects it; a pet-defined fidget, move or edge state is selected as is.
+- Unavailable, reported before `present` returns: a reaction cue with an empty pool. `ADR 0029`
+  guarantees every state cue plays on an activated pet, so a state cue is Unavailable only if `play`
+  fails, which `PetLibrary::activate` already rules out.
 - Started: `Player::entered` for the state the request selected. Completed: `Player::completed` for
   it. Interrupted: `Player::entered` for any state the request did not select (a drag hold, a
   developer selection).
 - `Stage` remembers only the latest request's instance, so signals about an earlier one are never
   reported against its replacement; the runtime ignores stale instances as a second line of defense.
-- A multi-step cue (`quit-angry`: the angry remark, a pause to read it, then `closing_angry`) is one
-  request; `Stage` reports Completed after its last step. `shutdownTimeoutMs` (10 s) covers all steps.
+- `annoyed` is one request with steps: the `annoyed` state cue, a 2.25 s pause to read the remark,
+  then `quit-angry`. `Stage` reports Completed after the last step; `shutdownTimeoutMs` (10 s) covers
+  them all.
 
 ## Behavior kept, and intentional differences
 
 Kept: session priority; attention interrupting surprises; surprises playing out over non-urgent
 activity; celebrations waiting behind a surprise; reminders waiting for calm; quiet hours letting
 reminders go; the note-only reminder when the pet has no art; drag and fall holding playback and
-showing the latest activity afterwards; a hidden pet quitting at once; edge hiding only when idle.
+showing the latest activity afterwards; a hidden pet quitting at once; edge hiding only when idle;
+one celebration per finished turn, shown instead of the `turn-finished` state; `turn-finished` and
+`error` never replayed.
 
 Intentional differences, for review:
 
 1. **Startup yields only to Shutdown and urgent activity.** Today a danger surprise or konami can cut
-   `starting`. Now they are refused until the pet has arrived.
-2. **Clock reminders wait for calm.** Today `monday`, `leave_work` and `sleep` play at once whatever
+   `start`. Now they are refused until the pet has arrived.
+2. **Clock reminders wait for calm.** Today `monday`, `leave-work` and `sleep` play at once whatever
    is happening, and muting drops only the note. As Reminders they wait (within their window) until
    the user is present and nothing else is being said, and muting holds them like wellness reminders.
 3. **Snack/water counts on Started**, not on selection: a snack that never played no longer cancels
@@ -245,21 +265,22 @@ Intentional differences, for review:
 Each step keeps every existing suite green and removes the guards it covers.
 
 1. **Runtime and Stage.** `src/behavior/runtime.cpp`, a `pet_behavior` library (Qt Core), linked by
-   `pet_ui`; register `behavior` with CTest in place of `behavior-tests-spec`. `Stage` over #64's
-   mapping. Nothing submits yet.
-2. **Session activity and lifecycle.** `Monitor::update` submits the aggregate (Urgent or Activity);
-   `PetWindow` submits `start` and `quit`/`quit-angry` and quits on `finished`. Remove the
-   `"closing"` check, the `held()`/`lastAggregate_` re-select logic, `quitTimer_` and
-   `playQuitAnimation`'s chain.
+   `pet_ui`; register `behavior` with CTest in place of `behavior-tests-spec`. `Stage` over
+   `Player::play`/`pool`. Nothing submits yet.
+2. **Session activity and lifecycle.** `Monitor::update` submits the aggregate (Urgent or Activity,
+   a moment for `turn-finished` and `error`) followed by `Mood`'s celebration; `PetWindow` submits
+   `start` and `quit`/`annoyed` and quits on `finished`. Remove the `quitting()` check, the
+   `held()`/`lastAggregate_` re-select logic, `quitTimer_`, `quitCue_` and `playQuitAnimation`'s chain.
 3. **Handling, rests and wander.** `PetWindow` sets `handled` and `moving`; edge hiding becomes a rest
    intent from `touch`, naps one from `Ambient`; `Ambient` submits fidgets and moves (its move gate
-   stays for geometry). Remove `resting()`/`isTouch()` from `Monitor` and the `requestedState() ==
-   "idle"` checks in `PetWindow`.
-4. **Celebrations and surprises.** `Mood` and `EasterEggs` submit Celebrations and Surprises and keep
-   their counters by outcome; `EasterEggs::surprise`/`surprising` and the snack scan go.
+   stays for geometry). Remove `PetWindow::resting()` and the `requested("idle")` checks in
+   `PetWindow`.
+4. **Surprises and treats by outcome.** `EasterEggs` submits Surprises; `Mood` and `EasterEggs` keep
+   their counters by outcome; `EasterEggs::surprise`/`surprising` and the `celebration.cue == "snack"`
+   check go.
 5. **Reminders.** `Monitor` sets `present`, `muted`, `speaking`, `quiet` and `attention`; wellness and
    clock reminders become Reminder intents and show their notes on Admitted. `Monitor::calm` goes.
-6. **Docs.** ADR 0029 (behavior runtime), `architecture.md` code map, `pets.md` (cues a pet answers
+6. **Docs.** ADR 0030 (behavior runtime), `architecture.md` code map, `pets.md` (cues a pet answers
    are arbitrated, not guaranteed to play), and `prototype-tests` cases for the wiring.
 
 ## How #43 joins
@@ -281,7 +302,8 @@ presentation. Coverage against the issue's list:
 | equal-priority ties | `equalOrLowerRankWaitsOrIsRejected`, `waitingIntentsGoByRankThenSubmissionOrder` |
 | expiry and deduplication | `waitingIntentsExpire`, `sameIdentityIsNotRestartedOrQueuedTwice`, `activityIsPresentedOnceAndRepeatsAreDuplicates`, `waitingIsBounded` |
 | obsolete reactions | `activityChangesDuringAReactionShowTheLatestAfterIt`, `obsoleteCelebrationIsDroppedWhenActivityMovesOn`, `restEndsWithActivityAndIsNotReplayed` |
-| missing optional mappings | `unavailableOptionalCueReleasesItsClaim`, `reminderKeepsItsNoteWhenTheArtIsMissing` |
+| moments (`turn-finished`, `error`) | `celebrationTakesTheFinishedTurnsPlace`, `momentDuringAReactionShowsAfterIt`, `waitingCelebrationStandsInForTheMoment`, `unavailableCelebrationLeavesTheMomentToShow`, `momentIsShownOnceAcrossHandling` |
+| missing optional mappings | `unavailableOptionalCueReleasesItsClaim`, `reminderKeepsItsNoteWhenTheArtIsMissing`, `presentationMayAnswerBeforeItReturns` |
 | stale feedback, timeouts | `staleFeedbackCannotFinishTheReplacement`, `silentPresentationTimesOut` |
 | shutdown failure | `shutdownCancelsEverythingAndFinishesOnce`, `shutdownFinishesWhenItsCueIsUnavailable`, `shutdownFinishesWithoutFeedback`, `shutdownOfAHiddenPetFinishesAtOnce`, `shutdownFinishesWithoutAPresentation` |
 | reminder notes and effects | `reminderWaitsForCalm` (7 rows), `quietHoursLetRemindersGo`, `reminderThatNeverGetsItsTurnShowsNoNote`, `effectsApplyOnlyWhenTheReactionStarts` |
