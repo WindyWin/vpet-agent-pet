@@ -245,8 +245,13 @@ jobs:
           }
           Get-ChildItem dist
 
+      - name: Build older setup fixture
+        run: |
+          $env:QMAKE = "$env:QT_ROOT_DIR\bin\qmake.exe"
+          python scripts/build_windows_update_fixture.py --output dist-update-fixture
+
       - name: Check install, upgrade and uninstall
-        run: python scripts/check_install_windows.py (Get-Item dist/agent-pet-*-windows-x86_64-setup.exe).FullName
+        run: python scripts/check_install_windows.py (Get-Item dist/agent-pet-*-windows-x86_64-setup.exe).FullName --previous-setup (Get-Item dist-update-fixture/agent-pet-*-windows-x86_64-setup.exe).FullName
 
       - uses: actions/upload-artifact@v4
         with:

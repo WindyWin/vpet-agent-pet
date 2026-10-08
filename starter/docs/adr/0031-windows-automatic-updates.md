@@ -25,7 +25,9 @@ exit. It holds the monitor receiver lock while running Setup so another monitor
 cannot start during replacement. Setup runs silently, without forcing other apps
 to close or requesting a restart, and explicitly skips integration/startup tasks.
 The helper checks the installed version using the console companion and relaunches
-the pet with the original arguments after releasing the locks.
+the pet with the original arguments after releasing the locks. Setup failures or failed
+version probes leave the pet stopped for manual repair. Target comparison expands
+Windows short path aliases; Setup and locks keep the registered path spelling.
 
 A pending attempt is consumed before Setup starts and on reported failures, so
 an unsuccessful upgrade cannot create a launch loop. The full download is retained

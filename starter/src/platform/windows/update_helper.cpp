@@ -31,11 +31,11 @@ int main(int argc, char **argv) {
     pet::i18n::install(pet::i18n::fromName(pet::PreferencesStore().load().language));
     auto args = app.arguments();
     if (args.size() < 7 || (args[1] != "--apply" && args[1] != "--run-setup")) return 2;
-    const QString prefix = args[2], package = args[3], digest = args[4], version = args[5];
+    const QString package = args[3], digest = args[4], version = args[5];
     bool validPid = false;
     const qint64 parent = args[6].toLongLong(&validPid);
-    if (!validPid || parent < 0 || QFileInfo(prefix).canonicalFilePath() != prefix
-        || !pet::platform::registeredInstallation(prefix)) return 2;
+    if (!validPid || parent < 0 || !pet::platform::registeredInstallation(args[2])) return 2;
+    const QString prefix = pet::platform::registeredInstallDirectory();
     const bool bootstrapMode = args[1] == "--apply";
     bool validBootstrap = false;
     const qint64 bootstrap = bootstrapMode ? 0 : args.value(7).toLongLong(&validBootstrap);
@@ -110,10 +110,12 @@ int main(int argc, char **argv) {
     QFile::remove(dataDirectory() + "/pending.json");
     pet::Receiver receiver;
     if (!receiver.start(error)) return report(Updater::tr("Close the running pet before installing an update."));
+    // Setup may partially replace files on failure. Relaunch only after a successful version probe.
+    resume = false;
     QProcess setup;
     setup.setWorkingDirectory(QFileInfo(package).absolutePath());
     setup.start(package, {"/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/NOCLOSEAPPLICATIONS",
-                          "/NORESTARTAPPLICATIONS", "/TASKS=", "/AGENTPETUPDATE=1", "/DIR=" + prefix,
+                          "/NORESTARTAPPLICATIONS", "/AGENTPETUPDATE=1", "/DIR=" + prefix,
                           "/LOG=" + dataDirectory() + "/setup.log"});
     // Wait for Setup to finish; terminating an installer midway can damage the installation.
     if (!setup.waitForStarted(10000) || !setup.waitForFinished(-1)
@@ -127,6 +129,7 @@ int main(int argc, char **argv) {
         probe.kill(); probe.waitForFinished(3000);
         return report(Updater::tr("The downloaded app cannot run on this system."));
     }
+    resume = true;
     QFile::remove(dataDirectory() + "/package.exe");
     writeResult(Updater::tr("Updated to %1.").arg(version));
     return 0;

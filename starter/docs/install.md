@@ -387,7 +387,8 @@ Portable copies and local builds offer notifications and manual downloads.
 Windows updates use the full setup program; component downloads and Linux's startup
 rollback are unavailable. A failed installation consumes the pending attempt to prevent
 a restart loop and records details in `%APPDATA%\agent-pet\updates\setup.log` and
-`result.txt`. Run the setup program manually to repair a failed or interrupted upgrade.
+`result.txt`. The pet stays stopped if Setup fails or the installed version check fails.
+Run the setup program manually to repair a failed or interrupted upgrade.
 Temporary helper copies are reclaimed during later updates when no longer running.
 
 **Uninstall:** **Settings → Apps → Installed apps → Agent Pet → Uninstall**. It stops the
