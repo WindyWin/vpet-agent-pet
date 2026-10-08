@@ -235,8 +235,10 @@ def check_catalog(animations, errors):
             errors.append(f'Empty pool for cue: {name}')
         else:
             for reaction in value:
-                if not ends_itself(reaction.get('state')) or not count(reaction.get('weight')):
-                    errors.append(f'Reaction must end by itself, return to idle and have a weight: {name}/{reaction.get("state")}')
+                if not isinstance(reaction, dict):
+                    errors.append(f'Each entry of the pool for cue {name} must be an object with a state and a weight')
+                elif not ends_itself(reaction.get('state')) or not count(reaction.get('weight')) or reaction['weight'] > 1000:
+                    errors.append(f'Reaction must end by itself, return to idle and have a weight of 1-1000: {name}/{reaction.get("state")}')
 
     # Ambient fidgets are one-shot states played at random while the pet idles.
     ambient = animations.get('ambient', {})

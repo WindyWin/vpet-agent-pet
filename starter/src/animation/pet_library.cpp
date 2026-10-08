@@ -147,17 +147,20 @@ bool PetLibrary::markDownloaded(const QString &id, QString *error) {
         return fail("Cannot write to " + store_);
     return true;
 }
+// Whether the stored file for `pack` has the size and SHA-256 its leaf in the installed index promises.
+static bool intactBlob(const QString &path, const PetPack &pack) {
+    QFile file(path);
+    if (!file.open(QIODevice::ReadOnly) || file.size() != pack.bytes) return false;
+    QCryptographicHash hash(QCryptographicHash::Sha256);
+    return hash.addData(&file) && hash.result().toHex() == pack.sha256.toLatin1();
+}
 void PetLibrary::repair(const QString &id) const {
     QFile::remove(store_ + "/" + id + ".root");
     for (const auto &pack : tree(id).packs) {
-        QFile file(blobPath(pack.sha256));
-        if (!file.open(QIODevice::ReadOnly)) continue;
-        QCryptographicHash hash(QCryptographicHash::Sha256);
-        const bool intact = file.size() == pack.bytes && hash.addData(&file) && hash.result().toHex() == pack.sha256.toLatin1();
-        file.close();
-        if (!intact) {
-            qWarning().noquote() << "Removing damaged download" << file.fileName();
-            file.remove();
+        const auto path = blobPath(pack.sha256);
+        if (QFile::exists(path) && !intactBlob(path, pack)) {
+            qWarning().noquote() << "Removing damaged download" << path;
+            QFile::remove(path);
         }
     }
 }
@@ -224,6 +227,9 @@ bool PetLibrary::activate(const QString &id, QString *error) {
                 QFile::remove(store_ + "/" + id + ".root"); // No longer complete: the picker offers the download again.
                 return rollBack(QString("Pet %1 is not downloaded: pack %2 is missing.").arg(id, pack.name));
             }
+            // The store is writable by anyone running as the user: a pack is trusted only once it matches its leaf.
+            if (!bundled && !intactBlob(path, pack))
+                return damaged(QString("The downloaded pack %1 of %2 is damaged; download the pet again.").arg(pack.name, id));
             if (!QResource::registerResource(path, mapRoot_)) {
                 if (bundled) return rollBack("Cannot load the artwork pack " + pack.name + ".rcc. Reinstall Agent Pet to restore it.");
                 return damaged(QString("The downloaded pack %1 of %2 is damaged; download the pet again.").arg(pack.name, id));

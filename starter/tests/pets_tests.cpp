@@ -134,10 +134,20 @@ QHash<QString, QByteArray> duoBlobs() {
 class Reply : public QNetworkReply {
     QByteArray data_; qint64 offset_ = 0;
 public:
-    Reply(const QNetworkRequest &request, QByteArray data, bool fail, QObject *parent) : QNetworkReply(parent), data_(std::move(data)) {
+    // With `redirect`, the answer is a redirect first: it goes on only once the downloader allows it, as with
+    // QNetworkRequest::UserVerifiedRedirectPolicy.
+    Reply(const QNetworkRequest &request, QByteArray data, bool fail, QObject *parent, QUrl redirect = {})
+        : QNetworkReply(parent), data_(std::move(data)) {
         setRequest(request); setUrl(request.url()); open(QIODevice::ReadOnly);
-        QTimer::singleShot(0, this, [this, fail] {
+        QTimer::singleShot(0, this, [this, fail, redirect] {
             if (isFinished()) return;
+            if (redirect.isValid()) {
+                bool allowed = false;
+                connect(this, &QNetworkReply::redirectAllowed, this, [&allowed] { allowed = true; });
+                emit redirected(redirect);
+                if (isFinished()) return; // Refused: the downloader aborted.
+                if (!allowed) { setError(QNetworkReply::InsecureRedirectError, "not allowed"); setFinished(true); emit finished(); return; }
+            }
             if (fail) setError(QNetworkReply::ConnectionRefusedError, "offline");
             else { setAttribute(QNetworkRequest::HttpStatusCodeAttribute, 200); emit readyRead(); }
             if (!isFinished()) { setFinished(true); emit finished(); }
@@ -157,6 +167,7 @@ public:
     QHash<QString, QByteArray> blobs;
     QHash<QString, int> tampered;
     QStringList requests;
+    QUrl redirect;
     bool offline = false;
 protected:
     QNetworkReply *createRequest(Operation, const QNetworkRequest &request, QIODevice *) override {
@@ -165,7 +176,7 @@ protected:
         const auto sha = file.chopped(4);
         auto bytes = blobs.value(sha);
         if (tampered.value(sha) > 0) { --tampered[sha]; bytes[0] = char(bytes[0] ^ 0x5a); }
-        return new Reply(request, bytes, offline, this);
+        return new Reply(request, bytes, offline, this, redirect);
     }
 };
 }
@@ -487,7 +498,7 @@ private slots:
         unbundledDuo(directory.path());
         pet::PetLibrary library(directory.filePath("artwork.rcc"), "/damaged", store.path());
         const auto blobs = duoBlobs();
-        // One pack holds the other's bytes: it registers, but its frames are missing.
+        // One pack holds the other's bytes: it would register, but is not what the index vouches for.
         const auto tree = library.tree("duo");
         const auto wave = std::find_if(tree.packs.begin(), tree.packs.end(), [](const pet::PetPack &pack) { return pack.sequence == "wave"; });
         const auto idle = std::find_if(tree.packs.begin(), tree.packs.end(), [](const pet::PetPack &pack) { return pack.sequence == "idle"; });
@@ -496,7 +507,7 @@ private slots:
         }
         QString error;
         QVERIFY(!library.activate("duo", &error));
-        QCOMPARE(error, QString("Missing frame assets/duo/wave/_000_50.png. Download the pet again."));
+        QVERIFY2(error.contains("is damaged; download the pet again"), qPrintable(error)); // Its digest is not the leaf's.
         QVERIFY(!QFile::exists(library.blobPath(wave->sha256))); // Removed: its digest did not match.
         QVERIFY(QFile::exists(library.blobPath(idle->sha256))); // Kept: it did.
         QCOMPARE(library.missing("duo").size(), 1);
@@ -588,6 +599,49 @@ private slots:
         QVERIFY(downloader.pet().isEmpty());
         QTest::qWait(50); // Nothing arrives after a cancel.
         QCOMPARE(finished.size(), 1); QVERIFY(stored().isEmpty());
+    }
+    void downloaderFollowsOnlyGithubRedirects() {
+        QTemporaryDir directory, store;
+        unbundledDuo(directory.path());
+        pet::PetLibrary library(directory.filePath("artwork.rcc"), "/redirect", store.path());
+        Release release; release.blobs = duoBlobs();
+        pet::PetDownloader downloader(library, &release);
+        QSignalSpy finished(&downloader, &pet::PetDownloader::finished);
+        // GitHub answers with a redirect to its asset host: followed.
+        release.redirect = QUrl("https://release-assets.githubusercontent.com/github-production-release-asset/abc");
+        QVERIFY(downloader.start("duo")); QVERIFY(finished.wait(5000));
+        QCOMPARE(finished.last().at(1).toString(), QString());
+        QVERIFY(library.missing("duo").isEmpty());
+        for (const auto &name : QDir(store.path()).entryList(QDir::Files)) QFile::remove(store.filePath(name));
+        // Anywhere else, or without TLS, is refused and nothing is stored.
+        for (const auto *target : {"https://example.com/pack.rcc", "http://objects.githubusercontent.com/pack.rcc"}) {
+            finished.clear(); release.redirect = QUrl(target);
+            QVERIFY(downloader.start("duo")); QVERIFY(finished.wait(5000));
+            QVERIFY2(!finished.last().at(1).toString().isEmpty(), target);
+            QVERIFY(QDir(store.path()).entryList(QDir::Files).isEmpty());
+        }
+    }
+    void storedPacksAreHashedAtActivation() {
+        QTemporaryDir directory, store;
+        unbundledDuo(directory.path());
+        pet::PetLibrary library(directory.filePath("artwork.rcc"), "/hashed", store.path());
+        const auto tree = library.tree("duo");
+        const auto blobs = duoBlobs();
+        for (auto it = blobs.begin(); it != blobs.end(); ++it) {
+            QFile file(library.blobPath(it.key())); QVERIFY(file.open(QIODevice::WriteOnly)); file.write(it.value());
+        }
+        // A pack with the same size and entries but other bytes: not the one the index vouches for.
+        QByteArray altered = blobs.value(tree.packs.first().sha256);
+        altered[altered.size() - 1] = char(altered[altered.size() - 1] ^ 0x01);
+        { QFile file(library.blobPath(tree.packs.first().sha256)); QVERIFY(file.open(QIODevice::WriteOnly)); file.write(altered); }
+        QVERIFY(library.markDownloaded("duo", nullptr));
+        QString error;
+        QVERIFY(!library.activate("duo", &error));
+        QVERIFY2(error.contains("damaged"), qPrintable(error));
+        QVERIFY(!QFile::exists(library.blobPath(tree.packs.first().sha256))); // Removed, with the stamp.
+        QVERIFY(!QFile::exists(store.filePath("duo.root")));
+        QVERIFY(QFile::exists(library.blobPath(tree.packs.last().sha256)));
+        QCOMPARE(library.missing("duo").size(), 1);
     }
     void pickerDownloadsBeforeChoosing() {
         const pet::PetInfo vpet{"vpet", "VUP", "VUP-Simulator team", {}, "VPET-ARTWORK-TERMS.md", {}};

@@ -51,7 +51,7 @@ private:
     QVector<PetPack> queue_;
     QString pet_, name_;
     int index_ = 0;
-    bool retried_ = false;
+    bool retried_ = false, writeFailed_ = false;
     qint64 done_ = 0, received_ = 0, total_ = 0;
 };
 }

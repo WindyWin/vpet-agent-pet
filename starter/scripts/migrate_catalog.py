@@ -36,7 +36,10 @@ def migrate(document):
     if 'cues' in document:
         raise ValueError('schema 1 catalog already has a "cues" section')
     cues = {}
-    for name, pool in document.get('reactions', {}).items():
+    reactions = document.get('reactions', {})
+    if not isinstance(reactions, dict):
+        raise ValueError('"reactions" must be an object')
+    for name, pool in reactions.items():
         if name not in REACTIONS and name not in SAME:
             raise ValueError(f'unknown reaction pool {name!r}')
         cues[REACTIONS.get(name, name)] = pool

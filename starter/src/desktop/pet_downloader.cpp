@@ -57,6 +57,7 @@ void PetDownloader::next() {
 void PetDownloader::fetch() {
     const auto pack = queue_.at(index_);
     received_ = 0;
+    writeFailed_ = false;
     hash_.reset();
     file_ = std::make_unique<QSaveFile>(library_.blobPath(pack.sha256));
     if (!file_->open(QIODevice::WriteOnly)) { end(tr("Cannot save %1. Check free disk space.").arg(name_)); return; }
@@ -76,7 +77,8 @@ void PetDownloader::fetch() {
         const auto bytes = reply->readAll();
         received_ += bytes.size();
         // More than the leaf says is never the pack; stop reading at once.
-        if (received_ > pack.bytes || file_->write(bytes) != bytes.size()) { reply->abort(); return; }
+        if (received_ > pack.bytes) { reply->abort(); return; }
+        if (file_->write(bytes) != bytes.size()) { writeFailed_ = true; reply->abort(); return; } // Typically a full disk.
         hash_.addData(bytes);
         emit progressed(pet_, done(), total_);
     });
@@ -86,6 +88,12 @@ void PetDownloader::fetch() {
         const bool transferred = reply->error() == QNetworkReply::NoError
             && reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() == 200;
         const bool intact = received_ == pack.bytes && hash_.result().toHex() == pack.sha256.toLatin1();
+        if (writeFailed_) {
+            file_->cancelWriting();
+            file_.reset();
+            end(tr("Cannot save %1. Check free disk space.").arg(name_));
+            return;
+        }
         if (!transferred || !intact) {
             file_->cancelWriting();
             file_.reset();
