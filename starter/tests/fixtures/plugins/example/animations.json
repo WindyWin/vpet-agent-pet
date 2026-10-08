@@ -1,0 +1,54 @@
+{
+  "schema_version": 2,
+  "sequences": [
+    {
+      "path": "heart",
+      "duration_ms": 600,
+      "frames": [
+        {
+          "path": "frames/heart/0.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "frames/heart/1.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "frames/heart/2.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "frames/heart/3.png",
+          "duration_ms": 150
+        }
+      ]
+    }
+  ],
+  "states": {
+    "example.heart": [
+      "heart"
+    ]
+  },
+  "playback": {
+    "example.heart": {
+      "mode": "once",
+      "after": "idle"
+    }
+  },
+  "cues": {
+    "celebrate": [
+      {
+        "state": "example.heart",
+        "weight": 1
+      }
+    ]
+  },
+  "ambient": {
+    "fidgets": [
+      {
+        "state": "example.heart",
+        "weight": 1
+      }
+    ]
+  }
+}

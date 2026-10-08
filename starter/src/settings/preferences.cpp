@@ -4,6 +4,7 @@
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
+#include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QRegularExpression>
@@ -82,6 +83,7 @@ Preferences PreferencesStore::load() {
         || (object.contains("autostart") && !object["autostart"].isBool())
         || (object.contains("language") && !object["language"].isString())
         || (object.contains("pet") && !object["pet"].isString())
+        || (object.contains("plugins") && !object["plugins"].isArray())
         || (object.contains("when_idle") && !parseIdlePolicy(object["when_idle"].toString(), whenIdle))) {
         writable_ = false; error_ = Settings::tr("Invalid preferences; using defaults and preserving the file."); return result;
     }
@@ -112,6 +114,10 @@ Preferences PreferencesStore::load() {
     const auto language = object["language"].toString();
     if (language == "en" || language == "vi") result.language = language;
     if (const auto pet = object["pet"].toString(); Preferences::validPet(pet)) result.pet = pet;
+    for (const auto &value : object["plugins"].toArray())
+        if (const auto id = value.toString(); Preferences::validPet(id) && !result.plugins.contains(id)
+            && result.plugins.size() < Preferences::maxPlugins)
+            result.plugins.append(id);
     return result;
 }
 bool PreferencesStore::save(const Preferences &preferences) {
@@ -133,6 +139,10 @@ bool PreferencesStore::save(const Preferences &preferences) {
                        {"leave_work_time", preferences.reminderSchedule.leaveWork.toString("HH:mm")},
                        {"sleep_time", preferences.reminderSchedule.sleep.toString("HH:mm")},
                        {"pet", Preferences::validPet(preferences.pet) ? preferences.pet : QString("vpet")}};
+    QJsonArray plugins;
+    for (const auto &id : preferences.plugins)
+        if (Preferences::validPet(id) && !plugins.contains(id) && plugins.size() < Preferences::maxPlugins) plugins.append(id);
+    object["plugins"] = plugins;
     if (Preferences::validBirthday(preferences.birthday)) object["birthday"] = preferences.birthday;
     if (preferences.hasPosition) { object["x"] = preferences.position.x(); object["y"] = preferences.position.y(); }
     const auto bytes = QJsonDocument(object).toJson();

@@ -111,6 +111,8 @@ int main(int argc, char **argv) {
         // the window's player then shows VPet.
         const auto chosen = parser.isSet("pet") ? parser.value("pet") : preferences.pet;
         QString petError;
+        // Enabled plugin packs merge into the pet as it activates; --no-persist and the smoke test run without them.
+        if (persist) pet::PetLibrary::shared().setPlugins({}, preferences.plugins);
         if (!pet::PetLibrary::shared().activate(chosen, &petError) && chosen != "vpet")
             qWarning().noquote() << QString("Pet \"%1\" is unavailable: %2; using vpet").arg(chosen, petError);
         // Downloaded packs that no pet of this version uses any more go.

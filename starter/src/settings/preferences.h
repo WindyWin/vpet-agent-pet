@@ -4,6 +4,7 @@
 #include <QRect>
 #include <QSize>
 #include <QString>
+#include <QStringList>
 #include <QTime>
 #include <QVector>
 
@@ -49,6 +50,10 @@ struct Preferences {
     // The pet shown from the next start, by id ([a-z0-9-]{1,32}). An id this build does not know, perhaps
     // from a newer version, is kept and runs VPet meanwhile; an invalid one reads as "vpet".
     QString pet = "vpet";
+    // Plugin packs to load from the next start, by id (docs/plugins.md). Ids that are not valid are dropped;
+    // ones no installed pack has are kept for when it is installed.
+    static constexpr int maxPlugins = 32;
+    QStringList plugins;
     // Startup keys. `agent-pet autostart` edits them without a display, possibly
     // while a pet runs, so the pet re-reads them before each save.
     bool autostart = false; // Hook launches the pet on a session start when none is running.

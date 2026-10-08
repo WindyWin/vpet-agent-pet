@@ -53,7 +53,7 @@ target_include_directories(pet_behavior PUBLIC src)
 target_link_libraries(pet_behavior PUBLIC Qt6::Core)
 qt_add_library(pet_animation STATIC
     src/animation/catalog.cpp src/animation/pet_library.cpp src/animation/player.cpp src/animation/ambient.cpp src/animation/activity.cpp
-    src/animation/mood.cpp src/animation/easter_eggs.cpp src/animation/stage.cpp)
+    src/animation/mood.cpp src/animation/easter_eggs.cpp src/animation/stage.cpp src/animation/plugins.cpp)
 target_include_directories(pet_animation PUBLIC src PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/generated")
 target_link_libraries(pet_animation PUBLIC Qt6::Gui pet_behavior)
 
@@ -81,7 +81,7 @@ qt_add_lrelease(pet_i18n TS_FILES ${pet_ts_files} QM_FILES_OUTPUT_VARIABLE pet_q
 qt_add_resources(pet_i18n pet_translations PREFIX "/i18n" BASE "${CMAKE_CURRENT_BINARY_DIR}" FILES ${pet_qm_files})
 qt_add_library(pet_ui STATIC
     src/desktop/pet_window.cpp
-    src/desktop/pet_picker.cpp src/desktop/pet_downloader.cpp
+    src/desktop/pet_picker.cpp src/desktop/pet_downloader.cpp src/desktop/plugin_list.cpp
     src/desktop/touch.cpp src/desktop/wander.cpp src/desktop/wellness.cpp src/desktop/alert_bubble.cpp src/desktop/monitor.cpp
     src/desktop/session_list.cpp src/updates/controller.cpp)
 target_include_directories(pet_ui PUBLIC src "${CMAKE_CURRENT_BINARY_DIR}/generated")
@@ -252,6 +252,14 @@ if(BUILD_TESTING)
         add_dependencies(pets-tests pet_test_artwork)
         add_test(NAME pets COMMAND pets-tests)
         set_tests_properties(pets PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+        # Plugin packs: scanning, merging fragments into a catalog, the library, preferences and Settings' list.
+        qt_add_executable(plugin-tests tests/plugin_tests.cpp)
+        target_link_libraries(plugin-tests PRIVATE pet_ui Qt6::Test)
+        target_compile_definitions(plugin-tests PRIVATE PET_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}"
+            FIXTURE_INDEX="${CMAKE_CURRENT_BINARY_DIR}/test-pets/artwork.rcc")
+        add_dependencies(plugin-tests pet_test_artwork)
+        add_test(NAME plugins COMMAND plugin-tests)
+        set_tests_properties(plugins PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
         find_package(Python3 COMPONENTS Interpreter REQUIRED)
         add_test(NAME pet-scaffold COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/scripts/check_new_pet.py)
     endif()

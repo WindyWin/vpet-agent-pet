@@ -171,6 +171,7 @@ Right-click the pet (or its tray / menu bar icon) for everything: your sessions,
 
 - change its size, choose which notes pop up and pick its character (other pets download when chosen);
 - make it calmer or livelier (when idle and while working), and switch off wandering, moods, touch or surprises;
+- turn on [plugin packs](starter/docs/plugins.md) that add animations to your pet;
 - set or turn off the eye and water reminders, configure lunch (default noon, eligible until 13:15), Monday, go-home and bedtime reminders, and enter your birthday;
 - connect Claude Code and Codex with one click, and have it start with your agents or at login;
 - choose how updates are installed.
@@ -242,7 +243,7 @@ flowchart TB
 
   packs["#62 PetLibrary / Catalog<br/>Active pet · artwork / credits / cue overrides"] --> cues
   packs --> player
-  plugins["#43 Plugin packs<br/>Catalog fragments / rule data"] --> packs
+  plugins["#43 Plugin packs<br/>Catalog fragments · rule data planned"] --> packs
   plugins --> custom
   updates["App updates / packaging"] --> packs
   downloads["#62 Part 2<br/>Verified pet downloads"] --> packs
@@ -250,7 +251,7 @@ flowchart TB
   settings -. select pet / plugins .-> packs
 
   classDef planned fill:#fff4d6,stroke:#9a6700,stroke-dasharray:5 5,color:#24292f
-  class custom,plugins planned
+  class custom planned
 ```
 
 Session priority belongs to `Sessions`; #67 chooses among behavior intents; #64
@@ -260,7 +261,7 @@ See the [code map](starter/docs/architecture.md#code-map) for source paths and d
 
 ### Roadmap mapped to the architecture
 
-Open work, reconciled with the merged code on 2026-10-08 (#62, #64 and #67 landed; issue state not re-checked on GitHub). Each issue owns its detailed
+Open work, reconciled with the merged code on 2026-10-08 (#62, #64, #67 and #43 phase 1 landed; issue state not re-checked on GitHub). Each issue owns its detailed
 acceptance checklist; check a row here when that phase lands and update the chart
 when a planned layer becomes implemented.
 
@@ -279,7 +280,7 @@ flowchart LR
 | ☑ | PetLibrary / Catalog | [#62 Part 1 — selectable pet packs](https://github.com/WindyWin/vpet-agent-pet/issues/62) | Standalone foundation |
 | ☑ | Cue mapping | [#64 — semantic cues and per-pet mapping](https://github.com/WindyWin/vpet-agent-pet/issues/64) | #62 Part 1 |
 | ☑ | Behavior runtime | [#67 — intent arbitration and lifecycle](https://github.com/WindyWin/vpet-agent-pet/issues/67) | #64 |
-| ☐ | Plugin catalog | [#43 Phase 1 — catalog fragments and plugin settings](https://github.com/WindyWin/vpet-agent-pet/issues/43) | #62 Part 1 |
+| ☑ | Plugin catalog | [#43 Phase 1 — catalog fragments and plugin settings](https://github.com/WindyWin/vpet-agent-pet/issues/43) | #62 Part 1 |
 | ☐ | Plugin rules → runtime | [#43 Phases 2–3 — custom events and data-driven triggers](https://github.com/WindyWin/vpet-agent-pet/issues/43) | Catalog fragments, #64 and #67 |
 | ☑ | Pet distribution | [#62 Part 2 — verified on-demand downloads](https://github.com/WindyWin/vpet-agent-pet/issues/62) | #62 Part 1 |
 | ☐ | Provider adapters | [#36 — third agent client](https://github.com/WindyWin/vpet-agent-pet/issues/36) | Existing event contract |
