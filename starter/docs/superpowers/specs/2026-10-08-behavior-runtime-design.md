@@ -109,10 +109,10 @@ Success (issue #67, "Done when"):
 | `Player` | phases, frames, held states and their release, presentation signals |
 | `PetWindow` / platform | pointer handling, flight, walking and sliding physics, geometry, native windows |
 
-`PetWindow` owns the `Runtime` and the `Stage`, as it owns `Player` today; `Monitor` reaches them
-through `window_.behavior()`. Each fact in `Context` has one writer: `PetWindow` sets `visible`,
-`handled` (through `Stage`, from `Player::heldChanged`), `visible` and `moving`; `Monitor` sets `present`,
-`muted`, `speaking` and `attention`, and `visible` and `moving` again on each tick.
+`PetWindow` owns the `Stage`, which owns the `Runtime`, as it owns `Player` today; `Monitor` reaches
+them through `window_.stage()`. `Stage` sets `handled` from `Player::heldChanged`; `PetWindow` sets
+`visible` and `moving` when it hides, shows or moves the pet; `Monitor` sets `present`, `muted`,
+`speaking` and `attention`, and refreshes `visible` and `moving` on each tick.
 
 ## Contract
 
