@@ -74,8 +74,9 @@ GitHub-provided SHA-256 digests for installation.
 - Only changed components download; the full archive remains for first installs and
   older clients.
 - A failed start rolls back to the previous directory.
-- Installation in place is Linux-only; macOS only announces releases
-  ([0020](0020-macos-port.md)).
+- Archive installation and startup rollback are Linux-only. Windows uses verified
+  Setup upgrades ([0031](0031-windows-automatic-updates.md)); macOS only announces
+  releases ([0020](0020-macos-port.md)).
 
 ## Validation
 

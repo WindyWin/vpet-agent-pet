@@ -146,6 +146,8 @@ end;
 procedure CurStepChanged(CurStep: TSetupStep);
 begin
   if CurStep <> ssPostInstall then Exit;
+  // Automatic upgrades preserve the user's integrations and startup preferences.
+  if ExpandConstant('{param:AGENTPETUPDATE|0}') = '1' then Exit;
   Configure('claude', 'integration enable --provider claude', 'Agent Pet could not connect Claude Code.');
   Configure('codex', 'integration enable --provider codex', 'Agent Pet could not connect Codex.');
   Configure('login', 'autostart login enable', 'Agent Pet could not register itself to start at sign-in.');

@@ -482,6 +482,18 @@
         <translation>Không thể chuẩn bị bản cập nhật bên cạnh bản cài đặt.</translation>
     </message>
     <message>
+        <source>Cannot save the download. Check free disk space.</source>
+        <translation>Không lưu được tệp tải về. Hãy kiểm tra dung lượng đĩa còn trống.</translation>
+    </message>
+    <message>
+        <source>Could not start the update installer.</source>
+        <translation>Không khởi chạy được trình cài đặt cập nhật.</translation>
+    </message>
+    <message>
+        <source>Windows update installation failed. Run the setup program manually; details are in %1.</source>
+        <translation>Cài đặt cập nhật Windows thất bại. Hãy chạy bộ cài thủ công; xem chi tiết tại %1.</translation>
+    </message>
+    <message>
         <source>The downloaded app cannot run on this system.</source>
         <translation>Ứng dụng đã tải về không chạy được trên hệ thống này.</translation>
     </message>

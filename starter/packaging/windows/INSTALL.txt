@@ -32,8 +32,12 @@ same program for hooks and commands, with working console output.
 
 Click the tray icon to hide or show the pet; it keeps monitoring while hidden.
 
-Not yet available on Windows: automatic update installation (the pet announces
-new versions; run the newer setup program to upgrade).
+Installed release builds check for updates daily and can download and run the
+verified setup program automatically (Settings > Updates). The pet saves its
+sessions and restarts; hooks and startup preferences are kept. Portable copies
+announce updates for manual installation. Failed setup upgrades are reported in
+%APPDATA%\agent-pet\updates\setup.log; run the setup program manually to repair.
+Windows updates do not offer automatic rollback.
 
 Remove: Settings > Apps > Installed apps > Agent Pet > Uninstall. It removes
 only Agent Pet's hook entries and its sign-in entry; other hooks are left as

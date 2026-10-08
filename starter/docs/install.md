@@ -169,7 +169,7 @@ archive is labelled “Downloading full update” and counts from its own total.
 Downloads can be cancelled or retried. Completed, verified components are kept
 for retries; the interrupted component restarts from zero.
 
-Releases separate application files, runtime libraries and artwork. The updater
+Linux releases separate application files, runtime libraries and artwork. The updater
 checks installed files against the new release and downloads only components that
 changed or need repair. A code-only update normally reuses all artwork and runtime
 libraries. Artwork is split into stable packs per animation sequence, with a small
@@ -194,7 +194,7 @@ restarting the pet. A save failure blocks the restart so you can fix it and retr
 Agent processes continue running independently of the pet. Session-triggered
 launches postpone installation on next launch so monitoring starts immediately.
 
-The helper verifies downloads again, rejects unsafe archive paths and links,
+On Linux, the helper verifies downloads again, rejects unsafe archive paths and links,
 and assembles the complete target beside the existing installation. Reused files
 are copied independently and verified again; obsolete files are omitted. The
 helper then atomically switches directories.
@@ -375,8 +375,20 @@ in (Windows Terminal, including PowerShell or Command Prompt windows handed off 
 classic console window), otherwise the editor or terminal found by process ancestry. tmux
 and herdr are not used on Windows.
 
-**Not yet on Windows:** automatic update installation (the pet announces new versions; run
-the newer setup program).
+**Automatic updates:** release builds installed through Setup support all four update
+modes in **Settings → Updates**, including automatic download and installation.
+The app downloads the setup executable from the matching GitHub release and verifies
+its SHA-256 digest again before running it. The helper runs from a private copy outside
+the installation so its own files can be replaced. It waits for the pet to exit, runs
+Setup silently at the registered installation path, preserves hooks and startup
+preferences, checks the installed version, then restarts the pet with its saved sessions.
+Portable copies and local builds offer notifications and manual downloads.
+
+Windows updates use the full setup program; component downloads and Linux's startup
+rollback are unavailable. A failed installation consumes the pending attempt to prevent
+a restart loop and records details in `%APPDATA%\agent-pet\updates\setup.log` and
+`result.txt`. Run the setup program manually to repair a failed or interrupted upgrade.
+Temporary helper copies are reclaimed during later updates when no longer running.
 
 **Uninstall:** **Settings → Apps → Installed apps → Agent Pet → Uninstall**. It stops the
 pet and removes only Agent Pet's hook entries and its sign-in value; other hooks are left as

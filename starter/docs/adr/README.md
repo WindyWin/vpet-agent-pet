@@ -38,6 +38,8 @@ the order the decisions were made. For a map of the code, start with the
 | [0029](0029-cues.md) | Cues: events decoupled from how a pet shows them | 2026-10-08 |
 | [0030](0030-on-demand-pets.md) | On-demand pets: verified downloads of pets that are not bundled | 2026-10-08 |
 
+| [0031](0031-windows-automatic-updates.md) | Windows automatic updates through verified Setup upgrades | 2026-10-08 |
+
 ## Writing a record
 
 Add the next number as `NNNN-short-slug.md` with this shape, and a row above:

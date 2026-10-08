@@ -2,6 +2,7 @@
 """Install, upgrade and uninstall the Windows setup program silently, into a folder with spaces and with
 throwaway Claude Code and Codex configurations, and check that hooks run the way each agent starts them."""
 import argparse
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -39,6 +40,11 @@ def login_value():
 if login_value() is not None:
     raise SystemExit("An Agent Pet login entry already exists for this user; this check would remove it")
 
+updates = Path(os.environ["APPDATA"]) / "agent-pet" / "updates"
+result_file = updates / "result.txt"
+if result_file.exists() or (updates / "pending.json").exists() or (updates / "state.json").exists():
+    raise SystemExit("Existing update state found; run this check under a disposable Windows user")
+
 with tempfile.TemporaryDirectory(prefix="agent pet check ") as temporary:
     root = Path(temporary)
     env = dict(os.environ, CLAUDE_CONFIG_DIR=str(root / "claude"), CODEX_HOME=str(root / "codex"),
@@ -72,7 +78,7 @@ with tempfile.TemporaryDirectory(prefix="agent pet check ") as temporary:
         raise SystemExit(f"Setup wrote into a foreign folder (exit {refused.returncode})")
 
     install("claude,codex,login", "install.log")
-    for name in ("agent-pet.exe", "agent-pet-cli.exe", "artwork.rcc", "INSTALL.txt", "LICENSE", "unins000.exe"):
+    for name in ("agent-pet.exe", "agent-pet-cli.exe", "agent-pet-updater.exe", "artwork.rcc", "INSTALL.txt", "LICENSE", "unins000.exe"):
         if not (prefix / name).is_file():
             raise SystemExit(f"Missing installed file {name}")
     print(run(str(cli), "--version").stdout.strip())
@@ -101,6 +107,34 @@ with tempfile.TemporaryDirectory(prefix="agent pet check ") as temporary:
     if owned(json.loads(claude.read_text())) != claude_hooks or login_value() is None:
         raise SystemExit("Upgrade changed the hooks or the login entry")
 
+    # Exercise the real automatic updater, including its external runtime copy and re-verification.
+    version = run(str(cli), "--version").stdout.split()[1]
+    digest = "sha256:" + hashlib.sha256(args.setup.read_bytes()).hexdigest()
+    helper = prefix / "agent-pet-updater.exe"
+    canonical = prefix.resolve().as_posix()
+    corrupted = subprocess.run([str(helper), "--apply", canonical, str(args.setup.resolve()), "sha256:" + "0" * 64,
+                                version, "0", "--version"], env=env, timeout=30)
+    if corrupted.returncode == 0:
+        raise SystemExit("Automatic updater accepted a checksum mismatch")
+    result_file.unlink(missing_ok=True)
+    run(str(helper), "--apply", canonical, str(args.setup.resolve()), digest, version, "0", "--version")
+    deadline = time.monotonic() + 300
+    while not result_file.exists():
+        if time.monotonic() > deadline:
+            raise SystemExit("Automatic updater did not finish")
+        time.sleep(1)
+    result = result_file.read_text(encoding="utf-8")
+    if result != f"Updated to {version}.":
+        raise SystemExit(f"Automatic update failed: {result}")
+    if owned(json.loads(claude.read_text())) != claude_hooks or owned(json.loads(codex.read_text())) != codex_hooks:
+        raise SystemExit("Automatic update changed registered hooks")
+    if login_value() != f'"{prefix / "agent-pet.exe"}"':
+        raise SystemExit("Automatic update changed the login entry")
+    if not (prefix / "unins000.dat").is_file():
+        raise SystemExit("Automatic update lost its uninstall log")
+    result_file.unlink()
+    time.sleep(2)
+
     run(str(prefix / "unins000.exe"), "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART")
     # The uninstaller continues from a temporary copy; wait for it to finish removing files.
     deadline = time.monotonic() + 120
@@ -115,4 +149,4 @@ with tempfile.TemporaryDirectory(prefix="agent pet check ") as temporary:
         raise SystemExit(f"Uninstall left Codex hooks: {codex.read_text()}")
     if login_value() is not None:
         raise SystemExit("Uninstall left the login entry")
-    print(f"{args.setup.name}: install, hooks, upgrade and uninstall passed")
+    print(f"{args.setup.name}: install, hooks, upgrade, automatic update and uninstall passed")

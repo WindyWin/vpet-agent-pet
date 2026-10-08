@@ -257,7 +257,8 @@ upgrades and removal. See [Arch Linux](docs/install.md#arch-linux).
 **Settings → Updates** offers daily release notifications, automatic downloads,
 optional installation on the next normal launch, and fully automatic download and install when idle (the default).
 Updates preserve settings and hooks and restore the previous version if startup
-fails. Development builds and the macOS and Windows apps offer notifications and manual downloads.
+fails. Windows setup installations download verified setup programs and upgrade automatically.
+Development builds, portable Windows copies and the macOS app offer notifications and manual downloads.
 While an update downloads, the Updates window shows one progress bar for the whole update
 (with “file 2 of 5” when it comes in several parts) instead of restarting at 0% for each file.
 See [update behavior and recovery](docs/install.md#update-notifications-and-automatic-updates).

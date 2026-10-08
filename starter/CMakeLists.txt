@@ -130,7 +130,7 @@ qt_add_library(pet_events STATIC src/ipc/local.cpp src/ipc/session_store.cpp src
 target_include_directories(pet_events PUBLIC src)
 target_link_libraries(pet_events PUBLIC pet_core PRIVATE pet_platform)
 if(WIN32)
-    # Releases are announced; the setup program installs them.
+    # Verified setup programs install Windows upgrades.
     qt_add_library(pet_update_platform STATIC src/platform/windows/update_install.cpp src/platform/windows/update_layout.cpp)
     target_link_libraries(pet_update_platform PUBLIC Qt6::Core)
 elseif(APPLE)
@@ -158,6 +158,9 @@ if(WIN32)
     qt_add_executable(agent-pet-cli src/main.cpp "${CMAKE_CURRENT_BINARY_DIR}/generated/agent-pet.rc")
     target_link_libraries(agent-pet-cli PRIVATE pet_ui pet_events pet_native pet_i18n)
     set(pet_cli_target agent-pet-cli)
+    qt_add_executable(agent-pet-updater src/platform/windows/update_helper.cpp)
+    target_link_libraries(agent-pet-updater PRIVATE pet_updates pet_events pet_i18n)
+    set_target_properties(agent-pet-updater PROPERTIES WIN32_EXECUTABLE ON)
     # scripts/package_windows.py assembles the installation directory and the setup program.
 elseif(APPLE)
     # A plain executable, so local builds find artwork.rcc beside it; scripts/package_macos.py assembles the
@@ -256,4 +259,9 @@ if(BUILD_TESTING)
             target_link_libraries(desktop-tests PRIVATE pet_ui pet_native Qt6::Test X11::X11 X11::Xtst)
         endif()
     endif() # Linux tests
+    if(NOT AGENT_PET_PORTABLE_CORE AND WIN32)
+        qt_add_executable(windows-update-tests tests/windows_update_tests.cpp)
+        target_link_libraries(windows-update-tests PRIVATE pet_updates Qt6::Test)
+        add_test(NAME windows-updates COMMAND windows-update-tests -o -,txt)
+    endif()
 endif()
