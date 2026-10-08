@@ -88,7 +88,10 @@ void PetPicker::label(QAbstractButton *tile) {
     if (!pet) return;
     const auto name = QString(pet->name).replace('&', "&&");
     const auto size = QLocale().formattedDataSize(pet->download);
-    tile->setText(tile->isChecked() ? "✓ " + name : pet->download > 0 ? "⬇ " + name : name);
+    //: A pet tile's label; %1 = the pet's name. Marks the chosen pet.
+    tile->setText(tile->isChecked() ? tr("✓ %1").arg(name) : pet->download > 0
+                  //: A pet tile's label; %1 = the pet's name. Marks a pet that still has to be downloaded.
+                  ? tr("⬇ %1").arg(name) : name);
     // Tooltips detect rich text, so the author is escaped.
     tile->setToolTip(pet->download > 0 ? tr("by %1 · %2 to download").arg(pet->author.toHtmlEscaped(), size)
                                        : tr("by %1").arg(pet->author.toHtmlEscaped()));

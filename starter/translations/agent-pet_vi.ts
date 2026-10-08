@@ -644,6 +644,15 @@
         <source>Downloading %1…</source>
         <translation>Đang tải %1…</translation>
     </message>
+    <message>
+        <source>✓ %1</source>
+        <extracomment>A pet tile&apos;s label; %1 = the pet&apos;s name. Marks the chosen pet.</extracomment>
+        <translation>✓ %1</translation>
+    </message>
+    <message>
+        <source>⬇ %1</source>
+        <translation>⬇ %1</translation>
+    </message>
 </context>
 <context>
     <name>pet::PetWindow</name>

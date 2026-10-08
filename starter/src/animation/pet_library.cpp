@@ -158,7 +158,8 @@ void PetLibrary::repair(const QString &id) const {
     QFile::remove(store_ + "/" + id + ".root");
     for (const auto &pack : tree(id).packs) {
         const auto path = blobPath(pack.sha256);
-        if (QFile::exists(path) && !intactBlob(path, pack)) {
+        // A file that cannot be opened right now is left alone: it may be fine, and downloading again may not be possible.
+        if (QFile(path).open(QIODevice::ReadOnly) && !intactBlob(path, pack)) {
             qWarning().noquote() << "Removing damaged download" << path;
             QFile::remove(path);
         }
