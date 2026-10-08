@@ -227,7 +227,8 @@ if(BUILD_TESTING)
         qt_add_executable(pets-tests tests/pets_tests.cpp)
         target_link_libraries(pets-tests PRIVATE pet_ui Qt6::Test)
         target_compile_definitions(pets-tests PRIVATE PET_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}"
-            PET_INDEX="${CMAKE_CURRENT_BINARY_DIR}/artwork.rcc" FIXTURE_INDEX="${CMAKE_CURRENT_BINARY_DIR}/test-pets/artwork.rcc")
+            PET_INDEX="${CMAKE_CURRENT_BINARY_DIR}/artwork.rcc" FIXTURE_INDEX="${CMAKE_CURRENT_BINARY_DIR}/test-pets/artwork.rcc"
+            RCC="$<TARGET_FILE:Qt6::rcc>")
         add_dependencies(pets-tests pet_test_artwork)
         add_test(NAME pets COMMAND pets-tests)
         set_tests_properties(pets PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")

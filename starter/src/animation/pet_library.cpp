@@ -4,6 +4,7 @@
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
+#include <QHash>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -13,6 +14,14 @@
 #include <utility>
 
 namespace pet {
+namespace {
+// A resource folder's entry names in one lookup (QDir looks each entry up again, which costs as much as checking
+// every frame by path).
+struct Folder : QResource {
+    using QResource::QResource;
+    using QResource::children;
+};
+}
 PetLibrary::PetLibrary(const QString &index, const QString &mapRoot) : index_(index), mapRoot_(mapRoot) {
     if (index_.isEmpty()) {
         const QDir executable(QCoreApplication::applicationDirPath());
@@ -99,12 +108,23 @@ bool PetLibrary::activate(const QString &id, QString *error) {
             packs_.append(path);
         }
     }
-    // A mismatched pack registers but lacks its frames, and a pack missing from the list leaves them unregistered:
-    // refuse the pet now rather than fail during play. Each sequence plays from one pack, so its first frame
-    // stands for the pack (all 1,197 VPet frames would cost 18 ms at every start; this costs about 2).
+    // A damaged or mismatched pack registers but lacks frames, and a pack missing from the list leaves them
+    // unregistered: refuse the pet now rather than fail during play. Each lookup searches every registered
+    // file, so each frame folder is listed once and its frames are found in that list (about 2 ms for VPet;
+    // one lookup per frame cost 18 ms at every start).
+    QHash<QString, QSet<QString>> folders;
     for (const auto &frames : std::as_const(catalog.sequences))
-        if (!QFile::exists(frames.first().path))
-            return rollBack("Missing frame " + frames.first().path.mid(root().size() + 1) + ". Reinstall Agent Pet to restore it.");
+        for (const auto &frame : frames) {
+            const auto slash = frame.path.lastIndexOf('/');
+            const auto path = frame.path.left(slash);
+            auto folder = folders.find(path);
+            if (folder == folders.end()) {
+                const auto children = Folder(path).children();
+                folder = folders.insert(path, QSet<QString>(children.begin(), children.end()));
+            }
+            if (!folder->contains(frame.path.mid(slash + 1)))
+                return rollBack("Missing frame " + frame.path.mid(root().size() + 1) + ". Reinstall Agent Pet to restore it.");
+        }
     active_ = id;
     catalog_ = catalog;
     return true;

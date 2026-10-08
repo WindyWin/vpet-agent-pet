@@ -17,6 +17,7 @@
 #include <QJsonObject>
 #include <QLabel>
 #include <QPixmap>
+#include <QProcess>
 #include <QResource>
 #include <QScopeGuard>
 #include <QSignalSpy>
@@ -244,7 +245,7 @@ private slots:
         QVERIFY(!QFile::exists(":/rollback/assets/duo/wave/_000_50.png"));
         QVERIFY2(library.activate("mini", &error), qPrintable(error)); // A failure leaves the library usable.
     }
-    void packWithoutItsFramesIsRefused() {
+    void incompletePacksAreRefused() {
         // A copy of the fixture build whose wave pack holds duo's idle frames instead: it registers, but lacks wave.
         QTemporaryDir directory;
         const QDir built(QFileInfo(FIXTURE_INDEX).absolutePath());
@@ -262,6 +263,20 @@ private slots:
         QVERIFY(library.active().isEmpty()); QVERIFY(!library.catalog().valid());
         QVERIFY(!QFile::exists(":/mismatch/assets/duo/idle/_000_100.png"));
         QVERIFY2(library.activate("mini", &error), qPrintable(error));
+
+        // A wave pack with its first frame only, built here with rcc: every frame is checked, not just the first.
+        QVERIFY(QFile::copy(PET_SOURCE "/tests/fixtures/pets/duo/wave/_000_50.png", directory.filePath("_000_50.png")));
+        QFile qrc(directory.filePath("partial.qrc"));
+        QVERIFY(qrc.open(QIODevice::WriteOnly));
+        qrc.write(R"(<RCC><qresource prefix="/"><file alias="assets/duo/wave/_000_50.png">_000_50.png</file></qresource></RCC>)");
+        qrc.close();
+        QVERIFY(QFile::remove(directory.filePath(packs.value("wave"))));
+        QCOMPARE(QProcess::execute(RCC, {"--binary", "-o", directory.filePath(packs.value("wave")), qrc.fileName()}), 0);
+        pet::PetLibrary partial(directory.filePath("artwork.rcc"), "/partial");
+        QVERIFY(!partial.activate("duo", &error));
+        QCOMPARE(error, QString("Missing frame assets/duo/wave/_001_50.png. Reinstall Agent Pet to restore it."));
+        QVERIFY(partial.active().isEmpty());
+        QVERIFY(!QFile::exists(":/partial/assets/duo/wave/_000_50.png"));
     }
     void brokenPetIsRefused() {
         pet::PetLibrary library(FIXTURE_INDEX, "/broken");
