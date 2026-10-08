@@ -1,6 +1,7 @@
 # Pet packs (Part 1) — design
 
-Date: 2026-10-07. Status: approved in conversation; ADR 0027 will record the decision.
+Date: 2026-10-07. Status: approved in conversation; ADR 0028 records the decision. Updated 2026-10-08 after
+merging main, which took ADR 0027 and stopped playing a `waiting` animation, so `waiting` left the contract.
 Tracking: issue #62 (Part 1 of 2; Part 2 is on-demand download of non-bundled pets).
 
 ## Intent
@@ -33,7 +34,7 @@ Success:
   layout and pack naming stay exactly as they are.
 - **VPet stays byte-identical.** A pack's name is the SHA-256 of its source directory
   path (`assets/vpet/vup/Default/Nomal/1`), and its bytes contain each frame's resource
-  path. VPet's files therefore stay at `assets/vpet/`, and its 141 sequence packs keep
+  path. VPet's files therefore stay at `assets/vpet/`, and its 136 packs (one per frame folder) keep
   their names and bytes. Only `artwork.rcc` (the index, ~200 KB) changes.
 - The index lives in `artwork.rcc`, which always ships and updates together with the
   binary. Its format belongs to one version, so it can change freely between versions.
@@ -126,7 +127,7 @@ the event side and pets meet, and it is provisional until the planned event refa
 | `starting`, `turn_finished` | once | idle |
 | `tool_error` | once | previous |
 | `closing`, `closing_angry`, `angry` | once | stop |
-| `thinking`, `reading`, `working`, `waiting`, `needs_input`, `sleeping`, `dragging` | phased (no `loops`) | idle |
+| `thinking`, `reading`, `working`, `needs_input`, `sleeping`, `dragging` | phased (no `loops`) | idle |
 | `out_of_quota` | loop | idle |
 
 A phased state may list the same sequence three times. Other states and every optional
@@ -147,9 +148,11 @@ All new code lives in `pet_animation` (`src/animation/`).
   compiling.
 - `static Catalog load(const QString &root, const QString &pet, QString *error)` reads
   `<root>/assets/<pet>/animations.json`, resolves frame paths against `root`, and runs
-  today's validation unchanged, plus the `asset_root` containment rule and the core
-  state contract from `core-states.json`. On failure it returns an empty catalog and
-  sets `error`.
+  today's validation unchanged, plus the `asset_root` containment rule. On failure it
+  returns an empty catalog and sets `error`.
+- `QString contractError() const` checks the core state contract from `core-states.json`
+  separately, so a `Player` still plays the partial catalogs of the prototype tests;
+  `PetLibrary::activate()` refuses a pet that fails it.
 - `bool valid() const` (non-empty with an idle loop).
 
 ### `PetLibrary` (`pet_library.h`, `pet_library.cpp`)
@@ -342,7 +345,7 @@ Existing suites run unchanged; `prototype-tests` keeps exercising VPet through
   format, the core state contract, licensing, adding sequences, the hash tree). It marks
   the core state contract as provisional until the event refactor, which will ship a
   migration for existing catalogs.
-- `starter/docs/adr/0027-pet-packs.md` and its row in `adr/README.md`.
+- `starter/docs/adr/0028-pet-packs.md` and its row in `adr/README.md`.
 - `starter/docs/architecture.md` (code map: `Catalog`, `PetLibrary`), the
   `starter/README.md` "Pets" section, and the asset notes in `CLAUDE.md`.
 - Issue #62 updated with the restart-to-apply and core-state decisions.
