@@ -47,7 +47,7 @@ qt_add_library(pet_core STATIC
     src/settings/preferences.cpp src/providers/adapters.cpp)
 target_include_directories(pet_core PUBLIC src)
 target_link_libraries(pet_core PUBLIC Qt6::Core pet_host_capture)
-# Which of the pet's competing behaviors may show (docs/adr/0030-behavior-runtime.md); no timers, no Player.
+# Which of the pet's competing behaviors may show (docs/adr/0031-behavior-runtime.md); no timers, no Player.
 qt_add_library(pet_behavior STATIC src/behavior/runtime.cpp)
 target_include_directories(pet_behavior PUBLIC src)
 target_link_libraries(pet_behavior PUBLIC Qt6::Core)

@@ -104,6 +104,10 @@ on. Art without separate start and end can list the same sequence three times. C
 A **reaction cue** draws one state from a weighted pool, and plays nothing when the pet maps none. Each
 state in a pool must end by itself and return to idle (`once`, or `phased` with `loops`).
 
+A cue is a request, not a promise: the behavior runtime ([0031](adr/0031-behavior-runtime.md)) decides
+when it may play, so a surprise waits out an urgent session and a reminder waits until the user is free.
+A pet only says how each cue looks.
+
 | Cue | When |
 | --- | --- |
 | `celebrate` | a turn finished (falls back to the `turn-finished` state cue) |

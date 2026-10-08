@@ -7,7 +7,7 @@
 #include <optional>
 
 namespace pet {
-// Shows what the behavior runtime chose on a Player and reports back how it went (docs/adr/0030-behavior-runtime.md).
+// Shows what the behavior runtime chose on a Player and reports back how it went (docs/adr/0031-behavior-runtime.md).
 // It owns the runtime: producers submit through runtime() and hear back through outcome() and finished().
 //
 // A request plays its producer's drawn state, else the state a state cue maps to, else a draw from a reaction

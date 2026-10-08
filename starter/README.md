@@ -170,7 +170,9 @@ when it idles and on the day's first finished turn. Late at night it yawns more,
 the first turn that finishes after 1 AM brings a gentle bedtime note. The pet also
 keeps time: on Monday morning it is tired and down about the week, at 4:45 PM on
 weekdays it blows bubbles and tells you to get ready to go home, and at 10 PM it
-tells you to go to sleep (each once a day, while it is running and visible).
+tells you to go to sleep (each once a day, while it is running and visible; like the
+wellness reminders, it waits until you are around and nothing else needs you, and
+muted alerts hold it).
 Settings → **Monday reminder**, **Go-home reminder** and **Sleep reminder** let
 you change these local times; the times above are the defaults. Turns finished
 on a Friday evening end in a dance, and a turn that ran for a quarter of an hour or

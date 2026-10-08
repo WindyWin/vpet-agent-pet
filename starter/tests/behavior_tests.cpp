@@ -1,4 +1,4 @@
-// The behavior runtime's policy (issue #67, docs/adr/0030-behavior-runtime.md). Each test drives the runtime
+// The behavior runtime's policy (issue #67, docs/adr/0031-behavior-runtime.md). Each test drives the runtime
 // with a hand-set clock and a fake presentation that records requests and answers with feedback, so no
 // desktop, Player or artwork is involved.
 // Cues are #64's (src/animation/cues.json); "fidget" and "edge-left" stand for states from a pet's own
