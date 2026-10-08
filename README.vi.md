@@ -16,7 +16,7 @@ Thú cưng nằm ngay trên màn hình: suy nghĩ khi agent suy nghĩ, bận r�
 - **Nắm trạng thái ngay khi nhìn**: biết các phiên agent đang làm gì.
 - **Không bỏ lỡ yêu cầu**: thông báo nhỏ xuất hiện khi agent chờ bạn; một cú nhấp đưa bạn đến đúng terminal.
 - **Một thú cưng để tương tác**: kéo, vuốt ve, tung lên, ngắm nó đi dạo và ngủ.
-- **Nhắc bạn chăm sóc bản thân**: nghỉ mắt, uống nước và xem lại hoạt động trong ngày.
+- **Nhắc bạn chăm sóc bản thân**: nghỉ mắt, uống nước, nghỉ trưa và xem lại hoạt động trong ngày.
 - **Riêng tư**: chỉ nhận biết *loại hoạt động*, không đọc prompt, mã nguồn hay câu lệnh của bạn.
 
 Hỗ trợ **Linux** x86_64 (X11 hoặc desktop Wayland có XWayland như GNOME và KDE), **macOS 11+** (Apple silicon và Intel), và **Windows 10 phiên bản 1809 trở lên / Windows 11** (x64).
@@ -145,7 +145,7 @@ Tối thứ Sáu, sinh nhật bạn, đêm khuya, công việc kéo dài và m�
 
 ### Nhắc bạn chăm sóc bản thân
 
-Cứ 20 phút làm việc, thú cưng nhắc bạn nhìn xa trong 20 giây (nhấp thông báo để cùng đếm ngược); mỗi giờ, nó nhắc bạn uống nước. Nó chờ đến khi bạn thực sự ở máy tính, giữ yên lặng khi agent cần bạn và không làm phiền vào ban đêm.
+Cứ 20 phút làm việc, thú cưng nhắc bạn nhìn xa trong 20 giây (nhấp thông báo để cùng đếm ngược); mỗi giờ, nó nhắc bạn uống nước. Mỗi ngày nó còn nhắc bạn nghỉ trưa (mặc định lúc 12:00, tùy chỉnh được). Nó chờ đến khi bạn thực sự ở máy tính, giữ yên lặng khi agent cần bạn và không làm phiền vào ban đêm.
 
 <table>
   <tr>
@@ -171,7 +171,7 @@ Nhấp chuột phải vào thú cưng (hoặc biểu tượng ở khay hệ th�
 
 - đổi kích thước, chọn những thông báo được hiển thị và chọn nhân vật (thú cưng khác được tải về khi chọn);
 - chọn mức độ sinh động khi rảnh và khi làm việc, hoặc tắt đi dạo, tâm trạng, tương tác và bất ngờ;
-- chỉnh hoặc tắt lời nhắc nghỉ mắt, uống nước và nhập ngày sinh nhật;
+- chỉnh hoặc tắt lời nhắc nghỉ mắt và uống nước, cấu hình nhắc nghỉ trưa (mặc định 12:00, còn hiệu lực đến 13:15), nhắc đầu tuần, nhắc về nhà và nhắc đi ngủ, rồi nhập ngày sinh nhật;
 - kết nối Claude Code và Codex bằng một cú nhấp, tự khởi động cùng agent hoặc khi đăng nhập;
 - chọn cách cài đặt bản cập nhật.
 
