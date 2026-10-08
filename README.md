@@ -188,7 +188,11 @@ If it ever gets in the way, click the tray icon to hide it. It keeps watching yo
 
 ### Stays up to date
 
-On Linux the pet updates itself in the background by default, downloading only what changed and keeping your settings. If a new version fails to start, it goes back to the previous one. On macOS and Windows it tells you when a new version is out: replace the macOS app or run the newer Windows setup program. Settings and enabled hooks are kept when upgrading in place.
+On Linux the pet updates itself in the background by default, downloading only what changed and keeping your settings. If a new version fails to start, it goes back to the previous one.
+
+On Windows, release builds installed through Setup support automatic updates in **Settings → Updates**. The app downloads a SHA-256-verified setup program, saves monitored sessions, upgrades in place, and restarts the pet. Settings, hooks, and startup preferences are preserved. Windows has no automatic rollback; rerun Setup manually to repair a failed update. Older Windows versions need one manual upgrade to obtain the new updater.
+
+On macOS and portable Windows copies, the pet announces new releases for manual installation: replace the macOS app or run the newer Windows setup program. See the [update guide](starter/docs/install.md#update-notifications-and-automatic-updates) for update modes and recovery.
 
 ## Your privacy
 
@@ -202,7 +206,7 @@ On Linux the pet updates itself in the background by default, downloading only w
 - **Not reacting?** Restart Claude Code or Codex after connecting, then send a new prompt. In Codex, approve the new hooks in `/hooks`.
 - **Lost the pet?** Click the tray icon, or right-click it → **More → Recover pet position and input**.
 - **macOS:** jumping to a terminal window and automatic updates aren't available yet. **Open** still switches tmux and herdr panes.
-- **Windows:** **Open** brings the agent's Windows Terminal or classic console window to the front, with an editor/terminal fallback based on process ancestry. Automatic update installation isn't available yet; run the newer setup program. For hook commands and console output, use `agent-pet-cli.exe`.
+- **Windows:** **Open** brings the agent's Windows Terminal or classic console window to the front, with an editor/terminal fallback based on process ancestry. Setup installations support automatic updates; portable copies require manual upgrades. For hook commands and console output, use `agent-pet-cli.exe`.
 - **Linux on Wayland:** the pet runs through XWayland, which GNOME and KDE provide by default. Pure Wayland isn't supported yet.
 
 ## Issues and discussion
