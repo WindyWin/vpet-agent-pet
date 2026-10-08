@@ -157,7 +157,7 @@ Choose one of four modes:
 | **Notify only** | A menu indicator shows the available version; choose Download update or open the release page. |
 | **Download automatically** | Downloads and verifies the package, then waits for **Restart and update**. |
 | **Install automatically on next launch** | Downloads and verifies the package, then installs during the next normal launch. |
-| **Download and install automatically** (default for new installs) | Downloads and verifies the package, then restarts into the new version after saving the latest monitored sessions, including pending approval and input requests. On Linux, sessions are restored only when the same agent process is still running (checked using its PID, start time and boot identity). Exited, expired or unverifiable sessions are skipped; new hook events can make them visible again. Each version is attempted once, so a rolled-back update does not loop. |
+| **Download and install automatically** (default for new installs) | Downloads and verifies the package, then restarts into the new version after saving the latest monitored sessions, including pending approval and input requests. On Linux and Windows, sessions are restored only when the same agent process is still running (checked using its PID and creation time, plus the boot identity on Linux). Exited, expired or unverifiable sessions are skipped; new hook events can make them visible again. Each version is attempted once, so a rolled-back update does not loop. |
 
 **Later / Close** leaves the update available. **Skip this version** suppresses
 that version and discards its pending package; **Check now** shows it again.

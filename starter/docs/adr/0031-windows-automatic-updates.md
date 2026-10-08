@@ -16,6 +16,9 @@ Only non-local builds at the current user's registered Inno Setup path, with the
 uninstaller and updater present, enable automatic installation. The shared controller
 keeps daily checks, modes, cancellation, verified downloads and session checkpointing.
 Windows caches the package as `package.exe`; component manifests are not selected.
+Session checkpoints verify a live agent by its executable name, PID and Windows
+process creation time. Expired, exited, mismatched or unreadable processes are not
+restored; a reused PID cannot revive a stale session.
 
 The installed helper verifies the package, copies itself and the app-local DLLs
 into a private temporary directory under the update data directory, copies and
