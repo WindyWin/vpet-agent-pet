@@ -35,7 +35,7 @@ bool parseRelease(const QJsonObject &object, const QString &architecture, Releas
     const QString componentsName = platform::componentsManifest(version, architecture);
     for (const auto &entry : object["assets"].toArray()) {
         const auto asset = entry.toObject();
-        if (asset["name"].toString() == componentsName && asset["state"].toString() == "uploaded"
+        if (!componentsName.isEmpty() && asset["name"].toString() == componentsName && asset["state"].toString() == "uploaded"
             && asset["browser_download_url"].toString() == base + "download/" + tag + '/' + componentsName
             && asset["size"].toInteger() > 0 && asset["size"].toInteger() <= MaxComponentsManifest
             && QRegularExpression("^sha256:[0-9a-f]{64}$").match(asset["digest"].toString()).hasMatch()) {

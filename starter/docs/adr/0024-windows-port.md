@@ -119,7 +119,9 @@ agent does, upgrades, uninstalls, and checks that unrelated settings survive.
   not its ancestry; a terminal older than ConPTY's window ownership, or one whose pseudo
   window has no owner, falls back to ancestry. `host_window` means an HWND on Windows,
   since a hook and its pet always share one desktop.
-- Session checkpoints across updates keep no process identity on Windows (as on macOS).
+- Windows update checkpoints verify the live agent executable and process creation
+  time before restoring sessions ([0031](0031-windows-automatic-updates.md)); macOS
+  checkpoints still lack process identity.
 
 ## Validation
 

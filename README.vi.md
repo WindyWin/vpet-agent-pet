@@ -188,7 +188,11 @@ Nếu thú cưng che mất nội dung, nhấp biểu tượng ở khay hệ th�
 
 ### Cập nhật phiên bản
 
-Trên Linux, mặc định thú cưng tự cập nhật nền, chỉ tải phần đã thay đổi và giữ nguyên cài đặt. Nếu bản mới không khởi động được, ứng dụng quay lại bản trước. Trên macOS và Windows, thú cưng thông báo khi có phiên bản mới: thay ứng dụng trên macOS hoặc chạy bộ cài Windows mới hơn. Cài đặt và hook đã bật được giữ lại khi nâng cấp tại cùng vị trí.
+Trên Linux, mặc định thú cưng tự cập nhật nền, chỉ tải phần đã thay đổi và giữ nguyên cài đặt. Nếu bản mới không khởi động được, ứng dụng quay lại bản trước.
+
+Trên Windows, bản phát hành cài qua bộ cài hỗ trợ tự động cập nhật tại **Settings → Updates**. Ứng dụng tải bộ cài đã được xác minh bằng SHA-256, lưu các phiên đang theo dõi, nâng cấp tại cùng vị trí rồi khởi động lại thú cưng. Cài đặt, hook và tùy chọn khởi động được giữ nguyên. Windows chưa hỗ trợ tự động quay lại phiên bản trước; nếu cập nhật thất bại, hãy chạy bộ cài thủ công để sửa chữa. Các bản Windows cũ cần nâng cấp thủ công một lần để có trình cập nhật mới.
+
+Trên macOS và bản Windows portable, thú cưng thông báo khi có phiên bản mới để bạn cài thủ công: thay ứng dụng trên macOS hoặc chạy bộ cài Windows mới hơn. Xem [hướng dẫn cập nhật](starter/docs/install.md#update-notifications-and-automatic-updates) để biết các chế độ cập nhật và cách khôi phục.
 
 ## Quyền riêng tư
 
@@ -202,7 +206,7 @@ Trên Linux, mặc định thú cưng tự cập nhật nền, chỉ tải phầ
 - **Thú cưng không phản ứng?** Khởi động lại Claude Code hoặc Codex sau khi kết nối, rồi gửi prompt mới. Trong Codex, phê duyệt hook mới tại `/hooks`.
 - **Không thấy thú cưng?** Nhấp biểu tượng ở khay hệ thống, hoặc nhấp chuột phải → **More → Recover pet position and input**.
 - **macOS:** chưa hỗ trợ đưa cửa sổ terminal lên trước và tự động cài cập nhật. **Open** vẫn chuyển được pane tmux và herdr.
-- **Windows:** **Open** đưa cửa sổ Windows Terminal hoặc console cổ điển của agent lên trước; nếu không tìm được, ứng dụng tìm trình soạn thảo hoặc terminal theo cây tiến trình cha. Chưa hỗ trợ tự động cài cập nhật; hãy chạy bộ cài mới hơn. Dùng `agent-pet-cli.exe` cho lệnh hook và thao tác cần xuất kết quả ra console.
+- **Windows:** **Open** đưa cửa sổ Windows Terminal hoặc console cổ điển của agent lên trước; nếu không tìm được, ứng dụng tìm trình soạn thảo hoặc terminal theo cây tiến trình cha. Bản cài qua bộ cài hỗ trợ tự động cập nhật; bản portable cần nâng cấp thủ công. Dùng `agent-pet-cli.exe` cho lệnh hook và thao tác cần xuất kết quả ra console.
 - **Linux trên Wayland:** thú cưng chạy qua XWayland, có sẵn mặc định trên GNOME và KDE. Chưa hỗ trợ Wayland thuần.
 
 ## Dành cho lập trình viên

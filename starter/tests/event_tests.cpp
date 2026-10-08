@@ -14,6 +14,8 @@
 #include <sys/un.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#endif
+#ifdef PET_TEST_NATIVE
 #include "ipc/session_store.h"
 #endif
 
@@ -128,12 +130,17 @@ private slots:
         QVERIFY(restored.restore(original.checkpoint(), now + 2, [](const pet::Session &) { return true; }));
         QCOMPARE(restored.unresolvedAttention(), 1); QVERIFY(restored.pending().isEmpty());
     }
-#if defined(PET_TEST_POSIX) && defined(Q_OS_LINUX)
+#if defined(PET_TEST_NATIVE) && (defined(Q_OS_LINUX) || defined(Q_OS_WIN))
     void checkpointChecksRealAgentProcess() {
         QTemporaryDir dir;
         // Give a harmless child the same executable name as an agent.
+#ifdef Q_OS_WIN
+        const auto executable = dir.filePath("claude.exe");
+        QVERIFY(QFile::copy(QStringLiteral(SESSION_PROCESS_PATH), executable));
+#else
         const auto executable = dir.filePath("claude");
         QVERIFY(QFile::copy("/bin/sleep", executable));
+#endif
         QProcess child; child.start(executable, {"30"}); QVERIFY(child.waitForStarted());
         auto e = event("attention"); e.host = "terminal"; e.hostPids = QString::number(child.processId());
         pet::Sessions original, restored;
@@ -145,14 +152,15 @@ private slots:
         QFile file(path); QVERIFY(file.open(QIODevice::ReadOnly));
         auto object = QJsonDocument::fromJson(file.readAll()).object(); file.close();
         auto processes = object["processes"].toObject();
-        processes["claude" + QString(QChar(0x1f)) + "session"] = "different-boot-or-start-time";
+        processes["claude" + QString(QChar(0x1f)) + "session"] = "different-process-creation-time";
         object["processes"] = processes;
         QVERIFY(file.open(QIODevice::WriteOnly | QIODevice::Truncate));
         file.write(QJsonDocument(object).toJson()); file.close();
         QVERIFY(pet::loadSessions(path, restored, now + 2));
         QVERIFY(restored.records().isEmpty());
         QVERIFY(pet::saveSessions(path, original));
-        child.terminate(); QVERIFY(child.waitForFinished());
+        // Windows terminate() sends WM_CLOSE, which this sleeping console fixture does not handle.
+        child.kill(); QVERIFY(child.waitForFinished(5000));
         QVERIFY(pet::loadSessions(path, restored, now + 3));
         QVERIFY(restored.records().isEmpty()); QVERIFY(restored.pending().isEmpty());
         QVERIFY(!pet::saveSessions(dir.path(), original));

@@ -12,7 +12,7 @@ import zipfile
 from package_macos import project_version, qt_notices, run
 
 ROOT = Path(__file__).resolve().parents[1]
-EXECUTABLES = ("agent-pet.exe", "agent-pet-cli.exe")
+EXECUTABLES = ("agent-pet.exe", "agent-pet-cli.exe", "agent-pet-updater.exe")
 ISCC_LOCATIONS = (Path(os.environ.get("ProgramFiles(x86)", r"C:\Program Files (x86)")) / "Inno Setup 6/ISCC.exe",
                   Path(os.environ.get("ProgramFiles", r"C:\Program Files")) / "Inno Setup 6/ISCC.exe")
 

@@ -91,15 +91,15 @@ add_dependencies(pet_ui pet_artwork)
 if(WIN32)
     set(pet_platform_sources src/platform/windows/event_transport.cpp src/platform/windows/hook_input.cpp
         src/platform/windows/hook_command.cpp src/platform/windows/launch.cpp src/platform/windows/login.cpp
-        src/platform/windows/process.cpp src/platform/windows/headless.cpp)
+        src/platform/windows/process.cpp src/platform/windows/headless.cpp src/platform/windows/session_identity.cpp)
 elseif(APPLE)
     set(pet_platform_sources src/platform/posix/commands.cpp src/platform/posix/event_transport.cpp
         src/platform/posix/hook_input.cpp src/platform/posix/hook_command.cpp src/platform/posix/launch.cpp
-        src/platform/macos/process.cpp src/platform/macos/headless.cpp src/platform/macos/login.cpp)
+        src/platform/macos/process.cpp src/platform/macos/headless.cpp src/platform/macos/login.cpp src/platform/macos/session_identity.cpp)
 else()
     set(pet_platform_sources src/platform/posix/commands.cpp src/platform/posix/event_transport.cpp
         src/platform/posix/hook_input.cpp src/platform/posix/hook_command.cpp src/platform/posix/launch.cpp
-        src/platform/linux/process.cpp src/platform/linux/headless.cpp src/platform/linux/startup.cpp)
+        src/platform/linux/process.cpp src/platform/linux/headless.cpp src/platform/linux/startup.cpp src/platform/linux/session_identity.cpp)
 endif()
 qt_add_library(pet_platform STATIC ${pet_platform_sources})
 target_include_directories(pet_platform PUBLIC src)
@@ -130,7 +130,7 @@ qt_add_library(pet_events STATIC src/ipc/local.cpp src/ipc/session_store.cpp src
 target_include_directories(pet_events PUBLIC src)
 target_link_libraries(pet_events PUBLIC pet_core PRIVATE pet_platform)
 if(WIN32)
-    # Releases are announced; the setup program installs them.
+    # Verified setup programs install Windows upgrades.
     qt_add_library(pet_update_platform STATIC src/platform/windows/update_install.cpp src/platform/windows/update_layout.cpp)
     target_link_libraries(pet_update_platform PUBLIC Qt6::Core)
 elseif(APPLE)
@@ -158,6 +158,9 @@ if(WIN32)
     qt_add_executable(agent-pet-cli src/main.cpp "${CMAKE_CURRENT_BINARY_DIR}/generated/agent-pet.rc")
     target_link_libraries(agent-pet-cli PRIVATE pet_ui pet_events pet_native pet_i18n)
     set(pet_cli_target agent-pet-cli)
+    qt_add_executable(agent-pet-updater src/platform/windows/update_helper.cpp)
+    target_link_libraries(agent-pet-updater PRIVATE pet_updates pet_events pet_i18n)
+    set_target_properties(agent-pet-updater PROPERTIES WIN32_EXECUTABLE ON)
     # scripts/package_windows.py assembles the installation directory and the setup program.
 elseif(APPLE)
     # A plain executable, so local builds find artwork.rcc beside it; scripts/package_macos.py assembles the
@@ -201,6 +204,12 @@ if(BUILD_TESTING)
     target_link_libraries(focus-tests PRIVATE pet_hosts pet_core Qt6::Test)
     add_test(NAME focus COMMAND focus-tests)
     if(NOT AGENT_PET_PORTABLE_CORE)
+        if(WIN32)
+            qt_add_executable(session-process-fixture tests/session_process_fixture.cpp)
+            target_link_libraries(session-process-fixture PRIVATE Qt6::Core)
+            target_compile_definitions(event-tests PRIVATE SESSION_PROCESS_PATH=\"$<TARGET_FILE:session-process-fixture>\")
+            add_dependencies(event-tests session-process-fixture)
+        endif()
         # PET_TEST_NATIVE sections run with every platform's services; PET_TEST_POSIX and PET_TEST_WINDOWS ones with one family.
         if(WIN32)
             set(pet_test_platform PET_TEST_WINDOWS)
@@ -256,4 +265,9 @@ if(BUILD_TESTING)
             target_link_libraries(desktop-tests PRIVATE pet_ui pet_native Qt6::Test X11::X11 X11::Xtst)
         endif()
     endif() # Linux tests
+    if(NOT AGENT_PET_PORTABLE_CORE AND WIN32)
+        qt_add_executable(windows-update-tests tests/windows_update_tests.cpp)
+        target_link_libraries(windows-update-tests PRIVATE pet_updates Qt6::Test)
+        add_test(NAME windows-updates COMMAND windows-update-tests -o -,txt)
+    endif()
 endif()

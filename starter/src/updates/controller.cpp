@@ -36,14 +36,22 @@ static bool writeObject(const QString &path, const QJsonObject &object) {
     QSaveFile file(path); const auto bytes = QJsonDocument(object).toJson();
     return file.open(QIODevice::WriteOnly) && file.write(bytes) == bytes.size() && file.commit();
 }
+static QString packageName() {
+#ifdef Q_OS_WIN
+    return "/package.exe";
+#else
+    return "/package.tar.gz";
+#endif
+}
 static QString pendingFile(const QString &directory, const QJsonObject &pending) {
-    return directory + (pending["kind"].toString() == "components" ? "/components.json" : "/package.tar.gz");
+    return directory + (pending["kind"].toString() == "components" ? "/components.json" : packageName());
 }
 static QString applyCommand(const QJsonObject &pending) {
     return pending["kind"].toString() == "components" ? "--apply-components" : "--apply";
 }
 static void pruneComponents(const QString &directory, const QStringList &keep = {}) {
     const auto patterns = platform::obsoleteComponentPatterns();
+    if (patterns.isEmpty()) return;
     for (const auto &name : QDir(directory).entryList(patterns, QDir::Files))
         if (!keep.contains(name)) QFile::remove(directory + '/' + name);
 }
@@ -194,7 +202,7 @@ void Controller::download() {
             QStringList keep;
             for (const auto &component : components.entries) keep.append(component.archive);
             pruneComponents(directory_, keep);
-            QFile::remove(directory_ + "/package.tar.gz");
+            QFile::remove(directory_ + packageName());
             // Only what is missing counts, so the bar covers the whole update once and never restarts per file.
             scanning_ = true; status(tr("Checking installed files…"));
             scanComponents(target, components, ++scan_, 0, {}, 0);
@@ -207,7 +215,7 @@ void Controller::downloadFull(const Release &target) {
     pruneComponents(directory_);
     QFile::remove(directory_ + "/components.json");
     beginProgress(target.size, 1, true); // Also the fallback after components: the total is now the whole package.
-    fetch(target, directory_ + "/package.tar.gz", [this, target] { finishDownload(target, false); });
+    fetch(target, directory_ + packageName(), [this, target] { finishDownload(target, false); });
 }
 void Controller::scanComponents(const Release &target, const Components &components, int scan, int index,
                                 QList<Component> queue, qint64 total) {
@@ -368,7 +376,7 @@ QWidget *Controller::settings(QWidget *parent) {
     connect(installButton, &QPushButton::clicked, this, &Controller::install);
     connect(cancelButton, &QPushButton::clicked, this, &Controller::cancel);
     connect(skip, &QPushButton::clicked, this, [this] { state_["skipped"] = release_.version; save(); ready_ = false;
-        QFile::remove(directory_ + "/pending.json"); QFile::remove(directory_ + "/package.tar.gz");
+        QFile::remove(directory_ + "/pending.json"); QFile::remove(directory_ + packageName());
         QFile::remove(directory_ + "/components.json");
         pruneComponents(directory_);
         status(tr("This version will be skipped. Check now to see it again.")); });
