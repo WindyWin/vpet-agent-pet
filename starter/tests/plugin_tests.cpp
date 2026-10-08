@@ -300,10 +300,13 @@ private slots:
         entry["duration_ms"] = 100;
         sequences[0] = entry; escape["sequences"] = sequences;
         writePack(folder.path(), "escape", escape);
+        // A symbolic link out of the pack. On Windows QFile::link makes a shortcut file instead, which is no link at all.
+#ifndef Q_OS_WIN
         writePack(folder.path(), "linked", danceFragment("linked"));
         QImage(8, 8, QImage::Format_ARGB32).save(outside.path() + "/elsewhere.png", "PNG");
         QFile::remove(folder.path() + "/linked/frames/dance/0.png");
-        const bool linked = QFile::link(outside.path() + "/elsewhere.png", folder.path() + "/linked/frames/dance/0.png");
+        QVERIFY(QFile::link(outside.path() + "/elsewhere.png", folder.path() + "/linked/frames/dance/0.png"));
+#endif
         writePack(folder.path(), "not-png", danceFragment("not-png"));
         {
             QFile fake(folder.path() + "/not-png/frames/dance/0.png");
@@ -339,7 +342,9 @@ private slots:
         QCOMPARE(status(packs, "good"), QString("applied"));
         QCOMPARE(status(packs, "missing"), QString("rejected: Missing frame frames/dance/1.png"));
         QCOMPARE(status(packs, "escape"), QString("rejected: Invalid frame path or duration in dance"));
-        if (linked) QCOMPARE(status(packs, "linked"), QString("rejected: Missing frame frames/dance/0.png"));
+#ifndef Q_OS_WIN
+        QCOMPARE(status(packs, "linked"), QString("rejected: Missing frame frames/dance/0.png"));
+#endif
         QCOMPARE(status(packs, "not-png"), QString("rejected: Not a PNG frame of at most 2048 pixels a side: frames/dance/0.png"));
         QCOMPARE(status(packs, "bitmap"), QString("rejected: Not a PNG frame of at most 2048 pixels a side: frames/dance/0.png"));
         QCOMPARE(status(packs, "huge"), QString("rejected: Not a PNG frame of at most 2048 pixels a side: frames/dance/0.png"));
