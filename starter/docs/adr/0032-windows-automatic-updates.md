@@ -1,4 +1,4 @@
-# 0031. Windows automatic updates through Setup
+# 0032. Windows automatic updates through Setup
 
 - Status: Accepted
 - Date: 2026-10-08

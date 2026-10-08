@@ -169,7 +169,7 @@ Nhấp chuột phải → **Today's recap** để xem tóm tắt một dòng, v�
 
 Nhấp chuột phải vào thú cưng (hoặc biểu tượng ở khay hệ thống / thanh menu) để mở danh sách phiên, tổng kết ngày, tắt tiếng, luôn ở trên cùng, Settings và Quit. Trong **Settings**, bạn có thể:
 
-- đổi kích thước và chọn những thông báo được hiển thị;
+- đổi kích thước, chọn những thông báo được hiển thị và chọn nhân vật (thú cưng khác được tải về khi chọn);
 - chọn mức độ sinh động khi rảnh và khi làm việc, hoặc tắt đi dạo, tâm trạng, tương tác và bất ngờ;
 - chỉnh hoặc tắt lời nhắc nghỉ mắt, uống nước và nhập ngày sinh nhật;
 - kết nối Claude Code và Codex bằng một cú nhấp, tự khởi động cùng agent hoặc khi đăng nhập;
@@ -213,7 +213,7 @@ Trên macOS và bản Windows portable, thú cưng thông báo khi có phiên b�
 
 ### Tổng quan kiến trúc
 
-Kiến trúc mục tiêu từ đầu vào đến hiển thị. **Các ô nét đứt là phần dự kiến**; những phần còn lại đã có. Cho đến khi #64 và #67 hoàn thành, `Monitor`, `PetWindow` và các mô-đun hành vi cùng đảm nhiệm việc chọn tín hiệu và phân xử. Mũi tên thể hiện luồng chạy, không phải thứ tự build.
+Kiến trúc mục tiêu từ đầu vào đến hiển thị. **Các ô nét đứt là phần dự kiến**; những phần còn lại đã có. Mũi tên thể hiện luồng chạy, không phải thứ tự build.
 
 ```mermaid
 flowchart TB
@@ -245,14 +245,14 @@ flowchart TB
   settings -. chọn thú cưng / plugin .-> packs
 
   classDef planned fill:#fff4d6,stroke:#9a6700,stroke-dasharray:5 5,color:#24292f
-  class runtime,cues,packs,custom,plugins,downloads planned
+  class custom,plugins planned
 ```
 
 `Sessions` quyết định ưu tiên giữa các phiên; #67 chọn giữa các ý định hành vi; #64 quyết định cách thú cưng thể hiện tín hiệu được chọn. Thông báo có luồng phân phối riêng. Di chuyển và thao tác cửa sổ gốc vẫn ở `PetWindow` và các dịch vụ nền tảng. Xem [bản đồ mã nguồn](starter/docs/architecture.md#code-map) để tìm đường dẫn và các quyết định thiết kế.
 
 ### Lộ trình theo kiến trúc
 
-Các công việc còn mở, đã đối chiếu với GitHub ngày 2026-10-07. Mỗi issue chứa danh sách tiêu chí nghiệm thu chi tiết; đánh dấu hàng tương ứng khi giai đoạn hoàn thành và cập nhật sơ đồ khi một lớp dự kiến đã được triển khai.
+Các công việc còn mở, đã đối chiếu với mã nguồn đã merge ngày 2026-10-08 (#62, #64 và #67 đã hoàn thành; chưa kiểm tra lại trạng thái issue trên GitHub). Mỗi issue chứa danh sách tiêu chí nghiệm thu chi tiết; đánh dấu hàng tương ứng khi giai đoạn hoàn thành và cập nhật sơ đồ khi một lớp dự kiến đã được triển khai.
 
 ```mermaid
 flowchart LR
@@ -266,12 +266,12 @@ flowchart LR
 
 | Hoàn thành | Phần kiến trúc | Công việc / issue | Phụ thuộc |
 | --- | --- | --- | --- |
-| ☐ | PetLibrary / Catalog | [#62 Phần 1 — chọn gói thú cưng](https://github.com/WindyWin/vpet-agent-pet/issues/62) | Nền tảng độc lập |
-| ☐ | Ánh xạ tín hiệu | [#64 — tín hiệu ngữ nghĩa và ánh xạ riêng cho từng thú cưng](https://github.com/WindyWin/vpet-agent-pet/issues/64) | #62 Phần 1 |
-| ☐ | Bộ điều phối hành vi | [#67 — phân xử ý định và vòng đời](https://github.com/WindyWin/vpet-agent-pet/issues/67) | #64 |
+| ☑ | PetLibrary / Catalog | [#62 Phần 1 — chọn gói thú cưng](https://github.com/WindyWin/vpet-agent-pet/issues/62) | Nền tảng độc lập |
+| ☑ | Ánh xạ tín hiệu | [#64 — tín hiệu ngữ nghĩa và ánh xạ riêng cho từng thú cưng](https://github.com/WindyWin/vpet-agent-pet/issues/64) | #62 Phần 1 |
+| ☑ | Bộ điều phối hành vi | [#67 — phân xử ý định và vòng đời](https://github.com/WindyWin/vpet-agent-pet/issues/67) | #64 |
 | ☐ | Catalog plugin | [#43 Giai đoạn 1 — phần bổ sung catalog và cài đặt plugin](https://github.com/WindyWin/vpet-agent-pet/issues/43) | #62 Phần 1 |
 | ☐ | Quy tắc plugin → bộ điều phối | [#43 Giai đoạn 2–3 — sự kiện tùy chỉnh và điều kiện kích hoạt từ dữ liệu](https://github.com/WindyWin/vpet-agent-pet/issues/43) | Phần bổ sung catalog, #64 và #67 |
-| ☐ | Phân phối thú cưng | [#62 Phần 2 — tải theo yêu cầu có kiểm tra tính toàn vẹn](https://github.com/WindyWin/vpet-agent-pet/issues/62) | #62 Phần 1 |
+| ☑ | Phân phối thú cưng | [#62 Phần 2 — tải theo yêu cầu có kiểm tra tính toàn vẹn](https://github.com/WindyWin/vpet-agent-pet/issues/62) | #62 Phần 1 |
 | ☐ | Adapter provider | [#36 — client agent thứ ba](https://github.com/WindyWin/vpet-agent-pet/issues/36) | Hợp đồng sự kiện hiện có |
 | ☐ | Thông báo / cài đặt | [#34 — tạm hoãn / chế độ tập trung](https://github.com/WindyWin/vpet-agent-pet/issues/34) | Luồng thông báo hiện có |
 | ☐ | Thông báo / yêu cầu chú ý | [#35 — tăng mức nhắc phê duyệt](https://github.com/WindyWin/vpet-agent-pet/issues/35) | Theo dõi yêu cầu chú ý hiện có |

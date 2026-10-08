@@ -120,7 +120,7 @@ agent does, upgrades, uninstalls, and checks that unrelated settings survive.
   window has no owner, falls back to ancestry. `host_window` means an HWND on Windows,
   since a hook and its pet always share one desktop.
 - Windows update checkpoints verify the live agent executable and process creation
-  time before restoring sessions ([0031](0031-windows-automatic-updates.md)); macOS
+  time before restoring sessions ([0032](0032-windows-automatic-updates.md)); macOS
   checkpoints still lack process identity.
 
 ## Validation

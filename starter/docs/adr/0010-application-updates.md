@@ -75,7 +75,7 @@ GitHub-provided SHA-256 digests for installation.
   older clients.
 - A failed start rolls back to the previous directory.
 - Archive installation and startup rollback are Linux-only. Windows uses verified
-  Setup upgrades ([0031](0031-windows-automatic-updates.md)); macOS only announces
+  Setup upgrades ([0032](0032-windows-automatic-updates.md)); macOS only announces
   releases ([0020](0020-macos-port.md)).
 
 ## Validation
