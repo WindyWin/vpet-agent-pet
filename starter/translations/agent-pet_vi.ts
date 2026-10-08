@@ -201,12 +201,12 @@
         <translation>Lại thứ Hai rồi... Em mệt quá à. Hôm nay mình làm từ từ thôi nha bạn.</translation>
     </message>
     <message>
-        <source>It&apos;s 4:45 PM. Time to wrap up and get ready to head home!</source>
-        <translation>4 giờ 45 chiều rồi. Bạn thu xếp công việc rồi chuẩn bị về nhà thôi!</translation>
+        <source>It&apos;s %1. Time to wrap up and get ready to head home!</source>
+        <translation>Đã %1 rồi. Đến lúc thu xếp và chuẩn bị về nhà!</translation>
     </message>
     <message>
-        <source>It&apos;s 10 PM. Time to put everything down and go to sleep!</source>
-        <translation>10 giờ tối rồi. Bạn cất hết mọi thứ rồi đi ngủ thôi nào!</translation>
+        <source>It&apos;s %1. Time to put everything down and go to sleep!</source>
+        <translation>Đã %1 rồi. Đến lúc gác mọi việc lại và đi ngủ!</translation>
     </message>
     <message>
         <source>It&apos;s getting late. Maybe finish up and get some sleep?</source>
@@ -953,6 +953,18 @@ và giật mình khi agent chạy lệnh nguy hiểm. Vài điều còn lại đ
         <translation>Ngày sinh nhật</translation>
     </message>
     <message>
+        <source>Monday reminder</source>
+        <translation>Nhắc nhở thứ Hai</translation>
+    </message>
+    <message>
+        <source>Go-home reminder</source>
+        <translation>Nhắc nhở về nhà</translation>
+    </message>
+    <message>
+        <source>Sleep reminder</source>
+        <translation>Nhắc nhở đi ngủ</translation>
+    </message>
+    <message>
         <source>Add today&apos;s recap to the &amp;go-home reminder</source>
         <translation>Thêm tổng kết hôm nay vào lời nhắc &amp;về nhà</translation>
     </message>
@@ -961,12 +973,12 @@ và giật mình khi agent chạy lệnh nguy hiểm. Vài điều còn lại đ
         <translation>Tổng kết hằng ngày</translation>
     </message>
     <message>
-        <source>At 4:45 PM on weekdays the pet sums up the day&apos;s agent work: finished turns, projects,
+        <source>At the go-home reminder time on weekdays the pet sums up the day&apos;s agent work: finished turns, projects,
 errors, approvals that waited and the longest run. Needs easter eggs on. Today&apos;s recap
 in the menu shows it any time.</source>
-        <translation>Lúc 4:45 chiều các ngày trong tuần, thú cưng tổng kết công việc của agent trong ngày: lượt đã xong, dự án,
-lỗi, phê duyệt phải chờ và lượt dài nhất. Cần bật Điều bất ngờ. Mục Tổng kết hôm nay
-trong menu cho xem bất cứ lúc nào.</translation>
+        <translation>Vào giờ nhắc về nhà các ngày trong tuần, thú cưng tổng kết công việc của tác tử trong ngày: lượt hoàn thành, dự án,
+lỗi, phê duyệt phải chờ và lượt chạy lâu nhất. Cần bật bất ngờ. Mục Tổng kết hôm nay
+trong trình đơn hiển thị bất cứ lúc nào.</translation>
     </message>
     <message>
         <source>Re&amp;cap</source>
@@ -1304,6 +1316,20 @@ Các cài đặt và hook khác được giữ nguyên. Hãy đăng ký từ m�
     <message>
         <source>Downloading update…</source>
         <translation>Đang tải bản cập nhật…</translation>
+    </message>
+    <message>
+        <source>Checking installed files…</source>
+        <translation>Đang kiểm tra các tệp đã cài…</translation>
+    </message>
+    <message>
+        <source>Downloading update… %1% (file %2 of %3)</source>
+        <extracomment>%1 = percent of the whole update, %2 = number of the file being downloaded, %3 = how many files</extracomment>
+        <translation>Đang tải bản cập nhật… %1% (tệp %2/%3)</translation>
+    </message>
+    <message>
+        <source>Downloading full update… %1%</source>
+        <extracomment>%1 = percent done</extracomment>
+        <translation>Đang tải toàn bộ bản cập nhật… %1%</translation>
     </message>
     <message>
         <source>Download stopped or failed. You can retry.</source>

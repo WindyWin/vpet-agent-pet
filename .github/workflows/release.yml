@@ -5,7 +5,7 @@ on:
     branches: [main]
     tags: ["v*"]
   pull_request:
-    # Docs-only PRs need no build; main still builds every merge, and it gates releases.
+    # Docs-only PRs need no build; docs-prefixed main pushes skip jobs below.
     # Later patterns win: the notices and licenses compiled into the app still build.
     paths: ["**", "!**.md", "!docs/**", "!starter/docs/**", "!.claude/**",
             "starter/THIRD_PARTY_NOTICES.md", "starter/licenses/**"]
@@ -15,8 +15,9 @@ permissions:
   contents: read
 
 # Superseded branch/PR runs are cancelled; tag runs always finish.
+# A skipped docs push must not cancel the preceding main build.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && startsWith(github.event.head_commit.message, 'docs') && '-docs' || '' }}
   cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
 
 jobs:
@@ -24,8 +25,11 @@ jobs:
     # Skip PRs from release/* branches (version bumps already built on the feature branches), and their
     # merge into main: the release tag on that same commit builds it. head_ref is empty for push/tag/dispatch
     # runs, and only the main branch push checks the merge message.
+    # Docs-prefixed main pushes skip all platforms; tags and manual builds still run.
     if: >-
-      ${{ !startsWith(github.head_ref, 'release/') && !(github.ref == 'refs/heads/main'
+      ${{ !(github.event_name == 'push' && github.ref == 'refs/heads/main'
+      && startsWith(github.event.head_commit.message, 'docs'))
+      && !startsWith(github.head_ref, 'release/') && !(github.ref == 'refs/heads/main'
       && startsWith(github.event.head_commit.message, 'Merge pull request') && contains(github.event.head_commit.message, format('from {0}/release/', github.repository_owner))) }}
     # Ubuntu 22.04 sets the glibc 2.35 baseline for the released binary.
     runs-on: ubuntu-22.04
@@ -108,7 +112,9 @@ jobs:
 
   macos:
     if: >-
-      ${{ !startsWith(github.head_ref, 'release/') && !(github.ref == 'refs/heads/main'
+      ${{ !(github.event_name == 'push' && github.ref == 'refs/heads/main'
+      && startsWith(github.event.head_commit.message, 'docs'))
+      && !startsWith(github.head_ref, 'release/') && !(github.ref == 'refs/heads/main'
       && startsWith(github.event.head_commit.message, 'Merge pull request') && contains(github.event.head_commit.message, format('from {0}/release/', github.repository_owner))) }}
     # One universal (arm64 + x86_64) bundle for macOS 11 and newer.
     runs-on: macos-14
@@ -166,7 +172,9 @@ jobs:
 
   windows:
     if: >-
-      ${{ !startsWith(github.head_ref, 'release/') && !(github.ref == 'refs/heads/main'
+      ${{ !(github.event_name == 'push' && github.ref == 'refs/heads/main'
+      && startsWith(github.event.head_commit.message, 'docs'))
+      && !startsWith(github.head_ref, 'release/') && !(github.ref == 'refs/heads/main'
       && startsWith(github.event.head_commit.message, 'Merge pull request') && contains(github.event.head_commit.message, format('from {0}/release/', github.repository_owner))) }}
     # x64 with MSVC, for Windows 10 1809 and newer.
     runs-on: windows-2022
@@ -257,9 +265,49 @@ jobs:
         run: |
           version="${GITHUB_REF_NAME#v}"
           git archive --prefix="agent-pet-$version/" -o "agent-pet-$version-source.tar.gz" "$GITHUB_SHA:starter"
+      - name: Generate download table
+        shell: bash
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          package="agent-pet-$version"
+          download="https://github.com/$GITHUB_REPOSITORY/releases/download/$GITHUB_REF_NAME"
+          docs="https://github.com/$GITHUB_REPOSITORY/blob/main"
+          # Every download link must point to a nonempty asset in this release.
+          for suffix in windows-x86_64-setup.exe macos-universal.dmg linux-x86_64.tar.gz \
+                        windows-x86_64.zip macos-universal.zip source.tar.gz; do
+            test -s "$package-$suffix" || { echo "Missing download: $package-$suffix"; exit 1; }
+          done
+          cat > release-notes.md <<EOF
+          ## Download / Tải xuống
+
+          Choose your operating system below. Each package includes the app, runtime and pet artwork.
+          Chọn hệ điều hành bên dưới. Mỗi gói đã bao gồm ứng dụng, thư viện và hình ảnh thú cưng.
+
+          | Operating system / Hệ điều hành | Download / Tải xuống | Install / Cài đặt |
+          | --- | --- | --- |
+          | Windows 10 (1809+) / 11 · x64 | [**Download Windows**]($download/$package-windows-x86_64-setup.exe) | Run the installer / Chạy bộ cài |
+          | macOS 11+ · Apple silicon & Intel | [**Download macOS**]($download/$package-macos-universal.dmg) | Drag Agent Pet into Applications / Kéo Agent Pet vào Applications |
+          | Linux · x86_64 | [**Download Linux**]($download/$package-linux-x86_64.tar.gz) | Extract and run ./install.sh / Giải nén và chạy ./install.sh |
+
+          [Installation guide]($docs/starter/docs/install.md) · [Hướng dẫn tiếng Việt]($docs/README.vi.md#bắt-đầu)
+
+          <details>
+          <summary>Portable packages and source / Bản portable và mã nguồn</summary>
+
+          - [Windows portable ZIP]($download/$package-windows-x86_64.zip)
+          - [macOS app ZIP]($download/$package-macos-universal.zip)
+          - [Source archive (starter/)]($download/$package-source.tar.gz)
+
+          </details>
+
+          The app downloads the \`app\`, \`runtime\`, \`artwork-*\` and \`components.json\` assets below automatically when updating. For installation, use the links above.
+          Ứng dụng tự tải các tệp \`app\`, \`runtime\`, \`artwork-*\` và \`components.json\` bên dưới khi cập nhật. Để cài đặt, dùng các liên kết phía trên.
+          EOF
       - uses: softprops/action-gh-release@v2
         with:
           draft: true
+          body_path: release-notes.md
+          generate_release_notes: true
           files: |
             *.tar.gz
             *-components.json

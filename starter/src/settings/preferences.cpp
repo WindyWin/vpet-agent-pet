@@ -52,6 +52,12 @@ Preferences PreferencesStore::load() {
         const double n = value.toDouble(low - 1.0);
         return value.isDouble() && std::isfinite(n) && n == std::floor(n) && n >= low && n <= high;
     };
+    const auto validTime = [&object](const QString &key) {
+        if (!object.contains(key)) return true;
+        const auto value = object[key];
+        const auto time = QTime::fromString(value.toString(), "HH:mm");
+        return value.isString() && time.isValid() && time.toString("HH:mm") == value.toString();
+    };
     // A file created by `agent-pet autostart` before the pet ever ran has no position yet.
     const bool position = object.contains("x") || object.contains("y");
     IdlePolicy whenIdle = IdlePolicy::Keep;
@@ -71,6 +77,7 @@ Preferences PreferencesStore::load() {
         || (object.contains("birthday") && !Preferences::validBirthday(object["birthday"].toString()))
         || (object.contains("eye_minutes") && !integer(object["eye_minutes"], 0, 1440))
         || (object.contains("water_minutes") && !integer(object["water_minutes"], 0, 1440))
+        || !validTime("monday_time") || !validTime("leave_work_time") || !validTime("sleep_time")
         || (object.contains("recap") && !object["recap"].isBool())
         || (object.contains("autostart") && !object["autostart"].isBool())
         || (object.contains("language") && !object["language"].isString())
@@ -95,6 +102,9 @@ Preferences PreferencesStore::load() {
     result.birthday = object["birthday"].toString();
     result.eyeMinutes = object["eye_minutes"].toInt(result.eyeMinutes);
     result.waterMinutes = object["water_minutes"].toInt(result.waterMinutes);
+    if (object.contains("monday_time")) result.reminderSchedule.monday = QTime::fromString(object["monday_time"].toString(), "HH:mm");
+    if (object.contains("leave_work_time")) result.reminderSchedule.leaveWork = QTime::fromString(object["leave_work_time"].toString(), "HH:mm");
+    if (object.contains("sleep_time")) result.reminderSchedule.sleep = QTime::fromString(object["sleep_time"].toString(), "HH:mm");
     result.recap = object["recap"].toBool(true);
     result.autostart = object["autostart"].toBool();
     result.whenIdle = whenIdle;
@@ -117,6 +127,9 @@ bool PreferencesStore::save(const Preferences &preferences) {
                        {"eye_minutes", preferences.eyeMinutes}, {"water_minutes", preferences.waterMinutes},
                        {"autostart", preferences.autostart}, {"when_idle", idlePolicyName(preferences.whenIdle)},
                        {"language", preferences.language},
+                       {"monday_time", preferences.reminderSchedule.monday.toString("HH:mm")},
+                       {"leave_work_time", preferences.reminderSchedule.leaveWork.toString("HH:mm")},
+                       {"sleep_time", preferences.reminderSchedule.sleep.toString("HH:mm")},
                        {"pet", Preferences::validPet(preferences.pet) ? preferences.pet : QString("vpet")}};
     if (Preferences::validBirthday(preferences.birthday)) object["birthday"] = preferences.birthday;
     if (preferences.hasPosition) { object["x"] = preferences.position.x(); object["y"] = preferences.position.y(); }

@@ -12,7 +12,6 @@
     "thinking": { "mode": "phased", "after": "idle" },
     "reading": { "mode": "phased", "after": "idle" },
     "working": { "mode": "phased", "after": "idle" },
-    "waiting": { "mode": "phased", "after": "idle" },
     "needs_input": { "mode": "phased", "after": "idle" },
     "sleeping": { "mode": "phased", "after": "idle" },
     "dragging": { "mode": "phased", "after": "idle" },

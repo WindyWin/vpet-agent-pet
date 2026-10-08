@@ -209,7 +209,7 @@
     "closing_angry": [
       "Shutdown/PoorCondition"
     ],
-    "waiting": [
+    "fidget_bubbles": [
       "IDEL/Bubbles/A",
       "IDEL/Bubbles/B",
       "IDEL/Bubbles/C"
@@ -5888,7 +5888,7 @@
         }
       ],
       "duration_ms": 1500,
-      "state": "waiting"
+      "state": "fidget_bubbles"
     },
     {
       "path": "IDEL/Bubbles/B",
@@ -5991,7 +5991,7 @@
         }
       ],
       "duration_ms": 3000,
-      "state": "waiting"
+      "state": "fidget_bubbles"
     },
     {
       "path": "IDEL/Bubbles/B_2",
@@ -6094,7 +6094,7 @@
         }
       ],
       "duration_ms": 3000,
-      "state": "waiting"
+      "state": "fidget_bubbles"
     },
     {
       "path": "IDEL/Bubbles/C",
@@ -6133,7 +6133,7 @@
         }
       ],
       "duration_ms": 1000,
-      "state": "waiting"
+      "state": "fidget_bubbles"
     }
   ],
   "playback": {
@@ -6347,8 +6347,9 @@
       "mode": "once",
       "after": "stop"
     },
-    "waiting": {
+    "fidget_bubbles": {
       "mode": "phased",
+      "loops": 1,
       "after": "idle"
     }
   },
@@ -6395,7 +6396,7 @@
         "weight": 1
       }
     ],
-    "waiting": [
+    "fidget_bubbles": [
       {
         "sequences": [
           "IDEL/Bubbles/A",
@@ -6541,7 +6542,7 @@
     ],
     "leave_work": [
       {
-        "state": "fidget_aside",
+        "state": "fidget_bubbles",
         "weight": 1
       }
     ],

@@ -79,7 +79,6 @@ and shows VPet instead.
 | `idle` | nothing is happening | loop, then idle |
 | `starting` | Agent Pet starts | once, then idle |
 | `thinking`, `reading`, `working` | an agent thinks, reads files, runs tools | phased, then idle |
-| `waiting` | an agent waits for background jobs | phased, then idle |
 | `needs_input` | a session needs you | phased, then idle |
 | `out_of_quota` | the agent's usage limit is reached | loop, then idle |
 | `tool_error` | a tool failed | once, then back to what was playing |

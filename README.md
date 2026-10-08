@@ -1,5 +1,7 @@
 # Agent Pet
 
+**English** | [Tiếng Việt](README.vi.md)
+
 **A little desktop pet that keeps you company while Claude Code and Codex work.**
 
 It sits on your screen, thinks when your agent thinks, gets busy when it runs tools, and waves at you when a session needs your approval, so you can look away from the terminal without missing anything.
@@ -17,11 +19,11 @@ It sits on your screen, thinks when your agent thinks, gets busy when it runs to
 - **Looks after you**: gentle reminders to rest your eyes and drink water, and a recap of your day.
 - **Private**: it only learns *what kind* of thing is happening, never your prompts, code or commands.
 
-Works on **Linux** x86_64 (X11, or Wayland desktops with XWayland such as GNOME and KDE) and **macOS 11+** (Apple silicon and Intel).
+Works on **Linux** x86_64 (X11, or Wayland desktops with XWayland such as GNOME and KDE), **macOS 11+** (Apple silicon and Intel), and **Windows 10 version 1809+ / Windows 11** (x64).
 
 ## Get started
 
-Download the latest version from the [Releases page](https://github.com/WindyWin/vpet-agent-pet/releases).
+Download the latest version from the [Releases page](https://github.com/WindyWin/vpet-agent-pet/releases/latest). Choose your operating system in the **Download / Tải xuống** table at the top of the release; each package includes the pet artwork.
 
 **Linux**
 
@@ -36,6 +38,14 @@ Download the latest version from the [Releases page](https://github.com/WindyWin
 1. Download the `.dmg`, open it and drag **Agent Pet** into **Applications**.
 2. Open it. The first time, macOS asks you to confirm: go to **System Settings → Privacy & Security → Open Anyway** (on macOS 14 or older, Control-click the app → **Open**).
 3. Right-click the pet → **Settings → Startup and agents**, press **Enable** next to Claude Code or Codex, then restart the client.
+
+**Windows**
+
+1. Download and run `agent-pet-<version>-windows-x86_64-setup.exe`. It installs for your user without administrator rights and adds **Agent Pet** to the Start menu. Qt, the Visual C++ runtime and the artwork are included.
+2. In setup, choose whether to connect Claude Code and/or Codex and start the pet at sign-in or when an agent session starts. You can also connect them later from **Settings → Startup and agents**.
+3. Restart Claude Code or Codex and send a prompt. Claude Code hooks need **2.1.139+**; in Codex, trust the hooks in `/hooks`.
+
+The Windows build is not code-signed yet. If SmartScreen warns, choose **More info → Run anyway**. For portable use, extract `agent-pet-<version>-windows-x86_64.zip` into a folder whose path has no spaces, then run `agent-pet.exe`. See the [Windows install guide](starter/docs/install.md#windows) for details.
 
 Need more detail, or something isn't working? See the [install guide](starter/docs/install.md) and its [troubleshooting table](starter/docs/install.md#troubleshooting).
 
@@ -165,6 +175,8 @@ Right-click the pet (or its tray / menu bar icon) for everything: your sessions,
 - connect Claude Code and Codex with one click, and have it start with your agents or at login;
 - choose how updates are installed.
 
+The interface supports **English and Vietnamese**. It follows your system language by default; choose **Settings → General → Language** to switch immediately.
+
 If it ever gets in the way, click the tray icon to hide it. It keeps watching your sessions and shows a badge on the icon instead.
 
 <table>
@@ -176,7 +188,7 @@ If it ever gets in the way, click the tray icon to hide it. It keeps watching yo
 
 ### Stays up to date
 
-On Linux the pet updates itself in the background by default, downloading only what changed and keeping your settings. If a new version fails to start, it goes back to the previous one. On macOS it tells you when a new version is out, and you install it by replacing the app.
+On Linux the pet updates itself in the background by default, downloading only what changed and keeping your settings. If a new version fails to start, it goes back to the previous one. On macOS and Windows it tells you when a new version is out: replace the macOS app or run the newer Windows setup program. Settings and enabled hooks are kept when upgrading in place.
 
 ## Your privacy
 
@@ -190,6 +202,7 @@ On Linux the pet updates itself in the background by default, downloading only w
 - **Not reacting?** Restart Claude Code or Codex after connecting, then send a new prompt. In Codex, approve the new hooks in `/hooks`.
 - **Lost the pet?** Click the tray icon, or right-click it → **More → Recover pet position and input**.
 - **macOS:** jumping to a terminal window and automatic updates aren't available yet. **Open** still switches tmux and herdr panes.
+- **Windows:** **Open** brings the agent's Windows Terminal or classic console window to the front, with an editor/terminal fallback based on process ancestry. Automatic update installation isn't available yet; run the newer setup program. For hook commands and console output, use `agent-pet-cli.exe`.
 - **Linux on Wayland:** the pet runs through XWayland, which GNOME and KDE provide by default. Pure Wayland isn't supported yet.
 
 ## Issues and discussion
@@ -198,10 +211,86 @@ Open an issue from the [template chooser](https://github.com/WindyWin/vpet-agent
 
 ## For developers
 
+### Architecture at a glance
+
+End-to-end target architecture. **Dashed boxes are planned**; the remaining pieces
+exist today. Until #64 and #67 land, `Monitor`, `PetWindow` and behavior modules
+share cue selection and arbitration. Arrows show runtime flow, not build order.
+
+```mermaid
+flowchart TB
+  agents["Claude Code / Codex"] --> input["Provider adapters · headless hook / emit"]
+  input --> ipc["Private local IPC · validated events"]
+  ipc --> sessions["Sessions · aggregate activity / attention"]
+  sessions --> runtime["#67 Behavior runtime<br/>Intents → eligibility / priority / interruption"]
+  life["Touch / wander / mood / wellness<br/>Easter eggs / startup / quit"] --> runtime
+  custom["#43 Custom events / rules"] --> runtime
+  runtime --> cues["#64 Cue mapping<br/>Semantic cue → pet state / reaction"]
+  cues --> player["Player · phases / frames / transitions"]
+  player --> window["PetWindow · pet / movement / input"]
+  player -. presentation outcomes .-> runtime
+  window --> life
+
+  sessions --> alerts["Alerts / session list / tray"]
+  alerts --> focus["Open session · host adapters"]
+  focus --> platform["Platform services · Linux / macOS / Windows"]
+  window --> platform
+  sessions --> recap["Daily recap / session checkpoint"]
+
+  packs["#62 PetLibrary / Catalog<br/>Active pet · artwork / credits / cue overrides"] --> cues
+  packs --> player
+  plugins["#43 Plugin packs<br/>Catalog fragments / rule data"] --> packs
+  plugins --> custom
+  updates["App updates / packaging"] --> packs
+  downloads["#62 Part 2<br/>Verified pet downloads"] --> packs
+  settings["Settings / preferences"] -. configure .-> life
+  settings -. select pet / plugins .-> packs
+
+  classDef planned fill:#fff4d6,stroke:#9a6700,stroke-dasharray:5 5,color:#24292f
+  class runtime,cues,packs,custom,plugins,downloads planned
+```
+
+Session priority belongs to `Sessions`; #67 chooses among behavior intents; #64
+chooses how the pet expresses the winning cue. Alerts keep their own delivery path.
+Movement and native window operations stay in `PetWindow` and platform services.
+See the [code map](starter/docs/architecture.md#code-map) for source paths and decisions.
+
+### Roadmap mapped to the architecture
+
+Open work, checked against GitHub on 2026-10-07. Each issue owns its detailed
+acceptance checklist; check a row here when that phase lands and update the chart
+when a planned layer becomes implemented.
+
+```mermaid
+flowchart LR
+  packs["#62 Part 1 · pet packs"] --> cues["#64 · cue mapping"]
+  cues --> runtime["#67 · arbitration"]
+  runtime --> rules["#43 · custom events / rules"]
+  packs --> fragments["#43 · catalog fragments"]
+  fragments --> rules
+  packs --> downloads["#62 Part 2 · downloads"]
+```
+
+| Done | Architecture area | Task / issue | Depends on |
+| --- | --- | --- | --- |
+| ☐ | PetLibrary / Catalog | [#62 Part 1 — selectable pet packs](https://github.com/WindyWin/vpet-agent-pet/issues/62) | Standalone foundation |
+| ☐ | Cue mapping | [#64 — semantic cues and per-pet mapping](https://github.com/WindyWin/vpet-agent-pet/issues/64) | #62 Part 1 |
+| ☐ | Behavior runtime | [#67 — intent arbitration and lifecycle](https://github.com/WindyWin/vpet-agent-pet/issues/67) | #64 |
+| ☐ | Plugin catalog | [#43 Phase 1 — catalog fragments and plugin settings](https://github.com/WindyWin/vpet-agent-pet/issues/43) | #62 Part 1 |
+| ☐ | Plugin rules → runtime | [#43 Phases 2–3 — custom events and data-driven triggers](https://github.com/WindyWin/vpet-agent-pet/issues/43) | Catalog fragments, #64 and #67 |
+| ☐ | Pet distribution | [#62 Part 2 — verified on-demand downloads](https://github.com/WindyWin/vpet-agent-pet/issues/62) | #62 Part 1 |
+| ☐ | Provider adapters | [#36 — third agent client](https://github.com/WindyWin/vpet-agent-pet/issues/36) | Existing event contract |
+| ☐ | Alerts / settings | [#34 — snooze / focus mode](https://github.com/WindyWin/vpet-agent-pet/issues/34) | Existing alert delivery |
+| ☐ | Alerts / attention | [#35 — escalating approval nudges](https://github.com/WindyWin/vpet-agent-pet/issues/35) | Existing attention tracking |
+| ☐ | Mood / interaction | [#37 — earned treats to feed the pet](https://github.com/WindyWin/vpet-agent-pet/issues/37) | Existing mood counters; coordinate reactions with #67 |
+
+### Build and contribution guides
+
 The app lives in [`starter/`](starter/README.md): building from source, running tests, command-line options, sending demo events and packaging. Further reading:
 
 - [Architecture overview](starter/docs/architecture.md) and [design decision records](starter/docs/adr/README.md)
 - [Event protocol](starter/docs/events.md) and [Claude Code / Codex integrations](starter/docs/integrations.md)
+- [CI commit rules](starter/README.md#ci-commit-rules)
 
 This repository root also keeps the original VPet artwork archive (about 5,500 frames, 735 MiB) as a source bundle for adding new animations. The app itself doesn't need it. Check it with `python3 scripts/assets.py verify`, or list every sequence with `python3 scripts/assets.py catalog`.
 

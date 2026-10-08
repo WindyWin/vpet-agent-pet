@@ -214,8 +214,8 @@ void Monitor::remind() {
     // The go-home nudge sums up the day, when there was agent work to sum up.
     const auto today = recap_.day(QDate::currentDate());
     if (reminder == "leave_work" && window_.recapEnabled() && today.turns)
-        say(EasterEggs::reminderNote(reminder) + "\n" + Recap::summary(today), Recap::breakdown(today));
-    else say(EasterEggs::reminderNote(reminder));
+        say(EasterEggs::reminderNote(reminder, window_.eggs().reminderSchedule()) + "\n" + Recap::summary(today), Recap::breakdown(today));
+    else say(EasterEggs::reminderNote(reminder, window_.eggs().reminderSchedule()));
 }
 bool Monitor::shown(const Alert &alert) const {
     const int level = window_.bubbles();

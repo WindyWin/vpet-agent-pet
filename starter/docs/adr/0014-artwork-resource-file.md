@@ -30,4 +30,4 @@ source timestamps and keep identical artwork reproducible across checkouts.
 
 The player no longer registers `artwork.rcc`. `PetLibrary` registers the index and only the active
 pet's packs, so the decision above (a separate resource file that keeps resource paths and lets
-updates reuse unchanged artwork) still holds. See [0027](0027-pet-packs.md).
+updates reuse unchanged artwork) still holds. See [0028](0028-pet-packs.md).

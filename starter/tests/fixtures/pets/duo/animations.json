@@ -38,11 +38,6 @@
       "idle",
       "idle"
     ],
-    "waiting": [
-      "idle",
-      "idle",
-      "idle"
-    ],
     "needs_input": [
       "idle",
       "idle",
@@ -132,10 +127,6 @@
       "after": "idle"
     },
     "working": {
-      "mode": "phased",
-      "after": "idle"
-    },
-    "waiting": {
       "mode": "phased",
       "after": "idle"
     },

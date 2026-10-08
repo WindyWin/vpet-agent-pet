@@ -14,7 +14,7 @@ QVector<qint64> splitPids(const QString &pids) {
 }
 HostContext fromV1(const QString &host, const QString &pids, const QString &window, const QString &target) {
     HostContext context{host, splitPids(pids), {}, target};
-    if (!window.isEmpty()) context.window = {x11Backend, window};
+    if (!window.isEmpty()) context.window = {platform::nativeWindowBackend, window};
     return context;
 }
 QJsonObject toV1(const HostContext &context) {
@@ -24,7 +24,10 @@ QJsonObject toV1(const HostContext &context) {
     if (!context.target.isEmpty() && context.target.size() <= maxTarget) out["host_target"] = context.target;
     if (!context.pids.isEmpty()) out["host_pids"] = joinPids(context.pids.mid(0, maxPids));
     // v1 has no field for another backend's window; it is left out, never reinterpreted.
-    if (context.window.backend == x11Backend && !context.window.id.isEmpty()) out["host_window"] = context.window.id;
+    if (context.window.backend == platform::nativeWindowBackend && !context.window.id.isEmpty()) out["host_window"] = context.window.id;
     return out;
+}
+bool needsNativeWindow(const HostContext &context) {
+    return !context.isNull() && context.window.backend != platform::nativeWindowBackend;
 }
 }

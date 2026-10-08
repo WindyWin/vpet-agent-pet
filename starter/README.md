@@ -18,8 +18,8 @@ The asset verifier uses only Python's standard library and works from any curren
 
 ## Waiting for background jobs
 
-When Claude ends a turn with background tasks still running, the pet calmly blows
-bubbles and the session says **Waiting**. It shows no completion celebration or
+When Claude ends a turn with background tasks still running, the pet uses its idle
+animation and the session says **Waiting**. It shows no completion celebration or
 “Needs input” bubble for idle notifications during the wait. Approvals still show
 normally. Once Claude resumes and finishes without background work, the pet gives
 its normal finished reaction and counts one turn, including the waiting time.
@@ -169,8 +169,10 @@ on your birthday (Settings → **Birthday**, day and month only) it celebrates, 
 when it idles and on the day's first finished turn. Late at night it yawns more, and
 the first turn that finishes after 1 AM brings a gentle bedtime note. The pet also
 keeps time: on Monday morning it is tired and down about the week, at 4:45 PM on
-weekdays it tells you to get ready to go home, and at 10 PM it tells you to go to
-sleep (each once a day, while it is running and visible). Turns finished
+weekdays it blows bubbles and tells you to get ready to go home, and at 10 PM it
+tells you to go to sleep (each once a day, while it is running and visible).
+Settings → **Monday reminder**, **Go-home reminder** and **Sleep reminder** let
+you change these local times; the times above are the defaults. Turns finished
 on a Friday evening end in a dance, and a turn that ran for a quarter of an hour or
 more gets a bigger celebration. When an agent starts a destructive shell command,
 such as `rm -rf` or `git push --force`, the pet jumps; the hook judges the command
@@ -200,7 +202,7 @@ water (off, 45, 60 or 90 minutes); both are on by default. See
 Right-click → **Today's recap** and the pet sums up what your agents did today:
 "Today: 38 turns across 3 projects · 2 approvals waited 10+ min · longest run 22 min".
 Click the bubble for turns per project, errors, approvals with the longest wait, and
-the longest run. On weekdays the 4:45 PM go-home reminder includes the summary too;
+the longest run. On weekdays the go-home reminder (default 4:45 PM) includes the summary too;
 Settings → **Recap** turns that off. The counters are kept for two weeks in
 `recap.json` next to the preferences: counts and project folder names only, never
 prompts, commands or paths. See [the design record](docs/adr/0018-daily-recap.md).
@@ -230,7 +232,7 @@ changes. Once two or more pets are installed, Settings → Pet → **Character**
 chosen pet appears the next time Agent Pet starts, and only its artwork is loaded. `--pet <id>` runs
 another installed pet once without saving the choice. A pet that cannot load is skipped and VPet runs
 instead. To make a pet, see [the pet guide](docs/pets.md) and
-[the design record](docs/adr/0027-pet-packs.md).
+[the design record](docs/adr/0028-pet-packs.md).
 
 ## Language
 
@@ -253,6 +255,8 @@ upgrades and removal. See [Arch Linux](docs/install.md#arch-linux).
 optional installation on the next normal launch, and fully automatic download and install when idle (the default).
 Updates preserve settings and hooks and restore the previous version if startup
 fails. Development builds and the macOS and Windows apps offer notifications and manual downloads.
+While an update downloads, the Updates window shows one progress bar for the whole update
+(with “file 2 of 5” when it comes in several parts) instead of restarting at 0% for each file.
 See [update behavior and recovery](docs/install.md#update-notifications-and-automatic-updates).
 
 ## Local events
@@ -319,6 +323,11 @@ the alert visible if it cannot raise a window, and its tooltip says whether the
 tab or pane could not be selected, the window was not found, or this desktop cannot
 raise windows at all. Sessions that
 started before this version appear without a host until their next event.
+
+On Windows the hook also records the console window the agent runs in, and Open raises
+it (Windows Terminal, including PowerShell or Command Prompt windows handed off to it, or
+a classic console window). When no console window is found, it falls back to the window
+that owns the agent's parent processes. tmux and herdr are not used on Windows.
 
 An orange badge stays on the pet while any observed session waits for approval
 or input, even after its alert is dismissed. It clears on that session's next
@@ -440,7 +449,26 @@ CI ([.github/workflows/release.yml](../.github/workflows/release.yml)) runs all 
 the above from a clean checkout on Ubuntu 22.04, macOS 14 and Windows Server 2022 with
 Qt 6.5.3, uploads the Linux full tarball, component tarballs and manifest, the macOS zip
 and dmg and the Windows zip and setup program, and attaches them to a draft GitHub
-release for `v*` tags.
+release for `v*` tags. CI adds an English/Vietnamese download table for the three
+operating systems above GitHub's generated release notes, with portable and source
+downloads in a collapsible section. It verifies that all six linked packages exist
+and are nonempty before creating the draft. Component assets remain available for
+automatic updates.
+
+### CI commit rules
+
+- Use `docs: ...` or `docs(scope): ...` for documentation-only commits. On a push
+  to `main`, a head commit message starting with `docs` skips all three platform
+  build/test/package jobs. GitHub may still show a workflow run with skipped jobs.
+- The rule checks the pushed head commit. For a squash merge, keep the `docs`
+  prefix in its commit title; a default `Merge pull request ...` title does not
+  match. Use the prefix only when the whole push is documentation-only.
+- Documentation-only pull requests already skip builds by changed paths;
+  bundled notices and licenses still trigger PR builds. Use a non-`docs` title
+  for changes that affect the shipped app or build, including CI configuration.
+- Version tags and **Run workflow** still build, even on a `docs` commit. A docs
+  push does not cancel an already running code build. Existing `release/*`
+  branch/merge skips remain in place; the version tag builds the release.
 
 ## Artwork and publishing
 

@@ -53,7 +53,7 @@ identifiers from the hook's environment and `/proc`, never titles or content:
 | --- | --- |
 | `host` | `konsole`, `herdr`, `tmux`, `vscode` or `terminal` (innermost multiplexer wins) |
 | `host_pids` | Up to 16 ancestor process IDs, nearest first, comma-separated |
-| `host_window` | `$WINDOWID` when the terminal exports it (decimal X11 window); never for `vscode` |
+| `host_window` | Decimal native window: `$WINDOWID` when the terminal exports it (X11), never for `vscode`; on Windows the agent's console window (HWND) |
 | `host_target` | Konsole `service\|/Windows/N\|/Sessions/M`; herdr `tab\|pane\|socket`; tmux `socket\|%pane` |
 
 Programs started from a terminal inherit its variables: VS Code launched from a
@@ -199,7 +199,8 @@ rules. Unmatched tool ends and errors keep waiting; another waiting finish keeps
 waiting, and a plain finish gives the normal finished reaction.
 The existing 30-minute session expiry still applies. Checkpoints preserve waiting
 and its start time. The session list shows **Waiting** in indigo (`#4c6ef5`), and
-the pet loops the Bubbles animation. Ambient fidgets and wander remain idle-only.
+the pet uses its idle animation, including ambient fidgets and wander when enabled.
+Bubble-blowing now plays once for the go-home reminder (default 16:45 on weekdays).
 
 ## Verification
 

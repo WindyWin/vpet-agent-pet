@@ -112,7 +112,7 @@ private slots:
     }
     void contractComesFromItsDataFile() {
         const auto &states = pet::coreStates();
-        QCOMPARE(states.size(), 15);
+        QCOMPARE(states.size(), 14);
         auto shape = [&](const QString &name) {
             for (const auto &state : states) if (state.name == name) return state.mode + "/" + state.after;
             return QString();
@@ -147,8 +147,8 @@ private slots:
         QVERIFY(load(withState(catalog, "thinking", {"idle"}, {{"mode", "once"}, {"after", "idle"}}))
                     .contractError().contains("thinking"));
         // A phased core state ends when the app moves on, never after a count of loops.
-        QVERIFY(load(withState(catalog, "waiting", {"idle", "idle", "idle"}, {{"mode", "phased"}, {"after", "idle"}, {"loops", 2}}))
-                    .contractError().contains("waiting"));
+        QVERIFY(load(withState(catalog, "reading", {"idle", "idle", "idle"}, {{"mode", "phased"}, {"after", "idle"}, {"loops", 2}}))
+                    .contractError().contains("reading"));
     }
     void framesStayInsideThePet() {
         QString error;

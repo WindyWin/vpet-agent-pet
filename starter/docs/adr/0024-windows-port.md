@@ -67,7 +67,13 @@ and the event protocol unchanged. Its platform layer, `src/platform/windows/`, s
   Start menu), matches them with the shared `matchWindow`, restores a minimized one and
   calls `SetForegroundWindow`, which Windows allows because the pet is the foreground
   application right after the user clicks it. `active()` compares with
-  `GetForegroundWindow`.
+  `GetForegroundWindow`. The hook first names the window precisely: it attaches to the
+  console of its nearest ancestor that has one (agents start hooks without a console
+  window) and sends that console window's root owner as `host_window`, an HWND on
+  Windows. Under ConPTY the console window is a hidden pseudo window owned by the
+  terminal's window, so this finds Windows Terminal even for a shell handed off to it,
+  whose parent is Explorer; a conhost console is its own window. The first console found
+  decides; when its window is hidden and unowned (VS Code's terminal), ancestry is used.
 - **Native queries.** The left button (the swapped button when buttons are swapped) from
   `GetAsyncKeyState`, because the system move loop can swallow the release; the screen
   lock from the input desktop, which is `Default` while the user works and cannot be
@@ -109,9 +115,10 @@ agent does, upgrades, uninstalls, and checks that unrelated settings survive.
   run until they gain reputation or a certificate.
 - `agent-pet.exe` prints nothing to a console; command-line use goes through
   `agent-pet-cli.exe`.
-- A console window owned by `conhost.exe` may not match the agent's process ancestry,
-  so **Open** can miss classic console windows; Windows Terminal and editor terminals
-  own their windows.
+- **Open** finds classic console windows and Windows Terminal from the agent's console,
+  not its ancestry; a terminal older than ConPTY's window ownership, or one whose pseudo
+  window has no owner, falls back to ancestry. `host_window` means an HWND on Windows,
+  since a hook and its pet always share one desktop.
 - Session checkpoints across updates keep no process identity on Windows (as on macOS).
 
 ## Validation
@@ -136,3 +143,15 @@ agent does, upgrades, uninstalls, and checks that unrelated settings survive.
 - Not yet verified by hand on a Windows desktop: the pet over other windows and across
   monitors and DPI scales, dragging, the tray icon, **Open** from Windows Terminal and VS
   Code, sign-in start, SmartScreen's prompt, and hooks from real Claude Code and Codex sessions.
+
+### Codex terminal focus — 2026-10-07
+
+- Problem: **Open** did not raise the terminal of a Codex session on Windows. Codex
+  (`codex-rs/hooks/src/engine/command_runner.rs`) starts hooks as `cmd.exe /C` with
+  `CREATE_NO_WINDOW` in a job object, so the ancestry is `cmd.exe → codex.exe → shell →
+  …`; it reaches `WindowsTerminal.exe` only when Terminal started the shell itself. A
+  shell started from the Start menu or Run and handed off to Terminal has Explorer as
+  its parent, and a classic console window belongs to `conhost.exe`, never an ancestor.
+- Fix: the console-window hint above. Linux: full build and all 12 CTest suites pass,
+  with `alerts` checking that `host_window` carries only the native backend's window.
+  Not yet verified on a Windows desktop or in Windows CI for this change.

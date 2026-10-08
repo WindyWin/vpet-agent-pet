@@ -45,8 +45,11 @@ int eventCommand(const QStringList &args) {
         if (object.isEmpty()) return 0;
         const auto processes = platform::createProcessServices();
         const auto ancestors = processes->ancestors(platform::parentProcessId());
-        const auto host = hosts::toV1(hosts::Registry::builtin().capture(QProcessEnvironment::systemEnvironment(), ancestors,
-                                                                         processes->names(ancestors)));
+        auto context = hosts::Registry::builtin().capture(QProcessEnvironment::systemEnvironment(), ancestors,
+                                                          processes->names(ancestors));
+        // The agent's own console window outranks windows found from ancestry (Windows only).
+        if (hosts::needsNativeWindow(context)) context.window = platform::agentConsoleWindow(ancestors);
+        const auto host = hosts::toV1(context);
         for (auto it = host.begin(); it != host.end(); ++it) object[it.key()] = it.value();
     }
     if (!provider.isEmpty()) {

@@ -162,7 +162,10 @@ Choose one of four modes:
 **Later / Close** leaves the update available. **Skip this version** suppresses
 that version and discards its pending package; **Check now** shows it again.
 The update window shows the installed version, last successful check, download
-progress, and release-page link. Updates never replace agent approval bubbles.
+progress, and release-page link. Progress is one bar for the whole update: the
+percentage covers every missing component together and never restarts per file,
+with “file 2 of 5” beside it when several are fetched. A fallback to the full
+archive is labelled “Downloading full update” and counts from its own total. Updates never replace agent approval bubbles.
 Downloads can be cancelled or retried. Completed, verified components are kept
 for retries; the interrupted component restarts from zero.
 
@@ -363,9 +366,10 @@ as on other systems. *Start at login* writes an `Agent Pet` value under
 `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`, which Task Manager's **Startup
 apps** also lists. Settings, the recap and update state are under `%APPDATA%\agent-pet`.
 
-**Open** brings the agent's Windows Terminal, editor or other terminal window to the front
-by its process ancestry; classic console windows may not be found. tmux and herdr are not
-used on Windows.
+**Open** brings the agent's terminal window to the front: the console window the agent runs
+in (Windows Terminal, including PowerShell or Command Prompt windows handed off to it, or a
+classic console window), otherwise the editor or terminal found by process ancestry. tmux
+and herdr are not used on Windows.
 
 **Not yet on Windows:** automatic update installation (the pet announces new versions; run
 the newer setup program).
@@ -384,3 +388,12 @@ and keep their own terms (`share/agent-pet/THIRD_PARTY_NOTICES.md` and
 keep their own licenses, collected under `share/agent-pet/runtime-licenses/` and
 listed in `share/agent-pet/runtime-manifest.json`. In the macOS app these files are
 under `Agent Pet.app/Contents/Resources/`; on Windows they are in the installation folder.
+
+### Clock reminder times
+
+In Settings, set **Monday reminder**, **Go-home reminder** and **Sleep reminder**
+to local times. Defaults are 06:00 on Mondays, 16:45 on weekdays and 22:00 daily.
+These reminders require Easter eggs to be enabled and run at most once per day
+while the pet is running. The go-home reminder plays the bubble-blowing animation.
+Times are saved automatically as `monday_time`, `leave_work_time` and `sleep_time`
+(`HH:mm`) in `preferences.json`.

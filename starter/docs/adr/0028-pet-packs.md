@@ -1,4 +1,4 @@
-# 0027. Pet packs
+# 0028. Pet packs
 
 - Status: Accepted
 - Date: 2026-10-07
@@ -25,7 +25,7 @@ frame folder's resource path ([0010](0010-application-updates.md), [0014](0014-a
 - `Catalog` parses and validates a catalog. `PetLibrary` registers the index, lists pets from metadata
   only, and on `activate(id)` validates that pet and registers only its packs, rolling back on failure.
   `Player` plays a `Catalog`.
-- The app selects 15 states by name. They are listed once, in `src/animation/core-states.json`, which
+- The app selects 14 states by name. They are listed once, in `src/animation/core-states.json`, which
   is embedded into the build. Every pet must define them with the listed playback. A pet that does not
   is refused at activation, and the `pets` test suite checks every bundled pet. Runtime fallback
   chains were rejected: `PetWindow` and `Monitor` compare requested state names, so substituting
