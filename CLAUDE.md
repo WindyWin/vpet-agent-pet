@@ -19,10 +19,10 @@ python3 scripts/verify_assets.py          # asset manifest/catalog check (also r
 cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_LIBDIR=lib
 cmake --build build -j 4
 ctest --test-dir build --output-on-failure
-./build/agent-pet                         # run the pet (--preview, --settings, --state thinking, --no-persist)
+./build/agent-pet                         # run the pet (--preview, --settings, --state thinking, --pet <id>, --no-persist)
 ```
 
-Tests are Qt Test executables registered with CTest (`updates`, `update-install`, `providers`, `events`, `alerts`, `focus`, `startup`, `prototype-1`…`prototype-4`, `i18n`; macOS and Windows register all but `updates`, `update-install` and `startup`):
+Tests are Qt Test executables registered with CTest (`updates`, `update-install`, `providers`, `events`, `alerts`, `focus`, `startup`, `prototype-1`…`prototype-4`, `i18n`, `pets`, plus the Python `pet-scaffold` check; macOS and Windows register all but `updates`, `update-install` and `startup`):
 
 ```bash
 ctest --test-dir build -R events --output-on-failure            # one CTest suite
@@ -68,11 +68,11 @@ CMake libraries enforce this split:
 
 Event flow: provider hook JSON → `providers/adapters.cpp` normalizes to protocol v1 → datagram → `Receiver` → `Monitor::apply` → `Sessions` (ordering, dedup, expiry, aggregate priority: attention > exhausted > error > turn-finished > working > reading > thinking > idle) → `PetWindow`/`Player` selects the animation state, and `AlertQueue` drives the bubble and badge. Nothing about sessions is persisted except the daily `Recap` counters (`recap.json`, counts only). Open goes `Monitor` → `hosts::FocusService` (injected from `main.cpp`) → host `Activation` (select tab/pane) → `platform::DesktopBackend`s in order (X11, then KWin), returning separate selection and activation outcomes. `starter/docs/adr/0017-session-focus.md` has the per-host policies.
 
-`assets/vpet/animations.json` is the animation catalog: display states, sequences with per-frame durations, playback phases (start → loop → end, one-shots), weighted variants, mood art, reactions, ambient fidgets, touch hit boxes and moves. Behavior is largely data-driven from it; the player validates it at load. The artwork and catalog are compiled into a separate `artwork.rcc` (not the executable), so updates can reuse unchanged artwork.
+Each pet is a folder `assets/<id>/` (VPet: `assets/vpet/`) with `pet.json`, a `preview.png` and the `animations.json` catalog. The catalog covers display states, sequences with per-frame durations, playback phases (start → loop → end, one-shots), weighted variants, mood art, reactions, ambient fidgets, touch hit boxes and moves. Behavior is largely data-driven from it: `Catalog` validates it at load, and `PetLibrary` registers only the chosen pet's packs. `cmake/pets.cmake` builds each frame folder into a separate `artwork-<sha>.rcc` and indexes every pet's metadata, catalog, preview and hash tree in `artwork.rcc` (not the executable), so updates can reuse unchanged artwork. The states the app selects by name are listed only in `src/animation/core-states.json`. `docs/pets.md` is the contributor guide.
 
 ## Conventions and gotchas
 
-- **Adding sprites**: copy them from the root archive (the default `--source`) with `scripts/add_sequences.py IDEL/yawning/Nomal …`. The script updates `manifest.json`, `available-animations.json` and the catalog), then map them in `animations.json`. `verify_assets.py` fails if any PNG under `assets/vpet/vup` is missing from the manifest *or* unused by the catalog.
+- **Adding sprites**: copy them from the root archive (the default `--source`) with `scripts/add_sequences.py IDEL/yawning/Nomal …`. The script updates `manifest.json`, `available-animations.json` and the catalog; then map them in `animations.json`. For another pet, use `--pet <id> --source DIR`, and start a pet with `scripts/new_pet.py`. `verify_assets.py` checks every pet folder and fails if any frame is missing from its manifest *or* unused by its catalog. Keep VPet's files where they are: moving them renames its packs and makes every user download them again.
 - Test hooks: `Monitor::hostActive` / `bringForward` are `std::function`s (returning `ActiveState` / `FocusResult`) replaced in tests; `tests/focus_tests.cpp` drives `FocusService` with fake activations, backends, runners and process services. Follow those patterns instead of adding real-desktop dependencies to tests.
 - Adding a host: register its `Capture` in `hosts::Registry::builtin()` (order is detection precedence) and its `Activation`, if any, in `platform::createFocusService()` (`platform/linux/native.cpp`, and `platform/macos/native.cpp` where it applies). Adding a desktop backend: implement `platform::DesktopBackend`, add it to `pet_native` and register it there. Neither touches sessions, alerts or UI. Keep v1 wire fields unchanged.
 - `preferences.json` can be written concurrently by the headless `autostart` command, so the pet re-reads it before every save. Keep that when touching settings.

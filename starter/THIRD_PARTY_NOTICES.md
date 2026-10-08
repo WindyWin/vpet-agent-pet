@@ -10,7 +10,7 @@ Preserve this notice, the artwork terms, and the upstream link when distributing
 
 ## Agent Pet application icon
 
-`packaging/agent-pet.png` (installed as the `agent-pet` icon) is a cropped, resized copy of the idle frame `Default/Nomal/1/_000_250.png` and is covered by the artwork terms above, not by the application code license.
+`packaging/agent-pet.png` (installed as the `agent-pet` icon) is a cropped, resized copy of the idle frame `Default/Nomal/1/_000_250.png` and is covered by the artwork terms above, not by the application code license. `assets/vpet/preview.png`, VPet's tile in Settings, is the same image under the same terms.
 
 ## Agent Pet application code
 

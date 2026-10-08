@@ -34,6 +34,7 @@ the order the decisions were made. For a map of the code, start with the
 | [0025](0025-out-of-quota.md) | Out-of-quota animation from Claude StopFailure | 2026-10-07 |
 | [0026](0026-background-waiting.md) | Background-job waiting from Claude Stop | 2026-10-07 |
 | [0027](0027-update-overall-progress.md) | One overall progress bar for updates | 2026-10-07 |
+| [0028](0028-pet-packs.md) | Pet packs: selectable pet characters | 2026-10-07 |
 
 ## Writing a record
 

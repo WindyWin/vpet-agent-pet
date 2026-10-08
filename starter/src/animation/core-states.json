@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "description": "States the app selects by name, with the playback every pet must give them (docs/pets.md). Provisional until the event refactor (#64).",
+  "states": {
+    "idle": { "mode": "loop", "after": "idle" },
+    "starting": { "mode": "once", "after": "idle" },
+    "turn_finished": { "mode": "once", "after": "idle" },
+    "tool_error": { "mode": "once", "after": "previous" },
+    "closing": { "mode": "once", "after": "stop" },
+    "closing_angry": { "mode": "once", "after": "stop" },
+    "angry": { "mode": "once", "after": "stop" },
+    "thinking": { "mode": "phased", "after": "idle" },
+    "reading": { "mode": "phased", "after": "idle" },
+    "working": { "mode": "phased", "after": "idle" },
+    "needs_input": { "mode": "phased", "after": "idle" },
+    "sleeping": { "mode": "phased", "after": "idle" },
+    "dragging": { "mode": "phased", "after": "idle" },
+    "out_of_quota": { "mode": "loop", "after": "idle" }
+  }
+}

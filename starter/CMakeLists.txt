@@ -28,6 +28,10 @@ include(GNUInstallDirs)
 # Release builds pass -DAGENT_PET_REVISION=<git commit>; local builds say "local".
 set(AGENT_PET_REVISION "local" CACHE STRING "Source revision shown in About")
 configure_file(src/version.h.in "${CMAKE_CURRENT_BINARY_DIR}/generated/version.h" @ONLY)
+# The core state contract (docs/pets.md), embedded so the catalog needs no resource file to read it.
+file(READ src/animation/core-states.json PET_CORE_STATES)
+configure_file(src/animation/core_states.h.in "${CMAKE_CURRENT_BINARY_DIR}/generated/core_states.h" @ONLY)
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS src/animation/core-states.json)
 
 # Capture/codecs link independently of focus coordination and native activation.
 qt_add_library(pet_host_capture STATIC src/hosts/context.cpp src/hosts/registry.cpp
@@ -44,54 +48,16 @@ qt_add_library(pet_core STATIC
 target_include_directories(pet_core PUBLIC src)
 target_link_libraries(pet_core PUBLIC Qt6::Core pet_host_capture)
 qt_add_library(pet_animation STATIC
-    src/animation/player.cpp src/animation/ambient.cpp src/animation/activity.cpp src/animation/mood.cpp
-    src/animation/easter_eggs.cpp)
-target_include_directories(pet_animation PUBLIC src)
+    src/animation/catalog.cpp src/animation/pet_library.cpp src/animation/player.cpp src/animation/ambient.cpp src/animation/activity.cpp
+    src/animation/mood.cpp src/animation/easter_eggs.cpp)
+target_include_directories(pet_animation PUBLIC src PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/generated")
 target_link_libraries(pet_animation PUBLIC Qt6::Gui)
 
 if(NOT AGENT_PET_PORTABLE_CORE)
-# Stable sequence packs keep additions from repacking unrelated artwork.
-function(add_artwork_pack target filename)
-    set(qrc "<RCC><qresource prefix=\"/\">\n")
-    foreach(resource IN LISTS ARGN)
-        string(APPEND qrc "<file alias=\"${resource}\">${CMAKE_CURRENT_SOURCE_DIR}/${resource}</file>\n")
-    endforeach()
-    string(APPEND qrc "</qresource></RCC>\n")
-    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/${filename}.qrc" "${qrc}")
-    qt_add_binary_resources(${target} "${CMAKE_CURRENT_BINARY_DIR}/${filename}.qrc"
-        DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/${filename}.rcc" OPTIONS --format-version 1 --no-compress)
-    install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${filename}.rcc" DESTINATION ${CMAKE_INSTALL_DATADIR}/agent-pet)
-endfunction()
-file(GLOB_RECURSE pet_frames CONFIGURE_DEPENDS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
-    "assets/vpet/vup/*.png")
-list(SORT pet_frames)
-set(sequence_ids)
-foreach(frame IN LISTS pet_frames)
-    get_filename_component(sequence "${frame}" DIRECTORY)
-    string(SHA256 id "${sequence}")
-    list(APPEND sequence_ids "${id}")
-    list(APPEND sequence_${id} "${frame}")
-endforeach()
-list(REMOVE_DUPLICATES sequence_ids)
-list(SORT sequence_ids)
-set(pack_index "[")
-set(pack_separator "")
-add_custom_target(pet_artwork)
-foreach(id IN LISTS sequence_ids)
-    add_artwork_pack(pet_artwork_${id} artwork-${id} ${sequence_${id}})
-    add_dependencies(pet_artwork pet_artwork_${id})
-    string(APPEND pack_index "${pack_separator}\"artwork-${id}.rcc\"")
-    set(pack_separator ",")
-endforeach()
-string(APPEND pack_index "]\n")
-file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/artwork-packs.json" "${pack_index}")
-# The small catalog and pack index change independently of the PNG packs.
-set(catalog_qrc "<RCC><qresource prefix=\"/\"><file alias=\"assets/vpet/animations.json\">${CMAKE_CURRENT_SOURCE_DIR}/assets/vpet/animations.json</file><file alias=\"assets/vpet/packs.json\">${CMAKE_CURRENT_BINARY_DIR}/artwork-packs.json</file></qresource></RCC>")
-file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/artwork.qrc" "${catalog_qrc}")
-qt_add_binary_resources(pet_artwork_catalog "${CMAKE_CURRENT_BINARY_DIR}/artwork.qrc"
-    DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/artwork.rcc" OPTIONS --format-version 1 --no-compress)
-add_dependencies(pet_artwork pet_artwork_catalog)
-install(FILES "${CMAKE_CURRENT_BINARY_DIR}/artwork.rcc" DESTINATION ${CMAKE_INSTALL_DATADIR}/agent-pet)
+# Every pet folder under assets/ (docs/pets.md): one stable pack per frame folder, so additions never repack
+# unrelated artwork, and the small index (artwork.rcc) of every pet's metadata, catalog, preview and packs.
+include(cmake/pets.cmake)
+add_pets(pet_artwork SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/assets" OUTPUT "${CMAKE_CURRENT_BINARY_DIR}" INSTALL)
 file(GLOB pet_notices CONFIGURE_DEPENDS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "licenses/*")
 list(APPEND pet_notices THIRD_PARTY_NOTICES.md LICENSE NOTICE)
 # Translations. English is the source language; each .ts compiles to a .qm embedded at :/i18n/ in every
@@ -108,6 +74,7 @@ qt_add_lrelease(pet_i18n TS_FILES ${pet_ts_files} QM_FILES_OUTPUT_VARIABLE pet_q
 qt_add_resources(pet_i18n pet_translations PREFIX "/i18n" BASE "${CMAKE_CURRENT_BINARY_DIR}" FILES ${pet_qm_files})
 qt_add_library(pet_ui STATIC
     src/desktop/pet_window.cpp
+    src/desktop/pet_picker.cpp
     src/desktop/touch.cpp src/desktop/wander.cpp src/desktop/wellness.cpp src/desktop/alert_bubble.cpp src/desktop/monitor.cpp
     src/desktop/session_list.cpp src/updates/controller.cpp)
 target_include_directories(pet_ui PUBLIC src "${CMAKE_CURRENT_BINARY_DIR}/generated")
@@ -255,6 +222,18 @@ if(BUILD_TESTING)
         target_link_libraries(i18n-tests PRIVATE pet_i18n Qt6::Test)
         target_compile_definitions(i18n-tests PRIVATE TS_PATH="${CMAKE_CURRENT_SOURCE_DIR}/translations/agent-pet_vi.ts")
         add_test(NAME i18n COMMAND i18n-tests)
+        # Pet packs: the catalog and its core state contract, the pet library over fixture pets, choosing a pet.
+        add_pets(pet_test_artwork SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/pets" OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/test-pets")
+        qt_add_executable(pets-tests tests/pets_tests.cpp)
+        target_link_libraries(pets-tests PRIVATE pet_ui Qt6::Test)
+        target_compile_definitions(pets-tests PRIVATE PET_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}"
+            PET_INDEX="${CMAKE_CURRENT_BINARY_DIR}/artwork.rcc" FIXTURE_INDEX="${CMAKE_CURRENT_BINARY_DIR}/test-pets/artwork.rcc"
+            RCC="$<TARGET_FILE:Qt6::rcc>")
+        add_dependencies(pets-tests pet_test_artwork)
+        add_test(NAME pets COMMAND pets-tests)
+        set_tests_properties(pets PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+        find_package(Python3 COMPONENTS Interpreter REQUIRED)
+        add_test(NAME pet-scaffold COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/scripts/check_new_pet.py)
     endif()
     if(NOT AGENT_PET_PORTABLE_CORE AND NOT APPLE AND NOT WIN32)
         qt_add_executable(update-tests tests/update_tests.cpp)

@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "file_count": 4,
+  "total_bytes": 330,
+  "files": [
+    {
+      "path": "assets/duo/idle/_000_100.png",
+      "bytes": 83,
+      "sha256": "3d922e068592410ac08cc5b6c39f859954a8141af30b1978c401245c6287464c"
+    },
+    {
+      "path": "assets/duo/idle/_001_100.png",
+      "bytes": 83,
+      "sha256": "e8e574266b026fe04c270843eea2439367102a6f4347079351327348a468e91c"
+    },
+    {
+      "path": "assets/duo/wave/_000_50.png",
+      "bytes": 82,
+      "sha256": "2aba4455d6c6abdfe8ddd037502ab2a4530a3b49e08ca04482ec38bfbc381e42"
+    },
+    {
+      "path": "assets/duo/wave/_001_50.png",
+      "bytes": 82,
+      "sha256": "a5ed981f9580e4200d9324ae525bf6b6c5c1e85b361c31b586d05c0f587d2d4b"
+    }
+  ]
+}

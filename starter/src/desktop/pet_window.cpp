@@ -1,5 +1,7 @@
 #include "updates/controller.h"
 #include "pet_window.h"
+#include "animation/pet_library.h"
+#include "desktop/pet_picker.h"
 #include "platform/contracts/native_window.h"
 #include "ipc/autostart.h"
 #include "providers/integrations.h"
@@ -87,6 +89,7 @@ PetWindow::PetWindow(QWidget *parent, const QString &path, bool persist)
     connect(&player_, &Player::entered, this, &PetWindow::entered);
     autostart_ = preferences.autostart; presence_.setPolicy(preferences.whenIdle);
     language_ = preferences.language;
+    pet_ = preferences.pet;
     connect(&player_, &Player::changed, this, qOverload<>(&PetWindow::update));
     connect(&player_, &Player::completed, this, [this](const QString &state) {
         if (!quitting_ || state != quitState_) return;
@@ -491,6 +494,11 @@ void PetWindow::setWhenIdle(IdlePolicy policy) {
     presence_.setPolicy(policy);
     writePreferences([policy](Preferences &preferences) { preferences.whenIdle = policy; });
 }
+void PetWindow::setPet(const QString &id) {
+    if (!Preferences::validPet(id)) return;
+    pet_ = id;
+    writePreferences([id](Preferences &preferences) { preferences.pet = id; });
+}
 bool PetWindow::savePreferences() { return writePreferences([](Preferences &) {}); }
 bool PetWindow::writePreferences(const std::function<void(Preferences &)> &change) {
     if (!persist_ || !ready_) return true;
@@ -741,6 +749,12 @@ void PetWindow::showSettings() {
     connect(bubbles, &QComboBox::currentIndexChanged, this, &PetWindow::setBubbles);
     layout->addRow(reminderSettings(dialog));
     layout = page(tr("Pet"));
+    // Shown once there is a choice; the chosen pet appears on the next start.
+    if (const auto pets = PetLibrary::shared().pets(); pets.size() > 1) {
+        auto *picker = new PetPicker(pets, pet_, PetLibrary::shared().active(), dialog);
+        layout->addRow(tr("&Character"), picker);
+        connect(picker, &PetPicker::chosen, this, &PetWindow::setPet);
+    }
     auto *ambient = new QComboBox(dialog);
     ambient->addItems({tr("Off (no fidgets or alternate idle loops)"), tr("Subtle (a fidget about once a minute)"), tr("Lively (a fidget every 15–25 seconds)")});
     ambient->setCurrentIndex(ambientLevel()); ambient->setAccessibleName(tr("Idle animation"));
@@ -966,18 +980,28 @@ void PetWindow::showAbout() {
     auto *dialog = new QDialog(this); aboutDialog_ = dialog; dialog->setAttribute(Qt::WA_DeleteOnClose);
     dialog->setWindowTitle(tr("About Agent Pet — artwork and terms")); dialog->resize(560, 440);
     auto *layout = new QVBoxLayout(dialog);
-    auto *credits = new QLabel(tr("<b>Agent Pet %1</b> (revision %2, Qt %3)<br>"
-                                       "Application code: Apache License 2.0. Artwork: VUP-Simulator team, via "
-                                       "<a href='https://github.com/LorisYounger/VPet'>LorisYounger/VPet</a>, under its own terms below.")
-                                   .arg(QString(AGENT_PET_VERSION).toHtmlEscaped(), QString(AGENT_PET_REVISION).toHtmlEscaped(), qVersion()), dialog);
+    // The running pet's credit and terms; the application's notices are the same for every pet.
+    const auto &library = PetLibrary::shared();
+    const auto artwork = library.info(library.active());
+    QString credit = tr("<b>Agent Pet %1</b> (revision %2, Qt %3)<br>Application code: Apache License 2.0.")
+                         .arg(QString(AGENT_PET_VERSION).toHtmlEscaped(), QString(AGENT_PET_REVISION).toHtmlEscaped(), qVersion());
+    if (!artwork.id.isEmpty() && artwork.url.isEmpty())
+        credit += " " + tr("Artwork: %1, under its own terms below.").arg(artwork.author.toHtmlEscaped());
+    else if (!artwork.id.isEmpty())
+        credit += " " + tr("Artwork: %1, via %2, under its own terms below.")
+                            .arg(artwork.author.toHtmlEscaped(), QString("<a href=\"%1\">%2</a>")
+                                 .arg(artwork.url.toHtmlEscaped(), artwork.url.mid(8).toHtmlEscaped()));
+    auto *credits = new QLabel(credit, dialog);
     credits->setOpenExternalLinks(true); credits->setTextInteractionFlags(Qt::TextBrowserInteraction); layout->addWidget(credits);
     auto *terms = new QTextBrowser(dialog); terms->setAccessibleName(tr("Artwork terms and third-party notices"));
-    QString text;
-    for (const auto &path : {":/NOTICE", ":/THIRD_PARTY_NOTICES.md", ":/licenses/VPET-ARTWORK-TERMS.md", ":/LICENSE"}) {
+    auto read = [](const QString &path) {
         QFile file(path);
-        if (file.open(QIODevice::ReadOnly)) text += QString::fromUtf8(file.readAll()) + "\n\n";
-    }
-    terms->setPlainText(text); layout->addWidget(terms);
+        return file.open(QIODevice::ReadOnly) ? QString::fromUtf8(file.readAll()) + "\n\n" : QString();
+    };
+    auto artworkTerms = artwork.terms.isEmpty() ? QString() : read(":/licenses/" + artwork.terms);
+    if (artworkTerms.isEmpty()) artworkTerms = tr("Artwork terms unavailable.") + "\n\n";
+    terms->setPlainText(read(":/NOTICE") + read(":/THIRD_PARTY_NOTICES.md") + artworkTerms + read(":/LICENSE"));
+    layout->addWidget(terms);
     auto *buttons = new QDialogButtonBox(QDialogButtonBox::Close, dialog);
     buttons->button(QDialogButtonBox::Close)->setText(tr("Close"));
     connect(buttons, &QDialogButtonBox::rejected, dialog, &QDialog::close); layout->addWidget(buttons); dialog->show();
