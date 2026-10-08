@@ -71,6 +71,8 @@ public:
     // The first reminder that is due and not yet given today; empty for none, or when turned off. A reminder
     // is given once a day, or not at all if the pet was not running when it was due.
     QString dueReminder() const;
+    // Every reminder that is due and not yet given today, in priority order.
+    QStringList dueReminders() const;
     void reminded(const QString &reminder); // Given today: it is not due again until tomorrow.
     QString reminder(); // dueReminder(), marked given.
     bool key(int key); // Feeds a key press; true when it completes the Konami code.

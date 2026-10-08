@@ -91,12 +91,17 @@ QString EasterEggs::reminderNote(const QString &reminder, const ReminderSchedule
     if (reminder == "sleep") return Pet::tr("It's %1. Time to put everything down and go to sleep!").arg(schedule.sleep.toString("HH:mm"));
     return {};
 }
-QString EasterEggs::dueReminder() const {
-    if (!enabled_) return {};
+QStringList EasterEggs::dueReminders() const {
+    QStringList due;
+    if (!enabled_) return due;
     const auto now = clock_();
-    for (const auto &due : remindersAt(now, schedule_))
-        if (reminded_.value(due) != now.date()) return due;
-    return {};
+    for (const auto &reminder : remindersAt(now, schedule_))
+        if (reminded_.value(reminder) != now.date()) due << reminder;
+    return due;
+}
+QString EasterEggs::dueReminder() const {
+    const auto due = dueReminders();
+    return due.isEmpty() ? QString() : due.first();
 }
 void EasterEggs::reminded(const QString &reminder) { if (!reminder.isEmpty()) reminded_.insert(reminder, clock_().date()); }
 QString EasterEggs::reminder() {

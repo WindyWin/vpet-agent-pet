@@ -195,8 +195,8 @@ void Monitor::outcome(const behavior::Intent &intent, behavior::Outcome outcome)
 // A reminder that is no longer due (given, taken some other way, turned off, a break, quiet hours) stops waiting.
 void Monitor::withdrawReminders(qint64 now) {
     auto &runtime = window_.stage().runtime();
-    const auto clock = window_.eggs().dueReminder();
-    for (const auto *reminder : clockReminders) if (clock != reminder) runtime.withdraw("clock", reminder);
+    const auto clock = window_.eggs().dueReminders();
+    for (const auto *reminder : clockReminders) if (!clock.contains(reminder)) runtime.withdraw("clock", reminder);
     auto wellness = window_.wellness().due(now); // Empty behind a locked screen: locking reset both timers.
     if (Wellness::quietAt(window_.eggs().now())) wellness.clear();
     for (const auto *reminder : wellnessReminders) if (wellness != reminder) runtime.withdraw("wellness", reminder);
@@ -251,10 +251,10 @@ void Monitor::showRecap() {
 // hidden or the user is away.
 void Monitor::remind() {
     auto &runtime = window_.stage().runtime();
-    const auto due = window_.eggs().dueReminder();
-    if (due.isEmpty()) return;
     using namespace behavior;
-    runtime.submit({"clock", due, due, Policy::Reminder, Lifetime::OneShot, runtime.now() + reminderWaitMs});
+    // Each due reminder is submitted on its own, so one that stays blocked cannot hide an overlapping one.
+    for (const auto &due : window_.eggs().dueReminders())
+        runtime.submit({"clock", due, due, Policy::Reminder, Lifetime::OneShot, runtime.now() + reminderWaitMs});
 }
 bool Monitor::shown(const Alert &alert) const {
     const int level = window_.bubbles();

@@ -2059,6 +2059,14 @@ private slots:
         local.setTime(QTime(12, 0)); QCOMPARE(eggs.dueReminder(), QString("lunch"));
         local.setTime(QTime(13, 14, 59)); QCOMPARE(eggs.dueReminder(), QString("lunch"));
         local.setTime(QTime(13, 15)); QVERIFY(eggs.dueReminder().isEmpty());
+        { // Overlapping reminders stay due independently: Monday at 11:00 does not hide lunch.
+            pet::ReminderSchedule overlap; overlap.monday = QTime(11, 0);
+            eggs.setReminderSchedule(overlap);
+            local = QDateTime(QDate(2026, 10, 5), QTime(12, 0)); // A Monday.
+            QCOMPARE(eggs.dueReminders(), QStringList({"monday", "lunch"}));
+            eggs.reminded("monday"); QCOMPARE(eggs.dueReminders(), QStringList({"lunch"}));
+            eggs.setReminderSchedule({}); local = QDateTime(QDate(2026, 10, 10), QTime(13, 15));
+        }
         local.setTime(QTime(12, 0)); eggs.setEnabled(false); QVERIFY(eggs.dueReminder().isEmpty());
         eggs.setEnabled(true); QCOMPARE(eggs.reminder(), QString("lunch")); QVERIFY(eggs.reminder().isEmpty());
         auto schedule = eggs.reminderSchedule(); schedule.lunch = QTime(12, 30); eggs.setReminderSchedule(schedule);
