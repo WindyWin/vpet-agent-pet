@@ -159,7 +159,8 @@ private slots:
         QVERIFY(pet::loadSessions(path, restored, now + 2));
         QVERIFY(restored.records().isEmpty());
         QVERIFY(pet::saveSessions(path, original));
-        child.terminate(); QVERIFY(child.waitForFinished());
+        // Windows terminate() sends WM_CLOSE, which this sleeping console fixture does not handle.
+        child.kill(); QVERIFY(child.waitForFinished(5000));
         QVERIFY(pet::loadSessions(path, restored, now + 3));
         QVERIFY(restored.records().isEmpty()); QVERIFY(restored.pending().isEmpty());
         QVERIFY(!pet::saveSessions(dir.path(), original));
