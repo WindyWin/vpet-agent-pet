@@ -4,6 +4,7 @@
 #include "animation/easter_eggs.h"
 #include "animation/mood.h"
 #include "animation/player.h"
+#include "animation/stage.h"
 #include "desktop/touch.h"
 #include "desktop/alert_bubble.h"
 #include "desktop/wander.h"
@@ -28,6 +29,10 @@ public:
     explicit PetWindow(QWidget *parent = nullptr, const QString &preferencesPath = {}, bool persist = true);
     ~PetWindow() override;
     Player &player() { return player_; }
+    // The behavior runtime and how it shows on the player: every behavior's way onto the pet.
+    Stage &stage() { return stage_; }
+    // Tells the runtime what the window knows: whether the pet is in view and whether it is moving.
+    void syncBehavior();
     Ambient &ambient() { return ambient_; }
     void setAmbientLevel(int level); // Preferences::Ambient; persisted.
     int ambientLevel() const { return int(ambient_.level()); }
@@ -103,9 +108,6 @@ public:
     void setBubbles(int level);
     int bubbles() const { return bubbles_; }
     bool quitting() const { return quitting_; }
-    // A fidget, an ambient nap or a reaction to the user (such as hiding at a screen edge) is showing: how an idle
-    // pet looks, which session changes to idle should leave alone.
-    bool resting() const { return ambient_.resting() || player_.isTouch(player_.requestedState()); }
     // Hidden: the window is gone but monitoring, alerts and the tray icon keep running.
     bool petHidden() const { return presence_.hidden(); }
     void setPetHidden(bool hidden); // Tray click or "Show pet"; ignored without a tray.
@@ -147,7 +149,6 @@ protected:
     void keyPressEvent(QKeyEvent *) override;
 private:
     void beginQuit(const QString &remark = {});
-    void playQuitAnimation(const QString &cue); // "quit", "annoyed" or "quit-angry".
     void endDrag(bool released = false);
     void land();
     void slideTo(QPoint target, touch::Edge hide); // Hides at `hide` on arrival, unless it is None.
@@ -170,6 +171,7 @@ private:
     updates::Controller *updates_ = nullptr;
     PetDownloader *downloader_ = nullptr;
     Player player_;
+    Stage stage_;
     Ambient ambient_;
     Activity activity_;
     Mood mood_;
@@ -203,7 +205,6 @@ private:
     QVector<touch::Sample> samples_;
     touch::Patience patience_;
     QElapsedTimer touchClock_;
-    QString quitCue_;
     NoteBubble quitNote_{this};
     std::optional<touch::Flight> flight_;
     QString walk_; // The move playing, while it carries the window.

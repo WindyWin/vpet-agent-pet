@@ -37,6 +37,7 @@ the order the decisions were made. For a map of the code, start with the
 | [0028](0028-pet-packs.md) | Pet packs: selectable pet characters | 2026-10-07 |
 | [0029](0029-cues.md) | Cues: events decoupled from how a pet shows them | 2026-10-08 |
 | [0030](0030-on-demand-pets.md) | On-demand pets: verified downloads of pets that are not bundled | 2026-10-08 |
+| [0031](0031-behavior-runtime.md) | Behavior runtime: one arbiter for the pet's competing behaviors | 2026-10-08 |
 
 | [0031](0031-windows-automatic-updates.md) | Windows automatic updates through verified Setup upgrades | 2026-10-08 |
 

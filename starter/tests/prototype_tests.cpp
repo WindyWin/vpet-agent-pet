@@ -2,6 +2,7 @@
 #include "desktop/monitor.h"
 #include "desktop/pet_window.h"
 #include "animation/catalog.h"
+#include "animation/stage.h"
 #include "i18n/language.h"
 #include "version.h"
 #include <QApplication>
@@ -270,6 +271,10 @@ private slots:
         QVERIFY(broken.open(QIODevice::WriteOnly)); broken.write("not a PNG"); broken.close();
         QSignalSpy failed(&player, &pet::Player::failed); player.select("working", true);
         QCOMPARE(failed.size(), 1); QCOMPARE(player.state(), QString("idle")); QVERIFY(!player.pixmap().isNull());
+        // Recovering lets go of a held state, and says so: the behavior runtime would otherwise wait for a release.
+        QSignalSpy held(&player, &pet::Player::heldChanged); player.hold("working");
+        QCOMPARE(failed.size(), 2); QVERIFY(!player.held()); QCOMPARE(player.state(), QString("idle"));
+        QCOMPARE(held.size(), 2); QCOMPARE(held.at(1).at(0).toBool(), false);
         QVERIFY(QFile::remove(directory.path() + "/assets/vpet/vup/idle.png"));
         pet::Player noIdle(nullptr, directory.path()); QVERIFY(noIdle.stopped());
         QVERIFY(noIdle.pixmap().isNull()); QVERIFY(!noIdle.error().isEmpty());
@@ -389,7 +394,7 @@ private slots:
     }
     void ambientFidgetsFollowTheIdleClock() {
         pet::Player player; player.setPaused(true); player.setRandom([](int) { return 0; });
-        pet::Ambient ambient(player);
+        pet::Stage stage(player); pet::Ambient ambient(player); ambient.setStage(&stage);
         QCOMPARE(ambient.level(), pet::AmbientLevel::Subtle);
         QCOMPARE(pet::Ambient::gapSeconds(pet::AmbientLevel::Subtle), (QPair<int, int>{45, 90}));
         QCOMPARE(pet::Ambient::gapSeconds(pet::AmbientLevel::Lively), (QPair<int, int>{15, 25}));
@@ -435,7 +440,7 @@ private slots:
     }
     void ambientOffIsQuiet() {
         pet::Player player; player.setPaused(true); player.setRandom([](int) { return 0; });
-        pet::Ambient ambient(player); Draws draws; qint64 now = 0;
+        pet::Stage stage(player); pet::Ambient ambient(player); ambient.setStage(&stage); Draws draws; qint64 now = 0;
         ambient.setRandom(draws.random()); ambient.setClock([&] { return now; });
         ambient.setLevel(pet::AmbientLevel::Off); QVERIFY(!player.variants());
         player.select("thinking", true); player.select("idle", true);
@@ -1548,7 +1553,7 @@ private slots:
         QCOMPARE(player.move("climb_down_right")->at, 315); QCOMPARE(player.move("climb_down_right")->speed, QPointF(0, 80));
         QCOMPARE(player.move("trot_right")->mood, QString("happy")); QCOMPARE(player.move("trudge_left")->mood, QString("poor"));
         QCOMPARE(player.move("walk_right")->speed, QPointF(112, 0)); QVERIFY(!player.move("fidget_aside"));
-        pet::Ambient ambient(player); Draws draws; qint64 now = 1000000;
+        pet::Stage stage(player); pet::Ambient ambient(player); ambient.setStage(&stage); Draws draws; qint64 now = 1000000;
         ambient.setRandom(draws.random()); ambient.setClock([&] { return now; });
         // Without a window to ask, a long idle spell draws only fidgets that stay put: aside 3, yawn 3,
         // boring 2 and squat 2, so the highest draw is a squat.
@@ -1704,6 +1709,7 @@ private slots:
         QCOMPARE(at(2026, 5, 20, 2, 0, "05-20"), (QStringList{"may20", "birthday", "late-night"}));
         // A birthday is "MM-dd" of a real date.
         pet::Player player; player.setPaused(true); pet::EasterEggs eggs(player);
+        pet::Stage stage(player, [&] { return eggs.now().toMSecsSinceEpoch(); }); eggs.setStage(&stage);
         for (const auto *bad : {"13-01", "02-30", "00-10", "2-1", "0101", "aa-bb", "2026-03-14"})
             QVERIFY2(!eggs.setBirthday(bad), bad);
         QVERIFY(eggs.setBirthday("02-29")); QVERIFY(!eggs.setBirthday("x")); QCOMPARE(eggs.birthday(), QString("02-29"));
@@ -1746,14 +1752,74 @@ private slots:
         QVERIFY(eggs.surprise("danger")); QCOMPARE(player.state(), QString("startled")); QVERIFY(eggs.surprising());
         // It stops counting once something else shows, or after a while even if the player stalls.
         player.select("thinking", true); QVERIFY(!eggs.surprising());
-        QVERIFY(eggs.surprise("danger")); local = local.addMSecs(pet::EasterEggs::surpriseMs); QVERIFY(!eggs.surprising());
+        QVERIFY(eggs.surprise("danger")); local = local.addMSecs(pet::EasterEggs::surpriseMs); stage.runtime().tick();
+        QVERIFY(!eggs.surprising());
         // Never over a drag.
         player.beginDrag(); QVERIFY(!eggs.surprise("danger")); player.endDrag();
         QCOMPARE(draws.unexpected, 0);
     }
+    void stagePresentsTheRuntime() {
+        using namespace pet::behavior;
+        pet::Player player; player.setPaused(true); player.setRandom([](int) { return 0; });
+        pet::Stage stage(player); stage.setRandom([](int) { return 0; }); auto &runtime = stage.runtime();
+        QStringList heard; bool finished = false;
+        QObject::connect(&stage, &pet::Stage::outcome, &stage, [&](const Intent &intent, Outcome outcome) {
+            static const QStringList names{"admitted", "started", "completed", "interrupted", "unavailable", "timed-out", "expired", "dropped"};
+            heard << intent.key + " " + names.at(int(outcome));
+        });
+        QObject::connect(&stage, &pet::Stage::finished, &stage, [&] { finished = true; });
+        // A state cue plays its state; a reaction cue draws from its pool. Entering starts it, its end completes it.
+        runtime.submit({"session", "activity", "working", Policy::Activity, Lifetime::Persistent});
+        QCOMPARE(player.state(), QString("working"));
+        runtime.submit({"eggs", "konami", "konami", Policy::Surprise});
+        QCOMPARE(player.state(), QString("dance")); QCOMPARE(heard, (QStringList{"konami admitted", "konami started"}));
+        playOut(player); finishSequence(player);
+        QCOMPARE(heard.last(), QString("konami completed")); QVERIFY(!runtime.showing());
+        QCOMPARE(player.requestedState(), QString("working")); // Back to the activity.
+        // Anything else entered interrupts it, and the runtime knows at once.
+        heard.clear(); runtime.submit({"eggs", "danger", "danger", Policy::Surprise});
+        QCOMPARE(player.state(), QString("startled"));
+        player.select("thinking", true);
+        QCOMPARE(heard, (QStringList{"danger admitted", "danger started", "danger interrupted"})); QVERIFY(!runtime.showing());
+        QTRY_COMPARE(player.requestedState(), QString("working")); // Shown once the player has entered "thinking".
+        // A reaction cue the pet has no pool for is unavailable and holds nothing up.
+        heard.clear(); runtime.submit({"eggs", "nobody", "nobody", Policy::Surprise});
+        QCOMPARE(heard, (QStringList{"nobody admitted", "nobody unavailable"})); QVERIFY(!runtime.showing());
+        // Holding the pet is the runtime's `handled`: nothing new shows until it is let go. Grabbed during a
+        // surprise, the pet keeps what waits behind it waiting, rather than starting it under the hold.
+        stage.update([](Context &c) { c.present = true; }); // So a reminder is free to show.
+        heard.clear(); runtime.submit({"eggs", "konami", "konami", Policy::Surprise});
+        QCOMPARE(runtime.submit({"wellness", "eyes", "eye-break", Policy::Reminder, Lifetime::OneShot, runtime.now() + 60000}),
+                 Submission::Deferred);
+        player.beginDrag(); QVERIFY(runtime.context().handled);
+        QCOMPARE(heard, (QStringList{"konami admitted", "konami started", "konami interrupted"})); QCOMPARE(runtime.deferred(), 1);
+        runtime.withdraw("wellness", "eyes");
+        QCOMPARE(runtime.submit({"eggs", "konami", "konami", Policy::Surprise}), Submission::Rejected);
+        runtime.submit({"session", "activity", "reading", Policy::Activity, Lifetime::Persistent});
+        QCOMPARE(player.state(), player.stateFor("drag"));
+        player.endDrag(); QVERIFY(!runtime.context().handled);
+        finishSequence(player); QCOMPARE(player.state(), QString("reading"));
+        // An idle pet's own decoration, wherever it came from, is idle enough to be left alone.
+        runtime.submit({"session", "activity", "idle", Policy::Activity, Lifetime::Persistent}); playOut(player);
+        player.select("fidget_aside");
+        runtime.submit({"session", "activity", "waiting", Policy::Activity, Lifetime::Persistent}); // Shown as idle.
+        QCOMPARE(player.requestedState(), QString("fidget_aside"));
+        runtime.submit({"session", "activity", "working", Policy::Activity, Lifetime::Persistent}); // Real work ends it.
+        QCOMPARE(player.state(), QString("working"));
+        runtime.submit({"session", "activity", "idle", Policy::Activity, Lifetime::Persistent});
+        playOut(player);
+        // Pestered into leaving: annoyed, a pause to read the remark, then quit-angry; then the app may quit.
+        heard.clear(); runtime.submit({"lifecycle", "quit", "annoyed", Policy::Shutdown});
+        QCOMPARE(player.state(), player.stateFor("annoyed"));
+        finishSequence(player); QVERIFY(!finished);
+        QTRY_COMPARE_WITH_TIMEOUT(player.state(), player.stateFor("quit-angry"), pet::Stage::annoyedPauseMs + 2000);
+        finishSequence(player); QVERIFY(player.stopped()); QVERIFY(finished);
+        QCOMPARE(heard, (QStringList{"quit admitted", "quit started", "quit completed"}));
+    }
     void easterEggFidgets() {
         pet::Player player; player.setPaused(true); player.setRandom([](int) { return 0; });
         pet::Ambient ambient(player); pet::EasterEggs eggs(player); ambient.setEasterEggs(&eggs);
+        pet::Stage stage(player); ambient.setStage(&stage); eggs.setStage(&stage);
         Draws draws, eggDraws; qint64 now = 1000000;
         QDateTime local(QDate(2026, 5, 20), QTime(12, 0));
         ambient.setRandom(draws.random()); ambient.setClock([&] { return now; });
@@ -1809,7 +1875,8 @@ private slots:
         // A birthday celebrates its first finished turn; a long turn still comes first.
         QVERIFY(eggs.setBirthday("10-09"));
         QCOMPARE(eggs.celebration(pet::EasterEggs::longTurnMs), QString("long-turn"));
-        QCOMPARE(eggs.celebration(0), QString("birthday")); QCOMPARE(eggs.celebration(0), QString("friday-evening"));
+        QCOMPARE(eggs.celebration(0), QString("birthday")); QCOMPARE(eggs.celebration(0), QString("birthday"));
+        eggs.cheered(); QCOMPARE(eggs.celebration(0), QString("friday-evening")); // Once it has played.
         QCOMPARE(mood.celebrate("birthday").state, QString("birthday"));
         // A milestone outranks an occasion, and a snack waits behind one for the next turn.
         mood.setTurns(99); mood.finished(1000); QCOMPARE(mood.treat(), QString("milestone"));
@@ -1902,6 +1969,7 @@ private slots:
             QCOMPARE(monitor.note().text(), pet::EasterEggs::reminderNote("leave-work") + "\n" + summary);
             QVERIFY(monitor.note().hasDetails());
             window.setRecapEnabled(false); QVERIFY(window.savePreferences());
+            monitor.note().hide(); // A reminder waits until nothing else is being said.
             local = QDateTime(QDate(2026, 10, 8), QTime(16, 50)); monitor.update(now + 2);
             QCOMPARE(monitor.note().text(), pet::EasterEggs::reminderNote("leave-work")); QVERIFY(!monitor.note().hasDetails());
             monitor.stop(); // Writes the counters now rather than after the short delay.
@@ -2064,6 +2132,20 @@ private slots:
         locked.activity(t0 + 2 * minute); locked.activity(t0 + 2 * minute + 30000, false);
         QCOMPARE(locked.eyesActiveMs(t0 + 2 * minute + 30000), qint64(30000));
     }
+    void monitorWithdrawsTurnedOffReminders() {
+        QTemporaryDir directory;
+        pet::PetWindow window(nullptr, directory.path() + "/preferences.json"); window.show();
+        pet::Monitor monitor(window); window.player().setPaused(true); window.ambient().setLevel(pet::AmbientLevel::Off);
+        QDateTime local(QDate(2026, 10, 7), QTime(12, 0)); window.eggs().setClock([&] { return local; });
+        QPoint pointer(1, 1); monitor.pointer = [&] { return pointer; };
+        // Twenty minutes of work with alerts muted: the eye break is due and held.
+        window.setMuted(true); qint64 t = QDateTime::currentMSecsSinceEpoch(); monitor.update(t);
+        for (int i = 0; i < 40; ++i) { t += 30000; pointer += QPoint(1, 0); monitor.update(t); }
+        QCOMPARE(window.wellness().due(t), QString("eyes")); QCOMPARE(window.stage().runtime().deferred(), 1);
+        // Turned off, then unmuted: the next update must not let it through before it is withdrawn.
+        window.setEyeMinutes(0); window.setMuted(false); monitor.update(t);
+        QVERIFY(!monitor.note().isVisible()); QCOMPARE(window.stage().runtime().deferred(), 0);
+    }
     void monitorWellnessReminders() {
         QTemporaryDir directory;
         pet::PetWindow window(nullptr, directory.path() + "/preferences.json"); window.show();
@@ -2136,6 +2218,14 @@ private slots:
         // Even a short lock: back after two minutes, the stretch starts from the first move.
         locked = false; work(1); QCOMPARE(window.wellness().waterActiveMs(t), qint64(30000));
         QVERIFY(!monitor.note().isVisible());
+        // A reminder still waiting (muted here) is gone after a lock, which started its stretch over: the user coming
+        // back to an unmuted pet does not bring it.
+        window.setEyeMinutes(20); window.setMuted(true); work(20); QVERIFY(!monitor.note().isVisible());
+        QCOMPARE(window.stage().runtime().deferred(), 1);
+        locked = true; monitor.update(t); QCOMPARE(window.stage().runtime().deferred(), 0);
+        locked = false; window.setMuted(false); work(1);
+        QVERIFY(!monitor.note().isVisible()); QCOMPARE(monitor.reminder(), QString());
+        window.setEyeMinutes(0); work(1); window.setEyeMinutes(20);
         // Locking takes away a reminder on screen, and ends a countdown without the cheer.
         playOut(player); window.setEyeMinutes(20); work(20); QCOMPARE(monitor.reminder(), QString("eyes"));
         locked = true; monitor.update(t); QCOMPARE(monitor.reminder(), QString()); QVERIFY(!monitor.note().isVisible());

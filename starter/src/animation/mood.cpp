@@ -47,6 +47,9 @@ void Mood::refresh(qint64 now) {
     level_ = level;
     player_.setMood(level_);
 }
+void Mood::keep(const QString &cue) {
+    if (cue == "milestone" || (cue == "snack" && treat_.isEmpty())) treat_ = cue;
+}
 Mood::Celebration Mood::celebrate(const QString &occasion) {
     const bool occasional = treat_ != "milestone" && !player_.pool(occasion).isEmpty();
     auto cue = occasional ? occasion : treat_;

@@ -218,8 +218,7 @@ Open an issue from the [template chooser](https://github.com/WindyWin/vpet-agent
 ### Architecture at a glance
 
 End-to-end target architecture. **Dashed boxes are planned**; the remaining pieces
-exist today. Until #64 and #67 land, `Monitor`, `PetWindow` and behavior modules
-share cue selection and arbitration. Arrows show runtime flow, not build order.
+exist today. Arrows show runtime flow, not build order.
 
 ```mermaid
 flowchart TB
@@ -251,7 +250,7 @@ flowchart TB
   settings -. select pet / plugins .-> packs
 
   classDef planned fill:#fff4d6,stroke:#9a6700,stroke-dasharray:5 5,color:#24292f
-  class runtime,cues,packs,custom,plugins,downloads planned
+  class cues,packs,custom,plugins,downloads planned
 ```
 
 Session priority belongs to `Sessions`; #67 chooses among behavior intents; #64
@@ -279,7 +278,7 @@ flowchart LR
 | --- | --- | --- | --- |
 | ☐ | PetLibrary / Catalog | [#62 Part 1 — selectable pet packs](https://github.com/WindyWin/vpet-agent-pet/issues/62) | Standalone foundation |
 | ☐ | Cue mapping | [#64 — semantic cues and per-pet mapping](https://github.com/WindyWin/vpet-agent-pet/issues/64) | #62 Part 1 |
-| ☐ | Behavior runtime | [#67 — intent arbitration and lifecycle](https://github.com/WindyWin/vpet-agent-pet/issues/67) | #64 |
+| ☑ | Behavior runtime | [#67 — intent arbitration and lifecycle](https://github.com/WindyWin/vpet-agent-pet/issues/67) | #64 |
 | ☐ | Plugin catalog | [#43 Phase 1 — catalog fragments and plugin settings](https://github.com/WindyWin/vpet-agent-pet/issues/43) | #62 Part 1 |
 | ☐ | Plugin rules → runtime | [#43 Phases 2–3 — custom events and data-driven triggers](https://github.com/WindyWin/vpet-agent-pet/issues/43) | Catalog fragments, #64 and #67 |
 | ☐ | Pet distribution | [#62 Part 2 — verified on-demand downloads](https://github.com/WindyWin/vpet-agent-pet/issues/62) | #62 Part 1 |

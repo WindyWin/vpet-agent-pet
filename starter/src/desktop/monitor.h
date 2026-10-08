@@ -55,9 +55,11 @@ public:
     void setRestTickMs(int ms) { rest_.setInterval(ms); } // One countdown second; tests shorten it.
 private:
     void refreshAlerts();
+    void withdrawReminders(qint64 now);
     void remind();
     void remindWellness(qint64 now);
-    bool calm(qint64 now) const;
+    void syncBehavior(qint64 now); // What the monitor knows that decides when a reminder may show.
+    void outcome(const behavior::Intent &intent, behavior::Outcome outcome);
     void answered();
     void rest();
     void dropReminder(); // Hides a shown reminder or countdown without counting it as answered.
@@ -74,10 +76,11 @@ private:
     Recap recap_; // Persisted shortly after each change, and when monitoring stops.
     std::unique_ptr<Receiver> receiver_;
     QTimer timer_, rest_, recapTimer_;
-    QString lastAggregate_, reminder_, sessionPath_;
+    QString reminder_, sessionPath_;
     QPoint lastPointer_;
     int restLeft_ = 0;
     qint64 lastTurnMs_ = 0; // How long the latest finished turn ran, for a long-turn celebration.
+    qint64 now_ = 0; // The time of the latest event or update, for what the runtime's outcomes change.
     quint64 heard_ = 0;
     bool observed_ = false, active_ = true;
 };

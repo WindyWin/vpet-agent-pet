@@ -39,6 +39,8 @@ public:
     QString sequence() const { return sequence_; }
     QString phase() const;
     QString error() const { return error_; }
+    // A state is ending by itself and the next one is being entered: `entered` is then not an interruption.
+    bool finishing() const { return finishing_; }
     QStringList states() const { return catalog_.animations.keys(); }
     const QPixmap &pixmap() const { return pixmap_; }
     int frameIndex() const { return index_; }
@@ -90,7 +92,10 @@ public:
 signals:
     void changed();
     void failed(const QString &message);
+    // A state played to its end: a one-shot, or a phased state's end phase. Emitted after the next state
+    // is entered, so listeners may select.
     void completed(const QString &state);
+    void heldChanged(bool held); // hold() took the pet, or release() let it go.
     // A state was just entered; listeners must not select from this signal.
     void entered(const QString &state);
     // A looping state, or a phased state's loop phase, started another pass; listeners may select a
@@ -127,6 +132,6 @@ private:
     QTimer timer_;
     QString state_, sequence_, pending_, previous_ = "idle", holdResume_ = "idle", error_, mood_;
     int index_ = 0, phase_ = 0, duration_ = 0, renderSize_ = 240, loopCount_ = 0;
-    bool paused_ = false, stopped_ = false, held_ = false, variants_ = true;
+    bool paused_ = false, stopped_ = false, held_ = false, variants_ = true, finishing_ = false;
 };
 }
