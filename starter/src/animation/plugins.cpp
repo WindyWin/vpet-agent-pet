@@ -74,6 +74,9 @@ bool merge(CatalogSource &source, const PluginPack &pack, QHash<QString, QString
         *error = reason;
         return false;
     };
+    // A folder that is gone has no canonical path, and an empty root would let "/" pass for containment below.
+    const auto root = QFileInfo(pack.folder).canonicalFilePath();
+    if (root.isEmpty()) return fail("Plugin folder is missing.");
     const auto fragment = readObject(pack.folder + "/animations.json", 1024 * 1024, error);
     if (!error->isEmpty()) return false;
     // Touch, moves and activity art depend on a pet's geometry and timing too closely to patch from outside.
@@ -101,7 +104,6 @@ bool merge(CatalogSource &source, const PluginPack &pack, QHash<QString, QString
     };
     // Sequences: frames are PNG files inside the pack folder. Their ids become "<pack>:<path>", which no pet's
     // sequence can be (a pet's paths never hold ':'), so packs never share or shadow a sequence.
-    const auto root = QFileInfo(pack.folder).canonicalFilePath();
     const QDir folder(root);
     QHash<QString, QString> local; // The fragment's sequence name -> its id in the merged catalog.
     int frameCount = 0;

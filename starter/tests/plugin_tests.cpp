@@ -359,6 +359,19 @@ private slots:
         QCOMPARE(states, QStringList{"good.dance"});
         QCOMPARE(catalog.pools.value("celebrate").size(), 1);
     }
+    void aPackWhoseFolderVanishedIsRejected() {
+        // Scanned, then removed before it is applied: nothing may resolve against what is left.
+        QTemporaryDir folder;
+        writePack(folder.path(), "gone", danceFragment("gone"));
+        QVector<pet::PluginPack> packs;
+        auto source = pet::Catalog::read(base_.path(), "test", nullptr);
+        packs = pet::plugins::scan(folder.path(), "1.0.0");
+        QVERIFY(QDir(folder.path() + "/gone").removeRecursively());
+        pet::plugins::apply(source, "test", {"gone"}, packs);
+        QCOMPARE(status(packs, "gone"), QString("rejected: Plugin folder is missing."));
+        QString error;
+        QVERIFY2(pet::Catalog::build(source, &error).valid(), qPrintable(error));
+    }
     void packsLoadOnlyWhenEnabledForTheirPet() {
         QTemporaryDir folder;
         writePack(folder.path(), "chosen", danceFragment("chosen"));
