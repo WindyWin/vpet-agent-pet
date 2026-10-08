@@ -4,6 +4,7 @@
 // Cues are #64's (src/animation/cues.json); "fidget" and "edge-left" stand for states from a pet's own
 // ambient and touch sections, which are not cues.
 #include "behavior/runtime.h"
+#include <QHash>
 #include <QTest>
 
 using namespace pet::behavior;
