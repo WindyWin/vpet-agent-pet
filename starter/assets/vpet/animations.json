@@ -6540,6 +6540,12 @@
         "weight": 1
       }
     ],
+    "lunch": [
+      {
+        "state": "snack_hungry",
+        "weight": 1
+      }
+    ],
     "leave-work": [
       {
         "state": "fidget_bubbles",

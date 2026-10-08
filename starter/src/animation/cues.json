@@ -27,6 +27,7 @@
     "friday-evening": { "kind": "reaction" },
     "late-night": { "kind": "reaction" },
     "monday": { "kind": "reaction" },
+    "lunch": { "kind": "reaction" },
     "leave-work": { "kind": "reaction" },
     "sleep": { "kind": "reaction" },
     "konami": { "kind": "reaction" },

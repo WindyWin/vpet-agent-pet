@@ -20,6 +20,7 @@ class Stage;
 //   danger           a hook saw a destructive shell command start
 //   konami           the Konami code typed while the pet has focus
 //   monday           configured Monday time: the pet is tired and down about the week ahead (once a day)
+//   lunch            configured daily time (default 12:00): take a lunch break (once a day)
 //   leave-work       configured weekday time (default 16:45): time to get ready to go home (once a day)
 //   sleep            configured daily time (default 22:00): time to go to sleep (once a day)
 // Local time comes from a replaceable clock, so tests can visit any date.
@@ -59,10 +60,10 @@ public:
     bool surprise(const QString &cue, bool evenWhenOff = false);
     bool surprising() const; // One of these surprises is what the runtime shows.
     bool bedtime(); // True once a night, the first time it is asked late at night.
-    // Which of "monday", "leave-work" and "sleep" are due at this local time, whether or not already given.
+    // Which of "monday", "lunch", "leave-work" and "sleep" are due at this local time, whether or not already given.
     static QStringList remindersAt(const QDateTime &local, const ReminderSchedule &schedule = {});
     void setReminderSchedule(const ReminderSchedule &schedule) {
-        if (schedule.monday.isValid() && schedule.leaveWork.isValid() && schedule.sleep.isValid()) schedule_ = schedule;
+        if (schedule.lunch.isValid() && schedule.monday.isValid() && schedule.leaveWork.isValid() && schedule.sleep.isValid()) schedule_ = schedule;
     }
     ReminderSchedule reminderSchedule() const { return schedule_; }
     // What the pet says for a reminder; empty for an unknown one.

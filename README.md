@@ -16,7 +16,7 @@ It sits on your screen, thinks when your agent thinks, gets busy when it runs to
 - **Know at a glance** what every agent session is doing.
 - **Never miss a request**: a small note pops up when an agent waits for you, and one click takes you to the right terminal.
 - **A pet, not just a status light**: drag it, pet it, throw it, watch it wander and nap.
-- **Looks after you**: gentle reminders to rest your eyes and drink water, and a recap of your day.
+- **Looks after you**: gentle reminders to rest your eyes, drink water and take a lunch break, and a recap of your day.
 - **Private**: it only learns *what kind* of thing is happening, never your prompts, code or commands.
 
 Works on **Linux** x86_64 (X11, or Wayland desktops with XWayland such as GNOME and KDE), **macOS 11+** (Apple silicon and Intel), and **Windows 10 version 1809+ / Windows 11** (x64).
@@ -171,7 +171,7 @@ Right-click the pet (or its tray / menu bar icon) for everything: your sessions,
 
 - change its size and choose which notes pop up;
 - make it calmer or livelier (when idle and while working), and switch off wandering, moods, touch or surprises;
-- set or turn off the eye and water reminders, and enter your birthday;
+- set or turn off the eye and water reminders, configure lunch (default noon, eligible until 13:15), Monday, go-home and bedtime reminders, and enter your birthday;
 - connect Claude Code and Codex with one click, and have it start with your agents or at login;
 - choose how updates are installed.
 

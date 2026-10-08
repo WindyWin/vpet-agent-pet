@@ -21,6 +21,7 @@ replaceable local-time clock and random source:
 | Birthday | The date set in settings (`MM-dd`; February 29 falls on the 28th in other years): the same greeting, and the day's first finished turn | `birthday`: `birthday` (`BDay`) |
 | Late night | 01:00 to 05:00: one fidget in two, and one bedtime tooltip a night when a turn finishes (not while muted or hidden) | `late_night`: `fidget_yawn` |
 | Monday blues | Monday from the configured time (default 06:00) for six hours, ending at midnight, once a day: a yawn or bored fidget and a tired tooltip (not while muted or hidden) | `monday`: `fidget_yawn` 2, `fidget_boring` 1 |
+| Lunch | Daily from the configured time (default 12:00) for 75 minutes, ending at midnight, once a day: a lunch-break note | `lunch`: `snack_hungry`; falls back to `snack`, then `celebrate` for other pets |
 | Go home | Monday to Friday from the configured time (default 16:45) for 75 minutes, ending at midnight, once a day: a tooltip to get ready to leave | `leave_work`: `fidget_bubbles` |
 | Bedtime | From the configured time (default 22:00) until midnight, once a day: a yawn and a tooltip telling you to sleep | `sleep`: `fidget_yawn` |
 | Friday evening | Friday from 17:00: every finished turn | `friday_evening`: `dance` (`Music`) |
@@ -53,11 +54,16 @@ matches the patterns listed in [integrations](../integrations.md#adapter-policy)
 It is a heuristic for an animation:
 it errs toward a false alarm, and an obfuscated command passes unnoticed.
 
-Monday, go-home and sleep reminder times are configurable in Settings, in local
-time. Preferences store `monday_time`, `leave_work_time` and `sleep_time` as
-`HH:mm`, defaulting to `06:00`, `16:45` and `22:00` for older files. Monday is
-eligible for six hours after its configured time, go-home for 75 minutes on
+Monday, lunch, go-home and sleep reminder times are configurable in Settings, in local
+time. Preferences store `monday_time`, `lunch_time`, `leave_work_time` and `sleep_time` as
+`HH:mm`, defaulting to `06:00`, `12:00`, `16:45` and `22:00` for older files. Monday is
+eligible for six hours after its configured time, lunch for 75 minutes every day, go-home for 75 minutes on
 weekdays, and sleep until midnight; windows never carry into the next day.
+Lunch uses the runtime Reminder policy: attention, visible alerts, muted notifications
+and absence hold delivery until calm within its window. The event is consumed only
+on admission, once per local date per run. Clicking its note dismisses it with a
+`reminder-done` cheer. Complete Settings edits are committed on editingFinished
+or dialog close; malformed stored times preserve the original preferences file.
 Changing a time does not repeat a reminder already given that day. The go-home
 and sleep notes display their configured times. These settings do not change the
 late-night or Friday celebration windows or wellness quiet hours.
@@ -112,3 +118,18 @@ on a real desktop, and CI on Qt 6.5.3.
   23:15 through 21:15 to 21:45 did not consume the reminder; it fired once at 21:45.
 - Linux, macOS and Windows build/test/package CI passed for commit `811d7c8`.
   Linux also passed isolated-package and install/upgrade/uninstall checks.
+
+### Lunch reminder evidence — 2026-10-08
+
+- Added the daily 12:00–13:15 lunch window, editable alongside the other clock
+  reminders in Settings → Reminders, with English and Vietnamese notes.
+- Tests cover window boundaries (including weekends and midnight), daily deduplication,
+  schedule edits, persistence, legacy defaults and preservation of malformed files.
+- Monitor tests cover muted notifications, approvals, error alerts, expiration,
+  turning eggs off, the meal animation and click-to-dismiss cheer. Custom-pet
+  tests exercise the snack and celebration fallbacks.
+- The Linux build and all 15 CTest suites passed across the main run and corrected
+  reruns; socket integration tests required running outside the sandbox. Focused
+  Settings and lunch tests passed again after grouping the clock inputs.
+- A separate snooze/focus feature (#34) is not implemented in this revision;
+  lunch uses the existing runtime Reminder policy and muted-notifications gate.

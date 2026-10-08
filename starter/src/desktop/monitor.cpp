@@ -23,7 +23,9 @@ Monitor::Monitor(PetWindow &window, std::shared_ptr<hosts::FocusService> focus)
     // A reminder on screen is said again in the new language; anything else was a passing remark and goes.
     connect(&note_, &NoteBubble::outdated, this, [this] {
         if (reminder_.isEmpty()) return;
-        const auto reminder = reminder_; say(Wellness::note(reminder)); reminder_ = reminder;
+        const auto reminder = reminder_;
+        say(reminder == "lunch" ? EasterEggs::reminderNote(reminder, window_.eggs().reminderSchedule()) : Wellness::note(reminder));
+        reminder_ = reminder;
     });
     timer_.setInterval(250);
     connect(&timer_, &QTimer::timeout, this, [this] { update(QDateTime::currentMSecsSinceEpoch()); });
@@ -55,7 +57,7 @@ static bool urgent(const QString &cue) { return cue == "attention" || cue == "ex
 // How long a due reminder may wait for calm before it is asked for again.
 static constexpr qint64 reminderWaitMs = 10 * 60 * 1000;
 static const char *const wellnessReminders[] = {"eyes", "water"};
-static const char *const clockReminders[] = {"monday", "leave-work", "sleep"};
+static const char *const clockReminders[] = {"monday", "lunch", "leave-work", "sleep"};
 // Subagents fold into their parent, as in the running-sessions list.
 static int topLevelSessions(const Sessions &sessions) {
     const auto &records = sessions.records();
@@ -187,6 +189,7 @@ void Monitor::outcome(const behavior::Intent &intent, behavior::Outcome outcome)
         if (intent.key == "leave-work" && window_.recapEnabled() && today.turns)
             say(note + "\n" + Recap::summary(today), Recap::breakdown(today));
         else say(note);
+        if (intent.key == "lunch") reminder_ = intent.key;
     }
 }
 // A reminder that is no longer due (given, taken some other way, turned off, a break, quiet hours) stops waiting.
@@ -215,7 +218,7 @@ void Monitor::remindWellness(qint64 now) {
 void Monitor::answered() {
     if (restLeft_ > 0) { rest_.stop(); restLeft_ = 0; return; } // Clicking the countdown away ends it.
     const auto reminder = std::exchange(reminder_, QString());
-    if (reminder == "water") window_.eggs().surprise("reminder-done", true);
+    if (reminder == "water" || reminder == "lunch") window_.eggs().surprise("reminder-done", true);
     if (reminder != "eyes" || !active_) return;
     restLeft_ = Wellness::eyeRestSeconds + 1;
     rest();
@@ -244,7 +247,7 @@ void Monitor::showRecap() {
     if (window_.petHidden()) window_.showTrayMessage(Pet::tr("Today's recap"), Recap::breakdown(today));
     else say(Recap::summary(today), today.turns ? Recap::breakdown(today) : QString());
 }
-// Monday blues, the go-home nudge and bedtime: said once each day when calm, and kept for later while the pet is
+// Monday blues, lunch, the go-home nudge and bedtime: said once each day when calm, and kept for later while the pet is
 // hidden or the user is away.
 void Monitor::remind() {
     auto &runtime = window_.stage().runtime();

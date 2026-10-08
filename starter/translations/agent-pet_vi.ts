@@ -201,6 +201,10 @@
         <translation>Lại thứ Hai rồi... Em mệt quá à. Hôm nay mình làm từ từ thôi nha bạn.</translation>
     </message>
     <message>
+        <source>It&apos;s %1. Time to step away, take a break, and enjoy some lunch! 🍱</source>
+        <translation>%1 rồi. Đến giờ rời màn hình, nghỉ ngơi và ăn trưa thôi! 🍱</translation>
+    </message>
+    <message>
         <source>It&apos;s %1. Time to wrap up and get ready to head home!</source>
         <translation>Đã %1 rồi. Đến lúc thu xếp và chuẩn bị về nhà!</translation>
     </message>
@@ -1011,6 +1015,10 @@ và giật mình khi agent chạy lệnh nguy hiểm. Vài điều còn lại đ
     <message>
         <source>Monday reminder</source>
         <translation>Nhắc nhở thứ Hai</translation>
+    </message>
+    <message>
+        <source>Lunch reminder</source>
+        <translation>Nhắc ăn trưa</translation>
     </message>
     <message>
         <source>Go-home reminder</source>
