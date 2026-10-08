@@ -105,6 +105,12 @@ def main():
         expect('asset_root must lie inside' in run('add_sequences.py', '--pet', 'cat', '--assets', assets, '--source', art,
                                                    'good', ok=False), 'An asset_root outside the pet')
         expect(not (base / 'elsewhere').exists(), 'Frames were copied outside the pet folder')
+        catalog['asset_root'] = 'assets/cat/nul'
+        (assets / 'cat/animations.json').write_text(json.dumps(catalog, indent=2) + '\n')
+        expect('asset_root must lie inside' in run('add_sequences.py', '--pet', 'cat', '--assets', assets, '--source', art,
+                                                   'good', ok=False), 'An asset_root Windows reserves')
+        # Windows reports a nul path as existing: it is the null device.
+        expect(sys.platform == 'win32' or not (assets / 'cat/nul').exists(), 'Frames were copied under a reserved asset_root')
         (assets / 'cat/animations.json').write_bytes(saved)
 
         # One call with a good and a bad sequence copies neither, and changes no catalog or manifest.

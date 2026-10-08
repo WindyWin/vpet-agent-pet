@@ -87,7 +87,7 @@ def main():
     bundled = {s['path'] for s in animations['sequences']}
     asset_root = animations.get('asset_root', f'assets/{args.pet}')
     if not asset_root_inside(asset_root, args.pet):  # Frames are copied under it.
-        raise SystemExit(f'asset_root must lie inside assets/{args.pet}: {asset_root}')
+        raise SystemExit(f'asset_root must lie inside assets/{args.pet}, without {RESERVED_TEXT}: {asset_root}')
     requested = []
     for path in args.sequences:
         if not SEQUENCE.fullmatch(path):

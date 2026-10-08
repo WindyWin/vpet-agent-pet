@@ -50,7 +50,8 @@ def windows_reserved(name):
 def asset_root_inside(asset_root, pet_id):
     """True when a catalog's asset_root is the pet's folder, assets/<id>, or a folder inside it."""
     parts = asset_root.split('/') if isinstance(asset_root, str) else []
-    return parts[:2] == ['assets', pet_id] and all(NAME.fullmatch(part) for part in parts[2:])
+    return parts[:2] == ['assets', pet_id] and all(NAME.fullmatch(part) and not windows_reserved(part)
+                                                   for part in parts[2:])
 
 
 def check_pet(folder, licenses, errors):
@@ -130,7 +131,7 @@ def check_files(folder, assets, pet, animations, errors):
 
     asset_root = animations.get('asset_root', prefix.rstrip('/'))
     if not asset_root_inside(asset_root, folder.name):
-        errors.append(f'asset_root must lie inside {prefix}: {asset_root}')
+        errors.append(f'asset_root must lie inside {prefix}, without {RESERVED_TEXT}: {asset_root}')
         asset_root = prefix.rstrip('/')
     catalog_paths = set()
     for sequence in animations['sequences']:
