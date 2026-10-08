@@ -21,7 +21,7 @@ import re
 import shutil
 from pathlib import Path
 
-from verify_assets import UNSAFE_TEXT, unsafe_frame_name
+from verify_assets import PET_ID, RESERVED_TEXT, UNSAFE_TEXT, asset_root_inside, unsafe_frame_name, windows_reserved
 
 ROOT = Path(__file__).resolve().parents[1]
 FRAME = re.compile(r'(?:^|_)(\d+)_(\d+)\.png$')  # WORK/Study/B_4_Nomal names its frame 000_1250.png
@@ -52,6 +52,8 @@ def frames_of(directory):
             raise SystemExit(f'Unexpected entry in {directory}: {file.name!r}')
         if unsafe_frame_name(file.name):
             raise SystemExit(f'Frames are PNG files without {UNSAFE_TEXT} in their names: {file.name!r} in {directory}')
+        if windows_reserved(file.name):
+            raise SystemExit(f'Windows cannot check out {file.name!r} in {directory}: {RESERVED_TEXT}')
         found.append((file.name[:match.start()], int(match[1]), int(match[2]), file))
     pictures = {}
     for prefix, index, _, file in found:
@@ -74,7 +76,7 @@ def main():
 
     folder = args.assets / args.pet
     vpet = args.pet == 'vpet'
-    if not (folder / 'pet.json').is_file():
+    if not PET_ID.fullmatch(args.pet) or not (folder / 'pet.json').is_file():
         raise SystemExit(f'Not a pet folder: {folder} (start one with scripts/new_pet.py)')
     source = args.source or (ROOT.parent / 'assets/vpet/pet/vup' if vpet else None)
     if source is None:
@@ -84,10 +86,14 @@ def main():
     listed = {s['path']: s for s in available['sequences']} if vpet else {}
     bundled = {s['path'] for s in animations['sequences']}
     asset_root = animations.get('asset_root', f'assets/{args.pet}')
+    if not asset_root_inside(asset_root, args.pet):  # Frames are copied under it.
+        raise SystemExit(f'asset_root must lie inside assets/{args.pet}: {asset_root}')
     requested = []
     for path in args.sequences:
         if not SEQUENCE.fullmatch(path):
             raise SystemExit(f'Sequence folders use A-Z, a-z, 0-9, ".", "_" and "-": {path}')
+        if any(windows_reserved(part) for part in path.split('/')):
+            raise SystemExit(f'Windows cannot check out {path}: {RESERVED_TEXT}')
         if path in bundled:
             raise SystemExit(f'Already bundled: {path}')
         if vpet and path not in listed:

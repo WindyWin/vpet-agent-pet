@@ -59,9 +59,11 @@ licenses/<terms>    the art's terms
 Unknown keys are errors. Frames live only in subfolders; the folder's root holds only the files above
 (VPet also keeps its `available-animations.json` there). Folder names use `A–Z`, `a–z`, `0–9`, `.`, `_`
 and `-`, and do not start with `.`. Frame file names are PNGs without any of `" & ' < > ; \ [ ] : * ? |` or control characters, which
-the build and Windows cannot carry. `new_pet.py` and `add_sequences.py` refuse such names before copying
-anything, and `verify_assets.py` rejects them. The catalog's `asset_root` (default `assets/<id>`) must lie
-inside the pet's folder, and every frame lies under it.
+the build and Windows cannot carry. No id, folder or file may use a name Windows reserves (`CON`, `PRN`,
+`AUX`, `NUL`, `COM0`–`COM9` or `LPT0`–`LPT9`, also with an extension, as in `nul.png`) or end in `.`.
+`new_pet.py` and `add_sequences.py` refuse such names before copying anything, and `verify_assets.py`
+rejects them. The catalog's `asset_root` (default `assets/<id>`) must lie inside the pet's folder, and every
+frame lies under it; `add_sequences.py` refuses to copy frames for a catalog whose `asset_root` does not.
 
 Each frame folder builds into one resource pack, named after the SHA-256 of its resource path
 (`artwork-<sha256 of assets/<id>/<folder>>.rcc`). Editing one sequence therefore replaces only its

@@ -22,6 +22,9 @@ NAME = re.compile(r'[A-Za-z0-9_-][A-Za-z0-9._-]*')  # terms and preview files, a
 # the catalog's path check or Windows file names. Control characters, newlines included, are refused too.
 UNSAFE = set('"&\'<>;\\[]:*?|')
 UNSAFE_TEXT = f'{" ".join(sorted(UNSAFE))} or control characters'
+# Names a Windows checkout cannot hold: device names, also with an extension (NUL.png is NUL), and names ending in ".".
+WINDOWS_DEVICES = {'CON', 'PRN', 'AUX', 'NUL', *(f'{port}{digit}' for port in ('COM', 'LPT') for digit in range(10))}
+RESERVED_TEXT = 'a name Windows reserves (CON, PRN, AUX, NUL, COM0-9 or LPT0-9, with any extension, or ending in ".")'
 PET_KEYS = {'schema_version', 'id', 'name', 'author', 'url', 'terms', 'preview'}
 METADATA = {'pet.json', 'animations.json', 'manifest.json', 'available-animations.json'}
 
@@ -37,6 +40,17 @@ def png_size(path):
 def unsafe_frame_name(name):
     """True when a frame file name holds a character the build cannot carry (see UNSAFE)."""
     return any(char in UNSAFE or ord(char) < 32 for char in name)
+
+
+def windows_reserved(name):
+    """True for a file or folder name a Windows checkout cannot hold (see WINDOWS_DEVICES)."""
+    return name.split('.')[0].upper() in WINDOWS_DEVICES or name.endswith('.')
+
+
+def asset_root_inside(asset_root, pet_id):
+    """True when a catalog's asset_root is the pet's folder, assets/<id>, or a folder inside it."""
+    parts = asset_root.split('/') if isinstance(asset_root, str) else []
+    return parts[:2] == ['assets', pet_id] and all(NAME.fullmatch(part) for part in parts[2:])
 
 
 def check_pet(folder, licenses, errors):
@@ -57,8 +71,10 @@ def check_pet(folder, licenses, errors):
         errors.append(f'Unknown pet.json keys: {", ".join(unknown)}')
     if pet.get('schema_version') != 1:
         errors.append('pet.json schema_version must be 1')
-    if not isinstance(pet.get('id'), str) or not PET_ID.fullmatch(pet['id']) or pet['id'] != folder.name:
-        errors.append('pet.json id must be the folder name: lowercase letters, digits and "-", at most 32')
+    if (not isinstance(pet.get('id'), str) or not PET_ID.fullmatch(pet['id']) or windows_reserved(pet['id'])
+            or pet['id'] != folder.name):
+        errors.append('pet.json id must be the folder name: lowercase letters, digits and "-", at most 32, '
+                      f'not {RESERVED_TEXT}')
     if not text('name', 64) or not text('author', 128):
         errors.append('pet.json needs a name of 1-64 characters and an author of 1-128')
     if 'url' in pet and not (isinstance(pet['url'], str) and pet['url'].startswith('https://') and len(pet['url']) <= 256):
@@ -95,6 +111,8 @@ def check_files(folder, assets, pet, animations, errors):
     actual = set()
     for path in sorted(folder.rglob('*')):
         relative = path.relative_to(folder)
+        if windows_reserved(path.name):
+            errors.append(f'Windows cannot check out {relative.as_posix()}: {RESERVED_TEXT}')
         if path.is_dir():
             if not NAME.fullmatch(path.name):
                 errors.append(f'Folder names use A-Z, a-z, 0-9, ".", "_" and "-": {relative.as_posix()}')
@@ -111,7 +129,7 @@ def check_files(folder, assets, pet, animations, errors):
         errors.append('Manifest count or size mismatch')
 
     asset_root = animations.get('asset_root', prefix.rstrip('/'))
-    if not isinstance(asset_root, str) or not (asset_root + '/').startswith(prefix) or '..' in asset_root.split('/'):
+    if not asset_root_inside(asset_root, folder.name):
         errors.append(f'asset_root must lie inside {prefix}: {asset_root}')
         asset_root = prefix.rstrip('/')
     catalog_paths = set()
@@ -394,12 +412,17 @@ def main():
             failures.extend(f'{folder.name}: {error}' for error in errors + unreadable)
             continue
         animations = json.loads(catalog.read_text(encoding='utf-8'))
-        check_files(folder, args.assets, pet, animations, errors)
-        check_catalog(animations, errors)
-        if (folder / 'available-animations.json').exists():
-            check_available(folder, animations, errors)
+        try:
+            check_files(folder, args.assets, pet, animations, errors)
+            check_catalog(animations, errors)
+            if (folder / 'available-animations.json').exists():
+                check_available(folder, animations, errors)
+            summary.append(f'{folder.name} ({len(animations["sequences"])} sequences)')
+        except (AttributeError, IndexError, KeyError, TypeError) as error:
+            # A missing or mistyped field: report it for this pet and go on to the others.
+            errors.append(f'Missing or invalid field in manifest.json, animations.json or available-animations.json '
+                          f'({type(error).__name__}: {error})')
         failures.extend(f'{folder.name}: {error}' for error in errors)
-        summary.append(f'{folder.name} ({len(animations["sequences"])} sequences)')
     if failures:
         raise SystemExit('\n'.join(failures))
     print(f'OK: {", ".join(summary)}.')

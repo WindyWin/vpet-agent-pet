@@ -19,7 +19,7 @@ import shutil
 from pathlib import Path
 
 from add_sequences import frames_of
-from verify_assets import png_size
+from verify_assets import RESERVED_TEXT, png_size, windows_reserved
 
 ROOT = Path(__file__).resolve().parents[1]
 CONTRACT = ROOT / 'src/animation/core-states.json'
@@ -43,8 +43,8 @@ def main():
     parser.add_argument('--licenses', type=Path, default=ROOT / 'licenses', help="folder holding the pets' terms")
     args = parser.parse_args()
 
-    if not re.fullmatch(r'[a-z0-9-]{1,32}', args.id):
-        raise SystemExit(f'Invalid id: {args.id} (lowercase letters, digits and "-", at most 32)')
+    if not re.fullmatch(r'[a-z0-9-]{1,32}', args.id) or windows_reserved(args.id):
+        raise SystemExit(f'Invalid id: {args.id} (lowercase letters, digits and "-", at most 32, not {RESERVED_TEXT})')
     if not 1 <= len(args.name) <= 64 or not 1 <= len(args.author) <= 128:
         raise SystemExit('--name needs 1-64 characters and --author 1-128')
     if args.url is not None and not (args.url.startswith('https://') and len(args.url) <= 256):

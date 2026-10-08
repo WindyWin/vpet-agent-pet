@@ -2,7 +2,7 @@
 """Scaffold a pet with new_pet.py in a temporary folder, add a sequence with add_sequences.py, verify both.
 
 Run by CTest (pet-scaffold). Also checks what the scripts refuse: an existing folder, missing terms, an
-oversized preview, and folder names the build cannot carry.
+oversized preview, names the build or Windows cannot carry, copies outside the pet's folder and incomplete files.
 """
 import json
 import shutil
@@ -93,6 +93,19 @@ def main():
         expect('Frames are PNG files without' in run('new_pet.py', 'semi', *cat, '--idle', art / 'semi', *common,
                                                      ok=False), 'new_pet.py refuses the same frame name')
         expect(not (assets / 'semi').exists(), 'A refused pet leaves no folder')
+        expect('Invalid id' in run('new_pet.py', 'con', *cat, '--idle', art / 'idle', *common, ok=False), 'Reserved id')
+        expect('Windows cannot check out' in run('add_sequences.py', '--pet', 'cat', '--assets', assets, '--source', art,
+                                                 'nul', ok=False), 'A folder name Windows reserves')
+        expect('Not a pet folder' in run('add_sequences.py', '--pet', '../assets/cat', '--assets', assets, '--source', art,
+                                         'good', ok=False), 'A pet outside the assets folder')
+        saved = (assets / 'cat/animations.json').read_bytes()
+        catalog = json.loads(saved)
+        catalog['asset_root'] = 'assets/cat/../../elsewhere'
+        (assets / 'cat/animations.json').write_text(json.dumps(catalog, indent=2) + '\n')
+        expect('asset_root must lie inside' in run('add_sequences.py', '--pet', 'cat', '--assets', assets, '--source', art,
+                                                   'good', ok=False), 'An asset_root outside the pet')
+        expect(not (base / 'elsewhere').exists(), 'Frames were copied outside the pet folder')
+        (assets / 'cat/animations.json').write_bytes(saved)
 
         # One call with a good and a bad sequence copies neither, and changes no catalog or manifest.
         kept = {name: (assets / 'cat' / name).read_bytes() for name in ('animations.json', 'manifest.json')}
@@ -111,6 +124,10 @@ def main():
         (assets / 'nocat/animations.json').write_text('{')
         (assets / 'nocat/manifest.json').write_text('{}')
         expect('nocat: animations.json is not valid JSON' in run('verify_assets.py', *common, ok=False), 'Malformed catalog')
+        (assets / 'nocat/animations.json').write_text('{"sequences": []}')
+        message = run('verify_assets.py', *common, ok=False)
+        expect('nocat: Missing or invalid field' in message and 'Traceback' not in message,
+               f'A manifest without files must fail by name:\n{message}')
         shutil.rmtree(assets / 'nocat')
 
         # Files the build cannot carry are reported.
@@ -125,6 +142,10 @@ def main():
             expect('Frames are PNG files without' in run('verify_assets.py', *common, ok=False), f'Frame name {odd!r}')
             (assets / 'cat/idle' / odd).unlink()
         run('verify_assets.py', *common)
+        if sys.platform != 'win32':  # Windows cannot create it
+            write_png(assets / 'cat/aux/_000_80.png', 16, 16, (0, 0, 0, 255))
+            expect('Windows cannot check out aux' in run('verify_assets.py', *common, ok=False), 'Reserved folder name')
+            shutil.rmtree(assets / 'cat/aux')
         write_png(assets / 'cat/odd name/_000_80.png', 16, 16, (0, 0, 0, 255))
         expect('Folder names use' in run('verify_assets.py', *common, ok=False), 'Folder with a space')
         # Scaffolding the mini test fixture again reproduces it; tests/pets_tests.cpp plays every core state of it.
