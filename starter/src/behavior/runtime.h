@@ -1,0 +1,151 @@
+#pragma once
+#include <QHash>
+#include <QString>
+#include <QStringList>
+#include <QVector>
+#include <functional>
+#include <optional>
+
+// The behavior runtime (issue #67): one place that decides which of the pet's competing behaviors may
+// show. Producers (session activity, lifecycle, mood, easter eggs, wellness, ambient, touch) submit
+// semantic intents; the runtime admits, defers, interrupts and expires them against the policy table in
+// docs/superpowers/specs/2026-10-08-behavior-runtime-design.md and hands one cue at a time to
+// presentation, which maps it to the active pet's animation (#64) and reports back how it went.
+//
+// Design stage: this header is the contract the tests in tests/behavior_tests.cpp are written against.
+// The implementation (src/behavior/runtime.cpp, Qt Core only) lands with the migration.
+namespace pet::behavior {
+
+// Centrally defined policy classes, from the highest rank down. Producers pick the class that says what
+// their intent is; they never pick a number. A higher class may interrupt a lower one where the policy
+// table allows it.
+enum class Policy {
+    Shutdown,    // quit, quit-angry: cancels everything else and always finishes
+    Urgent,      // session activity that needs the user: attention, exhausted, error
+    Startup,     // start: the pet arriving
+    Surprise,    // danger, konami, reminder-done: a reaction to something that just happened
+    Reminder,    // eye-break, water, monday, leave-work, sleep: art with a note, shown only when calm
+    Celebration, // a finished turn's treat or occasion: snack, milestone, long-turn, birthday, friday-evening
+    Activity,    // other session activity: working, reading, thinking, turn-finished, waiting, idle, inactive
+    Ambient,     // fidgets, occasion fidgets, wander moves, naps and hiding at a screen edge
+};
+
+enum class Lifetime {
+    // Valid until withdrawn or replaced by a submission with the same identity. Session activity always is.
+    Persistent,
+    // Plays once, then gives presentation back. Ends on completion, interruption, unavailability or timeout.
+    OneShot,
+};
+
+struct Intent {
+    QString source;   // The producer: "session", "lifecycle", "mood", "eggs", "wellness", "ambient", "touch"
+    QString key;      // Stable within the source; source + key is the intent's identity for deduplication.
+    QString cue;      // The semantic cue (#64), never an animation name.
+    Policy policy = Policy::Activity;
+    Lifetime lifetime = Lifetime::OneShot;
+    // A one-shot that cannot run at once may wait until this time (ms, the runtime's clock); 0 or a past
+    // time means now or never.
+    qint64 expiresAt = 0;
+    // Semantic side effects, such as "water" for a snack that offers a drink. Reported with Started only,
+    // so a denied or unavailable reaction never counts as shown.
+    QStringList effects;
+};
+
+// What submit() decided at once.
+enum class Submission {
+    Admitted,  // Claimed presentation now (or, for a persistent intent, became the current one).
+    Deferred,  // Waiting for its turn, until it expires.
+    Duplicate, // The same identity is already waiting or showing, or a persistent intent did not change.
+    Rejected,  // Not allowed now and not allowed to wait.
+};
+
+// Everything that happens to an intent instance, in order, through `outcome`. An instance reports
+// Admitted at most once and exactly one terminal outcome (anything but Admitted and Started) after it,
+// or Expired/Dropped without ever being admitted.
+enum class Outcome {
+    Admitted,    // It may run: a reminder shows its note now, and its interval starts over.
+    Started,     // Presentation began playing it; its effects apply.
+    Completed,   // It played to its end.
+    Interrupted, // Something with the right to interrupt took over, or a persistent intent was withdrawn.
+    Unavailable, // The active pet has nothing to show for this optional cue.
+    TimedOut,    // Presentation gave no terminal feedback in time.
+    Expired,     // It waited past `expiresAt` without being admitted.
+    Dropped,     // Cancelled unseen: shutdown, urgent activity, an obsolete celebration or a full queue.
+};
+
+// Feedback from presentation about the request it was handed.
+enum class Feedback { Started, Completed, Interrupted, Unavailable };
+
+// One cue for presentation to show. `instance` correlates feedback; a report for any other instance than
+// the latest request is stale and ignored.
+struct Request {
+    quint64 instance = 0;
+    QString cue;
+    // Cut what is showing instead of letting it finish its exit (Player::select's interrupt).
+    bool interrupt = false;
+};
+
+// Shared state the runtime admits against. Producers stop asking each other; whoever owns a fact sets it here.
+struct Context {
+    bool visible = true;   // The pet is on screen, not hidden to the tray.
+    bool handled = false;  // Held by the user (dragged or petted) or falling after a throw.
+    bool moving = false;   // Walking, climbing or sliding to an edge.
+    bool present = false;  // The user was seen recently enough to read a reminder.
+    bool muted = false;    // Notes and bubbles are off.
+    bool speaking = false; // An alert bubble or a note is showing.
+    bool quiet = false;    // Quiet hours: reminders are let go rather than shown.
+    int attention = 0;     // Sessions with an unresolved request for the user.
+};
+
+class Runtime {
+public:
+    // Presentation that reports nothing within this time is taken to have finished.
+    static constexpr qint64 oneShotTimeoutMs = 15000; // EasterEggs::surpriseMs today.
+    static constexpr qint64 shutdownTimeoutMs = 10000; // Covers quit-angry's remark and both of its animations.
+    static constexpr int maxDeferred = 4;            // Waiting one-shots, all sources together.
+
+    // `clock` gives milliseconds; tests drive it by hand.
+    explicit Runtime(std::function<qint64()> clock);
+
+    Submission submit(const Intent &intent);
+    // Ends a persistent intent, or a one-shot that is still waiting. Its outcome is Interrupted when it was
+    // showing and Dropped when it was waiting; unknown identities are ignored.
+    void withdraw(const QString &source, const QString &key);
+    // Re-evaluates admission, so a waiting reminder can start once things calm down, and the latest activity
+    // shows once the user lets go of the pet.
+    void setContext(const Context &context);
+    Context context() const { return context_; }
+    void report(quint64 instance, Feedback feedback);
+    // Expires waiting intents and times out silent presentation; the monitor calls it on its timer.
+    void tick();
+
+    // The latest session activity cue, whether or not it is what shows; empty before the first.
+    QString activity() const;
+    // The instance that holds presentation, if any (a one-shot, a rest or the activity).
+    std::optional<quint64> current() const;
+    QString currentCue() const;
+    int deferred() const;
+    bool closing() const { return closing_; } // Shutdown was submitted.
+
+    // Hands a cue to presentation. Unset, nothing is presented, and every request times out.
+    std::function<void(const Request &)> present;
+    std::function<void(const Intent &, Outcome)> outcome;
+    // Shutdown is complete: its presentation finished, failed, timed out or was not needed (hidden pet).
+    // Called exactly once.
+    std::function<void()> finished;
+
+private:
+    struct Entry {
+        Intent intent;
+        quint64 instance = 0, sequence = 0; // `sequence`: submission order, the tie-breaker.
+        qint64 requestedAt = -1;            // When presentation was handed it; -1 while waiting.
+        bool admitted = false;
+    };
+    std::function<qint64()> clock_;
+    Context context_;
+    std::optional<Entry> activity_, rest_, showing_; // `showing_`: the one-shot holding presentation.
+    QVector<Entry> waiting_;
+    quint64 nextInstance_ = 1, nextSequence_ = 1, presented_ = 0; // `presented_`: the latest request's instance.
+    bool closing_ = false, finished_ = false;
+};
+}

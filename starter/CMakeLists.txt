@@ -197,6 +197,11 @@ if(BUILD_TESTING)
     qt_add_executable(focus-tests tests/focus_tests.cpp)
     target_link_libraries(focus-tests PRIVATE pet_hosts pet_core Qt6::Test)
     add_test(NAME focus COMMAND focus-tests)
+    # Issue #67: the behavior runtime's policy tests come before the runtime. Compiling them against its
+    # header keeps the contract buildable; src/behavior/runtime.cpp turns this into a registered `behavior` suite.
+    add_library(behavior-tests-spec OBJECT tests/behavior_tests.cpp)
+    target_include_directories(behavior-tests-spec PRIVATE src)
+    target_link_libraries(behavior-tests-spec PRIVATE Qt6::Test)
     if(NOT AGENT_PET_PORTABLE_CORE)
         # PET_TEST_NATIVE sections run with every platform's services; PET_TEST_POSIX and PET_TEST_WINDOWS ones with one family.
         if(WIN32)
