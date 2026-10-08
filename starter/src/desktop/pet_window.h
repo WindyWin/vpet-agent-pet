@@ -89,6 +89,9 @@ public:
     // The pet shown from the next start, by id; persisted. The running pet never changes.
     void setPet(const QString &id);
     QString pet() const { return pet_; }
+    // The plugin packs loaded from the next start, by id; persisted. The running pet keeps what it loaded.
+    void setPlugins(const QStringList &ids);
+    QStringList plugins() const { return plugins_; }
     // Downloads pets that are not bundled for Settings' picker; made on first use. It outlives the dialog, and a
     // completed download becomes the choice for the next start.
     PetDownloader &petDownloader();
@@ -190,6 +193,7 @@ private:
     QMenu *moreMenu_ = nullptr, *statesMenu_ = nullptr;
     QString language_ = "auto";
     QString pet_ = "vpet";
+    QStringList plugins_;
     int statusSessions_ = 0, statusAttention_ = 0, statusErrors_ = 0; // The tray tooltip's last counts.
     Presence presence_;
     QPixmap trayBase_;

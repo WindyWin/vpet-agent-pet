@@ -1270,12 +1270,71 @@ Các cài đặt và hook khác được giữ nguyên. Hãy đăng ký từ m�
         <source>Transition history</source>
         <translation>Lịch sử chuyển đổi</translation>
     </message>
+    <message>
+        <source>Plugins</source>
+        <translation>Plugin</translation>
+    </message>
 </context>
 <context>
     <name>pet::Player</name>
     <message>
         <source>Cannot load the artwork pack. Reinstall Agent Pet to restore it.</source>
         <translation>Không tải được gói hình ảnh. Hãy cài lại Agent Pet để khôi phục.</translation>
+    </message>
+</context>
+<context>
+    <name>pet::PluginList</name>
+    <message>
+        <source>Plugin packs add animations to a pet and new ways to play its reactions. Put each pack in its own folder in %1. Changes apply the next time Agent Pet starts.</source>
+        <translation>Gói plugin thêm hoạt ảnh cho thú cưng và cách mới để thể hiện phản ứng của nó. Đặt mỗi gói vào một thư mục riêng trong %1. Thay đổi có hiệu lực vào lần khởi động Agent Pet tiếp theo.</translation>
+    </message>
+    <message>
+        <source>Plugin packs</source>
+        <translation>Gói plugin</translation>
+    </message>
+    <message>
+        <source>No plugin packs are installed.</source>
+        <translation>Chưa cài gói plugin nào.</translation>
+    </message>
+    <message>
+        <source>Open plugins &amp;folder</source>
+        <translation>Mở &amp;thư mục plugin</translation>
+    </message>
+    <message>
+        <source>Cannot be used: %1</source>
+        <translation>Không dùng được: %1</translation>
+    </message>
+    <message>
+        <source>Unloads the next time Agent Pet starts</source>
+        <translation>Gỡ vào lần khởi động Agent Pet tiếp theo</translation>
+    </message>
+    <message>
+        <source>Off</source>
+        <translation>Tắt</translation>
+    </message>
+    <message>
+        <source>Loaded</source>
+        <translation>Đã nạp</translation>
+    </message>
+    <message>
+        <source>Not loaded: %1</source>
+        <translation>Chưa nạp: %1</translation>
+    </message>
+    <message>
+        <source>For the pet %1: loads when it runs</source>
+        <translation>Dành cho thú cưng %1: nạp khi thú cưng đó chạy</translation>
+    </message>
+    <message>
+        <source>Loads the next time Agent Pet starts</source>
+        <translation>Nạp vào lần khởi động Agent Pet tiếp theo</translation>
+    </message>
+    <message>
+        <source>by %1 · license: %2</source>
+        <translation>của %1 · giấy phép: %2</translation>
+    </message>
+    <message>
+        <source>by %1</source>
+        <translation>của %1</translation>
     </message>
 </context>
 <context>

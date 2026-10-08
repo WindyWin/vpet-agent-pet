@@ -6,6 +6,7 @@ known, Settings → Pet shows a **Character** row with a tile per pet, and the c
 next time Agent Pet starts. VPet ships with the app; other pets download when chosen (see
 [Bundled and on-demand pets](#bundled-and-on-demand-pets)). `agent-pet --pet <id>` runs another pet
 once without saving the choice. Only the running pet's artwork is loaded.
+To add animations to an existing pet without a rebuild, make a [plugin pack](plugins.md) instead.
 
 ## A minimal pet
 

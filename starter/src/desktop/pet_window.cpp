@@ -3,6 +3,7 @@
 #include "animation/pet_library.h"
 #include "desktop/pet_downloader.h"
 #include "desktop/pet_picker.h"
+#include "desktop/plugin_list.h"
 #include "platform/contracts/native_window.h"
 #include "ipc/autostart.h"
 #include "providers/integrations.h"
@@ -97,6 +98,7 @@ PetWindow::PetWindow(QWidget *parent, const QString &path, bool persist)
     autostart_ = preferences.autostart; presence_.setPolicy(preferences.whenIdle);
     language_ = preferences.language;
     pet_ = preferences.pet;
+    plugins_ = preferences.plugins;
     connect(&player_, &Player::changed, this, qOverload<>(&PetWindow::update));
     // Shutdown always ends: its animation finished, failed or ran out of time, or nobody could see it.
     connect(&stage_, &Stage::finished, this, [] { qApp->quit(); });
@@ -508,6 +510,12 @@ void PetWindow::setPet(const QString &id) {
     pet_ = id;
     writePreferences([id](Preferences &preferences) { preferences.pet = id; });
 }
+void PetWindow::setPlugins(const QStringList &ids) {
+    plugins_.clear();
+    for (const auto &id : ids)
+        if (Preferences::validPet(id) && !plugins_.contains(id) && plugins_.size() < Preferences::maxPlugins) plugins_.append(id);
+    writePreferences([this](Preferences &preferences) { preferences.plugins = plugins_; });
+}
 PetDownloader &PetWindow::petDownloader() {
     if (!downloader_) {
         downloader_ = new PetDownloader(PetLibrary::shared(), nullptr, this);
@@ -867,6 +875,11 @@ void PetWindow::showSettings() {
                       "in the menu shows it any time."));
     layout->addRow(tr("Re&cap"), recap);
     connect(recap, &QCheckBox::toggled, this, &PetWindow::setRecapEnabled);
+    layout = page(tr("Plugins"));
+    auto &library = PetLibrary::shared();
+    auto *pluginList = new PluginList(library.plugins(), plugins_, library.active(), library.pluginFolder(), dialog);
+    layout->addRow(pluginList);
+    connect(pluginList, &PluginList::changed, this, &PetWindow::setPlugins);
     layout = page(tr("Startup and agents"));
     layout->addRow(startupSettings(dialog));
     layout->addRow(integrationSettings(dialog));

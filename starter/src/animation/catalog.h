@@ -1,5 +1,6 @@
 #pragma once
 #include "random.h"
+#include <QJsonObject>
 #include <QMap>
 #include <QPointF>
 #include <QRect>
@@ -68,6 +69,17 @@ const Cue *findCue(const QString &name); // Null for a name outside the vocabula
 // A pet's identifier, which is also its folder under assets/: [a-z0-9-]{1,32}.
 bool validPetId(const QString &id);
 
+// A relative path that stays where it is put: no drive, backslash, "." or ".." segment.
+bool safeAssetPath(const QString &path);
+
+// A catalog document before its sections are checked: the parsed JSON and its sequences, with frame paths already
+// resolved. Plugin packs (plugins.h) merge their fragments into it before Catalog::build() checks the result.
+struct CatalogSource {
+    QJsonObject document;
+    QMap<QString, QVector<Frame>> sequences;
+    bool valid() const { return !document.isEmpty(); }
+};
+
 // The catalog schema this build reads; scripts/migrate_catalog.py brings older catalogs up to it.
 inline constexpr int catalogSchema = 2;
 // A pet's animation catalog (assets/<id>/animations.json), parsed and validated. A Player copies it and
@@ -88,6 +100,10 @@ struct Catalog {
     // by default) and in subfolders of the pet's folder. Empty, with `error` set, when anything is invalid.
     // Whether every state cue can play is not part of this: see contractError().
     static Catalog load(const QString &root, const QString &pet, QString *error);
+    // load() in two steps: read() checks the file, its schema and its sequences; build() checks everything else
+    // against those sequences. Each is empty, with `error` set, when anything is invalid.
+    static CatalogSource read(const QString &root, const QString &pet, QString *error);
+    static Catalog build(const CatalogSource &source, QString *error);
     bool valid() const { return !animations.isEmpty(); }
     // The state a state cue plays here (the catalog's mapping, else the cue's default); empty for any other name.
     QString stateFor(const QString &cue) const;

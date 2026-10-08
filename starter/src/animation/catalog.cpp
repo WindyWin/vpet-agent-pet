@@ -71,10 +71,15 @@ QString Catalog::contractError() const {
     }
     return {};
 }
+bool safeAssetPath(const QString &path) { return safePath(path); }
 Catalog Catalog::load(const QString &root, const QString &pet, QString *error) {
+    const auto source = read(root, pet, error);
+    return source.valid() ? build(source, error) : Catalog();
+}
+CatalogSource Catalog::read(const QString &root, const QString &pet, QString *error) {
     auto invalid = [error](const QString &reason) {
         if (error) *error = reason;
-        return Catalog();
+        return CatalogSource();
     };
     if (!validPetId(pet)) return invalid("Invalid pet identifier: " + pet);
     const QString folder = "assets/" + pet;
@@ -93,11 +98,11 @@ Catalog Catalog::load(const QString &root, const QString &pet, QString *error) {
     const auto assetRoot = document.contains("asset_root") ? document["asset_root"].toString() : folder;
     if (!safePath(assetRoot) || (assetRoot != folder && !assetRoot.startsWith(folder + "/")))
         return invalid("Asset root outside the pet folder: " + assetRoot);
-    Catalog catalog;
+    CatalogSource source;
     for (const auto &entry : document["sequences"].toArray()) {
         const auto object = entry.toObject();
         const auto id = object["path"].toString();
-        if (!safePath(id) || catalog.sequences.contains(id)) return invalid("Invalid or duplicate sequence identifier.");
+        if (!safePath(id) || source.sequences.contains(id)) return invalid("Invalid or duplicate sequence identifier.");
         QVector<Frame> frames;
         int total = 0;
         for (const auto &value : object["frames"].toArray()) {
@@ -112,8 +117,19 @@ Catalog Catalog::load(const QString &root, const QString &pet, QString *error) {
             if (frames.size() > 1000) return invalid("Too many frames in " + id);
         }
         if (frames.isEmpty() || total != object["duration_ms"].toInt()) return invalid("Invalid sequence timing: " + id);
-        catalog.sequences.insert(id, frames);
+        source.sequences.insert(id, frames);
     }
+    source.document = document;
+    return source;
+}
+Catalog Catalog::build(const CatalogSource &source, QString *error) {
+    auto invalid = [error](const QString &reason) {
+        if (error) *error = reason;
+        return Catalog();
+    };
+    const auto &document = source.document;
+    Catalog catalog;
+    catalog.sequences = source.sequences;
     const auto states = document["states"].toObject();
     const auto playback = document["playback"].toObject();
     constexpr int maxWeight = 1000;
