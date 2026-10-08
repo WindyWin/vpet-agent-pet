@@ -76,14 +76,14 @@ bool PetLibrary::activate(const QString &id, QString *error) {
     const auto catalog = Catalog::load(root(), id, &reason);
     if (!catalog.valid()) return fail(reason);
     if (const auto broken = catalog.contractError(); !broken.isEmpty()) return fail(broken);
+    auto rollBack = [&](const QString &why) {
+        for (const auto &pack : std::as_const(packs_)) QResource::unregisterResource(pack, mapRoot_);
+        packs_.clear();
+        return fail(why);
+    };
     QFile list(QDir(root()).filePath("assets/" + id + "/packs.json"));
     // Without a pack list, the pet's frames are inside the index itself.
     if (list.exists()) {
-        auto rollBack = [&](const QString &why) {
-            for (const auto &pack : std::as_const(packs_)) QResource::unregisterResource(pack, mapRoot_);
-            packs_.clear();
-            return fail(why);
-        };
         if (!list.open(QIODevice::ReadOnly) || list.size() > 1024 * 1024) return rollBack("Cannot read the pack list of " + id);
         const auto packs = QJsonDocument::fromJson(list.readAll()).object()["packs"].toArray();
         if (packs.isEmpty() || packs.size() > 4093) return rollBack("Invalid pack list for " + id);
@@ -99,6 +99,12 @@ bool PetLibrary::activate(const QString &id, QString *error) {
             packs_.append(path);
         }
     }
+    // A mismatched pack registers but lacks its frames, and a pack missing from the list leaves them unregistered:
+    // refuse the pet now rather than fail during play. Each sequence plays from one pack, so its first frame
+    // stands for the pack (all 1,197 VPet frames would cost 18 ms at every start; this costs about 2).
+    for (const auto &frames : std::as_const(catalog.sequences))
+        if (!QFile::exists(frames.first().path))
+            return rollBack("Missing frame " + frames.first().path.mid(root().size() + 1) + ". Reinstall Agent Pet to restore it.");
     active_ = id;
     catalog_ = catalog;
     return true;

@@ -244,6 +244,25 @@ private slots:
         QVERIFY(!QFile::exists(":/rollback/assets/duo/wave/_000_50.png"));
         QVERIFY2(library.activate("mini", &error), qPrintable(error)); // A failure leaves the library usable.
     }
+    void packWithoutItsFramesIsRefused() {
+        // A copy of the fixture build whose wave pack holds duo's idle frames instead: it registers, but lacks wave.
+        QTemporaryDir directory;
+        const QDir built(QFileInfo(FIXTURE_INDEX).absolutePath());
+        for (const auto &name : built.entryList({"*.rcc"}, QDir::Files))
+            QVERIFY(QFile::copy(built.filePath(name), directory.filePath(name)));
+        QHash<QString, QString> packs;
+        for (const auto &pack : QJsonDocument::fromJson(contents(built.filePath("pets/duo/packs.json"))).object()["packs"].toArray())
+            packs.insert(pack.toObject()["sequence"].toString(), pack.toObject()["name"].toString() + ".rcc");
+        QVERIFY(QFile::remove(directory.filePath(packs.value("wave"))));
+        QVERIFY(QFile::copy(built.filePath(packs.value("idle")), directory.filePath(packs.value("wave"))));
+        pet::PetLibrary library(directory.filePath("artwork.rcc"), "/mismatch");
+        QString error;
+        QVERIFY(!library.activate("duo", &error));
+        QCOMPARE(error, QString("Missing frame assets/duo/wave/_000_50.png. Reinstall Agent Pet to restore it."));
+        QVERIFY(library.active().isEmpty()); QVERIFY(!library.catalog().valid());
+        QVERIFY(!QFile::exists(":/mismatch/assets/duo/idle/_000_100.png"));
+        QVERIFY2(library.activate("mini", &error), qPrintable(error));
+    }
     void brokenPetIsRefused() {
         pet::PetLibrary library(FIXTURE_INDEX, "/broken");
         QString error;
