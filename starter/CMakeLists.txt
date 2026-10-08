@@ -47,11 +47,15 @@ qt_add_library(pet_core STATIC
     src/settings/preferences.cpp src/providers/adapters.cpp)
 target_include_directories(pet_core PUBLIC src)
 target_link_libraries(pet_core PUBLIC Qt6::Core pet_host_capture)
+# Which of the pet's competing behaviors may show (docs/adr/0030-behavior-runtime.md); no timers, no Player.
+qt_add_library(pet_behavior STATIC src/behavior/runtime.cpp)
+target_include_directories(pet_behavior PUBLIC src)
+target_link_libraries(pet_behavior PUBLIC Qt6::Core)
 qt_add_library(pet_animation STATIC
     src/animation/catalog.cpp src/animation/pet_library.cpp src/animation/player.cpp src/animation/ambient.cpp src/animation/activity.cpp
     src/animation/mood.cpp src/animation/easter_eggs.cpp)
 target_include_directories(pet_animation PUBLIC src PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/generated")
-target_link_libraries(pet_animation PUBLIC Qt6::Gui)
+target_link_libraries(pet_animation PUBLIC Qt6::Gui pet_behavior)
 
 if(NOT AGENT_PET_PORTABLE_CORE)
 # Every pet folder under assets/ (docs/pets.md): one stable pack per frame folder, so additions never repack
@@ -200,11 +204,10 @@ if(BUILD_TESTING)
     qt_add_executable(focus-tests tests/focus_tests.cpp)
     target_link_libraries(focus-tests PRIVATE pet_hosts pet_core Qt6::Test)
     add_test(NAME focus COMMAND focus-tests)
-    # Issue #67: the behavior runtime's policy tests come before the runtime. Compiling them against its
-    # header keeps the contract buildable; src/behavior/runtime.cpp turns this into a registered `behavior` suite.
-    add_library(behavior-tests-spec OBJECT tests/behavior_tests.cpp)
-    target_include_directories(behavior-tests-spec PRIVATE src)
-    target_link_libraries(behavior-tests-spec PRIVATE Qt6::Test)
+    # The behavior runtime's policy with a hand-set clock and a fake presentation.
+    qt_add_executable(behavior-tests tests/behavior_tests.cpp)
+    target_link_libraries(behavior-tests PRIVATE pet_behavior Qt6::Test)
+    add_test(NAME behavior COMMAND behavior-tests)
     if(NOT AGENT_PET_PORTABLE_CORE)
         # PET_TEST_NATIVE sections run with every platform's services; PET_TEST_POSIX and PET_TEST_WINDOWS ones with one family.
         if(WIN32)

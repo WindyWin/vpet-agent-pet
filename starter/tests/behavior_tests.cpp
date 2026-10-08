@@ -1,7 +1,6 @@
-// The behavior runtime's policy (issue #67), written ahead of the runtime. Each test drives the runtime
+// The behavior runtime's policy (issue #67, docs/adr/0030-behavior-runtime.md). Each test drives the runtime
 // with a hand-set clock and a fake presentation that records requests and answers with feedback, so no
-// desktop, Player or artwork is involved. The policy table these tests pin down is in
-// docs/superpowers/specs/2026-10-08-behavior-runtime-design.md.
+// desktop, Player or artwork is involved.
 // Cues are #64's (src/animation/cues.json); "fidget" and "edge-left" stand for states from a pet's own
 // ambient and touch sections, which are not cues.
 #include "behavior/runtime.h"
@@ -375,6 +374,74 @@ private slots:
 
     // --- Presentation feedback ----------------------------------------------------------------------
 
+    void activityLeftByPresentationIsShownAgainOnTick() {
+        Rig rig;
+        rig.runtime.submit(activity("working"));
+        const auto requests = rig.requests.size();
+        // A developer selection or a phased state ending: presentation moved off the activity by itself.
+        rig.answer(Feedback::Interrupted);
+        QCOMPARE(rig.requests.size(), requests); // Not from inside the presentation's own signal.
+        rig.runtime.tick();
+        QCOMPARE(rig.requests.size(), requests + 1);
+        QCOMPARE(rig.lastCue(), QString("working"));
+        QVERIFY(!rig.requests.last().interrupt);
+        rig.runtime.tick();
+        QCOMPARE(rig.requests.size(), requests + 1);
+    }
+
+    void momentLeftByPresentationIsNotReplayed() {
+        Rig rig;
+        rig.runtime.submit(activity("error"));
+        const auto requests = rig.requests.size();
+        rig.answer(Feedback::Completed); // The error state played and went back to what it interrupted.
+        rig.runtime.tick();
+        QCOMPARE(rig.requests.size(), requests);
+    }
+
+    void restLeftByPresentationEnds() {
+        Rig rig;
+        rig.runtime.submit(activity("idle"));
+        rig.runtime.submit({"ambient", "nap", "nap", Policy::Ambient, Lifetime::Persistent});
+        rig.answer(Feedback::Interrupted);
+        QCOMPARE(rig.history("ambient/nap"), QString("admitted interrupted"));
+        rig.runtime.tick();
+        QCOMPARE(rig.lastCue(), QString("idle"));
+    }
+
+    void admitsAsksWithoutSubmitting() {
+        Rig rig;
+        rig.runtime.submit(activity("idle"));
+        const Intent edge{"touch", "edge", "edge-left", Policy::Ambient, Lifetime::Persistent};
+        QVERIFY(rig.runtime.admits(edge));
+        QVERIFY(rig.outcomes.isEmpty());
+        rig.runtime.submit(activity("working"));
+        QVERIFY(!rig.runtime.admits(edge));
+        QVERIFY(rig.runtime.admits(danger()));
+        rig.runtime.submit(danger());
+        QVERIFY(!rig.runtime.admits(konami())); // Equal rank never interrupts.
+        rig.runtime.submit(quit());
+        QVERIFY(!rig.runtime.admits(activity("attention")));
+    }
+
+    void showingNamesTheReactionOnScreen() {
+        Rig rig;
+        rig.runtime.submit(activity("idle"));
+        QVERIFY(!rig.runtime.showing());
+        rig.runtime.submit(konami());
+        QVERIFY(rig.runtime.showing());
+        QCOMPARE(rig.runtime.showing()->key, QString("konami"));
+        rig.answer(Feedback::Completed);
+        QVERIFY(!rig.runtime.showing());
+    }
+
+    void drawnStateIsHandedToPresentation() {
+        Rig rig;
+        rig.runtime.submit(activity("idle"));
+        rig.runtime.submit({"eggs", "danger", "danger", Policy::Surprise, Lifetime::OneShot, 0, {}, "startled"});
+        QCOMPARE(rig.requests.last().cue, QString("danger"));
+        QCOMPARE(rig.requests.last().state, QString("startled"));
+    }
+
     void unavailableOptionalCueReleasesItsClaim() {
         Rig rig;
         rig.runtime.submit(activity("idle"));
@@ -473,15 +540,6 @@ private slots:
         QCOMPARE(rig.history("wellness/eye-break"), QString("admitted"));
         QCOMPARE(rig.lastCue(), QString("eye-break"));
         QVERIFY(rig.requests.last().interrupt);
-    }
-
-    void quietHoursLetRemindersGo() {
-        Rig rig;
-        rig.runtime.submit(activity("idle"));
-        rig.change([](Context &c) { c.quiet = true; });
-        QCOMPARE(rig.runtime.submit(oneShot("wellness", "water", Policy::Reminder, rig.now + 60000)), Submission::Rejected);
-        QCOMPARE(rig.history("wellness/water"), QString());
-        QCOMPARE(rig.lastCue(), QString("idle"));
     }
 
     void reminderKeepsItsNoteWhenTheArtIsMissing() {

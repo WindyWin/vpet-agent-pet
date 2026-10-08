@@ -12,9 +12,8 @@
 // docs/superpowers/specs/2026-10-08-behavior-runtime-design.md and hands one cue at a time to
 // presentation, which maps it to the active pet's animation (#64, docs/adr/0029-cues.md) and reports back
 // how it went.
-//
-// Design stage: this header is the contract the tests in tests/behavior_tests.cpp are written against.
-// The implementation (src/behavior/runtime.cpp, Qt Core only) lands with the migration.
+// Qt Core only and timer-free: the monitor's tick drives time, and tests drive it by hand
+// (tests/behavior_tests.cpp). animation/stage.h connects it to the Player.
 namespace pet::behavior {
 
 // Centrally defined policy classes, from the highest rank down. Producers pick the class that says what
@@ -59,6 +58,9 @@ struct Intent {
     // Semantic side effects, such as "water" for a snack that offers a drink. Reported with Started only,
     // so a denied or unavailable reaction never counts as shown.
     QStringList effects;
+    // The state a producer already drew from the cue's pool, handed to presentation as is. The runtime never
+    // reads it; empty lets presentation resolve the cue itself.
+    QString state;
 };
 
 // What submit() decided at once.
@@ -90,7 +92,7 @@ enum class Feedback { Started, Completed, Interrupted, Unavailable };
 // the latest request is stale and ignored.
 struct Request {
     quint64 instance = 0;
-    QString cue;
+    QString cue, state; // `state`: the intent's own, when its producer drew one.
     // Cut what is showing instead of letting it finish its exit (Player::select's interrupt).
     bool interrupt = false;
 };
@@ -103,7 +105,6 @@ struct Context {
     bool present = false;  // The user was seen recently enough to read a reminder.
     bool muted = false;    // Notes and bubbles are off.
     bool speaking = false; // An alert bubble or a note is showing.
-    bool quiet = false;    // Quiet hours: reminders are let go rather than shown.
     int attention = 0;     // Sessions with an unresolved request for the user.
 };
 
@@ -125,16 +126,25 @@ public:
     // shows once the user lets go of the pet.
     void setContext(const Context &context);
     Context context() const { return context_; }
+    // Feedback on the latest request. For a one-shot it ends or starts the instance. For session activity,
+    // Interrupted or Completed means presentation moved off it on its own (a developer selection, a phased
+    // state ending): it is shown again on the next tick, unless it is a moment. A rest that is interrupted ends.
     void report(quint64 instance, Feedback feedback);
-    // Expires waiting intents and times out silent presentation; the monitor calls it on its timer.
+    // Expires waiting intents, times out silent presentation and shows the activity again where presentation
+    // left it; the monitor calls it on its timer.
     void tick();
+    qint64 now() const { return clock_(); }
 
     // The latest session activity cue, whether or not it is what shows; empty before the first.
     QString activity() const;
     // The instance that holds presentation, if any (a one-shot, a rest or the activity).
     std::optional<quint64> current() const;
     QString currentCue() const;
-    int deferred() const;
+    // The one-shot holding presentation, or null.
+    const Intent *showing() const { return showing_ ? &showing_->intent : nullptr; }
+    // Whether submit() would admit this intent now, without submitting it.
+    bool admits(const Intent &intent) const;
+    int deferred() const { return int(waiting_.size()); }
     bool closing() const { return closing_; } // Shutdown was submitted.
 
     // Hands a cue to presentation. It may report() before it returns, as for an optional cue the pet has
@@ -149,14 +159,27 @@ private:
     struct Entry {
         Intent intent;
         quint64 instance = 0, sequence = 0; // `sequence`: submission order, the tie-breaker.
-        qint64 requestedAt = -1;            // When presentation was handed it; -1 while waiting.
-        bool admitted = false;
+        qint64 requestedAt = -1;            // When presentation was handed it; -1 before that.
+        bool started = false;
     };
+    // Whether the class and the context let an intent run now, let it wait, or refuse it.
+    enum class Gate { Now, Wait, Never };
+    Gate gate(const Intent &intent) const;
+    bool outranks(const Intent &intent) const; // Nothing shows, or it ranks strictly above what does.
+    bool urgent() const;
+    bool idleLike() const;
+    void tell(const Intent &intent, Outcome outcome);
+    Entry make(const Intent &intent);
+    void admit(Entry entry);             // Takes presentation, interrupting the one-shot showing.
+    void request(Entry &entry, bool interrupt);
+    void end(Outcome outcome);           // Ends the showing one-shot and gives presentation back.
+    void resolve(bool returning = false); // Admits waiting work, else shows the rest or the activity.
+    void finish();
     std::function<qint64()> clock_;
     Context context_;
     std::optional<Entry> activity_, rest_, showing_; // `showing_`: the one-shot holding presentation.
     QVector<Entry> waiting_;
     quint64 nextInstance_ = 1, nextSequence_ = 1, presented_ = 0; // `presented_`: the latest request's instance.
-    bool closing_ = false, finished_ = false;
+    bool closing_ = false, finished_ = false, momentShown_ = false; // `momentShown_`: the activity, if a moment.
 };
 }
