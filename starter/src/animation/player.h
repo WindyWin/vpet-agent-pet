@@ -19,12 +19,17 @@ public:
     Player(QObject *parent, const Catalog &catalog);
     // Normal changes finish the current held state's exit; urgent changes cut immediately.
     bool select(const QString &state, bool interrupt = false);
+    // Selects the state a state cue plays on this pet (src/animation/cues.json); false for any other name.
+    bool play(const QString &cue, bool interrupt = false);
+    QString stateFor(const QString &cue) const { return catalog_.stateFor(cue); }
+    // The latest request is the state this cue plays.
+    bool requested(const QString &cue) const { return requestedState() == stateFor(cue); }
     // A held state stays until released, whatever else is selected meanwhile; release() then plays
     // its end and goes on to the latest request. Holding another state swaps it in at once.
     void hold(const QString &state);
     void release();
     bool held() const { return held_; }
-    void beginDrag() { hold("dragging"); }
+    void beginDrag() { hold(stateFor("drag")); }
     void endDrag() { release(); }
     void setRenderSize(int physicalPixels);
     void setPaused(bool paused);
@@ -43,7 +48,7 @@ public:
     static constexpr int cacheLimitKiB = 8192;
     bool paused() const { return paused_; }
     bool stopped() const { return stopped_; }
-    bool isDragging() const { return held_ && state_ == "dragging"; }
+    bool isDragging() const { return held_ && state_ == stateFor("drag"); }
     bool valid() const { return !catalog_.animations.isEmpty(); }
     void clearError() { error_.clear(); }
     // Alternate sequences for idle and fidgets; off plays only the catalog's own entry.
@@ -59,8 +64,8 @@ public:
     void setMood(const QString &mood) { mood_ = mood; }
     QString mood() const { return mood_; }
     bool hasMood(const QString &mood, const QString &state) const { return catalog_.moods.value(mood).contains(state); }
-    // Weighted states for a named reaction ("turn_finished", "snack", "milestone"); empty when not in the catalog.
-    QVector<Reaction> reactions(const QString &name) const { return catalog_.reactions.value(name); }
+    // The weighted states a reaction cue ("celebrate", "snack", "danger", ...) draws from; empty when the pet maps none.
+    QVector<Reaction> pool(const QString &cue) const { return catalog_.pools.value(cue); }
     const Touch &touch() const { return catalog_.touch; }
     bool isTouch(const QString &state) const { return catalog_.touchStates.contains(state); }
     // The state for a press at `point` on a square widget `side` pixels wide; empty off every region.

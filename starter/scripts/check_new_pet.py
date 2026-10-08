@@ -61,20 +61,30 @@ def main():
         run('new_pet.py', 'cat', *cat, '--idle', art / 'idle', *common)
         run('verify_assets.py', *common)
         catalog = json.loads((assets / 'cat/animations.json').read_text())
-        contract = json.loads((ROOT / 'src/animation/core-states.json').read_text())['states']
-        expect(list(catalog['states']) == list(contract), 'Every core state, in the contract file order')
-        expect(catalog['states']['thinking'] == ['idle'] * 3, 'A phased state lists its sequence three times')
-        expect(catalog['playback']['tool_error'] == {'mode': 'once', 'after': 'previous'}, 'Contract shapes')
+        vocabulary = json.loads((ROOT / 'src/animation/cues.json').read_text())['cues']
+        expect(catalog['schema_version'] == 2, 'The current catalog schema')
+        expect(list(catalog['states']) == ['idle', 'busy', 'hello', 'oops', 'bye', 'held'], 'One state per playback shape')
+        expect(catalog['states']['busy'] == ['idle'] * 3, 'A phased state lists its sequence three times')
+        expect(catalog['playback']['oops'] == {'mode': 'once', 'after': 'previous'}, 'Cue shapes')
+        for cue, shape in vocabulary.items():
+            if shape['kind'] == 'state':
+                state = catalog['cues'].get(cue, shape['state'])
+                expect(catalog['playback'].get(state) == {'mode': shape['mode'], 'after': shape['after']},
+                       f'Cue {cue} plays a state of its shape')
+        expect(catalog['cues']['attention'] == 'busy' and catalog['cues']['drag'] == 'held' and 'idle' not in catalog['cues'],
+               'Cues map to the minimal states')
         expect(json.loads((assets / 'cat/pet.json').read_text())['preview'] == 'preview.png', 'Preview file')
 
         # A new sequence is refused until a state uses it.
         run('add_sequences.py', '--pet', 'cat', '--assets', assets, '--source', art, 'wave')
         expect('do not cover the bundled sequences' in run('verify_assets.py', *common, ok=False), 'Unused sequence')
         catalog = json.loads((assets / 'cat/animations.json').read_text())
-        catalog['states']['starting'] = ['wave']
+        catalog['states']['wave'] = ['wave']
+        catalog['playback']['wave'] = {'mode': 'once', 'after': 'idle'}
+        catalog['cues']['start'] = 'wave'
         for sequence in catalog['sequences']:
             if sequence['path'] == 'wave':
-                sequence['state'] = 'starting'
+                sequence['state'] = 'wave'
         (assets / 'cat/animations.json').write_text(json.dumps(catalog, indent=2) + '\n')
         run('verify_assets.py', *common)
 

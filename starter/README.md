@@ -2,7 +2,7 @@
 
 A small starting repository for a desktop pet that reacts to Claude Code and Codex activity. The sprite files are bundled here, so development can proceed without a local VPet installation.
 
-The current asset pack contains **1,197 original PNG frames in 141 animation sequences (171.67 MiB)**. They cover idle (with two alternate loops, a few idle fidgets, and happy and droopy moods), thinking, reading, working, waiting for input, tool errors, several ways to celebrate a finished turn, sleeping, startup, closing, the original dragging animation, reactions to being petted, thrown and pushed against a screen edge, a few easter eggs, and walking, crawling and climbing. [animations.json](assets/vpet/animations.json) maps each state to its sequences, records frame durations, and lists the idle variants, fidgets, mood art, reactions, touch hit boxes and moves. [manifest.json](assets/vpet/manifest.json) records every file's size and SHA-256 hash.
+The current asset pack contains **1,197 original PNG frames in 141 animation sequences (171.67 MiB)**. They cover idle (with two alternate loops, a few idle fidgets, and happy and droopy moods), thinking, reading, working, waiting for input, tool errors, several ways to celebrate a finished turn, sleeping, startup, closing, the original dragging animation, reactions to being petted, thrown and pushed against a screen edge, a few easter eggs, and walking, crawling and climbing. [animations.json](assets/vpet/animations.json) maps each state to its sequences, records frame durations, and lists the idle variants, fidgets, mood art, reaction cues, touch hit boxes and moves. [manifest.json](assets/vpet/manifest.json) records every file's size and SHA-256 hash.
 
 [available-animations.json](assets/vpet/available-animations.json) catalogs the **422 remaining sequences and 4,301 frames** from the original character pack. Each entry gives its upstream folder, category, frame count, size, and timing status. These are references for future work; their PNG files are not included here. To add one later, run `python3 scripts/add_sequences.py IDEL/yawning/Nomal …` against a copy of the upstream VPet tree (`--source`; the full archive next to this folder is the default). It copies the frames, updates the manifest and both catalogs, and leaves you to map the sequences in `animations.json`, which `scripts/verify_assets.py` then checks. Retain the artwork notices.
 
@@ -231,8 +231,11 @@ preview and its own art terms under `assets/`, and a rebuild picks up every such
 changes. Once two or more pets are installed, Settings → Pet → **Character** shows a tile per pet. The
 chosen pet appears the next time Agent Pet starts, and only its artwork is loaded. `--pet <id>` runs
 another installed pet once without saving the choice. A pet that cannot load is skipped and VPet runs
-instead. To make a pet, see [the pet guide](docs/pets.md) and
-[the design record](docs/adr/0028-pet-packs.md).
+instead. VPet ships with the app; other pets show their download size and download when chosen, verified
+pack by pack against hashes the app already carries, with progress and Cancel in Settings. The app tells a pet what is happening through named cues (a session needs you, a turn finished,
+time for water), and each pet decides which of its animations answers each one. To make a pet, see
+[the pet guide](docs/pets.md) and the design records for [pet packs](docs/adr/0028-pet-packs.md),
+[cues](docs/adr/0029-cues.md) and [on-demand pets](docs/adr/0030-on-demand-pets.md).
 
 ## Language
 

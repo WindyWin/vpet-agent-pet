@@ -29,12 +29,13 @@ public:
     void refresh(qint64 now);  // Lets the score recover and updates the mood shown.
     int score(qint64 now);
     QString level() const { return level_; } // "happy", "poor" or empty for neutral.
-    // The state that celebrates a finished turn: a pending milestone, else a draw from the `occasion`
-    // reaction (an easter egg such as "long_turn") when the catalog has it, else a pending snack, else a
-    // draw from the "turn_finished" reaction. A snack passed over waits for the next turn. Falls back to
-    // "turn_finished".
-    QString celebrate(const QString &occasion = {});
-    QString treat() const { return treat_; } // "milestone", "snack" or empty.
+    // How a finished turn is celebrated: the cue that was drawn from and the state it drew.
+    struct Celebration { QString cue, state; };
+    // A pending milestone, else the `occasion` cue (an easter egg such as "long-turn") when the pet maps it, else a
+    // pending snack, else the "celebrate" cue. A snack passed over waits for the next turn. Without any of these
+    // pools, the "turn-finished" cue's state.
+    Celebration celebrate(const QString &occasion = {});
+    QString treat() const { return treat_; } // The cue "milestone" or "snack", or empty.
     // Every finished turn ever seen, persisted so the hundredth survives restarts.
     int turns() const { return turns_; }
     void setTurns(int turns) { turns_ = qMax(0, turns); }

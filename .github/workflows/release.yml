@@ -110,6 +110,16 @@ jobs:
             starter/dist/*-components.json
           if-no-files-found: error
 
+      # Packs of pets that are not bundled, named by content for the long-lived `pets` release (docs/pets.md).
+      - name: Collect on-demand pet packs
+        run: python3 scripts/pet_blobs.py build dist/pet-blobs
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pet-blobs
+          path: starter/dist/pet-blobs/
+          if-no-files-found: error
+
   macos:
     if: >-
       ${{ !(github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -303,6 +313,27 @@ jobs:
           The app downloads the \`app\`, \`runtime\`, \`artwork-*\` and \`components.json\` assets below automatically when updating. For installation, use the links above.
           Ứng dụng tự tải các tệp \`app\`, \`runtime\`, \`artwork-*\` và \`components.json\` bên dưới khi cập nhật. Để cài đặt, dùng các liên kết phía trên.
           EOF
+      - uses: actions/download-artifact@v4
+        with:
+          name: pet-blobs
+          path: pet-blobs
+      # Pets that are not bundled download their packs from one long-lived release, tag `pets`, where each pack is
+      # named by its SHA-256 and never changes. Only packs it lacks are uploaded. It is a prerelease that is never
+      # "latest", so update checks never see it.
+      - name: Publish on-demand pet packs
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          if [[ ! -s pet-blobs/blobs.txt ]]; then echo "Every pet is bundled."; exit 0; fi
+          gh release view pets > /dev/null 2>&1 || gh release create pets --title "Pet artwork" --prerelease --latest=false \
+            --notes "Artwork packs of pets that Agent Pet downloads on demand, named by SHA-256. Do not edit or delete."
+          existing="$(gh release view pets --json assets --jq '.assets[].name')"
+          while read -r name; do
+            grep -qxF "$name" <<< "$existing" && continue
+            gh release upload pets "pet-blobs/$name"
+          done < pet-blobs/blobs.txt
       - uses: softprops/action-gh-release@v2
         with:
           draft: true

@@ -35,7 +35,7 @@ void Ambient::entered(const QString &state) {
     } else {
         // Anything else is real activity, or a nap this class chose to start.
         idleSince_ = -1; fidgeting_ = false; special_.clear();
-        asleep_ = napping_ && state == "sleeping";
+        asleep_ = napping_ && state == player_.stateFor("nap");
     }
 }
 void Ambient::looped(const QString &state) {
@@ -43,8 +43,8 @@ void Ambient::looped(const QString &state) {
         return;
     const auto now = clock_(), idle = now - idleSince_;
     if (player_.sleepAfterS() > 0 && idle >= qint64(player_.sleepAfterS()) * 1000
-        && player_.states().contains("sleeping")) {
-        napping_ = true; player_.select("sleeping"); napping_ = false;
+        && player_.states().contains(player_.stateFor("nap"))) {
+        napping_ = true; player_.play("nap"); napping_ = false;
         return;
     }
     if (now < nextDue_) return;

@@ -23,6 +23,8 @@ The code map below describes the current implementation.
 | Preferences | `src/settings` | [0004](adr/0004-preferences-storage.md) |
 | Window, menus, recovery | `src/desktop` | [0008](adr/0008-window-behavior.md) |
 | Pets, playback and catalog | `src/animation` (`Catalog`, `PetLibrary`, `Player`), `assets/<id>/`, `cmake/pets.cmake`, [pets](pets.md) | [0003](adr/0003-catalog-driven-playback.md), [0014](adr/0014-artwork-resource-file.md), [0028](adr/0028-pet-packs.md) |
+| Cues (event → animation mapping) | `src/animation/cues.json`, `Catalog::stateFor`, `Player::play`/`pool` | [0029](adr/0029-cues.md) |
+| On-demand pets (store, downloads) | `PetLibrary` (store, stamps, `prune`), `src/desktop/pet_downloader.*`, `scripts/pet_blobs.py` | [0030](adr/0030-on-demand-pets.md) |
 | Idle, active, mood, touch, eggs, walking | `src/animation`, `src/desktop` | [0011](adr/0011-idle-animation.md), [0021](adr/0021-active-animation.md), [0012](adr/0012-mood.md), [0013](adr/0013-touch-reactions.md), [0015](adr/0015-easter-eggs.md), [0016](adr/0016-walking.md) |
 | Recap, wellness | `src/sessions/recap.*`, `src/desktop/wellness.*` | [0018](adr/0018-daily-recap.md), [0019](adr/0019-wellness-reminders.md) |
 | Packaging, updates | `scripts/package*.py`, `src/updates`, [install](install.md) | [0009](adr/0009-linux-packaging.md), [0010](adr/0010-application-updates.md) |
