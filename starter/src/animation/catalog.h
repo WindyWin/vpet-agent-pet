@@ -59,13 +59,17 @@ struct ActivityArt {
     QMap<QString, QString> handover; // To that state without leaving the desk.
 };
 
-// A state the app selects by name, and how every pet must play it: src/animation/core-states.json,
-// embedded at build time. Sorted by name.
-struct CoreState { QString name, mode, after; };
-const QVector<CoreState> &coreStates();
+// What the app asks a pet to show, from src/animation/cues.json (embedded at build time), sorted by name. A state
+// cue plays one state with this playback: `state` unless the catalog maps the cue to another (never for a `fixed`
+// cue). A reaction cue plays a state drawn from the pool the catalog maps it to, and nothing without one.
+struct Cue { QString name; bool reaction = false; QString state, mode, after; bool fixed = false; };
+const QVector<Cue> &cues();
+const Cue *findCue(const QString &name); // Null for a name outside the vocabulary.
 // A pet's identifier, which is also its folder under assets/: [a-z0-9-]{1,32}.
 bool validPetId(const QString &id);
 
+// The catalog schema this build reads; scripts/migrate_catalog.py brings older catalogs up to it.
+inline constexpr int catalogSchema = 2;
 // A pet's animation catalog (assets/<id>/animations.json), parsed and validated. A Player copies it and
 // never changes it.
 struct Catalog {
@@ -73,7 +77,8 @@ struct Catalog {
     QMap<QString, Animation> animations;
     QVector<Fidget> fidgets;
     QMap<QString, QMap<QString, QVector<Choice>>> moods; // mood -> state -> choices
-    QMap<QString, QVector<Reaction>> reactions;
+    QMap<QString, QString> cueStates; // The catalog's own state for a state cue, where it maps one.
+    QMap<QString, QVector<Reaction>> pools; // Reaction cue -> its pool, where the catalog maps one.
     QSet<QString> fidgetStates, touchStates;
     Touch touch;
     QMap<QString, Move> moves;
@@ -81,10 +86,12 @@ struct Catalog {
     int sleepAfterS = 0, moveScale = 0;
     // Reads <root>/assets/<pet>/animations.json. Frames must lie under its `asset_root` (the pet's folder
     // by default) and in subfolders of the pet's folder. Empty, with `error` set, when anything is invalid.
-    // The core state contract is not part of this: see contractError().
+    // Whether every state cue can play is not part of this: see contractError().
     static Catalog load(const QString &root, const QString &pet, QString *error);
     bool valid() const { return !animations.isEmpty(); }
-    // Empty when every core state exists with its required playback; otherwise the first problem.
+    // The state a state cue plays here (the catalog's mapping, else the cue's default); empty for any other name.
+    QString stateFor(const QString &cue) const;
+    // Empty when every state cue plays an existing state with the cue's playback; otherwise the first problem.
     QString contractError() const;
 };
 }

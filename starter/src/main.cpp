@@ -145,13 +145,13 @@ int main(int argc, char **argv) {
         if (parser.isSet("smoke-test")) {
             std::printf("Platform: %s; Qt: %s\n", qPrintable(app.platformName()), qVersion());
             std::fflush(stdout);
-            QTimer::singleShot(500, &window, [&] { window.player().select("thinking"); window.setPetSize(320); });
+            QTimer::singleShot(500, &window, [&] { window.player().play("thinking"); window.setPetSize(320); });
             QTimer::singleShot(1000, &window, [&] { window.setOnTop(false); window.setClickThrough(true); });
             // Coarse timers may fire up to 5% early or late: the 15-second recovery
             // armed at 1 s can land as late as ~17 s, so check precisely after that.
             QTimer::singleShot(18000, Qt::PreciseTimer, &window, [&] {
                 const bool recovered = !window.clickThrough();
-                window.player().select("idle");
+                window.player().play("idle");
                 window.setOnTop(true);
                 window.recover();
                 std::printf("Idle/thinking decoded; automatic input recovery: %s\n", recovered ? "passed" : "FAILED");

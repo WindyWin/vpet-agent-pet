@@ -85,6 +85,14 @@ bool Player::select(const QString &state, bool interrupt) {
     enter(state);
     return true;
 }
+bool Player::play(const QString &cue, bool interrupt) {
+    const auto state = stateFor(cue);
+    if (state.isEmpty()) {
+        error_ = "Unknown cue: " + cue;
+        emit failed(error_); return false;
+    }
+    return select(state, interrupt);
+}
 // A non-urgent change from an activity's loop phase that can stay at the desk; false plays the usual end.
 bool Player::decorate(const QString &target) {
     const auto found = catalog_.activity.constFind(state_);
@@ -270,7 +278,7 @@ void Player::advance() {
             stopped_ = true; index_ = catalog_.sequences[sequence_].size() - 1; emit changed();
         } else {
             auto target = animation.after == "previous" ? previous_ : QString("idle");
-            if (!catalog_.animations.contains(target) || catalog_.animations[target].mode == "once" || target == "dragging"
+            if (!catalog_.animations.contains(target) || catalog_.animations[target].mode == "once" || target == stateFor("drag")
                 || isTouch(target)) target = "idle";
             enter(target);
         }

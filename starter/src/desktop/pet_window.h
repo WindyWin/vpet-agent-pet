@@ -99,6 +99,9 @@ public:
     void setBubbles(int level);
     int bubbles() const { return bubbles_; }
     bool quitting() const { return quitting_; }
+    // A fidget, an ambient nap or a reaction to the user (such as hiding at a screen edge) is showing: how an idle
+    // pet looks, which session changes to idle should leave alone.
+    bool resting() const { return ambient_.resting() || player_.isTouch(player_.requestedState()); }
     // Hidden: the window is gone but monitoring, alerts and the tray icon keep running.
     bool petHidden() const { return presence_.hidden(); }
     void setPetHidden(bool hidden); // Tray click or "Show pet"; ignored without a tray.
@@ -140,7 +143,7 @@ protected:
     void keyPressEvent(QKeyEvent *) override;
 private:
     void beginQuit(const QString &remark = {});
-    void playQuitAnimation(const QString &state);
+    void playQuitAnimation(const QString &cue); // "quit", "annoyed" or "quit-angry".
     void endDrag(bool released = false);
     void land();
     void slideTo(QPoint target, touch::Edge hide); // Hides at `hide` on arrival, unless it is None.
@@ -195,7 +198,7 @@ private:
     QVector<touch::Sample> samples_;
     touch::Patience patience_;
     QElapsedTimer touchClock_;
-    QString quitState_;
+    QString quitCue_;
     NoteBubble quitNote_{this};
     std::optional<touch::Flight> flight_;
     QString walk_; // The move playing, while it carries the window.

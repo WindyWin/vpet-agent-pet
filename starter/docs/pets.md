@@ -22,17 +22,19 @@ the running pet's artwork is loaded.
    cmake --build build && ./build/agent-pet --pet cat
    ```
 
-   Every state the app needs now plays the idle sequence, so the pet already works.
+   The catalog has one state per playback shape (`idle`, `busy`, `hello`, `oops`, `bye` and `held`), all
+   playing the idle sequence, and maps every cue the app raises onto them, so the pet already works.
 4. Add sequences and give states their own art:
 
    ```bash
    python3 scripts/add_sequences.py --pet cat --source ~/art/cat think/start think/loop think/end
    ```
 
-   Then edit `assets/cat/animations.json`. Point states at the new sequences, for example
-   `"thinking": ["think/start", "think/loop", "think/end"]`. Set each sequence's `state` field to a state
-   that uses it. Run `python3 scripts/verify_assets.py` until it says OK, then
-   `ctest --test-dir build -R pets`, which checks every bundled pet against the core states below.
+   Then edit `assets/cat/animations.json`. Add a state for the new sequences, for example
+   `"think": ["think/start", "think/loop", "think/end"]` with `"playback": {"think": {"mode": "phased",
+   "after": "idle"}}`, and point the cue at it: `"cues": {"thinking": "think", …}`. Set each sequence's
+   `state` field to a state that uses it. Run `python3 scripts/verify_assets.py` until it says OK, then
+   `ctest --test-dir build -R pets`, which checks every bundled pet against the cues below.
 
 ## The folder
 
@@ -69,33 +71,63 @@ Each frame folder builds into one resource pack, named after the SHA-256 of its 
 (`artwork-<sha256 of assets/<id>/<folder>>.rcc`). Editing one sequence therefore replaces only its
 pack in updates.
 
-## States the app needs
+## Cues
 
-The app selects these states by name, so every pet defines them with this playback. The list lives in
-[`src/animation/core-states.json`](../src/animation/core-states.json). `new_pet.py` and the C++ catalog
-read it, and nothing else repeats it. A pet that breaks the contract does not start; Agent Pet logs why
-and shows VPet instead.
+The app never asks for a state by name. It raises **cues**, and each pet decides what plays. The
+vocabulary lives in [`src/animation/cues.json`](../src/animation/cues.json); the C++ catalog,
+`new_pet.py` and `verify_assets.py` read it, and nothing else repeats it.
 
-| State | When | Mode, then |
-| --- | --- | --- |
-| `idle` | nothing is happening | loop, then idle |
-| `starting` | Agent Pet starts | once, then idle |
-| `thinking`, `reading`, `working` | an agent thinks, reads files, runs tools | phased, then idle |
-| `needs_input` | a session needs you | phased, then idle |
-| `out_of_quota` | the agent's usage limit is reached | loop, then idle |
-| `tool_error` | a tool failed | once, then back to what was playing |
-| `turn_finished` | a turn finished | once, then idle |
-| `sleeping` | a long quiet spell | phased, then idle |
-| `dragging` | you drag the pet | phased, then idle |
-| `angry`, `closing`, `closing_angry` | quitting (after being pestered, normally, angrily) | once, then stop |
+A **state cue** plays one state, which must have the cue's playback. Without an entry in the catalog's
+`cues` section it plays its default state, so a pet with VPet's state names needs no mapping. A pet
+whose state cues cannot all play does not start; Agent Pet logs why and shows VPet instead.
+
+| Cue | When | Default state | Mode, then |
+| --- | --- | --- | --- |
+| `idle` | nothing is happening (cannot be remapped) | `idle` | loop, then idle |
+| `waiting` | an agent waits on background work | `idle` | loop, then idle |
+| `thinking`, `reading`, `working` | an agent thinks, reads files, runs tools | same name | phased, then idle |
+| `attention` | a session needs you | `needs_input` | phased, then idle |
+| `exhausted` | the agent's usage limit is reached | `out_of_quota` | loop, then idle |
+| `error` | a tool failed | `tool_error` | once, then back to what was playing |
+| `turn-finished` | a turn finished, when no `celebrate` pool exists | `turn_finished` | once, then idle |
+| `inactive` | every session went quiet | `sleeping` | phased, then idle |
+| `nap` | a long quiet spell while idle | `sleeping` | phased, then idle |
+| `start` | Agent Pet starts | `starting` | once, then idle |
+| `quit` | you quit | `closing` | once, then stop |
+| `annoyed`, `quit-angry` | pestered into leaving: the complaint, then the angry exit | `angry`, `closing_angry` | once, then stop |
+| `drag` | you drag the pet (needs a state no other cue plays) | `dragging` | phased, then idle |
 
 A phased state has three sequences (start, loop, end) and no `loops` count: it ends when the app moves
-on. Art without separate start and end can list the same sequence three times. Everything else in the
-catalog is optional: variants, mood art, reactions, ambient fidgets, touch, moves and activity
-decoration. VPet's catalog and ADRs 0011–0021 show what each does.
+on. Art without separate start and end can list the same sequence three times. Cues may share a state.
 
-This contract is provisional. A planned refactor (#64) replaces it with events that each pet maps to its
-own animations, and will ship a migration for existing catalogs.
+A **reaction cue** draws one state from a weighted pool, and plays nothing when the pet maps none. Each
+state in a pool must end by itself and return to idle (`once`, or `phased` with `loops`).
+
+| Cue | When |
+| --- | --- |
+| `celebrate` | a turn finished (falls back to the `turn-finished` state cue) |
+| `snack`, `milestone` | a treat after a long productive stretch, every hundredth turn |
+| `long-turn`, `friday-evening`, `birthday` | how some finished turns are celebrated instead |
+| `may20`, `birthday`, `late-night` | special days and hours, among the idle fidgets |
+| `monday`, `leave-work`, `sleep` | the configured clock reminders |
+| `eye-break`, `water`, `reminder-done` | wellness reminders, and answering one |
+| `danger`, `konami` | a destructive command starts; the Konami code |
+
+The `cues` section maps both kinds:
+
+```json
+"cues": {
+  "attention": "wave",
+  "celebrate": [{"state": "cheer", "weight": 2}, {"state": "spin", "weight": 1}]
+}
+```
+
+Everything else in the catalog is optional: variants, mood art, ambient fidgets, touch, moves and
+activity decoration. VPet's catalog and ADRs 0011–0021 show what each does; [ADR 0029](adr/0029-cues.md)
+records the cue design.
+
+The catalog's `schema_version` is 2. `python3 scripts/migrate_catalog.py <animations.json>…` brings a
+schema 1 catalog up to date: it moves its `reactions` into `cues` under the new names.
 
 ## Licensing
 

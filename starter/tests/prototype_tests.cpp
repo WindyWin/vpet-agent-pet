@@ -1,7 +1,7 @@
 #include "animation/activity.h"
 #include "desktop/monitor.h"
 #include "desktop/pet_window.h"
-#include "desktop/session_playback.h"
+#include "animation/catalog.h"
 #include "i18n/language.h"
 #include "version.h"
 #include <QApplication>
@@ -50,7 +50,7 @@ QJsonObject fixture(const QString &root) {
         return QJsonObject{{"path", name}, {"duration_ms", 25},
             {"frames", QJsonArray{QJsonObject{{"path", "assets/vpet/vup/" + name + ".png"}, {"duration_ms", 25}}}}};
     };
-    return {{"schema_version", 1}, {"states", QJsonObject{{"idle", QJsonArray{"idle"}}, {"working", QJsonArray{"work"}}}},
+    return {{"schema_version", pet::catalogSchema}, {"states", QJsonObject{{"idle", QJsonArray{"idle"}}, {"working", QJsonArray{"work"}}}},
             {"playback", QJsonObject{{"idle", QJsonObject{{"mode", "loop"}, {"after", "idle"}}},
                                      {"working", QJsonObject{{"mode", "loop"}, {"after", "idle"}}}}},
             {"sequences", QJsonArray{sequence("idle"), sequence("work")}}};
@@ -63,12 +63,12 @@ void writeCatalog(const QString &root, const QJsonObject &catalog) {
 void playOut(pet::Player &player) {
     for (int i = 0; i < 12 && player.state() != "idle"; ++i) finishSequence(player);
 }
-// The reactions that only celebrate or surprise.
+// The states of the reaction cues that only celebrate or surprise.
 QSet<QString> celebrations(pet::Player &player) {
     QSet<QString> reactions;
-    for (const auto *name : {"turn_finished", "snack", "milestone", "long_turn", "friday_evening", "may20", "birthday",
+    for (const auto *name : {"celebrate", "snack", "milestone", "long-turn", "friday-evening", "may20", "birthday",
                              "konami", "danger"})
-        for (const auto &reaction : player.reactions(name)) reactions.insert(reaction.state);
+        for (const auto &reaction : player.pool(name)) reactions.insert(reaction.state);
     return reactions;
 }
 // Every state under one mood, every frame decoded within the size and cache bounds, each state played out.
@@ -148,7 +148,7 @@ private slots:
             QSet<QString> loops;
             for (int i = 0; i < 2; ++i) {
                 player.setRandom([i](int bound) { return i ? bound - 1 : 0; });
-                QCOMPARE(player.reactions("leave_work").first().state, QString("fidget_bubbles"));
+                QCOMPARE(player.pool("leave-work").first().state, QString("fidget_bubbles"));
                 QVERIFY(player.select("fidget_bubbles", true));
                 QCOMPARE(player.sequence(), QString("IDEL/Bubbles/A"));
                 finishSequence(player); loops.insert(player.sequence());
@@ -174,18 +174,21 @@ private slots:
             QVERIFY2(file.open(QIODevice::ReadOnly) && file.size() > 0, path);
         }
     }
-    void sessionAnimationMapping() {
+    void sessionStatesAreCues() {
         pet::Player player;
         const QStringList states{"attention", "exhausted", "error", "turn-finished", "working", "reading", "thinking", "waiting", "idle", "inactive"};
-        QCOMPARE(pet::sessionAnimation("waiting"), QString("idle"));
-        QCOMPARE(pet::sessionAnimation("exhausted"), QString("out_of_quota"));
+        // VPet keeps the default mapping: background waiting looks idle, an exhausted quota has its own loop.
+        QCOMPARE(player.stateFor("waiting"), QString("idle"));
+        QCOMPARE(player.stateFor("exhausted"), QString("out_of_quota"));
+        QCOMPARE(player.stateFor("attention"), QString("needs_input"));
         for (const auto &state : states) {
-            const auto animation = pet::sessionAnimation(state);
-            QVERIFY2(player.select(animation, true), qPrintable(player.error()));
-            QCOMPARE(player.state(), animation);
-            player.beginDrag(); player.select(animation); player.endDrag();
-            QCOMPARE(player.requestedState(), animation);
+            QVERIFY2(pet::findCue(state) && !pet::findCue(state)->reaction, qPrintable(state));
+            QVERIFY2(player.play(state, true), qPrintable(player.error()));
+            QCOMPARE(player.state(), player.stateFor(state)); QVERIFY(player.requested(state));
+            player.beginDrag(); player.play(state); player.endDrag();
+            QCOMPARE(player.requestedState(), player.stateFor(state));
         }
+        QVERIFY(!player.play("snack")); QVERIFY(!player.play("nobody")); // Only state cues play directly.
     }
 
     void playbackUsesBundledTiming() {
@@ -236,7 +239,7 @@ private slots:
         const auto reactions = celebrations(player);
         QCOMPARE(reactions.size(), 10);
         // Late at night the pet yawns more, with a fidget it already has.
-        QCOMPARE(player.reactions("late_night").size(), 1); QVERIFY(player.isFidget(player.reactions("late_night").first().state));
+        QCOMPARE(player.pool("late-night").size(), 1); QVERIFY(player.isFidget(player.pool("late-night").first().state));
         // And the touch reactions: three held presses, two falls and two edges.
         const auto &touch = player.touch();
         QSet<QString> touches{touch.fallLeft, touch.fallRight, touch.edgeLeft, touch.edgeRight};
@@ -1115,12 +1118,16 @@ private slots:
         QSignalSpy counted(&mood, &pet::Mood::counted);
         // "turn_finished" weighs 2, the two cheers 1 each.
         const QList<QPair<int, QString>> expected{{0, "turn_finished"}, {1, "turn_finished"}, {2, "cheer_shining"}, {3, "cheer_shy"}};
-        for (const auto &[draw, state] : expected) { draws.values = {draw}; QCOMPARE(mood.celebrate(), state); }
+        for (const auto &[draw, state] : expected) {
+            draws.values = {draw}; const auto celebration = mood.celebrate();
+            QCOMPARE(celebration.state, state); QCOMPARE(celebration.cue, QString("celebrate"));
+        }
         // Twenty finished turns without a long break earn a snack, eaten by the next celebration.
         for (int i = 0; i < 19; ++i) { mood.finished(now); now += 60000; }
         QCOMPARE(mood.treat(), QString());
         mood.finished(now); QCOMPARE(mood.treat(), QString("snack"));
-        draws.values = {1}; QCOMPARE(mood.celebrate(), QString("snack_thirsty")); QCOMPARE(mood.treat(), QString());
+        draws.values = {1}; const auto snack = mood.celebrate();
+        QCOMPARE(snack.state, QString("snack_thirsty")); QCOMPARE(snack.cue, QString("snack")); QCOMPARE(mood.treat(), QString());
         // A break of more than half an hour starts the count again.
         for (int i = 0; i < 19; ++i) { mood.finished(now); now += 60000; }
         now += pet::Mood::breakMs; mood.finished(now); QCOMPARE(mood.treat(), QString());
@@ -1128,7 +1135,7 @@ private slots:
         QCOMPARE(mood.turns(), 40); QCOMPARE(counted.size(), 40);
         mood.setTurns(98); mood.finished(now); QCOMPARE(mood.treat(), QString());
         mood.finished(now); QCOMPARE(mood.turns(), 100); QCOMPARE(mood.treat(), QString("milestone"));
-        QCOMPARE(mood.celebrate(), QString("milestone")); // A pool of one draws nothing.
+        QCOMPARE(mood.celebrate().state, QString("milestone")); // A pool of one draws nothing.
         QCOMPARE(draws.unexpected, 0);
     }
     void monitorFeedsTheMood() {
@@ -1206,7 +1213,7 @@ private slots:
         auto reacting = base; auto playback = reacting["playback"].toObject();
         playback["working"] = QJsonObject{{"mode", "once"}, {"after", "idle"}}; reacting["playback"] = playback;
         auto reactions = [&](QJsonArray pool, QJsonObject catalog) {
-            catalog["reactions"] = QJsonObject{{"turn_finished", pool}}; return catalog;
+            catalog["cues"] = QJsonObject{{"celebrate", pool}}; return catalog;
         };
         auto reaction = [](QString state, int weight = 1) { return QJsonObject{{"state", state}, {"weight", weight}}; };
         QVERIFY(loads(reactions({reaction("working", 3)}, reacting)));
@@ -1690,11 +1697,11 @@ private slots:
         QCOMPARE(at(2028, 2, 28, 12, 0, "02-29"), QStringList());
         QCOMPARE(at(2028, 2, 29, 12, 0, "02-29"), QStringList{"birthday"});
         // Late night runs from 01:00 to 05:00, Friday evening from 17:00 to midnight.
-        QCOMPARE(at(2026, 10, 7, 0, 59), QStringList()); QCOMPARE(at(2026, 10, 7, 1, 0), QStringList{"late_night"});
-        QCOMPARE(at(2026, 10, 7, 4, 59), QStringList{"late_night"}); QCOMPARE(at(2026, 10, 7, 5, 0), QStringList());
-        QCOMPARE(at(2026, 10, 9, 16, 59), QStringList()); QCOMPARE(at(2026, 10, 9, 17, 0), QStringList{"friday_evening"});
-        QCOMPARE(at(2026, 10, 9, 23, 59), QStringList{"friday_evening"}); QCOMPARE(at(2026, 10, 10, 0, 30), QStringList());
-        QCOMPARE(at(2026, 5, 20, 2, 0, "05-20"), (QStringList{"may20", "birthday", "late_night"}));
+        QCOMPARE(at(2026, 10, 7, 0, 59), QStringList()); QCOMPARE(at(2026, 10, 7, 1, 0), QStringList{"late-night"});
+        QCOMPARE(at(2026, 10, 7, 4, 59), QStringList{"late-night"}); QCOMPARE(at(2026, 10, 7, 5, 0), QStringList());
+        QCOMPARE(at(2026, 10, 9, 16, 59), QStringList()); QCOMPARE(at(2026, 10, 9, 17, 0), QStringList{"friday-evening"});
+        QCOMPARE(at(2026, 10, 9, 23, 59), QStringList{"friday-evening"}); QCOMPARE(at(2026, 10, 10, 0, 30), QStringList());
+        QCOMPARE(at(2026, 5, 20, 2, 0, "05-20"), (QStringList{"may20", "birthday", "late-night"}));
         // A birthday is "MM-dd" of a real date.
         pet::Player player; player.setPaused(true); pet::EasterEggs eggs(player);
         for (const auto *bad : {"13-01", "02-30", "00-10", "2-1", "0101", "aa-bb", "2026-03-14"})
@@ -1712,8 +1719,8 @@ private slots:
         };
         QCOMPARE(due(2026, 10, 5, 5, 59), QStringList()); QCOMPARE(due(2026, 10, 5, 6, 0), QStringList{"monday"});
         QCOMPARE(due(2026, 10, 5, 11, 59), QStringList{"monday"}); QCOMPARE(due(2026, 10, 6, 9, 0), QStringList());
-        QCOMPARE(due(2026, 10, 7, 16, 44), QStringList()); QCOMPARE(due(2026, 10, 7, 16, 45), QStringList{"leave_work"});
-        QCOMPARE(due(2026, 10, 7, 17, 59), QStringList{"leave_work"}); QCOMPARE(due(2026, 10, 7, 18, 0), QStringList());
+        QCOMPARE(due(2026, 10, 7, 16, 44), QStringList()); QCOMPARE(due(2026, 10, 7, 16, 45), QStringList{"leave-work"});
+        QCOMPARE(due(2026, 10, 7, 17, 59), QStringList{"leave-work"}); QCOMPARE(due(2026, 10, 7, 18, 0), QStringList());
         QCOMPARE(due(2026, 10, 10, 16, 45), QStringList()); // Saturday.
         QCOMPARE(due(2026, 10, 10, 21, 59), QStringList()); QCOMPARE(due(2026, 10, 10, 22, 0), QStringList{"sleep"});
         QCOMPARE(due(2026, 10, 7, 23, 59), QStringList{"sleep"}); QCOMPARE(due(2026, 10, 8, 0, 0), QStringList());
@@ -1722,10 +1729,10 @@ private slots:
         QCOMPARE(eggs.reminder(), QString()); // Off since the bedtime check above.
         eggs.setEnabled(true);
         QCOMPARE(eggs.reminder(), QString("monday")); QCOMPARE(eggs.reminder(), QString());
-        local = QDateTime(QDate(2026, 10, 5), QTime(16, 50)); QCOMPARE(eggs.reminder(), QString("leave_work"));
+        local = QDateTime(QDate(2026, 10, 5), QTime(16, 50)); QCOMPARE(eggs.reminder(), QString("leave-work"));
         local = QDateTime(QDate(2026, 10, 5), QTime(22, 0)); QCOMPARE(eggs.reminder(), QString("sleep")); QCOMPARE(eggs.reminder(), QString());
         local = local.addDays(1); QCOMPARE(eggs.reminder(), QString("sleep"));
-        for (const auto *name : {"monday", "leave_work", "sleep"}) QVERIFY(!pet::EasterEggs::reminderNote(name).isEmpty());
+        for (const auto *name : {"monday", "leave-work", "sleep"}) QVERIFY(!pet::EasterEggs::reminderNote(name).isEmpty());
         // The Konami code completes on its last key, also after a false start.
         const QList<int> code{Qt::Key_Up, Qt::Key_Up, Qt::Key_Down, Qt::Key_Down, Qt::Key_Left, Qt::Key_Right,
                               Qt::Key_Left, Qt::Key_Right, Qt::Key_B};
@@ -1793,26 +1800,26 @@ private slots:
         QCOMPARE(eggs.celebration(0), QString()); QCOMPARE(eggs.celebration(60000), QString());
         // A turn of fifteen minutes or more is celebrated bigger: the milestone weighs 2, a dance 1.
         QCOMPARE(eggs.celebration(pet::EasterEggs::longTurnMs - 1), QString());
-        QCOMPARE(eggs.celebration(pet::EasterEggs::longTurnMs), QString("long_turn"));
-        draws.values = {1}; QCOMPARE(mood.celebrate("long_turn"), QString("milestone"));
-        draws.values = {2}; QCOMPARE(mood.celebrate("long_turn"), QString("dance"));
+        QCOMPARE(eggs.celebration(pet::EasterEggs::longTurnMs), QString("long-turn"));
+        draws.values = {1}; QCOMPARE(mood.celebrate("long-turn").state, QString("milestone"));
+        draws.values = {2}; QCOMPARE(mood.celebrate("long-turn").state, QString("dance"));
         // Friday evening dances.
         local = QDateTime(QDate(2026, 10, 9), QTime(17, 0));
-        QCOMPARE(eggs.celebration(0), QString("friday_evening")); QCOMPARE(mood.celebrate("friday_evening"), QString("dance"));
+        QCOMPARE(eggs.celebration(0), QString("friday-evening")); QCOMPARE(mood.celebrate("friday-evening").state, QString("dance"));
         // A birthday celebrates its first finished turn; a long turn still comes first.
         QVERIFY(eggs.setBirthday("10-09"));
-        QCOMPARE(eggs.celebration(pet::EasterEggs::longTurnMs), QString("long_turn"));
-        QCOMPARE(eggs.celebration(0), QString("birthday")); QCOMPARE(eggs.celebration(0), QString("friday_evening"));
-        QCOMPARE(mood.celebrate("birthday"), QString("birthday"));
+        QCOMPARE(eggs.celebration(pet::EasterEggs::longTurnMs), QString("long-turn"));
+        QCOMPARE(eggs.celebration(0), QString("birthday")); QCOMPARE(eggs.celebration(0), QString("friday-evening"));
+        QCOMPARE(mood.celebrate("birthday").state, QString("birthday"));
         // A milestone outranks an occasion, and a snack waits behind one for the next turn.
         mood.setTurns(99); mood.finished(1000); QCOMPARE(mood.treat(), QString("milestone"));
-        QCOMPARE(mood.celebrate("friday_evening"), QString("milestone")); QCOMPARE(mood.treat(), QString());
+        QCOMPARE(mood.celebrate("friday-evening").state, QString("milestone")); QCOMPARE(mood.treat(), QString());
         for (int i = 0; i < pet::Mood::snackTurns && mood.treat().isEmpty(); ++i) mood.finished(2000);
         QCOMPARE(mood.treat(), QString("snack"));
-        QCOMPARE(mood.celebrate("friday_evening"), QString("dance")); QCOMPARE(mood.treat(), QString("snack"));
-        draws.values = {0}; QCOMPARE(mood.celebrate(), QString("snack_hungry")); QCOMPARE(mood.treat(), QString());
+        QCOMPARE(mood.celebrate("friday-evening").state, QString("dance")); QCOMPARE(mood.treat(), QString("snack"));
+        draws.values = {0}; QCOMPARE(mood.celebrate().state, QString("snack_hungry")); QCOMPARE(mood.treat(), QString());
         // A pool the catalog lacks changes nothing, and neither do the eggs when turned off.
-        draws.values = {0}; QCOMPARE(mood.celebrate("nobody"), QString("turn_finished"));
+        draws.values = {0}; QCOMPARE(mood.celebrate("nobody").state, QString("turn_finished"));
         eggs.setEnabled(false); QCOMPARE(eggs.celebration(pet::EasterEggs::longTurnMs), QString());
         QCOMPARE(draws.unexpected, 0);
     }
@@ -1892,11 +1899,11 @@ private slots:
             QTest::mouseClick(&monitor.note(), Qt::LeftButton); QVERIFY(!monitor.note().isVisible());
             // The go-home reminder sums up the day, unless that is turned off.
             local = QDateTime(QDate(2026, 10, 7), QTime(16, 50)); monitor.update(now + 1);
-            QCOMPARE(monitor.note().text(), pet::EasterEggs::reminderNote("leave_work") + "\n" + summary);
+            QCOMPARE(monitor.note().text(), pet::EasterEggs::reminderNote("leave-work") + "\n" + summary);
             QVERIFY(monitor.note().hasDetails());
             window.setRecapEnabled(false); QVERIFY(window.savePreferences());
             local = QDateTime(QDate(2026, 10, 8), QTime(16, 50)); monitor.update(now + 2);
-            QCOMPARE(monitor.note().text(), pet::EasterEggs::reminderNote("leave_work")); QVERIFY(!monitor.note().hasDetails());
+            QCOMPARE(monitor.note().text(), pet::EasterEggs::reminderNote("leave-work")); QVERIFY(!monitor.note().hasDetails());
             monitor.stop(); // Writes the counters now rather than after the short delay.
         }
         QVERIFY(!pet::PreferencesStore(path).load().recap);
@@ -1933,9 +1940,9 @@ private slots:
         QVERIFY(restored.eggs().reminder().isEmpty());
         local.setTime(QTime(16, 45)); QVERIFY(restored.eggs().reminder().isEmpty());
         local.setTime(QTime(19, 29)); QVERIFY(restored.eggs().reminder().isEmpty());
-        local = local.addSecs(60); QCOMPARE(restored.eggs().reminder(), QString("leave_work"));
+        local = local.addSecs(60); QCOMPARE(restored.eggs().reminder(), QString("leave-work"));
         QVERIFY(restored.eggs().reminder().isEmpty());
-        QVERIFY(pet::EasterEggs::reminderNote("leave_work", schedule).contains("19:30"));
+        QVERIFY(pet::EasterEggs::reminderNote("leave-work", schedule).contains("19:30"));
         local.setTime(QTime(23, 14)); QVERIFY(restored.eggs().reminder().isEmpty());
         local = local.addSecs(60); QCOMPARE(restored.eggs().reminder(), QString("sleep"));
         QVERIFY(pet::EasterEggs::reminderNote("sleep", schedule).contains("23:15"));

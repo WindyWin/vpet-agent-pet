@@ -28,10 +28,10 @@ include(GNUInstallDirs)
 # Release builds pass -DAGENT_PET_REVISION=<git commit>; local builds say "local".
 set(AGENT_PET_REVISION "local" CACHE STRING "Source revision shown in About")
 configure_file(src/version.h.in "${CMAKE_CURRENT_BINARY_DIR}/generated/version.h" @ONLY)
-# The core state contract (docs/pets.md), embedded so the catalog needs no resource file to read it.
-file(READ src/animation/core-states.json PET_CORE_STATES)
-configure_file(src/animation/core_states.h.in "${CMAKE_CURRENT_BINARY_DIR}/generated/core_states.h" @ONLY)
-set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS src/animation/core-states.json)
+# The cue vocabulary (docs/pets.md), embedded so the catalog needs no resource file to read it.
+file(READ src/animation/cues.json PET_CUES)
+configure_file(src/animation/cues.h.in "${CMAKE_CURRENT_BINARY_DIR}/generated/cues.h" @ONLY)
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS src/animation/cues.json)
 
 # Capture/codecs link independently of focus coordination and native activation.
 qt_add_library(pet_host_capture STATIC src/hosts/context.cpp src/hosts/registry.cpp

@@ -1,6 +1,6 @@
 # 0028. Pet packs
 
-- Status: Accepted
+- Status: Accepted; its core state contract is superseded by [0029](0029-cues.md)
 - Date: 2026-10-07
 
 ## Context

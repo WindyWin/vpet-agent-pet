@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
-"""Start a new pet folder that plays one idle sequence for every state the app needs.
+"""Start a new pet folder that plays one idle sequence for every cue the app raises.
 
     python3 scripts/new_pet.py cat --name "Cat" --author "Jane Doe" --terms CAT-ARTWORK-TERMS.md --idle ~/art/cat/idle
 
 The idle folder holds PNG frames named with their index and duration in milliseconds, like VPet's
 (_000_125.png). They are copied to assets/<id>/idle/, and pet.json, manifest.json and animations.json
-are written. Every state in src/animation/core-states.json plays that idle sequence with the playback
-the app expects, so the pet runs at once. The Settings tile is the first idle frame unless --preview
+are written. The catalog has one state per playback shape that src/animation/cues.json asks for (idle, busy,
+hello, oops and bye, plus held for dragging), each playing that idle sequence, and maps every state cue to the
+state of its shape, so
+the pet runs at once. The Settings tile is the first idle frame unless --preview
 names another PNG; it must be at most 512 x 512 pixels. The art's terms must already be in licenses/.
-Then add sequences with scripts/add_sequences.py --pet <id>, map them in animations.json and run
+Then add sequences with scripts/add_sequences.py --pet <id>, give states and cues their own art in
+animations.json and run
 scripts/verify_assets.py; docs/pets.md walks through it.
 """
 import argparse
@@ -22,7 +25,13 @@ from add_sequences import frames_of
 from verify_assets import RESERVED_TEXT, png_size, windows_reserved
 
 ROOT = Path(__file__).resolve().parents[1]
-CONTRACT = ROOT / 'src/animation/core-states.json'
+CUES = ROOT / 'src/animation/cues.json'
+CATALOG_SCHEMA = 2
+# The minimal catalog's state for each playback shape a state cue asks for, as (mode, after), in catalog order.
+# Dragging is held apart from the rest, so it gets a state of its own.
+SHAPES = {('loop', 'idle'): 'idle', ('phased', 'idle'): 'busy', ('once', 'idle'): 'hello', ('once', 'previous'): 'oops',
+          ('once', 'stop'): 'bye'}
+OWN = {'drag': 'held'}
 FILE_NAME = re.compile(r'[A-Za-z0-9_-][A-Za-z0-9._-]*')
 
 
@@ -76,16 +85,27 @@ def main():
     if args.url:
         pet['url'] = args.url
     pet.update({'terms': args.terms, 'preview': 'preview.png'})
+    shapes, cues = {}, {}
+    for cue, shape in json.loads(CUES.read_text(encoding='utf-8'))['cues'].items():
+        if shape['kind'] != 'state':
+            continue
+        key = (shape['mode'], shape['after'])
+        state = OWN.get(cue, SHAPES[key])
+        shapes[state] = key
+        if state != shape['state']:
+            cues[cue] = state
     states, playback = {}, {}
-    for state, shape in json.loads(CONTRACT.read_text(encoding='utf-8'))['states'].items():
-        states[state] = ['idle'] * (3 if shape['mode'] == 'phased' else 1)
-        playback[state] = {'mode': shape['mode'], 'after': shape['after']}
+    for state in sorted(shapes, key=lambda name: [*SHAPES.values(), *OWN.values()].index(name)):
+        mode, after = shapes[state]
+        states[state] = ['idle'] * (3 if mode == 'phased' else 1)
+        playback[state] = {'mode': mode, 'after': after}
     write_json(folder / 'pet.json', pet)
     write_json(folder / 'manifest.json', {'schema_version': 1, 'file_count': len(files),
                                            'total_bytes': sum(f['bytes'] for f in files), 'files': files})
-    write_json(folder / 'animations.json', {'schema_version': 1, 'asset_root': f'assets/{args.id}', 'states': states,
-                                             'sequences': [sequence], 'playback': playback})
-    print(f'Created {folder}: its {len(frames)} idle frames play every core state. '
+    write_json(folder / 'animations.json', {'schema_version': CATALOG_SCHEMA, 'asset_root': f'assets/{args.id}',
+                                             'states': states, 'sequences': [sequence], 'playback': playback,
+                                             'cues': cues})
+    print(f'Created {folder}: its {len(frames)} idle frames play every cue. '
           f'Add sequences with scripts/add_sequences.py --pet {args.id}, then run scripts/verify_assets.py.')
 
 

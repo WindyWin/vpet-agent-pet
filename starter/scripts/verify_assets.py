@@ -6,8 +6,8 @@
     python3 scripts/verify_assets.py --assets tests/fixtures/pets --licenses .
 
 A pet is a folder with a pet.json (docs/pets.md). These are file-level checks plus the catalog's
-playback rules. The C++ Catalog checks the catalog again at load, and the core state contract
-(src/animation/core-states.json) is checked only there, by the `pets` test suite.
+playback rules. The C++ Catalog checks the catalog again at load, and whether every state cue of
+src/animation/cues.json can play is checked only there, by the `pets` test suite.
 """
 import argparse
 import hashlib
@@ -26,6 +26,8 @@ UNSAFE_TEXT = f'{" ".join(sorted(UNSAFE))} or control characters'
 WINDOWS_DEVICES = {'CON', 'PRN', 'AUX', 'NUL', *(f'{port}{digit}' for port in ('COM', 'LPT') for digit in range(10))}
 RESERVED_TEXT = 'a name Windows reserves (CON, PRN, AUX, NUL, COM0-9 or LPT0-9, with any extension, or ending in ".")'
 PET_KEYS = {'schema_version', 'id', 'name', 'author', 'url', 'terms', 'preview'}
+CATALOG_SCHEMA = 2  # scripts/migrate_catalog.py brings older catalogs up to it.
+CUES = json.loads((ROOT / 'src/animation/cues.json').read_text(encoding='utf-8'))['cues']
 METADATA = {'pet.json', 'animations.json', 'manifest.json', 'available-animations.json'}
 
 
@@ -144,7 +146,9 @@ def check_files(folder, assets, pet, animations, errors):
 
 
 def check_catalog(animations, errors):
-    """Playback rules: timing, states, variants, moods, reactions, fidgets, touch, moves and activity."""
+    """Playback rules: timing, states, variants, moods, cues, fidgets, touch, moves and activity."""
+    if animations.get('schema_version') != CATALOG_SCHEMA:
+        errors.append(f'Catalog schema_version must be {CATALOG_SCHEMA}; run scripts/migrate_catalog.py')
     for sequence in animations['sequences']:
         if not sequence['frames'] or sequence['duration_ms'] != sum(frame['duration_ms'] for frame in sequence['frames']):
             errors.append(f'Invalid sequence timing: {sequence["path"]}')
@@ -218,13 +222,21 @@ def check_catalog(animations, errors):
         one_shot = policy.get('mode') == 'once' or (policy.get('mode') == 'phased' and count(policy.get('loops')))
         return state in animations['states'] and state != 'idle' and one_shot and policy.get('after') == 'idle'
 
-    # Reactions are weighted pools of one-shot states, such as the ways to celebrate a finished turn.
-    for name, pool in animations.get('reactions', {}).items():
-        if not pool:
-            errors.append(f'Empty reaction: {name}')
-        for reaction in pool:
-            if not ends_itself(reaction.get('state')) or not count(reaction.get('weight')):
-                errors.append(f'Reaction must end by itself, return to idle and have a weight: {name}/{reaction.get("state")}')
+    # Cues: a state cue names the state it plays instead of its default; a reaction cue names a weighted pool of
+    # one-shot states, such as the ways to celebrate a finished turn.
+    for name, value in animations.get('cues', {}).items():
+        cue = CUES.get(name)
+        if cue is None:
+            errors.append(f'Unknown cue: {name}')
+        elif cue['kind'] == 'state':
+            if not isinstance(value, str) or value not in animations['states'] or (cue.get('fixed') and value != cue['state']):
+                errors.append(f'Invalid state for cue {name}: {value}')
+        elif not isinstance(value, list) or not value:
+            errors.append(f'Empty pool for cue: {name}')
+        else:
+            for reaction in value:
+                if not ends_itself(reaction.get('state')) or not count(reaction.get('weight')):
+                    errors.append(f'Reaction must end by itself, return to idle and have a weight: {name}/{reaction.get("state")}')
 
     # Ambient fidgets are one-shot states played at random while the pet idles.
     ambient = animations.get('ambient', {})

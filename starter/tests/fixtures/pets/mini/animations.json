@@ -1,59 +1,27 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "asset_root": "assets/mini",
   "states": {
     "idle": [
       "idle"
     ],
-    "starting": [
-      "idle"
-    ],
-    "turn_finished": [
-      "idle"
-    ],
-    "tool_error": [
-      "idle"
-    ],
-    "closing": [
-      "idle"
-    ],
-    "closing_angry": [
-      "idle"
-    ],
-    "angry": [
-      "idle"
-    ],
-    "thinking": [
+    "busy": [
       "idle",
       "idle",
       "idle"
     ],
-    "reading": [
-      "idle",
-      "idle",
+    "hello": [
       "idle"
     ],
-    "working": [
-      "idle",
-      "idle",
+    "oops": [
       "idle"
     ],
-    "needs_input": [
-      "idle",
-      "idle",
+    "bye": [
       "idle"
     ],
-    "sleeping": [
+    "held": [
       "idle",
       "idle",
-      "idle"
-    ],
-    "dragging": [
-      "idle",
-      "idle",
-      "idle"
-    ],
-    "out_of_quota": [
       "idle"
     ]
   },
@@ -79,57 +47,41 @@
       "mode": "loop",
       "after": "idle"
     },
-    "starting": {
+    "busy": {
+      "mode": "phased",
+      "after": "idle"
+    },
+    "hello": {
       "mode": "once",
       "after": "idle"
     },
-    "turn_finished": {
-      "mode": "once",
-      "after": "idle"
-    },
-    "tool_error": {
+    "oops": {
       "mode": "once",
       "after": "previous"
     },
-    "closing": {
+    "bye": {
       "mode": "once",
       "after": "stop"
     },
-    "closing_angry": {
-      "mode": "once",
-      "after": "stop"
-    },
-    "angry": {
-      "mode": "once",
-      "after": "stop"
-    },
-    "thinking": {
+    "held": {
       "mode": "phased",
-      "after": "idle"
-    },
-    "reading": {
-      "mode": "phased",
-      "after": "idle"
-    },
-    "working": {
-      "mode": "phased",
-      "after": "idle"
-    },
-    "needs_input": {
-      "mode": "phased",
-      "after": "idle"
-    },
-    "sleeping": {
-      "mode": "phased",
-      "after": "idle"
-    },
-    "dragging": {
-      "mode": "phased",
-      "after": "idle"
-    },
-    "out_of_quota": {
-      "mode": "loop",
       "after": "idle"
     }
+  },
+  "cues": {
+    "thinking": "busy",
+    "reading": "busy",
+    "working": "busy",
+    "attention": "busy",
+    "exhausted": "idle",
+    "error": "oops",
+    "turn-finished": "hello",
+    "inactive": "busy",
+    "nap": "busy",
+    "start": "hello",
+    "quit": "bye",
+    "annoyed": "bye",
+    "quit-angry": "bye",
+    "drag": "held"
   }
 }

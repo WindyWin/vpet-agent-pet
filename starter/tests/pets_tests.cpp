@@ -29,17 +29,18 @@
 #include <utility>
 
 namespace {
-// A catalog for pet "test" in which every core state plays one idle frame with its contract shape.
+// A catalog for pet "test" in which every state cue's default state plays one idle frame with the cue's shape.
 QJsonObject contractCatalog() {
     const QJsonObject frame{{"path", "assets/test/idle/_000_100.png"}, {"duration_ms", 100}};
     QJsonObject states, playback;
-    for (const auto &core : pet::coreStates()) {
+    for (const auto &cue : pet::cues()) {
+        if (cue.reaction) continue;
         QJsonArray sequences;
-        for (int phase = 0; phase < (core.mode == "phased" ? 3 : 1); ++phase) sequences.append("idle");
-        states[core.name] = sequences;
-        playback[core.name] = QJsonObject{{"mode", core.mode}, {"after", core.after}};
+        for (int phase = 0; phase < (cue.mode == "phased" ? 3 : 1); ++phase) sequences.append("idle");
+        states[cue.state] = sequences;
+        playback[cue.state] = QJsonObject{{"mode", cue.mode}, {"after", cue.after}};
     }
-    return {{"schema_version", 1}, {"asset_root", "assets/test"}, {"states", states}, {"playback", playback},
+    return {{"schema_version", pet::catalogSchema}, {"asset_root", "assets/test"}, {"states", states}, {"playback", playback},
             {"sequences", QJsonArray{QJsonObject{{"path", "idle"}, {"duration_ms", 100}, {"frames", QJsonArray{frame}}}}}};
 }
 // Replaces one state's sequences and playback.
@@ -111,19 +112,27 @@ private slots:
         qputenv("CODEX_HOME", QFile::encodeName(clients.path() + "/codex"));
         pet::EasterEggs::defaultClock = [] { return QDateTime(QDate(2026, 10, 7), QTime(12, 0)); };
     }
-    void contractComesFromItsDataFile() {
-        const auto &states = pet::coreStates();
-        QCOMPARE(states.size(), 14);
-        auto shape = [&](const QString &name) {
-            for (const auto &state : states) if (state.name == name) return state.mode + "/" + state.after;
-            return QString();
+    void cuesComeFromTheirDataFile() {
+        const auto &cues = pet::cues();
+        QCOMPARE(cues.size(), 32);
+        QVERIFY(std::is_sorted(cues.begin(), cues.end(), [](const pet::Cue &a, const pet::Cue &b) { return a.name < b.name; }));
+        auto shape = [](const QString &name) {
+            const auto *cue = pet::findCue(name);
+            return cue ? cue->state + ":" + cue->mode + "/" + cue->after : QString();
         };
-        QCOMPARE(shape("idle"), QString("loop/idle"));
-        QCOMPARE(shape("starting"), QString("once/idle"));
-        QCOMPARE(shape("tool_error"), QString("once/previous"));
-        QCOMPARE(shape("closing_angry"), QString("once/stop"));
-        QCOMPARE(shape("dragging"), QString("phased/idle"));
-        QCOMPARE(shape("out_of_quota"), QString("loop/idle"));
+        QCOMPARE(shape("idle"), QString("idle:loop/idle")); QVERIFY(pet::findCue("idle")->fixed);
+        QCOMPARE(shape("waiting"), QString("idle:loop/idle"));
+        QCOMPARE(shape("start"), QString("starting:once/idle"));
+        QCOMPARE(shape("error"), QString("tool_error:once/previous"));
+        QCOMPARE(shape("quit-angry"), QString("closing_angry:once/stop"));
+        QCOMPARE(shape("drag"), QString("dragging:phased/idle"));
+        QCOMPARE(shape("exhausted"), QString("out_of_quota:loop/idle"));
+        QVERIFY(pet::findCue("celebrate")->reaction); QVERIFY(pet::findCue("danger")->reaction);
+        QVERIFY(!pet::findCue("nobody")); QVERIFY(!pet::findCue("turn_finished")); // Cue names use hyphens.
+        // Every session aggregate is a state cue of the same name.
+        for (const auto *state : {"attention", "exhausted", "error", "turn-finished", "working", "reading", "thinking",
+                                  "waiting", "idle", "inactive"})
+            QVERIFY2(pet::findCue(state) && !pet::findCue(state)->reaction, state);
     }
     void vpetMeetsTheContract() {
         QString error;
@@ -142,14 +151,51 @@ private slots:
         auto playback = missing["playback"].toObject(); playback.remove("sleeping"); missing["playback"] = playback;
         const auto partial = load(missing);
         QVERIFY(partial.valid()); // Still a catalog a Player can play...
-        QCOMPARE(partial.contractError(), QString("Missing core state: sleeping")); // ...but not a pet the app can run.
+        QCOMPARE(partial.contractError(), QString("Cue inactive plays missing state sleeping")); // ...but not a pet the app can run.
         QCOMPARE(load(withState(catalog, "tool_error", {"idle"}, {{"mode", "once"}, {"after", "idle"}})).contractError(),
-                 QString("Core state tool_error must play once, then previous"));
+                 QString("Cue error must play once, then previous; state tool_error does not"));
         QVERIFY(load(withState(catalog, "thinking", {"idle"}, {{"mode", "once"}, {"after", "idle"}}))
                     .contractError().contains("thinking"));
-        // A phased core state ends when the app moves on, never after a count of loops.
+        // A phased state cue ends when the app moves on, never after a count of loops.
         QVERIFY(load(withState(catalog, "reading", {"idle", "idle", "idle"}, {{"mode", "phased"}, {"after", "idle"}, {"loops", 2}}))
                     .contractError().contains("reading"));
+    }
+    void catalogsMapCues() {
+        auto catalog = withState(contractCatalog(), "busy", {"idle", "idle", "idle"}, {{"mode", "phased"}, {"after", "idle"}});
+        catalog = withState(catalog, "cheer", {"idle"}, {{"mode", "once"}, {"after", "idle"}});
+        auto mapped = [&](const QJsonObject &cues) { auto copy = catalog; copy["cues"] = cues; return copy; };
+        QString error;
+        // A state cue plays the state the catalog names; the others keep their defaults.
+        auto loaded = load(mapped({{"attention", "busy"}, {"celebrate", QJsonArray{QJsonObject{{"state", "cheer"}, {"weight", 2}}}}}), &error);
+        QVERIFY2(loaded.valid(), qPrintable(error));
+        QCOMPARE(loaded.stateFor("attention"), QString("busy")); QCOMPARE(loaded.stateFor("thinking"), QString("thinking"));
+        QCOMPARE(loaded.stateFor("celebrate"), QString()); QCOMPARE(loaded.stateFor("nobody"), QString());
+        QCOMPARE(loaded.pools.value("celebrate").size(), 1); QCOMPARE(loaded.pools.value("celebrate").first().weight, 2);
+        QVERIFY(!loaded.pools.contains("snack")); // An unmapped reaction cue plays nothing.
+        QCOMPARE(loaded.contractError(), QString());
+        // Once mapped away, a default state need not exist.
+        auto states = catalog["states"].toObject(); states.remove("needs_input"); catalog["states"] = states;
+        auto playback = catalog["playback"].toObject(); playback.remove("needs_input"); catalog["playback"] = playback;
+        QCOMPARE(load(mapped({{"attention", "busy"}})).contractError(), QString());
+        QCOMPARE(load(catalog).contractError(), QString("Cue attention plays missing state needs_input"));
+        // The mapped state must have the cue's shape, and the drag state is the drag cue's alone.
+        QCOMPARE(load(mapped({{"attention", "cheer"}})).contractError(),
+                 QString("Cue attention must play phased, then idle; state cheer does not"));
+        QCOMPARE(load(mapped({{"attention", "busy"}, {"drag", "busy"}})).contractError(), QString("Cue attention shares the drag state busy"));
+        // Load refuses names outside the vocabulary, unknown states, a fixed cue moved, and pools that never end.
+        QVERIFY(!load(mapped({{"turn_finished", "cheer"}}), &error).valid()); QCOMPARE(error, QString("Unknown cue: turn_finished"));
+        QVERIFY(!load(mapped({{"attention", "nobody"}}), &error).valid()); QCOMPARE(error, QString("Invalid state for cue attention"));
+        QVERIFY(!load(mapped({{"attention", QJsonArray{"busy"}}})).valid());
+        QVERIFY(!load(mapped({{"idle", "busy"}})).valid()); QVERIFY(load(mapped({{"idle", "idle"}})).valid());
+        QVERIFY(!load(mapped({{"danger", QJsonArray{}}})).valid());
+        QVERIFY(!load(mapped({{"danger", QJsonArray{QJsonObject{{"state", "busy"}, {"weight", 1}}}}})).valid());
+        QVERIFY(!load(mapped({{"danger", "cheer"}})).valid());
+        auto notObject = catalog; notObject["cues"] = QJsonArray{}; QVERIFY(!load(notObject).valid());
+        // A catalog from before cues asks to be migrated.
+        auto old = contractCatalog(); old["schema_version"] = 1;
+        QVERIFY(!load(old, &error).valid());
+        QCOMPARE(error, QString("Animation catalog schema 1 is out of date: run scripts/migrate_catalog.py."));
+        old["schema_version"] = 3; QVERIFY(!load(old, &error).valid()); QCOMPARE(error, QString("Invalid animation catalog format."));
     }
     void framesStayInsideThePet() {
         QString error;
@@ -282,20 +328,35 @@ private slots:
         pet::PetLibrary library(FIXTURE_INDEX, "/broken");
         QString error;
         QVERIFY(!library.activate("broken", &error));
-        QCOMPARE(error, QString("Missing core state: sleeping"));
+        QCOMPARE(error, QString("Cue inactive plays missing state sleeping"));
         QVERIFY(!QFile::exists(":/broken/assets/broken/idle/_000_100.png"));
         QVERIFY(!library.activate("nosuch", &error)); QVERIFY(!error.isEmpty());
         QVERIFY2(library.activate("mini", &error), qPrintable(error));
     }
-    void miniPlaysEveryCoreState() {
-        pet::PetLibrary library(FIXTURE_INDEX, "/mini");
-        QString error; QVERIFY2(library.activate("mini", &error), qPrintable(error));
-        pet::Player player(nullptr, library.catalog()); player.setPaused(true);
-        QVERIFY2(player.valid(), qPrintable(player.error()));
-        for (const auto &core : pet::coreStates()) {
-            QVERIFY(player.select(core.name, true));
-            QVERIFY2(!player.pixmap().isNull(), qPrintable(core.name + ": " + player.error()));
-            QVERIFY2(player.error().isEmpty(), qPrintable(core.name + ": " + player.error()));
+    void everyCuePlaysOnEveryPet() {
+        // mini is what new_pet.py scaffolds (one state per playback shape, every cue mapped onto them); duo keeps the
+        // default states; VPet is the bundled pet.
+        for (const auto &[index, id] : {std::pair{QString(FIXTURE_INDEX), QString("mini")}, std::pair{QString(FIXTURE_INDEX), QString("duo")},
+                                        std::pair{QString(PET_INDEX), QString("vpet")}}) {
+            pet::PetLibrary library(index, "/cues-" + id);
+            QString error; QVERIFY2(library.activate(id, &error), qPrintable(id + ": " + error));
+            pet::Player player(nullptr, library.catalog()); player.setPaused(true);
+            QVERIFY2(player.valid(), qPrintable(player.error()));
+            for (const auto &cue : pet::cues()) {
+                const auto what = qPrintable(id + " " + cue.name + ": " + player.error());
+                if (cue.reaction) {
+                    for (const auto &reaction : player.pool(cue.name)) QVERIFY2(player.select(reaction.state, true), what);
+                    continue;
+                }
+                QVERIFY2(player.play(cue.name, true), what);
+                QCOMPARE(player.state(), player.stateFor(cue.name));
+                QVERIFY2(!player.pixmap().isNull() && player.error().isEmpty(), what);
+            }
+            if (id == "mini") {
+                QCOMPARE(player.stateFor("attention"), QString("busy")); QCOMPARE(player.stateFor("drag"), QString("held"));
+                player.play("working", true); player.beginDrag(); QVERIFY(player.isDragging()); QCOMPARE(player.state(), QString("held"));
+                player.endDrag(); QCOMPARE(player.requestedState(), QString("busy"));
+            }
         }
     }
     void bundledPetsMeetTheContract() {

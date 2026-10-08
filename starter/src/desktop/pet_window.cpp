@@ -92,14 +92,14 @@ PetWindow::PetWindow(QWidget *parent, const QString &path, bool persist)
     pet_ = preferences.pet;
     connect(&player_, &Player::changed, this, qOverload<>(&PetWindow::update));
     connect(&player_, &Player::completed, this, [this](const QString &state) {
-        if (!quitting_ || state != quitState_) return;
+        if (!quitting_ || state != player_.stateFor(quitCue_)) return;
         // Leave time to read the pet's complaint before its departure animation.
-        if (state == "angry") quitTimer_.start(2250);
+        if (quitCue_ == "annoyed") quitTimer_.start(2250);
         else qApp->quit();
     });
     quitTimer_.setSingleShot(true);
     connect(&quitTimer_, &QTimer::timeout, this, [this] {
-        if (quitState_ == "angry") playQuitAnimation("closing_angry");
+        if (quitCue_ == "annoyed") playQuitAnimation("quit-angry");
         else qApp->quit();
     });
     touchClock_.start();
@@ -182,7 +182,7 @@ PetWindow::PetWindow(QWidget *parent, const QString &path, bool persist)
     connect(&slide_, &QVariantAnimation::finished, this, [this] {
         // Arrived: hide only if the pet is still idle and nobody has picked it up meanwhile.
         const auto &touch = player_.touch();
-        if (dragging_ || quitting_ || flight_ || player_.requestedState() != "idle") return;
+        if (dragging_ || quitting_ || flight_ || !player_.requested("idle")) return;
         const auto hide = slideEdge_ == touch::Edge::Left ? touch.edgeLeft : slideEdge_ == touch::Edge::Right ? touch.edgeRight : QString();
         if (!hide.isEmpty()) player_.select(hide);
     });
@@ -190,7 +190,7 @@ PetWindow::PetWindow(QWidget *parent, const QString &path, bool persist)
     connect(&saveTimer_, &QTimer::timeout, this, &PetWindow::savePreferences);
     new QShortcut(QKeySequence(Qt::Key_Escape), this, [this] { requestQuit(); });
     new QShortcut(QKeySequence(Qt::Key_Space), this, [this] {
-        if (!quitting_) player_.select(player_.state() == "idle" ? "thinking" : "idle");
+        if (!quitting_) player_.play(player_.state() == player_.stateFor("idle") ? "thinking" : "idle");
     });
     new QShortcut(QKeySequence(Qt::Key_Menu), this, [this] { menu_.popup(mapToGlobal(rect().center())); });
     new QShortcut(QKeySequence("Ctrl+,"), this, [this] { showSettings(); });
@@ -200,7 +200,7 @@ PetWindow::PetWindow(QWidget *parent, const QString &path, bool persist)
     move(preferences.hasPosition ? preferences.position : QPoint(-1000000, -1000000));
     constrainPosition();
     ready_ = true;
-    player_.select("starting", true);
+    player_.play("start", true);
 }
 PetWindow::~PetWindow() { savePreferences(); }
 void PetWindow::changeEvent(QEvent *event) {
@@ -364,7 +364,7 @@ void PetWindow::setTouchEnabled(bool enabled) {
 void PetWindow::setWanderEnabled(bool enabled) {
     if (enabled == wanderEnabled_) return;
     wanderEnabled_ = enabled;
-    if (!enabled && walking()) player_.select("idle", true); // Stops where it is.
+    if (!enabled && walking()) player_.play("idle", true); // Stops where it is.
     if (ready_) saveTimer_.start();
 }
 void PetWindow::setRecapEnabled(bool enabled) {
@@ -403,7 +403,7 @@ void PetWindow::recover() {
     if (quitting_) return;
     slide_.stop();
     applyPresence(presence_.setUserHidden(false));
-    if (hiding() || walking()) player_.select("idle", true); // Out from behind the edge, or off a walk, to be placed in plain view.
+    if (hiding() || walking()) player_.play("idle", true); // Out from behind the edge, or off a walk, to be placed in plain view.
     setClickThrough(false);
     move(Preferences::visiblePosition({-1000000, -1000000}, size(), screenAreas()));
     show(); raise();
@@ -432,7 +432,7 @@ void PetWindow::applyPresence(Presence::Action action) {
     if (hidden) {
         endDrag();
         if (clickThrough_) setClickThrough(false);
-        if (walking()) player_.select("idle", true); // Nobody would see where it went.
+        if (walking()) player_.play("idle", true); // Nobody would see where it went.
         hide();
         player_.setPaused(true); // Nobody sees it; sessions keep driving its state.
     } else {
@@ -557,12 +557,12 @@ void PetWindow::beginQuit(const QString &remark) {
     if (petHidden()) { qApp->quit(); return; } // No one would see the closing animation.
     player_.setPaused(false);
     if (!remark.isEmpty()) quitNote_.say(remark, figure(), screenAreas());
-    playQuitAnimation(remark.isEmpty() ? "closing" : "angry");
+    playQuitAnimation(remark.isEmpty() ? "quit" : "annoyed");
 }
-void PetWindow::playQuitAnimation(const QString &state) {
-    quitState_ = state;
-    if (!player_.select(state, true) || player_.stopped()) {
-        if (state == "angry") playQuitAnimation("closing_angry");
+void PetWindow::playQuitAnimation(const QString &cue) {
+    quitCue_ = cue;
+    if (!player_.play(cue, true) || player_.stopped()) {
+        if (cue == "annoyed") playQuitAnimation("quit-angry");
         else qApp->quit();
         return;
     }
@@ -621,7 +621,7 @@ void PetWindow::letGo(QPointF velocity) {
     // Only an idle pet hides; one with work to show stays in view.
     const auto edge = touchEnabled_ ? touch::pushedEdge(QRect(nativePos(), size()), screenAreas()) : touch::Edge::None;
     const auto hide = edge == touch::Edge::Left ? touch.edgeLeft : edge == touch::Edge::Right ? touch.edgeRight : QString();
-    if (!hide.isEmpty() && player_.requestedState() == "idle") { slideToEdge(edge); return; }
+    if (!hide.isEmpty() && player_.requested("idle")) { slideToEdge(edge); return; }
     constrainPosition();
 }
 void PetWindow::slideToEdge(touch::Edge edge) {
