@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "asset_root": "assets/vpet/vup",
   "states": {
     "idle": [
@@ -6465,8 +6465,8 @@
       ]
     }
   },
-  "reactions": {
-    "turn_finished": [
+  "cues": {
+    "celebrate": [
       {
         "state": "turn_finished",
         "weight": 2
@@ -6496,7 +6496,7 @@
         "weight": 1
       }
     ],
-    "long_turn": [
+    "long-turn": [
       {
         "state": "milestone",
         "weight": 2
@@ -6506,7 +6506,7 @@
         "weight": 1
       }
     ],
-    "friday_evening": [
+    "friday-evening": [
       {
         "state": "dance",
         "weight": 1
@@ -6524,7 +6524,7 @@
         "weight": 1
       }
     ],
-    "late_night": [
+    "late-night": [
       {
         "state": "fidget_yawn",
         "weight": 1
@@ -6540,7 +6540,7 @@
         "weight": 1
       }
     ],
-    "leave_work": [
+    "leave-work": [
       {
         "state": "fidget_bubbles",
         "weight": 1
@@ -6568,7 +6568,7 @@
         "weight": 1
       }
     ],
-    "eye_break": [
+    "eye-break": [
       {
         "state": "fidget_yawn",
         "weight": 1
@@ -6580,7 +6580,7 @@
         "weight": 1
       }
     ],
-    "reminder_done": [
+    "reminder-done": [
       {
         "state": "cheer_shy",
         "weight": 1

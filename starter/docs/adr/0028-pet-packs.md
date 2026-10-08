@@ -1,6 +1,6 @@
 # 0028. Pet packs
 
-- Status: Accepted
+- Status: Accepted; its core state contract is superseded by [0029](0029-cues.md)
 - Date: 2026-10-07
 
 ## Context
@@ -43,7 +43,7 @@ frame folder's resource path ([0010](0010-application-updates.md), [0014](0014-a
   release. The catalog format may too, given a migration of the catalogs in the repository. The
   planned event refactor (#64) will replace `core-states.json` that way.
 - Every install still carries every bundled pet's packs. On-demand download of non-bundled pets, using
-  the hash tree, is part 2 of #62.
+  the hash tree, is part 2 of #62 ([0030](0030-on-demand-pets.md)).
 
 ## Validation
 

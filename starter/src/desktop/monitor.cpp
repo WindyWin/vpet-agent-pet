@@ -1,6 +1,5 @@
 #include "monitor.h"
 #include "ipc/session_store.h"
-#include "session_playback.h"
 #include "i18n/contexts.h"
 #include <QApplication>
 #include <QCursor>
@@ -49,8 +48,9 @@ Monitor::Monitor(PetWindow &window, std::shared_ptr<hosts::FocusService> focus)
     });
 }
 QString Monitor::bedtimeNote() { return Pet::tr("It's getting late. Maybe finish up and get some sleep?"); }
-// States that interrupt whatever the pet is doing and keep reminders and surprises away.
-static bool urgent(const QString &state) { return state == "attention" || state == "exhausted" || state == "error"; }
+// Session states are cues (src/animation/cues.json): each aggregate state asks the pet to show the cue of that name.
+// These interrupt whatever the pet is doing and keep reminders and surprises away.
+static bool urgent(const QString &cue) { return cue == "attention" || cue == "exhausted" || cue == "error"; }
 // Subagents fold into their parent, as in the running-sessions list.
 static int topLevelSessions(const Sessions &sessions) {
     const auto &records = sessions.records();
@@ -121,28 +121,25 @@ void Monitor::update(qint64 now) {
     window_.updatePresence(sessions_.records().size(), now); // May hide, show or quit the pet.
     window_.mood().refresh(now);
     remindWellness(now);
-    if (!active_ || !observed_ || window_.player().requestedState() == "closing") return;
-    const auto state = sessions_.aggregate(now);
-    const auto animation = sessionAnimation(state);
-    // A fidget, an ambient nap or a reaction to the user, such as hiding at a screen edge, is how an idle pet
-    // looks; leave it until something real happens. A reaction counts from when it is requested, because
-    // the drag's own end plays first.
-    const bool resting = window_.ambient().resting() || window_.player().isTouch(window_.player().requestedState());
-    const auto showing = animation == "idle" && resting ? animation : window_.player().requestedState();
+    if (!active_ || !observed_ || window_.quitting()) return;
+    const auto cue = sessions_.aggregate(now);
+    auto &player = window_.player();
+    const auto animation = player.stateFor(cue);
+    // A fidget, an ambient nap or a reaction to the user is how an idle pet looks; leave it until something real
+    // happens. A reaction counts from when it is requested, because the drag's own end plays first.
+    const auto showing = animation == player.stateFor("idle") && window_.resting() ? animation : player.requestedState();
     // A surprise, such as a startled jump or a dance, plays out unless a session needs the user.
-    if (window_.eggs().surprising() && !urgent(state)) return;
+    if (window_.eggs().surprising() && !urgent(cue)) return;
     // While the user holds the pet, or it is falling, the player keeps the latest request for afterwards.
-    if (state != lastAggregate_ || (!window_.player().held() && state != "error" && state != "turn-finished" &&
-                                    showing != animation)) {
+    if (cue != lastAggregate_ || (!player.held() && cue != "error" && cue != "turn-finished" && showing != animation)) {
         // A turn that just finished is celebrated in one of several ways, or with a treat when one is due.
-        const bool celebrate = state == "turn-finished" && lastAggregate_ != state;
-        const auto chosen = celebrate ? window_.mood().celebrate(window_.eggs().celebration(lastTurnMs_)) : animation;
-        window_.player().select(chosen, urgent(state));
-        // A snack that played already says "have a drink"; the water reminder need not repeat it.
-        const auto snacks = window_.player().reactions("snack");
-        if (celebrate && std::any_of(snacks.begin(), snacks.end(), [&](const auto &r) { return r.state == chosen; }))
-            window_.wellness().given("water", now);
-        lastAggregate_ = state;
+        if (cue == "turn-finished" && lastAggregate_ != cue) {
+            const auto celebration = window_.mood().celebrate(window_.eggs().celebration(lastTurnMs_));
+            player.select(celebration.state, urgent(cue));
+            // A snack that played already says "have a drink"; the water reminder need not repeat it.
+            if (celebration.cue == "snack") window_.wellness().given("water", now);
+        } else player.play(cue, urgent(cue));
+        lastAggregate_ = cue;
     }
 }
 void Monitor::say(const QString &text, const QString &details, int ms) {
@@ -167,7 +164,7 @@ void Monitor::remindWellness(qint64 now) {
     if (Wellness::quietAt(window_.eggs().now())) { wellness.given(due, now); return; }
     if (!calm(now)) return;
     wellness.given(due, now); // Ignored, it fades and comes back after the next interval.
-    window_.eggs().surprise(due == "eyes" ? "eye_break" : "water", true);
+    window_.eggs().surprise(due == "eyes" ? "eye-break" : "water", true);
     say(Wellness::note(due));
     reminder_ = due;
 }
@@ -175,7 +172,7 @@ void Monitor::remindWellness(qint64 now) {
 void Monitor::answered() {
     if (restLeft_ > 0) { rest_.stop(); restLeft_ = 0; return; } // Clicking the countdown away ends it.
     const auto reminder = std::exchange(reminder_, QString());
-    if (reminder == "water") window_.eggs().surprise("reminder_done", true);
+    if (reminder == "water") window_.eggs().surprise("reminder-done", true);
     if (reminder != "eyes" || !active_) return;
     restLeft_ = Wellness::eyeRestSeconds + 1;
     rest();
@@ -194,7 +191,7 @@ void Monitor::rest() {
         return;
     }
     rest_.stop();
-    window_.eggs().surprise("reminder_done", true);
+    window_.eggs().surprise("reminder-done", true);
     say(Pet::tr("Nice! Your eyes thank you."), {}, 4000);
 }
 void Monitor::showRecap() {
@@ -213,7 +210,7 @@ void Monitor::remind() {
     if (window_.muted()) return;
     // The go-home nudge sums up the day, when there was agent work to sum up.
     const auto today = recap_.day(QDate::currentDate());
-    if (reminder == "leave_work" && window_.recapEnabled() && today.turns)
+    if (reminder == "leave-work" && window_.recapEnabled() && today.turns)
         say(EasterEggs::reminderNote(reminder, window_.eggs().reminderSchedule()) + "\n" + Recap::summary(today), Recap::breakdown(today));
     else say(EasterEggs::reminderNote(reminder, window_.eggs().reminderSchedule()));
 }

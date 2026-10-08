@@ -1,11 +1,12 @@
 #include "catalog.h"
-#include "core_states.h"
+#include "cues.h"
 #include <QDir>
 #include <QFile>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QRegularExpression>
+#include <algorithm>
 #include <tuple>
 
 namespace pet {
@@ -32,25 +33,41 @@ bool validPetId(const QString &id) {
     static const QRegularExpression pattern(QRegularExpression::anchoredPattern("[a-z0-9-]{1,32}"));
     return pattern.match(id).hasMatch();
 }
-const QVector<CoreState> &coreStates() {
-    static const QVector<CoreState> states = [] {
-        QVector<CoreState> parsed;
-        const auto contract = QJsonDocument::fromJson(QByteArray(coreStatesJson)).object()["states"].toObject();
-        for (auto it = contract.begin(); it != contract.end(); ++it) {
-            const auto shape = it.value().toObject();
-            parsed.append({it.key(), shape["mode"].toString(), shape["after"].toString()});
+const QVector<Cue> &cues() {
+    static const QVector<Cue> vocabulary = [] {
+        QVector<Cue> parsed;
+        const auto entries = QJsonDocument::fromJson(QByteArray(cuesJson)).object()["cues"].toObject();
+        for (auto it = entries.begin(); it != entries.end(); ++it) {
+            const auto cue = it.value().toObject();
+            parsed.append({it.key(), cue["kind"].toString() == "reaction", cue["state"].toString(), cue["mode"].toString(),
+                           cue["after"].toString(), cue["fixed"].toBool()});
         }
         return parsed;
     }();
-    return states;
+    return vocabulary;
+}
+const Cue *findCue(const QString &name) {
+    const auto &vocabulary = cues();
+    const auto found = std::lower_bound(vocabulary.begin(), vocabulary.end(), name,
+                                        [](const Cue &cue, const QString &key) { return cue.name < key; });
+    return found != vocabulary.end() && found->name == name ? &*found : nullptr;
+}
+QString Catalog::stateFor(const QString &cue) const {
+    if (const auto mapped = cueStates.constFind(cue); mapped != cueStates.constEnd()) return *mapped;
+    const auto *known = findCue(cue);
+    return known && !known->reaction ? known->state : QString();
 }
 QString Catalog::contractError() const {
-    for (const auto &core : coreStates()) {
-        const auto found = animations.constFind(core.name);
-        if (found == animations.constEnd()) return "Missing core state: " + core.name;
-        // A phased core state ends when the app moves on, so it takes no `loops`.
-        if (found->mode != core.mode || found->after != core.after || found->loops != 0)
-            return QString("Core state %1 must play %2, then %3").arg(core.name, core.mode, core.after);
+    for (const auto &cue : cues()) {
+        if (cue.reaction) continue;
+        const auto state = stateFor(cue.name);
+        const auto found = animations.constFind(state);
+        if (found == animations.constEnd()) return QString("Cue %1 plays missing state %2").arg(cue.name, state);
+        // A phased state cue ends when the app moves on, so it takes no `loops`.
+        if (found->mode != cue.mode || found->after != cue.after || found->loops != 0)
+            return QString("Cue %1 must play %2, then %3; state %4 does not").arg(cue.name, cue.mode, cue.after, state);
+        // The player holds the drag state apart: nothing resumes into it, so no other cue may share it.
+        if (cue.name != "drag" && state == stateFor("drag")) return QString("Cue %1 shares the drag state %2").arg(cue.name, state);
     }
     return {};
 }
@@ -66,8 +83,11 @@ Catalog Catalog::load(const QString &root, const QString &pet, QString *error) {
         return invalid("Animation catalog is missing or too large.");
     QJsonParseError parse;
     const auto document = QJsonDocument::fromJson(file.readAll(), &parse).object();
-    if (parse.error != QJsonParseError::NoError || document["schema_version"].toInt() != 1)
-        return invalid("Invalid animation catalog format.");
+    if (parse.error != QJsonParseError::NoError) return invalid("Invalid animation catalog format.");
+    if (const int schema = document["schema_version"].toInt(); schema != catalogSchema)
+        return invalid(schema >= 1 && schema < catalogSchema
+                           ? QString("Animation catalog schema %1 is out of date: run scripts/migrate_catalog.py.").arg(schema)
+                           : QString("Invalid animation catalog format."));
     // Frames lie under `asset_root` (the pet's folder by default) and in subfolders of the pet's folder:
     // each subfolder builds into one sequence pack, and the folder's root holds only metadata.
     const auto assetRoot = document.contains("asset_root") ? document["asset_root"].toString() : folder;
@@ -170,17 +190,29 @@ Catalog Catalog::load(const QString &root, const QString &pet, QString *error) {
         return state != "idle" && found != catalog.animations.constEnd() && found->after == "idle"
             && (found->mode == "once" || (found->mode == "phased" && found->loops > 0));
     };
-    const auto reactions = document["reactions"].toObject();
-    for (auto it = reactions.begin(); it != reactions.end(); ++it) {
-        if (it.value().toArray().isEmpty()) return invalid("Empty reaction: " + it.key());
+    // Cues: a state cue names the state it plays instead of its default; a reaction cue names its pool.
+    if (document.contains("cues") && !document["cues"].isObject()) return invalid("Invalid cues section.");
+    const auto mapping = document["cues"].toObject();
+    for (auto it = mapping.begin(); it != mapping.end(); ++it) {
+        const auto *cue = findCue(it.key());
+        if (!cue) return invalid("Unknown cue: " + it.key());
+        if (!cue->reaction) {
+            const auto state = it.value().toString();
+            if (!it.value().isString() || !catalog.animations.contains(state) || (cue->fixed && state != cue->state))
+                return invalid("Invalid state for cue " + it.key());
+            catalog.cueStates.insert(it.key(), state);
+            continue;
+        }
+        if (it.value().toArray().isEmpty()) return invalid("Empty pool for cue " + it.key());
         for (const auto &value : it.value().toArray()) {
             const auto object = value.toObject();
             const Reaction reaction{object["state"].toString(), object["weight"].toInt(0)};
             if (!endsItself(reaction.state) || reaction.weight < 1 || reaction.weight > maxWeight)
-                return invalid("Invalid reaction for " + it.key() + ": " + reaction.state);
-            catalog.reactions[it.key()].append(reaction);
+                return invalid("Invalid reaction for cue " + it.key() + ": " + reaction.state);
+            catalog.pools[it.key()].append(reaction);
         }
     }
+    const auto dragging = catalog.stateFor("drag");
     const auto ambient = document["ambient"].toObject();
     if (ambient.contains("sleep_after_s")) {
         catalog.sleepAfterS = ambient["sleep_after_s"].toInt(0);
@@ -202,11 +234,11 @@ Catalog Catalog::load(const QString &root, const QString &pet, QString *error) {
         const auto touch = document["touch"].toObject();
         catalog.touch.scale = touch["scale"].toInt(0);
         if (catalog.touch.scale < 10 || catalog.touch.scale > 10000) return invalid("Invalid touch scale.");
-        auto heldState = [&catalog](const QJsonValue &value, QString &state) {
+        auto heldState = [&catalog, &dragging](const QJsonValue &value, QString &state) {
             state = value.toString();
             const auto found = catalog.animations.constFind(state);
             if (found == catalog.animations.constEnd() || found->mode != "phased" || found->loops > 0
-                || catalog.fidgetStates.contains(state) || state == "idle" || state == "dragging") return false;
+                || catalog.fidgetStates.contains(state) || state == "idle" || state == dragging) return false;
             catalog.touchStates.insert(state);
             return true;
         };
@@ -284,7 +316,7 @@ Catalog Catalog::load(const QString &root, const QString &pet, QString *error) {
         auto decorated = [&](const QString &state) {
             const auto found = catalog.animations.constFind(state);
             return found != catalog.animations.constEnd() && found->mode == "phased" && found->loops == 0 && state != "idle"
-                && state != "dragging" && !catalog.fidgetStates.contains(state) && !catalog.touchStates.contains(state);
+                && state != dragging && !catalog.fidgetStates.contains(state) && !catalog.touchStates.contains(state);
         };
         auto pool = [&](const QJsonValue &value, QVector<ActivityChoice> &choices, bool styled) {
             if (!value.isArray() || value.toArray().isEmpty()) return false;

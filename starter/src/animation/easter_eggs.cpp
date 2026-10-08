@@ -27,11 +27,11 @@ QStringList EasterEggs::occasionsAt(const QDateTime &local, const QString &birth
         if (month == 2 && day == 29 && !QDate::isLeapYear(date.year())) day = 28;
         if (date.month() == month && date.day() == day) occasions << "birthday";
     }
-    if (hour >= lateNightFrom && hour < lateNightUntil) occasions << "late_night";
-    if (date.dayOfWeek() == Qt::Friday && hour >= fridayEveningFrom) occasions << "friday_evening";
+    if (hour >= lateNightFrom && hour < lateNightUntil) occasions << "late-night";
+    if (date.dayOfWeek() == Qt::Friday && hour >= fridayEveningFrom) occasions << "friday-evening";
     return occasions;
 }
-QString EasterEggs::draw(const QString &pool) { return drawReaction(player_.reactions(pool), random_); }
+QString EasterEggs::draw(const QString &cue) { return drawReaction(player_.pool(cue), random_); }
 QString EasterEggs::fidget() {
     if (!enabled_) return {};
     const auto now = clock_();
@@ -39,31 +39,31 @@ QString EasterEggs::fidget() {
     if (greetedOn_ != now.date()) { greetedOn_ = now.date(); greeted_.clear(); }
     QStringList days;
     for (const QString occasion : {"birthday", "may20"})
-        if (occasions.contains(occasion) && !player_.reactions(occasion).isEmpty()) days << occasion;
+        if (occasions.contains(occasion) && !player_.pool(occasion).isEmpty()) days << occasion;
     // The first fidgets of the day greet with each occasion in turn; afterwards they come up now and then.
     for (const auto &occasion : days)
         if (!greeted_.contains(occasion)) { greeted_.insert(occasion); return draw(occasion); }
     for (const auto &occasion : days)
         if (random_(occasionOneIn) == 0) return draw(occasion);
-    if (occasions.contains("late_night") && !player_.reactions("late_night").isEmpty() && random_(lateNightOneIn) == 0)
-        return draw("late_night");
+    if (occasions.contains("late-night") && !player_.pool("late-night").isEmpty() && random_(lateNightOneIn) == 0)
+        return draw("late-night");
     return {};
 }
 QString EasterEggs::celebration(qint64 turnMs) {
     if (!enabled_) return {};
-    auto has = [this](const QString &pool) { return !player_.reactions(pool).isEmpty(); };
-    if (turnMs >= longTurnMs && has("long_turn")) return "long_turn";
+    auto has = [this](const QString &cue) { return !player_.pool(cue).isEmpty(); };
+    if (turnMs >= longTurnMs && has("long-turn")) return "long-turn";
     const auto now = clock_();
     const auto occasions = occasionsAt(now, birthday_);
     if (occasions.contains("birthday") && has("birthday") && cheeredOn_ != now.date()) {
         cheeredOn_ = now.date(); return "birthday";
     }
-    if (occasions.contains("friday_evening") && has("friday_evening")) return "friday_evening";
+    if (occasions.contains("friday-evening") && has("friday-evening")) return "friday-evening";
     return {};
 }
-bool EasterEggs::surprise(const QString &pool, bool evenWhenOff) {
+bool EasterEggs::surprise(const QString &cue, bool evenWhenOff) {
     if ((!enabled_ && !evenWhenOff) || player_.held() || player_.stopped()) return false;
-    const auto state = draw(pool);
+    const auto state = draw(cue);
     if (state.isEmpty()) return false;
     surprise_ = state; // Before selecting: entering it must not count as something else showing.
     surpriseUntil_ = clock_().toMSecsSinceEpoch() + surpriseMs;
@@ -75,7 +75,7 @@ bool EasterEggs::surprising() const {
 }
 bool EasterEggs::bedtime() {
     const auto now = clock_();
-    if (!enabled_ || bedtimeOn_ == now.date() || !occasionsAt(now, {}).contains("late_night")) return false;
+    if (!enabled_ || bedtimeOn_ == now.date() || !occasionsAt(now, {}).contains("late-night")) return false;
     bedtimeOn_ = now.date();
     return true;
 }
@@ -87,13 +87,13 @@ QStringList EasterEggs::remindersAt(const QDateTime &local, const ReminderSchedu
     const int monday = minuteOfDay(schedule.monday), leave = minuteOfDay(schedule.leaveWork);
     // Keep the original reminder windows, shifted with the configured start and ending at midnight.
     if (day == Qt::Monday && minutes >= monday && minutes < monday + 6 * 60) due << "monday";
-    if (day <= Qt::Friday && minutes >= leave && minutes < leave + 75) due << "leave_work";
+    if (day <= Qt::Friday && minutes >= leave && minutes < leave + 75) due << "leave-work";
     if (minutes >= minuteOfDay(schedule.sleep)) due << "sleep";
     return due;
 }
 QString EasterEggs::reminderNote(const QString &reminder, const ReminderSchedule &schedule) {
     if (reminder == "monday") return Pet::tr("Monday again... I'm so tired. Let's take it slow today.");
-    if (reminder == "leave_work") return Pet::tr("It's %1. Time to wrap up and get ready to head home!").arg(schedule.leaveWork.toString("HH:mm"));
+    if (reminder == "leave-work") return Pet::tr("It's %1. Time to wrap up and get ready to head home!").arg(schedule.leaveWork.toString("HH:mm"));
     if (reminder == "sleep") return Pet::tr("It's %1. Time to put everything down and go to sleep!").arg(schedule.sleep.toString("HH:mm"));
     return {};
 }

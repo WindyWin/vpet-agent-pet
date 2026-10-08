@@ -35,6 +35,8 @@ the order the decisions were made. For a map of the code, start with the
 | [0026](0026-background-waiting.md) | Background-job waiting from Claude Stop | 2026-10-07 |
 | [0027](0027-update-overall-progress.md) | One overall progress bar for updates | 2026-10-07 |
 | [0028](0028-pet-packs.md) | Pet packs: selectable pet characters | 2026-10-07 |
+| [0029](0029-cues.md) | Cues: events decoupled from how a pet shows them | 2026-10-08 |
+| [0030](0030-on-demand-pets.md) | On-demand pets: verified downloads of pets that are not bundled | 2026-10-08 |
 
 ## Writing a record
 

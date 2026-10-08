@@ -8,17 +8,17 @@
 #include <functional>
 
 namespace pet {
-// Surprises tied to the calendar, the clock and a few rare events. Each one plays a reaction pool from
-// the catalog, so a catalog without that pool skips it:
+// Surprises tied to the calendar, the clock and a few rare events. Each one is a reaction cue that the pet maps
+// to a pool of states, so a pet without that pool skips it:
 //   may20, birthday  on that day the first ambient fidget greets with it, and later ones now and then
-//   late_night       from 01:00 to 05:00, extra yawning among the fidgets and a bedtime note once a night
-//   friday_evening   from Friday 17:00, how a finished turn is celebrated
-//   long_turn        a turn that ran for `longTurnMs` or more is celebrated bigger
+//   late-night       from 01:00 to 05:00, extra yawning among the fidgets and a bedtime note once a night
+//   friday-evening   from Friday 17:00, how a finished turn is celebrated
+//   long-turn        a turn that ran for `longTurnMs` or more is celebrated bigger
 //   birthday         also celebrates the first finished turn of the birthday
 //   danger           a hook saw a destructive shell command start
 //   konami           the Konami code typed while the pet has focus
 //   monday           configured Monday time: the pet is tired and down about the week ahead (once a day)
-//   leave_work       configured weekday time (default 16:45): time to get ready to go home (once a day)
+//   leave-work       configured weekday time (default 16:45): time to get ready to go home (once a day)
 //   sleep            configured daily time (default 22:00): time to go to sleep (once a day)
 // Local time comes from a replaceable clock, so tests can visit any date.
 class EasterEggs : public QObject {
@@ -38,21 +38,21 @@ public:
     // "MM-dd", or empty for none; anything else is refused.
     bool setBirthday(const QString &monthDay);
     QString birthday() const { return birthday_; }
-    // Which of "may20", "birthday", "late_night" and "friday_evening" hold at this local time. A
+    // Which of "may20", "birthday", "late-night" and "friday-evening" hold at this local time. A
     // February 29 birthday is kept on February 28 in other years.
     static QStringList occasionsAt(const QDateTime &local, const QString &birthday);
     QStringList occasions() const { return occasionsAt(clock_(), birthday_); }
     // A state for the ambient scheduler to play instead of an ordinary fidget, or empty.
     QString fidget();
-    // The reaction pool to celebrate a finished turn of `turnMs` with (0 when unknown), or empty.
+    // The reaction cue to celebrate a finished turn of `turnMs` with (0 when unknown), or empty.
     QString celebration(qint64 turnMs);
-    // Plays a pool now, such as "danger" or "konami". It plays out unless a session needs the user.
+    // Plays a reaction cue now, such as "danger" or "konami". It plays out unless a session needs the user.
     // False when skipped: turned off (unless `evenWhenOff`, for reminders the user chose elsewhere),
-    // no such pool, or the pet is held or stopped.
-    bool surprise(const QString &pool, bool evenWhenOff = false);
+    // no pool for the cue, or the pet is held or stopped.
+    bool surprise(const QString &cue, bool evenWhenOff = false);
     bool surprising() const; // A surprise is still what the pet shows.
     bool bedtime(); // True once a night, the first time it is asked late at night.
-    // Which of "monday", "leave_work" and "sleep" are due at this local time, whether or not already given.
+    // Which of "monday", "leave-work" and "sleep" are due at this local time, whether or not already given.
     static QStringList remindersAt(const QDateTime &local, const ReminderSchedule &schedule = {});
     void setReminderSchedule(const ReminderSchedule &schedule) {
         if (schedule.monday.isValid() && schedule.leaveWork.isValid() && schedule.sleep.isValid()) schedule_ = schedule;
@@ -69,7 +69,7 @@ public:
     // Replaceable for tests. A pool of one draws nothing; see `fidget` for the other draws.
     void setRandom(Random random) { random_ = random ? std::move(random) : systemRandom(); }
 private:
-    QString draw(const QString &pool);
+    QString draw(const QString &cue);
     Player &player_;
     Random random_ = systemRandom();
     std::function<QDateTime()> clock_ = defaultClock;
