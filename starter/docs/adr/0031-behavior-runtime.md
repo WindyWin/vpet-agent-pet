@@ -39,8 +39,9 @@ reminder when it was chosen, whether or not it played.
   pet idles and end with activity. One-shots end on completion, interruption, missing art or a timeout
   (15 s; 10 s for shutdown).
 - **Waiting is bounded:** at most four one-shots, one per identity, ordered by rank and then submission;
-  each expires, and a waiting celebration is dropped when the activity moves on. Resubmitting an identity
-  that waits or shows is a duplicate and restarts nothing.
+  each expires (checked whenever waiting work could start, not only on a tick), and a waiting celebration
+  is dropped when the activity moves on. Resubmitting an identity that waits or shows is a duplicate and
+  restarts nothing.
 - **Feedback is correlated.** Every request carries an instance number; a report about any other
   instance is ignored, so a late completion never ends its replacement. If presentation leaves the
   activity on its own (a developer selection, a phased state ending), the next tick shows it again.
@@ -52,16 +53,18 @@ reminder when it was chosen, whether or not it played.
   - What it reports: entry starts a request; its end, or a state ending by itself, completes it; any
     other state entered interrupts it; a missing pool is unavailable at once.
   - Two new `Player` signals feed it. `heldChanged` makes the runtime's `handled` context follow drags,
-    petting and falls. `finishing()`, with `completed` now also emitted when a phased state ends by
-    itself, tells a natural end from an interruption.
+    petting and falls; it comes before the held state's entry, so what waited behind a grabbed reaction
+    keeps waiting. `finishing()`, with `completed` now also emitted when a phased state ends by itself,
+    tells a natural end from an interruption.
   - `annoyed` is one request: the complaint, a 2.25 s pause, then `quit-angry`.
   - A request for `idle` leaves the pet's own idle decoration (a fidget, a walk, an edge) playing.
 - **Outcomes, not animation names, drive bookkeeping.**
   - A reminder's note shows when the runtime admits it, so art and note come together. When the art is
     missing, the note shows alone.
   - Wellness intervals and clock reminders count as given on admission; quiet hours stay with the
-    wellness schedule.
-  - A treat the runtime refused or dropped returns to `Mood` for the next turn (`Mood::keep`).
+    wellness schedule. Each update withdraws reminders no longer due before anything can admit them.
+  - A treat the runtime refused or dropped returns to `Mood` for the next turn (`Mood::keep`), and the
+    birthday cheer counts as given only once it starts playing.
   - The snack's `water` effect counts only once the snack starts playing.
 - `Sessions` keeps ranking sessions; the runtime receives the aggregate as one intent. Alerts, the bubble
   and the tray keep their own delivery. The developer States menu, Space, the preview dialog and `--state`
@@ -91,7 +94,7 @@ reminder when it was chosen, whether or not it played.
 - Ubuntu 24.04, Qt 6.4.2 (the CI's Qt 6.5.3 could not be downloaded in that environment, so the version
   check and one `QDataStream::Qt_6_5` use were relaxed locally, not in the tree), GCC 13, CMake 3.28:
   `ctest --test-dir build` passed all 15 tests.
-  - The new `behavior` suite (46 functions, 52 cases) drives the runtime with a hand-set clock and a fake
+  - The new `behavior` suite (47 functions, 53 cases) drives the runtime with a hand-set clock and a fake
     presentation. It covers attention versus surprise, activity changes during handling, equal-rank ties,
     expiry, deduplication, bounded waiting, moments, missing optional art, stale feedback, timeouts,
     reminder admission and shutdown failure.
@@ -101,5 +104,10 @@ reminder when it was chosen, whether or not it played.
   - Every existing `Monitor`, `PetWindow`, `Ambient`, `EasterEggs` and `Mood` test still passes. Three
     were adapted: standalone `Ambient` and `EasterEggs` need a `Stage`, a surprise times out on the
     runtime's tick, and a clock reminder waits for the previous note to close.
+  - Review follow-up (same day): grabbing the pet during a surprise no longer starts a reminder waiting
+    behind it, a waiting intent past its deadline never starts on a release or completion, a reminder turned
+    off while it waits never shows, and the birthday cheer is not lost when its celebration is dropped. The
+    first three each have a test (`stagePresentsTheRuntime`, `waitingIntentsExpireBeforeAnyTick`,
+    `monitorWithdrawsTurnedOffReminders`) that fails without its fix.
 - Open: macOS and Windows CI runs; a manual pass of the acceptance checklist in
   [0008](0008-window-behavior.md#manual-acceptance-checklist) on a desktop.

@@ -105,8 +105,16 @@ void Runtime::finish() {
     if (finished) finished();
 }
 
+void Runtime::expire() {
+    if (waiting_.isEmpty()) return;
+    const auto now = clock_();
+    for (int i = int(waiting_.size()) - 1; i >= 0; --i)
+        if (waiting_[i].intent.expiresAt <= now) tell(waiting_.takeAt(i).intent, Outcome::Expired);
+}
+
 void Runtime::resolve(bool returning) {
     if (closing_) return; // Shutdown presents itself and nothing comes after it.
+    expire(); // Whatever calls for a resolve, past its deadline is too late.
     // The first waiting one-shot that may run now, by rank and then by submission order.
     std::stable_sort(waiting_.begin(), waiting_.end(), [](const Entry &a, const Entry &b) {
         return rank(a.intent.policy) != rank(b.intent.policy) ? rank(a.intent.policy) < rank(b.intent.policy)
@@ -253,8 +261,7 @@ void Runtime::report(quint64 instance, Feedback feedback) {
 
 void Runtime::tick() {
     const auto now = clock_();
-    for (int i = int(waiting_.size()) - 1; i >= 0; --i)
-        if (waiting_[i].intent.expiresAt <= now) tell(waiting_.takeAt(i).intent, Outcome::Expired);
+    expire();
     if (showing_ && showing_->requestedAt >= 0
         && now - showing_->requestedAt >= (showing_->intent.policy == Policy::Shutdown ? shutdownTimeoutMs : oneShotTimeoutMs)) {
         end(Outcome::TimedOut);

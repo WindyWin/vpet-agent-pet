@@ -125,6 +125,7 @@ void Monitor::update(qint64 now) {
     window_.updatePresence(sessions_.records().size(), now); // May hide, show or quit the pet.
     if (!active_) return;
     window_.mood().refresh(now);
+    withdrawReminders(now); // Before the context and the tick, which can start waiting work.
     syncBehavior(now);
     auto &runtime = window_.stage().runtime();
     runtime.tick();
@@ -171,6 +172,7 @@ void Monitor::outcome(const behavior::Intent &intent, behavior::Outcome outcome)
     using behavior::Outcome;
     if (!active_) return;
     if (outcome == Outcome::Started && intent.effects.contains("water")) window_.wellness().given("water", now_);
+    if (outcome == Outcome::Started && intent.source == "mood" && intent.cue == "birthday") window_.eggs().cheered();
     if (intent.source == "mood" && (outcome == Outcome::Dropped || outcome == Outcome::Expired)) window_.mood().keep(intent.cue);
     if (outcome != Outcome::Admitted) return;
     if (intent.source == "wellness") {
@@ -187,16 +189,23 @@ void Monitor::outcome(const behavior::Intent &intent, behavior::Outcome outcome)
         else say(note);
     }
 }
+// A reminder that is no longer due (given, taken some other way, turned off, a break, quiet hours) stops waiting.
+void Monitor::withdrawReminders(qint64 now) {
+    auto &runtime = window_.stage().runtime();
+    const auto clock = window_.eggs().dueReminder();
+    for (const auto *reminder : clockReminders) if (clock != reminder) runtime.withdraw("clock", reminder);
+    auto wellness = window_.wellness().due(now); // Empty behind a locked screen: locking reset both timers.
+    if (Wellness::quietAt(window_.eggs().now())) wellness.clear();
+    for (const auto *reminder : wellnessReminders) if (wellness != reminder) runtime.withdraw("wellness", reminder);
+}
 // An eye break or a sip of water, once its stretch of active time is up. A due reminder waits for calm; in
 // quiet hours it is let go, so the morning does not start with one.
 void Monitor::remindWellness(qint64 now) {
     if (!active_) return; // The presence update may have just quit.
     auto &wellness = window_.wellness();
     auto &runtime = window_.stage().runtime();
-    auto due = wellness.due(now); // Empty behind a locked screen: locking reset both timers.
+    auto due = wellness.due(now);
     if (!due.isEmpty() && Wellness::quietAt(window_.eggs().now())) { wellness.given(due, now); due.clear(); }
-    // A reminder that is no longer due (taken some other way, turned off, a break) stops waiting.
-    for (const auto *reminder : wellnessReminders) if (due != reminder) runtime.withdraw("wellness", reminder);
     if (due.isEmpty() || (locked && locked())) return;
     using namespace behavior;
     runtime.submit({"wellness", due, due == "eyes" ? "eye-break" : "water", Policy::Reminder, Lifetime::OneShot,
@@ -240,7 +249,6 @@ void Monitor::showRecap() {
 void Monitor::remind() {
     auto &runtime = window_.stage().runtime();
     const auto due = window_.eggs().dueReminder();
-    for (const auto *reminder : clockReminders) if (due != reminder) runtime.withdraw("clock", reminder);
     if (due.isEmpty()) return;
     using namespace behavior;
     runtime.submit({"clock", due, due, Policy::Reminder, Lifetime::OneShot, runtime.now() + reminderWaitMs});

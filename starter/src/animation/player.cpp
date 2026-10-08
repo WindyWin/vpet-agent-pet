@@ -202,8 +202,9 @@ void Player::hold(const QString &state) {
     if (!held_) holdResume_ = resumeTarget();
     pending_.clear();
     held_ = true;
-    enter(state);
+    // Before the entry, which ends whatever showed: nothing waiting may start in its place while held.
     if (!was) emit heldChanged(true);
+    enter(state);
 }
 void Player::release() {
     if (!held_) return;

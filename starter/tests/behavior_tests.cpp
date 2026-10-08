@@ -260,6 +260,24 @@ private slots:
         QCOMPARE(rig.requests.size(), requests);
         QCOMPARE(rig.runtime.currentCue(), QString("turn-finished"));
     }
+    void waitingIntentsExpireBeforeAnyTick() {
+        // A reaction ending, or the pet let go, just after the deadline does not start what waited too long.
+        Rig rig;
+        rig.runtime.submit(activity("idle"));
+        rig.runtime.submit(danger());
+        rig.play();
+        rig.runtime.submit(oneShot("clock", "monday", Policy::Reminder, rig.now + 5000));
+        rig.now += 5000;
+        rig.answer(Feedback::Completed);
+        QCOMPARE(rig.history("clock/monday"), QString("expired"));
+        QCOMPARE(rig.runtime.currentCue(), QString("idle"));
+        rig.change([](Context &c) { c.handled = true; });
+        rig.runtime.submit(oneShot("clock", "sleep", Policy::Reminder, rig.now + 5000));
+        rig.now += 5000;
+        rig.change([](Context &c) { c.handled = false; });
+        QCOMPARE(rig.history("clock/sleep"), QString("expired"));
+        QVERIFY(!rig.runtime.showing());
+    }
 
     void waitingIsBounded() {
         Rig rig;

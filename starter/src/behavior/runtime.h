@@ -172,6 +172,7 @@ private:
     void admit(Entry entry);             // Takes presentation, interrupting the one-shot showing.
     void request(Entry &entry, bool interrupt);
     void end(Outcome outcome);           // Ends the showing one-shot and gives presentation back.
+    void expire();                        // Drops waiting work past its deadline.
     void resolve(bool returning = false); // Admits waiting work, else shows the rest or the activity.
     void finish();
     std::function<qint64()> clock_;

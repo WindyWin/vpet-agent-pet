@@ -1781,8 +1781,15 @@ private slots:
         // A reaction cue the pet has no pool for is unavailable and holds nothing up.
         heard.clear(); runtime.submit({"eggs", "nobody", "nobody", Policy::Surprise});
         QCOMPARE(heard, (QStringList{"nobody admitted", "nobody unavailable"})); QVERIFY(!runtime.showing());
-        // Holding the pet is the runtime's `handled`: nothing new shows until it is let go.
+        // Holding the pet is the runtime's `handled`: nothing new shows until it is let go. Grabbed during a
+        // surprise, the pet keeps what waits behind it waiting, rather than starting it under the hold.
+        stage.update([](Context &c) { c.present = true; }); // So a reminder is free to show.
+        heard.clear(); runtime.submit({"eggs", "konami", "konami", Policy::Surprise});
+        QCOMPARE(runtime.submit({"wellness", "eyes", "eye-break", Policy::Reminder, Lifetime::OneShot, runtime.now() + 60000}),
+                 Submission::Deferred);
         player.beginDrag(); QVERIFY(runtime.context().handled);
+        QCOMPARE(heard, (QStringList{"konami admitted", "konami started", "konami interrupted"})); QCOMPARE(runtime.deferred(), 1);
+        runtime.withdraw("wellness", "eyes");
         QCOMPARE(runtime.submit({"eggs", "konami", "konami", Policy::Surprise}), Submission::Rejected);
         runtime.submit({"session", "activity", "reading", Policy::Activity, Lifetime::Persistent});
         QCOMPARE(player.state(), player.stateFor("drag"));
@@ -1864,7 +1871,8 @@ private slots:
         // A birthday celebrates its first finished turn; a long turn still comes first.
         QVERIFY(eggs.setBirthday("10-09"));
         QCOMPARE(eggs.celebration(pet::EasterEggs::longTurnMs), QString("long-turn"));
-        QCOMPARE(eggs.celebration(0), QString("birthday")); QCOMPARE(eggs.celebration(0), QString("friday-evening"));
+        QCOMPARE(eggs.celebration(0), QString("birthday")); QCOMPARE(eggs.celebration(0), QString("birthday"));
+        eggs.cheered(); QCOMPARE(eggs.celebration(0), QString("friday-evening")); // Once it has played.
         QCOMPARE(mood.celebrate("birthday").state, QString("birthday"));
         // A milestone outranks an occasion, and a snack waits behind one for the next turn.
         mood.setTurns(99); mood.finished(1000); QCOMPARE(mood.treat(), QString("milestone"));
@@ -2119,6 +2127,20 @@ private slots:
         locked.activity(t0 + minute, false); QCOMPARE(locked.eyesActiveMs(t0 + minute + 30000), qint64(0));
         locked.activity(t0 + 2 * minute); locked.activity(t0 + 2 * minute + 30000, false);
         QCOMPARE(locked.eyesActiveMs(t0 + 2 * minute + 30000), qint64(30000));
+    }
+    void monitorWithdrawsTurnedOffReminders() {
+        QTemporaryDir directory;
+        pet::PetWindow window(nullptr, directory.path() + "/preferences.json"); window.show();
+        pet::Monitor monitor(window); window.player().setPaused(true); window.ambient().setLevel(pet::AmbientLevel::Off);
+        QDateTime local(QDate(2026, 10, 7), QTime(12, 0)); window.eggs().setClock([&] { return local; });
+        QPoint pointer(1, 1); monitor.pointer = [&] { return pointer; };
+        // Twenty minutes of work with alerts muted: the eye break is due and held.
+        window.setMuted(true); qint64 t = QDateTime::currentMSecsSinceEpoch(); monitor.update(t);
+        for (int i = 0; i < 40; ++i) { t += 30000; pointer += QPoint(1, 0); monitor.update(t); }
+        QCOMPARE(window.wellness().due(t), QString("eyes")); QCOMPARE(window.stage().runtime().deferred(), 1);
+        // Turned off, then unmuted: the next update must not let it through before it is withdrawn.
+        window.setEyeMinutes(0); window.setMuted(false); monitor.update(t);
+        QVERIFY(!monitor.note().isVisible()); QCOMPARE(window.stage().runtime().deferred(), 0);
     }
     void monitorWellnessReminders() {
         QTemporaryDir directory;

@@ -55,6 +55,7 @@ public:
     void setRestTickMs(int ms) { rest_.setInterval(ms); } // One countdown second; tests shorten it.
 private:
     void refreshAlerts();
+    void withdrawReminders(qint64 now);
     void remind();
     void remindWellness(qint64 now);
     void syncBehavior(qint64 now); // What the monitor knows that decides when a reminder may show.

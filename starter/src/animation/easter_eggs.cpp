@@ -50,9 +50,7 @@ QString EasterEggs::celebration(qint64 turnMs) {
     if (turnMs >= longTurnMs && has("long-turn")) return "long-turn";
     const auto now = clock_();
     const auto occasions = occasionsAt(now, birthday_);
-    if (occasions.contains("birthday") && has("birthday") && cheeredOn_ != now.date()) {
-        cheeredOn_ = now.date(); return "birthday";
-    }
+    if (occasions.contains("birthday") && has("birthday") && cheeredOn_ != now.date()) return "birthday";
     if (occasions.contains("friday-evening") && has("friday-evening")) return "friday-evening";
     return {};
 }

@@ -47,8 +47,10 @@ public:
     QStringList occasions() const { return occasionsAt(clock_(), birthday_); }
     // A state for the ambient scheduler to play instead of an ordinary fidget, or empty.
     QString fidget();
-    // The reaction cue to celebrate a finished turn of `turnMs` with (0 when unknown), or empty.
+    // The reaction cue to celebrate a finished turn of `turnMs` with (0 when unknown), or empty. The birthday is
+    // offered until `cheered()` says its cheer played.
     QString celebration(qint64 turnMs);
+    void cheered() { cheeredOn_ = clock_().date(); }
     // Surprises go through the behavior runtime. Unset, none play.
     void setStage(Stage *stage) { stage_ = stage; }
     // Plays a reaction cue now, such as "danger" or "konami", as a Surprise: it plays out unless a session needs
