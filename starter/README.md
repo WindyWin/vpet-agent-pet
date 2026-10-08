@@ -168,12 +168,14 @@ A few surprises, on by default. On May 20 the idle pet greets you with a heart, 
 on your birthday (Settings → **Birthday**, day and month only) it celebrates, both
 when it idles and on the day's first finished turn. Late at night it yawns more, and
 the first turn that finishes after 1 AM brings a gentle bedtime note. The pet also
-keeps time: on Monday morning it is tired and down about the week, at 4:45 PM on
+keeps time: at noon every day it invites you to take a lunch break with a snack
+animation (eligible until 1:15 PM), on Monday morning it is tired and down about the week, at 4:45 PM on
 weekdays it blows bubbles and tells you to get ready to go home, and at 10 PM it
 tells you to go to sleep (each once a day, while it is running and visible; like the
 wellness reminders, it waits until you are around and nothing else needs you, and
 muted alerts hold it).
-Settings → **Monday reminder**, **Go-home reminder** and **Sleep reminder** let
+Click the lunch bubble to dismiss it with a happy reaction.
+Settings → **Monday reminder**, **Lunch reminder**, **Go-home reminder** and **Sleep reminder** let
 you change these local times; the times above are the defaults. Turns finished
 on a Friday evening end in a dance, and a turn that ran for a quarter of an hour or
 more gets a bigger celebration. When an agent starts a destructive shell command,

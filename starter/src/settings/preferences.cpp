@@ -77,7 +77,7 @@ Preferences PreferencesStore::load() {
         || (object.contains("birthday") && !Preferences::validBirthday(object["birthday"].toString()))
         || (object.contains("eye_minutes") && !integer(object["eye_minutes"], 0, 1440))
         || (object.contains("water_minutes") && !integer(object["water_minutes"], 0, 1440))
-        || !validTime("monday_time") || !validTime("leave_work_time") || !validTime("sleep_time")
+        || !validTime("lunch_time") || !validTime("monday_time") || !validTime("leave_work_time") || !validTime("sleep_time")
         || (object.contains("recap") && !object["recap"].isBool())
         || (object.contains("autostart") && !object["autostart"].isBool())
         || (object.contains("language") && !object["language"].isString())
@@ -102,6 +102,7 @@ Preferences PreferencesStore::load() {
     result.birthday = object["birthday"].toString();
     result.eyeMinutes = object["eye_minutes"].toInt(result.eyeMinutes);
     result.waterMinutes = object["water_minutes"].toInt(result.waterMinutes);
+    if (object.contains("lunch_time")) result.reminderSchedule.lunch = QTime::fromString(object["lunch_time"].toString(), "HH:mm");
     if (object.contains("monday_time")) result.reminderSchedule.monday = QTime::fromString(object["monday_time"].toString(), "HH:mm");
     if (object.contains("leave_work_time")) result.reminderSchedule.leaveWork = QTime::fromString(object["leave_work_time"].toString(), "HH:mm");
     if (object.contains("sleep_time")) result.reminderSchedule.sleep = QTime::fromString(object["sleep_time"].toString(), "HH:mm");
@@ -127,6 +128,7 @@ bool PreferencesStore::save(const Preferences &preferences) {
                        {"eye_minutes", preferences.eyeMinutes}, {"water_minutes", preferences.waterMinutes},
                        {"autostart", preferences.autostart}, {"when_idle", idlePolicyName(preferences.whenIdle)},
                        {"language", preferences.language},
+                       {"lunch_time", preferences.reminderSchedule.lunch.toString("HH:mm")},
                        {"monday_time", preferences.reminderSchedule.monday.toString("HH:mm")},
                        {"leave_work_time", preferences.reminderSchedule.leaveWork.toString("HH:mm")},
                        {"sleep_time", preferences.reminderSchedule.sleep.toString("HH:mm")},

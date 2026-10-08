@@ -192,7 +192,7 @@ private slots:
     }
     void cuesComeFromTheirDataFile() {
         const auto &cues = pet::cues();
-        QCOMPARE(cues.size(), 32);
+        QCOMPARE(cues.size(), 33);
         QVERIFY(std::is_sorted(cues.begin(), cues.end(), [](const pet::Cue &a, const pet::Cue &b) { return a.name < b.name; }));
         auto shape = [](const QString &name) {
             const auto *cue = pet::findCue(name);
@@ -205,6 +205,7 @@ private slots:
         QCOMPARE(shape("quit-angry"), QString("closing_angry:once/stop"));
         QCOMPARE(shape("drag"), QString("dragging:phased/idle"));
         QCOMPARE(shape("exhausted"), QString("out_of_quota:loop/idle"));
+        QVERIFY(pet::findCue("lunch")->reaction);
         QVERIFY(pet::findCue("celebrate")->reaction); QVERIFY(pet::findCue("danger")->reaction);
         QVERIFY(!pet::findCue("nobody")); QVERIFY(!pet::findCue("turn_finished")); // Cue names use hyphens.
         // Every session aggregate is a state cue of the same name.

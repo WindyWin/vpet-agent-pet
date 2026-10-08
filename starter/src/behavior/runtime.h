@@ -22,7 +22,7 @@ enum class Policy {
     Shutdown,    // quit, annoyed (then quit-angry): cancels everything else and always finishes
     Urgent,      // session activity that needs the user: attention, exhausted, error
     Surprise,    // danger, konami, reminder-done: a reaction to something that just happened
-    Reminder,    // eye-break, water, monday, leave-work, sleep: art with a note, shown only when calm
+    Reminder,    // eye-break, water, monday, lunch, leave-work, sleep: art with a note, shown only when calm
     Celebration, // how a finished turn is celebrated: celebrate, snack, milestone, long-turn, birthday, friday-evening
     Startup,     // start: the pet arriving, until it is done or any session activity arrives
     Activity,    // other session activity: working, reading, thinking, turn-finished, waiting, idle, inactive

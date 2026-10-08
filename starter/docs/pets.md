@@ -114,7 +114,7 @@ A pet only says how each cue looks.
 | `snack`, `milestone` | a treat after a long productive stretch, every hundredth turn |
 | `long-turn`, `friday-evening`, `birthday` | how some finished turns are celebrated instead |
 | `may20`, `birthday`, `late-night` | special days and hours, among the idle fidgets |
-| `monday`, `leave-work`, `sleep` | the configured clock reminders |
+| `monday`, `lunch`, `leave-work`, `sleep` | the configured clock reminders; `lunch` falls back to `snack`, then `celebrate` when unmapped |
 | `eye-break`, `water`, `reminder-done` | wellness reminders, and answering one |
 | `danger`, `konami` | a destructive command starts; the Konami code |
 

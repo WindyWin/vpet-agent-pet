@@ -79,22 +79,29 @@ QStringList EasterEggs::remindersAt(const QDateTime &local, const ReminderSchedu
     const int monday = minuteOfDay(schedule.monday), leave = minuteOfDay(schedule.leaveWork);
     // Keep the original reminder windows, shifted with the configured start and ending at midnight.
     if (day == Qt::Monday && minutes >= monday && minutes < monday + 6 * 60) due << "monday";
+    if (minutes >= minuteOfDay(schedule.lunch) && minutes < minuteOfDay(schedule.lunch) + 75) due << "lunch";
     if (day <= Qt::Friday && minutes >= leave && minutes < leave + 75) due << "leave-work";
     if (minutes >= minuteOfDay(schedule.sleep)) due << "sleep";
     return due;
 }
 QString EasterEggs::reminderNote(const QString &reminder, const ReminderSchedule &schedule) {
     if (reminder == "monday") return Pet::tr("Monday again... I'm so tired. Let's take it slow today.");
+    if (reminder == "lunch") return Pet::tr("It's %1. Time to step away, take a break, and enjoy some lunch! 🍱").arg(schedule.lunch.toString("HH:mm"));
     if (reminder == "leave-work") return Pet::tr("It's %1. Time to wrap up and get ready to head home!").arg(schedule.leaveWork.toString("HH:mm"));
     if (reminder == "sleep") return Pet::tr("It's %1. Time to put everything down and go to sleep!").arg(schedule.sleep.toString("HH:mm"));
     return {};
 }
-QString EasterEggs::dueReminder() const {
-    if (!enabled_) return {};
+QStringList EasterEggs::dueReminders() const {
+    QStringList due;
+    if (!enabled_) return due;
     const auto now = clock_();
-    for (const auto &due : remindersAt(now, schedule_))
-        if (reminded_.value(due) != now.date()) return due;
-    return {};
+    for (const auto &reminder : remindersAt(now, schedule_))
+        if (reminded_.value(reminder) != now.date()) due << reminder;
+    return due;
+}
+QString EasterEggs::dueReminder() const {
+    const auto due = dueReminders();
+    return due.isEmpty() ? QString() : due.first();
 }
 void EasterEggs::reminded(const QString &reminder) { if (!reminder.isEmpty()) reminded_.insert(reminder, clock_().date()); }
 QString EasterEggs::reminder() {

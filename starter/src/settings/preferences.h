@@ -9,6 +9,7 @@
 
 namespace pet {
 struct ReminderSchedule {
+    QTime lunch = QTime(12, 0);
     QTime monday = QTime(6, 0), leaveWork = QTime(16, 45), sleep = QTime(22, 0);
 };
 struct Preferences {

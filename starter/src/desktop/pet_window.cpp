@@ -759,7 +759,8 @@ void PetWindow::showSettings() {
     bubbles->setCurrentIndex(bubbles_); bubbles->setAccessibleName(tr("Show alert bubbles"));
     layout->addRow(tr("Show &bubbles"), bubbles);
     connect(bubbles, &QComboBox::currentIndexChanged, this, &PetWindow::setBubbles);
-    layout->addRow(reminderSettings(dialog));
+    auto *reminders = reminderSettings(dialog);
+    layout->addRow(reminders);
     layout = page(tr("Pet"));
     // Shown once there is a choice; the chosen pet appears on the next start.
     if (const auto pets = PetLibrary::shared().pets(); pets.size() > 1) {
@@ -842,10 +843,11 @@ void PetWindow::showSettings() {
     };
     connect(hasBirthday, &QCheckBox::toggled, this, applyBirthday);
     connect(birthdayDate, &QDateEdit::dateChanged, this, applyBirthday);
-    const auto clockTime = [this, dialog, layout](const QString &label, QTime ReminderSchedule::*field, const QString &name) {
+    auto *clockLayout = qobject_cast<QFormLayout*>(reminders->layout());
+    const auto clockTime = [this, dialog, clockLayout](const QString &label, QTime ReminderSchedule::*field, const QString &name) {
         auto *time = new QTimeEdit(eggs_.reminderSchedule().*field, dialog);
         time->setDisplayFormat("HH:mm"); time->setAccessibleName(label); time->setObjectName(name);
-        layout->addRow(label, time);
+        clockLayout->addRow(label, time);
         // Commit a complete edit: intermediate hour/minute values must not consume today's reminder.
         const auto applyTime = [this, time, field] {
             auto schedule = eggs_.reminderSchedule(); schedule.*field = time->time();
@@ -855,6 +857,7 @@ void PetWindow::showSettings() {
         connect(dialog, &QDialog::finished, this, applyTime);
     };
     clockTime(tr("Monday reminder"), &ReminderSchedule::monday, "mondayTime");
+    clockTime(tr("Lunch reminder"), &ReminderSchedule::lunch, "lunchTime");
     clockTime(tr("Go-home reminder"), &ReminderSchedule::leaveWork, "leaveWorkTime");
     clockTime(tr("Sleep reminder"), &ReminderSchedule::sleep, "sleepTime");
     auto *recap = new QCheckBox(tr("Add today's recap to the &go-home reminder"), dialog);

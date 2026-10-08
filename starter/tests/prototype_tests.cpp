@@ -164,8 +164,8 @@ private slots:
         // Settings inspect integration files; keep them away from the real client configuration.
         qputenv("CLAUDE_CONFIG_DIR", QFile::encodeName(clients.path() + "/claude"));
         qputenv("CODEX_HOME", QFile::encodeName(clients.path() + "/codex"));
-        // An ordinary Wednesday noon, so no special day or hour changes what a test expects.
-        pet::EasterEggs::defaultClock = [] { return QDateTime(QDate(2026, 10, 7), QTime(12, 0)); };
+        // An ordinary Wednesday afternoon, so no special day or hour changes what a test expects.
+        pet::EasterEggs::defaultClock = [] { return QDateTime(QDate(2026, 10, 7), QTime(14, 0)); };
     }
     void releaseMetadataIsEmbedded() {
         // The About view and release packages rely on these embedded resources.
@@ -1896,7 +1896,7 @@ private slots:
         pet::Monitor monitor(window); auto &player = window.player(); player.setPaused(true);
         player.setRandom([](int) { return 0; }); window.ambient().setRandom([](int) { return 0; });
         Draws draws, eggDraws; window.mood().setRandom(draws.random()); window.eggs().setRandom(eggDraws.random());
-        QDateTime local(QDate(2026, 10, 7), QTime(12, 0)); window.eggs().setClock([&] { return local; });
+        QDateTime local(QDate(2026, 10, 7), QTime(14, 0)); window.eggs().setClock([&] { return local; });
         const qint64 now = QDateTime::currentMSecsSinceEpoch(); qint64 seq = 0;
         auto event = [&](QString kind, qint64 at, QString session = "s1") {
             ++seq; return pet::Event{"claude", session, QString::number(seq), kind, {}, {}, "/work/abc-web", {}, at, {}};
@@ -1930,7 +1930,7 @@ private slots:
         QVERIFY(monitor.note().isVisible()); QCOMPARE(monitor.note().text(), pet::Monitor::bedtimeNote()); QVERIFY(!QToolTip::isVisible());
         QVERIFY(!window.eggs().bedtime()); // Used for tonight.
         // The Konami code, typed on the pet, makes it dance, and the monitor lets it.
-        local = QDateTime(QDate(2026, 10, 7), QTime(12, 0));
+        local = QDateTime(QDate(2026, 10, 7), QTime(14, 0));
         for (int i = 0; i < 4; ++i) playOut(player);
         QCOMPARE(player.state(), QString("idle")); monitor.update(now + 13);
         eggDraws.values = {0};
@@ -1948,7 +1948,7 @@ private slots:
             pet::PetWindow window(nullptr, path); window.show(); QVERIFY(window.recapEnabled());
             QCOMPARE(window.recapPath(), directory.path() + "/recap.json");
             pet::Monitor monitor(window); window.player().setPaused(true);
-            QDateTime local(QDate(2026, 10, 7), QTime(12, 0)); window.eggs().setClock([&] { return local; });
+            QDateTime local(QDate(2026, 10, 7), QTime(14, 0)); window.eggs().setClock([&] { return local; });
             // Asked for before any work, the pet says so and has nothing more to show.
             emit window.recapRequested();
             QVERIFY(monitor.note().isVisible()); QCOMPARE(monitor.note().text(), QString("No agent work yet today."));
@@ -1992,6 +1992,11 @@ private slots:
             pet::PetWindow window(nullptr, path);
             window.showSettings(); auto *dialog = window.findChild<QDialog*>(); QVERIFY(dialog);
             auto *monday = dialog->findChild<QTimeEdit*>("mondayTime");
+            auto *lunch = dialog->findChild<QTimeEdit*>("lunchTime");
+            QVERIFY(lunch);
+            auto *reminders = dialog->findChild<QGroupBox*>("reminders");
+            QVERIFY(reminders && reminders->isAncestorOf(lunch));
+            QCOMPARE(lunch->time(), QTime(12, 0)); lunch->setTime(QTime(12, 30));
             auto *leave = dialog->findChild<QTimeEdit*>("leaveWorkTime");
             auto *sleep = dialog->findChild<QTimeEdit*>("sleepTime");
             QVERIFY(monday && leave && sleep);
@@ -2000,6 +2005,7 @@ private slots:
         }
         pet::PetWindow restored(nullptr, path);
         const auto schedule = restored.eggs().reminderSchedule();
+        QCOMPARE(schedule.lunch, QTime(12, 30));
         QCOMPARE(schedule.monday, QTime(9, 15)); QCOMPARE(schedule.leaveWork, QTime(19, 30)); QCOMPARE(schedule.sleep, QTime(23, 15));
         QDateTime local(QDate(2026, 10, 5), QTime(9, 14));
         restored.eggs().setClock([&] { return local; });
@@ -2044,6 +2050,100 @@ private slots:
         local.setTime(QTime(21, 45)); QCOMPARE(window.eggs().reminder(), QString("sleep"));
         QVERIFY(window.eggs().reminder().isEmpty());
         dialog->close();
+    }
+    void lunchReminderSchedule() {
+        pet::Player player; pet::EasterEggs eggs(player);
+        QDateTime local(QDate(2026, 10, 10), QTime(11, 59)); // Includes weekends.
+        eggs.setClock([&] { return local; });
+        QVERIFY(eggs.dueReminder().isEmpty());
+        local.setTime(QTime(12, 0)); QCOMPARE(eggs.dueReminder(), QString("lunch"));
+        local.setTime(QTime(13, 14, 59)); QCOMPARE(eggs.dueReminder(), QString("lunch"));
+        local.setTime(QTime(13, 15)); QVERIFY(eggs.dueReminder().isEmpty());
+        { // Overlapping reminders stay due independently: Monday at 11:00 does not hide lunch.
+            pet::ReminderSchedule overlap; overlap.monday = QTime(11, 0);
+            eggs.setReminderSchedule(overlap);
+            local = QDateTime(QDate(2026, 10, 5), QTime(12, 0)); // A Monday.
+            QCOMPARE(eggs.dueReminders(), QStringList({"monday", "lunch"}));
+            eggs.reminded("monday"); QCOMPARE(eggs.dueReminders(), QStringList({"lunch"}));
+            eggs.setReminderSchedule({}); local = QDateTime(QDate(2026, 10, 10), QTime(13, 15));
+        }
+        local.setTime(QTime(12, 0)); eggs.setEnabled(false); QVERIFY(eggs.dueReminder().isEmpty());
+        eggs.setEnabled(true); QCOMPARE(eggs.reminder(), QString("lunch")); QVERIFY(eggs.reminder().isEmpty());
+        auto schedule = eggs.reminderSchedule(); schedule.lunch = QTime(12, 30); eggs.setReminderSchedule(schedule);
+        local.setTime(QTime(12, 30)); QVERIFY(eggs.reminder().isEmpty()); // Editing never repeats today.
+        local = local.addDays(1); QCOMPARE(eggs.reminder(), QString("lunch"));
+        QVERIFY(pet::EasterEggs::reminderNote("lunch", schedule).contains("12:30"));
+        schedule.lunch = QTime(23, 30);
+        QVERIFY(pet::EasterEggs::remindersAt(QDateTime(local.date(), QTime(23, 59)), schedule).contains("lunch"));
+        QVERIFY(!pet::EasterEggs::remindersAt(QDateTime(local.date().addDays(1), QTime(0, 0)), schedule).contains("lunch"));
+
+        QTemporaryDir directory; const auto path = directory.path() + "/preferences.json";
+        QFile file(path); QVERIFY(file.open(QIODevice::WriteOnly));
+        file.write(R"({"version":1,"size":200,"on_top":true})"); file.close();
+        QCOMPARE(pet::PreferencesStore(path).load().reminderSchedule.lunch, QTime(12, 0));
+        for (const auto *bad : {R"("24:00")", R"("9:15")", R"("12:60")", R"("noon")", "null", "123"}) {
+            const auto data = QByteArray(R"({"version":1,"size":200,"on_top":true,"lunch_time":)") + bad + "}";
+            QVERIFY(file.open(QIODevice::WriteOnly)); file.write(data); file.close();
+            pet::PreferencesStore invalid(path); invalid.load(); QVERIFY(!invalid.save(pet::Preferences{}));
+            QVERIFY(file.open(QIODevice::ReadOnly)); QCOMPARE(file.readAll(), data); file.close();
+        }
+    }
+    void editingLunchTimeDoesNotConsumeReminder() {
+        pet::PetWindow window(nullptr, {}, false);
+        QDateTime local(QDate(2026, 10, 10), QTime(11, 30)); window.eggs().setClock([&] { return local; });
+        window.showSettings(); auto *dialog = window.findChild<QDialog*>(); QVERIFY(dialog);
+        auto *lunch = dialog->findChild<QTimeEdit*>("lunchTime"); QVERIFY(lunch);
+        lunch->setTime(QTime(11, 0)); // Intermediate hour is already due; do not commit it.
+        QCOMPARE(window.eggs().reminderSchedule().lunch, QTime(12, 0)); QVERIFY(window.eggs().reminder().isEmpty());
+        lunch->setTime(QTime(11, 45)); emit lunch->editingFinished();
+        QVERIFY(window.eggs().reminder().isEmpty());
+        local.setTime(QTime(11, 45)); QCOMPARE(window.eggs().reminder(), QString("lunch"));
+        QVERIFY(window.eggs().reminder().isEmpty()); dialog->close();
+    }
+    void monitorLunchReminder() {
+        pet::PetWindow window(nullptr, {}, false); window.show();
+        pet::Monitor monitor(window); auto &player = window.player(); player.setPaused(true);
+        window.ambient().setLevel(pet::AmbientLevel::Off);
+        QDateTime local(QDate(2026, 10, 10), QTime(12, 0)); window.eggs().setClock([&] { return local; });
+        QPoint pointer(1, 1); monitor.pointer = [&] { return pointer; };
+        qint64 t = QDateTime::currentMSecsSinceEpoch();
+        auto tick = [&] { pointer += QPoint(1, 0); monitor.update(++t); };
+        window.setMuted(true); tick(); QVERIFY(!monitor.note().isVisible());
+        QCOMPARE(window.eggs().dueReminder(), QString("lunch"));
+        // A queued lunch expires at the end of the window without consuming the event.
+        local.setTime(QTime(13, 15)); window.setMuted(false); tick();
+        QVERIFY(!monitor.note().isVisible()); QCOMPARE(window.stage().runtime().deferred(), 0);
+        local = local.addDays(1); local.setTime(QTime(12, 0));
+        qint64 seq = 0;
+        auto event = [&](QString kind) { return pet::Event{"claude", "lunch", QString::number(++seq), kind, {}, {}, "/work", {}, t, {}}; };
+        QVERIFY(monitor.apply(event("attention"), t)); tick(); QVERIFY(!monitor.note().isVisible());
+        emit monitor.bubble().dismissRequested(); tick(); QVERIFY(!monitor.note().isVisible());
+        QCOMPARE(window.eggs().dueReminder(), QString("lunch"));
+        QVERIFY(monitor.apply(event("session_end"), t)); tick();
+        QVERIFY(monitor.note().isVisible()); QCOMPARE(monitor.note().text(), pet::EasterEggs::reminderNote("lunch"));
+        QCOMPARE(player.requestedState(), QString("snack_hungry")); QVERIFY(window.eggs().dueReminder().isEmpty());
+        QTest::mouseClick(&monitor.note(), Qt::LeftButton); QVERIFY(!monitor.note().isVisible());
+        QCOMPARE(player.requestedState(), QString("cheer_shy"));
+        playOut(player); tick(); QVERIFY(!monitor.note().isVisible());
+        local = local.addDays(1);
+        QVERIFY(monitor.apply(event("error"), t)); tick(); QVERIFY(!monitor.note().isVisible());
+        QVERIFY(monitor.bubble().isVisible());
+        QCOMPARE(window.eggs().dueReminder(), QString("lunch"));
+        // Turning eggs off withdraws a pending lunch before the runtime can admit it.
+        window.eggs().setEnabled(false); tick(); QCOMPARE(window.stage().runtime().deferred(), 0);
+    }
+    void lunchAnimationFallback() {
+        QTemporaryDir directory; writeCatalog(directory.path(), fixture(directory.path()));
+        QString error; auto catalog = pet::Catalog::load(directory.path(), "vpet", &error);
+        QVERIFY2(catalog.valid(), qPrintable(error));
+        for (const auto *cue : {"snack", "celebrate"}) {
+            catalog.pools.clear(); catalog.pools[cue] = {{"working", 1}};
+            pet::Player player(nullptr, catalog); player.setPaused(true); pet::Stage stage(player);
+            stage.update([](pet::behavior::Context &context) { context.present = true; });
+            using namespace pet::behavior;
+            QCOMPARE(stage.runtime().submit({"clock", "lunch", "lunch", Policy::Reminder, Lifetime::OneShot}), Submission::Admitted);
+            QCOMPARE(player.requestedState(), QString("working"));
+        }
     }
     void easterEggPreference() {
         QTemporaryDir directory; const auto path = directory.path() + "/preferences.json";
@@ -2136,7 +2236,7 @@ private slots:
         QTemporaryDir directory;
         pet::PetWindow window(nullptr, directory.path() + "/preferences.json"); window.show();
         pet::Monitor monitor(window); window.player().setPaused(true); window.ambient().setLevel(pet::AmbientLevel::Off);
-        QDateTime local(QDate(2026, 10, 7), QTime(12, 0)); window.eggs().setClock([&] { return local; });
+        QDateTime local(QDate(2026, 10, 7), QTime(14, 0)); window.eggs().setClock([&] { return local; });
         QPoint pointer(1, 1); monitor.pointer = [&] { return pointer; };
         // Twenty minutes of work with alerts muted: the eye break is due and held.
         window.setMuted(true); qint64 t = QDateTime::currentMSecsSinceEpoch(); monitor.update(t);
@@ -2152,7 +2252,7 @@ private slots:
         pet::Monitor monitor(window); auto &player = window.player(); player.setPaused(true);
         player.setRandom([](int) { return 0; }); window.ambient().setRandom([](int) { return 0; });
         window.ambient().setLevel(pet::AmbientLevel::Off);
-        QDateTime local(QDate(2026, 10, 7), QTime(12, 0)); window.eggs().setClock([&] { return local; });
+        QDateTime local(QDate(2026, 10, 7), QTime(14, 0)); window.eggs().setClock([&] { return local; });
         QPoint pointer; monitor.pointer = [&] { return pointer; };
         monitor.setRestTickMs(10); // The twenty-second eye break, in a fifth of a second.
         const qint64 minute = 60000; qint64 t = QDateTime::currentMSecsSinceEpoch();
@@ -2206,7 +2306,7 @@ private slots:
         work(61); QCOMPARE(monitor.reminder(), QString()); QCOMPARE(window.wellness().due(t), QString());
         monitor.note().hide();
         // Five minutes away starts the stretch over.
-        local = QDateTime(QDate(2026, 10, 7), QTime(12, 0));
+        local = QDateTime(QDate(2026, 10, 7), QTime(14, 0));
         work(50); t += 6 * minute; monitor.update(t); work(15); QVERIFY(!monitor.note().isVisible());
         // A locked screen counts nothing, from the pointer or from agents, and shows nothing.
         bool locked = false; monitor.locked = [&] { return locked; };
