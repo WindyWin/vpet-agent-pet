@@ -2192,6 +2192,14 @@ private slots:
         // Even a short lock: back after two minutes, the stretch starts from the first move.
         locked = false; work(1); QCOMPARE(window.wellness().waterActiveMs(t), qint64(30000));
         QVERIFY(!monitor.note().isVisible());
+        // A reminder still waiting (muted here) is gone after a lock, which started its stretch over: the user coming
+        // back to an unmuted pet does not bring it.
+        window.setEyeMinutes(20); window.setMuted(true); work(20); QVERIFY(!monitor.note().isVisible());
+        QCOMPARE(window.stage().runtime().deferred(), 1);
+        locked = true; monitor.update(t); QCOMPARE(window.stage().runtime().deferred(), 0);
+        locked = false; window.setMuted(false); work(1);
+        QVERIFY(!monitor.note().isVisible()); QCOMPARE(monitor.reminder(), QString());
+        window.setEyeMinutes(0); work(1); window.setEyeMinutes(20);
         // Locking takes away a reminder on screen, and ends a countdown without the cheer.
         playOut(player); window.setEyeMinutes(20); work(20); QCOMPARE(monitor.reminder(), QString("eyes"));
         locked = true; monitor.update(t); QCOMPARE(monitor.reminder(), QString()); QVERIFY(!monitor.note().isVisible());

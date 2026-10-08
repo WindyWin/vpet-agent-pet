@@ -190,14 +190,14 @@ void Monitor::outcome(const behavior::Intent &intent, behavior::Outcome outcome)
 // An eye break or a sip of water, once its stretch of active time is up. A due reminder waits for calm; in
 // quiet hours it is let go, so the morning does not start with one.
 void Monitor::remindWellness(qint64 now) {
-    if (!active_ || (locked && locked())) return; // The presence update may have just quit.
+    if (!active_) return; // The presence update may have just quit.
     auto &wellness = window_.wellness();
     auto &runtime = window_.stage().runtime();
-    auto due = wellness.due(now);
+    auto due = wellness.due(now); // Empty behind a locked screen: locking reset both timers.
     if (!due.isEmpty() && Wellness::quietAt(window_.eggs().now())) { wellness.given(due, now); due.clear(); }
     // A reminder that is no longer due (taken some other way, turned off, a break) stops waiting.
     for (const auto *reminder : wellnessReminders) if (due != reminder) runtime.withdraw("wellness", reminder);
-    if (due.isEmpty()) return;
+    if (due.isEmpty() || (locked && locked())) return;
     using namespace behavior;
     runtime.submit({"wellness", due, due == "eyes" ? "eye-break" : "water", Policy::Reminder, Lifetime::OneShot,
                     runtime.now() + reminderWaitMs});
