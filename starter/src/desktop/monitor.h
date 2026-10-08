@@ -1,11 +1,13 @@
 #pragma once
 #include "alert_bubble.h"
+#include "animation/event_rules.h"
 #include "hosts/focus_service.h"
 #include "ipc/local.h"
 #include "pet_window.h"
 #include "session_list.h"
 #include "sessions/alerts.h"
 #include "sessions/recap.h"
+#include <QHash>
 #include <QTimer>
 #include <functional>
 #include <memory>
@@ -21,7 +23,13 @@ public:
     explicit Monitor(PetWindow &window, std::shared_ptr<hosts::FocusService> focus = nullptr);
     // Takes a receiver that already holds the single-instance lock.
     void listen(std::unique_ptr<Receiver> receiver);
+    // True when the event changed anything: a session event that was accepted, or a custom event that made the pet react.
     bool apply(const Event &event, qint64 now);
+    // The reactions of the active plugin packs (events.json): to custom events and to agent events once they are applied.
+    // They are reactions only: the runtime still keeps them away from a session that needs the user.
+    void setRules(EventRules rules) { rules_ = std::move(rules); }
+    const EventRules &rules() const { return rules_; }
+    Random random = systemRandom(); // Which rule answers when several match; tests script it.
     void update(qint64 now);
     void stop();
     void restoreSessions(const QString &path);
@@ -61,6 +69,7 @@ private:
     void syncBehavior(qint64 now); // What the monitor knows that decides when a reminder may show.
     void outcome(const behavior::Intent &intent, behavior::Outcome outcome);
     void answered();
+    bool react(const QString &trigger, qint64 stamp, qint64 now);
     void rest();
     void dropReminder(); // Hides a shown reminder or countdown without counting it as answered.
     void say(const QString &text, const QString &details = {}, int ms = NoteBubble::defaultMs);
@@ -77,6 +86,8 @@ private:
     std::unique_ptr<Receiver> receiver_;
     QTimer timer_, rest_, recapTimer_;
     QString reminder_, sessionPath_;
+    EventRules rules_;
+    QHash<QString, QString> remarks_; // What a plugin reaction that is starting will say, by trigger.
     QPoint lastPointer_;
     int restLeft_ = 0;
     qint64 lastTurnMs_ = 0; // How long the latest finished turn ran, for a long-turn celebration.

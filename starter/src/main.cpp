@@ -123,6 +123,7 @@ int main(int argc, char **argv) {
             return 1;
         }
         pet::Monitor monitor(window, pet::platform::createFocusService());
+        monitor.setRules(pet::PetLibrary::shared().eventRules()); // Empty unless a plugin pack with an events.json is on.
         monitor.locked = pet::platform::createScreenLockQuery(&app); // The application outlives the monitor.
         if (receiver) monitor.listen(std::move(receiver));
         std::unique_ptr<pet::updates::Controller> updates;

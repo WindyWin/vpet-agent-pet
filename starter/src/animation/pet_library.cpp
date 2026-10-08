@@ -266,7 +266,8 @@ bool PetLibrary::activate(const QString &id, QString *error) {
     // Packs check their own frames, which are files rather than resources.
     if (!pluginFolder_.isEmpty()) {
         loadedPlugins_ = plugins::scan(pluginFolder_, AGENT_PET_VERSION);
-        plugins::apply(source, id, enabledPlugins_, loadedPlugins_);
+        rules_ = {};
+        plugins::apply(source, id, enabledPlugins_, loadedPlugins_, &rules_);
         if (std::any_of(loadedPlugins_.begin(), loadedPlugins_.end(), [](const PluginPack &pack) { return pack.status == PluginPack::Applied; }))
             catalog = Catalog::build(source, nullptr);
     }

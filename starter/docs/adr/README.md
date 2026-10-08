@@ -40,6 +40,7 @@ the order the decisions were made. For a map of the code, start with the
 | [0031](0031-behavior-runtime.md) | Behavior runtime: one arbiter for the pet's competing behaviors | 2026-10-08 |
 | [0032](0032-windows-automatic-updates.md) | Windows automatic updates through verified Setup upgrades | 2026-10-08 |
 | [0033](0033-plugin-packs.md) | Plugin packs: catalog fragments merged into a pet | 2026-10-08 |
+| [0034](0034-custom-events.md) | Custom events and plugin event rules | 2026-10-08 |
 
 ## Writing a record
 

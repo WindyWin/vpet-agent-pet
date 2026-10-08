@@ -171,7 +171,7 @@ Nhấp chuột phải vào thú cưng (hoặc biểu tượng ở khay hệ th�
 
 - đổi kích thước, chọn những thông báo được hiển thị và chọn nhân vật (thú cưng khác được tải về khi chọn);
 - chọn mức độ sinh động khi rảnh và khi làm việc, hoặc tắt đi dạo, tâm trạng, tương tác và bất ngờ;
-- bật [gói plugin](starter/docs/plugins.md) để thêm hoạt ảnh cho thú cưng;
+- bật [gói plugin](starter/docs/plugins.md) để thêm hoạt ảnh cho thú cưng, và để chúng phản ứng khi script hoặc CI của bạn gửi [một sự kiện tùy chỉnh](starter/docs/events.md#custom-events);
 - chỉnh hoặc tắt lời nhắc nghỉ mắt và uống nước, cấu hình nhắc nghỉ trưa (mặc định 12:00, còn hiệu lực đến 13:15), nhắc đầu tuần, nhắc về nhà và nhắc đi ngủ, rồi nhập ngày sinh nhật;
 - kết nối Claude Code và Codex bằng một cú nhấp, tự khởi động cùng agent hoặc khi đăng nhập;
 - chọn cách cài đặt bản cập nhật.
@@ -238,7 +238,7 @@ flowchart TB
 
   packs["#62 PetLibrary / Catalog<br/>Thú cưng đang dùng · hình ảnh / tác giả / ánh xạ riêng"] --> cues
   packs --> player
-  plugins["#43 Gói plugin<br/>Phần bổ sung catalog · dữ liệu quy tắc dự kiến"] --> packs
+  plugins["#43 Gói plugin<br/>Phần bổ sung catalog · quy tắc sự kiện"] --> packs
   plugins --> custom
   updates["Cập nhật ứng dụng / đóng gói"] --> packs
   downloads["#62 Phần 2<br/>Tải thú cưng có kiểm tra tính toàn vẹn"] --> packs
@@ -253,7 +253,7 @@ flowchart TB
 
 ### Lộ trình theo kiến trúc
 
-Các công việc còn mở, đã đối chiếu với mã nguồn đã merge ngày 2026-10-08 (#62, #64, #67 và giai đoạn 1 của #43 đã hoàn thành; chưa kiểm tra lại trạng thái issue trên GitHub). Mỗi issue chứa danh sách tiêu chí nghiệm thu chi tiết; đánh dấu hàng tương ứng khi giai đoạn hoàn thành và cập nhật sơ đồ khi một lớp dự kiến đã được triển khai.
+Các công việc còn mở, đã đối chiếu với mã nguồn đã merge ngày 2026-10-08 (#62, #64, #67 và giai đoạn 1–2 của #43 đã hoàn thành; chưa kiểm tra lại trạng thái issue trên GitHub). Mỗi issue chứa danh sách tiêu chí nghiệm thu chi tiết; đánh dấu hàng tương ứng khi giai đoạn hoàn thành và cập nhật sơ đồ khi một lớp dự kiến đã được triển khai.
 
 ```mermaid
 flowchart LR
@@ -271,7 +271,8 @@ flowchart LR
 | ☑ | Ánh xạ tín hiệu | [#64 — tín hiệu ngữ nghĩa và ánh xạ riêng cho từng thú cưng](https://github.com/WindyWin/vpet-agent-pet/issues/64) | #62 Phần 1 |
 | ☑ | Bộ điều phối hành vi | [#67 — phân xử ý định và vòng đời](https://github.com/WindyWin/vpet-agent-pet/issues/67) | #64 |
 | ☑ | Catalog plugin | [#43 Giai đoạn 1 — phần bổ sung catalog và cài đặt plugin](https://github.com/WindyWin/vpet-agent-pet/issues/43) | #62 Phần 1 |
-| ☐ | Quy tắc plugin → bộ điều phối | [#43 Giai đoạn 2–3 — sự kiện tùy chỉnh và điều kiện kích hoạt từ dữ liệu](https://github.com/WindyWin/vpet-agent-pet/issues/43) | Phần bổ sung catalog, #64 và #67 |
+| ☑ | Sự kiện plugin | [#43 Giai đoạn 2 — sự kiện tùy chỉnh và quy tắc sự kiện của plugin](https://github.com/WindyWin/vpet-agent-pet/issues/43) | Phần bổ sung catalog, #64 và #67 |
+| ☐ | Điều kiện kích hoạt có sẵn → quy tắc | [#43 Giai đoạn 3 — chuyển các điều kiện kích hoạt viết cứng sang bảng quy tắc](https://github.com/WindyWin/vpet-agent-pet/issues/43) | Sự kiện plugin |
 | ☑ | Phân phối thú cưng | [#62 Phần 2 — tải theo yêu cầu có kiểm tra tính toàn vẹn](https://github.com/WindyWin/vpet-agent-pet/issues/62) | #62 Phần 1 |
 | ☐ | Adapter provider | [#36 — client agent thứ ba](https://github.com/WindyWin/vpet-agent-pet/issues/36) | Hợp đồng sự kiện hiện có |
 | ☐ | Thông báo / cài đặt | [#34 — tạm hoãn / chế độ tập trung](https://github.com/WindyWin/vpet-agent-pet/issues/34) | Luồng thông báo hiện có |

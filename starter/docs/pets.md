@@ -118,6 +118,7 @@ A pet only says how each cue looks.
 | `monday`, `lunch`, `leave-work`, `sleep` | the configured clock reminders; `lunch` falls back to `snack`, then `celebrate` when unmapped |
 | `eye-break`, `water`, `reminder-done` | wellness reminders, and answering one |
 | `danger`, `konami` | a destructive command starts; the Konami code |
+| `plugin-event` | a plugin pack's [rule](plugins.md#eventsjson) reacted to an event. The rule names its own state, so a catalog never maps this cue |
 
 The `cues` section maps both kinds:
 

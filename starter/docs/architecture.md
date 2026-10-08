@@ -26,6 +26,7 @@ The code map below describes the current implementation.
 | Cues (event → animation mapping) | `src/animation/cues.json`, `Catalog::stateFor`, `Player::play`/`pool` | [0029](adr/0029-cues.md) |
 | Behavior runtime (which behavior may show) | `src/behavior/runtime.*`, `src/animation/stage.*`, producers in `Monitor`, `PetWindow`, `Ambient`, `EasterEggs` | [0031](adr/0031-behavior-runtime.md) |
 | Plugin packs (catalog fragments, Settings → Plugins) | `src/animation/plugins.*`, `PetLibrary::setPlugins`, `src/desktop/plugin_list.*`, [plugins](plugins.md) | [0033](adr/0033-plugin-packs.md) |
+| Custom events and plugin rules (`events.json`) | `Event` (`kind: custom`), `src/animation/event_rules.*`, `Monitor::react`, `agent-pet emit --custom`, [events](events.md#custom-events) | [0034](adr/0034-custom-events.md) |
 | On-demand pets (store, downloads) | `PetLibrary` (store, stamps, `prune`), `src/desktop/pet_downloader.*`, `scripts/pet_blobs.py` | [0030](adr/0030-on-demand-pets.md) |
 | Idle, active, mood, touch, eggs, walking | `src/animation`, `src/desktop` | [0011](adr/0011-idle-animation.md), [0021](adr/0021-active-animation.md), [0012](adr/0012-mood.md), [0013](adr/0013-touch-reactions.md), [0015](adr/0015-easter-eggs.md), [0016](adr/0016-walking.md) |
 | Recap, wellness | `src/sessions/recap.*`, `src/desktop/wellness.*` | [0018](adr/0018-daily-recap.md), [0019](adr/0019-wellness-reminders.md) |

@@ -254,6 +254,63 @@ bool merge(CatalogSource &source, const PluginPack &pack, QHash<QString, QString
     source.document = document;
     return true;
 }
+// Reads <folder>/events.json, if there is one: rules that react to custom or agent events (docs/plugins.md). A rule can
+// play any state of the merged `catalog` that ends by itself, as a reaction pool's entries do.
+bool readRules(const PluginPack &pack, const Catalog &catalog, QVector<EventRule> *rules, QString *error) {
+    auto fail = [error](const QString &reason) {
+        *error = "events.json: " + reason;
+        return false;
+    };
+    const QFileInfo file(pack.folder + "/events.json");
+    if (!file.exists()) return true;
+    QString problem;
+    const auto document = readObject(file.filePath(), 64 * 1024, &problem);
+    if (!problem.isEmpty()) {
+        *error = problem;
+        return false;
+    }
+    for (auto it = document.begin(); it != document.end(); ++it)
+        if (it.key() != "schema_version" && it.key() != "rules") return fail("unknown key " + it.key());
+    if (document.value("schema_version").toInt() != 1) return fail("schema_version must be 1.");
+    if (!document.value("rules").isArray()) return fail("rules must be a list.");
+    const auto list = document.value("rules").toArray();
+    if (list.isEmpty() || list.size() > EventRules::maxRulesPerPack)
+        return fail(QString("a pack needs between 1 and %1 rules.").arg(EventRules::maxRulesPerPack));
+    static const QSet<QString> keys{"on", "state", "say", "weight", "cooldown_ms"};
+    for (const auto &value : list) {
+        const auto object = value.toObject();
+        for (auto it = object.begin(); it != object.end(); ++it)
+            if (!keys.contains(it.key())) return fail("unknown key " + it.key() + " in a rule.");
+        EventRule rule;
+        rule.pack = pack.id;
+        rule.on = object.value("on").toString();
+        if (!EventRules::validTrigger(rule.on))
+            return fail(QString("Invalid \"on\": %1. Use custom:<name> or one of %2.").arg(rule.on, EventRules::agentEvents().join(", ")));
+        if (object.contains("state")) {
+            rule.state = object.value("state").toString();
+            const auto found = catalog.animations.constFind(rule.state);
+            // Like a reaction pool's entries: it must end by itself and hand back to idle.
+            if (found == catalog.animations.constEnd() || rule.state == "idle" || found->after != "idle"
+                || !(found->mode == "once" || (found->mode == "phased" && found->loops > 0)))
+                return fail("the state of a rule must be a state that ends by itself and returns to idle: " + rule.state);
+        }
+        if (object.contains("say")) {
+            rule.say = object.value("say").toString();
+            if (rule.say.trimmed().isEmpty() || rule.say.size() > EventRules::maxSayLength)
+                return fail(QString("say must be 1 to %1 characters.").arg(EventRules::maxSayLength));
+            for (const QChar c : std::as_const(rule.say))
+                if (c.category() == QChar::Other_Control) return fail("say cannot hold control characters.");
+        }
+        if (rule.state.isEmpty() && rule.say.isEmpty()) return fail("a rule needs a state, a say, or both: " + rule.on);
+        rule.weight = object.contains("weight") ? object.value("weight").toInt(0) : 1;
+        if (rule.weight < 1 || rule.weight > EventRules::maxWeight) return fail("weight must be 1 to 1000.");
+        rule.cooldownMs = object.contains("cooldown_ms") ? qint64(object.value("cooldown_ms").toDouble(0)) : EventRules::defaultCooldownMs;
+        if (rule.cooldownMs < EventRules::minCooldownMs || rule.cooldownMs > EventRules::maxCooldownMs)
+            return fail("cooldown_ms must be 1000 to 3600000.");
+        rules->append(rule);
+    }
+    return true;
+}
 }
 QString defaultFolder() {
     return QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/plugins";
@@ -274,7 +331,7 @@ QVector<PluginPack> scan(const QString &folder, const QString &appVersion) {
     }
     return packs;
 }
-void apply(CatalogSource &source, const QString &pet, const QStringList &enabled, QVector<PluginPack> &packs) {
+void apply(CatalogSource &source, const QString &pet, const QStringList &enabled, QVector<PluginPack> &packs, EventRules *rules) {
     QHash<QString, QString> claims;
     for (auto &pack : packs) {
         if (pack.status == PluginPack::Invalid) {
@@ -286,10 +343,13 @@ void apply(CatalogSource &source, const QString &pet, const QStringList &enabled
         auto candidate = source;
         auto candidateClaims = claims;
         QString error;
+        QVector<EventRule> candidateRules;
         if (merge(candidate, pack, candidateClaims, &error)) {
             const auto catalog = Catalog::build(candidate, &error);
-            if (catalog.valid()) error = catalog.contractError();
-            else if (error.isEmpty()) error = "Invalid animation catalog.";
+            if (catalog.valid()) {
+                error = catalog.contractError();
+                if (error.isEmpty()) readRules(pack, catalog, &candidateRules, &error);
+            } else if (error.isEmpty()) error = "Invalid animation catalog.";
         }
         if (!error.isEmpty()) {
             pack.status = PluginPack::Rejected;
@@ -299,6 +359,7 @@ void apply(CatalogSource &source, const QString &pet, const QStringList &enabled
         }
         source = candidate;
         claims = candidateClaims;
+        if (rules) rules->add(candidateRules);
         pack.status = PluginPack::Applied;
         pack.error.clear();
         qInfo().noquote() << "Plugin" << pack.id << pack.version << "loaded";
