@@ -1,9 +1,11 @@
-# Pets (docs/pets.md). add_pets(<target> SOURCE <dir> OUTPUT <dir> [INSTALL]) builds every pet folder under
-# SOURCE (a folder with a pet.json) into OUTPUT, mapping SOURCE to the resource prefix assets/:
+# Pets (docs/pets.md). add_pets(<target> SOURCE <dir> OUTPUT <dir> [INSTALL] [BUNDLED <id>…]) builds every pet
+# folder under SOURCE (a folder with a pet.json) into OUTPUT, mapping SOURCE to the resource prefix assets/:
 #   artwork-<sha256 of a frame folder's resource path>.rcc  one pack per frame folder
 #   pets/<id>/packs.json      the pet's pack list and hash tree (cmake/pet_tree.cmake)
 #   artwork.rcc               the index: each pet's pet.json, animations.json, preview and packs.json
-#   artwork-packs.json        every pack's file name, for scripts/package_macos.py and package_windows.py
+#   artwork-packs.json        the bundled packs' file names, for scripts/package_macos.py and package_windows.py
+# BUNDLED names the pets whose packs ship (every pet when omitted); the index lists every pet, and the others'
+# packs download on demand (scripts/pet_blobs.py prepares them for the `pets` release).
 # Resource files use format 1 without compression, as qt_add_binary_resources would, so identical frames
 # build identical packs that updates reuse. Every command belongs to <target>, so the tree step can depend
 # on the packs it hashes.
@@ -33,10 +35,16 @@ function(pet_rcc output name qrc)
 endfunction()
 
 function(add_pets target)
-    cmake_parse_arguments(PARSE_ARGV 1 arg "INSTALL" "SOURCE;OUTPUT" "")
+    cmake_parse_arguments(PARSE_ARGV 1 arg "INSTALL" "SOURCE;OUTPUT" "BUNDLED")
     file(GLOB pet_files CONFIGURE_DEPENDS "${arg_SOURCE}/*/pet.json")
     list(SORT pet_files)
+    foreach(id IN LISTS arg_BUNDLED)
+        if(NOT EXISTS "${arg_SOURCE}/${id}/pet.json")
+            message(FATAL_ERROR "Bundled pet ${id} has no ${arg_SOURCE}/${id}/pet.json")
+        endif()
+    endforeach()
     set(pack_files)
+    set(bundled_files)
     set(pack_names)
     set(index_depends)
     set(index_qrc "<RCC><qresource prefix=\"/\">\n")
@@ -78,7 +86,10 @@ function(add_pets target)
             pet_write("${arg_OUTPUT}/${name}.qrc" "${qrc}")
             pet_rcc("${arg_OUTPUT}/${name}.rcc" ${target}_${pack} "${arg_OUTPUT}/${name}.qrc" ${sources})
             list(APPEND pet_packs "${arg_OUTPUT}/${name}.rcc")
-            list(APPEND pack_names "\"${name}.rcc\"")
+            if(NOT arg_BUNDLED OR id IN_LIST arg_BUNDLED)
+                list(APPEND pack_names "\"${name}.rcc\"")
+                list(APPEND bundled_files "${arg_OUTPUT}/${name}.rcc")
+            endif()
             string(APPEND listing "${name} ${sequence_${pack}}\n")
         endforeach()
         list(APPEND pack_files ${pet_packs})
@@ -104,6 +115,6 @@ function(add_pets target)
     pet_write("${arg_OUTPUT}/artwork-packs.json" "[${joined}]\n")
     add_custom_target(${target} ALL DEPENDS "${arg_OUTPUT}/artwork.rcc" ${pack_files})
     if(arg_INSTALL)
-        install(FILES "${arg_OUTPUT}/artwork.rcc" ${pack_files} DESTINATION ${CMAKE_INSTALL_DATADIR}/agent-pet)
+        install(FILES "${arg_OUTPUT}/artwork.rcc" ${bundled_files} DESTINATION ${CMAKE_INSTALL_DATADIR}/agent-pet)
     endif()
 endfunction()

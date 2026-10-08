@@ -21,6 +21,7 @@
 
 namespace pet {
 namespace updates { class Controller; }
+class PetDownloader;
 class PetWindow : public QWidget {
     Q_OBJECT
 public:
@@ -83,6 +84,9 @@ public:
     // The pet shown from the next start, by id; persisted. The running pet never changes.
     void setPet(const QString &id);
     QString pet() const { return pet_; }
+    // Downloads pets that are not bundled for Settings' picker; made on first use. It outlives the dialog, and a
+    // completed download becomes the choice for the next start.
+    PetDownloader &petDownloader();
     void showSettings();
     void setUpdates(updates::Controller *controller);
     void showPreview();
@@ -164,6 +168,7 @@ private:
     QWidget *startupSettings(QWidget *parent);
     QWidget *reminderSettings(QWidget *parent);
     updates::Controller *updates_ = nullptr;
+    PetDownloader *downloader_ = nullptr;
     Player player_;
     Ambient ambient_;
     Activity activity_;

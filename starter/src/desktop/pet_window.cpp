@@ -1,6 +1,7 @@
 #include "updates/controller.h"
 #include "pet_window.h"
 #include "animation/pet_library.h"
+#include "desktop/pet_downloader.h"
 #include "desktop/pet_picker.h"
 #include "platform/contracts/native_window.h"
 #include "ipc/autostart.h"
@@ -499,6 +500,15 @@ void PetWindow::setPet(const QString &id) {
     pet_ = id;
     writePreferences([id](Preferences &preferences) { preferences.pet = id; });
 }
+PetDownloader &PetWindow::petDownloader() {
+    if (!downloader_) {
+        downloader_ = new PetDownloader(PetLibrary::shared(), nullptr, this);
+        connect(downloader_, &PetDownloader::finished, this, [this](const QString &id, const QString &error) {
+            if (error.isEmpty() && id != pet_) setPet(id);
+        });
+    }
+    return *downloader_;
+}
 bool PetWindow::savePreferences() { return writePreferences([](Preferences &) {}); }
 bool PetWindow::writePreferences(const std::function<void(Preferences &)> &change) {
     if (!persist_ || !ready_) return true;
@@ -754,6 +764,13 @@ void PetWindow::showSettings() {
         auto *picker = new PetPicker(pets, pet_, PetLibrary::shared().active(), dialog);
         layout->addRow(tr("&Character"), picker);
         connect(picker, &PetPicker::chosen, this, &PetWindow::setPet);
+        // Pets that are not bundled download first; the download outlives the dialog.
+        auto &downloads = petDownloader();
+        connect(picker, &PetPicker::downloadRequested, &downloads, &PetDownloader::start);
+        connect(picker, &PetPicker::cancelRequested, &downloads, &PetDownloader::cancel);
+        connect(&downloads, &PetDownloader::progressed, picker, &PetPicker::downloading);
+        connect(&downloads, &PetDownloader::finished, picker, &PetPicker::downloaded);
+        if (!downloads.pet().isEmpty()) picker->downloading(downloads.pet(), downloads.done(), downloads.total());
     }
     auto *ambient = new QComboBox(dialog);
     ambient->addItems({tr("Off (no fidgets or alternate idle loops)"), tr("Subtle (a fidget about once a minute)"), tr("Lively (a fidget every 15–25 seconds)")});

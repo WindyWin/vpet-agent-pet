@@ -596,6 +596,25 @@
     </message>
 </context>
 <context>
+    <name>pet::PetDownloader</name>
+    <message>
+        <source>Cannot save %1. Check free disk space.</source>
+        <translation>Không thể lưu %1. Hãy kiểm tra dung lượng đĩa còn trống.</translation>
+    </message>
+    <message>
+        <source>Download cancelled.</source>
+        <translation>Đã hủy tải xuống.</translation>
+    </message>
+    <message>
+        <source>The download of %1 did not match its checksum. Try again later.</source>
+        <translation>Bản tải xuống của %1 không khớp mã kiểm tra. Hãy thử lại sau.</translation>
+    </message>
+    <message>
+        <source>Could not download %1. Check your connection and try again.</source>
+        <translation>Không thể tải %1. Hãy kiểm tra kết nối mạng rồi thử lại.</translation>
+    </message>
+</context>
+<context>
     <name>pet::PetPicker</name>
     <message>
         <source>Pet character</source>
@@ -608,6 +627,22 @@
     <message>
         <source>%1 will appear the next time Agent Pet starts.</source>
         <translation>%1 sẽ xuất hiện vào lần khởi động Agent Pet tiếp theo.</translation>
+    </message>
+    <message>
+        <source>Pet download progress</source>
+        <translation>Tiến độ tải thú cưng</translation>
+    </message>
+    <message>
+        <source>Cancel download</source>
+        <translation>Hủy tải xuống</translation>
+    </message>
+    <message>
+        <source>by %1 · %2 to download</source>
+        <translation>của %1 · cần tải %2</translation>
+    </message>
+    <message>
+        <source>Downloading %1…</source>
+        <translation>Đang tải %1…</translation>
     </message>
 </context>
 <context>

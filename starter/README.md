@@ -231,10 +231,11 @@ preview and its own art terms under `assets/`, and a rebuild picks up every such
 changes. Once two or more pets are installed, Settings → Pet → **Character** shows a tile per pet. The
 chosen pet appears the next time Agent Pet starts, and only its artwork is loaded. `--pet <id>` runs
 another installed pet once without saving the choice. A pet that cannot load is skipped and VPet runs
-instead. The app tells a pet what is happening through named cues (a session needs you, a turn finished,
+instead. VPet ships with the app; other pets show their download size and download when chosen, verified
+pack by pack against hashes the app already carries, with progress and Cancel in Settings. The app tells a pet what is happening through named cues (a session needs you, a turn finished,
 time for water), and each pet decides which of its animations answers each one. To make a pet, see
-[the pet guide](docs/pets.md) and the design records for [pet packs](docs/adr/0028-pet-packs.md) and
-[cues](docs/adr/0029-cues.md).
+[the pet guide](docs/pets.md) and the design records for [pet packs](docs/adr/0028-pet-packs.md),
+[cues](docs/adr/0029-cues.md) and [on-demand pets](docs/adr/0030-on-demand-pets.md).
 
 ## Language
 

@@ -2,9 +2,10 @@
 
 A pet is a folder under `assets/` with its own frames, catalog, preview and art terms. A rebuild picks up
 every folder that has a `pet.json`; no C++ or CMake changes are needed. Once two or more pets are
-installed, Settings → Pet shows a **Character** row with a tile per pet, and the chosen pet appears the
-next time Agent Pet starts. `agent-pet --pet <id>` runs another pet once without saving the choice. Only
-the running pet's artwork is loaded.
+known, Settings → Pet shows a **Character** row with a tile per pet, and the chosen pet appears the
+next time Agent Pet starts. VPet ships with the app; other pets download when chosen (see
+[Bundled and on-demand pets](#bundled-and-on-demand-pets)). `agent-pet --pet <id>` runs another pet
+once without saving the choice. Only the running pet's artwork is loaded.
 
 ## A minimal pet
 
@@ -160,6 +161,29 @@ example `vup/Default/Nomal/1` for VPet.
 - `root` is the SHA-256 of `"agent-pet-pet-tree 1\ncatalog <catalog>\n"` followed by one
   `"<name> <sha256>\n"` line per pack, in the same order.
 
-Agent Pet uses only the pack names today. On-demand pets (part 2 of #62) will compare a stored root
-with the index root, then fetch only the packs whose leaves changed. `ctest -R pets` recomputes every
-digest from the built files.
+Installed packs are found by name. Pets that are not bundled use the digests: see below. `ctest -R pets`
+recomputes every digest from the built files.
+
+## Bundled and on-demand pets
+
+Only the pets in `AGENT_PET_BUNDLED_PETS` (CMake, default `vpet`) install their packs. Every other pet is in
+the index with its preview and hash tree, and its packs download when a user chooses it in Settings; the
+tile shows the download size, and a progress bar with Cancel shows while it runs. The pet appears on the
+next start once every pack is in.
+
+- Downloads come from one long-lived GitHub release, tag `pets`, where each pack is named by its SHA-256
+  (`<sha256>.rcc`). The release workflow runs `scripts/pet_blobs.py`, which collects every pack that is
+  not bundled, and uploads only the ones that release does not have yet, so app releases never upload
+  unchanged pet art again.
+- The store is `pets/` in the per-user data folder (see [install](install.md)). A pack enters it only
+  after its size and SHA-256 match the leaf in the installed index; a mismatch is fetched once more,
+  then the download fails and nothing is kept. Redirects may only go to GitHub's asset hosts over HTTPS.
+- `<id>.root` in the store records the tree root last found complete, so after an app update an
+  unchanged pet costs one comparison, and a changed one downloads only the packs whose leaves changed.
+- A downloaded pack that is missing or damaged when the pet starts is removed, VPet runs instead, and the
+  picker offers the download again. Packs no pet in the index uses are removed at startup.
+
+Try a pet as on-demand locally by leaving it out of the bundled list:
+`cmake -S . -B build -DAGENT_PET_BUNDLED_PETS=vpet` keeps every pack in the build folder, where it still
+counts as installed, but `cmake --install` and the packages carry only VPet's. ADR
+[0030](adr/0030-on-demand-pets.md) records the design.

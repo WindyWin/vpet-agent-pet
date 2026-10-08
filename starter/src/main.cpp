@@ -113,6 +113,8 @@ int main(int argc, char **argv) {
         QString petError;
         if (!pet::PetLibrary::shared().activate(chosen, &petError) && chosen != "vpet")
             qWarning().noquote() << QString("Pet \"%1\" is unavailable: %2; using vpet").arg(chosen, petError);
+        // Downloaded packs that no pet of this version uses any more go.
+        if (persist) pet::PetLibrary::shared().prune();
         pet::PetWindow window(nullptr, {}, persist);
         if (!window.player().select(parser.value("state"), true)) {
             std::fprintf(stderr, "%s\n", qPrintable(window.player().error()));

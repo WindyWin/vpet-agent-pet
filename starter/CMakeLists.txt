@@ -57,7 +57,10 @@ if(NOT AGENT_PET_PORTABLE_CORE)
 # Every pet folder under assets/ (docs/pets.md): one stable pack per frame folder, so additions never repack
 # unrelated artwork, and the small index (artwork.rcc) of every pet's metadata, catalog, preview and packs.
 include(cmake/pets.cmake)
-add_pets(pet_artwork SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/assets" OUTPUT "${CMAKE_CURRENT_BINARY_DIR}" INSTALL)
+# Pets that ship with the app; any other pet under assets/ downloads on demand from the `pets` release.
+set(AGENT_PET_BUNDLED_PETS vpet CACHE STRING "Pets whose artwork packs are installed (the rest download on demand)")
+add_pets(pet_artwork SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/assets" OUTPUT "${CMAKE_CURRENT_BINARY_DIR}" INSTALL
+    BUNDLED ${AGENT_PET_BUNDLED_PETS})
 file(GLOB pet_notices CONFIGURE_DEPENDS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "licenses/*")
 list(APPEND pet_notices THIRD_PARTY_NOTICES.md LICENSE NOTICE)
 # Translations. English is the source language; each .ts compiles to a .qm embedded at :/i18n/ in every
@@ -74,7 +77,7 @@ qt_add_lrelease(pet_i18n TS_FILES ${pet_ts_files} QM_FILES_OUTPUT_VARIABLE pet_q
 qt_add_resources(pet_i18n pet_translations PREFIX "/i18n" BASE "${CMAKE_CURRENT_BINARY_DIR}" FILES ${pet_qm_files})
 qt_add_library(pet_ui STATIC
     src/desktop/pet_window.cpp
-    src/desktop/pet_picker.cpp
+    src/desktop/pet_picker.cpp src/desktop/pet_downloader.cpp
     src/desktop/touch.cpp src/desktop/wander.cpp src/desktop/wellness.cpp src/desktop/alert_bubble.cpp src/desktop/monitor.cpp
     src/desktop/session_list.cpp src/updates/controller.cpp)
 target_include_directories(pet_ui PUBLIC src "${CMAKE_CURRENT_BINARY_DIR}/generated")
