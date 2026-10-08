@@ -157,6 +157,12 @@ Submission Runtime::submit(const Intent &intent) {
         if (changed) // The turn a waiting celebration was for is old news.
             for (int i = int(waiting_.size()) - 1; i >= 0; --i)
                 if (waiting_[i].intent.policy == Policy::Celebration) tell(waiting_.takeAt(i).intent, Outcome::Dropped);
+        // Any session activity ends the pet's arrival, as it always has; urgent activity ends every reaction.
+        if (showing_ && showing_->intent.policy == Policy::Startup) {
+            const auto old = std::move(*showing_);
+            showing_.reset();
+            tell(old.intent, Outcome::Interrupted);
+        }
         if (intent.policy == Policy::Urgent) {
             if (showing_ && rank(showing_->intent.policy) > rank(Policy::Urgent)) {
                 const auto old = std::move(*showing_);

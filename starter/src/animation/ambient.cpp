@@ -1,4 +1,5 @@
 #include "ambient.h"
+#include "stage.h"
 #include <QDateTime>
 
 namespace pet {
@@ -39,20 +40,28 @@ void Ambient::entered(const QString &state) {
     }
 }
 void Ambient::looped(const QString &state) {
-    if (state != "idle" || level_ == AmbientLevel::Off || idleSince_ < 0 || player_.held() || player_.stopped())
+    using namespace behavior;
+    if (state != "idle" || !stage_ || level_ == AmbientLevel::Off || idleSince_ < 0 || player_.held() || player_.stopped())
         return;
     const auto now = clock_(), idle = now - idleSince_;
     if (player_.sleepAfterS() > 0 && idle >= qint64(player_.sleepAfterS()) * 1000
         && player_.states().contains(player_.stateFor("nap"))) {
-        napping_ = true; player_.play("nap"); napping_ = false;
+        // A rest: it lasts until session activity, or anything else, wakes the pet.
+        napping_ = true;
+        stage_->runtime().submit({"ambient", "nap", "nap", Policy::Ambient, Lifetime::Persistent});
+        napping_ = false;
         return;
     }
     if (now < nextDue_) return;
     const auto special = eggs_ ? eggs_->fidget() : QString();
     const auto fidget = special.isEmpty() ? pick(idle) : special;
-    if (fidget.isEmpty()) { nextDue_ = now + gapMs(); return; }
-    last_ = fidget; special_ = special;
-    player_.select(fidget);
+    special_ = special; // Before submitting: entering it must count as a fidget.
+    // Fidgets are the pet's own states, not cues; the runtime decides whether one may play now.
+    if (fidget.isEmpty()
+        || stage_->runtime().submit({"ambient", "fidget", fidget, Policy::Ambient, Lifetime::OneShot, 0, {}, fidget}) != Submission::Admitted) {
+        special_.clear(); nextDue_ = now + gapMs(); return;
+    }
+    last_ = fidget;
 }
 QString Ambient::pick(qint64 idleMs) {
     QVector<const Fidget *> common, rare;

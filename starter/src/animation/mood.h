@@ -36,6 +36,9 @@ public:
     // pools, the "turn-finished" cue's state.
     Celebration celebrate(const QString &occasion = {});
     QString treat() const { return treat_; } // The cue "milestone" or "snack", or empty.
+    // A treat celebrate() handed out that never got to show (the behavior runtime refused or dropped it): it
+    // waits for the next finished turn again. A milestone outranks a snack.
+    void keep(const QString &cue);
     // Every finished turn ever seen, persisted so the hundredth survives restarts.
     int turns() const { return turns_; }
     void setTurns(int turns) { turns_ = qMax(0, turns); }

@@ -5,6 +5,7 @@
 #include <functional>
 
 namespace pet {
+class Stage;
 enum class AmbientLevel { Off = 0, Subtle = 1, Lively = 2 };
 
 // Plays a random fidget now and then while the pet idles, and lets it doze off after a long quiet
@@ -28,6 +29,9 @@ public:
     void setClock(std::function<qint64()> milliseconds);
     // Special days and late nights may offer their own fidget, asked before each ordinary draw.
     void setEasterEggs(EasterEggs *eggs) { eggs_ = eggs; }
+    // Fidgets and naps are submitted to the behavior runtime, which plays them only while nothing else is
+    // going on. Unset, none play.
+    void setStage(Stage *stage) { stage_ = stage; }
     // A fidget that walks, crawls or climbs moves the window, so the window decides whether one can
     // start now; it is left out of the draw otherwise. Without a gate, moves never play.
     void setMoveGate(std::function<bool(const Move &)> gate) { moveGate_ = std::move(gate); }
@@ -40,6 +44,7 @@ private:
     QString pick(qint64 idleMs);
     Player &player_;
     EasterEggs *eggs_ = nullptr;
+    Stage *stage_ = nullptr;
     AmbientLevel level_ = AmbientLevel::Subtle;
     Random random_ = systemRandom();
     std::function<qint64()> clock_;

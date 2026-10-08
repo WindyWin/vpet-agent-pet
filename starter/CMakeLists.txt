@@ -53,7 +53,7 @@ target_include_directories(pet_behavior PUBLIC src)
 target_link_libraries(pet_behavior PUBLIC Qt6::Core)
 qt_add_library(pet_animation STATIC
     src/animation/catalog.cpp src/animation/pet_library.cpp src/animation/player.cpp src/animation/ambient.cpp src/animation/activity.cpp
-    src/animation/mood.cpp src/animation/easter_eggs.cpp)
+    src/animation/mood.cpp src/animation/easter_eggs.cpp src/animation/stage.cpp)
 target_include_directories(pet_animation PUBLIC src PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/generated")
 target_link_libraries(pet_animation PUBLIC Qt6::Gui pet_behavior)
 

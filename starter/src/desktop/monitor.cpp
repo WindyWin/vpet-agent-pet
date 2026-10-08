@@ -42,6 +42,7 @@ Monitor::Monitor(PetWindow &window, std::shared_ptr<hosts::FocusService> focus)
     recapTimer_.setSingleShot(true); recapTimer_.setInterval(2000);
     connect(&recapTimer_, &QTimer::timeout, this, [this] { recapStore_.save(recap_); });
     connect(&window_, &PetWindow::quitRequested, this, &Monitor::stop);
+    connect(&window_.stage(), &Stage::outcome, this, &Monitor::outcome);
     connect(&window_, &PetWindow::presenceChanged, this, [this] {
         if (window_.petHidden()) { list_.hide(); note_.hide(); dropReminder(); }
         refreshAlerts();
@@ -49,8 +50,12 @@ Monitor::Monitor(PetWindow &window, std::shared_ptr<hosts::FocusService> focus)
 }
 QString Monitor::bedtimeNote() { return Pet::tr("It's getting late. Maybe finish up and get some sleep?"); }
 // Session states are cues (src/animation/cues.json): each aggregate state asks the pet to show the cue of that name.
-// These interrupt whatever the pet is doing and keep reminders and surprises away.
+// These are the Urgent class: they interrupt whatever the pet is doing and keep reminders and surprises away.
 static bool urgent(const QString &cue) { return cue == "attention" || cue == "exhausted" || cue == "error"; }
+// How long a due reminder may wait for calm before it is asked for again.
+static constexpr qint64 reminderWaitMs = 10 * 60 * 1000;
+static const char *const wellnessReminders[] = {"eyes", "water"};
+static const char *const clockReminders[] = {"monday", "leave-work", "sleep"};
 // Subagents fold into their parent, as in the running-sessions list.
 static int topLevelSessions(const Sessions &sessions) {
     const auto &records = sessions.records();
@@ -75,6 +80,7 @@ bool Monitor::checkpointSessions() {
 }
 bool Monitor::apply(const Event &event, qint64 now) {
     if (!active_ || !sessions_.apply(event, now)) return false;
+    now_ = now;
     const auto it = sessions_.records().find(event.provider + QChar(0x1f) + event.session);
     const Session *session = it == sessions_.records().end() ? nullptr : &*it;
     if (recap_.record(event, session, QDateTime::fromMSecsSinceEpoch(now).date())) recapTimer_.start();
@@ -88,11 +94,9 @@ bool Monitor::apply(const Event &event, qint64 now) {
     if (!(locked && locked())) window_.wellness().activity(now, event.kind == "prompt");
     checkpointSessions();
     observed_ = true; update(now);
-    // The hook saw a destructive command start: the pet jumps, then shows the work going on. A session
-    // waiting on the user, out of quota, or a fresh error, matters more.
-    const auto aggregate = sessions_.aggregate(now);
-    if (event.kind == "tool_start" && event.risky && !window_.petHidden() && !urgent(aggregate))
-        window_.eggs().surprise("danger");
+    // The hook saw a destructive command start: the pet jumps, then shows the work going on. The runtime keeps
+    // it away while a session waits on the user, is out of quota or just failed, or the pet is hidden.
+    if (event.kind == "tool_start" && event.risky) window_.eggs().surprise("danger");
     // Work going on deep into the night earns one gentle note.
     if (event.kind == "turn_finished" && !event.waiting && !window_.muted() && !window_.petHidden() && window_.eggs().bedtime())
         say(bedtimeNote());
@@ -100,6 +104,7 @@ bool Monitor::apply(const Event &event, qint64 now) {
 }
 void Monitor::update(qint64 now) {
     if (!active_) return;
+    now_ = now;
     sessions_.expire(now);
     // A locked screen is a break: both timers start over, nothing counts until it is unlocked, and a
     // reminder or countdown on screen goes away. The pointer is followed, so a move behind the lock does
@@ -112,61 +117,90 @@ void Monitor::update(qint64 now) {
         const auto position = pointer();
         if (position != lastPointer_) { lastPointer_ = position; window_.wellness().activity(now); }
     }
-    remind();
     refreshAlerts();
     if (list_.isVisible()) list_.present(sessionRows(sessions_, now));
     int errors = 0;
     for (const auto &alert : sessions_.pending()) errors += alert.kind == "error";
     window_.setStatus(topLevelSessions(sessions_), sessions_.unresolvedAttention(), errors);
     window_.updatePresence(sessions_.records().size(), now); // May hide, show or quit the pet.
+    if (!active_) return;
     window_.mood().refresh(now);
+    syncBehavior(now);
+    auto &runtime = window_.stage().runtime();
+    runtime.tick();
+    remind();
     remindWellness(now);
-    if (!active_ || !observed_ || window_.quitting()) return;
+    if (!observed_) return;
+    using namespace behavior;
     const auto cue = sessions_.aggregate(now);
-    auto &player = window_.player();
-    const auto animation = player.stateFor(cue);
-    // A fidget, an ambient nap or a reaction to the user is how an idle pet looks; leave it until something real
-    // happens. A reaction counts from when it is requested, because the drag's own end plays first.
-    const auto showing = animation == player.stateFor("idle") && window_.resting() ? animation : player.requestedState();
-    // A surprise, such as a startled jump or a dance, plays out unless a session needs the user.
-    if (window_.eggs().surprising() && !urgent(cue)) return;
-    // While the user holds the pet, or it is falling, the player keeps the latest request for afterwards.
-    if (cue != lastAggregate_ || (!player.held() && cue != "error" && cue != "turn-finished" && showing != animation)) {
-        // A turn that just finished is celebrated in one of several ways, or with a treat when one is due.
-        if (cue == "turn-finished" && lastAggregate_ != cue) {
-            const auto celebration = window_.mood().celebrate(window_.eggs().celebration(lastTurnMs_));
-            player.select(celebration.state, urgent(cue));
-            // A snack that played already says "have a drink"; the water reminder need not repeat it.
-            if (celebration.cue == "snack") window_.wellness().given("water", now);
-        } else player.play(cue, urgent(cue));
-        lastAggregate_ = cue;
-    }
+    const auto *shape = findCue(cue);
+    const bool moment = shape && shape->mode == "once"; // turn-finished, error: shown once, never replayed.
+    const auto submitted = runtime.submit({"session", "activity", cue, urgent(cue) ? Policy::Urgent : Policy::Activity,
+                                           moment ? Lifetime::Moment : Lifetime::Persistent});
+    // A turn that just finished is celebrated in one of several ways, or with a treat when one is due; the
+    // celebration takes the turn-finished state's place.
+    if (submitted != Submission::Admitted || cue != "turn-finished") return;
+    const auto celebration = window_.mood().celebrate(window_.eggs().celebration(lastTurnMs_));
+    if (celebration.cue == "turn-finished") return; // No pool for any of them: the cue's own state shows.
+    // A snack already says "have a drink": once it plays, the water reminder need not repeat it.
+    const auto effects = celebration.cue == "snack" ? QStringList{"water"} : QStringList{};
+    const auto celebrated = runtime.submit({"mood", "celebration", celebration.cue, Policy::Celebration, Lifetime::OneShot,
+                                            runtime.now() + EasterEggs::surpriseMs, effects, celebration.state});
+    if (celebrated == Submission::Rejected || celebrated == Submission::Duplicate) window_.mood().keep(celebration.cue);
 }
 void Monitor::say(const QString &text, const QString &details, int ms) {
     reminder_.clear(); // Whatever the note said before is gone.
     note_.say(text, window_.figure(), window_.screenAreas(), details, ms);
 }
-// The user is there, nothing needs them, nothing else is being said and the pet is free: a reminder will
-// not get in the way. A locked screen sees no pointer movement, so it holds reminders too.
-bool Monitor::calm(qint64 now) const {
-    const auto state = sessions_.aggregate(now);
-    return window_.wellness().present(now) && !window_.petHidden() && !window_.muted() && !bubble_.isVisible() && !note_.isVisible() && restLeft_ == 0 &&
-           sessions_.unresolvedAttention() == 0 && !urgent(state) &&
-           !window_.player().held() && !window_.eggs().surprising() && !window_.walking() && !window_.flying();
+// Everything that decides whether a reminder would get in the way: the user is there, nothing needs them,
+// nothing else is being said, and the pet is in view and free. A locked screen sees no pointer movement, so the
+// user is never present behind it.
+void Monitor::syncBehavior(qint64 now) {
+    window_.stage().update([&](behavior::Context &c) {
+        c.visible = !window_.petHidden();
+        c.moving = window_.walking() || window_.sliding() || window_.flying();
+        c.present = window_.wellness().present(now) && !(locked && locked());
+        c.muted = window_.muted();
+        c.speaking = bubble_.isVisible() || note_.isVisible() || restLeft_ > 0;
+        c.attention = sessions_.unresolvedAttention();
+    });
+}
+// What the runtime did with a reminder or a treat. A reminder shows its note when it is admitted, so art and
+// note come together, and a reminder that never got its turn says nothing.
+void Monitor::outcome(const behavior::Intent &intent, behavior::Outcome outcome) {
+    using behavior::Outcome;
+    if (!active_) return;
+    if (outcome == Outcome::Started && intent.effects.contains("water")) window_.wellness().given("water", now_);
+    if (intent.source == "mood" && (outcome == Outcome::Dropped || outcome == Outcome::Expired)) window_.mood().keep(intent.cue);
+    if (outcome != Outcome::Admitted) return;
+    if (intent.source == "wellness") {
+        window_.wellness().given(intent.key, now_); // Ignored, it fades and comes back after the next interval.
+        say(Wellness::note(intent.key));
+        reminder_ = intent.key;
+    } else if (intent.source == "clock") {
+        window_.eggs().reminded(intent.key);
+        // The go-home nudge sums up the day, when there was agent work to sum up.
+        const auto today = recap_.day(QDate::currentDate());
+        const auto note = EasterEggs::reminderNote(intent.key, window_.eggs().reminderSchedule());
+        if (intent.key == "leave-work" && window_.recapEnabled() && today.turns)
+            say(note + "\n" + Recap::summary(today), Recap::breakdown(today));
+        else say(note);
+    }
 }
 // An eye break or a sip of water, once its stretch of active time is up. A due reminder waits for calm; in
 // quiet hours it is let go, so the morning does not start with one.
 void Monitor::remindWellness(qint64 now) {
     if (!active_ || (locked && locked())) return; // The presence update may have just quit.
     auto &wellness = window_.wellness();
-    const auto due = wellness.due(now);
+    auto &runtime = window_.stage().runtime();
+    auto due = wellness.due(now);
+    if (!due.isEmpty() && Wellness::quietAt(window_.eggs().now())) { wellness.given(due, now); due.clear(); }
+    // A reminder that is no longer due (taken some other way, turned off, a break) stops waiting.
+    for (const auto *reminder : wellnessReminders) if (due != reminder) runtime.withdraw("wellness", reminder);
     if (due.isEmpty()) return;
-    if (Wellness::quietAt(window_.eggs().now())) { wellness.given(due, now); return; }
-    if (!calm(now)) return;
-    wellness.given(due, now); // Ignored, it fades and comes back after the next interval.
-    window_.eggs().surprise(due == "eyes" ? "eye-break" : "water", true);
-    say(Wellness::note(due));
-    reminder_ = due;
+    using namespace behavior;
+    runtime.submit({"wellness", due, due == "eyes" ? "eye-break" : "water", Policy::Reminder, Lifetime::OneShot,
+                    runtime.now() + reminderWaitMs});
 }
 // A click on the reminder means it was done: a sip earns a happy reaction at once, an eye break after its countdown.
 void Monitor::answered() {
@@ -201,18 +235,15 @@ void Monitor::showRecap() {
     if (window_.petHidden()) window_.showTrayMessage(Pet::tr("Today's recap"), Recap::breakdown(today));
     else say(Recap::summary(today), today.turns ? Recap::breakdown(today) : QString());
 }
-// Monday blues, the go-home nudge and bedtime: said once each day, and kept for later while the pet is hidden.
+// Monday blues, the go-home nudge and bedtime: said once each day when calm, and kept for later while the pet is
+// hidden or the user is away.
 void Monitor::remind() {
-    if (window_.petHidden()) return;
-    const auto reminder = window_.eggs().reminder();
-    if (reminder.isEmpty()) return;
-    window_.eggs().surprise(reminder);
-    if (window_.muted()) return;
-    // The go-home nudge sums up the day, when there was agent work to sum up.
-    const auto today = recap_.day(QDate::currentDate());
-    if (reminder == "leave-work" && window_.recapEnabled() && today.turns)
-        say(EasterEggs::reminderNote(reminder, window_.eggs().reminderSchedule()) + "\n" + Recap::summary(today), Recap::breakdown(today));
-    else say(EasterEggs::reminderNote(reminder, window_.eggs().reminderSchedule()));
+    auto &runtime = window_.stage().runtime();
+    const auto due = window_.eggs().dueReminder();
+    for (const auto *reminder : clockReminders) if (due != reminder) runtime.withdraw("clock", reminder);
+    if (due.isEmpty()) return;
+    using namespace behavior;
+    runtime.submit({"clock", due, due, Policy::Reminder, Lifetime::OneShot, runtime.now() + reminderWaitMs});
 }
 bool Monitor::shown(const Alert &alert) const {
     const int level = window_.bubbles();

@@ -66,8 +66,13 @@ static void drawBadge(QPainter &painter, const QRect &badge, const QColor &color
     painter.drawText(badge, Qt::AlignCenter, text);
     painter.restore();
 }
+// Hiding behind a screen edge is a rest: it lasts while the pet idles, and session activity ends it.
+static behavior::Intent edgeIntent(const QString &state) {
+    return {"touch", "edge", state, behavior::Policy::Ambient, behavior::Lifetime::Persistent};
+}
 PetWindow::PetWindow(QWidget *parent, const QString &path, bool persist)
-    : QWidget(parent), player_(this), ambient_(player_, this), activity_(player_, this), mood_(player_, this), eggs_(player_, this), store_(path), menu_(this), tray_(this), persist_(persist) {
+    : QWidget(parent), player_(this), stage_(player_, [this] { return eggs_.now().toMSecsSinceEpoch(); }, this),
+      ambient_(player_, this), activity_(player_, this), mood_(player_, this), eggs_(player_, this), store_(path), menu_(this), tray_(this), persist_(persist) {
     const auto preferences = persist_ ? store_.load() : Preferences{};
     setWindowTitle("Agent Pet");
     setWindowFlags(Qt::Tool | Qt::FramelessWindowHint);
@@ -87,22 +92,17 @@ PetWindow::PetWindow(QWidget *parent, const QString &path, bool persist)
     eggs_.setEnabled(preferences.easterEggs); eggs_.setBirthday(preferences.birthday);
     wellness_.setEyeMinutes(preferences.eyeMinutes); wellness_.setWaterMinutes(preferences.waterMinutes);
     ambient_.setEasterEggs(&eggs_);
+    ambient_.setStage(&stage_); eggs_.setStage(&stage_);
     connect(&player_, &Player::entered, this, &PetWindow::entered);
     autostart_ = preferences.autostart; presence_.setPolicy(preferences.whenIdle);
     language_ = preferences.language;
     pet_ = preferences.pet;
     connect(&player_, &Player::changed, this, qOverload<>(&PetWindow::update));
-    connect(&player_, &Player::completed, this, [this](const QString &state) {
-        if (!quitting_ || state != player_.stateFor(quitCue_)) return;
-        // Leave time to read the pet's complaint before its departure animation.
-        if (quitCue_ == "annoyed") quitTimer_.start(2250);
-        else qApp->quit();
-    });
-    quitTimer_.setSingleShot(true);
-    connect(&quitTimer_, &QTimer::timeout, this, [this] {
-        if (quitCue_ == "annoyed") playQuitAnimation("quit-angry");
-        else qApp->quit();
-    });
+    // Shutdown always ends: its animation finished, failed or ran out of time, or nobody could see it.
+    connect(&stage_, &Stage::finished, this, [] { qApp->quit(); });
+    // Monitoring stops when quitting starts, so this keeps the runtime's clock going for the shutdown's bound.
+    quitTimer_.setInterval(250);
+    connect(&quitTimer_, &QTimer::timeout, this, [this] { stage_.runtime().tick(); });
     touchClock_.start();
     // Everyday actions stay at the top level; previews, troubleshooting, updates and credits go under More.
     // retranslate() labels them.
@@ -181,11 +181,12 @@ PetWindow::PetWindow(QWidget *parent, const QString &path, bool persist)
     slide_.setDuration(280); slide_.setEasingCurve(QEasingCurve::OutCubic);
     connect(&slide_, &QVariantAnimation::valueChanged, this, [this](const QVariant &value) { move(value.toPoint()); });
     connect(&slide_, &QVariantAnimation::finished, this, [this] {
-        // Arrived: hide only if the pet is still idle and nobody has picked it up meanwhile.
+        // Arrived: it hides there as a rest, which the runtime allows only while nothing else is going on.
         const auto &touch = player_.touch();
-        if (dragging_ || quitting_ || flight_ || !player_.requested("idle")) return;
+        syncBehavior();
+        if (dragging_ || quitting_ || flight_) return;
         const auto hide = slideEdge_ == touch::Edge::Left ? touch.edgeLeft : slideEdge_ == touch::Edge::Right ? touch.edgeRight : QString();
-        if (!hide.isEmpty()) player_.select(hide);
+        if (!hide.isEmpty()) stage_.runtime().submit(edgeIntent(hide));
     });
     saveTimer_.setSingleShot(true); saveTimer_.setInterval(250);
     connect(&saveTimer_, &QTimer::timeout, this, &PetWindow::savePreferences);
@@ -201,7 +202,7 @@ PetWindow::PetWindow(QWidget *parent, const QString &path, bool persist)
     move(preferences.hasPosition ? preferences.position : QPoint(-1000000, -1000000));
     constrainPosition();
     ready_ = true;
-    player_.play("start", true);
+    stage_.runtime().submit({"lifecycle", "start", "start", behavior::Policy::Startup});
 }
 PetWindow::~PetWindow() { savePreferences(); }
 void PetWindow::changeEvent(QEvent *event) {
@@ -442,7 +443,14 @@ void PetWindow::applyPresence(Presence::Action action) {
         player_.setPaused(false);
         constrainPosition();
     }
+    syncBehavior();
     emit presenceChanged();
+}
+void PetWindow::syncBehavior() {
+    stage_.update([this](behavior::Context &c) {
+        c.visible = !petHidden();
+        c.moving = walking() || sliding() || flying();
+    });
 }
 void PetWindow::updatePresence(int sessions, qint64 now) {
     if (quitting_) return;
@@ -564,20 +572,14 @@ void PetWindow::beginQuit(const QString &remark) {
     if (previewDialog_) previewDialog_->close();
     if (aboutDialog_) aboutDialog_->close();
     menu_.setEnabled(false);
-    if (petHidden()) { qApp->quit(); return; } // No one would see the closing animation.
-    player_.setPaused(false);
-    if (!remark.isEmpty()) quitNote_.say(remark, figure(), screenAreas());
-    playQuitAnimation(remark.isEmpty() ? "quit" : "annoyed");
-}
-void PetWindow::playQuitAnimation(const QString &cue) {
-    quitCue_ = cue;
-    if (!player_.play(cue, true) || player_.stopped()) {
-        if (cue == "annoyed") playQuitAnimation("quit-angry");
-        else qApp->quit();
-        return;
+    syncBehavior(); // A hidden pet quits at once: no one would see the closing animation.
+    if (!petHidden()) {
+        player_.setPaused(false);
+        if (!remark.isEmpty()) quitNote_.say(remark, figure(), screenAreas());
     }
-    // A broken shutdown asset must never prevent exit.
-    quitTimer_.start(5000);
+    quitTimer_.start();
+    // Pestered into leaving, it complains first: the annoyed cue, a moment to read the remark, then quit-angry.
+    stage_.runtime().submit({"lifecycle", "quit", remark.isEmpty() ? "quit" : "annoyed", behavior::Policy::Shutdown});
 }
 void PetWindow::closeEvent(QCloseEvent *event) { event->ignore(); requestQuit(); }
 void PetWindow::contextMenuEvent(QContextMenuEvent *event) { menu_.popup(event->globalPos()); }
@@ -631,7 +633,7 @@ void PetWindow::letGo(QPointF velocity) {
     // Only an idle pet hides; one with work to show stays in view.
     const auto edge = touchEnabled_ ? touch::pushedEdge(QRect(nativePos(), size()), screenAreas()) : touch::Edge::None;
     const auto hide = edge == touch::Edge::Left ? touch.edgeLeft : edge == touch::Edge::Right ? touch.edgeRight : QString();
-    if (!hide.isEmpty() && player_.requested("idle")) { slideToEdge(edge); return; }
+    if (!hide.isEmpty() && stage_.runtime().admits(edgeIntent(hide))) { slideToEdge(edge); return; }
     constrainPosition();
 }
 void PetWindow::slideToEdge(touch::Edge edge) {

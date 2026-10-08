@@ -622,25 +622,33 @@ private slots:
 
     // --- Lifecycle ----------------------------------------------------------------------------------
 
-    void startupYieldsOnlyToUrgentActivity() {
+    void startupEndsWithTheFirstSessionActivity() {
         Rig rig;
         QCOMPARE(rig.runtime.submit({"lifecycle", "start", "start", Policy::Startup}), Submission::Admitted);
         QVERIFY(rig.requests.last().interrupt);
         rig.play();
-        rig.runtime.submit(activity("working"));
-        QCOMPARE(rig.runtime.submit(danger()), Submission::Rejected);
-        QCOMPARE(rig.lastCue(), QString("start"));
-        rig.runtime.submit(activity("attention")); // A request restored from before an update.
-        QCOMPARE(rig.lastCue(), QString("attention"));
+        QCOMPARE(rig.runtime.submit(oneShot("ambient", "fidget", Policy::Ambient)), Submission::Rejected);
+        rig.runtime.submit(activity("working")); // As always: the work shows at once.
+        QCOMPARE(rig.lastCue(), QString("working"));
         QCOMPARE(rig.history("lifecycle/start"), QString("admitted started interrupted"));
     }
 
-    void startupCompletesIntoTheLatestActivity() {
+    void reactionsCutTheArrivalShort() {
         Rig rig;
         rig.runtime.submit({"lifecycle", "start", "start", Policy::Startup});
         rig.play();
+        QCOMPARE(rig.runtime.submit(danger()), Submission::Admitted);
+        QCOMPARE(rig.history("lifecycle/start"), QString("admitted started interrupted"));
+    }
+
+    void startupCompletesIntoTheActivity() {
+        Rig rig;
+        rig.runtime.submit({"lifecycle", "start", "start", Policy::Startup});
+        rig.play();
+        const auto requests = rig.requests.size();
+        rig.answer(Feedback::Completed); // Nothing to show yet: presentation went on to idle by itself.
+        QCOMPARE(rig.requests.size(), requests);
         rig.runtime.submit(activity("working"));
-        rig.answer(Feedback::Completed);
         QCOMPARE(rig.lastCue(), QString("working"));
     }
 

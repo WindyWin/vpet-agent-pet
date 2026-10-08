@@ -1,16 +1,11 @@
 #include "easter_eggs.h"
+#include "stage.h"
 #include "i18n/contexts.h"
 #include "settings/preferences.h"
 
 namespace pet {
-EasterEggs::EasterEggs(Player &player, QObject *parent) : QObject(parent), player_(player) {
-    // Anything else showing ends a surprise, whether it finished or was cut short.
-    connect(&player_, &Player::entered, this, [this](const QString &state) { if (state != surprise_) surprise_.clear(); });
-}
-void EasterEggs::setEnabled(bool enabled) {
-    enabled_ = enabled;
-    if (!enabled_) surprise_.clear();
-}
+EasterEggs::EasterEggs(Player &player, QObject *parent) : QObject(parent), player_(player) {}
+void EasterEggs::setEnabled(bool enabled) { enabled_ = enabled; }
 bool EasterEggs::setBirthday(const QString &monthDay) {
     if (!monthDay.isEmpty() && !Preferences::validBirthday(monthDay)) return false;
     birthday_ = monthDay;
@@ -62,16 +57,15 @@ QString EasterEggs::celebration(qint64 turnMs) {
     return {};
 }
 bool EasterEggs::surprise(const QString &cue, bool evenWhenOff) {
-    if ((!enabled_ && !evenWhenOff) || player_.held() || player_.stopped()) return false;
+    if ((!enabled_ && !evenWhenOff) || !stage_) return false;
     const auto state = draw(cue);
     if (state.isEmpty()) return false;
-    surprise_ = state; // Before selecting: entering it must not count as something else showing.
-    surpriseUntil_ = clock_().toMSecsSinceEpoch() + surpriseMs;
-    player_.select(state, true);
-    return true;
+    using namespace behavior;
+    return stage_->runtime().submit({"eggs", cue, cue, Policy::Surprise, Lifetime::OneShot, 0, {}, state}) == Submission::Admitted;
 }
 bool EasterEggs::surprising() const {
-    return !surprise_.isEmpty() && player_.requestedState() == surprise_ && clock_().toMSecsSinceEpoch() < surpriseUntil_;
+    const auto *showing = stage_ ? stage_->runtime().showing() : nullptr;
+    return showing && showing->source == "eggs" && showing->policy == behavior::Policy::Surprise;
 }
 bool EasterEggs::bedtime() {
     const auto now = clock_();
@@ -97,15 +91,18 @@ QString EasterEggs::reminderNote(const QString &reminder, const ReminderSchedule
     if (reminder == "sleep") return Pet::tr("It's %1. Time to put everything down and go to sleep!").arg(schedule.sleep.toString("HH:mm"));
     return {};
 }
-QString EasterEggs::reminder() {
+QString EasterEggs::dueReminder() const {
     if (!enabled_) return {};
     const auto now = clock_();
-    for (const auto &due : remindersAt(now, schedule_)) {
-        if (reminded_.value(due) == now.date()) continue;
-        reminded_.insert(due, now.date());
-        return due;
-    }
+    for (const auto &due : remindersAt(now, schedule_))
+        if (reminded_.value(due) != now.date()) return due;
     return {};
+}
+void EasterEggs::reminded(const QString &reminder) { if (!reminder.isEmpty()) reminded_.insert(reminder, clock_().date()); }
+QString EasterEggs::reminder() {
+    const auto due = dueReminder();
+    reminded(due);
+    return due;
 }
 bool EasterEggs::key(int key) {
     static const QVector<int> code{Qt::Key_Up, Qt::Key_Up, Qt::Key_Down, Qt::Key_Down, Qt::Key_Left,

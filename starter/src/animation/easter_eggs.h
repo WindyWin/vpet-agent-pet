@@ -1,4 +1,5 @@
 #pragma once
+#include "behavior/runtime.h"
 #include "player.h"
 #include "settings/preferences.h"
 #include <QDateTime>
@@ -8,6 +9,7 @@
 #include <functional>
 
 namespace pet {
+class Stage;
 // Surprises tied to the calendar, the clock and a few rare events. Each one is a reaction cue that the pet maps
 // to a pool of states, so a pet without that pool skips it:
 //   may20, birthday  on that day the first ambient fidget greets with it, and later ones now and then
@@ -25,8 +27,9 @@ class EasterEggs : public QObject {
     Q_OBJECT
 public:
     static constexpr qint64 longTurnMs = 15 * 60 * 1000;
-    // A surprise holds off session animation for at most this long, even if the player stalls.
-    static constexpr qint64 surpriseMs = 15000;
+    // A surprise holds off session animation for at most this long, even if the player stalls: the behavior
+    // runtime's bound on any reaction.
+    static constexpr qint64 surpriseMs = behavior::Runtime::oneShotTimeoutMs;
     // On a special day, one later fidget in this many is the day's own; at night, one in this many yawns.
     static constexpr int occasionOneIn = 4, lateNightOneIn = 2;
     static constexpr int lateNightFrom = 1, lateNightUntil = 5, fridayEveningFrom = 17; // Hours, local time.
@@ -46,11 +49,13 @@ public:
     QString fidget();
     // The reaction cue to celebrate a finished turn of `turnMs` with (0 when unknown), or empty.
     QString celebration(qint64 turnMs);
-    // Plays a reaction cue now, such as "danger" or "konami". It plays out unless a session needs the user.
-    // False when skipped: turned off (unless `evenWhenOff`, for reminders the user chose elsewhere),
-    // no pool for the cue, or the pet is held or stopped.
+    // Surprises go through the behavior runtime. Unset, none play.
+    void setStage(Stage *stage) { stage_ = stage; }
+    // Plays a reaction cue now, such as "danger" or "konami", as a Surprise: it plays out unless a session needs
+    // the user. False when skipped: turned off (unless `evenWhenOff`, for a cheer the user earned elsewhere), no
+    // pool for the cue, or the runtime refused it (the pet is held, hidden, quitting or busy with something bigger).
     bool surprise(const QString &cue, bool evenWhenOff = false);
-    bool surprising() const; // A surprise is still what the pet shows.
+    bool surprising() const; // One of these surprises is what the runtime shows.
     bool bedtime(); // True once a night, the first time it is asked late at night.
     // Which of "monday", "leave-work" and "sleep" are due at this local time, whether or not already given.
     static QStringList remindersAt(const QDateTime &local, const ReminderSchedule &schedule = {});
@@ -60,9 +65,11 @@ public:
     ReminderSchedule reminderSchedule() const { return schedule_; }
     // What the pet says for a reminder; empty for an unknown one.
     static QString reminderNote(const QString &reminder, const ReminderSchedule &schedule = {});
-    // The first reminder that is due and not yet given today, and marks it given; empty for none. A reminder
+    // The first reminder that is due and not yet given today; empty for none, or when turned off. A reminder
     // is given once a day, or not at all if the pet was not running when it was due.
-    QString reminder();
+    QString dueReminder() const;
+    void reminded(const QString &reminder); // Given today: it is not due again until tomorrow.
+    QString reminder(); // dueReminder(), marked given.
     bool key(int key); // Feeds a key press; true when it completes the Konami code.
     void setClock(std::function<QDateTime()> clock) { if (clock) clock_ = std::move(clock); }
     QDateTime now() const { return clock_(); } // Local time, from the replaceable clock.
@@ -71,12 +78,12 @@ public:
 private:
     QString draw(const QString &cue);
     Player &player_;
+    Stage *stage_ = nullptr;
     Random random_ = systemRandom();
     std::function<QDateTime()> clock_ = defaultClock;
     bool enabled_ = true;
     ReminderSchedule schedule_;
-    QString birthday_, surprise_;
-    qint64 surpriseUntil_ = 0;
+    QString birthday_;
     QDate greetedOn_, cheeredOn_, bedtimeOn_;
     QHash<QString, QDate> reminded_; // The day each reminder was last given.
     QSet<QString> greeted_; //Occasions that already greeted on `greetedOn_`.

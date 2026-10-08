@@ -198,15 +198,18 @@ bool Player::vary(const QString &sequence) {
 }
 void Player::hold(const QString &state) {
     if (!catalog_.animations.contains(state) || (held_ && state == state_)) return;
+    const bool was = held_;
     if (!held_) holdResume_ = resumeTarget();
     pending_.clear();
     held_ = true;
     enter(state);
+    if (!was) emit heldChanged(true);
 }
 void Player::release() {
     if (!held_) return;
     held_ = false;
     select(holdResume_);
+    emit heldChanged(false);
 }
 QString Player::touchAt(QPointF point, int side) const {
     if (catalog_.touch.scale <= 0 || side <= 0) return {};
@@ -266,10 +269,13 @@ void Player::advance() {
         if (phase_ == 0) { enterSequence(1, std::exchange(welcome_, {})); return; }
         if (phase_ == 1 && animation.loops > 0 && ++loopCount_ >= animation.loops) { enterSequence(2); return; }
         if (phase_ == 2) {
+            const auto finished = state_;
             auto target = pending_.isEmpty() ? QString("idle") : pending_;
             pending_.clear();
             if (catalog_.animations[target].mode == "once") previous_ = state_;
-            enter(target); return;
+            finishing_ = true; enter(target); finishing_ = false;
+            emit completed(finished);
+            return;
         }
     }
     if (animation.mode == "once") {
@@ -280,7 +286,7 @@ void Player::advance() {
             auto target = animation.after == "previous" ? previous_ : QString("idle");
             if (!catalog_.animations.contains(target) || catalog_.animations[target].mode == "once" || target == stateFor("drag")
                 || isTouch(target)) target = "idle";
-            enter(target);
+            finishing_ = true; enter(target); finishing_ = false;
         }
         emit completed(finished);
         return;
