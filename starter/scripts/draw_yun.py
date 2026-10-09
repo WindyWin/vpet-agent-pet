@@ -17,7 +17,7 @@ from dataclasses import dataclass, field, replace
 import cairo
 
 from pet_art import (CHEEK, CX, GROUND, INK, SIZE, WHITE, back_out, ease, ease_out, ellipse, fill_stroke,
-                     heart, hearts_up, hop, lerp, mix, notes, osc, puff, rgb, round_rect, run, sparkles, star, sweat,
+                     heart, hearts_up, hop, lerp, mix, notes, osc, puff, rgb, ease_in, round_rect, run, sparkles, star, sweat,
                      zzz)
 
 ROBE = (0.13, 0.12, 0.17)          # black robe
@@ -68,6 +68,7 @@ class Pose:
     hand_r: tuple = None
     wind: float = 0.2
     flutter: float = 0
+    drag: float = 0            # cloth pulled up (+) or down (-) by the body's motion; see follow_through
     hair_up: float = 0         # hair lifted by a surge of qi
     soot: float = 0            # scorched by lightning
     tint: float = 0
@@ -92,7 +93,7 @@ EYE_Y = -362
 EYE_DX = 54
 
 
-def ribbon(ctx, x, y, angle, length, width, wind, flutter, color, outline=True, taper=0.5, sway=1.0):
+def ribbon(ctx, x, y, angle, length, width, wind, flutter, color, outline=True, taper=0.5, sway=1.0, drag=0.0):
     """A strip of cloth or hair starting at (x, y), heading at `angle` degrees (0 = right, 90 = down)."""
     n = 16
     a = math.radians(angle)
@@ -101,7 +102,7 @@ def ribbon(ctx, x, y, angle, length, width, wind, flutter, color, outline=True, 
         u = i / n
         wave = math.sin(flutter * 2 * math.pi + u * 5) * 24 * u * sway
         pts.append((x + math.cos(a) * length * u - math.sin(a) * wave,
-                    y + math.sin(a) * length * u + math.cos(a) * wave + (1 - wind) * 22 * u * u))
+                    y + math.sin(a) * length * u + math.cos(a) * wave + (1 - wind) * 22 * u * u - drag * 90 * u * u))
     left, right = [], []
     for i, (px, py) in enumerate(pts):
         nx, ny = pts[min(i + 1, n)][0] - pts[max(i - 1, 0)][0], pts[min(i + 1, n)][1] - pts[max(i - 1, 0)][1]
@@ -124,20 +125,20 @@ def ribbon(ctx, x, y, angle, length, width, wind, flutter, color, outline=True, 
 
 def draw_back_hair(ctx, p):
     angle = lerp(100, 170, p.wind) - 40 * p.hair_up
-    ribbon(ctx, -40, -420 + p.head_dy, angle, 300, 92, p.wind, p.flutter, HAIR, taper=0.55)
+    ribbon(ctx, -40, -420 + p.head_dy, angle, 300, 92, p.wind, p.flutter, HAIR, taper=0.55, drag=p.drag)
     # Ribbon tied round the bun.
     bx, by = -30, -560 + p.head_dy
-    ribbon(ctx, bx, by, lerp(130, 185, p.wind), 190, 30, p.wind, p.flutter + 0.2, TRIM, sway=1.3)
-    ribbon(ctx, bx + 4, by + 8, lerp(115, 172, p.wind), 160, 26, p.wind, p.flutter + 0.5, ROBE, sway=1.3)
+    ribbon(ctx, bx, by, lerp(130, 185, p.wind), 190, 30, p.wind, p.flutter + 0.2, TRIM, sway=1.3, drag=p.drag)
+    ribbon(ctx, bx + 4, by + 8, lerp(115, 172, p.wind), 160, 26, p.wind, p.flutter + 0.5, ROBE, sway=1.3, drag=p.drag)
 
 
 def draw_mantle(ctx, p):
     """A short black mantle with a crimson lining, streaming back from the shoulders."""
     angle = lerp(105, 172, p.wind)
     for dx, length, phase in ((-60, 196, 0.1), (-30, 170, 0.4)):
-        ribbon(ctx, dx, -222, angle, length, 104, p.wind, p.flutter + phase, TRIM, taper=0.35, sway=0.8)
+        ribbon(ctx, dx, -222, angle, length, 104, p.wind, p.flutter + phase, TRIM, taper=0.35, sway=0.8, drag=p.drag)
         ribbon(ctx, dx + 6, -226, angle - 3, length - 22, 82, p.wind, p.flutter + phase, ROBE, outline=False,
-               taper=0.4, sway=0.8)
+               taper=0.4, sway=0.8, drag=p.drag)
 
 
 def draw_back_sword(ctx, p):
@@ -701,19 +702,27 @@ def glow(ctx, x, y, r, color, alpha):
     ctx.fill()
 
 
-def qi_orbs(t, layer, count=5, radius=250, cy=-300, color=QI):
-    """Orbs circling Yun; `layer` 'back' draws the far half, 'front' the near half."""
+def qi_orbs(t, layer, count=5, radius=250, cy=-300, color=QI, appear=1.0, gather=0.0):
+    """Orbs circling Yun; `layer` 'back' draws the far half, 'front' the near half. `appear` fades them in one
+    after another; `gather` spirals them into the body."""
     def draw(ctx, p):
         for i in range(count):
-            a = 2 * math.pi * (t + i / count)
+            grow = max(0.0, min(1.0, appear * count - i))
+            if grow <= 0:
+                continue
+            a = 2 * math.pi * (t + i / count) + gather * 3
             depth = math.sin(a)
             if (depth < 0) != (layer == 'back'):
                 continue
-            x, y = math.cos(a) * radius, cy + depth * 60
-            r = 15 + 6 * depth
+            rad = radius * (1 - gather)
+            x, y = math.cos(a) * rad, lerp(cy, -320, gather) + depth * 60 * (1 - gather)
+            r = (15 + 6 * depth) * back_out(grow) * (1 - 0.6 * gather)
+            if r <= 0.5:
+                continue
             for k in range(1, 5):
                 b = a - k * 0.12
-                glow(ctx, math.cos(b) * radius, cy + math.sin(b) * 60, r * (1 - k * 0.15) * 1.6, color, 0.25 - k * 0.05)
+                glow(ctx, math.cos(b) * rad, lerp(cy, -320, gather) + math.sin(b) * 60 * (1 - gather),
+                     r * (1 - k * 0.15) * 1.6, color, 0.25 - k * 0.05)
             glow(ctx, x, y, r * 2.6, color, 0.45)
             ellipse(ctx, x, y, r, r)
             rgb(ctx, mix(color, WHITE, 0.6))
@@ -747,11 +756,14 @@ def formation(t, strength=1.0, color=QI, radius=260):
 
 
 def lotus(bloom):
+    """Petals open one after another, outer ones first, each with a small overshoot."""
     def draw(ctx, p):
         if bloom <= 0:
             return
-        b = back_out(bloom)
         for k, (a, s) in enumerate(((-70, 0.8), (70, 0.8), (-40, 1), (40, 1), (0, 1.1))):
+            b = back_out(max(0.0, min(1.0, bloom * 1.8 - k * 0.2)))
+            if b <= 0.01:
+                continue
             ctx.save()
             ctx.translate(0, -8)
             ctx.rotate(math.radians(a))
@@ -826,13 +838,13 @@ def bamboo_scroll(open_=1.0):
     return draw
 
 
-def cauldron(t, rise=1.0, fire=1.0, pill=0.0):
+def cauldron(t, rise=1.0, fire=1.0, pill=0.0, shake=0.0, pill_stretch=0.0):
     """A bronze alchemy cauldron in front of Yun, fire beneath and wisps above."""
     def draw(ctx, p):
         if rise <= 0:
             return
         ctx.save()
-        ctx.translate(0, (1 - ease(rise)) * 240)
+        ctx.translate(shake, (1 - ease(min(rise, 1.0))) * 240 - 30 * max(0.0, rise - 1))
         ctx.rectangle(-400, -600, 800, 600)
         ctx.clip()
         # Fire.
@@ -898,7 +910,11 @@ def cauldron(t, rise=1.0, fire=1.0, pill=0.0):
             k = ease_out(min(1, pill * 1.3))
             x, y = 210 * k, -250 - 300 * k
             glow(ctx, x, y, 90, QI, 0.6 * pill)
-            ellipse(ctx, x, y, 24, 24)
+            ctx.save()
+            ctx.translate(x, y)
+            ctx.rotate(math.atan2(-300, 210) + math.pi / 2)
+            ellipse(ctx, 0, 0, 24 * (1 - 0.3 * pill_stretch), 24 * (1 + 0.6 * pill_stretch))
+            ctx.restore()
             fill_stroke(ctx, mix(QI, WHITE, 0.4), 7)
             star(ctx, x + 46, y - 30, 14 * pill, WHITE, outline=False, points=4, inner=0.3)
     return draw
@@ -1305,6 +1321,49 @@ def orbit_sword(t, layer):
     return draw
 
 
+def flash(strength):
+    """A white flash round Yun (canvas space). It fades out before the frame's edge, so the transparent window
+    never shows a square."""
+    def draw(ctx, p):
+        x, y = CX + p.x, GROUND - p.lift - 330
+        g = cairo.RadialGradient(x, y, 40, x, y, 430)
+        g.add_color_stop_rgba(0, 1, 1, 1, 0.85 * strength)
+        g.add_color_stop_rgba(0.6, 1, 0.97, 0.9, 0.35 * strength)
+        g.add_color_stop_rgba(1, 1, 1, 1, 0)
+        ctx.set_source(g)
+        ctx.arc(x, y, 430, 0, 2 * math.pi)
+        ctx.fill()
+    return draw
+
+
+def sleeve_smear(angle):
+    """A dark arc trailing the right sleeve as it snaps across."""
+    def draw(ctx, p):
+        sx, sy = shoulder(1, p)
+        a1 = math.radians(angle)
+        ctx.new_sub_path()
+        ctx.arc(sx, sy, 150, math.pi / 2 - a1, math.pi / 2 - a1 + 0.9)
+        ctx.arc_negative(sx, sy, 95, math.pi / 2 - a1 + 0.9, math.pi / 2 - a1)
+        ctx.close_path()
+        rgb(ctx, ROBE, 0.45)
+        ctx.fill()
+    return draw
+
+
+def spin_smear(angle):
+    """Curved streaks round the body during a fast tumble."""
+    def draw(ctx, p):
+        rgb(ctx, QI, 0.5)
+        ctx.set_line_width(14)
+        ctx.set_line_cap(cairo.LINE_CAP_ROUND)
+        for k in range(3):
+            a = math.radians(angle) + k * 2.1
+            ctx.new_sub_path()
+            ctx.arc(0, -320, 250 + 18 * k, a, a + 0.9)
+            ctx.stroke()
+    return draw
+
+
 def speed_lines(strength):
     def draw(ctx, p):
         rgb(ctx, QI, 0.6 * strength)
@@ -1332,15 +1391,17 @@ SEAL = dict(hand_l=(-30, -120), hand_r=(30, -120))       # hands resting on the 
 
 
 def idle(kind='plain'):
+    """Idle loops. The floating one drifts on a slow sine; robe, sleeves and ribbon trail it (follow_through)."""
     out = []
     n = 18
     for i in range(n):
         t = i / n
-        p = replace(BASE, squash=breathe(t), flutter=t, wind=0.2 + 0.06 * osc(t), sleeve_l=10 + 2 * osc(t),
-                    sleeve_r=10 + 2 * osc(t, 1, 0.5))
+        p = replace(BASE, squash=breathe(t), flutter=t - 0.2, wind=0.2 + 0.06 * osc(t), sleeve_l=10 + 2 * osc(t, 1, -0.15),
+                    sleeve_r=10 + 2 * osc(t, 1, 0.35), tilt=1.2 * math.sin(2 * math.pi * (t - 0.15)))
         if kind == 'float':
-            p = replace(p, lift=26 + 14 * osc(t), shadow=True, sleeve_l=22 + 6 * osc(t), sleeve_r=22 + 6 * osc(t),
-                        eyes='closed' if 0.3 < t < 0.8 else 'open', wind=0.35, back=[formation(t, 0.5)])
+            p = replace(p, lift=30 + 14 * osc(t), sleeve_l=22 + 6 * osc(t, 1, -0.2), sleeve_r=22 + 6 * osc(t, 1, -0.25),
+                        eyes='closed' if 0.35 < t < 0.75 else 'open', brows='calm' if 0.35 < t < 0.75 else 'sharp',
+                        wind=0.35, back=[formation(t, 0.5)])
         elif kind == 'breeze':
             gust = hop(t)
             p = replace(p, wind=0.2 + 0.75 * gust, flutter=t * 2, sleeve_l=10 + 30 * gust, sleeve_r=10 + 12 * gust,
@@ -1355,40 +1416,47 @@ def idle(kind='plain'):
             p = replace(p, squash=0.95 + 0.01 * osc(t), eyes='sleepy', eye_open=0.55, brows='worried', pale=0.4,
                         tilt=-5, wind=0.0, blush=0.1, mouth='flat', sleeve_l=4, sleeve_r=4)
         out.append((p, 140))
-    if kind != 'poor':
-        last = out[-3][0]
-        out[-3:] = [(replace(last, eye_open=0.4), 50), (replace(last, eye_open=0.05), 70), (replace(last, eye_open=0.4), 50)]
+    if kind not in ('poor', 'float'):
+        at = 13
+        p = out[at][0]
+        out[at:at + 1] = [(replace(p, eye_open=0.4), 50), (replace(p, eye_open=0.05), 70), (replace(p, eye_open=0.4), 50)]
     return out
 
 
 def meditate(phase, lotus_loop=False):
-    out = []
+    """Dip, sit and rise on an ease-out while the orbs appear one by one; orbit; spiral the orbs in, glow, land."""
     if phase == 'start':
-        for i in range(6):
-            t = (i + 1) / 6
-            p = replace(BASE, sit=1 if t > 0.3 else 0, lift=lerp(0, 30, ease(t)) if t > 0.3 else 0,
-                        eyes='closed' if t > 0.5 else 'open', brows='calm', flutter=t,
-                        back=[formation(t, ease(t))], **(SEAL if t > 0.3 else {}))
-            out.append((p, 80))
-    elif phase == 'loop':
+        out = [(replace(BASE, squash=0.94, eyes='open', brows='calm'), 80),
+               (replace(BASE, squash=0.97, sit=1, eyes='closed', brows='calm', back=[formation(0.1, 0.3)], **SEAL), 80)]
+        for k, u in enumerate((0.35, 0.65, 0.85, 0.96, 1.0)):
+            t = (k + 1) / 5
+            out.append((replace(BASE, sit=1, lift=30 * u, eyes='closed', brows='calm', flutter=t,
+                                back=[formation(t, u), qi_orbs(t * 0.2, 'back', appear=t)],
+                                front=[qi_orbs(t * 0.2, 'front', appear=t)], **SEAL), (70, 70, 80, 100, 120)[k]))
+        return out
+    if phase == 'loop':
+        out = []
         n = 16
         for i in range(n):
             t = i / n
-            p = replace(BASE, sit=1, lift=30 + 8 * osc(t), eyes='closed', brows='calm', mouth='cat', flutter=t,
-                        wind=0.35, squash=breathe(t, 0.01), blush=0.3,
-                        back=[formation(t), qi_orbs(t, 'back')] + ([lotus(1)] if lotus_loop else []),
-                        front=[qi_orbs(t, 'front')], **SEAL)
+            color = QI_DARK if lotus_loop else QI
+            back = [formation(t, color=color), qi_orbs(t, 'back', color=color)]
+            front = [qi_orbs(t, 'front', color=color)]
             if lotus_loop:
-                p = replace(p, back=[formation(t, color=QI_DARK), lotus(min(1, t * 4)), qi_orbs(t, 'back', color=QI_DARK)],
-                            front=[qi_orbs(t, 'front', color=QI_DARK), petals(t, amount=8, seed=21)])
-            out.append((p, 110))
-    else:
-        for i in range(5):
-            t = (i + 1) / 5
-            p = replace(BASE, sit=1 if t < 0.7 else 0, lift=lerp(30, 0, ease(t)) if t < 0.7 else 0,
-                        eyes='open' if t > 0.3 else 'closed', flutter=t, back=[formation(t, 1 - t)],
-                        **(SEAL if t < 0.7 else {}))
-            out.append((p, 80))
+                back.insert(1, lotus(min(1, t * 2.2)))
+                front.append(petals(t, amount=8, seed=21))
+            out.append((replace(BASE, sit=1, lift=30 + 8 * osc(t), eyes='closed', brows='calm', mouth='cat', flutter=t,
+                                wind=0.35, squash=breathe(t, 0.01), blush=0.3, back=back, front=front, **SEAL), 110))
+        return out
+    out = []
+    for k, g in enumerate((0.35, 0.7, 1.0)):
+        out.append((replace(BASE, sit=1, lift=30, eyes='closed', brows='calm', flutter=k / 3,
+                            back=[formation(0.5, 1 - g * 0.6), qi_orbs(0.2, 'back', gather=g)],
+                            front=[qi_orbs(0.2, 'front', gather=g)], **SEAL), 70))
+    out += [(replace(BASE, sit=1, lift=30, eyes='glow', brows='sharp', back=[formation(0.6, 0.3)], **SEAL), 140),
+            (replace(BASE, sit=1, lift=12, eyes='open', **SEAL), 80),
+            (replace(BASE, squash=0.94), 80),
+            (replace(BASE), 100)]
     return out
 
 
@@ -1397,43 +1465,48 @@ CHEST = dict(hand_l=(-26, -176), hand_r=(26, -182))
 
 
 def jade(phase, alt=False):
-    out = []
+    """The slip rises from the chest on a curve, floats and pulses while glyphs flow in, then drops into the sleeve."""
+    def slip_path(u):
+        return (lerp(0, SLIP_AT[0], u) + 60 * math.sin(math.pi * u), lerp(-200, SLIP_AT[1], ease_out(u)))
     if phase == 'start':
-        for i in range(6):
-            t = (i + 1) / 6
-            u = ease(t)
-            p = replace(BASE, eyes='closed' if t > 0.7 else 'open', look=(10 * t, -8 * t), flutter=t,
-                        hand_l=(lerp(-80, -26, u), lerp(-110, -176, u)), hand_r=(lerp(80, 26, u), lerp(-110, -182, u)),
-                        front=[jade_slip(lerp(0, SLIP_AT[0], u), lerp(-200, SLIP_AT[1], u), -0.2 * u, t)])
-            out.append((p, 80))
-    elif phase == 'loop' and not alt:
+        out = []
+        for i, (u, ms) in enumerate(zip((0.15, 0.4, 0.7, 0.92, 1.04, 1.0), (60, 60, 70, 80, 80, 100))):
+            h = ease(min(1, (i + 1) / 3))
+            x, y = slip_path(min(u, 1.0))
+            y -= 18 * max(0.0, u - 1) / 0.04
+            out.append((replace(BASE, eyes='closed' if i > 3 else 'open', look=(10 * h, -8 * h), flutter=i / 6,
+                                hand_l=(lerp(-80, -26, h), lerp(-110, -176, h)), hand_r=(lerp(80, 26, h), lerp(-110, -182, h)),
+                                front=[jade_slip(x, y, -0.2 * min(u, 1), min(1, u))]), ms))
+        return out
+    if phase == 'loop' and not alt:
+        out = []
         n = 16
         for i in range(n):
             t = i / n
-            p = replace(BASE, eyes='closed', brows='calm', mouth='flat', tilt=3 * osc(t), flutter=t,
-                        squash=breathe(t, 0.01), **CHEST,
-                        front=[jade_slip(SLIP_AT[0], SLIP_AT[1] + 10 * osc(t), -0.2, 0.6 + 0.4 * osc(t, 0.5)),
-                               glyph_stream(t * 2, SLIP_AT[0] - 20, SLIP_AT[1] + 20, 10, -440)])
-            out.append((p, 120))
-    elif phase == 'loop':
+            pulse = max(0.0, math.sin(2 * math.pi * t * 2))
+            out.append((replace(BASE, eyes='closed', brows='calm', mouth='flat', tilt=3 * osc(t), flutter=t,
+                                squash=breathe(t, 0.01), **CHEST,
+                                front=[jade_slip(SLIP_AT[0], SLIP_AT[1] + 10 * osc(t), -0.2 + 0.05 * osc(t), 0.5 + 0.5 * pulse),
+                                       glyph_stream(t * 2, SLIP_AT[0] - 20, SLIP_AT[1] + 20, 10, -440)]), 120))
+        return out
+    if phase == 'loop':
+        out = []
         n = 16
         for i in range(n):
             t = i / n
             u = (t * 2) % 1
-            p = replace(BASE, hand_l=(-135, -168), hand_r=(135, -168), look=(lerp(18, -18, ease(u)), 12),
-                        tilt=4 + 2 * osc(t), flutter=t, front=[bamboo_scroll()],
-                        eye_open=0.1 if i in (7, 15) else 1)
-            out.append((p, 120))
-    else:
-        for i in range(5):
-            t = (i + 1) / 5
-            u = ease(t)
-            p = replace(BASE, eyes='open', flutter=t,
-                        hand_l=(lerp(-26, -80, u), lerp(-176, -110, u)), hand_r=(lerp(26, 80, u), lerp(-182, -110, u)),
-                        front=[jade_slip(lerp(SLIP_AT[0], 90, u), lerp(SLIP_AT[1], -130, u), -0.2, 1 - t)] if t < 1 else [])
-            if t >= 1:
-                p = replace(BASE)
-            out.append((p, 80))
+            out.append((replace(BASE, hand_l=(-135, -168), hand_r=(135, -168), look=(lerp(18, -18, ease(u)), 12),
+                                tilt=4 + 2 * osc(t), flutter=t, front=[bamboo_scroll()],
+                                eye_open=0.1 if i in (7, 15) else 1), 120))
+        return out
+    out = []
+    for i, u in enumerate((0.85, 0.55, 0.25, 0.0)):
+        h = 1 - ease((i + 1) / 4)
+        x, y = slip_path(u)
+        out.append((replace(BASE, eyes='open', flutter=i / 4,
+                            hand_l=(lerp(-80, -26, h), lerp(-110, -176, h)), hand_r=(lerp(80, 26, h), lerp(-110, -182, h)),
+                            front=[jade_slip(x, y + 60 * (1 - u), -0.2 * u, u)] if u > 0 else []), (70, 60, 60, 90)[i]))
+    out.append((replace(BASE), 90))
     return out
 
 
@@ -1446,47 +1519,61 @@ def alchemy(phase, pill_loop=False):
         for i in range(7):
             t = (i + 1) / 7
             u = ease(t)
-            p = replace(BASE, hand_r=(lerp(80, FAN_AT[0], u), lerp(-110, FAN_AT[1], u)), look=(0, 10 * t), flutter=t,
-                        front=[cauldron(t, rise=t, fire=max(0, t * 2 - 1))], head_dy=-20 * t)
-            out.append((p, 80))
-    elif phase == 'loop':
+            p = replace(BASE, hand_r=(lerp(80, FAN_AT[0], u), lerp(-110, FAN_AT[1], u) - 50 * math.sin(math.pi * u)),
+                        look=(0, 10 * t), flutter=t, head_dy=-20 * t,
+                        front=[cauldron(t, rise=back_out(t), fire=max(0, t * 2 - 1))])
+            out.append((p, (60, 60, 60, 70, 80, 90, 110)[i]))
+        return out
+    if phase == 'loop' and not pill_loop:
         n = 12
         for i in range(n):
             t = i / n
             fan = osc(t * 2)
-            p = replace(BASE, hand_r=(FAN_AT[0] + 14 * fan, FAN_AT[1] + 12 * fan), sleeve_l=20, look=(0, 12), head_dy=-20,
-                        brows='calm', mouth='cat', flutter=t, wind=0.35,
-                        front=[cauldron(t, pill=0), fan_flame(t * 2)])
-            if pill_loop:
-                pill = max(0, (t - 0.25) / 0.75)
-                up = ease(min(1, pill * 2))
-                p = replace(p, eyes='glow' if pill > 0.3 else 'wide', brows='', mouth='smirk', blush=0,
-                            hand_r=None, sleeve_r=lerp(60, 150, up), sleeve_l=lerp(20, 150, up),
-                            front=[cauldron(t, pill=pill), sparkles(pill, count=6, radius=170, cy=-560, seed=8)])
-            out.append((p, 100))
-    else:
-        for i in range(6):
-            t = (i + 1) / 6
-            u = ease(t)
-            p = replace(BASE, hand_r=(lerp(FAN_AT[0], 80, u), lerp(FAN_AT[1], -110, u)) if t < 1 else None,
-                        look=(0, 10 * (1 - t)), flutter=t, head_dy=-20 * (1 - t),
-                        front=[cauldron(t, rise=1 - t, fire=max(0, 1 - t * 2))])
-            out.append((p, 80))
+            out.append((replace(BASE, hand_r=(FAN_AT[0] + 14 * fan, FAN_AT[1] + 12 * fan), sleeve_l=20, look=(0, 12),
+                                head_dy=-20, brows='calm', mouth='smirk', flutter=t, wind=0.35,
+                                front=[cauldron(t, pill=0), fan_flame(t * 2)]), 100))
+        return out
+    if phase == 'loop':
+        held = replace(BASE, hand_r=(FAN_AT[0], FAN_AT[1]), sleeve_l=20, look=(0, 12), head_dy=-20, brows='calm',
+                       mouth='smirk', wind=0.35)
+        # Two shudders, the pill shoots out on an arc, hangs at the top, sparkles.
+        beats = [(0, 0.0, 'wide', 90), (14, 0.0, 'wide', 70), (-14, 0.0, 'wide', 70), (12, 0.0, 'wide', 70),
+                 (-10, 0.0, 'wide', 70), (0, 0.25, 'wide', 50), (0, 0.6, 'glow', 50), (0, 0.85, 'glow', 60),
+                 (0, 1.0, 'glow', 160), (0, 1.0, 'glow', 120), (0, 1.0, 'glow', 120), (0, 1.0, 'glow', 100)]
+        for i, (shake, pill, eyes, ms) in enumerate(beats):
+            t = i / len(beats)
+            up = ease(min(1, pill * 1.5))
+            speed = 1.0 if 0 < pill < 0.9 else 0.0
+            p = replace(held, eyes=eyes, flutter=t, hand_r=None if pill > 0 else held.hand_r,
+                        sleeve_r=lerp(60, 150, up), sleeve_l=lerp(20, 150, up), squash=1 + 0.04 * up,
+                        front=[cauldron(t, pill=pill, shake=shake, pill_stretch=speed),
+                               sparkles((i - 8) / 4, count=6, radius=170, cy=-560, seed=8, color=GOLD)])
+            out.append((p, ms))
+        return out
+    for i in range(6):
+        t = (i + 1) / 6
+        u = ease(t)
+        p = replace(BASE, hand_r=(lerp(FAN_AT[0], 80, u), lerp(FAN_AT[1], -110, u)) if t < 1 else None,
+                    look=(0, 10 * (1 - t)), flutter=t, head_dy=-20 * (1 - t),
+                    front=[cauldron(t, rise=1 - ease_in(t), fire=max(0, 1 - t * 2))])
+        out.append((p, 70))
     return out
 
 
 def jade_to_alchemy():
-    """Reading hands over to working: the slip fades into the sleeve as the cauldron rises."""
+    """Reading to working without standing up: slip away and cauldron up at the same time; the hand moves on an arc."""
     out = []
     for i in range(10):
         t = (i + 1) / 10
-        a = ease(min(1, t * 1.6))
-        props = [cauldron(t, rise=max(0, t * 1.6 - 0.6), fire=max(0, t * 2 - 1))]
+        a = ease(min(1, t * 1.4))
+        hx = lerp(26, FAN_AT[0], a)
+        hy = lerp(-182, FAN_AT[1], a) - 70 * math.sin(math.pi * a)
+        props = [cauldron(t, rise=back_out(max(0.0, min(1.0, t * 1.5 - 0.4))) if t > 0.27 else 0,
+                          fire=max(0, t * 2 - 1))]
         if a < 1:
             props.append(jade_slip(lerp(SLIP_AT[0], 120, a), lerp(SLIP_AT[1], -200, a), -0.2, 1 - a))
-        out.append((replace(BASE, hand_l=(lerp(-26, -80, a), lerp(-176, -110, a)),
-                            hand_r=(lerp(26, FAN_AT[0], a), lerp(-182, FAN_AT[1], a)), eyes='open', look=(0, 12 * t),
-                            head_dy=-20 * t, flutter=t, front=props), 90))
+        out.append((replace(BASE, hand_l=(lerp(-26, -80, a), lerp(-176, -110, a)), hand_r=(hx, hy), eyes='open',
+                            look=(0, 12 * t), head_dy=-20 * t, flutter=t, front=props), 80 if i < 9 else 120))
     return out
 
 
@@ -1505,79 +1592,96 @@ def alchemy_to_jade():
 
 
 def alert(phase):
-    out = []
+    """The wrist flicks back, then the talisman spins in on an arc and stops with an overshoot; it floats; it folds."""
     tx, ty = 230, -560
     if phase == 'start':
-        for i in range(6):
-            t = (i + 1) / 6
-            p = replace(BASE, hand_r=(lerp(80, 170, ease(t)), lerp(-120, -400, ease(t))), eyes='wide', flutter=t,
-                        wind=0.4, front=[talisman(tx, ty, 0.1, size=back_out(t), light=t)])
-            out.append((p, 60))
-    elif phase == 'loop':
+        out = [(replace(BASE, hand_r=(60, -170), eyes='sharp', flutter=0.1, wind=0.4), 90)]
+        for k, u in enumerate((0.3, 0.6, 0.85, 1.0, 1.0)):
+            x = lerp(-60, tx, u) + 30 * math.sin(math.pi * u)
+            y = lerp(-250, ty, ease_out(u)) - 90 * math.sin(math.pi * u)
+            over = (0, 0, 0, 1.12, 1.0)[k]
+            out.append((replace(BASE, hand_r=(lerp(60, 170, ease(u)), lerp(-170, -400, ease(u))), eyes='wide' if k < 3 else 'open',
+                                flutter=u, wind=0.4,
+                                front=[talisman(x, y, 0.1 + (1 - u) * 6, size=over or lerp(0.4, 1, u), light=u)]),
+                        (50, 50, 60, 70, 90)[k]))
+        return out
+    if phase == 'loop':
+        out = []
         n = 10
         for i in range(n):
             t = i / n
-            p = replace(BASE, hand_r=(170, -400 - 12 * osc(t, 0.5)), eyes='open', look=(10, -6), brows='calm',
-                        mouth='open', mouth_open=0.3, flutter=t * 2, wind=0.45, tilt=-4,
-                        front=[talisman(tx, ty + 12 * osc(t), 0.1 + 0.08 * osc(t), light=0.6 + 0.4 * osc(t, 0.5))])
-            out.append((p, 90))
-    else:
-        for i in range(4):
-            t = (i + 1) / 4
-            p = replace(BASE, hand_r=(lerp(170, 80, t), lerp(-400, -120, t)) if t < 1 else None, flutter=t,
-                        front=[talisman(tx, ty, 0.1, size=1 - t)])
-            out.append((p, 70))
+            out.append((replace(BASE, hand_r=(170, -400 - 12 * osc(t, 0.5)), eyes='open', look=(10, -6), brows='calm',
+                                mouth='smirk', flutter=t * 2, wind=0.45, tilt=-4,
+                                front=[talisman(tx, ty + 12 * osc(t), 0.1 + 0.08 * osc(t), light=0.6 + 0.4 * osc(t, 0.5))]), 90))
+        return out
+    out = []
+    for i, (s, ms) in enumerate(((1.1, 60), (0.6, 60), (0.2, 60), (0.0, 80))):
+        t = (i + 1) / 4
+        out.append((replace(BASE, hand_r=(lerp(170, 80, t), lerp(-400, -120, t)) if t < 1 else None, flutter=t,
+                            front=[talisman(tx, ty, 0.1, size=s)] if s else []), ms))
     return out
 
 
 def tribulation():
+    """The cloud gathers slowly, a white flash, the strike, the scorched squash held 0.25 s, then a slow recovery."""
     out = []
-    n = 20
-    for i in range(n):
-        t = i / (n - 1)
-        if t < 0.3:
-            u = t / 0.3
-            p = replace(BASE, look=(0, -14), eyes='wide', brows='worried', over=[storm(u, 0)], flutter=u)
-        elif t < 0.42:
-            u = (t - 0.3) / 0.12
-            p = replace(BASE, look=(0, -14), eyes='squeeze', brows='worried', squash=1.08, hair_up=0.6,
-                        over=[storm(1, 1 - u * 0.5)], sleeve_l=120, sleeve_r=120, flutter=u)
-        elif t < 0.8:
-            u = (t - 0.42) / 0.38
-            p = replace(BASE, eyes='spiral', soot=1, hair_up=0.3, squash=0.92 + 0.03 * osc(u, 0.5), mouth='wavy',
-                        tilt=6 * osc(u, 0.5), back=[smoke_wisps(u)], over=[storm(1 - u, 0)], flutter=u, wind=0)
-        else:
-            u = (t - 0.8) / 0.2
-            p = replace(BASE, eyes='squeeze' if u < 0.5 else 'open', soot=1 - u, brows='worried', mouth='wavy',
-                        front=[sweat(1)])
-        out.append((p, 85))
+    for k in range(5):
+        u = (k + 1) / 5
+        out.append((replace(BASE, look=(0, -14 * u), eyes='wide' if u > 0.5 else 'open', brows='worried',
+                            over=[storm(u * 0.9, 0)], flutter=u), (120, 120, 110, 100, 140)[k]))
+    out.append((replace(BASE, look=(0, -14), eyes='squeeze', brows='worried', squash=1.1, hair_up=0.7,
+                        over=[storm(1, 1), flash(1.0)], sleeve_l=130, sleeve_r=130), 50))
+    out.append((replace(BASE, eyes='squeeze', squash=1.08, hair_up=0.6, soot=0.6, over=[storm(1, 0.7)],
+                        sleeve_l=120, sleeve_r=120), 60))
+    out.append((replace(BASE, eyes='spiral', soot=1, hair_up=0.4, squash=0.84, mouth='wavy', back=[smoke_wisps(0.1)],
+                        over=[storm(0.8, 0)], wind=0), 250))
+    for k in range(5):
+        u = (k + 1) / 5
+        out.append((replace(BASE, eyes='spiral', soot=1, hair_up=0.3, squash=0.88 + 0.02 * osc(u, 0.5), mouth='wavy',
+                            tilt=6 * osc(u, 0.5), back=[smoke_wisps(0.1 + u * 0.6)], over=[storm(0.8 * (1 - u), 0)],
+                            flutter=u, wind=0), 100))
+    for k, (soot, sq, eyes) in enumerate(((0.8, 0.94, 'squeeze'), (0.5, 0.98, 'squeeze'), (0.2, 1.0, 'open'))):
+        out.append((replace(BASE, eyes=eyes, soot=soot, squash=sq, brows='worried', mouth='wavy',
+                            hand_r=(60, -320) if k < 2 else None, front=[sweat(1)]), 130))
     out.append((replace(BASE), 120))
     return out
 
 
 def deviation():
+    """Out of qi: slumped and pale, the violet aura flickering on an irregular beat, shallow uneven breath."""
+    flicker = (0.55, 0.62, 0.4, 0.7, 0.45, 0.48, 0.66, 0.38, 0.6, 0.72, 0.42, 0.5, 0.58, 0.47)
+    breath = (0, 0.4, 0.8, 1.0, 0.7, 0.3, 0.1, 0.0, 0.3, 0.9, 0.6, 0.2, 0.05, 0.0)
+    durations = (150, 130, 170, 140, 120, 180, 150, 130, 160, 140, 170, 120, 150, 140)
     out = []
-    n = 14
-    for i in range(n):
-        t = i / n
-        p = replace(BASE, sit=1, squash=0.97 + 0.01 * osc(t), eyes='sleepy', eye_open=0.45 + 0.1 * osc(t),
-                    brows='worried', pale=0.5, tilt=-8 + 2 * osc(t), wind=0.0, mouth='wavy', blush=0, flutter=t,
-                    back=[aura(t, (0.55, 0.35, 0.75), 0.5 + 0.15 * osc(t))], front=[sweat(0.6, side=-1)], **SEAL)
-        out.append((p, 150))
+    for i in range(14):
+        t = i / 14
+        out.append((replace(BASE, sit=1, squash=0.965 + 0.012 * breath[i], eyes='sleepy', eye_open=0.42 + 0.12 * breath[i],
+                            brows='worried', pale=0.5, tilt=-8 + 2 * breath[i], wind=0.0, mouth='wavy', blush=0,
+                            flutter=t, back=[aura(t, (0.55, 0.35, 0.75), flicker[i])], front=[sweat(0.6, side=-1)],
+                            **SEAL), durations[i]))
     return out
 
 
 def breakthrough():
-    out = []
-    n = 16
-    for i in range(n):
-        t = i / (n - 1)
-        rise = hop(t)
-        p = replace(BASE, lift=90 * rise, squash=1 + 0.06 * rise, eyes='glow' if 0.2 < t < 0.8 else 'happy', blush=0.8,
-                    sleeve_l=lerp(20, 150, rise), sleeve_r=lerp(20, 150, rise), hair_up=0.4 * rise, wind=0.4 + 0.5 * rise,
-                    flutter=t * 2, back=[light_pillar(rise), sparkles(t, count=8, seed=4, color=GOLD)],
-                    over=[petals(t, amount=10, seed=2)] if t > 0.4 else [])
-        out.append((p, 85 if i < n - 1 else 160))
+    """Crouch while the orbs gather, launch stretched as the pillar erupts, hang at the top, land squashed."""
+    plan = [  # lift, squash, arms, eyes, pillar, gather, ms
+        (0, 0.92, 20, 'closed', 0.0, 0.0, 90), (0, 0.86, 30, 'closed', 0.1, 0.5, 100), (0, 0.84, 30, 'closed', 0.2, 1.0, 80),
+        (50, 1.14, 120, 'glow', 0.8, 1.0, 50), (95, 1.1, 150, 'glow', 1.0, 1.0, 60), (112, 1.03, 160, 'glow', 1.0, 1.0, 150),
+        (100, 1.02, 155, 'glow', 0.9, 1.0, 80), (60, 1.06, 140, 'glow', 0.6, 1.0, 60), (15, 1.06, 120, 'happy', 0.3, 1.0, 50),
+        (0, 0.84, 90, 'happy', 0.1, 1.0, 90), (0, 1.04, 40, 'happy', 0.0, 1.0, 90), (0, 1.0, 20, 'happy', 0.0, 1.0, 160)]
+    total = sum(p[-1] for p in plan)
+    out, at = [], 0
+    for i, (lift, sq, arms, eyes, pillar, gather, ms) in enumerate(plan):
+        t = at / total
+        back = [light_pillar(pillar), sparkles(t, count=8, seed=4, color=GOLD)]
+        front = []
+        if i < 3:
+            back.append(qi_orbs(t, 'back', gather=gather * 0.9))
+            front.append(qi_orbs(t, 'front', gather=gather * 0.9))
+        out.append((replace(BASE, lift=lift, squash=sq, eyes=eyes, blush=0.6, sleeve_l=arms, sleeve_r=arms,
+                            hair_up=0.4 * pillar, wind=0.4 + 0.5 * pillar, flutter=t * 2, back=back, front=front,
+                            over=[petals(t, amount=12, seed=2)] if i >= 4 else []), ms))
+        at += ms
     return out
 
 
@@ -1585,98 +1689,99 @@ def cloudnap(phase):
     out = []
     base_lift = 120
     if phase == 'start':
-        for i in range(8):
-            t = (i + 1) / 8
-            p = replace(BASE, sit=1 if t > 0.25 else 0, lift=base_lift * ease(t), eyes='sleepy',
-                        eye_open=lerp(1, 0.05, ease(t)), tilt=-10 * ease(t), wind=0.1, flutter=t, shadow=True,
-                        back=[cloud(0, -10 + base_lift * ease(t) * 0 + 6, 0.5 + 0.5 * ease(t), ease(t))], **SEAL)
-            out.append((p, 110))
-    elif phase == 'loop':
+        s = dict(**SEAL, wind=0.1, shadow=True)
+        rises = (0.15, 0.4, 0.7, 0.9, 1.0, 1.0, 1.0, 1.0)
+        heads = [(0, 0, 0.8, 'sleepy'), (0, 0, 0.6, 'sleepy'), (-3, 0, 0.4, 'sleepy'), (-12, 10, 0.1, 'sleepy'),
+                 (2, -4, 0.8, 'open'), (-5, 0, 0.4, 'sleepy'), (-9, 6, 0.1, 'sleepy'), (-10, 4, 0, 'closed')]
+        for i, (r, (tilt, dy, eo, eyes)) in enumerate(zip(rises, heads)):
+            out.append((replace(BASE, sit=1 if i > 0 else 0, lift=base_lift * ease(r), eyes=eyes, eye_open=eo, tilt=tilt,
+                                head_dy=dy, flutter=i / 8, back=[cloud(0, 6, 0.5 + 0.5 * ease(r), ease(r))], **s),
+                        (100, 100, 110, 160, 90, 140, 160, 180)[i]))
+        return out
+    if phase == 'loop':
         n = 16
         for i in range(n):
             t = i / n
             bob = 10 * osc(t)
-            p = replace(BASE, sit=1, lift=base_lift + bob, eyes='closed', tilt=-10 + 2 * osc(t), wind=0.1, mouth='o',
-                        mouth_open=0.2 + 0.1 * osc(t), blush=0.6, flutter=t * 0.5, back=[cloud(0, 6), zzz(t)], **SEAL)
-            out.append((p, 150))
-    else:
-        steps = [('closed', 1, base_lift), ('sleepy', 1, base_lift * 0.6), ('open', 0, base_lift * 0.25), ('happy', 0, 0),
-                 ('open', 0, 0)]
-        for i, (eyes, sit, lift) in enumerate(steps):
-            t = (i + 1) / len(steps)
-            extra = SEAL if sit else dict(sleeve_l=lerp(150, 10, t), sleeve_r=lerp(150, 10, t))
-            p = replace(BASE, sit=sit, lift=lift, eyes=eyes, eye_open=0.5 if eyes == 'sleepy' else 1, flutter=t,
-                        back=[cloud(0, 6, 1 - t * 0.5, 1 - t)] if t < 1 else [], **extra)
-            out.append((p, 130))
+            out.append((replace(BASE, sit=1, lift=base_lift + bob, eyes='closed', tilt=-10 + 2 * osc(t, 1, -0.1), wind=0.1,
+                                mouth='o', mouth_open=0.2 + 0.1 * osc(t), blush=0.6, flutter=t * 0.5,
+                                back=[cloud(0, 6), zzz(t)], **SEAL), 150))
+        return out
+    steps = [('wide', 1, base_lift, 100), ('open', 1, base_lift * 0.7, 100), ('open', 0, base_lift * 0.3, 90),
+             ('open', 0, 0, 80), ('happy', 0, 0, 160)]
+    for i, (eyes, sit, lift, ms) in enumerate(steps):
+        t = (i + 1) / len(steps)
+        extra = SEAL if sit else dict(sleeve_l=lerp(120, 10, t), sleeve_r=lerp(120, 10, t))
+        out.append((replace(BASE, sit=sit, lift=lift, eyes=eyes, squash=0.88 if i == 3 else 1, flutter=t,
+                            back=[cloud(0, 6, 1 - t * 0.5, 1 - t)] if t < 1 else [], **extra), ms))
     return out
 
 
 def descend():
+    """Dives in on the sword with an ease-out, overshoots the stop and bobs back, hops off squashed, salutes and holds."""
     out = []
-    n = 20
-    for i in range(n):
-        t = i / (n - 1)
-        if t < 0.45:
-            u = ease_out(t / 0.45)
-            p = replace(BASE, lift=lerp(620, 0, u) + 20, sword=1, trail=1 - u, lean=-6 * (1 - u), wind=0.9 * (1 - u) + 0.2,
-                        flutter=t * 3, eyes='open', sleeve_l=40, sleeve_r=40, alpha=min(1, t * 6))
-        elif t < 0.6:
-            u = (t - 0.45) / 0.15
-            p = replace(BASE, lift=20 * (1 - u), sword=1 - u, squash=lerp(0.9, 1, u), eyes='happy', flutter=t * 3)
-        else:
-            u = (t - 0.6) / 0.4
-            bow = hop(min(1, u * 1.4))
-            p = replace(BASE, eyes='happy' if bow > 0.2 else 'open', tilt=10 * bow, lean=4 * bow, blush=0.7,
-                        flutter=t * 2, back=[sparkles(u, count=5, seed=8, color=QI)], **SALUTE)
-        out.append((p, 80))
+    for k in range(8):
+        u = ease_out((k + 1) / 8)
+        out.append((replace(BASE, lift=lerp(640, 0, u) + 20 - 14 * math.sin(math.pi * min(1, u * 1.05)) * (u > 0.9),
+                            sword=1, trail=1 - u, lean=-8 * (1 - u), wind=0.9 * (1 - u) + 0.2, flutter=k / 4,
+                            eyes='sharp', sleeve_l=40, sleeve_r=40, alpha=min(1, (k + 1) / 2)), 60))
+    out += [(replace(BASE, lift=8, sword=1, squash=0.94, eyes='sharp', sleeve_l=30, sleeve_r=30), 70),
+            (replace(BASE, lift=26, sword=1, squash=1.02, eyes='open', sleeve_l=30, sleeve_r=30), 70),
+            (replace(BASE, lift=40, sword=0.6, squash=1.08, eyes='open', sleeve_l=60, sleeve_r=60), 70),
+            (replace(BASE, lift=0, sword=0.1, squash=0.86, eyes='happy'), 80),
+            (replace(BASE, squash=1.03, eyes='open', **SALUTE), 90),
+            (replace(BASE, tilt=6, lean=2, eyes='closed', **SALUTE), 90),
+            (replace(BASE, tilt=12, lean=5, eyes='closed', blush=0.4, **SALUTE,
+                     back=[sparkles(0.4, count=5, seed=8, color=QI)]), 320),
+            (replace(BASE, tilt=4, lean=1, eyes='open', **SALUTE), 90),
+            (replace(BASE), 140)]
     return out
 
 
 def ascend():
-    out = []
-    n = 20
-    for i in range(n):
-        t = i / (n - 1)
-        if t < 0.35:
-            u = t / 0.35
-            bow = hop(u)
-            p = replace(BASE, eyes='happy', tilt=10 * bow, lean=4 * bow, blush=0.7, flutter=t * 2, **SALUTE)
-        elif t < 0.5:
-            u = (t - 0.35) / 0.15
-            p = replace(BASE, sword=u, lift=20 * u, eyes='open', flutter=t * 2, sleeve_l=40, sleeve_r=40)
-        else:
-            u = ease((t - 0.5) / 0.5)
-            p = replace(BASE, sword=1, lift=20 + 700 * u, trail=u, lean=-6 * u, alpha=1 - ease(max(0, (u - 0.6) / 0.4)),
-                        wind=0.9, flutter=t * 3, eyes='happy', sleeve_l=40, sleeve_r=40)
-        out.append((p, 80))
+    """Bow, the sword slides under the feet, a crouch, then the climb accelerates (ease-in) and fades out."""
+    out = [(replace(BASE, eyes='open', **SALUTE), 90),
+           (replace(BASE, tilt=8, lean=3, eyes='closed', **SALUTE), 90),
+           (replace(BASE, tilt=12, lean=5, eyes='closed', **SALUTE), 260),
+           (replace(BASE, tilt=3, eyes='open', **SALUTE), 90),
+           (replace(BASE, sword=0.4, eyes='sharp', sleeve_l=30, sleeve_r=30), 70),
+           (replace(BASE, sword=1, lift=8, eyes='sharp', sleeve_l=40, sleeve_r=40), 70),
+           (replace(BASE, sword=1, lift=4, squash=0.88, eyes='sharp', sleeve_l=50, sleeve_r=50), 120)]
+    for k in range(7):
+        u = ease_in((k + 1) / 7)
+        out.append((replace(BASE, sword=1, lift=10 + 720 * u, squash=1.08 if k < 4 else 1.04, trail=min(1, 0.3 + u),
+                            lean=-8 * min(1, u * 3), alpha=1 - ease(max(0, (u - 0.55) / 0.45)), wind=0.95,
+                            flutter=k / 3, eyes='happy', sleeve_l=40, sleeve_r=40), (90, 80, 70, 60, 55, 50, 50)[k]))
     out.append((replace(BASE, alpha=0, shadow=False), 200))
     return out
 
 
 def fury(leave=False):
-    out = []
+    """Annoyed: the aura flares in pulses with a jitter, then holds the glare. Leaving: turns away, snaps the sleeve
+    across on an arc and is gone in a whirl of leaves."""
+    red = (0.95, 0.30, 0.30)
     if not leave:
-        n = 16
-        for i in range(n):
-            t = i / (n - 1)
-            s = ease(min(1, t * 2))
-            p = replace(BASE, tint=s, brows='angry', mouth='frown', hair_up=0.5 * s, wind=0.5 + 0.4 * s, flutter=t * 3,
-                        sleeve_l=lerp(10, 50, s), sleeve_r=lerp(10, 50, s), squash=1 - 0.03 * abs(osc(t, 0.25)),
-                        back=[aura(t, (0.95, 0.30, 0.30), s)])
-            out.append((p, 85))
+        pulses = (0.2, 0.5, 0.35, 0.8, 0.6, 1.0, 0.85, 1.0, 1.0, 1.0, 1.0, 1.0)
+        jitter = (0, 6, -6, 5, -5, 4, -4, 2, 0, 0, 0, 0)
+        out = []
+        for i, (s, j) in enumerate(zip(pulses, jitter)):
+            t = i / len(pulses)
+            out.append((replace(BASE, x=j, tint=min(1, s * 1.1), brows='angry', mouth='frown', hair_up=0.5 * s,
+                                wind=0.5 + 0.4 * s, flutter=t * 3, sleeve_l=lerp(10, 50, s), sleeve_r=lerp(10, 50, s),
+                                squash=1 + 0.03 * s, back=[aura(t, red, s)]), 70 if i < 8 else 120))
         return out
-    n = 18
-    for i in range(n):
-        t = i / (n - 1)
-        if t < 0.35:
-            u = t / 0.35
-            p = replace(BASE, tint=0.7, brows='angry', mouth='frown', eyes='closed', tilt=-12 * ease(u),
-                        sleeve_r=lerp(10, 120, ease(u)), sleeve_l=20, wind=0.6, flutter=u, back=[aura(u, (0.95, 0.3, 0.3), 0.6)])
-        else:
-            u = (t - 0.35) / 0.65
-            p = replace(BASE, tint=0.7, brows='angry', mouth='frown', eyes='closed', tilt=-12, sleeve_r=lerp(120, 20, u),
-                        alpha=1 - ease(min(1, u * 1.4)), wind=0.9, flutter=u * 3, over=[leaves(u)])
-        out.append((p, 85))
+    out = [(replace(BASE, tint=0.7, brows='angry', mouth='frown', eyes='closed', tilt=-6, sleeve_r=20, wind=0.6,
+                    back=[aura(0.1, red, 0.6)]), 90),
+           (replace(BASE, tint=0.7, brows='angry', mouth='frown', eyes='closed', tilt=-12, sleeve_r=0, lean=-3, wind=0.6,
+                    back=[aura(0.2, red, 0.6)]), 120)]
+    for k, ang in enumerate((40, 110, 160, 150)):
+        out.append((replace(BASE, tint=0.7, brows='angry', mouth='frown', eyes='closed', tilt=-12, sleeve_r=ang,
+                            lean=3 if k < 2 else 1, wind=0.8, flutter=k / 3, front=[sleeve_smear(ang)] if k < 3 else [],
+                            over=[leaves(0.05 + k * 0.08)]), 50))
+    for k in range(8):
+        u = (k + 1) / 8
+        out.append((replace(BASE, tint=0.7, brows='angry', mouth='frown', eyes='closed', tilt=-12, sleeve_r=lerp(150, 20, u),
+                            alpha=1 - ease(min(1, u * 1.4)), wind=0.9, flutter=u * 3, over=[leaves(0.3 + u * 0.7)]), 85))
     out.append((replace(BASE, alpha=0, shadow=False), 200))
     return out
 
@@ -1742,74 +1847,75 @@ def tickle(phase):
 
 
 def tumble(phase):
-    """Thrown: a tumble, then riding the flying sword until the landing. Faces right; mirrored for the left."""
-    out = []
+    """Thrown: a fast tumble with smears, the sword appears; surf it, wobbling; land and salute. Faces right."""
     if phase == 'start':
-        for i in range(5):
-            t = (i + 1) / 5
-            out.append((replace(BASE, lean=-70 * math.sin(t * math.pi), lift=40, eyes='squeeze', brows='worried',
-                                sleeve_l=140, sleeve_r=140, shadow=False, sword=max(0, t * 2 - 1), wind=0.9,
-                                flutter=t * 2), 60))
-    elif phase == 'loop':
+        out = []
+        for k, ang in enumerate((-50, -130, -220, -310, -360)):
+            # Spin about the middle of the body rather than the feet: move the feet so the centre stays put.
+            th = math.radians(ang)
+            out.append((replace(BASE, lean=ang, x=-300 * math.sin(th), lift=40 + 300 - 300 * math.cos(th), eyes='squeeze', brows='worried', sleeve_l=140, sleeve_r=140,
+                                shadow=False, sword=max(0, (k - 2) / 2), wind=0.9, flutter=k / 2,
+                                back=[spin_smear(ang)] if k < 4 else []), 55))
+        return out
+    if phase == 'loop':
+        out = []
         n = 10
         for i in range(n):
             t = i / n
-            out.append((replace(BASE, lift=40, lean=-8 + 6 * osc(t), sword=1, trail=0.7, eyes='wide', brows='worried',
-                                mouth='o', sleeve_l=100 + 30 * osc(t, 0.5), sleeve_r=80 + 30 * osc(t, 0.5, 0.5),
-                                shadow=False, wind=1.0, flutter=t * 3, back=[speed_lines(0.8)]), 70))
-    else:
-        for i, (lift, sw, eyes) in enumerate(((30, 1, 'open'), (10, 0.6, 'open'), (0, 0.2, 'happy'), (0, 0, 'happy'))):
-            out.append((replace(BASE, lift=lift, sword=sw, eyes=eyes, squash=0.92 if i == 2 else 1, flutter=i / 4,
-                                **(SALUTE if i == 3 else {})), 90))
-    return out
+            out.append((replace(BASE, lift=40 + 6 * osc(t, 0.5), lean=-8 + 7 * osc(t), sword=1, trail=0.7, eyes='wide',
+                                brows='worried', mouth='o', sleeve_l=100 + 30 * osc(t, 0.5),
+                                sleeve_r=80 + 30 * osc(t, 0.5, 0.5), shadow=False, wind=1.0, flutter=t * 3,
+                                back=[speed_lines(0.8)]), 70))
+        return out
+    return [(replace(BASE, lift=24, sword=1, eyes='open', sleeve_l=60, sleeve_r=60), 60),
+            (replace(BASE, lift=0, sword=0.5, squash=0.86, eyes='squeeze', sleeve_l=40, sleeve_r=40), 80),
+            (replace(BASE, sword=0, squash=1.04, eyes='happy'), 70),
+            (replace(BASE, eyes='happy', **SALUTE), 150)]
 
 
 def peek(phase):
-    """Hiding at the screen's edge behind a cloud, peeking out. Faces right, for the left edge; mirrored for the right."""
-    out = []
-    pose = dict(x=-30, lean=8, tilt=12, look=(14, 0), blush=0.3, sleeve_r=60, flutter=0, wind=0.1)
+    """Hides behind a cloud at the screen edge and peeks out; the peek is held longer than the duck. Faces right."""
+    pose = dict(x=-30, lean=8, tilt=12, look=(14, 0), blush=0.3, sleeve_r=60, wind=0.1)
     if phase == 'start':
-        for i in range(4):
-            t = (i + 1) / 4
-            out.append((replace(BASE, **{**pose, 'tilt': 10 * t, 'lean': 8 * t, 'flutter': t},
-                                front=[cloud(60, -110, 0.9, ease(t))]), 80))
-    elif phase == 'loop':
-        n = 12
-        for i in range(n):
-            t = i / n
-            eyes = 'happy' if 5 <= i < 8 else 'open'
-            out.append((replace(BASE, **{**pose, 'flutter': t, 'look': (12, 4 * osc(t))}, eyes=eyes, mouth='cat',
-                                lift=6 * osc(t), front=[cloud(60, -110 + 6 * osc(t), 0.9)]), 120))
-    else:
-        for i in range(4):
-            t = (i + 1) / 4
-            out.append((replace(BASE, **{**pose, 'tilt': 10 * (1 - t), 'lean': 8 * (1 - t), 'x': -30 * (1 - t)},
-                                front=[cloud(60, -110, 0.9, 1 - t)]), 80))
-    return out
+        return [(replace(BASE, **{**pose, 'tilt': 10 * t, 'lean': 8 * t}, flutter=t,
+                         front=[cloud(60, -110, 0.9, ease(t))]), ms)
+                for t, ms in ((0.4, 60), (0.8, 70), (1.0, 100))]
+    if phase == 'loop':
+        plan = [(1.0, 0, 'open', 260), (1.0, 0, 'happy', 300), (1.0, 2, 'happy', 160), (0.4, 14, 'closed', 90),
+                (0.1, 22, 'closed', 160), (0.6, 10, 'open', 90), (1.0, 0, 'open', 300)]
+        out = []
+        for i, (out_amt, dy, eyes, ms) in enumerate(plan):
+            out.append((replace(BASE, **{**pose, 'lean': 8 * out_amt, 'tilt': 12 * out_amt, 'x': -30 - 40 * (1 - out_amt)},
+                                head_dy=dy, eyes=eyes, mouth='cat', flutter=i / 7,
+                                front=[cloud(60, -110, 0.9)]), ms))
+        return out
+    return [(replace(BASE, **{**pose, 'tilt': 12 * (1 - t), 'lean': 8 * (1 - t), 'x': -30 * (1 - t)}, flutter=t,
+                     front=[cloud(60, -110, 0.9, 1 - t)]), ms)
+            for t, ms in ((0.4, 70), (0.8, 70), (1.0, 100))]
 
 
 def mount(phase, angle=0.0):
-    """Flying-sword travel: mount, a loop pass of flight tilted by `angle` (degrees, + climbs), dismount."""
-    out = []
+    """Flying-sword travel: step on with a dip, a loop pass tilted by `angle` (degrees, + climbs), step off squashed."""
     if phase == 'start':
-        for i in range(5):
-            t = (i + 1) / 5
-            out.append((replace(BASE, sword=t, lift=30 * ease(t), sleeve_l=lerp(10, 50, t), sleeve_r=lerp(10, 40, t),
-                                eyes='open', wind=0.3 + 0.4 * t, flutter=t), 70))
-    elif phase == 'loop':
+        return [(replace(BASE, sword=0.5, eyes='sharp', sleeve_l=20, sleeve_r=20, wind=0.3), 60),
+                (replace(BASE, sword=1, lift=10, eyes='sharp', sleeve_l=30, sleeve_r=30, wind=0.4), 60),
+                (replace(BASE, sword=1, lift=4, squash=0.9, eyes='sharp', sleeve_l=40, sleeve_r=40, wind=0.4), 100),
+                (replace(BASE, sword=1, lift=24, squash=1.06, eyes='sharp', sleeve_l=50, sleeve_r=35, wind=0.7), 60),
+                (replace(BASE, sword=1, lift=30, eyes='sharp', sleeve_l=55, sleeve_r=30, wind=0.85), 70)]
+    if phase == 'loop':
+        out = []
         n = 8
         for i in range(n):
             t = i / n
-            out.append((replace(BASE, sword=1, lift=30 + 8 * osc(t), lean=-angle * 0.5 - 4, trail=1, eyes='open',
-                                mouth='cat', look=(10, -6 * (angle > 0) + 6 * (angle < 0)), sleeve_l=60 + 8 * osc(t),
+            out.append((replace(BASE, sword=1, lift=30 + 8 * osc(t), lean=-angle * 0.5 - 4, trail=1, eyes='sharp',
+                                mouth='smirk', look=(10, -6 * (angle > 0) + 6 * (angle < 0)), sleeve_l=60 + 8 * osc(t, 1, -0.2),
                                 sleeve_r=30, wind=1.0, flutter=t * 2, back=[speed_lines(0.7 + 0.3 * osc(t))]), 70))
-    else:
-        for i in range(5):
-            t = (i + 1) / 5
-            out.append((replace(BASE, sword=1 - t, lift=30 * (1 - ease(t)), sleeve_l=lerp(50, 10, t), sleeve_r=lerp(40, 10, t),
-                                eyes='happy' if 1 < i < 4 else 'open', squash=0.94 if i == 3 else 1, wind=0.6 * (1 - t) + 0.2,
-                                flutter=t), 70))
-    return out
+        return out
+    return [(replace(BASE, sword=1, lift=30, lean=4, eyes='sharp', sleeve_l=50, sleeve_r=40, wind=0.7), 60),
+            (replace(BASE, sword=1, lift=40, squash=1.06, eyes='open', sleeve_l=60, sleeve_r=50, wind=0.5), 60),
+            (replace(BASE, sword=0.4, lift=0, squash=0.86, eyes='happy', sleeve_l=30, sleeve_r=30, wind=0.4), 80),
+            (replace(BASE, sword=0, squash=1.03, eyes='happy', wind=0.3), 80),
+            (replace(BASE), 100)]
 
 
 def petal_rain():
@@ -1832,42 +1938,43 @@ def play_flute(phase):
     fl = flute(20, -306, 250, -270)
     if phase == 'start':
         for i in range(4):
-            t = (i + 1) / 4
+            t = ease_out((i + 1) / 4)
             out.append((replace(BASE, hand_l=(lerp(-80, 60, t), lerp(-120, -300, t)), hand_r=(lerp(80, 170, t), lerp(-120, -280, t)),
-                                eyes='open' if t < 0.6 else 'closed', front=[fl] if t > 0.4 else [], flutter=t), 80))
-    elif phase == 'loop':
+                                eyes='open' if t < 0.6 else 'closed', front=[fl] if t > 0.4 else [], flutter=t), (60, 70, 80, 110)[i]))
+        return out
+    if phase == 'loop':
         n = 12
         for i in range(n):
             t = i / n
-            out.append((replace(BASE, **pose, tilt=6 * osc(t), lean=3 * osc(t), wind=0.5, flutter=t * 2, blush=0.5,
+            sway = math.sin(2 * math.pi * t)
+            sway = math.copysign(abs(sway) ** 0.7, sway)
+            out.append((replace(BASE, **pose, tilt=6 * sway, lean=3 * sway, wind=0.5, flutter=t * 2 - 0.2, blush=0.3,
                                 front=[fl], back=[notes(t), petals(t, amount=6, seed=44, area=300)]), 110))
-    else:
-        for i in range(4):
-            t = (i + 1) / 4
-            out.append((replace(BASE, hand_l=(lerp(60, -80, t), lerp(-300, -120, t)), hand_r=(lerp(170, 80, t), lerp(-280, -120, t)),
-                                eyes='happy', front=[fl] if t < 0.6 else [], flutter=t), 80))
+        return out
+    for i in range(4):
+        t = ease((i + 1) / 4)
+        out.append((replace(BASE, hand_l=(lerp(60, -80, t), lerp(-300, -120, t)), hand_r=(lerp(170, 80, t), lerp(-280, -120, t)),
+                            eyes='happy', mouth='smirk', front=[fl] if t < 0.6 else [], flutter=t), (70, 70, 80, 140)[i]))
     return out
 
 
 def butterfly_trick():
-    """Yun bursts into butterflies, they flutter round, and gather back into Yun."""
-    out = []
-    n = 26
-    for i in range(n):
-        t = i / (n - 1)
-        if t < 0.2:
-            u = t / 0.2
-            p = replace(BASE, eyes='closed', mouth='cat', **SALUTE, alpha=1 - ease(max(0, u * 1.5 - 0.5)),
-                        over=[butterflies(u, 9, gather=1 - ease(u))] if u > 0.3 else [], flutter=u, shadow=u < 0.8)
-        elif t < 0.7:
-            u = (t - 0.2) / 0.5
-            p = replace(BASE, alpha=0, shadow=False, over=[butterflies(u, 9, gather=0)])
-        else:
-            u = (t - 0.7) / 0.3
-            p = replace(BASE, eyes='happy', blush=0.8, alpha=ease(max(0, u * 1.5 - 0.3)), sleeve_l=lerp(150, 20, u),
-                        sleeve_r=lerp(150, 20, u), over=[butterflies(u, 9, gather=ease(u))] if u < 0.75 else [], flutter=u,
-                        shadow=u > 0.3)
-        out.append((p, 90))
+    """Salute; Yun breaks into butterflies from the edges in, they flutter round, fly back and rebuild Yun."""
+    out = [(replace(BASE, eyes='closed', mouth='smirk', **SALUTE), 120)]
+    for k in range(6):
+        u = (k + 1) / 6
+        out.append((replace(BASE, eyes='closed', mouth='smirk', **SALUTE, alpha=1 - ease(u), shadow=u < 0.7,
+                            over=[butterflies(u * 0.3, 1 + int(8 * u), gather=1 - ease(u))], flutter=u), 70))
+    for k in range(10):
+        u = (k + 1) / 10
+        out.append((replace(BASE, alpha=0, shadow=False, over=[butterflies(0.3 + u * 0.6, 9, gather=0)]), 90))
+    for k in range(6):
+        u = (k + 1) / 6
+        out.append((replace(BASE, eyes='happy', alpha=ease(u), sleeve_l=lerp(150, 60, u), sleeve_r=lerp(150, 60, u),
+                            over=[butterflies(0.9 + u * 0.3, 9 - int(8 * u), gather=ease(u))], flutter=u, shadow=u > 0.3), 70))
+    out += [(replace(BASE, eyes='happy', squash=0.94, sleeve_l=140, sleeve_r=140), 90),
+            (replace(BASE, eyes='happy', squash=1.02, sleeve_l=120, sleeve_r=120), 160),
+            (replace(BASE), 120)]
     return out
 
 
@@ -2001,14 +2108,17 @@ def look_around():
 
 
 def sword_dance():
+    """The floating sword orbits, speeding up then slowing (ease-in-out), eyes following; a held salute to finish."""
     out = []
-    n = 18
+    n = 16
     for i in range(n):
-        t = i / (n - 1)
-        out.append((replace(BASE, hand_r=(150, -300), hand_l=(-30, -200), look=(16 * math.cos(2 * math.pi * t), -6),
-                            eyes='open' if t < 0.8 else 'happy', brows='calm', mouth='cat', wind=0.6, flutter=t * 2,
-                            back=[orbit_sword(t * 2, 'back')], front=[orbit_sword(t * 2, 'front')]), 80))
-    out.append((replace(BASE, eyes='happy', **SALUTE), 180))
+        t = ease(i / (n - 1))
+        phase = t * 2
+        out.append((replace(BASE, hand_r=(150, -300), hand_l=(-30, -200), look=(16 * math.cos(2 * math.pi * phase), -6),
+                            eyes='open' if i < 13 else 'happy', brows='calm', mouth='smirk', wind=0.6, flutter=i / 8,
+                            back=[orbit_sword(phase, 'back')], front=[orbit_sword(phase, 'front')]), 85))
+    out += [(replace(BASE, eyes='happy', squash=0.96, **SALUTE), 90), (replace(BASE, eyes='closed', tilt=8, **SALUTE), 320),
+            (replace(BASE), 120)]
     return out
 
 

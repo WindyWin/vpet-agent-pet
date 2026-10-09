@@ -216,60 +216,69 @@
           "duration_ms": 140
         },
         {
-          "path": "assets/yun/idle/_013_140.png",
-          "duration_ms": 140
+          "path": "assets/yun/idle/_013_50.png",
+          "duration_ms": 50
         },
         {
-          "path": "assets/yun/idle/_014_140.png",
-          "duration_ms": 140
+          "path": "assets/yun/idle/_014_70.png",
+          "duration_ms": 70
         },
         {
           "path": "assets/yun/idle/_015_50.png",
           "duration_ms": 50
         },
         {
-          "path": "assets/yun/idle/_016_70.png",
-          "duration_ms": 70
+          "path": "assets/yun/idle/_016_140.png",
+          "duration_ms": 140
         },
         {
-          "path": "assets/yun/idle/_017_50.png",
-          "duration_ms": 50
+          "path": "assets/yun/idle/_017_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle/_018_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle/_019_140.png",
+          "duration_ms": 140
         }
       ],
-      "duration_ms": 2270
+      "duration_ms": 2550
     },
     {
+      "state": "working",
       "path": "alchemy/end",
       "frames": [
         {
-          "path": "assets/yun/alchemy/end/_000_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/alchemy/end/_000_70.png",
+          "duration_ms": 70
         },
         {
-          "path": "assets/yun/alchemy/end/_001_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/alchemy/end/_001_70.png",
+          "duration_ms": 70
         },
         {
-          "path": "assets/yun/alchemy/end/_002_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/alchemy/end/_002_70.png",
+          "duration_ms": 70
         },
         {
-          "path": "assets/yun/alchemy/end/_003_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/alchemy/end/_003_70.png",
+          "duration_ms": 70
         },
         {
-          "path": "assets/yun/alchemy/end/_004_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/alchemy/end/_004_70.png",
+          "duration_ms": 70
         },
         {
-          "path": "assets/yun/alchemy/end/_005_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/alchemy/end/_005_70.png",
+          "duration_ms": 70
         }
       ],
-      "duration_ms": 480,
-      "state": "working"
+      "duration_ms": 420
     },
     {
+      "state": "working",
       "path": "alchemy/loop",
       "frames": [
         {
@@ -321,100 +330,100 @@
           "duration_ms": 100
         }
       ],
-      "duration_ms": 1200,
-      "state": "working"
+      "duration_ms": 1200
     },
     {
+      "state": "working",
       "path": "alchemy/pill",
       "frames": [
         {
-          "path": "assets/yun/alchemy/pill/_000_100.png",
-          "duration_ms": 100
+          "path": "assets/yun/alchemy/pill/_000_90.png",
+          "duration_ms": 90
         },
         {
-          "path": "assets/yun/alchemy/pill/_001_100.png",
-          "duration_ms": 100
+          "path": "assets/yun/alchemy/pill/_001_70.png",
+          "duration_ms": 70
         },
         {
-          "path": "assets/yun/alchemy/pill/_002_100.png",
-          "duration_ms": 100
+          "path": "assets/yun/alchemy/pill/_002_70.png",
+          "duration_ms": 70
         },
         {
-          "path": "assets/yun/alchemy/pill/_003_100.png",
-          "duration_ms": 100
+          "path": "assets/yun/alchemy/pill/_003_70.png",
+          "duration_ms": 70
         },
         {
-          "path": "assets/yun/alchemy/pill/_004_100.png",
-          "duration_ms": 100
+          "path": "assets/yun/alchemy/pill/_004_70.png",
+          "duration_ms": 70
         },
         {
-          "path": "assets/yun/alchemy/pill/_005_100.png",
-          "duration_ms": 100
+          "path": "assets/yun/alchemy/pill/_005_50.png",
+          "duration_ms": 50
         },
         {
-          "path": "assets/yun/alchemy/pill/_006_100.png",
-          "duration_ms": 100
+          "path": "assets/yun/alchemy/pill/_006_50.png",
+          "duration_ms": 50
         },
         {
-          "path": "assets/yun/alchemy/pill/_007_100.png",
-          "duration_ms": 100
+          "path": "assets/yun/alchemy/pill/_007_60.png",
+          "duration_ms": 60
         },
         {
-          "path": "assets/yun/alchemy/pill/_008_100.png",
-          "duration_ms": 100
+          "path": "assets/yun/alchemy/pill/_008_160.png",
+          "duration_ms": 160
         },
         {
-          "path": "assets/yun/alchemy/pill/_009_100.png",
-          "duration_ms": 100
+          "path": "assets/yun/alchemy/pill/_009_120.png",
+          "duration_ms": 120
         },
         {
-          "path": "assets/yun/alchemy/pill/_010_100.png",
-          "duration_ms": 100
+          "path": "assets/yun/alchemy/pill/_010_120.png",
+          "duration_ms": 120
         },
         {
           "path": "assets/yun/alchemy/pill/_011_100.png",
           "duration_ms": 100
         }
       ],
-      "duration_ms": 1200,
-      "state": "working"
+      "duration_ms": 1030
     },
     {
+      "state": "working",
       "path": "alchemy/start",
       "frames": [
         {
-          "path": "assets/yun/alchemy/start/_000_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/alchemy/start/_000_60.png",
+          "duration_ms": 60
         },
         {
-          "path": "assets/yun/alchemy/start/_001_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/alchemy/start/_001_60.png",
+          "duration_ms": 60
         },
         {
-          "path": "assets/yun/alchemy/start/_002_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/alchemy/start/_002_60.png",
+          "duration_ms": 60
         },
         {
-          "path": "assets/yun/alchemy/start/_003_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/alchemy/start/_003_70.png",
+          "duration_ms": 70
         },
         {
           "path": "assets/yun/alchemy/start/_004_80.png",
           "duration_ms": 80
         },
         {
-          "path": "assets/yun/alchemy/start/_005_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/alchemy/start/_005_90.png",
+          "duration_ms": 90
         },
         {
-          "path": "assets/yun/alchemy/start/_006_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/alchemy/start/_006_110.png",
+          "duration_ms": 110
         }
       ],
-      "duration_ms": 560,
-      "state": "working"
+      "duration_ms": 530
     },
     {
+      "state": "working",
       "path": "alchemy/to_jade",
       "frames": [
         {
@@ -458,97 +467,73 @@
           "duration_ms": 90
         }
       ],
-      "duration_ms": 900,
-      "state": "working"
+      "duration_ms": 900
     },
     {
+      "state": "closing",
       "path": "ascend",
       "frames": [
         {
-          "path": "assets/yun/ascend/_000_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/ascend/_000_90.png",
+          "duration_ms": 90
         },
         {
-          "path": "assets/yun/ascend/_001_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/ascend/_001_90.png",
+          "duration_ms": 90
         },
         {
-          "path": "assets/yun/ascend/_002_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/ascend/_002_260.png",
+          "duration_ms": 260
         },
         {
-          "path": "assets/yun/ascend/_003_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/ascend/_003_90.png",
+          "duration_ms": 90
         },
         {
-          "path": "assets/yun/ascend/_004_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/ascend/_004_70.png",
+          "duration_ms": 70
         },
         {
-          "path": "assets/yun/ascend/_005_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/ascend/_005_70.png",
+          "duration_ms": 70
         },
         {
-          "path": "assets/yun/ascend/_006_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/ascend/_006_120.png",
+          "duration_ms": 120
         },
         {
-          "path": "assets/yun/ascend/_007_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/ascend/_007_90.png",
+          "duration_ms": 90
         },
         {
           "path": "assets/yun/ascend/_008_80.png",
           "duration_ms": 80
         },
         {
-          "path": "assets/yun/ascend/_009_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/ascend/_009_70.png",
+          "duration_ms": 70
         },
         {
-          "path": "assets/yun/ascend/_010_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/ascend/_010_60.png",
+          "duration_ms": 60
         },
         {
-          "path": "assets/yun/ascend/_011_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/ascend/_011_55.png",
+          "duration_ms": 55
         },
         {
-          "path": "assets/yun/ascend/_012_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/ascend/_012_50.png",
+          "duration_ms": 50
         },
         {
-          "path": "assets/yun/ascend/_013_80.png",
-          "duration_ms": 80
-        },
-        {
-          "path": "assets/yun/ascend/_014_80.png",
-          "duration_ms": 80
-        },
-        {
-          "path": "assets/yun/ascend/_015_80.png",
-          "duration_ms": 80
-        },
-        {
-          "path": "assets/yun/ascend/_016_80.png",
-          "duration_ms": 80
-        },
-        {
-          "path": "assets/yun/ascend/_017_80.png",
-          "duration_ms": 80
-        },
-        {
-          "path": "assets/yun/ascend/_018_80.png",
-          "duration_ms": 80
-        },
-        {
-          "path": "assets/yun/ascend/_019_280.png",
-          "duration_ms": 280
+          "path": "assets/yun/ascend/_013_250.png",
+          "duration_ms": 250
         }
       ],
-      "duration_ms": 1800,
-      "state": "closing"
+      "duration_ms": 1445
     },
     {
+      "state": "birthday",
       "path": "birthday",
       "frames": [
         {
@@ -648,110 +633,94 @@
           "duration_ms": 100
         }
       ],
-      "duration_ms": 2400,
-      "state": "birthday"
+      "duration_ms": 2400
     },
     {
+      "state": "turn_finished",
       "path": "breakthrough",
       "frames": [
         {
-          "path": "assets/yun/breakthrough/_000_85.png",
-          "duration_ms": 85
+          "path": "assets/yun/breakthrough/_000_90.png",
+          "duration_ms": 90
         },
         {
-          "path": "assets/yun/breakthrough/_001_85.png",
-          "duration_ms": 85
+          "path": "assets/yun/breakthrough/_001_100.png",
+          "duration_ms": 100
         },
         {
-          "path": "assets/yun/breakthrough/_002_85.png",
-          "duration_ms": 85
+          "path": "assets/yun/breakthrough/_002_80.png",
+          "duration_ms": 80
         },
         {
-          "path": "assets/yun/breakthrough/_003_85.png",
-          "duration_ms": 85
+          "path": "assets/yun/breakthrough/_003_50.png",
+          "duration_ms": 50
         },
         {
-          "path": "assets/yun/breakthrough/_004_85.png",
-          "duration_ms": 85
+          "path": "assets/yun/breakthrough/_004_60.png",
+          "duration_ms": 60
         },
         {
-          "path": "assets/yun/breakthrough/_005_85.png",
-          "duration_ms": 85
+          "path": "assets/yun/breakthrough/_005_150.png",
+          "duration_ms": 150
         },
         {
-          "path": "assets/yun/breakthrough/_006_85.png",
-          "duration_ms": 85
+          "path": "assets/yun/breakthrough/_006_80.png",
+          "duration_ms": 80
         },
         {
-          "path": "assets/yun/breakthrough/_007_85.png",
-          "duration_ms": 85
+          "path": "assets/yun/breakthrough/_007_60.png",
+          "duration_ms": 60
         },
         {
-          "path": "assets/yun/breakthrough/_008_85.png",
-          "duration_ms": 85
+          "path": "assets/yun/breakthrough/_008_50.png",
+          "duration_ms": 50
         },
         {
-          "path": "assets/yun/breakthrough/_009_85.png",
-          "duration_ms": 85
+          "path": "assets/yun/breakthrough/_009_90.png",
+          "duration_ms": 90
         },
         {
-          "path": "assets/yun/breakthrough/_010_85.png",
-          "duration_ms": 85
+          "path": "assets/yun/breakthrough/_010_90.png",
+          "duration_ms": 90
         },
         {
-          "path": "assets/yun/breakthrough/_011_85.png",
-          "duration_ms": 85
-        },
-        {
-          "path": "assets/yun/breakthrough/_012_85.png",
-          "duration_ms": 85
-        },
-        {
-          "path": "assets/yun/breakthrough/_013_85.png",
-          "duration_ms": 85
-        },
-        {
-          "path": "assets/yun/breakthrough/_014_85.png",
-          "duration_ms": 85
-        },
-        {
-          "path": "assets/yun/breakthrough/_015_160.png",
+          "path": "assets/yun/breakthrough/_011_160.png",
           "duration_ms": 160
         }
       ],
-      "duration_ms": 1435,
-      "state": "turn_finished"
+      "duration_ms": 1060
     },
     {
+      "state": "butterflies",
       "path": "butterflies",
       "frames": [
         {
-          "path": "assets/yun/butterflies/_000_90.png",
-          "duration_ms": 90
+          "path": "assets/yun/butterflies/_000_120.png",
+          "duration_ms": 120
         },
         {
-          "path": "assets/yun/butterflies/_001_90.png",
-          "duration_ms": 90
+          "path": "assets/yun/butterflies/_001_70.png",
+          "duration_ms": 70
         },
         {
-          "path": "assets/yun/butterflies/_002_90.png",
-          "duration_ms": 90
+          "path": "assets/yun/butterflies/_002_70.png",
+          "duration_ms": 70
         },
         {
-          "path": "assets/yun/butterflies/_003_90.png",
-          "duration_ms": 90
+          "path": "assets/yun/butterflies/_003_70.png",
+          "duration_ms": 70
         },
         {
-          "path": "assets/yun/butterflies/_004_90.png",
-          "duration_ms": 90
+          "path": "assets/yun/butterflies/_004_70.png",
+          "duration_ms": 70
         },
         {
-          "path": "assets/yun/butterflies/_005_90.png",
-          "duration_ms": 90
+          "path": "assets/yun/butterflies/_005_70.png",
+          "duration_ms": 70
         },
         {
-          "path": "assets/yun/butterflies/_006_90.png",
-          "duration_ms": 90
+          "path": "assets/yun/butterflies/_006_70.png",
+          "duration_ms": 70
         },
         {
           "path": "assets/yun/butterflies/_007_90.png",
@@ -794,73 +763,73 @@
           "duration_ms": 90
         },
         {
-          "path": "assets/yun/butterflies/_017_90.png",
-          "duration_ms": 90
+          "path": "assets/yun/butterflies/_017_70.png",
+          "duration_ms": 70
         },
         {
-          "path": "assets/yun/butterflies/_018_90.png",
-          "duration_ms": 90
+          "path": "assets/yun/butterflies/_018_70.png",
+          "duration_ms": 70
         },
         {
-          "path": "assets/yun/butterflies/_019_90.png",
-          "duration_ms": 90
+          "path": "assets/yun/butterflies/_019_70.png",
+          "duration_ms": 70
         },
         {
-          "path": "assets/yun/butterflies/_020_90.png",
-          "duration_ms": 90
+          "path": "assets/yun/butterflies/_020_70.png",
+          "duration_ms": 70
         },
         {
-          "path": "assets/yun/butterflies/_021_90.png",
-          "duration_ms": 90
+          "path": "assets/yun/butterflies/_021_70.png",
+          "duration_ms": 70
         },
         {
-          "path": "assets/yun/butterflies/_022_90.png",
-          "duration_ms": 90
+          "path": "assets/yun/butterflies/_022_70.png",
+          "duration_ms": 70
         },
         {
           "path": "assets/yun/butterflies/_023_90.png",
           "duration_ms": 90
         },
         {
-          "path": "assets/yun/butterflies/_024_90.png",
-          "duration_ms": 90
+          "path": "assets/yun/butterflies/_024_160.png",
+          "duration_ms": 160
         },
         {
-          "path": "assets/yun/butterflies/_025_90.png",
-          "duration_ms": 90
+          "path": "assets/yun/butterflies/_025_120.png",
+          "duration_ms": 120
         }
       ],
-      "duration_ms": 2340,
-      "state": "butterflies"
+      "duration_ms": 2230
     },
     {
+      "state": "sleeping",
       "path": "cloudnap/end",
       "frames": [
         {
-          "path": "assets/yun/cloudnap/end/_000_130.png",
-          "duration_ms": 130
+          "path": "assets/yun/cloudnap/end/_000_100.png",
+          "duration_ms": 100
         },
         {
-          "path": "assets/yun/cloudnap/end/_001_130.png",
-          "duration_ms": 130
+          "path": "assets/yun/cloudnap/end/_001_100.png",
+          "duration_ms": 100
         },
         {
-          "path": "assets/yun/cloudnap/end/_002_130.png",
-          "duration_ms": 130
+          "path": "assets/yun/cloudnap/end/_002_90.png",
+          "duration_ms": 90
         },
         {
-          "path": "assets/yun/cloudnap/end/_003_130.png",
-          "duration_ms": 130
+          "path": "assets/yun/cloudnap/end/_003_80.png",
+          "duration_ms": 80
         },
         {
-          "path": "assets/yun/cloudnap/end/_004_130.png",
-          "duration_ms": 130
+          "path": "assets/yun/cloudnap/end/_004_160.png",
+          "duration_ms": 160
         }
       ],
-      "duration_ms": 650,
-      "state": "sleeping"
+      "duration_ms": 530
     },
     {
+      "state": "sleeping",
       "path": "cloudnap/loop",
       "frames": [
         {
@@ -928,136 +897,124 @@
           "duration_ms": 150
         }
       ],
-      "duration_ms": 2400,
-      "state": "sleeping"
+      "duration_ms": 2400
     },
     {
+      "state": "sleeping",
       "path": "cloudnap/start",
       "frames": [
         {
-          "path": "assets/yun/cloudnap/start/_000_110.png",
-          "duration_ms": 110
+          "path": "assets/yun/cloudnap/start/_000_100.png",
+          "duration_ms": 100
         },
         {
-          "path": "assets/yun/cloudnap/start/_001_110.png",
-          "duration_ms": 110
+          "path": "assets/yun/cloudnap/start/_001_100.png",
+          "duration_ms": 100
         },
         {
           "path": "assets/yun/cloudnap/start/_002_110.png",
           "duration_ms": 110
         },
         {
-          "path": "assets/yun/cloudnap/start/_003_110.png",
-          "duration_ms": 110
+          "path": "assets/yun/cloudnap/start/_003_160.png",
+          "duration_ms": 160
         },
         {
-          "path": "assets/yun/cloudnap/start/_004_110.png",
-          "duration_ms": 110
+          "path": "assets/yun/cloudnap/start/_004_90.png",
+          "duration_ms": 90
         },
         {
-          "path": "assets/yun/cloudnap/start/_005_110.png",
-          "duration_ms": 110
+          "path": "assets/yun/cloudnap/start/_005_140.png",
+          "duration_ms": 140
         },
         {
-          "path": "assets/yun/cloudnap/start/_006_110.png",
-          "duration_ms": 110
+          "path": "assets/yun/cloudnap/start/_006_160.png",
+          "duration_ms": 160
         },
         {
-          "path": "assets/yun/cloudnap/start/_007_110.png",
-          "duration_ms": 110
+          "path": "assets/yun/cloudnap/start/_007_180.png",
+          "duration_ms": 180
         }
       ],
-      "duration_ms": 880,
-      "state": "sleeping"
+      "duration_ms": 1040
     },
     {
+      "state": "starting",
       "path": "descend",
       "frames": [
         {
-          "path": "assets/yun/descend/_000_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/descend/_000_60.png",
+          "duration_ms": 60
         },
         {
-          "path": "assets/yun/descend/_001_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/descend/_001_60.png",
+          "duration_ms": 60
         },
         {
-          "path": "assets/yun/descend/_002_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/descend/_002_60.png",
+          "duration_ms": 60
         },
         {
-          "path": "assets/yun/descend/_003_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/descend/_003_60.png",
+          "duration_ms": 60
         },
         {
-          "path": "assets/yun/descend/_004_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/descend/_004_60.png",
+          "duration_ms": 60
         },
         {
-          "path": "assets/yun/descend/_005_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/descend/_005_60.png",
+          "duration_ms": 60
         },
         {
-          "path": "assets/yun/descend/_006_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/descend/_006_60.png",
+          "duration_ms": 60
         },
         {
-          "path": "assets/yun/descend/_007_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/descend/_007_60.png",
+          "duration_ms": 60
         },
         {
-          "path": "assets/yun/descend/_008_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/descend/_008_70.png",
+          "duration_ms": 70
         },
         {
-          "path": "assets/yun/descend/_009_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/descend/_009_70.png",
+          "duration_ms": 70
         },
         {
-          "path": "assets/yun/descend/_010_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/descend/_010_70.png",
+          "duration_ms": 70
         },
         {
           "path": "assets/yun/descend/_011_80.png",
           "duration_ms": 80
         },
         {
-          "path": "assets/yun/descend/_012_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/descend/_012_90.png",
+          "duration_ms": 90
         },
         {
-          "path": "assets/yun/descend/_013_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/descend/_013_90.png",
+          "duration_ms": 90
         },
         {
-          "path": "assets/yun/descend/_014_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/descend/_014_320.png",
+          "duration_ms": 320
         },
         {
-          "path": "assets/yun/descend/_015_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/descend/_015_90.png",
+          "duration_ms": 90
         },
         {
-          "path": "assets/yun/descend/_016_80.png",
-          "duration_ms": 80
-        },
-        {
-          "path": "assets/yun/descend/_017_80.png",
-          "duration_ms": 80
-        },
-        {
-          "path": "assets/yun/descend/_018_80.png",
-          "duration_ms": 80
-        },
-        {
-          "path": "assets/yun/descend/_019_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/descend/_016_140.png",
+          "duration_ms": 140
         }
       ],
-      "duration_ms": 1600,
-      "state": "starting"
+      "duration_ms": 1500
     },
     {
+      "state": "out_of_quota",
       "path": "deviation",
       "frames": [
         {
@@ -1065,85 +1022,85 @@
           "duration_ms": 150
         },
         {
-          "path": "assets/yun/deviation/_001_150.png",
-          "duration_ms": 150
+          "path": "assets/yun/deviation/_001_130.png",
+          "duration_ms": 130
         },
         {
-          "path": "assets/yun/deviation/_002_150.png",
-          "duration_ms": 150
+          "path": "assets/yun/deviation/_002_170.png",
+          "duration_ms": 170
         },
         {
-          "path": "assets/yun/deviation/_003_150.png",
-          "duration_ms": 150
+          "path": "assets/yun/deviation/_003_140.png",
+          "duration_ms": 140
         },
         {
-          "path": "assets/yun/deviation/_004_150.png",
-          "duration_ms": 150
+          "path": "assets/yun/deviation/_004_120.png",
+          "duration_ms": 120
         },
         {
-          "path": "assets/yun/deviation/_005_150.png",
-          "duration_ms": 150
+          "path": "assets/yun/deviation/_005_180.png",
+          "duration_ms": 180
         },
         {
           "path": "assets/yun/deviation/_006_150.png",
           "duration_ms": 150
         },
         {
-          "path": "assets/yun/deviation/_007_150.png",
-          "duration_ms": 150
+          "path": "assets/yun/deviation/_007_130.png",
+          "duration_ms": 130
         },
         {
-          "path": "assets/yun/deviation/_008_150.png",
-          "duration_ms": 150
+          "path": "assets/yun/deviation/_008_160.png",
+          "duration_ms": 160
         },
         {
-          "path": "assets/yun/deviation/_009_150.png",
-          "duration_ms": 150
+          "path": "assets/yun/deviation/_009_140.png",
+          "duration_ms": 140
         },
         {
-          "path": "assets/yun/deviation/_010_150.png",
-          "duration_ms": 150
+          "path": "assets/yun/deviation/_010_170.png",
+          "duration_ms": 170
         },
         {
-          "path": "assets/yun/deviation/_011_150.png",
-          "duration_ms": 150
+          "path": "assets/yun/deviation/_011_120.png",
+          "duration_ms": 120
         },
         {
           "path": "assets/yun/deviation/_012_150.png",
           "duration_ms": 150
         },
         {
-          "path": "assets/yun/deviation/_013_150.png",
-          "duration_ms": 150
+          "path": "assets/yun/deviation/_013_140.png",
+          "duration_ms": 140
         }
       ],
-      "duration_ms": 2100,
-      "state": "out_of_quota"
+      "duration_ms": 2050
     },
     {
+      "state": "flute",
       "path": "flute/end",
       "frames": [
         {
-          "path": "assets/yun/flute/end/_000_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/flute/end/_000_70.png",
+          "duration_ms": 70
         },
         {
-          "path": "assets/yun/flute/end/_001_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/flute/end/_001_70.png",
+          "duration_ms": 70
         },
         {
           "path": "assets/yun/flute/end/_002_80.png",
           "duration_ms": 80
         },
         {
-          "path": "assets/yun/flute/end/_003_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/flute/end/_003_140.png",
+          "duration_ms": 140
         }
       ],
-      "duration_ms": 320,
-      "state": "flute"
+      "duration_ms": 360
     },
     {
+      "state": "flute",
       "path": "flute/loop",
       "frames": [
         {
@@ -1195,87 +1152,87 @@
           "duration_ms": 110
         }
       ],
-      "duration_ms": 1320,
-      "state": "flute"
+      "duration_ms": 1320
     },
     {
+      "state": "flute",
       "path": "flute/start",
       "frames": [
         {
-          "path": "assets/yun/flute/start/_000_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/flute/start/_000_60.png",
+          "duration_ms": 60
         },
         {
-          "path": "assets/yun/flute/start/_001_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/flute/start/_001_70.png",
+          "duration_ms": 70
         },
         {
           "path": "assets/yun/flute/start/_002_80.png",
           "duration_ms": 80
         },
         {
-          "path": "assets/yun/flute/start/_003_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/flute/start/_003_110.png",
+          "duration_ms": 110
         }
       ],
-      "duration_ms": 320,
-      "state": "flute"
+      "duration_ms": 320
     },
     {
+      "state": "fly_left",
       "path": "fly/dismount_left",
       "frames": [
         {
-          "path": "assets/yun/fly/dismount_left/_000_70.png",
-          "duration_ms": 70
+          "path": "assets/yun/fly/dismount_left/_000_60.png",
+          "duration_ms": 60
         },
         {
-          "path": "assets/yun/fly/dismount_left/_001_70.png",
-          "duration_ms": 70
+          "path": "assets/yun/fly/dismount_left/_001_60.png",
+          "duration_ms": 60
         },
         {
-          "path": "assets/yun/fly/dismount_left/_002_70.png",
-          "duration_ms": 70
+          "path": "assets/yun/fly/dismount_left/_002_80.png",
+          "duration_ms": 80
         },
         {
-          "path": "assets/yun/fly/dismount_left/_003_70.png",
-          "duration_ms": 70
+          "path": "assets/yun/fly/dismount_left/_003_80.png",
+          "duration_ms": 80
         },
         {
-          "path": "assets/yun/fly/dismount_left/_004_70.png",
-          "duration_ms": 70
+          "path": "assets/yun/fly/dismount_left/_004_100.png",
+          "duration_ms": 100
         }
       ],
-      "duration_ms": 350,
-      "state": "fly_left"
+      "duration_ms": 380
     },
     {
+      "state": "fly_right",
       "path": "fly/dismount_right",
       "frames": [
         {
-          "path": "assets/yun/fly/dismount_right/_000_70.png",
-          "duration_ms": 70
+          "path": "assets/yun/fly/dismount_right/_000_60.png",
+          "duration_ms": 60
         },
         {
-          "path": "assets/yun/fly/dismount_right/_001_70.png",
-          "duration_ms": 70
+          "path": "assets/yun/fly/dismount_right/_001_60.png",
+          "duration_ms": 60
         },
         {
-          "path": "assets/yun/fly/dismount_right/_002_70.png",
-          "duration_ms": 70
+          "path": "assets/yun/fly/dismount_right/_002_80.png",
+          "duration_ms": 80
         },
         {
-          "path": "assets/yun/fly/dismount_right/_003_70.png",
-          "duration_ms": 70
+          "path": "assets/yun/fly/dismount_right/_003_80.png",
+          "duration_ms": 80
         },
         {
-          "path": "assets/yun/fly/dismount_right/_004_70.png",
-          "duration_ms": 70
+          "path": "assets/yun/fly/dismount_right/_004_100.png",
+          "duration_ms": 100
         }
       ],
-      "duration_ms": 350,
-      "state": "fly_right"
+      "duration_ms": 380
     },
     {
+      "state": "dive_left",
       "path": "fly/dive_left",
       "frames": [
         {
@@ -1311,10 +1268,10 @@
           "duration_ms": 70
         }
       ],
-      "duration_ms": 560,
-      "state": "dive_left"
+      "duration_ms": 560
     },
     {
+      "state": "dive_right",
       "path": "fly/dive_right",
       "frames": [
         {
@@ -1350,10 +1307,10 @@
           "duration_ms": 70
         }
       ],
-      "duration_ms": 560,
-      "state": "dive_right"
+      "duration_ms": 560
     },
     {
+      "state": "fly_left",
       "path": "fly/left",
       "frames": [
         {
@@ -1389,64 +1346,64 @@
           "duration_ms": 70
         }
       ],
-      "duration_ms": 560,
-      "state": "fly_left"
+      "duration_ms": 560
     },
     {
+      "state": "fly_left",
       "path": "fly/mount_left",
       "frames": [
         {
-          "path": "assets/yun/fly/mount_left/_000_70.png",
-          "duration_ms": 70
+          "path": "assets/yun/fly/mount_left/_000_60.png",
+          "duration_ms": 60
         },
         {
-          "path": "assets/yun/fly/mount_left/_001_70.png",
-          "duration_ms": 70
+          "path": "assets/yun/fly/mount_left/_001_60.png",
+          "duration_ms": 60
         },
         {
-          "path": "assets/yun/fly/mount_left/_002_70.png",
-          "duration_ms": 70
+          "path": "assets/yun/fly/mount_left/_002_100.png",
+          "duration_ms": 100
         },
         {
-          "path": "assets/yun/fly/mount_left/_003_70.png",
-          "duration_ms": 70
+          "path": "assets/yun/fly/mount_left/_003_60.png",
+          "duration_ms": 60
         },
         {
           "path": "assets/yun/fly/mount_left/_004_70.png",
           "duration_ms": 70
         }
       ],
-      "duration_ms": 350,
-      "state": "fly_left"
+      "duration_ms": 350
     },
     {
+      "state": "fly_right",
       "path": "fly/mount_right",
       "frames": [
         {
-          "path": "assets/yun/fly/mount_right/_000_70.png",
-          "duration_ms": 70
+          "path": "assets/yun/fly/mount_right/_000_60.png",
+          "duration_ms": 60
         },
         {
-          "path": "assets/yun/fly/mount_right/_001_70.png",
-          "duration_ms": 70
+          "path": "assets/yun/fly/mount_right/_001_60.png",
+          "duration_ms": 60
         },
         {
-          "path": "assets/yun/fly/mount_right/_002_70.png",
-          "duration_ms": 70
+          "path": "assets/yun/fly/mount_right/_002_100.png",
+          "duration_ms": 100
         },
         {
-          "path": "assets/yun/fly/mount_right/_003_70.png",
-          "duration_ms": 70
+          "path": "assets/yun/fly/mount_right/_003_60.png",
+          "duration_ms": 60
         },
         {
           "path": "assets/yun/fly/mount_right/_004_70.png",
           "duration_ms": 70
         }
       ],
-      "duration_ms": 350,
-      "state": "fly_right"
+      "duration_ms": 350
     },
     {
+      "state": "fly_right",
       "path": "fly/right",
       "frames": [
         {
@@ -1482,10 +1439,10 @@
           "duration_ms": 70
         }
       ],
-      "duration_ms": 560,
-      "state": "fly_right"
+      "duration_ms": 560
     },
     {
+      "state": "soar_left",
       "path": "fly/rise_left",
       "frames": [
         {
@@ -1521,10 +1478,10 @@
           "duration_ms": 70
         }
       ],
-      "duration_ms": 560,
-      "state": "soar_left"
+      "duration_ms": 560
     },
     {
+      "state": "soar_right",
       "path": "fly/rise_right",
       "frames": [
         {
@@ -1560,106 +1517,90 @@
           "duration_ms": 70
         }
       ],
-      "duration_ms": 560,
-      "state": "soar_right"
+      "duration_ms": 560
     },
     {
+      "state": "angry",
       "path": "fury",
       "frames": [
         {
-          "path": "assets/yun/fury/_000_85.png",
-          "duration_ms": 85
+          "path": "assets/yun/fury/_000_70.png",
+          "duration_ms": 70
         },
         {
-          "path": "assets/yun/fury/_001_85.png",
-          "duration_ms": 85
+          "path": "assets/yun/fury/_001_70.png",
+          "duration_ms": 70
         },
         {
-          "path": "assets/yun/fury/_002_85.png",
-          "duration_ms": 85
+          "path": "assets/yun/fury/_002_70.png",
+          "duration_ms": 70
         },
         {
-          "path": "assets/yun/fury/_003_85.png",
-          "duration_ms": 85
+          "path": "assets/yun/fury/_003_70.png",
+          "duration_ms": 70
         },
         {
-          "path": "assets/yun/fury/_004_85.png",
-          "duration_ms": 85
+          "path": "assets/yun/fury/_004_70.png",
+          "duration_ms": 70
         },
         {
-          "path": "assets/yun/fury/_005_85.png",
-          "duration_ms": 85
+          "path": "assets/yun/fury/_005_70.png",
+          "duration_ms": 70
         },
         {
-          "path": "assets/yun/fury/_006_85.png",
-          "duration_ms": 85
+          "path": "assets/yun/fury/_006_70.png",
+          "duration_ms": 70
         },
         {
-          "path": "assets/yun/fury/_007_85.png",
-          "duration_ms": 85
+          "path": "assets/yun/fury/_007_70.png",
+          "duration_ms": 70
         },
         {
-          "path": "assets/yun/fury/_008_85.png",
-          "duration_ms": 85
+          "path": "assets/yun/fury/_008_120.png",
+          "duration_ms": 120
         },
         {
-          "path": "assets/yun/fury/_009_85.png",
-          "duration_ms": 85
+          "path": "assets/yun/fury/_009_120.png",
+          "duration_ms": 120
         },
         {
-          "path": "assets/yun/fury/_010_85.png",
-          "duration_ms": 85
+          "path": "assets/yun/fury/_010_120.png",
+          "duration_ms": 120
         },
         {
-          "path": "assets/yun/fury/_011_85.png",
-          "duration_ms": 85
-        },
-        {
-          "path": "assets/yun/fury/_012_85.png",
-          "duration_ms": 85
-        },
-        {
-          "path": "assets/yun/fury/_013_85.png",
-          "duration_ms": 85
-        },
-        {
-          "path": "assets/yun/fury/_014_85.png",
-          "duration_ms": 85
-        },
-        {
-          "path": "assets/yun/fury/_015_85.png",
-          "duration_ms": 85
+          "path": "assets/yun/fury/_011_120.png",
+          "duration_ms": 120
         }
       ],
-      "duration_ms": 1360,
-      "state": "angry"
+      "duration_ms": 1040
     },
     {
+      "state": "closing_angry",
       "path": "fury_vanish",
       "frames": [
         {
-          "path": "assets/yun/fury_vanish/_000_85.png",
-          "duration_ms": 85
+          "path": "assets/yun/fury_vanish/_000_90.png",
+          "duration_ms": 90
         },
         {
-          "path": "assets/yun/fury_vanish/_001_85.png",
-          "duration_ms": 85
+          "path": "assets/yun/fury_vanish/_001_120.png",
+          "duration_ms": 120
         },
         {
-          "path": "assets/yun/fury_vanish/_002_85.png",
-          "duration_ms": 85
+          "path": "assets/yun/fury_vanish/_002_50.png",
+          "duration_ms": 50
         },
         {
-          "path": "assets/yun/fury_vanish/_003_85.png",
-          "duration_ms": 85
+          "path": "assets/yun/fury_vanish/_003_50.png",
+          "duration_ms": 50
         },
         {
-          "path": "assets/yun/fury_vanish/_004_85.png",
-          "duration_ms": 85
+          "path": "assets/yun/fury_vanish/_004_50.png",
+          "duration_ms": 50
         },
         {
-          "path": "assets/yun/fury_vanish/_005_85.png",
-          "duration_ms": 85
+          "path": "assets/yun/fury_vanish/_005_50.png",
+          "duration_ms": 50
         },
         {
           "path": "assets/yun/fury_vanish/_006_85.png",
@@ -1690,30 +1631,14 @@
           "duration_ms": 85
         },
         {
-          "path": "assets/yun/fury_vanish/_013_85.png",
-          "duration_ms": 85
-        },
-        {
-          "path": "assets/yun/fury_vanish/_014_85.png",
-          "duration_ms": 85
-        },
-        {
-          "path": "assets/yun/fury_vanish/_015_85.png",
-          "duration_ms": 85
-        },
-        {
-          "path": "assets/yun/fury_vanish/_016_85.png",
-          "duration_ms": 85
-        },
-        {
-          "path": "assets/yun/fury_vanish/_017_285.png",
+          "path": "assets/yun/fury_vanish/_013_285.png",
           "duration_ms": 285
         }
       ],
-      "duration_ms": 1730,
-      "state": "closing_angry"
+      "duration_ms": 1290
     },
     {
+      "state": "dragging",
       "path": "held/end",
       "frames": [
         {
@@ -1733,10 +1658,10 @@
           "duration_ms": 70
         }
       ],
-      "duration_ms": 280,
-      "state": "dragging"
+      "duration_ms": 280
     },
     {
+      "state": "dragging",
       "path": "held/loop",
       "frames": [
         {
@@ -1788,10 +1713,10 @@
           "duration_ms": 80
         }
       ],
-      "duration_ms": 960,
-      "state": "dragging"
+      "duration_ms": 960
     },
     {
+      "state": "dragging",
       "path": "held/start",
       "frames": [
         {
@@ -1815,10 +1740,10 @@
           "duration_ms": 60
         }
       ],
-      "duration_ms": 300,
-      "state": "dragging"
+      "duration_ms": 300
     },
     {
+      "state": "idle",
       "path": "idle_breeze",
       "frames": [
         {
@@ -1874,30 +1799,38 @@
           "duration_ms": 140
         },
         {
-          "path": "assets/yun/idle_breeze/_013_140.png",
-          "duration_ms": 140
+          "path": "assets/yun/idle_breeze/_013_50.png",
+          "duration_ms": 50
         },
         {
-          "path": "assets/yun/idle_breeze/_014_140.png",
-          "duration_ms": 140
+          "path": "assets/yun/idle_breeze/_014_70.png",
+          "duration_ms": 70
         },
         {
           "path": "assets/yun/idle_breeze/_015_50.png",
           "duration_ms": 50
         },
         {
-          "path": "assets/yun/idle_breeze/_016_70.png",
-          "duration_ms": 70
+          "path": "assets/yun/idle_breeze/_016_140.png",
+          "duration_ms": 140
         },
         {
-          "path": "assets/yun/idle_breeze/_017_50.png",
-          "duration_ms": 50
+          "path": "assets/yun/idle_breeze/_017_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_breeze/_018_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_breeze/_019_140.png",
+          "duration_ms": 140
         }
       ],
-      "duration_ms": 2270,
-      "state": "idle"
+      "duration_ms": 2550
     },
     {
+      "state": "idle",
       "path": "idle_float",
       "frames": [
         {
@@ -1961,22 +1894,22 @@
           "duration_ms": 140
         },
         {
-          "path": "assets/yun/idle_float/_015_50.png",
-          "duration_ms": 50
+          "path": "assets/yun/idle_float/_015_140.png",
+          "duration_ms": 140
         },
         {
-          "path": "assets/yun/idle_float/_016_70.png",
-          "duration_ms": 70
+          "path": "assets/yun/idle_float/_016_140.png",
+          "duration_ms": 140
         },
         {
-          "path": "assets/yun/idle_float/_017_50.png",
-          "duration_ms": 50
+          "path": "assets/yun/idle_float/_017_140.png",
+          "duration_ms": 140
         }
       ],
-      "duration_ms": 2270,
-      "state": "idle"
+      "duration_ms": 2520
     },
     {
+      "state": "idle",
       "path": "idle_happy",
       "frames": [
         {
@@ -2032,30 +1965,38 @@
           "duration_ms": 140
         },
         {
-          "path": "assets/yun/idle_happy/_013_140.png",
-          "duration_ms": 140
+          "path": "assets/yun/idle_happy/_013_50.png",
+          "duration_ms": 50
         },
         {
-          "path": "assets/yun/idle_happy/_014_140.png",
-          "duration_ms": 140
+          "path": "assets/yun/idle_happy/_014_70.png",
+          "duration_ms": 70
         },
         {
           "path": "assets/yun/idle_happy/_015_50.png",
           "duration_ms": 50
         },
         {
-          "path": "assets/yun/idle_happy/_016_70.png",
-          "duration_ms": 70
+          "path": "assets/yun/idle_happy/_016_140.png",
+          "duration_ms": 140
         },
         {
-          "path": "assets/yun/idle_happy/_017_50.png",
-          "duration_ms": 50
+          "path": "assets/yun/idle_happy/_017_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_happy/_018_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_happy/_019_140.png",
+          "duration_ms": 140
         }
       ],
-      "duration_ms": 2270,
-      "state": "idle"
+      "duration_ms": 2550
     },
     {
+      "state": "idle",
       "path": "idle_look",
       "frames": [
         {
@@ -2111,30 +2052,38 @@
           "duration_ms": 140
         },
         {
-          "path": "assets/yun/idle_look/_013_140.png",
-          "duration_ms": 140
+          "path": "assets/yun/idle_look/_013_50.png",
+          "duration_ms": 50
         },
         {
-          "path": "assets/yun/idle_look/_014_140.png",
-          "duration_ms": 140
+          "path": "assets/yun/idle_look/_014_70.png",
+          "duration_ms": 70
         },
         {
           "path": "assets/yun/idle_look/_015_50.png",
           "duration_ms": 50
         },
         {
-          "path": "assets/yun/idle_look/_016_70.png",
-          "duration_ms": 70
+          "path": "assets/yun/idle_look/_016_140.png",
+          "duration_ms": 140
         },
         {
-          "path": "assets/yun/idle_look/_017_50.png",
-          "duration_ms": 50
+          "path": "assets/yun/idle_look/_017_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_look/_018_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_look/_019_140.png",
+          "duration_ms": 140
         }
       ],
-      "duration_ms": 2270,
-      "state": "idle"
+      "duration_ms": 2550
     },
     {
+      "state": "idle",
       "path": "idle_poor",
       "frames": [
         {
@@ -2210,37 +2159,37 @@
           "duration_ms": 140
         }
       ],
-      "duration_ms": 2520,
-      "state": "idle"
+      "duration_ms": 2520
     },
     {
+      "state": "reading",
       "path": "jade/end",
       "frames": [
         {
-          "path": "assets/yun/jade/end/_000_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/jade/end/_000_70.png",
+          "duration_ms": 70
         },
         {
-          "path": "assets/yun/jade/end/_001_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/jade/end/_001_60.png",
+          "duration_ms": 60
         },
         {
-          "path": "assets/yun/jade/end/_002_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/jade/end/_002_60.png",
+          "duration_ms": 60
         },
         {
-          "path": "assets/yun/jade/end/_003_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/jade/end/_003_90.png",
+          "duration_ms": 90
         },
         {
-          "path": "assets/yun/jade/end/_004_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/jade/end/_004_90.png",
+          "duration_ms": 90
         }
       ],
-      "duration_ms": 400,
-      "state": "reading"
+      "duration_ms": 370
     },
     {
+      "state": "reading",
       "path": "jade/loop",
       "frames": [
         {
@@ -2308,10 +2257,10 @@
           "duration_ms": 120
         }
       ],
-      "duration_ms": 1920,
-      "state": "reading"
+      "duration_ms": 1920
     },
     {
+      "state": "reading",
       "path": "jade/scroll",
       "frames": [
         {
@@ -2379,23 +2328,23 @@
           "duration_ms": 120
         }
       ],
-      "duration_ms": 1920,
-      "state": "reading"
+      "duration_ms": 1920
     },
     {
+      "state": "reading",
       "path": "jade/start",
       "frames": [
         {
-          "path": "assets/yun/jade/start/_000_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/jade/start/_000_60.png",
+          "duration_ms": 60
         },
         {
-          "path": "assets/yun/jade/start/_001_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/jade/start/_001_60.png",
+          "duration_ms": 60
         },
         {
-          "path": "assets/yun/jade/start/_002_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/jade/start/_002_70.png",
+          "duration_ms": 70
         },
         {
           "path": "assets/yun/jade/start/_003_80.png",
@@ -2406,61 +2355,61 @@
           "duration_ms": 80
         },
         {
-          "path": "assets/yun/jade/start/_005_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/jade/start/_005_100.png",
+          "duration_ms": 100
         }
       ],
-      "duration_ms": 480,
-      "state": "reading"
+      "duration_ms": 450
     },
     {
+      "state": "reading",
       "path": "jade/to_alchemy",
       "frames": [
         {
-          "path": "assets/yun/jade/to_alchemy/_000_90.png",
-          "duration_ms": 90
+          "path": "assets/yun/jade/to_alchemy/_000_80.png",
+          "duration_ms": 80
         },
         {
-          "path": "assets/yun/jade/to_alchemy/_001_90.png",
-          "duration_ms": 90
+          "path": "assets/yun/jade/to_alchemy/_001_80.png",
+          "duration_ms": 80
         },
         {
-          "path": "assets/yun/jade/to_alchemy/_002_90.png",
-          "duration_ms": 90
+          "path": "assets/yun/jade/to_alchemy/_002_80.png",
+          "duration_ms": 80
         },
         {
-          "path": "assets/yun/jade/to_alchemy/_003_90.png",
-          "duration_ms": 90
+          "path": "assets/yun/jade/to_alchemy/_003_80.png",
+          "duration_ms": 80
         },
         {
-          "path": "assets/yun/jade/to_alchemy/_004_90.png",
-          "duration_ms": 90
+          "path": "assets/yun/jade/to_alchemy/_004_80.png",
+          "duration_ms": 80
         },
         {
-          "path": "assets/yun/jade/to_alchemy/_005_90.png",
-          "duration_ms": 90
+          "path": "assets/yun/jade/to_alchemy/_005_80.png",
+          "duration_ms": 80
         },
         {
-          "path": "assets/yun/jade/to_alchemy/_006_90.png",
-          "duration_ms": 90
+          "path": "assets/yun/jade/to_alchemy/_006_80.png",
+          "duration_ms": 80
         },
         {
-          "path": "assets/yun/jade/to_alchemy/_007_90.png",
-          "duration_ms": 90
+          "path": "assets/yun/jade/to_alchemy/_007_80.png",
+          "duration_ms": 80
         },
         {
-          "path": "assets/yun/jade/to_alchemy/_008_90.png",
-          "duration_ms": 90
+          "path": "assets/yun/jade/to_alchemy/_008_80.png",
+          "duration_ms": 80
         },
         {
-          "path": "assets/yun/jade/to_alchemy/_009_90.png",
-          "duration_ms": 90
+          "path": "assets/yun/jade/to_alchemy/_009_120.png",
+          "duration_ms": 120
         }
       ],
-      "duration_ms": 900,
-      "state": "reading"
+      "duration_ms": 840
     },
     {
+      "state": "fidget_look",
       "path": "look",
       "frames": [
         {
@@ -2492,10 +2441,10 @@
           "duration_ms": 140
         }
       ],
-      "duration_ms": 1480,
-      "state": "fidget_look"
+      "duration_ms": 1480
     },
     {
+      "state": "love",
       "path": "love",
       "frames": [
         {
@@ -2571,37 +2520,45 @@
           "duration_ms": 100
         }
       ],
-      "duration_ms": 1800,
-      "state": "love"
+      "duration_ms": 1800
     },
     {
+      "state": "thinking",
       "path": "meditate/end",
       "frames": [
         {
-          "path": "assets/yun/meditate/end/_000_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/meditate/end/_000_70.png",
+          "duration_ms": 70
         },
         {
-          "path": "assets/yun/meditate/end/_001_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/meditate/end/_001_70.png",
+          "duration_ms": 70
         },
         {
-          "path": "assets/yun/meditate/end/_002_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/meditate/end/_002_70.png",
+          "duration_ms": 70
         },
         {
-          "path": "assets/yun/meditate/end/_003_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/meditate/end/_003_140.png",
+          "duration_ms": 140
         },
         {
           "path": "assets/yun/meditate/end/_004_80.png",
           "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/meditate/end/_005_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/meditate/end/_006_100.png",
+          "duration_ms": 100
         }
       ],
-      "duration_ms": 400,
-      "state": "thinking"
+      "duration_ms": 610
     },
     {
+      "state": "thinking",
       "path": "meditate/loop",
       "frames": [
         {
@@ -2669,10 +2626,10 @@
           "duration_ms": 110
         }
       ],
-      "duration_ms": 1760,
-      "state": "thinking"
+      "duration_ms": 1760
     },
     {
+      "state": "thinking",
       "path": "meditate/lotus",
       "frames": [
         {
@@ -2740,10 +2697,10 @@
           "duration_ms": 110
         }
       ],
-      "duration_ms": 1760,
-      "state": "thinking"
+      "duration_ms": 1760
     },
     {
+      "state": "thinking",
       "path": "meditate/start",
       "frames": [
         {
@@ -2755,26 +2712,30 @@
           "duration_ms": 80
         },
         {
-          "path": "assets/yun/meditate/start/_002_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/meditate/start/_002_70.png",
+          "duration_ms": 70
         },
         {
-          "path": "assets/yun/meditate/start/_003_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/meditate/start/_003_70.png",
+          "duration_ms": 70
         },
         {
           "path": "assets/yun/meditate/start/_004_80.png",
           "duration_ms": 80
         },
         {
-          "path": "assets/yun/meditate/start/_005_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/meditate/start/_005_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/meditate/start/_006_120.png",
+          "duration_ms": 120
         }
       ],
-      "duration_ms": 480,
-      "state": "thinking"
+      "duration_ms": 600
     },
     {
+      "state": "touch_head",
       "path": "pat/end",
       "frames": [
         {
@@ -2790,10 +2751,10 @@
           "duration_ms": 70
         }
       ],
-      "duration_ms": 210,
-      "state": "touch_head"
+      "duration_ms": 210
     },
     {
+      "state": "touch_head",
       "path": "pat/loop",
       "frames": [
         {
@@ -2837,10 +2798,10 @@
           "duration_ms": 90
         }
       ],
-      "duration_ms": 900,
-      "state": "touch_head"
+      "duration_ms": 900
     },
     {
+      "state": "touch_head",
       "path": "pat/start",
       "frames": [
         {
@@ -2860,10 +2821,10 @@
           "duration_ms": 60
         }
       ],
-      "duration_ms": 240,
-      "state": "touch_head"
+      "duration_ms": 240
     },
     {
+      "state": "peach",
       "path": "peach",
       "frames": [
         {
@@ -2923,212 +2884,156 @@
           "duration_ms": 220
         }
       ],
-      "duration_ms": 1530,
-      "state": "peach"
+      "duration_ms": 1530
     },
     {
+      "state": "hide_left",
       "path": "peek/end_left",
       "frames": [
         {
-          "path": "assets/yun/peek/end_left/_000_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/peek/end_left/_000_70.png",
+          "duration_ms": 70
         },
         {
-          "path": "assets/yun/peek/end_left/_001_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/peek/end_left/_001_70.png",
+          "duration_ms": 70
         },
         {
-          "path": "assets/yun/peek/end_left/_002_80.png",
-          "duration_ms": 80
-        },
-        {
-          "path": "assets/yun/peek/end_left/_003_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/peek/end_left/_002_100.png",
+          "duration_ms": 100
         }
       ],
-      "duration_ms": 320,
-      "state": "hide_left"
+      "duration_ms": 240
     },
     {
+      "state": "hide_right",
       "path": "peek/end_right",
       "frames": [
         {
-          "path": "assets/yun/peek/end_right/_000_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/peek/end_right/_000_70.png",
+          "duration_ms": 70
         },
         {
-          "path": "assets/yun/peek/end_right/_001_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/peek/end_right/_001_70.png",
+          "duration_ms": 70
         },
         {
-          "path": "assets/yun/peek/end_right/_002_80.png",
-          "duration_ms": 80
-        },
-        {
-          "path": "assets/yun/peek/end_right/_003_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/peek/end_right/_002_100.png",
+          "duration_ms": 100
         }
       ],
-      "duration_ms": 320,
-      "state": "hide_right"
+      "duration_ms": 240
     },
     {
+      "state": "hide_left",
       "path": "peek/left",
       "frames": [
         {
-          "path": "assets/yun/peek/left/_000_120.png",
-          "duration_ms": 120
+          "path": "assets/yun/peek/left/_000_260.png",
+          "duration_ms": 260
         },
         {
-          "path": "assets/yun/peek/left/_001_120.png",
-          "duration_ms": 120
+          "path": "assets/yun/peek/left/_001_300.png",
+          "duration_ms": 300
         },
         {
-          "path": "assets/yun/peek/left/_002_120.png",
-          "duration_ms": 120
+          "path": "assets/yun/peek/left/_002_160.png",
+          "duration_ms": 160
         },
         {
-          "path": "assets/yun/peek/left/_003_120.png",
-          "duration_ms": 120
+          "path": "assets/yun/peek/left/_003_90.png",
+          "duration_ms": 90
         },
         {
-          "path": "assets/yun/peek/left/_004_120.png",
-          "duration_ms": 120
+          "path": "assets/yun/peek/left/_004_160.png",
+          "duration_ms": 160
         },
         {
-          "path": "assets/yun/peek/left/_005_120.png",
-          "duration_ms": 120
+          "path": "assets/yun/peek/left/_005_90.png",
+          "duration_ms": 90
         },
         {
-          "path": "assets/yun/peek/left/_006_120.png",
-          "duration_ms": 120
-        },
-        {
-          "path": "assets/yun/peek/left/_007_120.png",
-          "duration_ms": 120
-        },
-        {
-          "path": "assets/yun/peek/left/_008_120.png",
-          "duration_ms": 120
-        },
-        {
-          "path": "assets/yun/peek/left/_009_120.png",
-          "duration_ms": 120
-        },
-        {
-          "path": "assets/yun/peek/left/_010_120.png",
-          "duration_ms": 120
-        },
-        {
-          "path": "assets/yun/peek/left/_011_120.png",
-          "duration_ms": 120
+          "path": "assets/yun/peek/left/_006_300.png",
+          "duration_ms": 300
         }
       ],
-      "duration_ms": 1440,
-      "state": "hide_left"
+      "duration_ms": 1360
     },
     {
+      "state": "hide_right",
       "path": "peek/right",
       "frames": [
         {
-          "path": "assets/yun/peek/right/_000_120.png",
-          "duration_ms": 120
+          "path": "assets/yun/peek/right/_000_260.png",
+          "duration_ms": 260
         },
         {
-          "path": "assets/yun/peek/right/_001_120.png",
-          "duration_ms": 120
+          "path": "assets/yun/peek/right/_001_300.png",
+          "duration_ms": 300
         },
         {
-          "path": "assets/yun/peek/right/_002_120.png",
-          "duration_ms": 120
+          "path": "assets/yun/peek/right/_002_160.png",
+          "duration_ms": 160
         },
         {
-          "path": "assets/yun/peek/right/_003_120.png",
-          "duration_ms": 120
+          "path": "assets/yun/peek/right/_003_90.png",
+          "duration_ms": 90
         },
         {
-          "path": "assets/yun/peek/right/_004_120.png",
-          "duration_ms": 120
+          "path": "assets/yun/peek/right/_004_160.png",
+          "duration_ms": 160
         },
         {
-          "path": "assets/yun/peek/right/_005_120.png",
-          "duration_ms": 120
+          "path": "assets/yun/peek/right/_005_90.png",
+          "duration_ms": 90
         },
         {
-          "path": "assets/yun/peek/right/_006_120.png",
-          "duration_ms": 120
-        },
-        {
-          "path": "assets/yun/peek/right/_007_120.png",
-          "duration_ms": 120
-        },
-        {
-          "path": "assets/yun/peek/right/_008_120.png",
-          "duration_ms": 120
-        },
-        {
-          "path": "assets/yun/peek/right/_009_120.png",
-          "duration_ms": 120
-        },
-        {
-          "path": "assets/yun/peek/right/_010_120.png",
-          "duration_ms": 120
-        },
-        {
-          "path": "assets/yun/peek/right/_011_120.png",
-          "duration_ms": 120
+          "path": "assets/yun/peek/right/_006_300.png",
+          "duration_ms": 300
         }
       ],
-      "duration_ms": 1440,
-      "state": "hide_right"
+      "duration_ms": 1360
     },
     {
+      "state": "hide_left",
       "path": "peek/start_left",
       "frames": [
         {
-          "path": "assets/yun/peek/start_left/_000_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/peek/start_left/_000_60.png",
+          "duration_ms": 60
         },
         {
-          "path": "assets/yun/peek/start_left/_001_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/peek/start_left/_001_70.png",
+          "duration_ms": 70
         },
         {
-          "path": "assets/yun/peek/start_left/_002_80.png",
-          "duration_ms": 80
-        },
-        {
-          "path": "assets/yun/peek/start_left/_003_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/peek/start_left/_002_100.png",
+          "duration_ms": 100
         }
       ],
-      "duration_ms": 320,
-      "state": "hide_left"
+      "duration_ms": 230
     },
     {
+      "state": "hide_right",
       "path": "peek/start_right",
       "frames": [
         {
-          "path": "assets/yun/peek/start_right/_000_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/peek/start_right/_000_60.png",
+          "duration_ms": 60
         },
         {
-          "path": "assets/yun/peek/start_right/_001_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/peek/start_right/_001_70.png",
+          "duration_ms": 70
         },
         {
-          "path": "assets/yun/peek/start_right/_002_80.png",
-          "duration_ms": 80
-        },
-        {
-          "path": "assets/yun/peek/start_right/_003_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/peek/start_right/_002_100.png",
+          "duration_ms": 100
         }
       ],
-      "duration_ms": 320,
-      "state": "hide_right"
+      "duration_ms": 230
     },
     {
+      "state": "petal_rain",
       "path": "petal_rain",
       "frames": [
         {
@@ -3216,10 +3121,10 @@
           "duration_ms": 150
         }
       ],
-      "duration_ms": 1950,
-      "state": "petal_rain"
+      "duration_ms": 1950
     },
     {
+      "state": "shy",
       "path": "shy",
       "frames": [
         {
@@ -3279,10 +3184,10 @@
           "duration_ms": 100
         }
       ],
-      "duration_ms": 1400,
-      "state": "shy"
+      "duration_ms": 1400
     },
     {
+      "state": "startled",
       "path": "startled",
       "frames": [
         {
@@ -3318,93 +3223,93 @@
           "duration_ms": 120
         }
       ],
-      "duration_ms": 710,
-      "state": "startled"
+      "duration_ms": 710
     },
     {
+      "state": "sword_dance",
       "path": "sword_dance",
       "frames": [
         {
-          "path": "assets/yun/sword_dance/_000_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/sword_dance/_000_85.png",
+          "duration_ms": 85
         },
         {
-          "path": "assets/yun/sword_dance/_001_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/sword_dance/_001_85.png",
+          "duration_ms": 85
         },
         {
-          "path": "assets/yun/sword_dance/_002_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/sword_dance/_002_85.png",
+          "duration_ms": 85
         },
         {
-          "path": "assets/yun/sword_dance/_003_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/sword_dance/_003_85.png",
+          "duration_ms": 85
         },
         {
-          "path": "assets/yun/sword_dance/_004_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/sword_dance/_004_85.png",
+          "duration_ms": 85
         },
         {
-          "path": "assets/yun/sword_dance/_005_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/sword_dance/_005_85.png",
+          "duration_ms": 85
         },
         {
-          "path": "assets/yun/sword_dance/_006_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/sword_dance/_006_85.png",
+          "duration_ms": 85
         },
         {
-          "path": "assets/yun/sword_dance/_007_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/sword_dance/_007_85.png",
+          "duration_ms": 85
         },
         {
-          "path": "assets/yun/sword_dance/_008_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/sword_dance/_008_85.png",
+          "duration_ms": 85
         },
         {
-          "path": "assets/yun/sword_dance/_009_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/sword_dance/_009_85.png",
+          "duration_ms": 85
         },
         {
-          "path": "assets/yun/sword_dance/_010_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/sword_dance/_010_85.png",
+          "duration_ms": 85
         },
         {
-          "path": "assets/yun/sword_dance/_011_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/sword_dance/_011_85.png",
+          "duration_ms": 85
         },
         {
-          "path": "assets/yun/sword_dance/_012_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/sword_dance/_012_85.png",
+          "duration_ms": 85
         },
         {
-          "path": "assets/yun/sword_dance/_013_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/sword_dance/_013_85.png",
+          "duration_ms": 85
         },
         {
-          "path": "assets/yun/sword_dance/_014_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/sword_dance/_014_85.png",
+          "duration_ms": 85
         },
         {
-          "path": "assets/yun/sword_dance/_015_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/sword_dance/_015_85.png",
+          "duration_ms": 85
         },
         {
-          "path": "assets/yun/sword_dance/_016_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/sword_dance/_016_90.png",
+          "duration_ms": 90
         },
         {
-          "path": "assets/yun/sword_dance/_017_80.png",
-          "duration_ms": 80
+          "path": "assets/yun/sword_dance/_017_320.png",
+          "duration_ms": 320
         },
         {
-          "path": "assets/yun/sword_dance/_018_180.png",
-          "duration_ms": 180
+          "path": "assets/yun/sword_dance/_018_120.png",
+          "duration_ms": 120
         }
       ],
-      "duration_ms": 1620,
-      "state": "sword_dance"
+      "duration_ms": 1890
     },
     {
+      "state": "taichi",
       "path": "taichi",
       "frames": [
         {
@@ -3484,33 +3389,33 @@
           "duration_ms": 140
         }
       ],
-      "duration_ms": 2120,
-      "state": "taichi"
+      "duration_ms": 2120
     },
     {
+      "state": "needs_input",
       "path": "talisman/end",
       "frames": [
         {
-          "path": "assets/yun/talisman/end/_000_70.png",
-          "duration_ms": 70
+          "path": "assets/yun/talisman/end/_000_60.png",
+          "duration_ms": 60
         },
         {
-          "path": "assets/yun/talisman/end/_001_70.png",
-          "duration_ms": 70
+          "path": "assets/yun/talisman/end/_001_60.png",
+          "duration_ms": 60
         },
         {
-          "path": "assets/yun/talisman/end/_002_70.png",
-          "duration_ms": 70
+          "path": "assets/yun/talisman/end/_002_60.png",
+          "duration_ms": 60
         },
         {
-          "path": "assets/yun/talisman/end/_003_70.png",
-          "duration_ms": 70
+          "path": "assets/yun/talisman/end/_003_80.png",
+          "duration_ms": 80
         }
       ],
-      "duration_ms": 280,
-      "state": "needs_input"
+      "duration_ms": 260
     },
     {
+      "state": "needs_input",
       "path": "talisman/loop",
       "frames": [
         {
@@ -3554,41 +3459,41 @@
           "duration_ms": 90
         }
       ],
-      "duration_ms": 900,
-      "state": "needs_input"
+      "duration_ms": 900
     },
     {
+      "state": "needs_input",
       "path": "talisman/start",
       "frames": [
         {
-          "path": "assets/yun/talisman/start/_000_60.png",
-          "duration_ms": 60
+          "path": "assets/yun/talisman/start/_000_90.png",
+          "duration_ms": 90
         },
         {
-          "path": "assets/yun/talisman/start/_001_60.png",
-          "duration_ms": 60
+          "path": "assets/yun/talisman/start/_001_50.png",
+          "duration_ms": 50
         },
         {
-          "path": "assets/yun/talisman/start/_002_60.png",
-          "duration_ms": 60
+          "path": "assets/yun/talisman/start/_002_50.png",
+          "duration_ms": 50
         },
         {
           "path": "assets/yun/talisman/start/_003_60.png",
           "duration_ms": 60
         },
         {
-          "path": "assets/yun/talisman/start/_004_60.png",
-          "duration_ms": 60
+          "path": "assets/yun/talisman/start/_004_70.png",
+          "duration_ms": 70
         },
         {
-          "path": "assets/yun/talisman/start/_005_60.png",
-          "duration_ms": 60
+          "path": "assets/yun/talisman/start/_005_90.png",
+          "duration_ms": 90
         }
       ],
-      "duration_ms": 360,
-      "state": "needs_input"
+      "duration_ms": 410
     },
     {
+      "state": "tea",
       "path": "tea",
       "frames": [
         {
@@ -3672,10 +3577,10 @@
           "duration_ms": 90
         }
       ],
-      "duration_ms": 1800,
-      "state": "tea"
+      "duration_ms": 1800
     },
     {
+      "state": "touch_body",
       "path": "tickle/end",
       "frames": [
         {
@@ -3691,10 +3596,10 @@
           "duration_ms": 70
         }
       ],
-      "duration_ms": 210,
-      "state": "touch_body"
+      "duration_ms": 210
     },
     {
+      "state": "touch_body",
       "path": "tickle/loop",
       "frames": [
         {
@@ -3738,10 +3643,10 @@
           "duration_ms": 75
         }
       ],
-      "duration_ms": 750,
-      "state": "touch_body"
+      "duration_ms": 750
     },
     {
+      "state": "touch_body",
       "path": "tickle/start",
       "frames": [
         {
@@ -3757,147 +3662,131 @@
           "duration_ms": 60
         }
       ],
-      "duration_ms": 180,
-      "state": "touch_body"
+      "duration_ms": 180
     },
     {
+      "state": "tool_error",
       "path": "tribulation",
       "frames": [
         {
-          "path": "assets/yun/tribulation/_000_85.png",
-          "duration_ms": 85
+          "path": "assets/yun/tribulation/_000_120.png",
+          "duration_ms": 120
         },
         {
-          "path": "assets/yun/tribulation/_001_85.png",
-          "duration_ms": 85
+          "path": "assets/yun/tribulation/_001_120.png",
+          "duration_ms": 120
         },
         {
-          "path": "assets/yun/tribulation/_002_85.png",
-          "duration_ms": 85
+          "path": "assets/yun/tribulation/_002_110.png",
+          "duration_ms": 110
         },
         {
-          "path": "assets/yun/tribulation/_003_85.png",
-          "duration_ms": 85
+          "path": "assets/yun/tribulation/_003_100.png",
+          "duration_ms": 100
         },
         {
-          "path": "assets/yun/tribulation/_004_85.png",
-          "duration_ms": 85
+          "path": "assets/yun/tribulation/_004_140.png",
+          "duration_ms": 140
         },
         {
-          "path": "assets/yun/tribulation/_005_85.png",
-          "duration_ms": 85
+          "path": "assets/yun/tribulation/_005_50.png",
+          "duration_ms": 50
         },
         {
-          "path": "assets/yun/tribulation/_006_85.png",
-          "duration_ms": 85
+          "path": "assets/yun/tribulation/_006_60.png",
+          "duration_ms": 60
         },
         {
-          "path": "assets/yun/tribulation/_007_85.png",
-          "duration_ms": 85
+          "path": "assets/yun/tribulation/_007_250.png",
+          "duration_ms": 250
         },
         {
-          "path": "assets/yun/tribulation/_008_85.png",
-          "duration_ms": 85
+          "path": "assets/yun/tribulation/_008_100.png",
+          "duration_ms": 100
         },
         {
-          "path": "assets/yun/tribulation/_009_85.png",
-          "duration_ms": 85
+          "path": "assets/yun/tribulation/_009_100.png",
+          "duration_ms": 100
         },
         {
-          "path": "assets/yun/tribulation/_010_85.png",
-          "duration_ms": 85
+          "path": "assets/yun/tribulation/_010_100.png",
+          "duration_ms": 100
         },
         {
-          "path": "assets/yun/tribulation/_011_85.png",
-          "duration_ms": 85
+          "path": "assets/yun/tribulation/_011_100.png",
+          "duration_ms": 100
         },
         {
-          "path": "assets/yun/tribulation/_012_85.png",
-          "duration_ms": 85
+          "path": "assets/yun/tribulation/_012_100.png",
+          "duration_ms": 100
         },
         {
-          "path": "assets/yun/tribulation/_013_85.png",
-          "duration_ms": 85
+          "path": "assets/yun/tribulation/_013_130.png",
+          "duration_ms": 130
         },
         {
-          "path": "assets/yun/tribulation/_014_85.png",
-          "duration_ms": 85
+          "path": "assets/yun/tribulation/_014_130.png",
+          "duration_ms": 130
         },
         {
-          "path": "assets/yun/tribulation/_015_85.png",
-          "duration_ms": 85
+          "path": "assets/yun/tribulation/_015_130.png",
+          "duration_ms": 130
         },
         {
-          "path": "assets/yun/tribulation/_016_85.png",
-          "duration_ms": 85
-        },
-        {
-          "path": "assets/yun/tribulation/_017_85.png",
-          "duration_ms": 85
-        },
-        {
-          "path": "assets/yun/tribulation/_018_85.png",
-          "duration_ms": 85
-        },
-        {
-          "path": "assets/yun/tribulation/_019_85.png",
-          "duration_ms": 85
-        },
-        {
-          "path": "assets/yun/tribulation/_020_120.png",
+          "path": "assets/yun/tribulation/_016_120.png",
           "duration_ms": 120
         }
       ],
-      "duration_ms": 1820,
-      "state": "tool_error"
+      "duration_ms": 1960
     },
     {
+      "state": "fall_left",
       "path": "tumble/end_left",
       "frames": [
         {
-          "path": "assets/yun/tumble/end_left/_000_90.png",
-          "duration_ms": 90
+          "path": "assets/yun/tumble/end_left/_000_60.png",
+          "duration_ms": 60
         },
         {
-          "path": "assets/yun/tumble/end_left/_001_90.png",
-          "duration_ms": 90
+          "path": "assets/yun/tumble/end_left/_001_80.png",
+          "duration_ms": 80
         },
         {
-          "path": "assets/yun/tumble/end_left/_002_90.png",
-          "duration_ms": 90
+          "path": "assets/yun/tumble/end_left/_002_70.png",
+          "duration_ms": 70
         },
         {
-          "path": "assets/yun/tumble/end_left/_003_90.png",
-          "duration_ms": 90
+          "path": "assets/yun/tumble/end_left/_003_150.png",
+          "duration_ms": 150
         }
       ],
-      "duration_ms": 360,
-      "state": "fall_left"
+      "duration_ms": 360
     },
     {
+      "state": "fall_right",
       "path": "tumble/end_right",
       "frames": [
         {
-          "path": "assets/yun/tumble/end_right/_000_90.png",
-          "duration_ms": 90
+          "path": "assets/yun/tumble/end_right/_000_60.png",
+          "duration_ms": 60
         },
         {
-          "path": "assets/yun/tumble/end_right/_001_90.png",
-          "duration_ms": 90
+          "path": "assets/yun/tumble/end_right/_001_80.png",
+          "duration_ms": 80
         },
         {
-          "path": "assets/yun/tumble/end_right/_002_90.png",
-          "duration_ms": 90
+          "path": "assets/yun/tumble/end_right/_002_70.png",
+          "duration_ms": 70
         },
         {
-          "path": "assets/yun/tumble/end_right/_003_90.png",
-          "duration_ms": 90
+          "path": "assets/yun/tumble/end_right/_003_150.png",
+          "duration_ms": 150
         }
       ],
-      "duration_ms": 360,
-      "state": "fall_right"
+      "duration_ms": 360
     },
     {
+      "state": "fall_left",
       "path": "tumble/left",
       "frames": [
         {
@@ -3941,10 +3830,10 @@
           "duration_ms": 70
         }
       ],
-      "duration_ms": 700,
-      "state": "fall_left"
+      "duration_ms": 700
     },
     {
+      "state": "fall_right",
       "path": "tumble/right",
       "frames": [
         {
@@ -3988,64 +3877,64 @@
           "duration_ms": 70
         }
       ],
-      "duration_ms": 700,
-      "state": "fall_right"
+      "duration_ms": 700
     },
     {
+      "state": "fall_left",
       "path": "tumble/start_left",
       "frames": [
         {
-          "path": "assets/yun/tumble/start_left/_000_60.png",
-          "duration_ms": 60
+          "path": "assets/yun/tumble/start_left/_000_55.png",
+          "duration_ms": 55
         },
         {
-          "path": "assets/yun/tumble/start_left/_001_60.png",
-          "duration_ms": 60
+          "path": "assets/yun/tumble/start_left/_001_55.png",
+          "duration_ms": 55
         },
         {
-          "path": "assets/yun/tumble/start_left/_002_60.png",
-          "duration_ms": 60
+          "path": "assets/yun/tumble/start_left/_002_55.png",
+          "duration_ms": 55
         },
         {
-          "path": "assets/yun/tumble/start_left/_003_60.png",
-          "duration_ms": 60
+          "path": "assets/yun/tumble/start_left/_003_55.png",
+          "duration_ms": 55
         },
         {
-          "path": "assets/yun/tumble/start_left/_004_60.png",
-          "duration_ms": 60
+          "path": "assets/yun/tumble/start_left/_004_55.png",
+          "duration_ms": 55
         }
       ],
-      "duration_ms": 300,
-      "state": "fall_left"
+      "duration_ms": 275
     },
     {
+      "state": "fall_right",
       "path": "tumble/start_right",
       "frames": [
         {
-          "path": "assets/yun/tumble/start_right/_000_60.png",
-          "duration_ms": 60
+          "path": "assets/yun/tumble/start_right/_000_55.png",
+          "duration_ms": 55
         },
         {
-          "path": "assets/yun/tumble/start_right/_001_60.png",
-          "duration_ms": 60
+          "path": "assets/yun/tumble/start_right/_001_55.png",
+          "duration_ms": 55
         },
         {
-          "path": "assets/yun/tumble/start_right/_002_60.png",
-          "duration_ms": 60
+          "path": "assets/yun/tumble/start_right/_002_55.png",
+          "duration_ms": 55
         },
         {
-          "path": "assets/yun/tumble/start_right/_003_60.png",
-          "duration_ms": 60
+          "path": "assets/yun/tumble/start_right/_003_55.png",
+          "duration_ms": 55
         },
         {
-          "path": "assets/yun/tumble/start_right/_004_60.png",
-          "duration_ms": 60
+          "path": "assets/yun/tumble/start_right/_004_55.png",
+          "duration_ms": 55
         }
       ],
-      "duration_ms": 300,
-      "state": "fall_right"
+      "duration_ms": 275
     },
     {
+      "state": "yawn",
       "path": "yawn",
       "frames": [
         {
@@ -4081,8 +3970,7 @@
           "duration_ms": 110
         }
       ],
-      "duration_ms": 1000,
-      "state": "yawn"
+      "duration_ms": 1000
     }
   ],
   "playback": {

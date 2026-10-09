@@ -8,6 +8,7 @@ import argparse
 import io
 import math
 import random
+from dataclasses import fields, replace
 from pathlib import Path
 
 import cairo
@@ -45,6 +46,15 @@ def ease_out(t):
 def back_out(t, s=1.9):
     t = max(0.0, min(1.0, t)) - 1
     return t * t * ((s + 1) * t + s) + 1
+
+
+def ease_in(t):
+    t = max(0.0, min(1.0, t))
+    return t * t * t
+
+
+def linear(t):
+    return max(0.0, min(1.0, t))
 
 
 def hop(t):
@@ -129,7 +139,7 @@ def heart(ctx, x, y, s, color, outline=True, alpha=1.0):
         ctx.fill()
 
 
-def thought_bubble(dots=3, size=1.0, pulse=0.0, bulb=0.0):
+def thought_bubble(dots=3, size=1.0, pulse=0.0, bulb=0.0, scale=1.0, squash=0.0):
     def draw(ctx, p):
         if size <= 0.01:
             return
@@ -140,10 +150,12 @@ def thought_bubble(dots=3, size=1.0, pulse=0.0, bulb=0.0):
                 fill_stroke(ctx, WHITE, 8)
         if size < 0.5:
             return
-        s = back_out((size - 0.5) * 2)
+        s = back_out((size - 0.5) * 2) * scale
+        if s < 0.02:
+            return
         ctx.save()
         ctx.translate(bx, by)
-        ctx.scale(s, s)
+        ctx.scale(s * (1 + 0.15 * squash), s * (1 - 0.15 * squash))
         ctx.new_sub_path()
         for k in range(8):
             a = k / 8 * 2 * math.pi
@@ -394,6 +406,60 @@ def notes(t):
     return draw
 
 
+# ---------------------------------------------------------------- motion: keyframes, holds and follow-through
+
+def _blend(a, b, u):
+    if isinstance(a, bool) or isinstance(b, bool):
+        return b
+    if isinstance(a, (int, float)) and isinstance(b, (int, float)):
+        return lerp(a, b, u)
+    if isinstance(a, tuple) and isinstance(b, tuple) and len(a) == len(b):
+        return tuple(_blend(x, y, u) for x, y in zip(a, b))
+    return b
+
+
+def tween(start, segments):
+    """Keyframed poses. Each segment is (frames, ms, curve, changes[, extra]): the pose moves from the previous key
+    to `changes` over `frames` frames shown `ms` each (or a list of per-frame durations), with `curve` shaping the
+    in-betweens. Numbers and number tuples blend; anything else (eyes, props, a hand appearing) switches at the
+    segment's first frame. `extra(pose, u)` can add what changes every frame, such as props, with u in (0, 1]."""
+    out, cur = [], start
+    for segment in segments:
+        n, ms, curve, changes = segment[:4]
+        extra = segment[4] if len(segment) > 4 else None
+        target = replace(cur, **changes)
+        for k in range(1, n + 1):
+            u = k / n
+            w = curve(u)
+            pose = replace(cur, **{f.name: _blend(getattr(cur, f.name), getattr(target, f.name), w)
+                                   for f in fields(cur)})
+            if extra:
+                pose = extra(pose, u)
+            out.append((pose, ms[k - 1] if isinstance(ms, (list, tuple)) else ms))
+        cur = target
+    return out
+
+
+def follow_through(seq, gain=1 / 45, carry=0.45):
+    """Overlapping action for cloth and hair: from how fast the body rises or falls, set each pose's `drag` one
+    frame late and let it decay, so tails droop while the body rises, float while it falls and settle after a
+    landing. Poses that already set a drag keep it. Loops (same lift at both ends) wrap round."""
+    if not seq or not hasattr(seq[0][0], 'drag'):
+        return seq
+    lifts = [p.lift for p, _ in seq]
+    loop = abs(lifts[0] - lifts[-1]) < 1
+    out, drag = [], 0.0
+    for i, (p, ms) in enumerate(seq):
+        j, k = i - 1, i - 2
+        if j < 0 and not loop:
+            v = 0.0
+        else:
+            v = (lifts[j] - lifts[k]) / max(seq[j][1], 1) * 100
+        drag = carry * drag + (1 - carry) * max(-1.0, min(1.0, -v * gain))
+        out.append((p if p.drag else replace(p, drag=drag), ms))
+    return out
+
+
 def png_bytes(surface):
     """The frame as an 8-bit palette PNG with alpha: a third of the size, and the flat-coloured art does not band."""
     raw = io.BytesIO()
@@ -411,7 +477,7 @@ def write_sequence(out, name, seq, render):
     for old in folder.glob('*.png'):
         old.unlink()
     merged = []
-    for pose, ms in seq:
+    for pose, ms in follow_through(seq):
         data = png_bytes(render(pose))
         if merged and merged[-1][0] == data:
             merged[-1][1] += ms

@@ -24,6 +24,11 @@ a second pet, so nothing showed that a pet could use them in its own way.
   merges consecutive identical frames into one longer frame and saves 8-bit palette PNGs with alpha, a third of
   the RGBA size; the flat-coloured art does not band. Drawing needs `pycairo` and Pillow; the app does not.
 - Both pets stay out of `AGENT_PET_BUNDLED_PETS` and download when chosen, like Fat Cat.
+- Motion follows written briefs. Each animation shown in the gallery has a prompt in the style of the Kling, Seedance
+  and Runway guides (one action, ordered and timed beats, a keep-list, a short negative list) and sprite-timing rules
+  (anticipation, slow-in and slow-out, holds, squash on landing). `pet_art.py` provides `tween` (keyframes with easing
+  and per-frame holds) and `follow_through`, which the writer applies to every sequence: scarves, ribbons, hair and
+  mantles drag behind the body's vertical motion one frame late and settle after a landing.
 - Neither pet borrows a design from another work. Requests to draw characters from existing franchises were
   answered with these original designs instead.
 
@@ -65,3 +70,8 @@ Yun is where the catalog is pushed further:
 - Rendering `draw_kuro.py` again after the shared kit was split out produced byte-identical frames.
 - Open: throws, edge hiding, moves and handovers by hand on a desktop; macOS and Windows CI; the first download of
   either pet through the `pets` release.
+- 2026-10-09, after the prompt-driven rework (32 animations rebuilt, every frame re-rendered for follow-through):
+  `verify_assets.py` reported `OK: fat-cat (9 sequences), kuro (60 sequences), vpet (141 sequences), yun (79 sequences)`
+  (Kuro 655 files, 10.8 MB; Yun 815 files, 17.3 MB), and `pets`, `plugins` and `pet-scaffold` passed again on the
+  scratch Qt 6.4 build. Yun's tribulation flash is a radial glow that fades before the frame's edge, so the
+  transparent window never shows a square.
