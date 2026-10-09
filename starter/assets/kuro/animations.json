@@ -1,0 +1,3619 @@
+{
+  "schema_version": 2,
+  "asset_root": "assets/kuro",
+  "states": {
+    "idle": [
+      "idle"
+    ],
+    "thinking": [
+      "think/start",
+      "think/loop",
+      "think/end"
+    ],
+    "reading": [
+      "read/start",
+      "read/loop",
+      "read/end"
+    ],
+    "working": [
+      "work/start",
+      "work/loop",
+      "work/end"
+    ],
+    "needs_input": [
+      "alert/start",
+      "alert/loop",
+      "alert/end"
+    ],
+    "tool_error": [
+      "oops"
+    ],
+    "out_of_quota": [
+      "tired"
+    ],
+    "turn_finished": [
+      "done"
+    ],
+    "sleeping": [
+      "sleep/start",
+      "sleep/loop",
+      "sleep/end"
+    ],
+    "starting": [
+      "hello"
+    ],
+    "closing": [
+      "bye"
+    ],
+    "angry": [
+      "angry"
+    ],
+    "closing_angry": [
+      "angry_leave"
+    ],
+    "dragging": [
+      "held/start",
+      "held/loop",
+      "held/end"
+    ],
+    "touch_head": [
+      "pat/start",
+      "pat/loop",
+      "pat/end"
+    ],
+    "touch_body": [
+      "poke/start",
+      "poke/loop",
+      "poke/end"
+    ],
+    "cheer": [
+      "cheer"
+    ],
+    "dance": [
+      "dance/start",
+      "dance/loop",
+      "dance/end"
+    ],
+    "snack": [
+      "snack"
+    ],
+    "drink": [
+      "drink"
+    ],
+    "yawn": [
+      "yawn"
+    ],
+    "startled": [
+      "startled"
+    ],
+    "love": [
+      "love"
+    ],
+    "birthday": [
+      "birthday"
+    ],
+    "milestone": [
+      "milestone"
+    ],
+    "stretch": [
+      "stretch"
+    ],
+    "shy": [
+      "shy"
+    ],
+    "fidget_look": [
+      "look"
+    ],
+    "fidget_bounce": [
+      "bounce"
+    ],
+    "fidget_shuriken": [
+      "shuriken"
+    ],
+    "dash_left": [
+      "dash/start_left",
+      "dash/left",
+      "dash/end_left"
+    ],
+    "dash_right": [
+      "dash/start_right",
+      "dash/right",
+      "dash/end_right"
+    ]
+  },
+  "sequences": [
+    {
+      "state": "idle",
+      "path": "idle",
+      "frames": [
+        {
+          "path": "assets/kuro/idle/_000_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle/_001_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle/_002_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle/_003_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle/_004_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle/_005_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle/_006_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle/_007_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle/_008_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle/_009_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle/_010_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle/_011_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle/_012_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle/_013_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle/_014_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle/_015_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/kuro/idle/_016_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/idle/_017_50.png",
+          "duration_ms": 50
+        }
+      ],
+      "duration_ms": 2270
+    },
+    {
+      "path": "alert/end",
+      "frames": [
+        {
+          "path": "assets/kuro/alert/end/_000_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/alert/end/_001_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/alert/end/_002_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/alert/end/_003_70.png",
+          "duration_ms": 70
+        }
+      ],
+      "duration_ms": 280,
+      "state": "needs_input"
+    },
+    {
+      "path": "alert/loop",
+      "frames": [
+        {
+          "path": "assets/kuro/alert/loop/_000_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/alert/loop/_001_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/alert/loop/_002_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/alert/loop/_003_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/alert/loop/_004_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/alert/loop/_005_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/alert/loop/_006_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/alert/loop/_007_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/alert/loop/_008_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/alert/loop/_009_80.png",
+          "duration_ms": 80
+        }
+      ],
+      "duration_ms": 800,
+      "state": "needs_input"
+    },
+    {
+      "path": "alert/start",
+      "frames": [
+        {
+          "path": "assets/kuro/alert/start/_000_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/kuro/alert/start/_001_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/kuro/alert/start/_002_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/kuro/alert/start/_003_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/kuro/alert/start/_004_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/kuro/alert/start/_005_60.png",
+          "duration_ms": 60
+        }
+      ],
+      "duration_ms": 360,
+      "state": "needs_input"
+    },
+    {
+      "path": "angry",
+      "frames": [
+        {
+          "path": "assets/kuro/angry/_000_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/angry/_001_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/angry/_002_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/angry/_003_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/angry/_004_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/angry/_005_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/angry/_006_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/angry/_007_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/angry/_008_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/angry/_009_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/angry/_010_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/angry/_011_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/angry/_012_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/angry/_013_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/angry/_014_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/angry/_015_85.png",
+          "duration_ms": 85
+        }
+      ],
+      "duration_ms": 1360,
+      "state": "angry"
+    },
+    {
+      "path": "angry_leave",
+      "frames": [
+        {
+          "path": "assets/kuro/angry_leave/_000_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/angry_leave/_001_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/angry_leave/_002_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/angry_leave/_003_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/angry_leave/_004_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/angry_leave/_005_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/angry_leave/_006_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/angry_leave/_007_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/angry_leave/_008_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/angry_leave/_009_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/angry_leave/_010_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/angry_leave/_011_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/angry_leave/_012_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/angry_leave/_013_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/angry_leave/_014_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/angry_leave/_015_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/angry_leave/_016_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/angry_leave/_017_285.png",
+          "duration_ms": 285
+        }
+      ],
+      "duration_ms": 1730,
+      "state": "closing_angry"
+    },
+    {
+      "path": "birthday",
+      "frames": [
+        {
+          "path": "assets/kuro/birthday/_000_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/birthday/_001_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/birthday/_002_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/birthday/_003_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/birthday/_004_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/birthday/_005_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/birthday/_006_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/birthday/_007_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/birthday/_008_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/birthday/_009_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/birthday/_010_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/birthday/_011_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/birthday/_012_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/birthday/_013_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/birthday/_014_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/birthday/_015_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/birthday/_016_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/birthday/_017_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/birthday/_018_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/birthday/_019_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/birthday/_020_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/birthday/_021_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/birthday/_022_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/birthday/_023_100.png",
+          "duration_ms": 100
+        }
+      ],
+      "duration_ms": 2400,
+      "state": "birthday"
+    },
+    {
+      "path": "bounce",
+      "frames": [
+        {
+          "path": "assets/kuro/bounce/_000_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/bounce/_001_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/bounce/_002_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/bounce/_003_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/bounce/_004_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/bounce/_005_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/bounce/_006_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/bounce/_007_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/bounce/_008_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/bounce/_009_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/bounce/_010_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/bounce/_011_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/bounce/_012_100.png",
+          "duration_ms": 100
+        }
+      ],
+      "duration_ms": 940,
+      "state": "fidget_bounce"
+    },
+    {
+      "path": "bye",
+      "frames": [
+        {
+          "path": "assets/kuro/bye/_000_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/bye/_001_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/bye/_002_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/bye/_003_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/bye/_004_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/bye/_005_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/bye/_006_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/bye/_007_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/bye/_008_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/bye/_009_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/bye/_010_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/bye/_011_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/bye/_012_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/bye/_013_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/bye/_014_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/bye/_015_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/bye/_016_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/bye/_017_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/bye/_018_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/bye/_019_280.png",
+          "duration_ms": 280
+        }
+      ],
+      "duration_ms": 1800,
+      "state": "closing"
+    },
+    {
+      "path": "cheer",
+      "frames": [
+        {
+          "path": "assets/kuro/cheer/_000_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/cheer/_001_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/cheer/_002_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/cheer/_003_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/cheer/_004_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/cheer/_005_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/cheer/_006_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/cheer/_007_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/cheer/_008_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/cheer/_009_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/cheer/_010_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/cheer/_011_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/cheer/_012_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/cheer/_013_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/cheer/_014_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/cheer/_015_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/cheer/_016_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/cheer/_017_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/cheer/_018_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/cheer/_019_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/cheer/_020_150.png",
+          "duration_ms": 150
+        }
+      ],
+      "duration_ms": 1850,
+      "state": "cheer"
+    },
+    {
+      "path": "dance/end",
+      "frames": [
+        {
+          "path": "assets/kuro/dance/end/_000_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/kuro/dance/end/_001_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/kuro/dance/end/_002_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/dance/end/_003_80.png",
+          "duration_ms": 80
+        }
+      ],
+      "duration_ms": 380,
+      "state": "dance"
+    },
+    {
+      "path": "dance/loop",
+      "frames": [
+        {
+          "path": "assets/kuro/dance/loop/_000_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/kuro/dance/loop/_001_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/kuro/dance/loop/_002_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/kuro/dance/loop/_003_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/kuro/dance/loop/_004_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/kuro/dance/loop/_005_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/kuro/dance/loop/_006_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/kuro/dance/loop/_007_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/kuro/dance/loop/_008_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/kuro/dance/loop/_009_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/kuro/dance/loop/_010_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/kuro/dance/loop/_011_90.png",
+          "duration_ms": 90
+        }
+      ],
+      "duration_ms": 1080,
+      "state": "dance"
+    },
+    {
+      "path": "dance/start",
+      "frames": [
+        {
+          "path": "assets/kuro/dance/start/_000_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/dance/start/_001_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/dance/start/_002_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/dance/start/_003_70.png",
+          "duration_ms": 70
+        }
+      ],
+      "duration_ms": 280,
+      "state": "dance"
+    },
+    {
+      "path": "dash/end_left",
+      "frames": [
+        {
+          "path": "assets/kuro/dash/end_left/_000_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/dash/end_left/_001_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/dash/end_left/_002_80.png",
+          "duration_ms": 80
+        }
+      ],
+      "duration_ms": 240,
+      "state": "dash_left"
+    },
+    {
+      "path": "dash/end_right",
+      "frames": [
+        {
+          "path": "assets/kuro/dash/end_right/_000_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/dash/end_right/_001_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/dash/end_right/_002_80.png",
+          "duration_ms": 80
+        }
+      ],
+      "duration_ms": 240,
+      "state": "dash_right"
+    },
+    {
+      "path": "dash/left",
+      "frames": [
+        {
+          "path": "assets/kuro/dash/left/_000_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/dash/left/_001_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/dash/left/_002_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/dash/left/_003_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/dash/left/_004_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/dash/left/_005_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/dash/left/_006_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/dash/left/_007_70.png",
+          "duration_ms": 70
+        }
+      ],
+      "duration_ms": 560,
+      "state": "dash_left"
+    },
+    {
+      "path": "dash/right",
+      "frames": [
+        {
+          "path": "assets/kuro/dash/right/_000_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/dash/right/_001_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/dash/right/_002_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/dash/right/_003_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/dash/right/_004_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/dash/right/_005_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/dash/right/_006_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/dash/right/_007_70.png",
+          "duration_ms": 70
+        }
+      ],
+      "duration_ms": 560,
+      "state": "dash_right"
+    },
+    {
+      "path": "dash/start_left",
+      "frames": [
+        {
+          "path": "assets/kuro/dash/start_left/_000_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/dash/start_left/_001_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/dash/start_left/_002_70.png",
+          "duration_ms": 70
+        }
+      ],
+      "duration_ms": 210,
+      "state": "dash_left"
+    },
+    {
+      "path": "dash/start_right",
+      "frames": [
+        {
+          "path": "assets/kuro/dash/start_right/_000_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/dash/start_right/_001_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/dash/start_right/_002_70.png",
+          "duration_ms": 70
+        }
+      ],
+      "duration_ms": 210,
+      "state": "dash_right"
+    },
+    {
+      "path": "done",
+      "frames": [
+        {
+          "path": "assets/kuro/done/_000_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/kuro/done/_001_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/kuro/done/_002_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/kuro/done/_003_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/kuro/done/_004_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/kuro/done/_005_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/kuro/done/_006_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/kuro/done/_007_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/kuro/done/_008_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/kuro/done/_009_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/kuro/done/_010_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/kuro/done/_011_160.png",
+          "duration_ms": 160
+        }
+      ],
+      "duration_ms": 1150,
+      "state": "turn_finished"
+    },
+    {
+      "path": "drink",
+      "frames": [
+        {
+          "path": "assets/kuro/drink/_000_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/kuro/drink/_001_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/kuro/drink/_002_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/kuro/drink/_003_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/kuro/drink/_004_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/kuro/drink/_005_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/kuro/drink/_006_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/kuro/drink/_007_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/kuro/drink/_008_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/kuro/drink/_009_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/kuro/drink/_010_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/kuro/drink/_011_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/kuro/drink/_012_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/kuro/drink/_013_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/kuro/drink/_014_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/kuro/drink/_015_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/kuro/drink/_016_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/kuro/drink/_017_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/kuro/drink/_018_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/kuro/drink/_019_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/kuro/drink/_020_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/kuro/drink/_021_90.png",
+          "duration_ms": 90
+        }
+      ],
+      "duration_ms": 1980,
+      "state": "drink"
+    },
+    {
+      "path": "held/end",
+      "frames": [
+        {
+          "path": "assets/kuro/held/end/_000_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/held/end/_001_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/held/end/_002_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/held/end/_003_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/held/end/_004_70.png",
+          "duration_ms": 70
+        }
+      ],
+      "duration_ms": 350,
+      "state": "dragging"
+    },
+    {
+      "path": "held/loop",
+      "frames": [
+        {
+          "path": "assets/kuro/held/loop/_000_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/held/loop/_001_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/held/loop/_002_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/held/loop/_003_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/held/loop/_004_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/held/loop/_005_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/held/loop/_006_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/held/loop/_007_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/held/loop/_008_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/held/loop/_009_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/held/loop/_010_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/held/loop/_011_80.png",
+          "duration_ms": 80
+        }
+      ],
+      "duration_ms": 960,
+      "state": "dragging"
+    },
+    {
+      "path": "held/start",
+      "frames": [
+        {
+          "path": "assets/kuro/held/start/_000_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/kuro/held/start/_001_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/kuro/held/start/_002_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/kuro/held/start/_003_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/kuro/held/start/_004_60.png",
+          "duration_ms": 60
+        }
+      ],
+      "duration_ms": 300,
+      "state": "dragging"
+    },
+    {
+      "path": "hello",
+      "frames": [
+        {
+          "path": "assets/kuro/hello/_000_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/hello/_001_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/hello/_002_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/hello/_003_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/hello/_004_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/hello/_005_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/hello/_006_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/hello/_007_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/hello/_008_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/hello/_009_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/hello/_010_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/hello/_011_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/hello/_012_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/hello/_013_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/hello/_014_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/hello/_015_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/hello/_016_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/hello/_017_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/hello/_018_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/hello/_019_80.png",
+          "duration_ms": 80
+        }
+      ],
+      "duration_ms": 1600,
+      "state": "starting"
+    },
+    {
+      "path": "idle_breeze",
+      "frames": [
+        {
+          "path": "assets/kuro/idle_breeze/_000_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle_breeze/_001_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle_breeze/_002_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle_breeze/_003_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle_breeze/_004_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle_breeze/_005_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle_breeze/_006_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle_breeze/_007_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle_breeze/_008_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle_breeze/_009_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle_breeze/_010_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle_breeze/_011_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle_breeze/_012_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle_breeze/_013_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle_breeze/_014_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle_breeze/_015_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/kuro/idle_breeze/_016_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/idle_breeze/_017_50.png",
+          "duration_ms": 50
+        }
+      ],
+      "duration_ms": 2270,
+      "state": "idle"
+    },
+    {
+      "path": "idle_happy",
+      "frames": [
+        {
+          "path": "assets/kuro/idle_happy/_000_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle_happy/_001_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle_happy/_002_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle_happy/_003_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle_happy/_004_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle_happy/_005_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle_happy/_006_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle_happy/_007_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle_happy/_008_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle_happy/_009_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle_happy/_010_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle_happy/_011_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle_happy/_012_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle_happy/_013_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle_happy/_014_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle_happy/_015_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/kuro/idle_happy/_016_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/idle_happy/_017_50.png",
+          "duration_ms": 50
+        }
+      ],
+      "duration_ms": 2270,
+      "state": "idle"
+    },
+    {
+      "path": "idle_look",
+      "frames": [
+        {
+          "path": "assets/kuro/idle_look/_000_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle_look/_001_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle_look/_002_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle_look/_003_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle_look/_004_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle_look/_005_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle_look/_006_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle_look/_007_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle_look/_008_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle_look/_009_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle_look/_010_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle_look/_011_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle_look/_012_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle_look/_013_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle_look/_014_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle_look/_015_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/kuro/idle_look/_016_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/idle_look/_017_50.png",
+          "duration_ms": 50
+        }
+      ],
+      "duration_ms": 2270,
+      "state": "idle"
+    },
+    {
+      "path": "idle_poor",
+      "frames": [
+        {
+          "path": "assets/kuro/idle_poor/_000_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle_poor/_001_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle_poor/_002_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle_poor/_003_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle_poor/_004_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle_poor/_005_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle_poor/_006_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle_poor/_007_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle_poor/_008_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle_poor/_009_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle_poor/_010_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle_poor/_011_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle_poor/_012_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle_poor/_013_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle_poor/_014_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle_poor/_015_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle_poor/_016_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/idle_poor/_017_140.png",
+          "duration_ms": 140
+        }
+      ],
+      "duration_ms": 2520,
+      "state": "idle"
+    },
+    {
+      "path": "look",
+      "frames": [
+        {
+          "path": "assets/kuro/look/_000_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/look/_001_260.png",
+          "duration_ms": 260
+        },
+        {
+          "path": "assets/kuro/look/_002_260.png",
+          "duration_ms": 260
+        },
+        {
+          "path": "assets/kuro/look/_003_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/kuro/look/_004_260.png",
+          "duration_ms": 260
+        },
+        {
+          "path": "assets/kuro/look/_005_300.png",
+          "duration_ms": 300
+        },
+        {
+          "path": "assets/kuro/look/_006_140.png",
+          "duration_ms": 140
+        }
+      ],
+      "duration_ms": 1480,
+      "state": "fidget_look"
+    },
+    {
+      "path": "love",
+      "frames": [
+        {
+          "path": "assets/kuro/love/_000_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/love/_001_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/love/_002_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/love/_003_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/love/_004_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/love/_005_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/love/_006_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/love/_007_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/love/_008_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/love/_009_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/love/_010_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/love/_011_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/love/_012_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/love/_013_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/love/_014_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/love/_015_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/love/_016_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/love/_017_100.png",
+          "duration_ms": 100
+        }
+      ],
+      "duration_ms": 1800,
+      "state": "love"
+    },
+    {
+      "path": "milestone",
+      "frames": [
+        {
+          "path": "assets/kuro/milestone/_000_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/milestone/_001_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/milestone/_002_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/milestone/_003_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/milestone/_004_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/milestone/_005_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/milestone/_006_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/milestone/_007_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/milestone/_008_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/milestone/_009_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/milestone/_010_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/milestone/_011_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/milestone/_012_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/milestone/_013_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/milestone/_014_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/milestone/_015_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/milestone/_016_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/milestone/_017_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/milestone/_018_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/milestone/_019_100.png",
+          "duration_ms": 100
+        }
+      ],
+      "duration_ms": 2000,
+      "state": "milestone"
+    },
+    {
+      "path": "oops",
+      "frames": [
+        {
+          "path": "assets/kuro/oops/_000_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/oops/_001_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/oops/_002_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/oops/_003_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/oops/_004_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/oops/_005_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/oops/_006_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/oops/_007_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/oops/_008_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/oops/_009_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/oops/_010_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/oops/_011_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/oops/_012_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/oops/_013_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/oops/_014_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/oops/_015_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/kuro/oops/_016_120.png",
+          "duration_ms": 120
+        }
+      ],
+      "duration_ms": 1480,
+      "state": "tool_error"
+    },
+    {
+      "path": "pat/end",
+      "frames": [
+        {
+          "path": "assets/kuro/pat/end/_000_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/pat/end/_001_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/pat/end/_002_70.png",
+          "duration_ms": 70
+        }
+      ],
+      "duration_ms": 210,
+      "state": "touch_head"
+    },
+    {
+      "path": "pat/loop",
+      "frames": [
+        {
+          "path": "assets/kuro/pat/loop/_000_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/kuro/pat/loop/_001_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/kuro/pat/loop/_002_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/kuro/pat/loop/_003_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/kuro/pat/loop/_004_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/kuro/pat/loop/_005_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/kuro/pat/loop/_006_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/kuro/pat/loop/_007_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/kuro/pat/loop/_008_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/kuro/pat/loop/_009_90.png",
+          "duration_ms": 90
+        }
+      ],
+      "duration_ms": 900,
+      "state": "touch_head"
+    },
+    {
+      "path": "pat/start",
+      "frames": [
+        {
+          "path": "assets/kuro/pat/start/_000_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/kuro/pat/start/_001_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/kuro/pat/start/_002_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/kuro/pat/start/_003_60.png",
+          "duration_ms": 60
+        }
+      ],
+      "duration_ms": 240,
+      "state": "touch_head"
+    },
+    {
+      "path": "poke/end",
+      "frames": [
+        {
+          "path": "assets/kuro/poke/end/_000_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/poke/end/_001_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/poke/end/_002_70.png",
+          "duration_ms": 70
+        }
+      ],
+      "duration_ms": 210,
+      "state": "touch_body"
+    },
+    {
+      "path": "poke/loop",
+      "frames": [
+        {
+          "path": "assets/kuro/poke/loop/_000_75.png",
+          "duration_ms": 75
+        },
+        {
+          "path": "assets/kuro/poke/loop/_001_75.png",
+          "duration_ms": 75
+        },
+        {
+          "path": "assets/kuro/poke/loop/_002_75.png",
+          "duration_ms": 75
+        },
+        {
+          "path": "assets/kuro/poke/loop/_003_75.png",
+          "duration_ms": 75
+        },
+        {
+          "path": "assets/kuro/poke/loop/_004_75.png",
+          "duration_ms": 75
+        },
+        {
+          "path": "assets/kuro/poke/loop/_005_75.png",
+          "duration_ms": 75
+        },
+        {
+          "path": "assets/kuro/poke/loop/_006_75.png",
+          "duration_ms": 75
+        },
+        {
+          "path": "assets/kuro/poke/loop/_007_75.png",
+          "duration_ms": 75
+        },
+        {
+          "path": "assets/kuro/poke/loop/_008_75.png",
+          "duration_ms": 75
+        },
+        {
+          "path": "assets/kuro/poke/loop/_009_75.png",
+          "duration_ms": 75
+        }
+      ],
+      "duration_ms": 750,
+      "state": "touch_body"
+    },
+    {
+      "path": "poke/start",
+      "frames": [
+        {
+          "path": "assets/kuro/poke/start/_000_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/kuro/poke/start/_001_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/kuro/poke/start/_002_60.png",
+          "duration_ms": 60
+        }
+      ],
+      "duration_ms": 180,
+      "state": "touch_body"
+    },
+    {
+      "path": "read/end",
+      "frames": [
+        {
+          "path": "assets/kuro/read/end/_000_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/read/end/_001_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/read/end/_002_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/read/end/_003_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/read/end/_004_70.png",
+          "duration_ms": 70
+        }
+      ],
+      "duration_ms": 350,
+      "state": "reading"
+    },
+    {
+      "path": "read/loop",
+      "frames": [
+        {
+          "path": "assets/kuro/read/loop/_000_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/kuro/read/loop/_001_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/kuro/read/loop/_002_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/kuro/read/loop/_003_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/kuro/read/loop/_004_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/kuro/read/loop/_005_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/kuro/read/loop/_006_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/kuro/read/loop/_007_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/kuro/read/loop/_008_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/kuro/read/loop/_009_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/kuro/read/loop/_010_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/kuro/read/loop/_011_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/kuro/read/loop/_012_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/kuro/read/loop/_013_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/kuro/read/loop/_014_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/kuro/read/loop/_015_130.png",
+          "duration_ms": 130
+        }
+      ],
+      "duration_ms": 2080,
+      "state": "reading"
+    },
+    {
+      "path": "read/start",
+      "frames": [
+        {
+          "path": "assets/kuro/read/start/_000_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/read/start/_001_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/read/start/_002_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/read/start/_003_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/read/start/_004_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/read/start/_005_70.png",
+          "duration_ms": 70
+        }
+      ],
+      "duration_ms": 420,
+      "state": "reading"
+    },
+    {
+      "path": "shuriken",
+      "frames": [
+        {
+          "path": "assets/kuro/shuriken/_000_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/shuriken/_001_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/shuriken/_002_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/shuriken/_003_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/shuriken/_004_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/shuriken/_005_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/shuriken/_006_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/shuriken/_007_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/shuriken/_008_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/shuriken/_009_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/shuriken/_010_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/shuriken/_011_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/shuriken/_012_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/shuriken/_013_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/shuriken/_014_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/shuriken/_015_80.png",
+          "duration_ms": 80
+        }
+      ],
+      "duration_ms": 1280,
+      "state": "fidget_shuriken"
+    },
+    {
+      "path": "shy",
+      "frames": [
+        {
+          "path": "assets/kuro/shy/_000_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/shy/_001_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/shy/_002_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/shy/_003_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/shy/_004_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/shy/_005_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/shy/_006_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/shy/_007_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/shy/_008_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/shy/_009_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/shy/_010_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/shy/_011_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/shy/_012_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/shy/_013_100.png",
+          "duration_ms": 100
+        }
+      ],
+      "duration_ms": 1400,
+      "state": "shy"
+    },
+    {
+      "path": "sleep/end",
+      "frames": [
+        {
+          "path": "assets/kuro/sleep/end/_000_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/sleep/end/_001_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/sleep/end/_002_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/sleep/end/_003_180.png",
+          "duration_ms": 180
+        },
+        {
+          "path": "assets/kuro/sleep/end/_004_180.png",
+          "duration_ms": 180
+        },
+        {
+          "path": "assets/kuro/sleep/end/_005_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/kuro/sleep/end/_006_140.png",
+          "duration_ms": 140
+        }
+      ],
+      "duration_ms": 1060,
+      "state": "sleeping"
+    },
+    {
+      "path": "sleep/loop",
+      "frames": [
+        {
+          "path": "assets/kuro/sleep/loop/_000_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/kuro/sleep/loop/_001_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/kuro/sleep/loop/_002_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/kuro/sleep/loop/_003_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/kuro/sleep/loop/_004_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/kuro/sleep/loop/_005_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/kuro/sleep/loop/_006_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/kuro/sleep/loop/_007_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/kuro/sleep/loop/_008_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/kuro/sleep/loop/_009_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/kuro/sleep/loop/_010_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/kuro/sleep/loop/_011_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/kuro/sleep/loop/_012_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/kuro/sleep/loop/_013_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/kuro/sleep/loop/_014_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/kuro/sleep/loop/_015_150.png",
+          "duration_ms": 150
+        }
+      ],
+      "duration_ms": 2400,
+      "state": "sleeping"
+    },
+    {
+      "path": "sleep/start",
+      "frames": [
+        {
+          "path": "assets/kuro/sleep/start/_000_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/kuro/sleep/start/_001_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/kuro/sleep/start/_002_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/kuro/sleep/start/_003_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/kuro/sleep/start/_004_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/kuro/sleep/start/_005_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/kuro/sleep/start/_006_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/kuro/sleep/start/_007_110.png",
+          "duration_ms": 110
+        }
+      ],
+      "duration_ms": 880,
+      "state": "sleeping"
+    },
+    {
+      "path": "snack",
+      "frames": [
+        {
+          "path": "assets/kuro/snack/_000_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/snack/_001_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/snack/_002_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/snack/_003_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/snack/_004_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/snack/_005_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/snack/_006_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/kuro/snack/_007_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/kuro/snack/_008_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/kuro/snack/_009_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/kuro/snack/_010_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/kuro/snack/_011_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/kuro/snack/_012_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/kuro/snack/_013_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/kuro/snack/_014_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/kuro/snack/_015_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/kuro/snack/_016_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/kuro/snack/_017_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/kuro/snack/_018_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/kuro/snack/_019_200.png",
+          "duration_ms": 200
+        }
+      ],
+      "duration_ms": 2020,
+      "state": "snack"
+    },
+    {
+      "path": "startled",
+      "frames": [
+        {
+          "path": "assets/kuro/startled/_000_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/startled/_001_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/startled/_002_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/startled/_003_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/startled/_004_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/startled/_005_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/kuro/startled/_006_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/kuro/startled/_007_120.png",
+          "duration_ms": 120
+        }
+      ],
+      "duration_ms": 710,
+      "state": "startled"
+    },
+    {
+      "path": "stretch",
+      "frames": [
+        {
+          "path": "assets/kuro/stretch/_000_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/kuro/stretch/_001_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/kuro/stretch/_002_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/kuro/stretch/_003_160.png",
+          "duration_ms": 160
+        },
+        {
+          "path": "assets/kuro/stretch/_004_160.png",
+          "duration_ms": 160
+        },
+        {
+          "path": "assets/kuro/stretch/_005_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/kuro/stretch/_006_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/kuro/stretch/_007_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/kuro/stretch/_008_110.png",
+          "duration_ms": 110
+        }
+      ],
+      "duration_ms": 1090,
+      "state": "stretch"
+    },
+    {
+      "path": "think/end",
+      "frames": [
+        {
+          "path": "assets/kuro/think/end/_000_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/think/end/_001_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/think/end/_002_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/think/end/_003_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/think/end/_004_70.png",
+          "duration_ms": 70
+        }
+      ],
+      "duration_ms": 350,
+      "state": "thinking"
+    },
+    {
+      "path": "think/idea",
+      "frames": [
+        {
+          "path": "assets/kuro/think/idea/_000_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/kuro/think/idea/_001_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/kuro/think/idea/_002_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/kuro/think/idea/_003_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/kuro/think/idea/_004_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/kuro/think/idea/_005_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/kuro/think/idea/_006_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/kuro/think/idea/_007_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/kuro/think/idea/_008_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/kuro/think/idea/_009_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/kuro/think/idea/_010_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/kuro/think/idea/_011_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/kuro/think/idea/_012_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/kuro/think/idea/_013_110.png",
+          "duration_ms": 110
+        }
+      ],
+      "duration_ms": 1540,
+      "state": "thinking"
+    },
+    {
+      "path": "think/loop",
+      "frames": [
+        {
+          "path": "assets/kuro/think/loop/_000_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/kuro/think/loop/_001_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/kuro/think/loop/_002_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/kuro/think/loop/_003_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/kuro/think/loop/_004_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/kuro/think/loop/_005_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/kuro/think/loop/_006_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/kuro/think/loop/_007_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/kuro/think/loop/_008_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/kuro/think/loop/_009_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/kuro/think/loop/_010_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/kuro/think/loop/_011_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/kuro/think/loop/_012_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/kuro/think/loop/_013_110.png",
+          "duration_ms": 110
+        }
+      ],
+      "duration_ms": 1540,
+      "state": "thinking"
+    },
+    {
+      "path": "think/start",
+      "frames": [
+        {
+          "path": "assets/kuro/think/start/_000_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/think/start/_001_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/think/start/_002_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/think/start/_003_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/think/start/_004_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/think/start/_005_70.png",
+          "duration_ms": 70
+        }
+      ],
+      "duration_ms": 420,
+      "state": "thinking"
+    },
+    {
+      "path": "tired",
+      "frames": [
+        {
+          "path": "assets/kuro/tired/_000_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/kuro/tired/_001_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/kuro/tired/_002_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/kuro/tired/_003_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/kuro/tired/_004_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/kuro/tired/_005_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/kuro/tired/_006_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/kuro/tired/_007_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/kuro/tired/_008_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/kuro/tired/_009_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/kuro/tired/_010_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/kuro/tired/_011_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/kuro/tired/_012_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/kuro/tired/_013_150.png",
+          "duration_ms": 150
+        }
+      ],
+      "duration_ms": 2100,
+      "state": "out_of_quota"
+    },
+    {
+      "path": "work/end",
+      "frames": [
+        {
+          "path": "assets/kuro/work/end/_000_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/work/end/_001_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/work/end/_002_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/work/end/_003_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/work/end/_004_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/work/end/_005_160.png",
+          "duration_ms": 160
+        }
+      ],
+      "duration_ms": 510,
+      "state": "working"
+    },
+    {
+      "path": "work/fast",
+      "frames": [
+        {
+          "path": "assets/kuro/work/fast/_000_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/work/fast/_001_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/work/fast/_002_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/work/fast/_003_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/work/fast/_004_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/work/fast/_005_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/work/fast/_006_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/work/fast/_007_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/work/fast/_008_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/work/fast/_009_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/work/fast/_010_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/work/fast/_011_70.png",
+          "duration_ms": 70
+        }
+      ],
+      "duration_ms": 840,
+      "state": "working"
+    },
+    {
+      "path": "work/loop",
+      "frames": [
+        {
+          "path": "assets/kuro/work/loop/_000_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/work/loop/_001_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/work/loop/_002_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/work/loop/_003_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/work/loop/_004_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/work/loop/_005_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/work/loop/_006_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/work/loop/_007_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/work/loop/_008_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/work/loop/_009_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/work/loop/_010_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/kuro/work/loop/_011_100.png",
+          "duration_ms": 100
+        }
+      ],
+      "duration_ms": 1200,
+      "state": "working"
+    },
+    {
+      "path": "work/start",
+      "frames": [
+        {
+          "path": "assets/kuro/work/start/_000_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/work/start/_001_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/work/start/_002_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/work/start/_003_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/work/start/_004_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/kuro/work/start/_005_70.png",
+          "duration_ms": 70
+        }
+      ],
+      "duration_ms": 420,
+      "state": "working"
+    },
+    {
+      "path": "yawn",
+      "frames": [
+        {
+          "path": "assets/kuro/yawn/_000_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/kuro/yawn/_001_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/kuro/yawn/_002_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/kuro/yawn/_003_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/kuro/yawn/_004_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/kuro/yawn/_005_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/kuro/yawn/_006_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/kuro/yawn/_007_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/kuro/yawn/_008_110.png",
+          "duration_ms": 110
+        }
+      ],
+      "duration_ms": 1110,
+      "state": "yawn"
+    }
+  ],
+  "playback": {
+    "idle": {
+      "mode": "loop",
+      "after": "idle",
+      "weight": 2
+    },
+    "thinking": {
+      "mode": "phased",
+      "after": "idle"
+    },
+    "reading": {
+      "mode": "phased",
+      "after": "idle"
+    },
+    "working": {
+      "mode": "phased",
+      "after": "idle"
+    },
+    "needs_input": {
+      "mode": "phased",
+      "after": "idle"
+    },
+    "tool_error": {
+      "mode": "once",
+      "after": "previous"
+    },
+    "out_of_quota": {
+      "mode": "loop",
+      "after": "idle"
+    },
+    "turn_finished": {
+      "mode": "once",
+      "after": "idle"
+    },
+    "sleeping": {
+      "mode": "phased",
+      "after": "idle"
+    },
+    "starting": {
+      "mode": "once",
+      "after": "idle"
+    },
+    "closing": {
+      "mode": "once",
+      "after": "stop"
+    },
+    "angry": {
+      "mode": "once",
+      "after": "stop"
+    },
+    "closing_angry": {
+      "mode": "once",
+      "after": "stop"
+    },
+    "dragging": {
+      "mode": "phased",
+      "after": "idle"
+    },
+    "touch_head": {
+      "mode": "phased",
+      "after": "idle"
+    },
+    "touch_body": {
+      "mode": "phased",
+      "after": "idle"
+    },
+    "cheer": {
+      "mode": "once",
+      "after": "idle"
+    },
+    "dance": {
+      "mode": "phased",
+      "after": "idle",
+      "loops": 2
+    },
+    "snack": {
+      "mode": "once",
+      "after": "idle"
+    },
+    "drink": {
+      "mode": "once",
+      "after": "idle"
+    },
+    "yawn": {
+      "mode": "once",
+      "after": "idle"
+    },
+    "startled": {
+      "mode": "once",
+      "after": "idle"
+    },
+    "love": {
+      "mode": "once",
+      "after": "idle"
+    },
+    "birthday": {
+      "mode": "once",
+      "after": "idle"
+    },
+    "milestone": {
+      "mode": "once",
+      "after": "idle"
+    },
+    "stretch": {
+      "mode": "once",
+      "after": "idle"
+    },
+    "shy": {
+      "mode": "once",
+      "after": "idle"
+    },
+    "fidget_look": {
+      "mode": "once",
+      "after": "idle"
+    },
+    "fidget_bounce": {
+      "mode": "once",
+      "after": "idle"
+    },
+    "fidget_shuriken": {
+      "mode": "once",
+      "after": "idle"
+    },
+    "dash_left": {
+      "mode": "phased",
+      "after": "idle",
+      "loops": 4
+    },
+    "dash_right": {
+      "mode": "phased",
+      "after": "idle",
+      "loops": 4
+    }
+  },
+  "variants": {
+    "idle": [
+      {
+        "sequences": [
+          "idle_look"
+        ],
+        "weight": 1
+      },
+      {
+        "sequences": [
+          "idle_breeze"
+        ],
+        "weight": 1
+      }
+    ],
+    "thinking": [
+      {
+        "sequences": [
+          "think/start",
+          "think/idea",
+          "think/end"
+        ],
+        "weight": 1
+      }
+    ],
+    "working": [
+      {
+        "sequences": [
+          "work/start",
+          "work/fast",
+          "work/end"
+        ],
+        "weight": 1
+      }
+    ]
+  },
+  "moods": {
+    "happy": {
+      "idle": [
+        {
+          "sequences": [
+            "idle_happy"
+          ],
+          "weight": 1
+        }
+      ]
+    },
+    "poor": {
+      "idle": [
+        {
+          "sequences": [
+            "idle_poor"
+          ],
+          "weight": 1
+        }
+      ]
+    }
+  },
+  "cues": {
+    "celebrate": [
+      {
+        "state": "turn_finished",
+        "weight": 2
+      },
+      {
+        "state": "cheer",
+        "weight": 1
+      },
+      {
+        "state": "fidget_shuriken",
+        "weight": 1
+      }
+    ],
+    "snack": [
+      {
+        "state": "snack",
+        "weight": 1
+      }
+    ],
+    "lunch": [
+      {
+        "state": "snack",
+        "weight": 1
+      }
+    ],
+    "water": [
+      {
+        "state": "drink",
+        "weight": 1
+      }
+    ],
+    "milestone": [
+      {
+        "state": "milestone",
+        "weight": 1
+      }
+    ],
+    "long-turn": [
+      {
+        "state": "milestone",
+        "weight": 2
+      },
+      {
+        "state": "dance",
+        "weight": 1
+      }
+    ],
+    "friday-evening": [
+      {
+        "state": "dance",
+        "weight": 1
+      }
+    ],
+    "may20": [
+      {
+        "state": "love",
+        "weight": 1
+      }
+    ],
+    "birthday": [
+      {
+        "state": "birthday",
+        "weight": 1
+      }
+    ],
+    "late-night": [
+      {
+        "state": "yawn",
+        "weight": 1
+      }
+    ],
+    "monday": [
+      {
+        "state": "yawn",
+        "weight": 2
+      },
+      {
+        "state": "stretch",
+        "weight": 1
+      }
+    ],
+    "leave-work": [
+      {
+        "state": "stretch",
+        "weight": 1
+      },
+      {
+        "state": "dance",
+        "weight": 1
+      }
+    ],
+    "sleep": [
+      {
+        "state": "yawn",
+        "weight": 1
+      }
+    ],
+    "konami": [
+      {
+        "state": "dance",
+        "weight": 2
+      },
+      {
+        "state": "love",
+        "weight": 1
+      }
+    ],
+    "danger": [
+      {
+        "state": "startled",
+        "weight": 1
+      }
+    ],
+    "eye-break": [
+      {
+        "state": "stretch",
+        "weight": 1
+      }
+    ],
+    "reminder-done": [
+      {
+        "state": "shy",
+        "weight": 1
+      }
+    ]
+  },
+  "ambient": {
+    "sleep_after_s": 600,
+    "fidgets": [
+      {
+        "state": "fidget_look",
+        "weight": 3
+      },
+      {
+        "state": "fidget_bounce",
+        "weight": 2
+      },
+      {
+        "state": "fidget_shuriken",
+        "weight": 2,
+        "min_idle_s": 60
+      },
+      {
+        "state": "yawn",
+        "weight": 2,
+        "min_idle_s": 120
+      },
+      {
+        "state": "stretch",
+        "weight": 1,
+        "min_idle_s": 120
+      },
+      {
+        "state": "dash_left",
+        "weight": 2,
+        "min_idle_s": 240
+      },
+      {
+        "state": "dash_right",
+        "weight": 2,
+        "min_idle_s": 240
+      },
+      {
+        "state": "dance",
+        "weight": 1,
+        "rare": true
+      }
+    ]
+  },
+  "touch": {
+    "scale": 500,
+    "regions": [
+      {
+        "state": "touch_head",
+        "rect": [
+          160,
+          201,
+          180,
+          140
+        ]
+      },
+      {
+        "state": "touch_body",
+        "rect": [
+          190,
+          345,
+          120,
+          136
+        ]
+      }
+    ]
+  },
+  "moves": {
+    "scale": 500,
+    "list": [
+      {
+        "state": "dash_left",
+        "speed": [
+          -150,
+          0
+        ],
+        "room": {
+          "left": 200
+        },
+        "keep": {
+          "left": 100
+        }
+      },
+      {
+        "state": "dash_right",
+        "speed": [
+          150,
+          0
+        ],
+        "room": {
+          "right": 200
+        },
+        "keep": {
+          "right": 100
+        }
+      }
+    ]
+  }
+}
