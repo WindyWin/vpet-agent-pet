@@ -5,3 +5,8 @@ reviews:
   auto_review:
     ignore_title_keywords:
       - "Bump version to"
+  # Docs, ADRs and README media are not reviewed.
+  path_filters:
+    - "!**/*.md"
+    - "!docs/**"
+    - "!starter/docs/**"
