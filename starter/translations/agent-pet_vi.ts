@@ -391,7 +391,7 @@
     </message>
     <message>
         <source>Reserved package path.</source>
-        <translation>Gói chứa đường dẫn dành riêng cho hệ thống.</translation>
+        <translation>Gói chứa đường dẫn dành riêng cho Agent Pet.</translation>
     </message>
     <message>
         <source>Cannot create package directory.</source>
@@ -679,7 +679,7 @@
     <message>
         <source>Click for running sessions · Hold still to pet · Drag to move, or throw · Push past a screen edge to hide
 Right-click for controls · Esc to quit</source>
-        <translation>Nhấp để xem các phiên đang chạy · Giữ con trỏ trên thú cưng để vuốt ve · Kéo để di chuyển hoặc tung lên · Đẩy qua mép màn hình để trốn
+        <translation>Nhấp để xem các phiên đang chạy · Nhấn giữ chuột trái và giữ yên để vuốt ve · Kéo để di chuyển hoặc tung lên · Đẩy qua mép màn hình để trốn
 Nhấp chuột phải để mở menu · Esc để thoát</translation>
     </message>
     <message>
@@ -818,7 +818,7 @@ Nhấp chuột phải để điều khiển</translation>
     </message>
     <message>
         <source>&amp;Mute alert bubbles (badge stays visible)</source>
-        <translation>Tắt &amp;thông báo (vẫn hiện dấu hiệu cần chú ý)</translation>
+        <translation>Tắt &amp;bong bóng thông báo (vẫn hiện dấu hiệu cần chú ý)</translation>
     </message>
     <message>
         <source>Alerts</source>
@@ -842,11 +842,11 @@ Nhấp chuột phải để điều khiển</translation>
     </message>
     <message>
         <source>Show alert bubbles</source>
-        <translation>Hiển thị thông báo</translation>
+        <translation>Hiển thị bong bóng thông báo</translation>
     </message>
     <message>
         <source>Show &amp;bubbles</source>
-        <translation>Hiển thị &amp;thông báo</translation>
+        <translation>Hiển thị &amp;bong bóng thông báo</translation>
     </message>
     <message>
         <source>Pet</source>
@@ -972,7 +972,7 @@ Tâm trạng dần trở lại bình thường sau vài phút yên tĩnh.</trans
         <source>Hold the pet still on its head, cheek or body to pet it. Let go while dragging fast and it
 falls to the bottom of the screen. Push it past the left or right edge while it idles and it
 hides there until an agent needs it. Off, the pet is only dragged.</source>
-        <translation>Giữ con trỏ trên đầu, má hoặc thân thú cưng để vuốt ve. Thả ra khi đang kéo nhanh, thú cưng
+        <translation>Nhấn giữ chuột trái trên đầu, má hoặc thân thú cưng và giữ yên để vuốt ve. Thả ra khi đang kéo nhanh, thú cưng
 sẽ rơi xuống đáy màn hình. Đẩy qua mép trái hoặc phải khi đang rảnh, thú cưng sẽ
 trốn ở đó cho đến khi có agent cần chú ý. Khi tắt, bạn chỉ có thể kéo thú cưng để di chuyển.</translation>
     </message>

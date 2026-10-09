@@ -95,7 +95,7 @@ Nhấp vào thú cưng để xem các phiên đang chạy, sắp xếp theo mứ
 
 ### Chơi cùng thú cưng
 
-Kéo thú cưng đến bất kỳ đâu, nó sẽ đung đưa theo con trỏ. Giữ con trỏ trên đầu hoặc bụng để vuốt ve. Thả giữa lúc đang đung đưa, nó sẽ ngã xuống rồi đứng dậy. Đẩy ra mép màn hình, nó sẽ trốn ở đó và ló đầu ra cho đến khi agent bận rộn trở lại.
+Kéo thú cưng đến bất kỳ đâu, nó sẽ đung đưa theo con trỏ. Nhấn giữ chuột trái trên đầu hoặc bụng và giữ yên để vuốt ve. Thả giữa lúc đang đung đưa, nó sẽ ngã xuống rồi đứng dậy. Đẩy ra mép màn hình, nó sẽ trốn ở đó và ló đầu ra cho đến khi agent bận rộn trở lại.
 
 Nhưng đừng quá tay: tung quá nhiều, vuốt ve liên tục hoặc giữ quá lâu sẽ khiến nó giận và bỏ đi.
 
