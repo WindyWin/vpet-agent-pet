@@ -3,7 +3,8 @@
 A pet is a folder under `assets/` with its own frames, catalog, preview and art terms. A rebuild picks up
 every folder that has a `pet.json`; no C++ or CMake changes are needed. Once two or more pets are
 known, Settings → Pet shows a **Character** row with a tile per pet, and the chosen pet appears the
-next time Agent Pet starts. VPet ships with the app; other pets download when chosen (see
+next time Agent Pet starts. VPet ships with the app; other pets, such as Fat Cat ([0036](adr/0036-fat-cat-pet.md), a worked example of a
+small pet on borrowed CC0 art), download when chosen (see
 [Bundled and on-demand pets](#bundled-and-on-demand-pets)). `agent-pet --pet <id>` runs another pet
 once without saving the choice. Only the running pet's artwork is loaded.
 To add animations to an existing pet without a rebuild, make a [plugin pack](plugins.md) instead.

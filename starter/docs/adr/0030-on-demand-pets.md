@@ -68,5 +68,5 @@ in-place updater only runs on Linux, and package-manager installs under `/usr` c
 - `scripts/pet_blobs.py` on the fixture build with `duo` treated as not bundled copied its two packs
   as `<sha256>.rcc`, matching their digests; on the app build it found nothing to upload.
 - `agent-pet --smoke-test` (offscreen) passed with startup cleanup enabled.
-- Open: the first real upload to the `pets` release (no on-demand pet ships yet), macOS and Windows CI
+- Open: the first real upload to the `pets` release (no on-demand pet shipped yet; [0036](0036-fat-cat-pet.md) adds the first), macOS and Windows CI
   runs, and a manual check against GitHub's redirect to its asset host.

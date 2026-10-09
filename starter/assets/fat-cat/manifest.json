@@ -1,0 +1,262 @@
+{
+  "schema_version": 1,
+  "file_count": 51,
+  "total_bytes": 11208517,
+  "files": [
+    {
+      "path": "assets/fat-cat/idle/_000_2600.png",
+      "bytes": 216954,
+      "sha256": "afce42d7044cb299d1356ab676ea1993a0311acdd925d3b27cb0d9186161b8cb"
+    },
+    {
+      "path": "assets/fat-cat/idle/_001_160.png",
+      "bytes": 201836,
+      "sha256": "fb6cd134a1b755f355537b8e359053e509629e22ca3d3072485b2701ebb4f0fa"
+    },
+    {
+      "path": "assets/fat-cat/walk/_000_60.png",
+      "bytes": 216992,
+      "sha256": "f9cb2fc90db0c0c02962adbb3b5944d3399c560437f0744c8bae9ba3734f5b0b"
+    },
+    {
+      "path": "assets/fat-cat/walk/_001_60.png",
+      "bytes": 220740,
+      "sha256": "fab6f81f5e85c59bc9aafc8eeffc9e3bf9cd9607bfe63956f335402b3d2e0351"
+    },
+    {
+      "path": "assets/fat-cat/walk/_002_60.png",
+      "bytes": 224914,
+      "sha256": "d44517ee04134d00974af742b29a40789724a38dcc711cd49a200b84eb28357c"
+    },
+    {
+      "path": "assets/fat-cat/walk/_003_60.png",
+      "bytes": 227209,
+      "sha256": "1368103e0f7d164aebac17d6baf29aa393befddfc4c6e26c61dafa48f0cc01be"
+    },
+    {
+      "path": "assets/fat-cat/walk/_004_60.png",
+      "bytes": 229788,
+      "sha256": "828f4cf6d389d87ef5dcc04dfe6cdcfd96ed14b30087c9b1336f88df29705f3c"
+    },
+    {
+      "path": "assets/fat-cat/walk/_005_60.png",
+      "bytes": 227472,
+      "sha256": "a6127e5d3f42b38f2c8baf23945d326c38d8cc52a63265e69d1457eabb75c48e"
+    },
+    {
+      "path": "assets/fat-cat/walk/_006_60.png",
+      "bytes": 226086,
+      "sha256": "8f2106d137f00b954dce0abda20398299b346254ea42ac09bcabd03e273fd6e0"
+    },
+    {
+      "path": "assets/fat-cat/walk/_007_60.png",
+      "bytes": 224164,
+      "sha256": "3bd78fa80a1abb0c7c194c3e2f958469a20b54341fda7930c91d4729d02b31bc"
+    },
+    {
+      "path": "assets/fat-cat/walk/_008_60.png",
+      "bytes": 220161,
+      "sha256": "7148181928215d9a98648f9e4e247ea598b5326c8720b0b4c6d55ac9326ebba6"
+    },
+    {
+      "path": "assets/fat-cat/walk/_009_60.png",
+      "bytes": 216992,
+      "sha256": "f9cb2fc90db0c0c02962adbb3b5944d3399c560437f0744c8bae9ba3734f5b0b"
+    },
+    {
+      "path": "assets/fat-cat/walk/_010_60.png",
+      "bytes": 214962,
+      "sha256": "e172a7f8201c85fc47e8ba977c0e4dc2b73da8a649784a20729995508df2f649"
+    },
+    {
+      "path": "assets/fat-cat/walk/_011_60.png",
+      "bytes": 211664,
+      "sha256": "59b7f91a595e9117537a6669ff866cc1c1081c9660dd8efc51b652aa4d280625"
+    },
+    {
+      "path": "assets/fat-cat/walk/_012_60.png",
+      "bytes": 209443,
+      "sha256": "bc3031aab9f0a630975a0258b90d8bfe586fed86a1f05b83c505746606839517"
+    },
+    {
+      "path": "assets/fat-cat/walk/_013_60.png",
+      "bytes": 207976,
+      "sha256": "b0ce983bdc2a50cf2680486705741ec3400c6c0fc1090276933c9df25c1b36d2"
+    },
+    {
+      "path": "assets/fat-cat/walk/_014_60.png",
+      "bytes": 206781,
+      "sha256": "4e70bbf9cc0afae2f1da64c6b68d8beee481486a03f7586c66f76fb65b74780b"
+    },
+    {
+      "path": "assets/fat-cat/walk/_015_60.png",
+      "bytes": 207987,
+      "sha256": "a510803e88bebc97a74be3437b3f523df17fd5ba5a907190b10605b82f66342f"
+    },
+    {
+      "path": "assets/fat-cat/walk/_016_60.png",
+      "bytes": 209132,
+      "sha256": "22348f7423bcb60b95b71c86d69e54cb75cd640a6f51039e1afc11146b120643"
+    },
+    {
+      "path": "assets/fat-cat/walk/_017_60.png",
+      "bytes": 211358,
+      "sha256": "a40e331e92b06d1b3886c83abd21799ea37e141e3ee9edc05017368dc068514e"
+    },
+    {
+      "path": "assets/fat-cat/walk/_018_60.png",
+      "bytes": 215317,
+      "sha256": "f8965a4f67868bd14f979c999c63e0af1c0b90d0695fa079b747d0b45d97886e"
+    },
+    {
+      "path": "assets/fat-cat/wave/_000_80.png",
+      "bytes": 237148,
+      "sha256": "435d3bef1d63ccf0392d2ab979e88d8d67bf27cf41a156f30f910013b89ff489"
+    },
+    {
+      "path": "assets/fat-cat/wave/_001_80.png",
+      "bytes": 236505,
+      "sha256": "a5cefbc6ab0d70ca68006aa9e741ab38d46817292170a8e440d3303ffec82c61"
+    },
+    {
+      "path": "assets/fat-cat/wave/_002_80.png",
+      "bytes": 236259,
+      "sha256": "f29db448d3b6d2b9b3f438849f44ada66b693575de1347364a4fab514e2c90ab"
+    },
+    {
+      "path": "assets/fat-cat/wave/_003_80.png",
+      "bytes": 235362,
+      "sha256": "7ac9ac2624270d1041dd6f7884faad9e13f953c91758119fbbefccf428fd9106"
+    },
+    {
+      "path": "assets/fat-cat/wave/_004_80.png",
+      "bytes": 236164,
+      "sha256": "599e3b40dbfab48704127a1377f90c039b43dcccec5d3aedf060506977fb754f"
+    },
+    {
+      "path": "assets/fat-cat/wave/_005_80.png",
+      "bytes": 235814,
+      "sha256": "53de2d4d4cd19ddc7f48f85f067b225a774413fef836ffb8180f1a2eec14fa1b"
+    },
+    {
+      "path": "assets/fat-cat/wave/_006_80.png",
+      "bytes": 236389,
+      "sha256": "76baf5fef95a87cb475bd3344a7b801e93ea04f3a99845e7364c4ca5478ad394"
+    },
+    {
+      "path": "assets/fat-cat/wave/_007_80.png",
+      "bytes": 236831,
+      "sha256": "d778bf9396247c599db53fc20e2c8472e3eab185f0879e5e5fa7050ce16daa10"
+    },
+    {
+      "path": "assets/fat-cat/wave/_008_80.png",
+      "bytes": 236774,
+      "sha256": "dafa4062bc07133920e583c1d47884477d88708b95db3c6b5b832bcb85670717"
+    },
+    {
+      "path": "assets/fat-cat/wave/_009_80.png",
+      "bytes": 236662,
+      "sha256": "4dc3e89e7c2fa016c6323058cb0819bab70c77acf0dee137841e6b8ce070b31a"
+    },
+    {
+      "path": "assets/fat-cat/dead/_000_90.png",
+      "bytes": 217195,
+      "sha256": "ff43d5dc743a2a78070830688be6d3562da8054b4c778eb25903b23a8e078370"
+    },
+    {
+      "path": "assets/fat-cat/dead/_001_90.png",
+      "bytes": 227867,
+      "sha256": "9ffbc8a0aa1575fe7c76a181c9362332ed0781e2c6d4004eec90661ac9003b95"
+    },
+    {
+      "path": "assets/fat-cat/dead/_002_90.png",
+      "bytes": 235456,
+      "sha256": "c037c9e35c8342a229398e5d92d68dd9db9ceee799c4b31aee4ef708ffc4bc80"
+    },
+    {
+      "path": "assets/fat-cat/dead/_003_90.png",
+      "bytes": 238188,
+      "sha256": "6d2fe0459be00bdb74999455b38ac2a74e09974e8cc144eb75e545cef66bb176"
+    },
+    {
+      "path": "assets/fat-cat/dead/_004_90.png",
+      "bytes": 238946,
+      "sha256": "8ef6a75b66b13fc88b98d12a114f9fa9e9c2ddcd0052f4fc531958c8b3d399d0"
+    },
+    {
+      "path": "assets/fat-cat/dead/_005_90.png",
+      "bytes": 216160,
+      "sha256": "b98f3aa231578cc1aabe4a85320c120d23a5906cc39fb00eb097634f8da17bf5"
+    },
+    {
+      "path": "assets/fat-cat/dead/_006_90.png",
+      "bytes": 209031,
+      "sha256": "55ca42479278763a17e04338eab8f727fc8f684f3bcae1dea1997300a346e827"
+    },
+    {
+      "path": "assets/fat-cat/dead/_007_90.png",
+      "bytes": 208019,
+      "sha256": "5effe0b12c45043fcd934588d290d0e4d0c794735d02af8d9c446cdad7c252f2"
+    },
+    {
+      "path": "assets/fat-cat/dead/_008_90.png",
+      "bytes": 206908,
+      "sha256": "83ef48c5c564f04a1f64ee937c0db669dba6ec36cc769bdf16f0d3151cd271c7"
+    },
+    {
+      "path": "assets/fat-cat/dead/_009_90.png",
+      "bytes": 202423,
+      "sha256": "e493e83c4e88bba792acbb8c510680a38aefe5b7a89003623e17b84801d39647"
+    },
+    {
+      "path": "assets/fat-cat/dead/_010_90.png",
+      "bytes": 200694,
+      "sha256": "9416c984fc2febd8d1d223497daba81731666aae79c8b921d8f70fca48bb8097"
+    },
+    {
+      "path": "assets/fat-cat/dead/_011_90.png",
+      "bytes": 200694,
+      "sha256": "9416c984fc2febd8d1d223497daba81731666aae79c8b921d8f70fca48bb8097"
+    },
+    {
+      "path": "assets/fat-cat/dead/_012_90.png",
+      "bytes": 200694,
+      "sha256": "9416c984fc2febd8d1d223497daba81731666aae79c8b921d8f70fca48bb8097"
+    },
+    {
+      "path": "assets/fat-cat/dead/_013_90.png",
+      "bytes": 200694,
+      "sha256": "9416c984fc2febd8d1d223497daba81731666aae79c8b921d8f70fca48bb8097"
+    },
+    {
+      "path": "assets/fat-cat/dead/_014_900.png",
+      "bytes": 200694,
+      "sha256": "9416c984fc2febd8d1d223497daba81731666aae79c8b921d8f70fca48bb8097"
+    },
+    {
+      "path": "assets/fat-cat/hi/_000_1600.png",
+      "bytes": 219248,
+      "sha256": "afc22c191de4482e3b1f39383fa4f1600e757af169225f3142e8ae9cad116752"
+    },
+    {
+      "path": "assets/fat-cat/happy/_000_1600.png",
+      "bytes": 210169,
+      "sha256": "03d7c22c9c0ec344d9cb1b47370d6587a3d30f4292364277f2b956494a588e2f"
+    },
+    {
+      "path": "assets/fat-cat/grumpy/_000_1600.png",
+      "bytes": 217355,
+      "sha256": "96442c9650d0b2f5e814928e674d9849c24f8ab3ea1719b524fe91bf2f754344"
+    },
+    {
+      "path": "assets/fat-cat/tsk/_000_1600.png",
+      "bytes": 199305,
+      "sha256": "af142e084facadb1b0ae1f127a9afacce2894a14ecc1328b653a32c04c3b37b8"
+    },
+    {
+      "path": "assets/fat-cat/zombie/_000_1600.png",
+      "bytes": 246941,
+      "sha256": "1c6bb717c07a965788d36745ac2534ccc27dca11ae7be4db7dd3bd496a6a5c27"
+    }
+  ]
+}

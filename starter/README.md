@@ -230,7 +230,7 @@ Native Wayland placement and stacking support remain unverified.
 
 ## Pets
 
-VPet is the bundled pet, and the app is built for more. A pet is a folder of frames, a catalog, a
+VPet is the bundled pet, and **Fat Cat** (an orange cat, CC0 art by shuaa of megupets) downloads when chosen in Settings. The app is built for more. A pet is a folder of frames, a catalog, a
 preview and its own art terms under `assets/`, and a rebuild picks up every such folder with no code
 changes. Once two or more pets are installed, Settings → Pet → **Character** shows a tile per pet. The
 chosen pet appears the next time Agent Pet starts, and only its artwork is loaded. `--pet <id>` runs
@@ -239,7 +239,7 @@ instead. VPet ships with the app; other pets show their download size and downlo
 pack by pack against hashes the app already carries, with progress and Cancel in Settings. The app tells a pet what is happening through named cues (a session needs you, a turn finished,
 time for water), and each pet decides which of its animations answers each one. To make a pet, see
 [the pet guide](docs/pets.md) and the design records for [pet packs](docs/adr/0028-pet-packs.md),
-[cues](docs/adr/0029-cues.md) and [on-demand pets](docs/adr/0030-on-demand-pets.md).
+[cues](docs/adr/0029-cues.md) and [on-demand pets](docs/adr/0030-on-demand-pets.md), and [Fat Cat](docs/adr/0036-fat-cat-pet.md).
 
 ## Plugin packs
 
@@ -498,6 +498,8 @@ automatic updates.
   branch/merge skips remain in place; the version tag builds the release.
 
 ## Artwork and publishing
+
+Fat Cat's artwork is **Orange Fat Cat** by shuaa ([megupets](https://www.megupets.com)), released under [CC0 1.0](licenses/FAT-CAT-ARTWORK-TERMS.md). The rest of this section is about VPet's art.
 
 Artwork credit: **VUP-Simulator team**, via [LorisYounger/VPet](https://github.com/LorisYounger/VPet). See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and the [upstream artwork terms](licenses/VPET-ARTWORK-TERMS.md).
 
