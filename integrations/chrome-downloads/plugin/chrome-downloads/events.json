@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "rules": [
+    {"on": "custom:download_started", "say": "Chrome is downloading a file.", "cooldown_ms": 10000},
+    {"on": "custom:download_completed", "cue": "celebrate", "say": "Your download is ready!", "cooldown_ms": 1000},
+    {"on": "custom:download_interrupted", "say": "A download was interrupted. Check Chrome.", "cooldown_ms": 1000}
+  ]
+}

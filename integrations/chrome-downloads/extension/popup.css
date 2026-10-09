@@ -1,0 +1,7 @@
+body { width: 340px; margin: 18px; font: 14px system-ui; color: #242938; background: #f7f8fc; }
+h1 { font-size: 21px; margin-bottom: 8px; }
+button { cursor: pointer; border: 1px solid #bdc4db; border-radius: 6px; padding: 6px 10px; background: white; }
+article { margin-top: 12px; padding: 12px; background: white; border-radius: 8px; }
+strong { display: block; overflow-wrap: anywhere; }
+p { color: #586176; }
+progress { width: 100%; accent-color: #5265d9; }
