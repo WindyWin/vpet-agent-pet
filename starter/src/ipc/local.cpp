@@ -25,21 +25,32 @@ int eventCommand(const QStringList &args) {
     const bool hook = args.value(1) == "hook";
     QString error;
     auto fail = [&] { if (!hook) std::fprintf(stderr, "%s\n", qPrintable(error)); return hook ? 0 : 1; };
-    QString provider;
+    QString provider, custom;
     for (int i = 2; i < args.size(); ++i) {
         if (args[i] == "--provider" && i + 1 < args.size() && provider.isEmpty()) provider = args[++i];
+        else if (!hook && args[i] == "--custom" && i + 1 < args.size() && custom.isEmpty()) custom = args[++i];
         else if (hook && args[i] == "--registration" && args.value(i + 1) == "agent-pet-v1") ++i;
-        else { error = "Usage: agent-pet hook --provider claude|codex, or agent-pet emit [--provider claude|codex]; hook reads provider JSON; emit reads normalized JSON"; return fail(); }
+        else { error = "Usage: agent-pet hook --provider claude|codex, or agent-pet emit [--provider claude|codex|custom | --custom NAME]; hook reads provider JSON; emit reads normalized JSON"; return fail(); }
     }
-    if ((hook && provider.isEmpty()) || (!provider.isEmpty() && provider != "claude" && provider != "codex")) {
-        error = "Expected provider claude or codex"; return fail();
+    if ((hook && provider.isEmpty()) || (!provider.isEmpty() && provider != "claude" && provider != "codex" && (hook || provider != "custom"))
+        || (!custom.isEmpty() && !provider.isEmpty() && provider != "custom")) {
+        error = !custom.isEmpty() ? "--custom sends provider custom only"
+              : hook ? "Expected provider claude or codex" : "Expected provider claude, codex or custom";
+        return fail();
     }
     const int inputLimit = hook ? 1024 * 1024 : 8192;
     QByteArray data;
-    if (!platform::readHookInput(inputLimit, data, error)) return fail();
-    auto doc = QJsonDocument::fromJson(data);
-    if (!doc.isObject()) { error = "Expected normalized JSON event"; return fail(); }
-    auto object = doc.object();
+    QJsonObject object;
+    if (!custom.isEmpty()) {
+        // A custom event needs no input: the name says it all (docs/events.md).
+        object = {{"version", 1}, {"provider", "custom"}, {"session_id", "emit"}, {"kind", "custom"}, {"name", custom}};
+        provider = "custom";
+    } else {
+        if (!platform::readHookInput(inputLimit, data, error)) return fail();
+        auto doc = QJsonDocument::fromJson(data);
+        if (!doc.isObject()) { error = "Expected normalized JSON event"; return fail(); }
+        object = doc.object();
+    }
     if (hook) {
         object = normalizeHook(provider, object, QDateTime::currentMSecsSinceEpoch());
         if (object.isEmpty()) return 0;

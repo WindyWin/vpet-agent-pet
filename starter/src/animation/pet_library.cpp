@@ -1,4 +1,5 @@
 #include "pet_library.h"
+#include "version.h"
 #include <QCoreApplication>
 #include <QCryptographicHash>
 #include <QDebug>
@@ -14,6 +15,7 @@
 #include <QSaveFile>
 #include <QSet>
 #include <QStandardPaths>
+#include <algorithm>
 #include <utility>
 
 namespace pet {
@@ -198,7 +200,9 @@ bool PetLibrary::activate(const QString &id, QString *error) {
     if (!error_.isEmpty()) return fail(error_);
     if (info(id).id.isEmpty()) return fail("Unknown pet or invalid pet.json: " + id);
     QString reason;
-    const auto catalog = Catalog::load(root(), id, &reason);
+    auto source = Catalog::read(root(), id, &reason);
+    if (!source.valid()) return fail(reason);
+    auto catalog = Catalog::build(source, &reason);
     if (!catalog.valid()) return fail(reason);
     if (const auto broken = catalog.contractError(); !broken.isEmpty()) return fail(broken);
     auto rollBack = [&](const QString &why) {
@@ -259,8 +263,31 @@ bool PetLibrary::activate(const QString &id, QString *error) {
         }
     // Downloaded packs are verified when stored, so finding them all complete is worth one stamp.
     if (stored && stamp(id) != tree.root) markDownloaded(id, nullptr);
+    // Packs check their own frames, which are files rather than resources.
+    if (!pluginFolder_.isEmpty()) {
+        loadedPlugins_ = plugins::scan(pluginFolder_, AGENT_PET_VERSION);
+        rules_ = {};
+        plugins::apply(source, id, enabledPlugins_, loadedPlugins_, &rules_);
+        if (std::any_of(loadedPlugins_.begin(), loadedPlugins_.end(), [](const PluginPack &pack) { return pack.status == PluginPack::Applied; }))
+            catalog = Catalog::build(source, nullptr);
+    }
     active_ = id;
     catalog_ = catalog;
     return true;
+}
+void PetLibrary::setPlugins(const QString &folder, const QStringList &enabled) {
+    pluginFolder_ = folder.isEmpty() ? plugins::defaultFolder() : folder;
+    enabledPlugins_ = enabled;
+}
+QVector<PluginPack> PetLibrary::plugins() const {
+    auto packs = plugins::scan(pluginFolder(), AGENT_PET_VERSION);
+    for (auto &pack : packs)
+        for (const auto &loaded : loadedPlugins_)
+            if (loaded.id == pack.id && pack.status != PluginPack::Invalid
+                && (loaded.status == PluginPack::Applied || loaded.status == PluginPack::Rejected || loaded.status == PluginPack::OtherPet)) {
+                pack.status = loaded.status;
+                pack.error = loaded.error;
+            }
+    return packs;
 }
 }

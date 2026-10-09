@@ -12,10 +12,11 @@ One UTF-8 JSON object per Unix datagram, at most 8192 bytes:
 {"version":1,"provider":"claude","session_id":"example","event_id":"delivery-1","kind":"tool_start","timestamp_ms":1791072000000,"tool_id":"call-1","activity":"reading","project_path":"/projects/example","parent_id":"parent"}
 ```
 
-Required fields: `version` (integer 1), `provider` (`claude` or `codex`),
+Required fields: `version` (integer 1), `provider` (`claude` or `codex`; `custom` for a
+[custom event](#custom-events)),
 `session_id`, `event_id`, `kind`, and positive integer Unix `timestamp_ms`.
 Optional fields: `tool_id`, `parent_id`, `project_path`, `activity`, `reason`,
-`risky`, `waiting`, and the host fields below.
+`risky`, `waiting`, `name` (custom events only), and the host fields below.
 `tool_start` and `tool_end` require `tool_id`; activity is `reading` or `working`
 (default working). `reason` is allowed on `attention`, as `approval` or `input`
 (without it alerts say "Needs attention"), and on `turn_failed`, as `limit` (the
@@ -31,7 +32,7 @@ arguments, output, or raw provider payload is retained or transmitted; `risky` i
 a one-bit judgment made inside the hook.
 
 Kinds: `session_start`, `prompt`, `tool_start`, `tool_end`, `attention`, `error`,
-`turn_finished`, `turn_failed`, `interrupt`, `session_end`. A finished turn indicates only that
+`turn_finished`, `turn_failed`, `interrupt`, `session_end`, and [`custom`](#custom-events). A finished turn indicates only that
 it stopped; it says nothing about success or test results. A failed turn ended on a
 provider error; with a `limit` or `billing` reason the provider is out of quota.
 
@@ -43,6 +44,38 @@ command generates a UUID per invocation. This cannot deduplicate independently
 retried invocations; adapters should supply a stable delivery ID when possible.
 Missing timestamps are stamped at callback receipt. These fallback policies do
 not infer provider coverage; see the M4 mapping and acceptance record.
+
+### Custom events
+
+A script, build or CI job can tell the pet that something happened with a `custom` event. It is
+still protocol version 1 and an ordinary datagram under the same limits. An older pet drops the
+unknown kind without a word: `emit` only knows that the datagram was delivered, as for any event.
+The hook never sends custom events.
+
+```bash
+agent-pet emit --custom deploy_succeeded
+printf '%s\n' '{"version":1,"provider":"custom","session_id":"ci","kind":"custom","name":"tests_failed"}' | agent-pet emit
+```
+
+`--custom NAME` builds the event (session `emit`) without reading input. A custom event has the
+provider `custom` (and only custom events do), the required `name`, `[a-z0-9_-]{1,64}`, and the
+identity every event has: `session_id` (who sent it, free text such as `ci`), `event_id` and
+`timestamp_ms`. `tool_id`, `parent_id`, `project_path`, `activity`, `reason`, `risky`, `waiting` and
+the host fields are rejected. No payload travels with it.
+
+A custom event is a **reaction, not session state**. It never reaches `Sessions`: it creates no
+session, row, alert or badge, does not change the aggregate state, the recap or the wellness
+timers, and has no effect unless an enabled [plugin pack](plugins.md#eventsjson) has a rule for its
+name. Then the pet plays the rule's state and/or says its remark as a Surprise
+([policy table](adr/0031-behavior-runtime.md)): it is kept away while a session needs the user,
+is out of quota or just failed, while the pet is held or hidden, and while another surprise
+plays, and then it is dropped. It is never queued, so a burst cannot build a backlog.
+
+A noisy script cannot keep the pet reacting: after a reaction plays, its name rests for the rule's
+`cooldown_ms` (10 s by default), at most 12 reactions play a minute in all, and an event whose
+`timestamp_ms` is more than a minute from the pet's clock is ignored. A reaction that was held
+off does not start the rest. Event IDs are not tracked for custom events, since repeating one is
+harmless.
 
 ### Host fields
 

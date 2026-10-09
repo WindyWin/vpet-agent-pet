@@ -213,6 +213,7 @@ Pets that are not bundled download, when chosen in Settings, into
 `~/.local/share/agent-pet/pets/` (`~/Library/Application Support/agent-pet/pets` on
 macOS, `%APPDATA%\agent-pet\pets` on Windows), so they need no write access to the
 installation; packs no installed pet uses any more are removed at the next start.
+[Plugin packs](plugins.md) you add live beside them in `plugins/`; updates never change them.
 `result.txt` records the last installation result. Update checks send no session,
 project, or agent data. They contact GitHub over HTTPS; downloads are matched
 against GitHub's SHA-256 asset digest. A component manifest is verified against

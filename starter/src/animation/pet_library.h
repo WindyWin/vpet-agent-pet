@@ -1,5 +1,6 @@
 #pragma once
 #include "catalog.h"
+#include "plugins.h"
 #include <QString>
 #include <QStringList>
 #include <QVector>
@@ -45,7 +46,16 @@ public:
     int prune() const;
     // Validates the pet's catalog, including the core state contract, then registers its packs. On failure
     // nothing it tried stays registered and `error` says why, in English. A library activates one pet at most.
+    // Enabled plugin packs for the pet are merged in last; a pack that fails is left out and never fails the pet.
     bool activate(const QString &id, QString *error);
+    // Plugin packs (plugins.h) that activate() merges into the pet: those in `enabled`, from `folder` (empty: the
+    // default). Without this call no pack loads.
+    void setPlugins(const QString &folder, const QStringList &enabled);
+    QString pluginFolder() const { return pluginFolder_.isEmpty() ? plugins::defaultFolder() : pluginFolder_; }
+    // The packs in the plugin folder now, each with what activation made of it: one added since is Off (or Invalid).
+    QVector<PluginPack> plugins() const;
+    // The reaction rules (events.json) of the packs activate() applied, in pack id order; empty without any.
+    const EventRules &eventRules() const { return rules_; }
     QString active() const { return active_; }
     const Catalog &catalog() const { return catalog_; } // The active pet's; empty before activate().
     QString root() const { return ":" + mapRoot_; } // Pets are at <root>/assets/<id>/.
@@ -53,8 +63,11 @@ private:
     QString stamp(const QString &id) const;
     // Re-hashes the pet's packs in the store, removing any that do not match, and drops its stamp.
     void repair(const QString &id) const;
-    QString index_, mapRoot_, store_, error_, active_;
+    QString index_, mapRoot_, store_, error_, active_, pluginFolder_;
+    QStringList enabledPlugins_;
+    QVector<PluginPack> loadedPlugins_; // As activate() found them.
     Catalog catalog_;
+    EventRules rules_;
     QStringList packs_; // Registered pack files.
     bool indexRegistered_ = false;
 };

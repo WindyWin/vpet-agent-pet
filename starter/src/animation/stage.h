@@ -10,8 +10,9 @@ namespace pet {
 // Shows what the behavior runtime chose on a Player and reports back how it went (docs/adr/0031-behavior-runtime.md).
 // It owns the runtime: producers submit through runtime() and hear back through outcome() and finished().
 //
-// A request plays its producer's drawn state, else the state a state cue maps to, else a draw from a reaction
-// cue's pool, else a state of the pet's own (a fidget, a move, an edge); with none of these it is unavailable.
+// A request plays its producer's drawn state, else the state a state cue maps to, else what the pet's rule table
+// draws for a trigger of that name (a reminder's art), else a state of the pet's own (a fidget, a move, an edge);
+// with none of these it is unavailable.
 // The state's entry starts it; its end, or a state ending by itself into the next one, completes it; any other
 // state entered interrupts it. The pet being held or let go is the runtime's `handled` context.
 class Stage : public QObject {
@@ -24,7 +25,7 @@ public:
     behavior::Runtime &runtime() { return runtime_; }
     // Changes the shared context; the runtime acts on it at once.
     void update(const std::function<void(behavior::Context &)> &change);
-    // Draws from a reaction cue's pool when the producer did not; replaceable for tests.
+    // Draws from the rule table when the producer did not; replaceable for tests.
     void setRandom(Random random) { random_ = random ? std::move(random) : systemRandom(); }
 signals:
     void outcome(const pet::behavior::Intent &intent, pet::behavior::Outcome outcome);

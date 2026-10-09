@@ -26,40 +26,40 @@ QStringList EasterEggs::occasionsAt(const QDateTime &local, const QString &birth
     if (date.dayOfWeek() == Qt::Friday && hour >= fridayEveningFrom) occasions << "friday-evening";
     return occasions;
 }
-QString EasterEggs::draw(const QString &cue) { return drawReaction(player_.pool(cue), random_); }
 QString EasterEggs::fidget() {
     if (!enabled_) return {};
     const auto now = clock_();
     const auto occasions = occasionsAt(now, birthday_);
     if (greetedOn_ != now.date()) { greetedOn_ = now.date(); greeted_.clear(); }
+    // Fidgets are silent: the rules of these triggers play a state and say nothing.
     QStringList days;
-    for (const QString occasion : {"birthday", "may20"})
-        if (occasions.contains(occasion) && !player_.pool(occasion).isEmpty()) days << occasion;
+    for (const auto &[occasion, trigger] : {std::pair{"birthday", "birthday-greeting"}, std::pair{"may20", "may20"}})
+        if (occasions.contains(occasion) && answers(trigger)) days << trigger;
     // The first fidgets of the day greet with each occasion in turn; afterwards they come up now and then.
-    for (const auto &occasion : days)
-        if (!greeted_.contains(occasion)) { greeted_.insert(occasion); return draw(occasion); }
-    for (const auto &occasion : days)
-        if (random_(occasionOneIn) == 0) return draw(occasion);
-    if (occasions.contains("late-night") && !player_.pool("late-night").isEmpty() && random_(lateNightOneIn) == 0)
-        return draw("late-night");
+    for (const auto &trigger : days)
+        if (!greeted_.contains(trigger)) { greeted_.insert(trigger); return draw(trigger)->state; }
+    for (const auto &trigger : days)
+        if (random_(occasionOneIn) == 0) return draw(trigger)->state;
+    if (occasions.contains("late-night") && answers("late-night") && random_(lateNightOneIn) == 0)
+        return draw("late-night")->state;
     return {};
 }
 QString EasterEggs::celebration(qint64 turnMs) {
     if (!enabled_) return {};
-    auto has = [this](const QString &cue) { return !player_.pool(cue).isEmpty(); };
-    if (turnMs >= longTurnMs && has("long-turn")) return "long-turn";
+    if (turnMs >= longTurnMs && answers("long-turn")) return "long-turn";
     const auto now = clock_();
     const auto occasions = occasionsAt(now, birthday_);
-    if (occasions.contains("birthday") && has("birthday") && cheeredOn_ != now.date()) return "birthday";
-    if (occasions.contains("friday-evening") && has("friday-evening")) return "friday-evening";
+    if (occasions.contains("birthday") && answers("birthday") && cheeredOn_ != now.date()) return "birthday";
+    if (occasions.contains("friday-evening") && answers("friday-evening")) return "friday-evening";
     return {};
 }
-bool EasterEggs::surprise(const QString &cue, bool evenWhenOff) {
+bool EasterEggs::surprise(const QString &trigger, bool evenWhenOff) {
     if ((!enabled_ && !evenWhenOff) || !stage_) return false;
-    const auto state = draw(cue);
-    if (state.isEmpty()) return false;
+    const auto reaction = draw(trigger);
+    if (!reaction || reaction->state.isEmpty()) return false;
     using namespace behavior;
-    return stage_->runtime().submit({"eggs", cue, cue, Policy::Surprise, Lifetime::OneShot, 0, {}, state}) == Submission::Admitted;
+    return stage_->runtime().submit({"eggs", trigger, trigger, Policy::Surprise, Lifetime::OneShot, 0, {}, reaction->state, reaction->say})
+        == Submission::Admitted;
 }
 bool EasterEggs::surprising() const {
     const auto *showing = stage_ ? stage_->runtime().showing() : nullptr;

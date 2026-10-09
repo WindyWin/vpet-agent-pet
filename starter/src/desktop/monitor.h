@@ -6,6 +6,7 @@
 #include "session_list.h"
 #include "sessions/alerts.h"
 #include "sessions/recap.h"
+#include <QHash>
 #include <QTimer>
 #include <functional>
 #include <memory>
@@ -21,7 +22,11 @@ public:
     explicit Monitor(PetWindow &window, std::shared_ptr<hosts::FocusService> focus = nullptr);
     // Takes a receiver that already holds the single-instance lock.
     void listen(std::unique_ptr<Receiver> receiver);
+    // True when the event changed anything: a session event that was accepted, or a custom event that made the pet react.
     bool apply(const Event &event, qint64 now);
+    // Custom events, and agent events once they are applied, are answered by the player's rule table (the plugin packs'
+    // events.json). They are reactions only: the runtime still keeps them away from a session that needs the user.
+    Random random = systemRandom(); // Which rule answers when several match; tests script it.
     void update(qint64 now);
     void stop();
     void restoreSessions(const QString &path);
@@ -61,6 +66,7 @@ private:
     void syncBehavior(qint64 now); // What the monitor knows that decides when a reminder may show.
     void outcome(const behavior::Intent &intent, behavior::Outcome outcome);
     void answered();
+    bool react(const QString &trigger, qint64 stamp, qint64 now);
     void rest();
     void dropReminder(); // Hides a shown reminder or countdown without counting it as answered.
     void say(const QString &text, const QString &details = {}, int ms = NoteBubble::defaultMs);

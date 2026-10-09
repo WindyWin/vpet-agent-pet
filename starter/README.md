@@ -241,6 +241,24 @@ time for water), and each pet decides which of its animations answers each one. 
 [the pet guide](docs/pets.md) and the design records for [pet packs](docs/adr/0028-pet-packs.md),
 [cues](docs/adr/0029-cues.md) and [on-demand pets](docs/adr/0030-on-demand-pets.md).
 
+## Plugin packs
+
+Plugin packs add animations to a pet without rebuilding the app: new states from their own PNG frames,
+more ways to celebrate, snack or fidget, and, only when a pack declares it, replacements for the pet's own
+animations. A pack is a folder of JSON and PNG files in the plugins folder (`~/.local/share/agent-pet/plugins/`
+on Linux). Settings → **Plugins** lists each pack with its author, license and status, opens the folder, and
+turns packs on or off for the next start. A pack that fails validation is left out with the reason shown,
+and the pet starts without it. To make one, see [the plugin guide](docs/plugins.md) and its
+[design record](docs/adr/0033-plugin-packs.md).
+
+A pack can also react to events: `agent-pet emit --custom deploy_succeeded` from a script or CI job
+makes the pet play the pack's animation and say its remark, and a pack can answer the agent's own events,
+such as a finished turn. These reactions never change what the sessions show and give way to a session
+that needs you; see [custom events](docs/events.md#custom-events) and its
+[design record](docs/adr/0034-custom-events.md). The pet's own moments are rules in the same table, so a
+pack can also answer the danger startle, the Konami code, a milestone or the lunch reminder with its own art
+([the pet's own triggers](docs/plugins.md#the-pets-own-triggers), [design record](docs/adr/0035-built-in-triggers-as-rules.md)).
+
 ## Language
 
 The pet speaks English or Vietnamese (Tiếng Việt). By default it follows the system
