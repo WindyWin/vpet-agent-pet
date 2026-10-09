@@ -261,8 +261,9 @@ bool endsItself(const Catalog &catalog, const QString &state) {
     return found != catalog.animations.constEnd() && state != "idle" && found->after == "idle"
         && (found->mode == "once" || (found->mode == "phased" && found->loops > 0));
 }
-// Reads <folder>/events.json, if there is one: rules that react to custom or agent events (docs/plugins.md). A rule can
-// play any state of the merged `catalog` that ends by itself, as a reaction pool's entries do.
+// Reads <folder>/events.json, if there is one: rules that react to custom or agent events, or answer one of the pet's own
+// triggers (docs/plugins.md). A rule can play any state of the merged `catalog` that ends by itself, as a reaction pool's
+// entries do, or draw from one of its pools.
 bool readRules(const PluginPack &pack, const Catalog &catalog, QVector<EventRule> *rules, QString *error) {
     auto fail = [error](const QString &reason) {
         *error = "events.json: " + reason;
@@ -283,7 +284,7 @@ bool readRules(const PluginPack &pack, const Catalog &catalog, QVector<EventRule
     const auto list = document.value("rules").toArray();
     if (list.isEmpty() || list.size() > EventRules::maxRulesPerPack)
         return fail(QString("a pack needs between 1 and %1 rules.").arg(EventRules::maxRulesPerPack));
-    static const QSet<QString> keys{"on", "state", "say", "weight", "cooldown_ms"};
+    static const QSet<QString> keys{"on", "state", "cue", "say", "weight", "cooldown_ms"};
     for (const auto &value : list) {
         const auto object = value.toObject();
         for (auto it = object.begin(); it != object.end(); ++it)
@@ -292,12 +293,20 @@ bool readRules(const PluginPack &pack, const Catalog &catalog, QVector<EventRule
         rule.pack = pack.id;
         rule.on = object.value("on").toString();
         if (!EventRules::validTrigger(rule.on))
-            return fail(QString("Invalid \"on\": %1. Use custom:<name> or one of %2.").arg(rule.on, EventRules::agentEvents().join(", ")));
+            return fail(QString("Invalid \"on\": %1. Use custom:<name>, one of %2, or a trigger of the pet such as danger or milestone.")
+                            .arg(rule.on, EventRules::agentEvents().join(", ")));
+        const auto *trigger = findTrigger(rule.on);
         if (object.contains("state")) {
             rule.state = object.value("state").toString();
             // Like a reaction pool's entries: it must end by itself and hand back to idle.
             if (!endsItself(catalog, rule.state))
                 return fail("the state of a rule must be a state that ends by itself and returns to idle: " + rule.state);
+        }
+        if (object.contains("cue")) {
+            rule.cue = object.value("cue").toString();
+            if (!rule.state.isEmpty()) return fail("a rule plays a state or a cue's pool, not both: " + rule.on);
+            // Pools are only ever added to or replaced, never emptied, so a later pack cannot take this one away.
+            if (catalog.pools.value(rule.cue).isEmpty()) return fail("the pet has no pool for the cue of a rule: " + rule.cue);
         }
         if (object.contains("say")) {
             rule.say = object.value("say").toString();
@@ -306,10 +315,17 @@ bool readRules(const PluginPack &pack, const Catalog &catalog, QVector<EventRule
             for (const QChar c : std::as_const(rule.say))
                 if (c.category() == QChar::Other_Control) return fail("say cannot hold control characters.");
         }
-        if (rule.state.isEmpty() && rule.say.isEmpty()) return fail("a rule needs a state, a say, or both: " + rule.on);
+        if (trigger) {
+            // The pet raises its own triggers when the moment comes and plays them its way: a rule chooses the art.
+            if (rule.state.isEmpty() && rule.cue.isEmpty()) return fail("a rule for a trigger of the pet needs a state or a cue: " + rule.on);
+            if (!rule.say.isEmpty() && !trigger->speaks())
+                return fail("fidgets and reminders say nothing of a pack's, so a rule for " + rule.on + " cannot say.");
+            if (object.contains("cooldown_ms")) return fail("the pet paces its own triggers, so a rule for " + rule.on + " takes no cooldown_ms.");
+        } else if (rule.state.isEmpty() && rule.cue.isEmpty() && rule.say.isEmpty())
+            return fail("a rule needs a state or a cue, a say, or both: " + rule.on);
         rule.weight = object.contains("weight") ? object.value("weight").toInt(0) : 1;
         if (rule.weight < 1 || rule.weight > EventRules::maxWeight) return fail("weight must be 1 to 1000.");
-        rule.cooldownMs = EventRules::defaultCooldownMs;
+        rule.cooldownMs = trigger ? 0 : EventRules::defaultCooldownMs;
         if (object.contains("cooldown_ms")) {
             // Checked as the number it is: converting an out-of-range double to an integer is undefined.
             const double cooldown = object.value("cooldown_ms").toDouble(-1);

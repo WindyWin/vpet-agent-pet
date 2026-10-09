@@ -1,5 +1,6 @@
 #pragma once
 #include "catalog.h"
+#include "event_rules.h"
 #include <QCache>
 #include <QObject>
 #include <QPixmap>
@@ -68,6 +69,12 @@ public:
     bool hasMood(const QString &mood, const QString &state) const { return catalog_.moods.value(mood).contains(state); }
     // The weighted states a reaction cue ("celebrate", "snack", "danger", ...) draws from; empty when the pet maps none.
     QVector<Reaction> pool(const QString &cue) const { return catalog_.pools.value(cue); }
+    // What plays for a trigger (src/animation/triggers.json) or an event: the pet's own rules for its pools, then the
+    // plugin packs' (events.json). The player built from the library starts with the library's.
+    EventRules &rules() { return rules_; }
+    const EventRules &rules() const { return rules_; }
+    // The pet's own rules followed by `packs`, with no reaction played yet.
+    void setRules(const QVector<EventRule> &packs);
     const Touch &touch() const { return catalog_.touch; }
     bool isTouch(const QString &state) const { return catalog_.touchStates.contains(state); }
     // The state for a press at `point` on a square widget `side` pixels wide; empty off every region.
@@ -119,6 +126,7 @@ private:
     QString resumeTarget() const;
     QStringList choose(const QString &state);
     Catalog catalog_; // The pet's validated catalog; playback never changes it.
+    EventRules rules_;
     std::function<bool()> reactionGate_;
     Decoration decoration_ = Decoration::None;
     QString welcome_, lingerLast_; // `welcome_`: the enter reaction waiting for the first loop pass.

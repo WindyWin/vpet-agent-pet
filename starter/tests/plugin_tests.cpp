@@ -2,6 +2,7 @@
 #include "animation/pet_library.h"
 #include "animation/player.h"
 #include "animation/plugins.h"
+#include "animation/stage.h"
 #include "desktop/monitor.h"
 #include "desktop/pet_window.h"
 #include "desktop/plugin_list.h"
@@ -417,9 +418,10 @@ private slots:
         pet::EventRules rules;
         pet::plugins::apply(source, "vpet", {"example"}, packs, &rules);
         QCOMPARE(status(packs, "example"), QString("applied"));
-        QCOMPARE(rules.size(), 2);
+        QCOMPARE(rules.size(), 3);
         QCOMPARE(rules.pick("custom:deploy_succeeded", 0)->state, QString("example.heart"));
         QCOMPARE(rules.pick("custom:tests_failed", 0)->say, QString("Oh no, the tests failed."));
+        QCOMPARE(rules.draw("konami")->say, QString("You found me!"));
         const auto catalog = pet::Catalog::build(source, &error);
         QVERIFY2(catalog.valid(), qPrintable(error));
         QCOMPARE(catalog.contractError(), QString());
@@ -501,7 +503,16 @@ private slots:
             {{rule("prompt", "wave.dance", {{"say", ""}})}, "say must be"},
             {{rule("prompt", "wave.dance", {{"say", QString(121, 'x')}})}, "say must be"},
             {{rule("prompt", "wave.dance", {{"say", "a\nb"}})}, "control"},
-            {{QJsonObject{{"on", "prompt"}}}, "needs a state, a say"},
+            {{QJsonObject{{"on", "prompt"}}}, "needs a state or a cue, a say"},
+            {{rule("prompt", "wave.dance", {{"cue", "celebrate"}})}, "not both"},
+            {{QJsonObject{{"on", "prompt"}, {"cue", "danger"}}}, "no pool for the cue of a rule: danger"}, // The test pet maps none.
+            {{QJsonObject{{"on", "prompt"}, {"cue", "nonsense"}}}, "no pool"},
+            {{QJsonObject{{"on", "prompt"}, {"cue", 5}}}, "no pool"},
+            // The pet's own triggers: a rule chooses their art, and the pet keeps their timing and their words.
+            {{QJsonObject{{"on", "danger"}, {"say", "Whoa"}}}, "needs a state or a cue: danger"},
+            {{rule("may20", "wave.dance", {{"say", "Hi"}})}, "cannot say"},
+            {{rule("lunch", "wave.dance", {{"say", "Hi"}})}, "cannot say"},
+            {{rule("danger", "wave.dance", {{"cooldown_ms", 5000}})}, "takes no cooldown_ms"},
             {{rule("prompt", "wave.dance", {{"weight", 0}})}, "weight"},
             {{rule("prompt", "wave.dance", {{"weight", 1001}})}, "weight"},
             {{rule("prompt", "wave.dance", {{"cooldown_ms", 999}})}, "cooldown_ms"},
@@ -648,14 +659,10 @@ private slots:
         const auto pool = window.player().pool("celebrate");
         QVERIFY(!pool.isEmpty());
         const auto state = pool.first().state;
-        monitor.setRules([&] {
-            pet::EventRules rules;
-            rules.add({{"ci", "custom:deploy_succeeded", state, "Shipped!", 1, 5000},
-                       {"ci", "custom:quiet", {}, "Just a remark.", 1, 5000},
-                       {"ci", "custom:tests_failed", state, {}, 1, 5000},
-                       {"ci", "turn_finished", state, "Done.", 1, 5000}});
-            return rules;
-        }());
+        window.player().setRules({{"ci", "custom:deploy_succeeded", state, "Shipped!", 1, 5000},
+                                  {"ci", "custom:quiet", {}, "Just a remark.", 1, 5000},
+                                  {"ci", "custom:tests_failed", state, {}, 1, 5000},
+                                  {"ci", "turn_finished", state, "Done.", 1, 5000}});
         const qint64 now = QDateTime::currentMSecsSinceEpoch();
         int serial = 0;
         auto custom = [&](const QString &name, qint64 at) {
@@ -694,9 +701,7 @@ private slots:
         window.eggs().setClock([] { return QDateTime(QDate(2026, 10, 7), QTime(14, 0)); });
         pet::Monitor monitor(window);
         const auto state = window.player().pool("celebrate").first().state;
-        pet::EventRules rules;
-        rules.add({{"ci", "custom:go", state, "Hi", 1, 5000}});
-        monitor.setRules(rules);
+        window.player().setRules({{"ci", "custom:go", state, "Hi", 1, 5000}});
         const qint64 now = QDateTime::currentMSecsSinceEpoch();
         pet::Event ask{"claude", "s", "1", "attention", {}, {}, "/project", {}, now};
         ask.reason = "input";
@@ -724,9 +729,7 @@ private slots:
         pet::PetWindow window(nullptr, directory.path() + "/preferences.json"); window.show();
         window.eggs().setClock([] { return QDateTime(QDate(2026, 10, 7), QTime(14, 0)); });
         pet::Monitor monitor(window);
-        pet::EventRules rules;
-        rules.add({{"fun", "prompt", window.player().pool("celebrate").first().state, "On it!", 1, 5000}});
-        monitor.setRules(rules);
+        window.player().setRules({{"fun", "prompt", window.player().pool("celebrate").first().state, "On it!", 1, 5000}});
         const qint64 now = QDateTime::currentMSecsSinceEpoch();
         // The sessions accept a callback that is minutes late, but it is no longer news.
         pet::Event late{"claude", "late", "1", "prompt", {}, {}, "/project", {}, now - 5 * 60 * 1000};
@@ -742,9 +745,7 @@ private slots:
         window.eggs().setClock([] { return QDateTime(QDate(2026, 10, 7), QTime(14, 0)); });
         pet::Monitor monitor(window);
         const auto state = window.player().pool("celebrate").first().state;
-        pet::EventRules rules;
-        rules.add({{"fun", "prompt", state, "On it!", 1, 5000}});
-        monitor.setRules(rules);
+        window.player().setRules({{"fun", "prompt", state, "On it!", 1, 5000}});
         const qint64 now = QDateTime::currentMSecsSinceEpoch();
         // A duplicate or stale event the sessions refuse is not an occurrence either.
         pet::Event prompt{"claude", "s", "1", "prompt", {}, {}, "/project", {}, now};
@@ -761,6 +762,173 @@ private slots:
         prompt.id = "3"; prompt.timestamp = now + 30;
         QVERIFY(monitor.apply(prompt, now + 30)); // Accepted by the sessions, but the rule is resting.
         QVERIFY(!monitor.note().isVisible());
+    }
+    void triggersMatchTheCueVocabulary() {
+        // The file as written: known classes and keys only, since an unknown class would read as a surprise.
+        QFile file(PET_SOURCE "/src/animation/triggers.json");
+        QVERIFY(file.open(QIODevice::ReadOnly));
+        const auto entries = QJsonDocument::fromJson(file.readAll()).object()["triggers"].toObject();
+        QCOMPARE(entries.size(), pet::triggers().size());
+        for (auto it = entries.begin(); it != entries.end(); ++it) {
+            const auto entry = it.value().toObject();
+            QCOMPARE(entry.keys(), (QStringList{"class", "cues"}));
+            QVERIFY2(QStringList({"surprise", "celebration", "fidget", "reminder"}).contains(entry["class"].toString()), qPrintable(it.key()));
+        }
+        QSet<QString> reached;
+        QString last;
+        for (const auto &trigger : pet::triggers()) {
+            QVERIFY(trigger.name > last); // Sorted, for findTrigger().
+            last = trigger.name;
+            QCOMPARE(pet::findTrigger(trigger.name), &trigger);
+            QVERIFY(pet::EventRules::validTrigger(trigger.name));
+            QVERIFY(!pet::EventRules::agentEvents().contains(trigger.name) && !trigger.name.contains(':'));
+            QVERIFY2(!trigger.cues.isEmpty(), qPrintable(trigger.name));
+            for (const auto &cue : trigger.cues) {
+                const auto *known = pet::findCue(cue);
+                QVERIFY2(known && known->reaction, qPrintable(trigger.name + " draws from " + cue));
+                reached.insert(cue);
+            }
+        }
+        // Every reaction cue the app raises belongs to a trigger; plugin-event plays the rule's own state.
+        for (const auto &cue : pet::cues())
+            if (cue.reaction && cue.name != "plugin-event") QVERIFY2(reached.contains(cue.name), qPrintable(cue.name));
+        QVERIFY(!pet::findTrigger("prompt")); QVERIFY(!pet::findTrigger("plugin-event"));
+        QCOMPARE(pet::findTrigger("lunch")->cues, (QStringList{"lunch", "snack", "celebrate"}));
+        QCOMPARE(pet::findTrigger("birthday-greeting")->cues, QStringList{"birthday"});
+        QCOMPARE(pet::findTrigger("birthday")->kind, pet::Trigger::Celebration);
+        QVERIFY(pet::findTrigger("danger")->speaks()); QVERIFY(pet::findTrigger("milestone")->speaks());
+        QVERIFY(!pet::findTrigger("may20")->speaks()); QVERIFY(!pet::findTrigger("water")->speaks());
+    }
+    void thePetsOwnRulesFollowItsPools() {
+        QString error;
+        const auto test = pet::Catalog::load(base_.path(), "test", &error);
+        QVERIFY2(test.valid(), qPrintable(error));
+        // The test pet maps only celebrate, which the lunch reminder falls back to; nothing answers the rest.
+        const pet::EventRules own(test.pools);
+        QVERIFY(own.answers("celebrate")); QVERIFY(own.answers("lunch"));
+        QVERIFY(!own.answers("danger")); QVERIFY(!own.answers("snack")); QVERIFY(!own.answers("custom:go"));
+        QCOMPARE(own.draw("lunch")->state, QString("cheer"));
+        QCOMPARE(own.rules().first().pack, QString());
+        QVERIFY(!pet::EventRules().answers("celebrate")); // No pools, no rules of its own.
+        // On VPet each trigger draws exactly what its pool would, with the same numbers: the table changes nothing.
+        auto source = pet::Catalog::read(PET_SOURCE, "vpet", &error);
+        const auto vpet = pet::Catalog::build(source, &error);
+        QVERIFY2(vpet.valid(), qPrintable(error));
+        const pet::EventRules rules(vpet.pools);
+        int answered = 0;
+        for (const auto &trigger : pet::triggers()) {
+            QString cue;
+            for (const auto &candidate : trigger.cues) if (cue.isEmpty() && !vpet.pools.value(candidate).isEmpty()) cue = candidate;
+            QCOMPARE(rules.answers(trigger.name), !cue.isEmpty());
+            if (cue.isEmpty()) continue;
+            ++answered;
+            for (int roll = 0; roll < 7; ++roll) {
+                const pet::Random random = [roll](int bound) { return roll % bound; };
+                QCOMPARE(rules.draw(trigger.name, random)->state, pet::drawReaction(vpet.pools.value(cue), random));
+            }
+        }
+        QVERIFY(answered >= 10);
+    }
+    void packsAnswerThePetsTriggers() {
+        QTemporaryDir folder;
+        writePack(folder.path(), "wave", danceFragment("wave"));
+        writeRules(folder.path(), "wave", {rule("danger", "wave.dance", {{"say", "Whoa!"}}), // The test pet has no danger art.
+                                           QJsonObject{{"on", "custom:deploy"}, {"cue", "celebrate"}}, // The pet's own art.
+                                           QJsonObject{{"on", "may20"}, {"cue", "celebrate"}, {"weight", 5}},
+                                           rule("celebrate", "wave.dance", {{"weight", 3}}),
+                                           rule("water", "wave.dance")});
+        QString error;
+        auto source = pet::Catalog::read(base_.path(), "test", &error);
+        auto packs = pet::plugins::scan(folder.path(), "1.0.0");
+        pet::EventRules loaded;
+        pet::plugins::apply(source, "test", {"wave"}, packs, &loaded);
+        QCOMPARE(status(packs, "wave"), QString("applied"));
+        QCOMPARE(loaded.size(), 5);
+        QCOMPARE(loaded.rules()[0].cooldownMs, qint64(0)); // The pet paces its own triggers.
+        QCOMPARE(loaded.rules()[1].cue, QString("celebrate")); QCOMPARE(loaded.rules()[1].state, QString());
+        QCOMPARE(loaded.rules()[1].cooldownMs, pet::EventRules::defaultCooldownMs);
+        // In the pet's table they come after its own rules.
+        pet::Player player(nullptr, pet::Catalog::build(source, &error));
+        player.setRules(loaded.rules());
+        const auto &rules = player.rules();
+        QCOMPARE(rules.size(), 2 + 5); // celebrate and lunch (through celebrate) of its own, then the pack's.
+        QCOMPARE(rules.draw("danger")->state, QString("wave.dance")); QCOMPARE(rules.draw("danger")->say, QString("Whoa!"));
+        QCOMPARE(rules.pick("custom:deploy", 0)->state, QString("cheer"));
+        QCOMPARE(rules.draw("may20")->state, QString("cheer"));
+        QCOMPARE(rules.draw("water")->state, QString("wave.dance"));
+        // A trigger the pet answers itself: its rule weighs 1, before the pack's 3.
+        auto roll = [](int value) { return pet::Random([value](int bound) { return value % bound; }); };
+        QCOMPARE(rules.draw("celebrate", roll(0))->state, QString("cheer"));
+        QCOMPARE(rules.draw("celebrate", roll(1))->state, QString("wave.dance"));
+        QCOMPARE(rules.draw("celebrate", roll(3))->state, QString("wave.dance"));
+        // Setting the rules again starts over from the pet's own.
+        player.setRules({});
+        QVERIFY(!player.rules().answers("danger")); QVERIFY(player.rules().answers("celebrate"));
+    }
+    void stageDrawsRemindersFromTheRuleTable() {
+        QString error;
+        pet::Player player(nullptr, pet::Catalog::load(base_.path(), "test", &error));
+        player.setPaused(true);
+        pet::Stage stage(player);
+        using namespace pet::behavior;
+        QStringList heard;
+        QObject::connect(&stage, &pet::Stage::outcome, [&](const Intent &intent, Outcome outcome) {
+            if (outcome == Outcome::Unavailable) heard << intent.key + " unavailable";
+        });
+        QObject::connect(&player, &pet::Player::entered, [&](const QString &state) { heard << state; });
+        // A reminder names its trigger and leaves the art to the table: no lunch art, so the pet's cheer.
+        QCOMPARE(stage.runtime().submit({"clock", "lunch", "lunch", Policy::Surprise}), Submission::Admitted);
+        QCOMPARE(heard.first(), QString("cheer"));
+        // Nothing answers water, until a pack's rule does.
+        heard.clear();
+        stage.runtime().submit({"wellness", "water", "water", Policy::Surprise});
+        QCOMPARE(heard, QStringList{"water unavailable"});
+        heard.clear();
+        player.setRules({{"p", "water", "cheer"}});
+        QCOMPARE(stage.runtime().submit({"wellness", "water", "water", Policy::Surprise}), Submission::Admitted);
+        QCOMPARE(heard.first(), QString("cheer"));
+    }
+    void packRulesAnswerThePetsOwnTriggers() {
+        QTemporaryDir directory;
+        pet::PetWindow window(nullptr, directory.path() + "/preferences.json"); window.show();
+        window.eggs().setClock([] { return QDateTime(QDate(2026, 10, 7), QTime(14, 0)); });
+        pet::Monitor monitor(window);
+        auto &player = window.player();
+        const auto state = player.pool("celebrate").first().state;
+        player.setRules({{"fun", "danger", state, "Careful!", 1000}, {"fun", "celebrate", state, "Nice work!", 1000}});
+        // The last number draws past the pet's own rule, which comes first, to the pack's.
+        const pet::Random last = [](int bound) { return bound - 1; };
+        window.eggs().setRandom(last); window.mood().setRandom(last);
+        const qint64 now = QDateTime::currentMSecsSinceEpoch();
+        QVERIFY(monitor.apply({"claude", "s", "1", "prompt", {}, {}, "/project", {}, now}, now));
+        // A destructive command: the pet's danger trigger, answered by the pack, as the surprise it always is.
+        pet::Event risky{"claude", "s", "2", "tool_start", "t", {}, "/project", {}, now + 1};
+        risky.risky = true;
+        QVERIFY(monitor.apply(risky, now + 1));
+        const auto *showing = window.stage().runtime().showing();
+        QVERIFY(showing);
+        QCOMPARE(showing->source, QString("eggs")); QCOMPARE(showing->key, QString("danger"));
+        QCOMPARE(showing->policy, pet::behavior::Policy::Surprise); QCOMPARE(showing->state, state);
+        QVERIFY(monitor.note().isVisible()); QCOMPARE(monitor.note().text(), QString("Careful!"));
+        finish(window);
+        monitor.note().hide();
+        // A finished turn: the celebration is the pack's, with its remark, and still a celebration.
+        QVERIFY(monitor.apply({"claude", "s", "3", "turn_finished", {}, {}, "/project", {}, now + 2}, now + 2));
+        showing = window.stage().runtime().showing();
+        QVERIFY(showing);
+        QCOMPARE(showing->source, QString("mood")); QCOMPARE(showing->cue, QString("celebrate"));
+        QCOMPARE(showing->policy, pet::behavior::Policy::Celebration); QCOMPARE(showing->state, state);
+        QCOMPARE(monitor.note().text(), QString("Nice work!"));
+        finish(window);
+        monitor.note().hide();
+        // The pet's own rule says nothing of its own, and the easter eggs setting still decides.
+        window.eggs().setRandom([](int) { return 0; });
+        QVERIFY(window.eggs().surprise("danger"));
+        QCOMPARE(window.stage().runtime().showing()->state, pet::drawReaction(player.pool("danger"), [](int) { return 0; }));
+        QVERIFY(!monitor.note().isVisible());
+        finish(window);
+        window.eggs().setEnabled(false);
+        QVERIFY(!window.eggs().surprise("danger"));
     }
     void preferencesKeepEnabledPacks() {
         QTemporaryDir directory;

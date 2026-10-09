@@ -1,6 +1,5 @@
 #pragma once
 #include "alert_bubble.h"
-#include "animation/event_rules.h"
 #include "hosts/focus_service.h"
 #include "ipc/local.h"
 #include "pet_window.h"
@@ -25,10 +24,8 @@ public:
     void listen(std::unique_ptr<Receiver> receiver);
     // True when the event changed anything: a session event that was accepted, or a custom event that made the pet react.
     bool apply(const Event &event, qint64 now);
-    // The reactions of the active plugin packs (events.json): to custom events and to agent events once they are applied.
-    // They are reactions only: the runtime still keeps them away from a session that needs the user.
-    void setRules(EventRules rules) { rules_ = std::move(rules); }
-    const EventRules &rules() const { return rules_; }
+    // Custom events, and agent events once they are applied, are answered by the player's rule table (the plugin packs'
+    // events.json). They are reactions only: the runtime still keeps them away from a session that needs the user.
     Random random = systemRandom(); // Which rule answers when several match; tests script it.
     void update(qint64 now);
     void stop();
@@ -86,8 +83,6 @@ private:
     std::unique_ptr<Receiver> receiver_;
     QTimer timer_, rest_, recapTimer_;
     QString reminder_, sessionPath_;
-    EventRules rules_;
-    QHash<QString, QString> remarks_; // What a plugin reaction that is starting will say, by trigger.
     QPoint lastPointer_;
     int restLeft_ = 0;
     qint64 lastTurnMs_ = 0; // How long the latest finished turn ran, for a long-turn celebration.

@@ -58,12 +58,10 @@ void Stage::present(const behavior::Request &request) {
     cue_ = request.cue;
     auto state = request.state;
     if (state.isEmpty()) state = player_.stateFor(request.cue);
-    if (state.isEmpty()) state = drawReaction(player_.pool(request.cue), random_);
-    // Older/custom pets can share their snack or cheerful reaction with the lunch reminder.
-    if (state.isEmpty() && request.cue == "lunch") {
-        state = drawReaction(player_.pool("snack"), random_);
-        if (state.isEmpty()) state = drawReaction(player_.pool("celebrate"), random_);
-    }
+    // A reminder names its trigger: the pet's rule table chooses its art (a pet without lunch art shares its snack or
+    // cheer, as triggers.json says).
+    if (state.isEmpty())
+        if (const auto reaction = player_.rules().draw(request.cue, random_)) state = reaction->state;
     if (state.isEmpty() && player_.states().contains(request.cue)) state = request.cue;
     // An idle pet's own decoration (a fidget, a walk, a touch reaction such as hiding at an edge) already shows
     // idle, wherever it came from: it is left to finish.

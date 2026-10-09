@@ -255,7 +255,9 @@ A pack can also react to events: `agent-pet emit --custom deploy_succeeded` from
 makes the pet play the pack's animation and say its remark, and a pack can answer the agent's own events,
 such as a finished turn. These reactions never change what the sessions show and give way to a session
 that needs you; see [custom events](docs/events.md#custom-events) and its
-[design record](docs/adr/0034-custom-events.md).
+[design record](docs/adr/0034-custom-events.md). The pet's own moments are rules in the same table, so a
+pack can also answer the danger startle, the Konami code, a milestone or the lunch reminder with its own art
+([the pet's own triggers](docs/plugins.md#the-pets-own-triggers), [design record](docs/adr/0035-built-in-triggers-as-rules.md)).
 
 ## Language
 

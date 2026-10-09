@@ -32,6 +32,10 @@ configure_file(src/version.h.in "${CMAKE_CURRENT_BINARY_DIR}/generated/version.h
 file(READ src/animation/cues.json PET_CUES)
 configure_file(src/animation/cues.h.in "${CMAKE_CURRENT_BINARY_DIR}/generated/cues.h" @ONLY)
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS src/animation/cues.json)
+# The pet's own triggers and their built-in rules (docs/plugins.md), embedded the same way.
+file(READ src/animation/triggers.json PET_TRIGGERS)
+configure_file(src/animation/triggers.h.in "${CMAKE_CURRENT_BINARY_DIR}/generated/triggers.h" @ONLY)
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS src/animation/triggers.json)
 
 # Capture/codecs link independently of focus coordination and native activation.
 qt_add_library(pet_host_capture STATIC src/hosts/context.cpp src/hosts/registry.cpp

@@ -10,9 +10,10 @@
 
 namespace pet {
 class Stage;
-// Surprises tied to the calendar, the clock and a few rare events. Each one is a reaction cue that the pet maps
-// to a pool of states, so a pet without that pool skips it:
-//   may20, birthday  on that day the first ambient fidget greets with it, and later ones now and then
+// Surprises tied to the calendar, the clock and a few rare events. Each one is a trigger (src/animation/triggers.json)
+// that the pet's rule table answers, from the catalog's pool of the same name or a plugin pack's rule, so a pet with
+// no rule for it skips it:
+//   may20, birthday-greeting  on that day the first ambient fidget greets with it, and later ones now and then
 //   late-night       from 01:00 to 05:00, extra yawning among the fidgets and a bedtime note once a night
 //   friday-evening   from Friday 17:00, how a finished turn is celebrated
 //   long-turn        a turn that ran for `longTurnMs` or more is celebrated bigger
@@ -54,10 +55,11 @@ public:
     void cheered() { cheeredOn_ = clock_().date(); }
     // Surprises go through the behavior runtime. Unset, none play.
     void setStage(Stage *stage) { stage_ = stage; }
-    // Plays a reaction cue now, such as "danger" or "konami", as a Surprise: it plays out unless a session needs
-    // the user. False when skipped: turned off (unless `evenWhenOff`, for a cheer the user earned elsewhere), no
-    // pool for the cue, or the runtime refused it (the pet is held, hidden, quitting or busy with something bigger).
-    bool surprise(const QString &cue, bool evenWhenOff = false);
+    // Plays a surprise trigger now, such as "danger" or "konami", as a Surprise: it plays out unless a session needs
+    // the user, and the pet says the rule's remark, if it has one. False when skipped: turned off (unless `evenWhenOff`,
+    // for a cheer the user earned elsewhere), no rule answers it, or the runtime refused it (the pet is held, hidden,
+    // quitting or busy with something bigger).
+    bool surprise(const QString &trigger, bool evenWhenOff = false);
     bool surprising() const; // One of these surprises is what the runtime shows.
     bool bedtime(); // True once a night, the first time it is asked late at night.
     // Which of "monday", "lunch", "leave-work" and "sleep" are due at this local time, whether or not already given.
@@ -78,10 +80,11 @@ public:
     bool key(int key); // Feeds a key press; true when it completes the Konami code.
     void setClock(std::function<QDateTime()> clock) { if (clock) clock_ = std::move(clock); }
     QDateTime now() const { return clock_(); } // Local time, from the replaceable clock.
-    // Replaceable for tests. A pool of one draws nothing; see `fidget` for the other draws.
+    // Replaceable for tests. A single rule with a pool of one draws nothing; see `fidget` for the other draws.
     void setRandom(Random random) { random_ = random ? std::move(random) : systemRandom(); }
 private:
-    QString draw(const QString &cue);
+    std::optional<EventReaction> draw(const QString &trigger) const { return player_.rules().draw(trigger, random_); }
+    bool answers(const QString &trigger) const { return player_.rules().answers(trigger); }
     Player &player_;
     Stage *stage_ = nullptr;
     Random random_ = systemRandom();
