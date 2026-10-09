@@ -246,7 +246,6 @@ flowchart TB
   settings -. chọn thú cưng / plugin .-> packs
 
   classDef planned fill:#fff4d6,stroke:#9a6700,stroke-dasharray:5 5,color:#24292f
-  class custom planned
 ```
 
 `Sessions` quyết định ưu tiên giữa các phiên; #67 chọn giữa các ý định hành vi; #64 quyết định cách thú cưng thể hiện tín hiệu được chọn. Thông báo có luồng phân phối riêng. Di chuyển và thao tác cửa sổ gốc vẫn ở `PetWindow` và các dịch vụ nền tảng. Xem [bản đồ mã nguồn](starter/docs/architecture.md#code-map) để tìm đường dẫn và các quyết định thiết kế.

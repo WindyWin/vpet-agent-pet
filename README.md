@@ -251,7 +251,6 @@ flowchart TB
   settings -. select pet / plugins .-> packs
 
   classDef planned fill:#fff4d6,stroke:#9a6700,stroke-dasharray:5 5,color:#24292f
-  class custom planned
 ```
 
 Session priority belongs to `Sessions`; #67 chooses among behavior intents; #64

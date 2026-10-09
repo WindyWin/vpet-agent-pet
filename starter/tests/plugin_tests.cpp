@@ -995,6 +995,16 @@ private slots:
         QCOMPARE(changed.size(), 3);
         pet::PluginList none({}, {}, "vpet", "/p");
         QVERIFY(!none.findChild<QListWidget *>()->isVisibleTo(&none));
+        // With as many choices saved as preferences keep (here for packs no longer installed), one more is refused.
+        QStringList full;
+        for (int n = 0; n < pet::Preferences::maxPlugins; ++n) full << QString("gone%1").arg(n);
+        pet::PluginList crowded({fresh}, full, "vpet", "/p");
+        QSignalSpy refused(&crowded, &pet::PluginList::changed);
+        auto *item = crowded.findChild<QListWidget *>()->item(0);
+        item->setCheckState(Qt::Checked);
+        QCOMPARE(item->checkState(), Qt::Unchecked);
+        QCOMPARE(refused.size(), 0);
+        QCOMPARE(crowded.enabled(), full);
     }
     void windowSavesEnabledPacks() {
         QTemporaryDir directory;

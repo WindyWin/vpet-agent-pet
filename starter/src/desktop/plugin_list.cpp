@@ -1,4 +1,5 @@
 #include "plugin_list.h"
+#include "settings/preferences.h"
 #include <QDesktopServices>
 #include <QDir>
 #include <QHBoxLayout>
@@ -48,6 +49,12 @@ PluginList::PluginList(const QVector<PluginPack> &packs, const QStringList &enab
         const auto &pack = packs_[item->data(Qt::UserRole).toInt()];
         const bool checked = item->checkState() == Qt::Checked;
         if (checked == enabled_.contains(pack.id)) return; // Only the label changed.
+        // Preferences keep at most this many choices, so one more would show as on and never load.
+        if (checked && enabled_.size() >= Preferences::maxPlugins) {
+            const QSignalBlocker blocker(list_);
+            item->setCheckState(Qt::Unchecked);
+            return;
+        }
         if (checked) enabled_.append(pack.id);
         else enabled_.removeAll(pack.id);
         label(item);

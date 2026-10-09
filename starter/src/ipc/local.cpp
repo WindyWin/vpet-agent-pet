@@ -34,7 +34,9 @@ int eventCommand(const QStringList &args) {
     }
     if ((hook && provider.isEmpty()) || (!provider.isEmpty() && provider != "claude" && provider != "codex" && (hook || provider != "custom"))
         || (!custom.isEmpty() && !provider.isEmpty() && provider != "custom")) {
-        error = "Expected provider claude or codex"; return fail();
+        error = !custom.isEmpty() ? "--custom sends provider custom only"
+              : hook ? "Expected provider claude or codex" : "Expected provider claude, codex or custom";
+        return fail();
     }
     const int inputLimit = hook ? 1024 * 1024 : 8192;
     QByteArray data;
