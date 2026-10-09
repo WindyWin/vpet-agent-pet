@@ -42,6 +42,7 @@ the order the decisions were made. For a map of the code, start with the
 | [0033](0033-plugin-packs.md) | Plugin packs: catalog fragments merged into a pet | 2026-10-08 |
 | [0034](0034-custom-events.md) | Custom events and plugin event rules | 2026-10-08 |
 | [0035](0035-built-in-triggers-as-rules.md) | The pet's own triggers as rules | 2026-10-09 |
+| [0036](0036-fat-cat-pet.md) | Fat Cat, the first on-demand pet | 2026-10-09 |
 
 ## Writing a record
 

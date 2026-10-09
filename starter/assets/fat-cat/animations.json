@@ -1,0 +1,397 @@
+{
+  "schema_version": 2,
+  "asset_root": "assets/fat-cat",
+  "states": {
+    "idle": [
+      "idle"
+    ],
+    "ponder": [
+      "tsk",
+      "tsk",
+      "tsk"
+    ],
+    "calm": [
+      "idle",
+      "idle",
+      "idle"
+    ],
+    "work": [
+      "walk",
+      "walk",
+      "walk"
+    ],
+    "alert": [
+      "wave",
+      "wave",
+      "wave"
+    ],
+    "oops": [
+      "dead"
+    ],
+    "zombie": [
+      "zombie"
+    ],
+    "cheer": [
+      "happy"
+    ],
+    "grin": [
+      "hi"
+    ],
+    "angry": [
+      "grumpy"
+    ],
+    "bye": [
+      "wave"
+    ],
+    "held": [
+      "wave",
+      "wave",
+      "wave"
+    ]
+  },
+  "sequences": [
+    {
+      "state": "idle",
+      "path": "idle",
+      "frames": [
+        {
+          "path": "assets/fat-cat/idle/_000_2600.png",
+          "duration_ms": 2600
+        },
+        {
+          "path": "assets/fat-cat/idle/_001_160.png",
+          "duration_ms": 160
+        }
+      ],
+      "duration_ms": 2760
+    },
+    {
+      "state": "work",
+      "path": "walk",
+      "frames": [
+        {
+          "path": "assets/fat-cat/walk/_000_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/fat-cat/walk/_001_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/fat-cat/walk/_002_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/fat-cat/walk/_003_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/fat-cat/walk/_004_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/fat-cat/walk/_005_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/fat-cat/walk/_006_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/fat-cat/walk/_007_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/fat-cat/walk/_008_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/fat-cat/walk/_009_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/fat-cat/walk/_010_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/fat-cat/walk/_011_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/fat-cat/walk/_012_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/fat-cat/walk/_013_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/fat-cat/walk/_014_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/fat-cat/walk/_015_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/fat-cat/walk/_016_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/fat-cat/walk/_017_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/fat-cat/walk/_018_60.png",
+          "duration_ms": 60
+        }
+      ],
+      "duration_ms": 1140
+    },
+    {
+      "state": "alert",
+      "path": "wave",
+      "frames": [
+        {
+          "path": "assets/fat-cat/wave/_000_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/fat-cat/wave/_001_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/fat-cat/wave/_002_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/fat-cat/wave/_003_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/fat-cat/wave/_004_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/fat-cat/wave/_005_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/fat-cat/wave/_006_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/fat-cat/wave/_007_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/fat-cat/wave/_008_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/fat-cat/wave/_009_80.png",
+          "duration_ms": 80
+        }
+      ],
+      "duration_ms": 800
+    },
+    {
+      "state": "oops",
+      "path": "dead",
+      "frames": [
+        {
+          "path": "assets/fat-cat/dead/_000_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/fat-cat/dead/_001_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/fat-cat/dead/_002_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/fat-cat/dead/_003_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/fat-cat/dead/_004_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/fat-cat/dead/_005_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/fat-cat/dead/_006_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/fat-cat/dead/_007_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/fat-cat/dead/_008_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/fat-cat/dead/_009_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/fat-cat/dead/_010_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/fat-cat/dead/_011_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/fat-cat/dead/_012_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/fat-cat/dead/_013_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/fat-cat/dead/_014_900.png",
+          "duration_ms": 900
+        }
+      ],
+      "duration_ms": 2160
+    },
+    {
+      "state": "grin",
+      "path": "hi",
+      "frames": [
+        {
+          "path": "assets/fat-cat/hi/_000_1600.png",
+          "duration_ms": 1600
+        }
+      ],
+      "duration_ms": 1600
+    },
+    {
+      "state": "cheer",
+      "path": "happy",
+      "frames": [
+        {
+          "path": "assets/fat-cat/happy/_000_1600.png",
+          "duration_ms": 1600
+        }
+      ],
+      "duration_ms": 1600
+    },
+    {
+      "state": "angry",
+      "path": "grumpy",
+      "frames": [
+        {
+          "path": "assets/fat-cat/grumpy/_000_1600.png",
+          "duration_ms": 1600
+        }
+      ],
+      "duration_ms": 1600
+    },
+    {
+      "state": "ponder",
+      "path": "tsk",
+      "frames": [
+        {
+          "path": "assets/fat-cat/tsk/_000_1600.png",
+          "duration_ms": 1600
+        }
+      ],
+      "duration_ms": 1600
+    },
+    {
+      "state": "zombie",
+      "path": "zombie",
+      "frames": [
+        {
+          "path": "assets/fat-cat/zombie/_000_1600.png",
+          "duration_ms": 1600
+        }
+      ],
+      "duration_ms": 1600
+    }
+  ],
+  "playback": {
+    "idle": {
+      "mode": "loop",
+      "after": "idle"
+    },
+    "ponder": {
+      "mode": "phased",
+      "after": "idle"
+    },
+    "calm": {
+      "mode": "phased",
+      "after": "idle"
+    },
+    "work": {
+      "mode": "phased",
+      "after": "idle"
+    },
+    "alert": {
+      "mode": "phased",
+      "after": "idle"
+    },
+    "oops": {
+      "mode": "once",
+      "after": "previous"
+    },
+    "zombie": {
+      "mode": "loop",
+      "after": "idle"
+    },
+    "cheer": {
+      "mode": "once",
+      "after": "idle"
+    },
+    "grin": {
+      "mode": "once",
+      "after": "idle"
+    },
+    "angry": {
+      "mode": "once",
+      "after": "stop"
+    },
+    "bye": {
+      "mode": "once",
+      "after": "stop"
+    },
+    "held": {
+      "mode": "phased",
+      "after": "idle"
+    }
+  },
+  "cues": {
+    "thinking": "ponder",
+    "reading": "calm",
+    "working": "work",
+    "attention": "alert",
+    "exhausted": "zombie",
+    "error": "oops",
+    "turn-finished": "cheer",
+    "inactive": "calm",
+    "nap": "calm",
+    "start": "grin",
+    "quit": "bye",
+    "annoyed": "angry",
+    "quit-angry": "angry",
+    "drag": "held",
+    "celebrate": [
+      {
+        "state": "cheer",
+        "weight": 2
+      },
+      {
+        "state": "grin",
+        "weight": 1
+      }
+    ]
+  }
+}
