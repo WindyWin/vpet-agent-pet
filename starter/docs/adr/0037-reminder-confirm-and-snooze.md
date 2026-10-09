@@ -17,14 +17,15 @@ and no quiet mode (#34); [0015](0015-easter-eggs.md) left it out.
   the bedtime note stay plain remarks.
   - Done gives the reminder (`Monitor::give`: the wellness timer starts over, or the clock reminder is done for the
     day) and earns the happy reaction; an eye break still counts its 20 seconds first.
-  - Skip today gives it without the reaction.
+  - Skip today gives it without the reaction and lets it go until tomorrow (`Nudges::skipDay`; a skipped wellness
+    reminder lets its interval pass silently, so the other one can still come).
   - Later puts it off for ten minutes and does not use up one of its asks.
 - **Re-remind.** A reminder is no longer given when it appears, only when it is answered, skipped or has been asked
   `Nudges::maxAsks` (3) times. A bubble stays up for a minute; if it fades unanswered, or is replaced by another
   note, it is asked again after ten minutes (`Nudges`, in memory). Withdrawal is unchanged: a break, a locked screen,
   quiet hours, the end of the lunch window or turning it off all make it not due, and `Nudges::forget` drops it.
 - **Snooze (#34).** `Snooze` (in memory, never persisted) is on `PetWindow` beside Mute: 15 minutes, 30 minutes,
-  1 hour, until this turn finishes, until tomorrow (06:00, where the quiet hours end), with **Resume now** and the
+  1 hour, until this turn finishes (the last turn going on, not whichever session finishes first), until tomorrow (06:00, where the quiet hours end), with **Resume now** and the
   time left while it is on. `PetWindow::quiet(now)` (muted or snoozed) is the one test for "say nothing": the alert
   bubble and sound, remarks, the bedtime note, and, through `Context::muted`, every reminder. The attention badge and
   the animations are unchanged. The pet shows a small "z" badge and the tray tooltip says "snoozed". Alerts that arrived

@@ -2293,14 +2293,32 @@ private slots:
         }
         monitor.note().hide(); settle(); work(1);
         QCOMPARE(window.wellness().due(t), QString()); work(12); QVERIFY(!monitor.note().isVisible());
-        // Skip today: the interval starts over without the happy reaction.
-        work(45); QVERIFY(monitor.note().isVisible());
-        press("Skip today"); QVERIFY(!monitor.note().isVisible()); QCOMPARE(window.wellness().due(t), QString());
-        QVERIFY(player.requestedState() != "cheer_shy");
         // Done is the same as clicking the words.
-        settle(); work(45); QVERIFY(monitor.note().isVisible());
+        work(45); QVERIFY(monitor.note().isVisible());
         press("Done"); QVERIFY(!monitor.note().isVisible()); QCOMPARE(window.wellness().due(t), QString());
         QCOMPARE(player.requestedState(), QString("cheer_shy"));
+        // Skip today: no happy reaction, and it does not come back for the rest of the day.
+        settle(); work(45); QVERIFY(monitor.note().isVisible());
+        press("Skip today"); QVERIFY(!monitor.note().isVisible()); QCOMPARE(window.wellness().due(t), QString());
+        QVERIFY(player.requestedState() != "cheer_shy");
+        settle(); work(45 * 3); QVERIFY(!monitor.note().isVisible()); QCOMPARE(window.wellness().due(t), QString());
+        local = local.addDays(1); work(45); QVERIFY(monitor.note().isVisible()); // Tomorrow it is back.
+    }
+    void snoozeStopsTheEyeBreakCountdown() {
+        pet::PetWindow window(nullptr, {}, false); window.show();
+        pet::Monitor monitor(window); auto &player = window.player(); player.setPaused(true);
+        window.ambient().setLevel(pet::AmbientLevel::Off);
+        QDateTime local(QDate(2026, 10, 7), QTime(14, 0)); window.eggs().setClock([&] { return local; });
+        QPoint pointer; monitor.pointer = [&] { return pointer; };
+        window.setEyeMinutes(20); window.setWaterMinutes(0);
+        const qint64 minute = 60000; qint64 t = QDateTime::currentMSecsSinceEpoch();
+        pointer = QPoint(1, 1); monitor.update(t);
+        for (const qint64 end = t + 20 * minute; t < end;) { t += 30000; pointer += QPoint(1, 0); monitor.update(t); }
+        QVERIFY(monitor.note().asking());
+        emit monitor.note().clicked(); QCOMPARE(monitor.restLeft(), 20); QVERIFY(monitor.note().isVisible());
+        // Snoozed in the middle of the countdown: it stops and says nothing more, not even the cheer.
+        window.snooze().start(t, 5 * minute); monitor.update(t + 1);
+        QCOMPARE(monitor.restLeft(), 0); QVERIFY(!monitor.note().isVisible());
     }
     void snoozeSilencesEverythingButTheBadge() {
         pet::PetWindow window(nullptr, {}, false); window.show();
@@ -2314,7 +2332,8 @@ private slots:
             for (const qint64 end = t + minutes * minute; t < end;) { t += 30000; pointer += QPoint(1, 0); monitor.update(t); }
         };
         qint64 seq = 0;
-        auto event = [&](QString kind) { ++seq; return pet::Event{"claude", "z1", QString::number(seq), kind, {}, {}, "/work/abc-web", {}, t, {}}; };
+        auto eventFor = [&](QString session, QString kind) { ++seq; return pet::Event{"claude", session, QString::number(seq), kind, {}, {}, "/work/abc-web", {}, t, {}}; };
+        auto event = [&](QString kind) { return eventFor("z1", kind); };
         pointer = QPoint(1, 1); monitor.update(t);
         window.snooze().start(t, 50 * minute);
         work(45);
@@ -2323,13 +2342,19 @@ private slots:
         QVERIFY(monitor.apply(event("attention"), t)); work(1);
         QCOMPARE(window.attention(), 1); QVERIFY(!monitor.bubble().isVisible());
         QVERIFY(window.statusText().contains("snoozed"));
-        // Resuming brings the one waiting alert, not a replay of anything.
+        // Another request arrives meanwhile. Resuming shows what waits as one bubble with the rest counted, not a
+        // replay of each alert.
+        QVERIFY(monitor.apply(eventFor("z2", "attention"), t)); work(1); QVERIFY(!monitor.bubble().isVisible());
         window.resumeSnooze(); work(1);
-        QVERIFY(!window.snoozeShown()); QVERIFY(monitor.bubble().isVisible()); QVERIFY(!window.statusText().contains("snoozed"));
+        QVERIFY(!window.snoozeShown()); QVERIFY(monitor.bubble().isVisible()); QCOMPARE(monitor.bubble().footer(), QString("+1"));
+        QVERIFY(!window.statusText().contains("snoozed"));
         // A snooze ends by itself, and one "until this turn finishes" ends with the turn.
         window.snooze().start(t, 5 * minute); work(6); QVERIFY(!window.snoozeShown());
         window.snoozeUntilTurnEnds(); work(1); QVERIFY(window.snoozeShown());
-        QVERIFY(monitor.apply(event("turn_finished"), t)); work(1); QVERIFY(!window.snoozeShown());
+        // With two turns going on, it ends with the last one rather than the first to finish.
+        QVERIFY(monitor.apply(eventFor("z1", "prompt"), t)); QVERIFY(monitor.apply(eventFor("z2", "prompt"), t));
+        QVERIFY(monitor.apply(eventFor("z1", "turn_finished"), t)); work(1); QVERIFY(window.snoozeShown());
+        QVERIFY(monitor.apply(eventFor("z2", "turn_finished"), t)); work(1); QVERIFY(!window.snoozeShown());
     }
     void monitorWithdrawsTurnedOffReminders() {
         QTemporaryDir directory;

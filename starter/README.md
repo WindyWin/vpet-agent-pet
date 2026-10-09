@@ -192,7 +192,7 @@ While you work, the pet reminds you to rest your eyes and to drink some water. A
 closes its eyes for a stretch (the 20-20-20 rule); click the note and it counts the 20 seconds down, then
 cheers. After 60 minutes it gets thirsty and says "Time for some water 💧"; click to
 say you had some and it cheers. Each reminder (also lunch and go-home) is a question with
-**Done**, **Later** (asks again in 10 minutes) and **Skip today** (until the next interval, or tomorrow).
+**Done**, **Later** (asks again in 10 minutes) and **Skip today** (until tomorrow).
 Ignored, it fades and is asked again after 10 minutes, up to three times, then left until the next
 interval. Activity means moving the pointer, sending a prompt, or agent
 events while you were around in the last five minutes: a few idle minutes pause the

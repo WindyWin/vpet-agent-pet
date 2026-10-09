@@ -42,11 +42,15 @@ public:
     // The user let it fade. True once it has used up its asks, and the caller should treat it as given.
     bool ignored(const QString &key, qint64 now);
     void forget(const QString &key) { entries_.remove(key); } // Answered, skipped, or no longer due.
+    // Skip today: the reminder is let go for the rest of `day`, however often it falls due.
+    void skipDay(const QString &key, const QDate &day) { skipped_[key] = day; }
+    bool skippedOn(const QString &key, const QDate &day) const { return skipped_.value(key) == day; }
     // Only `showing` is on screen (empty for none): anything else marked as shown has been replaced.
     void settle(const QString &showing, qint64 now);
     int asks(const QString &key) const { return entries_.value(key).asks; }
 private:
     struct Entry { int asks = 0; bool showing = false; qint64 notBefore = 0; };
     QHash<QString, Entry> entries_;
+    QHash<QString, QDate> skipped_;
 };
 }

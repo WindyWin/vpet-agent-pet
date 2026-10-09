@@ -94,7 +94,6 @@ bool Monitor::apply(const Event &event, qint64 now) {
     if (recap_.record(event, session, QDateTime::fromMSecsSinceEpoch(now).date())) recapTimer_.start();
     // Only accepted events count: duplicates and stale callbacks of an interrupted turn are dropped above.
     if (event.kind == "turn_finished" && !event.waiting) {
-        window_.snooze().turnFinished();
         window_.mood().finished(now);
         lastTurnMs_ = sessions_.records().value(event.provider + QChar(0x1f) + event.session).lastTurnMs;
     }
@@ -102,6 +101,14 @@ bool Monitor::apply(const Event &event, qint64 now) {
     // Only a prompt shows the user is there; nothing counts behind a locked screen.
     if (!(locked && locked())) window_.wellness().activity(now, event.kind == "prompt");
     checkpointSessions();
+    // A snooze "until this turn finishes" ends with the last turn going on, not with whichever session finishes first.
+    if (event.kind == "turn_finished" && !event.waiting) {
+        const auto &records = sessions_.records();
+        const bool running = std::any_of(records.begin(), records.end(), [](const Session &s) {
+            return s.state == "working" || s.state == "reading" || s.state == "thinking";
+        });
+        if (!running) window_.snooze().turnFinished();
+    }
     observed_ = true; update(now);
     // The hook saw a destructive command start: the pet jumps, then shows the work going on. The runtime keeps
     // it away while a session waits on the user, is out of quota or just failed, or the pet is hidden.
@@ -135,7 +142,9 @@ void Monitor::update(qint64 now) {
     sessions_.expire(now);
     // A reminder that faded, or was hidden, without an answer is asked again later; one that lost its bubble to
     // something else is only put off.
-    if (!reminder_.isEmpty() && window_.snooze().activeAt(now)) { note_.hide(); released(false); } // Snoozed meanwhile.
+    if ((!reminder_.isEmpty() || restLeft_ > 0) && window_.snooze().activeAt(now)) { // Snoozed meanwhile.
+        note_.hide(); rest_.stop(); restLeft_ = 0; released(false);
+    }
     else if (!reminder_.isEmpty() && !note_.isVisible() && restLeft_ == 0) released(true);
     nudges_.settle(reminder_, now);
     window_.setSnoozeShown(window_.snooze().activeAt(now));
@@ -232,7 +241,10 @@ void Monitor::remindWellness(qint64 now) {
     auto &wellness = window_.wellness();
     auto &runtime = window_.stage().runtime();
     auto due = wellness.due(now);
-    if (!due.isEmpty() && Wellness::quietAt(window_.eggs().now())) { wellness.given(due, now); due.clear(); }
+    // Quiet hours and a reminder skipped for today let the interval pass without a word, so the other one can come.
+    if (!due.isEmpty() && (Wellness::quietAt(window_.eggs().now()) || nudges_.skippedOn(due, window_.eggs().now().date()))) {
+        wellness.given(due, now); due.clear();
+    }
     if (due.isEmpty() || (locked && locked()) || nudges_.held(due, now)) return;
     using namespace behavior;
     runtime.submit({"wellness", due, due == "eyes" ? "eye-break" : "water", Policy::Reminder, Lifetime::OneShot,
@@ -278,9 +290,12 @@ void Monitor::answered() {
     rest_.start();
 }
 void Monitor::putOff() { released(false); }
+// Skip today: a clock reminder is given for the day anyway; a wellness one is let go until tomorrow.
 void Monitor::skipped() {
     const auto reminder = std::exchange(reminder_, QString());
-    if (!reminder.isEmpty()) give(reminder);
+    if (reminder.isEmpty()) return;
+    give(reminder);
+    nudges_.skipDay(reminder, window_.eggs().now().date());
 }
 void Monitor::dropReminder() {
     if (reminder_.isEmpty() && restLeft_ == 0) return; // The note may be saying something else.
