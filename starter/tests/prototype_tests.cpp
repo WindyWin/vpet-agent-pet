@@ -1970,7 +1970,8 @@ private slots:
             QCOMPARE(monitor.note().text(), pet::EasterEggs::reminderNote("leave-work") + "\n" + summary);
             QVERIFY(monitor.note().hasDetails());
             window.setRecapEnabled(false); QVERIFY(window.savePreferences());
-            emit monitor.note().clicked(); monitor.note().hide(); // Done; the next day's reminder is a new one. playOut(window.player()); playOut(window.player());
+            emit monitor.note().clicked(); monitor.note().hide(); // Done; the next day's reminder is a new one.
+            playOut(window.player()); playOut(window.player());
             local = QDateTime(QDate(2026, 10, 8), QTime(16, 50)); monitor.update(now + 2);
             QCOMPARE(monitor.note().text(), pet::EasterEggs::reminderNote("leave-work")); QVERIFY(!monitor.note().hasDetails());
             monitor.stop(); // Writes the counters now rather than after the short delay.
