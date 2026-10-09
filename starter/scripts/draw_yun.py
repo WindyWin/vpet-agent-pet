@@ -1127,6 +1127,7 @@ def peach(bites, x, y):
             return
         ctx.save()
         ctx.translate(x, y)
+        ctx.push_group()
         ctx.move_to(0, -48)
         ctx.curve_to(40, -50, 56, 0, 30, 30)
         ctx.curve_to(16, 44, -16, 44, -30, 30)
@@ -1154,6 +1155,9 @@ def peach(bites, x, y):
             ctx.set_operator(cairo.OPERATOR_CLEAR)
             ctx.fill()
             ctx.set_operator(cairo.OPERATOR_OVER)
+        # The bites clear only the peach, not the pet drawn under it.
+        ctx.pop_group_to_source()
+        ctx.paint()
         ctx.restore()
     return draw
 
@@ -2013,7 +2017,7 @@ def sword_dance():
 
 
 def mirrored(seq):
-    return [(replace(p, face=-p.face), ms) for p, ms in seq]
+    return [(replace(p, face=-p.face, x=-p.x), ms) for p, ms in seq]
 
 
 SEQUENCES = {

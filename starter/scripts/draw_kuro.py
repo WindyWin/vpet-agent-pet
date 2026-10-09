@@ -645,6 +645,7 @@ def onigiri(bites, x, y):
             return
         ctx.save()
         ctx.translate(x, y)
+        ctx.push_group()
         ctx.move_to(0, -52)
         ctx.curve_to(30, -50, 60, 20, 50, 34)
         ctx.curve_to(30, 46, -30, 46, -50, 34)
@@ -660,6 +661,9 @@ def onigiri(bites, x, y):
             ctx.set_operator(cairo.OPERATOR_CLEAR)
             ctx.fill()
             ctx.set_operator(cairo.OPERATOR_OVER)
+        # The bites clear only the onigiri, not the pet drawn under it.
+        ctx.pop_group_to_source()
+        ctx.paint()
         ctx.restore()
     return draw
 
