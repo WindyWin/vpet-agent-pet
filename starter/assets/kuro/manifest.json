@@ -1,0 +1,3327 @@
+{
+  "schema_version": 1,
+  "file_count": 664,
+  "total_bytes": 10933373,
+  "files": [
+    {
+      "path": "assets/kuro/idle/_000_140.png",
+      "bytes": 14069,
+      "sha256": "03dd36e698b1c46db61d211ea41206799248a42e6bf551d60ef9f86632af60d8"
+    },
+    {
+      "path": "assets/kuro/idle/_001_140.png",
+      "bytes": 14819,
+      "sha256": "2c50b11da0ed4fe3bd5f939211f7d6b4ab47cff79bd4296381df6cb8b14502b9"
+    },
+    {
+      "path": "assets/kuro/idle/_002_140.png",
+      "bytes": 14798,
+      "sha256": "1465fd450deab292fbf7a8f80d6dcfbb7245f5e0dd2d6fd990aabef3f0873e4e"
+    },
+    {
+      "path": "assets/kuro/idle/_003_140.png",
+      "bytes": 14838,
+      "sha256": "aace04818c688ed075c92bf009a5d4e9e6803221bf9c911db7c281d06f69ad76"
+    },
+    {
+      "path": "assets/kuro/idle/_004_140.png",
+      "bytes": 14912,
+      "sha256": "9b5b204011c3eb04eebb51a84f2f3a2f5ed84f83e85b1e627b0285eeb7d7bdc8"
+    },
+    {
+      "path": "assets/kuro/idle/_005_140.png",
+      "bytes": 14944,
+      "sha256": "22d85b4fc9025ddd7d78118f2c8b7aeba581f75bf5eb7976bc6a83c4ab96b44a"
+    },
+    {
+      "path": "assets/kuro/idle/_006_140.png",
+      "bytes": 14989,
+      "sha256": "29e8e5ec1b5fd5391d1edbb99ddc58939010f8d5b43746d18cf9a0e7902c69bc"
+    },
+    {
+      "path": "assets/kuro/idle/_007_140.png",
+      "bytes": 15119,
+      "sha256": "a6cc588186706d049d74c5edeb30563f926670224cf4b01f103296b1a0ceb12b"
+    },
+    {
+      "path": "assets/kuro/idle/_008_140.png",
+      "bytes": 15096,
+      "sha256": "bba3e63fbabf7376dd9c658fff09ff12eb6e5ccf4aef89e1de50b8eeb5d32916"
+    },
+    {
+      "path": "assets/kuro/idle/_009_140.png",
+      "bytes": 14245,
+      "sha256": "3897c3ca2a8864902beb0c2ef3a5a7dc974407e916a74e1cc8f6dfe7901ff968"
+    },
+    {
+      "path": "assets/kuro/idle/_010_140.png",
+      "bytes": 14882,
+      "sha256": "f74364f1d3707dcc3c7526749204374a2e56a79c3d6467ada4aa8aa46e305674"
+    },
+    {
+      "path": "assets/kuro/idle/_011_140.png",
+      "bytes": 14867,
+      "sha256": "ad5b7d8df54e90ba02df60e6c55775339565fc69926ea7fec366a0e9a1b32d87"
+    },
+    {
+      "path": "assets/kuro/idle/_012_140.png",
+      "bytes": 14932,
+      "sha256": "1fd928d82bf919346b25984ad1d8a88ce4fd8e2ad84835608da8353c8fad63c2"
+    },
+    {
+      "path": "assets/kuro/idle/_013_140.png",
+      "bytes": 14760,
+      "sha256": "88fce2d2192539ce514206ed863ccc9fdc8157b0d71c83ea7815fec7a4022201"
+    },
+    {
+      "path": "assets/kuro/idle/_014_140.png",
+      "bytes": 14829,
+      "sha256": "9530f0a7f291c4a7423d9d01ef3f286776233ea8e8bce414735e265126e7171b"
+    },
+    {
+      "path": "assets/kuro/idle/_015_50.png",
+      "bytes": 14281,
+      "sha256": "174338a6c69de9891aa5d643a3e82d4ddbf63a7302b00f7be1337dbb4e776bdf"
+    },
+    {
+      "path": "assets/kuro/idle/_016_70.png",
+      "bytes": 14138,
+      "sha256": "25b96c6d92a5f48541a545d24cea3404efa8fdcdd577b9e5576b31349896c732"
+    },
+    {
+      "path": "assets/kuro/idle/_017_50.png",
+      "bytes": 14281,
+      "sha256": "174338a6c69de9891aa5d643a3e82d4ddbf63a7302b00f7be1337dbb4e776bdf"
+    },
+    {
+      "path": "assets/kuro/alert/end/_000_70.png",
+      "bytes": 15968,
+      "sha256": "7b7994e29f58bcb9aa830f077ff129a0700b0fb5a4a19d46c273c62c7aad682c"
+    },
+    {
+      "path": "assets/kuro/alert/end/_001_70.png",
+      "bytes": 15532,
+      "sha256": "cefafe4153fb66f39369f8535f8a0cd90efcbeb245bc9e8fd6bf014194a09664"
+    },
+    {
+      "path": "assets/kuro/alert/end/_002_70.png",
+      "bytes": 15025,
+      "sha256": "de8a71b2908164fece62bcb93719272d3f3d5017c5096982710d8bfcaaccbc2d"
+    },
+    {
+      "path": "assets/kuro/alert/end/_003_70.png",
+      "bytes": 14069,
+      "sha256": "03dd36e698b1c46db61d211ea41206799248a42e6bf551d60ef9f86632af60d8"
+    },
+    {
+      "path": "assets/kuro/alert/loop/_000_80.png",
+      "bytes": 16584,
+      "sha256": "d1ca48f691f9663d2b04037e3ee66b08f5c4818334908d710aaa178eb15212e3"
+    },
+    {
+      "path": "assets/kuro/alert/loop/_001_80.png",
+      "bytes": 17892,
+      "sha256": "6b41fff4122376a06befee6008ab87143a9606b3cc31279a960c2b4572273482"
+    },
+    {
+      "path": "assets/kuro/alert/loop/_002_80.png",
+      "bytes": 17805,
+      "sha256": "e199233c1f34cd04ae93bd90a3ae672e3621d1435e5e944e80c9124783a315b6"
+    },
+    {
+      "path": "assets/kuro/alert/loop/_003_80.png",
+      "bytes": 18670,
+      "sha256": "4b3771de1668677bb6a394fa311b7f47ab9720a14e1a36c7e4e686a2d367460c"
+    },
+    {
+      "path": "assets/kuro/alert/loop/_004_80.png",
+      "bytes": 18989,
+      "sha256": "78708978acec5630e7964bf797250b36438b6322159c87448e3591a873d16ad8"
+    },
+    {
+      "path": "assets/kuro/alert/loop/_005_80.png",
+      "bytes": 16584,
+      "sha256": "d1ca48f691f9663d2b04037e3ee66b08f5c4818334908d710aaa178eb15212e3"
+    },
+    {
+      "path": "assets/kuro/alert/loop/_006_80.png",
+      "bytes": 17954,
+      "sha256": "adb38bc24f59b5d4d27b7f38fe92a0cc43c4660b96fdf4ad056b0af8d75d824b"
+    },
+    {
+      "path": "assets/kuro/alert/loop/_007_80.png",
+      "bytes": 17914,
+      "sha256": "355ab0277d1a7e0d8839e345285dff6ca6f2f00235f13bca7ddce7e5d0ddab8d"
+    },
+    {
+      "path": "assets/kuro/alert/loop/_008_80.png",
+      "bytes": 18724,
+      "sha256": "7095c0ed0e550bfe02cf490b5f63c540b519ed8ddd06952a5db8318872ddb073"
+    },
+    {
+      "path": "assets/kuro/alert/loop/_009_80.png",
+      "bytes": 18981,
+      "sha256": "76ae939e2f07e2f21e09aeddfc938d0a017e0ce4d69771b450c85c160f3d196f"
+    },
+    {
+      "path": "assets/kuro/alert/start/_000_60.png",
+      "bytes": 16506,
+      "sha256": "8aa08c22550741839a0a1bb8d5e531b68fb9e6e5732b4cc67b84a5fa5a491946"
+    },
+    {
+      "path": "assets/kuro/alert/start/_001_60.png",
+      "bytes": 17803,
+      "sha256": "0ed1a0e1d24f7e4a7300021325df0407e3e592c8534c6bb1a40240cf6f41716d"
+    },
+    {
+      "path": "assets/kuro/alert/start/_002_60.png",
+      "bytes": 18242,
+      "sha256": "a762e31dd0db1f7806f75baa178d24ee00d101eca707acc6bd54585760935bcd"
+    },
+    {
+      "path": "assets/kuro/alert/start/_003_60.png",
+      "bytes": 18862,
+      "sha256": "853779fc2006378ef3eb5ff300b9b1eb77aaefd137ad10527f37ccac9c12265d"
+    },
+    {
+      "path": "assets/kuro/alert/start/_004_60.png",
+      "bytes": 18244,
+      "sha256": "4d63e93323e51c399e5dfcbc34ec65c55e895809f491734e8d5479357c0c708c"
+    },
+    {
+      "path": "assets/kuro/alert/start/_005_60.png",
+      "bytes": 16841,
+      "sha256": "09c1fb9832caab14efd33e6bab8266b7cb129bf6805f59bded749fad21556c82"
+    },
+    {
+      "path": "assets/kuro/angry/_000_85.png",
+      "bytes": 14522,
+      "sha256": "3522208bb7dcd66eda9e1d4fed68c4807ddb09baf165be5f0fde59054d989c90"
+    },
+    {
+      "path": "assets/kuro/angry/_001_85.png",
+      "bytes": 15971,
+      "sha256": "379dd6bdcb4a10a443b2bada1383c5662848b69ddb1a4c23fa9895f287025040"
+    },
+    {
+      "path": "assets/kuro/angry/_002_85.png",
+      "bytes": 15726,
+      "sha256": "332a4c1b2984c417cc752b141c0739fa41b1d6648f61d4523565fdfc81eec0f1"
+    },
+    {
+      "path": "assets/kuro/angry/_003_85.png",
+      "bytes": 15779,
+      "sha256": "1172b648b1408034632cd4667df93154ad68ee555271b01e3b8a95691d9ba3f6"
+    },
+    {
+      "path": "assets/kuro/angry/_004_85.png",
+      "bytes": 19028,
+      "sha256": "fb1c9896d5fae06fe65341f1d7c2b221239a29edc49498b162aaa1824d7306ca"
+    },
+    {
+      "path": "assets/kuro/angry/_005_85.png",
+      "bytes": 18946,
+      "sha256": "68edc1e3a0efa216364be861fad5d0c29bd43e5fd5e5d90b07962ba7291db7f9"
+    },
+    {
+      "path": "assets/kuro/angry/_006_85.png",
+      "bytes": 18593,
+      "sha256": "5383df5f42b8b54f409bf7b1d9146f45670489abe389a2f68da9fd8b501785c8"
+    },
+    {
+      "path": "assets/kuro/angry/_007_85.png",
+      "bytes": 18685,
+      "sha256": "dbd807ae0581f55fe1dd9a9cc7942f50647c917759000ba7d7f7d832d616753c"
+    },
+    {
+      "path": "assets/kuro/angry/_008_85.png",
+      "bytes": 19347,
+      "sha256": "3d6e729ab86a9113d985f24bb555362a1609146e8d0f540371b7288234e9793e"
+    },
+    {
+      "path": "assets/kuro/angry/_009_85.png",
+      "bytes": 18247,
+      "sha256": "e5ba7416caa983fe2026e68c057390817b1d54ff8e384b448395afa213ef7a09"
+    },
+    {
+      "path": "assets/kuro/angry/_010_85.png",
+      "bytes": 18700,
+      "sha256": "797d2ed464fa3b6045064c6c3aa5ac5a52fec9688df884a38823d51877addea7"
+    },
+    {
+      "path": "assets/kuro/angry/_011_85.png",
+      "bytes": 18913,
+      "sha256": "97085420f384c042bc7404c333e608494d0da080b2d227e18acb5f26d89ec74a"
+    },
+    {
+      "path": "assets/kuro/angry/_012_85.png",
+      "bytes": 18104,
+      "sha256": "5595f3e236668881d6cf6854663ba55b312f3d5214a56eede54ce7ea7ece6124"
+    },
+    {
+      "path": "assets/kuro/angry/_013_85.png",
+      "bytes": 19057,
+      "sha256": "750049ff50e4718a527c57f133aeba56d0ee182f1962d326ff69c5d802894a1b"
+    },
+    {
+      "path": "assets/kuro/angry/_014_85.png",
+      "bytes": 19476,
+      "sha256": "7a8dee11ef94eb0cb1a1c69d43da2ff1172283770521e816320d661c4ec7b90a"
+    },
+    {
+      "path": "assets/kuro/angry/_015_85.png",
+      "bytes": 16208,
+      "sha256": "5b4aaf79ae27901f8ae8850e03f9eb5ff56f66b8b93b3539869d0a8795ac24ec"
+    },
+    {
+      "path": "assets/kuro/angry_leave/_000_85.png",
+      "bytes": 16258,
+      "sha256": "7783353b6f2d59ccd46c64b3adbc20724ab7ad04ab7dee06da2d774b3a2cd0a3"
+    },
+    {
+      "path": "assets/kuro/angry_leave/_001_85.png",
+      "bytes": 19060,
+      "sha256": "b8a4e5cbe35ed1135d293c86daa59e580446d4aa3dc9d0b2f5de4c3f9f054057"
+    },
+    {
+      "path": "assets/kuro/angry_leave/_002_85.png",
+      "bytes": 19715,
+      "sha256": "f6f7075a54c196e0a7f3089c47ed072704506a21b25e7e6c718fc0b23acd1049"
+    },
+    {
+      "path": "assets/kuro/angry_leave/_003_85.png",
+      "bytes": 20181,
+      "sha256": "8ee3a9887a612c3760d9cc539a1fea28d08ecd8f13b81303e67456223d89a28c"
+    },
+    {
+      "path": "assets/kuro/angry_leave/_004_85.png",
+      "bytes": 20080,
+      "sha256": "a3b0f874bdb6c8861cd901745543fe25d86ab11cc5cb210337c3101a0daa182c"
+    },
+    {
+      "path": "assets/kuro/angry_leave/_005_85.png",
+      "bytes": 20295,
+      "sha256": "149d758088d858e7feb6fb6a1a17b050e0bc5dd1bf18425211770673b3a82c51"
+    },
+    {
+      "path": "assets/kuro/angry_leave/_006_85.png",
+      "bytes": 20471,
+      "sha256": "f8073087789f8e5db2630c87db571bdb1337652966c7d2e895d40d281a1184ef"
+    },
+    {
+      "path": "assets/kuro/angry_leave/_007_85.png",
+      "bytes": 15905,
+      "sha256": "50e2a705320722955c2d8d0b0d1c3bf245cd9a5678e2930282b12df43bc1b2fe"
+    },
+    {
+      "path": "assets/kuro/angry_leave/_008_85.png",
+      "bytes": 14175,
+      "sha256": "c7a43ace71791a7d2676611e38985b95b8287ee9e4c570caf1b983e244e1027b"
+    },
+    {
+      "path": "assets/kuro/angry_leave/_009_85.png",
+      "bytes": 12828,
+      "sha256": "aab78355164060d859f34d5978380ed32505cd92b90791b63d05263936ea3a9b"
+    },
+    {
+      "path": "assets/kuro/angry_leave/_010_85.png",
+      "bytes": 11601,
+      "sha256": "6a6f6fbe00297bb4b1c34a079058c7d6ef4c8ae59a2297a30817c033d045bae4"
+    },
+    {
+      "path": "assets/kuro/angry_leave/_011_85.png",
+      "bytes": 11272,
+      "sha256": "ca54fd0c9072e6ffc8846598a22fe06fce074d4874f60809a36cb9f55953931e"
+    },
+    {
+      "path": "assets/kuro/angry_leave/_012_85.png",
+      "bytes": 11159,
+      "sha256": "ba0e872daa9aa731c186dc523666f0f541a7626543cf1c3edf3cfa5962ddfa7d"
+    },
+    {
+      "path": "assets/kuro/angry_leave/_013_85.png",
+      "bytes": 10074,
+      "sha256": "23b5b6488834b6d2ce255d099a5061bb8434551e0d317c6862c5a9ef6fa2b8f0"
+    },
+    {
+      "path": "assets/kuro/angry_leave/_014_85.png",
+      "bytes": 8602,
+      "sha256": "bd8d8e3515d0260c64a62c71e7b138a3aa29437c4b9a82e4c9b20761a68863e8"
+    },
+    {
+      "path": "assets/kuro/angry_leave/_015_85.png",
+      "bytes": 8486,
+      "sha256": "dd92a7e04680f1f40698e6d5c12f8fc73aa42b63b007af167d7679fd75757782"
+    },
+    {
+      "path": "assets/kuro/angry_leave/_016_85.png",
+      "bytes": 8482,
+      "sha256": "3bfdf0835adb14866e9edf87c3b003b462a8fb58dbb48f02bb49554424dc3ab3"
+    },
+    {
+      "path": "assets/kuro/angry_leave/_017_285.png",
+      "bytes": 2097,
+      "sha256": "ef21bd77899cfe4806c27e15179b018d6f40075ef9eb6218cde8b077648537d6"
+    },
+    {
+      "path": "assets/kuro/birthday/_000_100.png",
+      "bytes": 17490,
+      "sha256": "3dd179f64aa694fc03261aa5dc2023c6e20eb2918e8c12dcad81ea5dddac81a4"
+    },
+    {
+      "path": "assets/kuro/birthday/_001_100.png",
+      "bytes": 17295,
+      "sha256": "b9dd4f54d9edaeb5716f83d869d5d76846f4897ab780f1b5a35e6562c418877d"
+    },
+    {
+      "path": "assets/kuro/birthday/_002_100.png",
+      "bytes": 17524,
+      "sha256": "ec6be0751f14f1b1d4dc4682273b2e51c912c476942abc5b6a84366fc4832bb0"
+    },
+    {
+      "path": "assets/kuro/birthday/_003_100.png",
+      "bytes": 17903,
+      "sha256": "f0c5d0f9f981d404a04ab92c51b9760db638ecde939b5c5bd5d766252b2f4d3d"
+    },
+    {
+      "path": "assets/kuro/birthday/_004_100.png",
+      "bytes": 18081,
+      "sha256": "72f1ec61746b66ba5284ee35860d0a41e38cec201b2b6422ba8741137255687f"
+    },
+    {
+      "path": "assets/kuro/birthday/_005_100.png",
+      "bytes": 22369,
+      "sha256": "1732fdf77254845a7a53ca040c0ee12ee5931b3ddbf852ca5017dd918bc4c8d2"
+    },
+    {
+      "path": "assets/kuro/birthday/_006_100.png",
+      "bytes": 23930,
+      "sha256": "2720af06ba0848836731d8c0434e21196555ff6fad4ad9531d0531d1ac232d04"
+    },
+    {
+      "path": "assets/kuro/birthday/_007_100.png",
+      "bytes": 22407,
+      "sha256": "05887992ea0ac2c2481dfd7ba919ac26e4fb1fa1fcdc9bb6cdef5a98417f35fd"
+    },
+    {
+      "path": "assets/kuro/birthday/_008_100.png",
+      "bytes": 21992,
+      "sha256": "5c187091965f6d595d81d7e1934e3ed969525aed3750df90e4d02fe85dd68601"
+    },
+    {
+      "path": "assets/kuro/birthday/_009_100.png",
+      "bytes": 23608,
+      "sha256": "df40507203680fb3761ffd1bd6ccac103bf3110b1521598038fc65b888aecf29"
+    },
+    {
+      "path": "assets/kuro/birthday/_010_100.png",
+      "bytes": 23590,
+      "sha256": "9f1b6c80b0caa05da0bf876b3a5adc0cd119dcb60cfe75d01315c05ba1ffc670"
+    },
+    {
+      "path": "assets/kuro/birthday/_011_100.png",
+      "bytes": 23765,
+      "sha256": "1db483e24dbe52f08ec3d3afa46965fbc2193f86c46c7ae739dd4c101505a3bc"
+    },
+    {
+      "path": "assets/kuro/birthday/_012_100.png",
+      "bytes": 23864,
+      "sha256": "2b60816ed53e6198b5bc5f4a72ab94c9a1622298460df2c01bea9cb54ac27571"
+    },
+    {
+      "path": "assets/kuro/birthday/_013_100.png",
+      "bytes": 24348,
+      "sha256": "d878b3e18ac8481c4af9a089a6fa32d17d3c3008a109ae0ad4eee6085babeb7e"
+    },
+    {
+      "path": "assets/kuro/birthday/_014_100.png",
+      "bytes": 24299,
+      "sha256": "2c89d6d44d04c03f99654596693122229b7a07d8df3067c254cf82e7a5493e64"
+    },
+    {
+      "path": "assets/kuro/birthday/_015_100.png",
+      "bytes": 22284,
+      "sha256": "1b7d11a3be1530c05b63ece5383c58ec994f00c99600846060699d84ae9a191d"
+    },
+    {
+      "path": "assets/kuro/birthday/_016_100.png",
+      "bytes": 22126,
+      "sha256": "ddd38a1158ea9b4ca31a7a2a5c098d581f07b4e93636bd15f17c5388f0c66084"
+    },
+    {
+      "path": "assets/kuro/birthday/_017_100.png",
+      "bytes": 23784,
+      "sha256": "b76e96d3c4c8cfc90f8d07ca616a0f8300926c1b910d2e833b4f5c3bf7e8bc26"
+    },
+    {
+      "path": "assets/kuro/birthday/_018_100.png",
+      "bytes": 23677,
+      "sha256": "c319991bda6800b3ae463fecace07774f8a7e4d33233c3505100b5b0144d30ef"
+    },
+    {
+      "path": "assets/kuro/birthday/_019_100.png",
+      "bytes": 23749,
+      "sha256": "23ef5d704aefb086a4fa804e683d260e4e49ac131e5068cd8097b51ec67f4390"
+    },
+    {
+      "path": "assets/kuro/birthday/_020_100.png",
+      "bytes": 22165,
+      "sha256": "ca7fd2ada7ecc53608b22335d8fd528d6d71c6b5f61bb28a92450c3f21f9a90b"
+    },
+    {
+      "path": "assets/kuro/birthday/_021_100.png",
+      "bytes": 22000,
+      "sha256": "df391ba3df3517bfc6a4f588e30c935f8f3dc862c70343520bad00ecb90f2f90"
+    },
+    {
+      "path": "assets/kuro/birthday/_022_100.png",
+      "bytes": 21429,
+      "sha256": "06f66175e39d3c68e3beac8bf2d835340a66a8f37273564bc3ab2b41f9f26df6"
+    },
+    {
+      "path": "assets/kuro/birthday/_023_100.png",
+      "bytes": 20904,
+      "sha256": "8b8c40c6fc841dc47cdc29f1d45c19a5528d2aa9033a371242a2fe6fde2b6121"
+    },
+    {
+      "path": "assets/kuro/bounce/_000_70.png",
+      "bytes": 13910,
+      "sha256": "9498e9563c8767a51a5a370a2b55b3e7d55828eaf9b1e2b02c8d43eacc57dbdf"
+    },
+    {
+      "path": "assets/kuro/bounce/_001_70.png",
+      "bytes": 15063,
+      "sha256": "2d3c2bbf35eee66e20beecd2932adbd383a5db9988f3219065218aa5bf42ff96"
+    },
+    {
+      "path": "assets/kuro/bounce/_002_70.png",
+      "bytes": 15253,
+      "sha256": "29d2cae57c12e09e7798e6d2051d7f5888fc2d82102abfdf1a5430a3b13ed78e"
+    },
+    {
+      "path": "assets/kuro/bounce/_003_70.png",
+      "bytes": 15340,
+      "sha256": "748f42d237e5ec2b358f8e0e97a17a9a637a591eb6cc41eae1986e77b13f346f"
+    },
+    {
+      "path": "assets/kuro/bounce/_004_70.png",
+      "bytes": 15390,
+      "sha256": "bda1ee86947ab32de1f4d1c7570d5721f36767c488a3bb4fc9c11ba1e0552a75"
+    },
+    {
+      "path": "assets/kuro/bounce/_005_70.png",
+      "bytes": 15220,
+      "sha256": "5176a52517aa96c18069d2131eda97046545d64cd9c9a6b57c145c70cd77c6ba"
+    },
+    {
+      "path": "assets/kuro/bounce/_006_70.png",
+      "bytes": 13910,
+      "sha256": "9498e9563c8767a51a5a370a2b55b3e7d55828eaf9b1e2b02c8d43eacc57dbdf"
+    },
+    {
+      "path": "assets/kuro/bounce/_007_70.png",
+      "bytes": 15063,
+      "sha256": "2d3c2bbf35eee66e20beecd2932adbd383a5db9988f3219065218aa5bf42ff96"
+    },
+    {
+      "path": "assets/kuro/bounce/_008_70.png",
+      "bytes": 15253,
+      "sha256": "29d2cae57c12e09e7798e6d2051d7f5888fc2d82102abfdf1a5430a3b13ed78e"
+    },
+    {
+      "path": "assets/kuro/bounce/_009_70.png",
+      "bytes": 15340,
+      "sha256": "748f42d237e5ec2b358f8e0e97a17a9a637a591eb6cc41eae1986e77b13f346f"
+    },
+    {
+      "path": "assets/kuro/bounce/_010_70.png",
+      "bytes": 15390,
+      "sha256": "bda1ee86947ab32de1f4d1c7570d5721f36767c488a3bb4fc9c11ba1e0552a75"
+    },
+    {
+      "path": "assets/kuro/bounce/_011_70.png",
+      "bytes": 15220,
+      "sha256": "5176a52517aa96c18069d2131eda97046545d64cd9c9a6b57c145c70cd77c6ba"
+    },
+    {
+      "path": "assets/kuro/bounce/_012_100.png",
+      "bytes": 14069,
+      "sha256": "03dd36e698b1c46db61d211ea41206799248a42e6bf551d60ef9f86632af60d8"
+    },
+    {
+      "path": "assets/kuro/bye/_000_80.png",
+      "bytes": 14267,
+      "sha256": "fceafe2b5955ba9a94ff3f1139eaa0f9395a0bb6460cd462253ed79ec19ae47b"
+    },
+    {
+      "path": "assets/kuro/bye/_001_80.png",
+      "bytes": 14980,
+      "sha256": "32ccc034b0ae9cde34c03a706bc560336e6afdfb6bc34c0e63c24cad10654626"
+    },
+    {
+      "path": "assets/kuro/bye/_002_80.png",
+      "bytes": 15396,
+      "sha256": "3687f26b3d98c6c175a424c1970a8ab5308fdd8dbc3f5eecca0c5229f6995d69"
+    },
+    {
+      "path": "assets/kuro/bye/_003_80.png",
+      "bytes": 15994,
+      "sha256": "88abeced1f435f445acee18d166871cd6ab13e81b02c5b96b790a6f9ac6e60cb"
+    },
+    {
+      "path": "assets/kuro/bye/_004_80.png",
+      "bytes": 15255,
+      "sha256": "93414dd862470b90d05f3e39c0fdab6c7083c5785281c6d2953b9a854a6be39a"
+    },
+    {
+      "path": "assets/kuro/bye/_005_80.png",
+      "bytes": 14904,
+      "sha256": "aa6b8f36df3f044553cbcd794815fed259009211c995ac92944214e51955562a"
+    },
+    {
+      "path": "assets/kuro/bye/_006_80.png",
+      "bytes": 15804,
+      "sha256": "8b60abf6007d0a041ea37df1c4c39eb447f8ab787ad3ad0abd96a6ddbc07f4de"
+    },
+    {
+      "path": "assets/kuro/bye/_007_80.png",
+      "bytes": 14705,
+      "sha256": "67611a282f0971b4abfdc38b6f61a5258542bac6ba670f4b173d59ea907071cd"
+    },
+    {
+      "path": "assets/kuro/bye/_008_80.png",
+      "bytes": 15148,
+      "sha256": "f53211c0cc6d6fc406d43cef0821ece90b50762475a7e897127a42570269223f"
+    },
+    {
+      "path": "assets/kuro/bye/_009_80.png",
+      "bytes": 15723,
+      "sha256": "92f14a04a863d43cb04844edd654cd4c976caee1970dfeffd4ad568d5c1e13e7"
+    },
+    {
+      "path": "assets/kuro/bye/_010_80.png",
+      "bytes": 15553,
+      "sha256": "cde67ffa51125d6272a73e276a198ddc4428e580b6b8948fc2b22a018719394f"
+    },
+    {
+      "path": "assets/kuro/bye/_011_80.png",
+      "bytes": 14762,
+      "sha256": "a69dd93087d3470f93d0e44de60eac1a71bd08a1d3d11493b031a7b76a814c72"
+    },
+    {
+      "path": "assets/kuro/bye/_012_80.png",
+      "bytes": 11287,
+      "sha256": "6a10d5161e2c212b53aa6bd6a64c60782f5cf71921b7eecfd7c0a1b569e522d3"
+    },
+    {
+      "path": "assets/kuro/bye/_013_80.png",
+      "bytes": 10585,
+      "sha256": "61690bcf0e5b61c30c25ed32b6381a8452492f935819b0b10a13608ffb76682f"
+    },
+    {
+      "path": "assets/kuro/bye/_014_80.png",
+      "bytes": 10260,
+      "sha256": "d33580f0a37a0219b425462b7dabfd2af732119630250bc231c7fa0217f08c14"
+    },
+    {
+      "path": "assets/kuro/bye/_015_80.png",
+      "bytes": 10334,
+      "sha256": "3fbbed57132d90077ba2a45d2a466dc08b4644741224bcd7887a46722f4165c1"
+    },
+    {
+      "path": "assets/kuro/bye/_016_80.png",
+      "bytes": 9163,
+      "sha256": "a658d611d5827d9ba021ead283540db136657f84a7caf9eae190cb7cef951bf7"
+    },
+    {
+      "path": "assets/kuro/bye/_017_80.png",
+      "bytes": 9194,
+      "sha256": "ee21bc8676f205e8587e5346096c6324bfb777932e2bde93b363cc0a7f08ca65"
+    },
+    {
+      "path": "assets/kuro/bye/_018_80.png",
+      "bytes": 9348,
+      "sha256": "32f77e06d9baa8b5d040009e4c5644abd6b6e37028b3efab0a3b59fcdad8aaf5"
+    },
+    {
+      "path": "assets/kuro/bye/_019_280.png",
+      "bytes": 2097,
+      "sha256": "ef21bd77899cfe4806c27e15179b018d6f40075ef9eb6218cde8b077648537d6"
+    },
+    {
+      "path": "assets/kuro/cheer/_000_85.png",
+      "bytes": 17566,
+      "sha256": "67121990387bd96e5922d8c1c3ae97d0e65b014c1b1940cfcae18ffbd72bbfe9"
+    },
+    {
+      "path": "assets/kuro/cheer/_001_85.png",
+      "bytes": 18785,
+      "sha256": "a693b7efb74f9802b4f36ae6014d171fbbfc5fc14847614e37f2a1d607b168a5"
+    },
+    {
+      "path": "assets/kuro/cheer/_002_85.png",
+      "bytes": 19089,
+      "sha256": "5221806daf69d84d5ef390c35705631feccdd744c257cb99d134a4aa45028e79"
+    },
+    {
+      "path": "assets/kuro/cheer/_003_85.png",
+      "bytes": 19429,
+      "sha256": "6febcf70c703a136459f0f829582c8ccae4c1f26b8b31c951e66b1cb91faf9ef"
+    },
+    {
+      "path": "assets/kuro/cheer/_004_85.png",
+      "bytes": 19817,
+      "sha256": "8f1dadb69d1f215dd346d3648c1bac5c4c1b3cf9c5525318171d22d4bcfc5590"
+    },
+    {
+      "path": "assets/kuro/cheer/_005_85.png",
+      "bytes": 19409,
+      "sha256": "c3bf2bea3af500fe9a951a8fa878e4437195be6410de39912e33a2c28875061b"
+    },
+    {
+      "path": "assets/kuro/cheer/_006_85.png",
+      "bytes": 18511,
+      "sha256": "dca263aff88764c2e863ac4614bcebb63e14062a74cec3f9be1094a7e800ab9c"
+    },
+    {
+      "path": "assets/kuro/cheer/_007_85.png",
+      "bytes": 18478,
+      "sha256": "16853b5fb52686e4264896bd2d3da79c4386c93d8a9e5fb908d71d74d20a9960"
+    },
+    {
+      "path": "assets/kuro/cheer/_008_85.png",
+      "bytes": 19210,
+      "sha256": "a0bcb1c7f92e1c230151249d2faf0288d473dd88818dfc8c74bcf732bc245b6f"
+    },
+    {
+      "path": "assets/kuro/cheer/_009_85.png",
+      "bytes": 18423,
+      "sha256": "b922c562e1d7a2ee1bf0270bcea5cc0864070138feed7cd84dd222deea5fb165"
+    },
+    {
+      "path": "assets/kuro/cheer/_010_85.png",
+      "bytes": 18619,
+      "sha256": "5e8a25c7939d9724d8c39cb4408dc776a8906d4c4c70dd6867dafc5c6e38bd16"
+    },
+    {
+      "path": "assets/kuro/cheer/_011_85.png",
+      "bytes": 19817,
+      "sha256": "0d6eb3241dd6210275a87e6eb551974d0f427da7f222a274341d5a2a24b2eccd"
+    },
+    {
+      "path": "assets/kuro/cheer/_012_85.png",
+      "bytes": 19016,
+      "sha256": "560830a462452e1f40662e8c557c17765d1f6d20f95a15d542d5afcd786dbbd9"
+    },
+    {
+      "path": "assets/kuro/cheer/_013_85.png",
+      "bytes": 18654,
+      "sha256": "7f02ccf7d7e986e8fa617d3ec3ff15af0c5aaec6390b6a351dde3cc199abd7e0"
+    },
+    {
+      "path": "assets/kuro/cheer/_014_85.png",
+      "bytes": 18534,
+      "sha256": "0f2849c98b9176c7b0edbc3c42938e9d580d551b2530c6badbe3eb4c51bdff7a"
+    },
+    {
+      "path": "assets/kuro/cheer/_015_85.png",
+      "bytes": 19105,
+      "sha256": "fdb2ad80a7a55d3fa9f544eac75c923edb8b2a9b331554e5ee16b77915ab07f8"
+    },
+    {
+      "path": "assets/kuro/cheer/_016_85.png",
+      "bytes": 19366,
+      "sha256": "3420b2082a85d5ec2ffdc96ddf326c1013a9de9a4a0792e2df03481c95a62d82"
+    },
+    {
+      "path": "assets/kuro/cheer/_017_85.png",
+      "bytes": 19634,
+      "sha256": "4cc34e4a44b64ebeab6c720986a19fdbfcaab7b977ba1d46974fc868ebe13d5d"
+    },
+    {
+      "path": "assets/kuro/cheer/_018_85.png",
+      "bytes": 17270,
+      "sha256": "c749a6c99e28b384bdf7c919925d77b6553b4f9e4346bbea7b265fc094f33916"
+    },
+    {
+      "path": "assets/kuro/cheer/_019_85.png",
+      "bytes": 16955,
+      "sha256": "2594ef109026ec6a375911517e50c9c26d5f379486c36fc844938c38558c8835"
+    },
+    {
+      "path": "assets/kuro/cheer/_020_150.png",
+      "bytes": 14017,
+      "sha256": "8bedc71bcb81238c1decd09db11a6c269233c0a43260409b5d64beeeaf1aed5d"
+    },
+    {
+      "path": "assets/kuro/dance/end/_000_110.png",
+      "bytes": 14726,
+      "sha256": "8ebf1fe35347f46576d652656a85e04dc9c814f56c4c9e35ee18668c32648879"
+    },
+    {
+      "path": "assets/kuro/dance/end/_001_110.png",
+      "bytes": 15974,
+      "sha256": "b547ba5a7354ef430b968ff70cf9f831c26e9d57bf69935bfc8c9447e01d1493"
+    },
+    {
+      "path": "assets/kuro/dance/end/_002_80.png",
+      "bytes": 16035,
+      "sha256": "2866211474f13bf804df4d1fbb688e65ea64eea5e6a6b6f3e85b0fa2bd053bd3"
+    },
+    {
+      "path": "assets/kuro/dance/end/_003_80.png",
+      "bytes": 14778,
+      "sha256": "f053cde5e6cf81fb537aaaff04ea955508699aeb0fb9e95d42b201ff4d7293fc"
+    },
+    {
+      "path": "assets/kuro/dance/loop/_000_90.png",
+      "bytes": 15071,
+      "sha256": "761d3e71a1319fbf128b6c5f2379fdb6b267ead563388159cc34b2dd718efa0f"
+    },
+    {
+      "path": "assets/kuro/dance/loop/_001_90.png",
+      "bytes": 18844,
+      "sha256": "09adb9f2c327b2c4148858ab7bb17a9406dbe9a03a9d6b3d22d8012bde2c6222"
+    },
+    {
+      "path": "assets/kuro/dance/loop/_002_90.png",
+      "bytes": 19759,
+      "sha256": "57bd95dc6d83b32399fccbc8c40def4932c7a2f49479f86be2ece0d765499330"
+    },
+    {
+      "path": "assets/kuro/dance/loop/_003_90.png",
+      "bytes": 19481,
+      "sha256": "5943b6fff3c8908261a62aa766f9c2871e06f15b888d82c430774245082abc26"
+    },
+    {
+      "path": "assets/kuro/dance/loop/_004_90.png",
+      "bytes": 20132,
+      "sha256": "276d3282489ac5be6b5f7cb518c82e401c2c629e3972b09d8b74b94fadd36b46"
+    },
+    {
+      "path": "assets/kuro/dance/loop/_005_90.png",
+      "bytes": 19197,
+      "sha256": "d2ac46b3ce4d115b155ca01d7609ba8a7571822acf51897dd670310aa84a3ca7"
+    },
+    {
+      "path": "assets/kuro/dance/loop/_006_90.png",
+      "bytes": 15059,
+      "sha256": "362a407d3194f0e2a62e6187da0297d0edfd06253fc0fa349f63e2a24e99ce2c"
+    },
+    {
+      "path": "assets/kuro/dance/loop/_007_90.png",
+      "bytes": 18190,
+      "sha256": "2c39c22816c3098582ed2f0504105ac109c9d60ddde3fb83bf10a88ad9e34725"
+    },
+    {
+      "path": "assets/kuro/dance/loop/_008_90.png",
+      "bytes": 18571,
+      "sha256": "8232cc0d901202bb6c46fb432f66c286e1bceafc52d87de9b2917d7b8886052a"
+    },
+    {
+      "path": "assets/kuro/dance/loop/_009_90.png",
+      "bytes": 18291,
+      "sha256": "dce8f7d9a45d6a55eb3342a5dfe2ed78c9774aa34b925241ce388ffd9d5a96c2"
+    },
+    {
+      "path": "assets/kuro/dance/loop/_010_90.png",
+      "bytes": 18857,
+      "sha256": "e8998bad20dab22383649d1653ceedb5af0bb1859180256a1d1a396f317d9af8"
+    },
+    {
+      "path": "assets/kuro/dance/loop/_011_90.png",
+      "bytes": 18324,
+      "sha256": "ac4d83c88e90e9d3c9976402217aa22814ddbba8452ed5f520acfc01d1493632"
+    },
+    {
+      "path": "assets/kuro/dance/start/_000_70.png",
+      "bytes": 14341,
+      "sha256": "05d26d952ac2180b4e507890ffcb5690be78f3a9b57adfd6f4ad74deb561c39e"
+    },
+    {
+      "path": "assets/kuro/dance/start/_001_70.png",
+      "bytes": 14419,
+      "sha256": "ec1aa7c5d7b0ef4474d380fbc91a154bdc93b7a4e879e13d81e2c2a260b140fe"
+    },
+    {
+      "path": "assets/kuro/dance/start/_002_70.png",
+      "bytes": 14686,
+      "sha256": "89ba12eeb4dc6cb453e1f9566ffaf595e07cbd312bde8ab4dc76c58888257989"
+    },
+    {
+      "path": "assets/kuro/dance/start/_003_70.png",
+      "bytes": 14633,
+      "sha256": "16a957036a21981d9d6f5f15712b328324fffa752a4b785055139e6aa33cd658"
+    },
+    {
+      "path": "assets/kuro/dash/end_left/_000_80.png",
+      "bytes": 15099,
+      "sha256": "3c79d400adaef5722767f41ea635b266c127f7bf86202343c956316591d3ea87"
+    },
+    {
+      "path": "assets/kuro/dash/end_left/_001_80.png",
+      "bytes": 15965,
+      "sha256": "b4d7fb374fd2d09faa5b2ea63ec49a174bdaa7c6f2395b1b3cc6d580f806b93c"
+    },
+    {
+      "path": "assets/kuro/dash/end_left/_002_80.png",
+      "bytes": 13901,
+      "sha256": "6329bf2923a57c7a20ad0d76278ae7903eeda85320fe6067ff59077371aa5c0e"
+    },
+    {
+      "path": "assets/kuro/dash/end_right/_000_80.png",
+      "bytes": 14960,
+      "sha256": "853ff1c22cce9eef575f3950012aaf0a853a3fe84577fbb9ca9898f645b7a904"
+    },
+    {
+      "path": "assets/kuro/dash/end_right/_001_80.png",
+      "bytes": 15881,
+      "sha256": "02e9c335ddc2576176c17e2a76f958ff37f5cdf523181c4dc450e30369a87de1"
+    },
+    {
+      "path": "assets/kuro/dash/end_right/_002_80.png",
+      "bytes": 13895,
+      "sha256": "7d95cbde40c5d109174a0908e4855f60b10b354dfde71bc1a034ebb1e879147b"
+    },
+    {
+      "path": "assets/kuro/dash/left/_000_70.png",
+      "bytes": 17551,
+      "sha256": "e87a3bc8028c4c4c266e8d6cfab69e6a885ce23026880f73f02f47117cd46110"
+    },
+    {
+      "path": "assets/kuro/dash/left/_001_70.png",
+      "bytes": 18703,
+      "sha256": "2d4dd365f32155714ac087e6db36debf1c1e3fd03c8801e64a0383c6f93864eb"
+    },
+    {
+      "path": "assets/kuro/dash/left/_002_70.png",
+      "bytes": 19143,
+      "sha256": "2ab3ee5e991ea9bb59defd3c5940040efd632ec92a023f89d6cc56ef1b1ba437"
+    },
+    {
+      "path": "assets/kuro/dash/left/_003_70.png",
+      "bytes": 18872,
+      "sha256": "e1d4caba629a7f374865344f0aae95f8783f05df8262a3796a15635af6a1ee26"
+    },
+    {
+      "path": "assets/kuro/dash/left/_004_70.png",
+      "bytes": 18619,
+      "sha256": "daa179ec2ea674605e861585b9701a43a33789ccba299a86f500dec0368bfa5e"
+    },
+    {
+      "path": "assets/kuro/dash/left/_005_70.png",
+      "bytes": 18117,
+      "sha256": "1602d9a562038a68ab28e6cae92334505bed64a0d457f2d61d92feb41f386f81"
+    },
+    {
+      "path": "assets/kuro/dash/left/_006_70.png",
+      "bytes": 18826,
+      "sha256": "0e0c7e2165ca31e18cc40953d96e180753bbcc9e0acf4622b750936681a4fc0e"
+    },
+    {
+      "path": "assets/kuro/dash/left/_007_70.png",
+      "bytes": 18867,
+      "sha256": "5398484ea5eec996eb47cd6c2e87958978ce6a9b131b28ddd748b8ced99d3047"
+    },
+    {
+      "path": "assets/kuro/dash/right/_000_70.png",
+      "bytes": 17404,
+      "sha256": "f76e745dfa60a446bb7f660552943ce7fd6ff20aca071144ac4cd3e814084310"
+    },
+    {
+      "path": "assets/kuro/dash/right/_001_70.png",
+      "bytes": 18554,
+      "sha256": "a43071fe9cef00eeb18523aabce688c61544ff184f0d6086f5c459804424a8bc"
+    },
+    {
+      "path": "assets/kuro/dash/right/_002_70.png",
+      "bytes": 18870,
+      "sha256": "221251574eaf5dfb5f025d6c6a44add9bb44c75e3fd3021a5a76b74b1532915f"
+    },
+    {
+      "path": "assets/kuro/dash/right/_003_70.png",
+      "bytes": 18545,
+      "sha256": "badd3b9cc5f4b968bb3a194262202e3b1d010cbb0ae785096cbe14b74b01661e"
+    },
+    {
+      "path": "assets/kuro/dash/right/_004_70.png",
+      "bytes": 18437,
+      "sha256": "fe2684e0edf188bb383beb2fb651a667ee25a65d186cf6bee022f75ce22c7a09"
+    },
+    {
+      "path": "assets/kuro/dash/right/_005_70.png",
+      "bytes": 18013,
+      "sha256": "d6c4444499433d0b21864bffa2359571ad488c7372def0a807cd13e46952ff0e"
+    },
+    {
+      "path": "assets/kuro/dash/right/_006_70.png",
+      "bytes": 18629,
+      "sha256": "d2ec956a7407e7857075b6a95796c06d4173e6c5eec9befaac1a6bcca6dd00a3"
+    },
+    {
+      "path": "assets/kuro/dash/right/_007_70.png",
+      "bytes": 18615,
+      "sha256": "b76484d84111de6469359339d9408a1cbda26990d6486c97d1f63ec51ce7f282"
+    },
+    {
+      "path": "assets/kuro/dash/start_left/_000_70.png",
+      "bytes": 16059,
+      "sha256": "f244318cc690f61ead7110d9bd172331a92747603e3b20a9d90ef0d16aee7ed5"
+    },
+    {
+      "path": "assets/kuro/dash/start_left/_001_70.png",
+      "bytes": 16272,
+      "sha256": "0aea28ac09989e3836c8bb2021381ba86b7a5edee66caf9d4ee922b5853b0402"
+    },
+    {
+      "path": "assets/kuro/dash/start_left/_002_70.png",
+      "bytes": 16633,
+      "sha256": "a7d2a90721a08f2836f95d373135f014625186437aab84e521c5b2a2e31bebb4"
+    },
+    {
+      "path": "assets/kuro/dash/start_right/_000_70.png",
+      "bytes": 16035,
+      "sha256": "b6fc5d1277677449947394cba7d619d707f18218d19f48cb80b06bac0bfda35a"
+    },
+    {
+      "path": "assets/kuro/dash/start_right/_001_70.png",
+      "bytes": 16106,
+      "sha256": "c2fa106c5c830b2993e989354721e87444761263c7cd4541080f5aa879781629"
+    },
+    {
+      "path": "assets/kuro/dash/start_right/_002_70.png",
+      "bytes": 16367,
+      "sha256": "2dc03ab0eca8b09fe57126031dd7912f4208842d877e5b0bca0de4654a60f27c"
+    },
+    {
+      "path": "assets/kuro/done/_000_90.png",
+      "bytes": 13533,
+      "sha256": "93143bd47f2c887a9985355bf4886f20127cbadf3338cc3b40d918a8ef25c241"
+    },
+    {
+      "path": "assets/kuro/done/_001_90.png",
+      "bytes": 13898,
+      "sha256": "062e46075e97b4e62b45b1a2cc2071a5489426dffb43d80f1c60db35668e0a10"
+    },
+    {
+      "path": "assets/kuro/done/_002_90.png",
+      "bytes": 16702,
+      "sha256": "56196dea113c3ca4eabe49f572e419546209ac952f36c3ba992522ff56e127b2"
+    },
+    {
+      "path": "assets/kuro/done/_003_90.png",
+      "bytes": 16743,
+      "sha256": "1865f83f156c6c4e383098b84c8706036459fa385cf24cb9165196640236d47d"
+    },
+    {
+      "path": "assets/kuro/done/_004_90.png",
+      "bytes": 16634,
+      "sha256": "f139254a92a3790fb7ed34084aa451f0bc23d9c401c27d67f55091aeca0f58e3"
+    },
+    {
+      "path": "assets/kuro/done/_005_90.png",
+      "bytes": 16309,
+      "sha256": "7124fdd1ffab7fe9a2708ab071f754807b5db1bbdb390966caeb2746f38449c9"
+    },
+    {
+      "path": "assets/kuro/done/_006_90.png",
+      "bytes": 16971,
+      "sha256": "793944c06ef1ac7e67643b9e77f89701ee1262cdb4c0220bd2d9e1dc6a1052a9"
+    },
+    {
+      "path": "assets/kuro/done/_007_90.png",
+      "bytes": 15633,
+      "sha256": "dac23070cd9c1ff4a8a6caa42edb4802b12427eaddeee7b12d3ac99ac12d2647"
+    },
+    {
+      "path": "assets/kuro/done/_008_90.png",
+      "bytes": 16138,
+      "sha256": "f868a6f1b391d348c7ed51e90beb72a9a94b58a29db744bf9a218874e8a64d10"
+    },
+    {
+      "path": "assets/kuro/done/_009_90.png",
+      "bytes": 15379,
+      "sha256": "c4f6fb89fd7311ad66f16bf43ad564bf1e6c229de5c7845fe1c2fcac4782707d"
+    },
+    {
+      "path": "assets/kuro/done/_010_90.png",
+      "bytes": 14648,
+      "sha256": "8810b2af2e6a3ac6b51a44c766168c71eaa79373ba9d38b5d29c6fdb8d571e21"
+    },
+    {
+      "path": "assets/kuro/done/_011_160.png",
+      "bytes": 14407,
+      "sha256": "9b3a9baff3d6a3433587664d1893489d1f6808900a37fd10abda6a370ad3201a"
+    },
+    {
+      "path": "assets/kuro/drink/_000_90.png",
+      "bytes": 14980,
+      "sha256": "7680648ae5f872e555542619204bf191b9a3b7cb0e32a66c124a18c159ba1b79"
+    },
+    {
+      "path": "assets/kuro/drink/_001_90.png",
+      "bytes": 14866,
+      "sha256": "5d6f905f0b5f88ecd5006816123be2cde3a37ed885df2b845a4f213e222f663c"
+    },
+    {
+      "path": "assets/kuro/drink/_002_90.png",
+      "bytes": 14617,
+      "sha256": "430ec6070c7e89dfbb091d41809b11bc82c5a259e9703ac429c87725bec6391f"
+    },
+    {
+      "path": "assets/kuro/drink/_003_90.png",
+      "bytes": 14616,
+      "sha256": "dfddeb92382620e12660a28840c94fd5794de6b08b0dafc31e6a4bff1d4b6411"
+    },
+    {
+      "path": "assets/kuro/drink/_004_90.png",
+      "bytes": 14784,
+      "sha256": "84058f604fd3c03a6685cbba4a119e81d5442dfe2cc119a899ebb9584046af21"
+    },
+    {
+      "path": "assets/kuro/drink/_005_90.png",
+      "bytes": 14951,
+      "sha256": "3957f6b558226bbdb8a6c49d5f6ecafe4ec6e10d0ee74e0cd322d68df5faa8ff"
+    },
+    {
+      "path": "assets/kuro/drink/_006_90.png",
+      "bytes": 16298,
+      "sha256": "84b9c6bef82de577d7e5579c70c50b15dffd3553db263e3032f980876915bfb6"
+    },
+    {
+      "path": "assets/kuro/drink/_007_90.png",
+      "bytes": 16474,
+      "sha256": "1047043b8eb0c7af83b85613048774a50074c4660f24a67384b5acdb62f8f946"
+    },
+    {
+      "path": "assets/kuro/drink/_008_90.png",
+      "bytes": 16515,
+      "sha256": "b837e7b1abc5a7f9a6ad0bd6b1bb1f75aab15afd302e48d3c9f079718579c504"
+    },
+    {
+      "path": "assets/kuro/drink/_009_90.png",
+      "bytes": 16562,
+      "sha256": "c8412060ca8d2380c6f89154a42f08b61e33bed806d4a2c6a1907fc7757fba57"
+    },
+    {
+      "path": "assets/kuro/drink/_010_90.png",
+      "bytes": 16664,
+      "sha256": "212c456879edcaf94168de1dcf416abc0c73762b59c9066be9ae974178a6c417"
+    },
+    {
+      "path": "assets/kuro/drink/_011_90.png",
+      "bytes": 16794,
+      "sha256": "b36deb5a255b0a68a949ee4bb5e3ae04140bd7c3ec5697c8207758ea82dd9f3e"
+    },
+    {
+      "path": "assets/kuro/drink/_012_90.png",
+      "bytes": 16731,
+      "sha256": "bef4217c78570990fe7a9713766e930fb46ae9b6f269b42fffe0ccd2235404c8"
+    },
+    {
+      "path": "assets/kuro/drink/_013_90.png",
+      "bytes": 16698,
+      "sha256": "a01719f2938a92d987deec3c44fac14db388c2c7c1261d573c4501660a5d14e1"
+    },
+    {
+      "path": "assets/kuro/drink/_014_90.png",
+      "bytes": 16726,
+      "sha256": "5a26a183dc1d514a2b62e8c1f78c62a631406e19959182a0db141b7c83daa3ea"
+    },
+    {
+      "path": "assets/kuro/drink/_015_90.png",
+      "bytes": 15118,
+      "sha256": "18918798f19b2a38be2a723e69c379814e7f26e7c569a53ac62ef4a9ca1beeec"
+    },
+    {
+      "path": "assets/kuro/drink/_016_90.png",
+      "bytes": 15541,
+      "sha256": "228e83b2897f7373e346d597466618f6c19ab8f18fb92556fbc135c1cb3faeab"
+    },
+    {
+      "path": "assets/kuro/drink/_017_90.png",
+      "bytes": 16072,
+      "sha256": "8b1c26123ad8145b23aa5d290c68fa76d6d5d299406e71dabe22fb23836f2fae"
+    },
+    {
+      "path": "assets/kuro/drink/_018_90.png",
+      "bytes": 15978,
+      "sha256": "95515bd5965d6eea03511d04211e65404e5a9f961f3b6f65be27bd1aa20086c0"
+    },
+    {
+      "path": "assets/kuro/drink/_019_90.png",
+      "bytes": 15249,
+      "sha256": "9aaffaa4fb116e8ddc1e349e8a2168740d25d6fc7b106de6c9c4ef1cee259955"
+    },
+    {
+      "path": "assets/kuro/drink/_020_90.png",
+      "bytes": 14702,
+      "sha256": "d019ba177ffecb67047df0e964857b7019220735c8435670855cd7f409130ab4"
+    },
+    {
+      "path": "assets/kuro/drink/_021_90.png",
+      "bytes": 14009,
+      "sha256": "0499eb051f75c92606fcda33274e0cc7c75d3a55506d460775c58ee7ff5aa582"
+    },
+    {
+      "path": "assets/kuro/held/end/_000_70.png",
+      "bytes": 14862,
+      "sha256": "984d68df391200b39dcf0b62a5ac53a52a53dee435a7819ca34995bb51fe4318"
+    },
+    {
+      "path": "assets/kuro/held/end/_001_70.png",
+      "bytes": 13473,
+      "sha256": "b8793ea971b0ac7c6fad53f0173655a1b74b497c86947679b759ab52416e2821"
+    },
+    {
+      "path": "assets/kuro/held/end/_002_70.png",
+      "bytes": 15306,
+      "sha256": "ab842719f3a6e5cb2f4a869bb27643e46503841db66e44d69c2b59bfd07bf0db"
+    },
+    {
+      "path": "assets/kuro/held/end/_003_70.png",
+      "bytes": 14819,
+      "sha256": "8037d495a46242a65a503a51c1078d1365d154d42a6d597212e6d5492ceac6d3"
+    },
+    {
+      "path": "assets/kuro/held/end/_004_70.png",
+      "bytes": 14319,
+      "sha256": "822ebaa55e31b54d2644c740b76b810f926a50040d81e6596e85bdb5bbd57996"
+    },
+    {
+      "path": "assets/kuro/held/loop/_000_80.png",
+      "bytes": 16360,
+      "sha256": "629eae1a961727492fc2be6d16320a197fc1bf1fb6e2053fb7be2a22adb6ec9e"
+    },
+    {
+      "path": "assets/kuro/held/loop/_001_80.png",
+      "bytes": 18457,
+      "sha256": "74018a14da98128a0273d495aeec7d87951e96b1998c87c9d9acbae95486d7bb"
+    },
+    {
+      "path": "assets/kuro/held/loop/_002_80.png",
+      "bytes": 18636,
+      "sha256": "9ccb2299a058e3c28983d05aa84219eec0622337c3bc2e520e3df8ec6f255c56"
+    },
+    {
+      "path": "assets/kuro/held/loop/_003_80.png",
+      "bytes": 19307,
+      "sha256": "1d468b0037534fb77fac4fe84afe69c393094245f6036b6bd798944f0c68f3e5"
+    },
+    {
+      "path": "assets/kuro/held/loop/_004_80.png",
+      "bytes": 18543,
+      "sha256": "aa5676b8566bd3a6dc69943737eb38404503928c77778a438fed0ca4ce53fc8e"
+    },
+    {
+      "path": "assets/kuro/held/loop/_005_80.png",
+      "bytes": 17577,
+      "sha256": "26fcc8228f42a762c4d96faf6e2a7c85e0203996b1af88f66e038332bb39a1b3"
+    },
+    {
+      "path": "assets/kuro/held/loop/_006_80.png",
+      "bytes": 16360,
+      "sha256": "629eae1a961727492fc2be6d16320a197fc1bf1fb6e2053fb7be2a22adb6ec9e"
+    },
+    {
+      "path": "assets/kuro/held/loop/_007_80.png",
+      "bytes": 18158,
+      "sha256": "10bed905f1d8e4714eb0693cfd1abe2ce0f97138304043b145ac4ba660718423"
+    },
+    {
+      "path": "assets/kuro/held/loop/_008_80.png",
+      "bytes": 18729,
+      "sha256": "19c86c969b1ddff51f4f060073ed57b94f15b32260bec4f7f8e0c30ded1cd430"
+    },
+    {
+      "path": "assets/kuro/held/loop/_009_80.png",
+      "bytes": 19221,
+      "sha256": "a9449a3bcc2b59b292ed4f2fe6f2f180f022ad3728e56d2a2f434e74e0e5f25f"
+    },
+    {
+      "path": "assets/kuro/held/loop/_010_80.png",
+      "bytes": 18564,
+      "sha256": "e9dd805e8356f68d772eda9548792b04986d7bbe5c09d18b81f12ed28d9791e7"
+    },
+    {
+      "path": "assets/kuro/held/loop/_011_80.png",
+      "bytes": 17539,
+      "sha256": "e7c2592708cc0b2df4005fb851206c7cdd0949687155593687ce9c63029bc00e"
+    },
+    {
+      "path": "assets/kuro/held/start/_000_60.png",
+      "bytes": 15554,
+      "sha256": "f15b4a2015b80b65923746a389a06a49fb8d21387f02e3695a11c87d4ed102d1"
+    },
+    {
+      "path": "assets/kuro/held/start/_001_60.png",
+      "bytes": 16387,
+      "sha256": "4ba8cbe7ea1052a4f9d171d250eff45c9bbd214072a4140115cefc8d5fdde072"
+    },
+    {
+      "path": "assets/kuro/held/start/_002_60.png",
+      "bytes": 16590,
+      "sha256": "af0f8c8e2b4853d30649a6300fd05a563b4d03f5dce7b802a41c28fe359990c9"
+    },
+    {
+      "path": "assets/kuro/held/start/_003_60.png",
+      "bytes": 16482,
+      "sha256": "7da31640e6ca19b56405bc451c559e491c1518ff5beec02a003a97a9d93bcd89"
+    },
+    {
+      "path": "assets/kuro/held/start/_004_60.png",
+      "bytes": 16411,
+      "sha256": "787fef3b0c6070116400ca0db3194d051df8750395316c977f221e4f51a770ff"
+    },
+    {
+      "path": "assets/kuro/hello/_000_80.png",
+      "bytes": 5833,
+      "sha256": "56c1acd67ec823ecaeb8f5287b44beef850e875ae077738997d4b682eba55ace"
+    },
+    {
+      "path": "assets/kuro/hello/_001_80.png",
+      "bytes": 6992,
+      "sha256": "65dc7fd0ea58c64fe0deee20a4e2a0cee0131d8bb6f99eba31420a2c5b45da2e"
+    },
+    {
+      "path": "assets/kuro/hello/_002_80.png",
+      "bytes": 7770,
+      "sha256": "07758002f182195b8bdbfb6f8e71e2768bf1ca0f243ec2fb1466a94eaeb23e79"
+    },
+    {
+      "path": "assets/kuro/hello/_003_80.png",
+      "bytes": 9736,
+      "sha256": "6f75c2ce3fe06a9bcbd5e6fb9c5432d0b601a124641064e3fdcda7f1fa28b9b2"
+    },
+    {
+      "path": "assets/kuro/hello/_004_80.png",
+      "bytes": 13284,
+      "sha256": "90ff17eb4fb3aed79ed0feab7c9337a9354e822223f2da0e09f1643d0a96ade7"
+    },
+    {
+      "path": "assets/kuro/hello/_005_80.png",
+      "bytes": 17280,
+      "sha256": "3abe68d21781add8301c63ff2e101449cefad04408ccd6ab6900c68f762bca38"
+    },
+    {
+      "path": "assets/kuro/hello/_006_80.png",
+      "bytes": 20141,
+      "sha256": "b7e6619fa7f060698512313e8b2940ed7501cebde9b1ac2ea64bd3e1ec6b6312"
+    },
+    {
+      "path": "assets/kuro/hello/_007_80.png",
+      "bytes": 22579,
+      "sha256": "0f479ccee9beac878fa496f72efa5386a5a183a04dedea1317220f7bc8d13447"
+    },
+    {
+      "path": "assets/kuro/hello/_008_80.png",
+      "bytes": 21524,
+      "sha256": "ab6c71937a81aa1d46ebb517cf56d8f7322cb46532900e221b5fc4cbf3d0f71e"
+    },
+    {
+      "path": "assets/kuro/hello/_009_80.png",
+      "bytes": 13989,
+      "sha256": "3e267ebdd790c8617a5c5c3af0b082d4dadd32669ba7674c251efb87158ebf4f"
+    },
+    {
+      "path": "assets/kuro/hello/_010_80.png",
+      "bytes": 14618,
+      "sha256": "8a06d3b73f899dfe682ae69c960f4a4b95c7e387bd0702a6e7b8f7eca9e3599d"
+    },
+    {
+      "path": "assets/kuro/hello/_011_80.png",
+      "bytes": 15061,
+      "sha256": "c9ee5255034f60493afad94a956c28ab65358610abdfd9f0c94c5945cc1e1c04"
+    },
+    {
+      "path": "assets/kuro/hello/_012_80.png",
+      "bytes": 15258,
+      "sha256": "c812bfeeed98f660ea873ce6e093b4ebbaabeb9867f06a924799aae460538329"
+    },
+    {
+      "path": "assets/kuro/hello/_013_80.png",
+      "bytes": 15405,
+      "sha256": "fd28ef664972ed60b30428f2cde31222128fb9b8a6ecab74f7feb869b36fac62"
+    },
+    {
+      "path": "assets/kuro/hello/_014_80.png",
+      "bytes": 15615,
+      "sha256": "3e8b996974dcf9b2f72a8bc8b4be6b07cfbb52d089662e89e16f93e4de6e52de"
+    },
+    {
+      "path": "assets/kuro/hello/_015_80.png",
+      "bytes": 15482,
+      "sha256": "1ca548d9d4058791d55ea069272d81f61b39402a98bca49ed558874887ffdafd"
+    },
+    {
+      "path": "assets/kuro/hello/_016_80.png",
+      "bytes": 14297,
+      "sha256": "4bf7058d4c961cde17e3f822de6e63d9447675b5c727be373d89f8e0e0ff3fb6"
+    },
+    {
+      "path": "assets/kuro/hello/_017_80.png",
+      "bytes": 14836,
+      "sha256": "d5b639e2cfd2e12541c42201b4a4993ab0a71d4d8020356b380228034556b113"
+    },
+    {
+      "path": "assets/kuro/hello/_018_80.png",
+      "bytes": 14684,
+      "sha256": "2289e0c0b36308c5a809f6c7384a8bc7e5fcca19ffa297d42d4db5746d998fa2"
+    },
+    {
+      "path": "assets/kuro/hello/_019_80.png",
+      "bytes": 14393,
+      "sha256": "325b18e31fe454ea540ce5c9bcd272fcde18fe5a0dc61a612d33b7de07de1c8c"
+    },
+    {
+      "path": "assets/kuro/idle_breeze/_000_140.png",
+      "bytes": 14069,
+      "sha256": "03dd36e698b1c46db61d211ea41206799248a42e6bf551d60ef9f86632af60d8"
+    },
+    {
+      "path": "assets/kuro/idle_breeze/_001_140.png",
+      "bytes": 15567,
+      "sha256": "1a18f32636f9b6f02be49d1bc2b978a6487df998f4d9bf4567410cb3e9a38119"
+    },
+    {
+      "path": "assets/kuro/idle_breeze/_002_140.png",
+      "bytes": 16107,
+      "sha256": "1ea3f5a0d8626efe5683d900d0adfce6829c0c6419595e2cb053ec0329fdf645"
+    },
+    {
+      "path": "assets/kuro/idle_breeze/_003_140.png",
+      "bytes": 16523,
+      "sha256": "e5604371e1ab78a8827fbe8110908b5c4dee11b7bfb8aef601d86ae90cafdb1f"
+    },
+    {
+      "path": "assets/kuro/idle_breeze/_004_140.png",
+      "bytes": 16555,
+      "sha256": "7ceed4bd69b7c3b7ab06923cc4f8df6e00ff44c9da7cf3e14268cb41ae3cfda7"
+    },
+    {
+      "path": "assets/kuro/idle_breeze/_005_140.png",
+      "bytes": 16793,
+      "sha256": "32061b1b861aa1ca064c6131bf4ae0578dd889c2e25f0857377d58a84054fdf5"
+    },
+    {
+      "path": "assets/kuro/idle_breeze/_006_140.png",
+      "bytes": 16579,
+      "sha256": "cd34d0cdbbdb7bfb6c82c76cb5c627f99781c10301f1a1dd3b54c8258f1899c4"
+    },
+    {
+      "path": "assets/kuro/idle_breeze/_007_140.png",
+      "bytes": 16755,
+      "sha256": "bdd8583b8976f915c1f52ee3c5bc6831ef1f2bed9bea5cf0f9b222f44c12f928"
+    },
+    {
+      "path": "assets/kuro/idle_breeze/_008_140.png",
+      "bytes": 16281,
+      "sha256": "3af0379436012707c647bf957155c4a2482c2d326888a6a827078006161de4d3"
+    },
+    {
+      "path": "assets/kuro/idle_breeze/_009_140.png",
+      "bytes": 15896,
+      "sha256": "8091c35f65deeb803613e497920d85df904d27d6542963806da1a2239142bfce"
+    },
+    {
+      "path": "assets/kuro/idle_breeze/_010_140.png",
+      "bytes": 15955,
+      "sha256": "f789532173609dc1a3e5ce29f5f8cc5f558465bee726ef99782b133bd6f2d66d"
+    },
+    {
+      "path": "assets/kuro/idle_breeze/_011_140.png",
+      "bytes": 16058,
+      "sha256": "0e125a76f12ed8dc16ad1bbe631259ab35aad310ccb5e14104cd06a331e45229"
+    },
+    {
+      "path": "assets/kuro/idle_breeze/_012_140.png",
+      "bytes": 16237,
+      "sha256": "6723ac656ed1f419653928ae5fd5e97dcc6f504411d6dd512b175c7d1e2ac1ca"
+    },
+    {
+      "path": "assets/kuro/idle_breeze/_013_140.png",
+      "bytes": 16649,
+      "sha256": "5d029d6646083d161444899e8230e7623ac0b3ccb414d20e3893ceaf8c850d9e"
+    },
+    {
+      "path": "assets/kuro/idle_breeze/_014_140.png",
+      "bytes": 16441,
+      "sha256": "6e103af22215ba58ba11f68f0c4a48c1dc8e03f9cedbd285187fbdc866e99ae7"
+    },
+    {
+      "path": "assets/kuro/idle_breeze/_015_50.png",
+      "bytes": 15927,
+      "sha256": "ba83c7187c12acd36597afde768dc2283a62828697c640b6dc4a51f8d07e349e"
+    },
+    {
+      "path": "assets/kuro/idle_breeze/_016_70.png",
+      "bytes": 15848,
+      "sha256": "e082dfd0bd9288b23f91dd80114211e27691cfa458fab569875f796a54ae66ff"
+    },
+    {
+      "path": "assets/kuro/idle_breeze/_017_50.png",
+      "bytes": 15927,
+      "sha256": "ba83c7187c12acd36597afde768dc2283a62828697c640b6dc4a51f8d07e349e"
+    },
+    {
+      "path": "assets/kuro/idle_happy/_000_140.png",
+      "bytes": 14199,
+      "sha256": "66fc87e6119df784fdc2da29631250f9b8811aa82c89c8cfac96b2fbfd463c9b"
+    },
+    {
+      "path": "assets/kuro/idle_happy/_001_140.png",
+      "bytes": 14983,
+      "sha256": "7a412beb27cd6a2728d326c24bc908bf001ad770e2b630c2ae0791774dcf62cd"
+    },
+    {
+      "path": "assets/kuro/idle_happy/_002_140.png",
+      "bytes": 14847,
+      "sha256": "29fc15072f6dc9700049df742cdfb650eb4aa52a3ab710b0396d6786f2c82ef6"
+    },
+    {
+      "path": "assets/kuro/idle_happy/_003_140.png",
+      "bytes": 14813,
+      "sha256": "0c98907bd77a82084d87cbb7e9974210fc4ed1b41c4d09a4ac99cfa065c4f987"
+    },
+    {
+      "path": "assets/kuro/idle_happy/_004_140.png",
+      "bytes": 15160,
+      "sha256": "9f46edca34f2e26588834a392843741c07738e51931471b0ac1d6bf77eea74b0"
+    },
+    {
+      "path": "assets/kuro/idle_happy/_005_140.png",
+      "bytes": 15295,
+      "sha256": "468cff30c96f8018bc0213d148c090163e8ef1b461e0e2f6f4ac62b2061edf21"
+    },
+    {
+      "path": "assets/kuro/idle_happy/_006_140.png",
+      "bytes": 15204,
+      "sha256": "f08d6e84e339f0d13b98511b0129148ff27daa24a287a8d909b6c8ef71bdc77d"
+    },
+    {
+      "path": "assets/kuro/idle_happy/_007_140.png",
+      "bytes": 14882,
+      "sha256": "002942ee0c07f63e3b85a92f7795e09fe857cf54dd5aa7347de8567b97611f1f"
+    },
+    {
+      "path": "assets/kuro/idle_happy/_008_140.png",
+      "bytes": 15268,
+      "sha256": "1ecb06bcf20fa88ed3e8746e830cde4dc489c4748dbad2209cfe6d8de6835574"
+    },
+    {
+      "path": "assets/kuro/idle_happy/_009_140.png",
+      "bytes": 14480,
+      "sha256": "c6cbbdd2994209302cf3018157d7c1ff39a994fa7e73aaa972e4ce2f2905c32f"
+    },
+    {
+      "path": "assets/kuro/idle_happy/_010_140.png",
+      "bytes": 15314,
+      "sha256": "6063a2675b5e3617084cd420852c984dcf2549d31ffbaa46e5887e02f444869d"
+    },
+    {
+      "path": "assets/kuro/idle_happy/_011_140.png",
+      "bytes": 15273,
+      "sha256": "354c24ecc85051a7df7e05b97b25459fd916a5db2ab4dda2de0ee8a7605d3a07"
+    },
+    {
+      "path": "assets/kuro/idle_happy/_012_140.png",
+      "bytes": 15449,
+      "sha256": "f9142d9752b3c7f418a463906aeb70ddeb8c136557b6aaf2e82c15f9c5ada9a7"
+    },
+    {
+      "path": "assets/kuro/idle_happy/_013_140.png",
+      "bytes": 15372,
+      "sha256": "a8579f61b8ae9f6aeec78eec706b37a4b1de6a6c9a54336aa6ef456a2f4f02bb"
+    },
+    {
+      "path": "assets/kuro/idle_happy/_014_140.png",
+      "bytes": 15325,
+      "sha256": "c62cf5a4356300820540499886a520743324102e15a4309f4f86351b3199379c"
+    },
+    {
+      "path": "assets/kuro/idle_happy/_015_50.png",
+      "bytes": 14679,
+      "sha256": "e5f8980357b027f67f9d84867e5d7193bbec1933382f958e00a9872562aabb65"
+    },
+    {
+      "path": "assets/kuro/idle_happy/_016_70.png",
+      "bytes": 14510,
+      "sha256": "b771d8b440ba8300ecec513d5d5dc1d0fbcd79bf36ec1e79f8725fa9d3261cf3"
+    },
+    {
+      "path": "assets/kuro/idle_happy/_017_50.png",
+      "bytes": 14679,
+      "sha256": "e5f8980357b027f67f9d84867e5d7193bbec1933382f958e00a9872562aabb65"
+    },
+    {
+      "path": "assets/kuro/idle_look/_000_140.png",
+      "bytes": 14069,
+      "sha256": "03dd36e698b1c46db61d211ea41206799248a42e6bf551d60ef9f86632af60d8"
+    },
+    {
+      "path": "assets/kuro/idle_look/_001_140.png",
+      "bytes": 14819,
+      "sha256": "2c50b11da0ed4fe3bd5f939211f7d6b4ab47cff79bd4296381df6cb8b14502b9"
+    },
+    {
+      "path": "assets/kuro/idle_look/_002_140.png",
+      "bytes": 14798,
+      "sha256": "1465fd450deab292fbf7a8f80d6dcfbb7245f5e0dd2d6fd990aabef3f0873e4e"
+    },
+    {
+      "path": "assets/kuro/idle_look/_003_140.png",
+      "bytes": 15311,
+      "sha256": "1a3b3e47a2b936425e7cfec8c149f28e0c0bf3890663cbbed45f0f3b76865ddf"
+    },
+    {
+      "path": "assets/kuro/idle_look/_004_140.png",
+      "bytes": 15496,
+      "sha256": "530d53f9178e2c7cdd1f4b2abbef0d0f6f740d1f68dafe9a0ce35ad7ff028909"
+    },
+    {
+      "path": "assets/kuro/idle_look/_005_140.png",
+      "bytes": 15514,
+      "sha256": "c5c29778f8f118e837aeebc310b06f0aeb9261fdd1efed72145fe14bc5269929"
+    },
+    {
+      "path": "assets/kuro/idle_look/_006_140.png",
+      "bytes": 15409,
+      "sha256": "fed66fbfb448e6049c3d132c05a551d36fc9ad85109d9c6a6460f1b6b5a9698f"
+    },
+    {
+      "path": "assets/kuro/idle_look/_007_140.png",
+      "bytes": 15659,
+      "sha256": "0af7ec9ab6c1d5a6d14b4c38faf543e09fad1d2d7214e1be551c05cc8c82d0ed"
+    },
+    {
+      "path": "assets/kuro/idle_look/_008_140.png",
+      "bytes": 16469,
+      "sha256": "2d5e81c15755d96f1bfe0c14cf3d3d0fa24b8dd8e21b7f643792e8dd0e04736a"
+    },
+    {
+      "path": "assets/kuro/idle_look/_009_140.png",
+      "bytes": 16064,
+      "sha256": "b03069b12f7868336b318ef9b2a25a2e6741380c423e07f99b69663414c13958"
+    },
+    {
+      "path": "assets/kuro/idle_look/_010_140.png",
+      "bytes": 16183,
+      "sha256": "40dde50cf4f73904b2f1dcee4b41d70db0b0b3a5912c604ceb61144591218e8a"
+    },
+    {
+      "path": "assets/kuro/idle_look/_011_140.png",
+      "bytes": 16164,
+      "sha256": "443000035c80a37e6fc4959c1733b657316732b6dcbb822b797117a5933674e7"
+    },
+    {
+      "path": "assets/kuro/idle_look/_012_140.png",
+      "bytes": 16179,
+      "sha256": "f8c6b781f9e1ead4e19cf6e8423cf00ac3415f855877ee6980b381f5f2710530"
+    },
+    {
+      "path": "assets/kuro/idle_look/_013_140.png",
+      "bytes": 16139,
+      "sha256": "4e891debbb998fffda8999dd2eeebfe60f410adb16d8651e5d61c0a33ae6feb4"
+    },
+    {
+      "path": "assets/kuro/idle_look/_014_140.png",
+      "bytes": 14829,
+      "sha256": "9530f0a7f291c4a7423d9d01ef3f286776233ea8e8bce414735e265126e7171b"
+    },
+    {
+      "path": "assets/kuro/idle_look/_015_50.png",
+      "bytes": 14281,
+      "sha256": "174338a6c69de9891aa5d643a3e82d4ddbf63a7302b00f7be1337dbb4e776bdf"
+    },
+    {
+      "path": "assets/kuro/idle_look/_016_70.png",
+      "bytes": 14138,
+      "sha256": "25b96c6d92a5f48541a545d24cea3404efa8fdcdd577b9e5576b31349896c732"
+    },
+    {
+      "path": "assets/kuro/idle_look/_017_50.png",
+      "bytes": 14281,
+      "sha256": "174338a6c69de9891aa5d643a3e82d4ddbf63a7302b00f7be1337dbb4e776bdf"
+    },
+    {
+      "path": "assets/kuro/idle_poor/_000_140.png",
+      "bytes": 14287,
+      "sha256": "7d74ce287f9279319cbaf00ecd9fd1e31cc27f1e63eaa4db42acc0dec9b81cb6"
+    },
+    {
+      "path": "assets/kuro/idle_poor/_001_140.png",
+      "bytes": 14386,
+      "sha256": "c4ce0a09e1dd5211143880fae2fa16a434d13a9c66ba1b7ebd101b30c747faab"
+    },
+    {
+      "path": "assets/kuro/idle_poor/_002_140.png",
+      "bytes": 14178,
+      "sha256": "deec3ec49e0a3936ec8d62a07e5745976ab26f8579eb3d4f8ce9289ff6158434"
+    },
+    {
+      "path": "assets/kuro/idle_poor/_003_140.png",
+      "bytes": 14294,
+      "sha256": "c9a8e69d31e20eff4d91721cf9364282029464e01eea3ade4e2ce2f68245d934"
+    },
+    {
+      "path": "assets/kuro/idle_poor/_004_140.png",
+      "bytes": 14413,
+      "sha256": "0a29aa0665b9eea1b16854cc817a9a93aec0aef680760282d0af827dd40daee1"
+    },
+    {
+      "path": "assets/kuro/idle_poor/_005_140.png",
+      "bytes": 14409,
+      "sha256": "26b94452c252369f183c2041bdb50d7751e5b21bd7b1acffddf25482dfdf9c60"
+    },
+    {
+      "path": "assets/kuro/idle_poor/_006_140.png",
+      "bytes": 14465,
+      "sha256": "19de416948402eb00ae6e533cbf860fcfd9ad940b71ed3876773da41f941029b"
+    },
+    {
+      "path": "assets/kuro/idle_poor/_007_140.png",
+      "bytes": 14448,
+      "sha256": "f5d92743c98807913cfd26437c0a47ffc1effb9e7ac3d371a5c80b587a5c7fef"
+    },
+    {
+      "path": "assets/kuro/idle_poor/_008_140.png",
+      "bytes": 14798,
+      "sha256": "dd02d1b88567c3f8abd7154679ec4aa50872b3f328d375f0034edbbb51d0a55a"
+    },
+    {
+      "path": "assets/kuro/idle_poor/_009_140.png",
+      "bytes": 14713,
+      "sha256": "91ec3bbb38782c28d87120e75c4802d723b1d553e7341bb3e14e772f4b58634d"
+    },
+    {
+      "path": "assets/kuro/idle_poor/_010_140.png",
+      "bytes": 14733,
+      "sha256": "2f0a3d4808badaff33ede50177d556f187da4b0342e1dc946a1ed6080c60f26a"
+    },
+    {
+      "path": "assets/kuro/idle_poor/_011_140.png",
+      "bytes": 14655,
+      "sha256": "3f43fac92b037371592a8b9435abfdb4bb71c7be16e4d3101dc2f9a03473e754"
+    },
+    {
+      "path": "assets/kuro/idle_poor/_012_140.png",
+      "bytes": 14422,
+      "sha256": "567ad006a5ff4b13772124509b2cc79c69e45df4688d6a3dc798fdfae2574752"
+    },
+    {
+      "path": "assets/kuro/idle_poor/_013_140.png",
+      "bytes": 14294,
+      "sha256": "3fbe5983af021f72a81675e4c35c2d834ae303da359920b27833171fd7cc5b6c"
+    },
+    {
+      "path": "assets/kuro/idle_poor/_014_140.png",
+      "bytes": 14332,
+      "sha256": "6f954f72baf5f64201032647509fd8701b178faa71375f6b3f3234a239b2a1ab"
+    },
+    {
+      "path": "assets/kuro/idle_poor/_015_140.png",
+      "bytes": 14247,
+      "sha256": "b093d35b8d6898a02abea53b0d4d9d3364c7c2b4397ad0e1d384c8c0da74a32b"
+    },
+    {
+      "path": "assets/kuro/idle_poor/_016_140.png",
+      "bytes": 14337,
+      "sha256": "1e599510576a581a52b5cd2d2a1caed767f9fc8fae433c8a9a6b2ad2b93a3c0a"
+    },
+    {
+      "path": "assets/kuro/idle_poor/_017_140.png",
+      "bytes": 14475,
+      "sha256": "0b36e118ab85d02666e4b01c3c25d1cb7f8dfcc51517dff8c4494cd3203c6806"
+    },
+    {
+      "path": "assets/kuro/look/_000_140.png",
+      "bytes": 14069,
+      "sha256": "03dd36e698b1c46db61d211ea41206799248a42e6bf551d60ef9f86632af60d8"
+    },
+    {
+      "path": "assets/kuro/look/_001_260.png",
+      "bytes": 14815,
+      "sha256": "92925a3ee61bff91480c3b532578a343d77b8662104e911333453a55fb80dc47"
+    },
+    {
+      "path": "assets/kuro/look/_002_260.png",
+      "bytes": 14874,
+      "sha256": "5b7b9c193478ebb7356e3ef122d786cd8df3564befac0527720b53b08fa90ae0"
+    },
+    {
+      "path": "assets/kuro/look/_003_120.png",
+      "bytes": 14140,
+      "sha256": "7065a0676b15a16371fd45eadd2a94ef054424c6a7e1110dec1633766665e3ca"
+    },
+    {
+      "path": "assets/kuro/look/_004_260.png",
+      "bytes": 16296,
+      "sha256": "c51bb76d518e317c2fef1999e1f66523f842d7edf941e424cc5c84c90e439139"
+    },
+    {
+      "path": "assets/kuro/look/_005_300.png",
+      "bytes": 18103,
+      "sha256": "7aba90c80be53b79142413288a19d054404f70d21551d8d32fcec3c2f2e5d3ef"
+    },
+    {
+      "path": "assets/kuro/look/_006_140.png",
+      "bytes": 14062,
+      "sha256": "c31c2e82293caef47eac82c07b19eabb1479637b50312906d89467841a6ab60f"
+    },
+    {
+      "path": "assets/kuro/love/_000_100.png",
+      "bytes": 14229,
+      "sha256": "24927a6211b855ed15e88dc1f31cbaf5cacac022b630a0adde8035366a164eaf"
+    },
+    {
+      "path": "assets/kuro/love/_001_100.png",
+      "bytes": 17313,
+      "sha256": "23511b457abd2de87899da84c46442ee3fc6693c8a429173c85eb282063028e7"
+    },
+    {
+      "path": "assets/kuro/love/_002_100.png",
+      "bytes": 18301,
+      "sha256": "06cd60827b91d18d981adf43d9432a44e8b03b59ce3b88dd69fad21bf405f769"
+    },
+    {
+      "path": "assets/kuro/love/_003_100.png",
+      "bytes": 18800,
+      "sha256": "baaa614836e629269bf93d275b129169fea3e50eb73db104bf36d25a7f51a6a4"
+    },
+    {
+      "path": "assets/kuro/love/_004_100.png",
+      "bytes": 18952,
+      "sha256": "4eb25b153a8381f85686841a52a53183f25eea865f1796248838973af485e025"
+    },
+    {
+      "path": "assets/kuro/love/_005_100.png",
+      "bytes": 18931,
+      "sha256": "264408fa8553b8a291c8f755eea9a9bf5c18342ff0b9ed1ea2a8630b4d88de86"
+    },
+    {
+      "path": "assets/kuro/love/_006_100.png",
+      "bytes": 18988,
+      "sha256": "92f56d3b2e9858cbf99e8530a92997b10c0c6d4d9f4dcf8e4e668e546a3cf9b7"
+    },
+    {
+      "path": "assets/kuro/love/_007_100.png",
+      "bytes": 18567,
+      "sha256": "891e736fb37be014567a2b005864ad008ad872feaccff33d75548eb4fc7c85e6"
+    },
+    {
+      "path": "assets/kuro/love/_008_100.png",
+      "bytes": 18184,
+      "sha256": "034bef8073108975b3338511eb58f47c9bce6186a2302e14cfbde65f27e65192"
+    },
+    {
+      "path": "assets/kuro/love/_009_100.png",
+      "bytes": 18517,
+      "sha256": "5b0176a2c64cdabf713c80103dc41313968848edc0ba998eb778f1151b5d0858"
+    },
+    {
+      "path": "assets/kuro/love/_010_100.png",
+      "bytes": 19207,
+      "sha256": "c7194eaf82f19b99c241fa3c02b6fa806fa125b6cd11761246652c1d1e52e95b"
+    },
+    {
+      "path": "assets/kuro/love/_011_100.png",
+      "bytes": 19695,
+      "sha256": "49a1fdf2cc23103d42ceaa665f04918f6f85abaef2be6c23cc38119bd7d3b9bb"
+    },
+    {
+      "path": "assets/kuro/love/_012_100.png",
+      "bytes": 19253,
+      "sha256": "868d3a09560cf2fcd18fa69d5f7ff2ad180015e8aba7dc9d14ae8eab45cb0f82"
+    },
+    {
+      "path": "assets/kuro/love/_013_100.png",
+      "bytes": 19054,
+      "sha256": "1d9c84bf1115cd268380cba7629ed10fbc8468b1d65489d1db9408510f1a0116"
+    },
+    {
+      "path": "assets/kuro/love/_014_100.png",
+      "bytes": 18789,
+      "sha256": "037424995cfd6de451a804c95138198111c7546c73474d7c41eebc8ed9e8f4f7"
+    },
+    {
+      "path": "assets/kuro/love/_015_100.png",
+      "bytes": 17956,
+      "sha256": "bfc3bc89247d9d7a450d596229133509b58cd83cc0e581e9037ce8bfa77f27af"
+    },
+    {
+      "path": "assets/kuro/love/_016_100.png",
+      "bytes": 17653,
+      "sha256": "b529500c9609a493add696b13f4cd89256bf3c8e74bcbb8788e4a36bad502b2b"
+    },
+    {
+      "path": "assets/kuro/love/_017_100.png",
+      "bytes": 15232,
+      "sha256": "d5f9c6252b27e7cd82c1a86e1a9d290185321b27551874b420c062406d3c4d8b"
+    },
+    {
+      "path": "assets/kuro/milestone/_000_100.png",
+      "bytes": 15565,
+      "sha256": "bd8012f53bdaadc543b339f7acc65034a6301747d9cd9e02680825d227c436e9"
+    },
+    {
+      "path": "assets/kuro/milestone/_001_100.png",
+      "bytes": 16662,
+      "sha256": "b38939338cafcd5f174847c1bbec9902722cc9226c62f43e370b9da45d057593"
+    },
+    {
+      "path": "assets/kuro/milestone/_002_100.png",
+      "bytes": 16995,
+      "sha256": "f829bac7cf81672160287c6f999701bbc0b20c06947d77de3701cbb0e0371217"
+    },
+    {
+      "path": "assets/kuro/milestone/_003_100.png",
+      "bytes": 18137,
+      "sha256": "9401a9775db8302be7983aa7f567d6b97d34388070056def0fe86992bf9a84ea"
+    },
+    {
+      "path": "assets/kuro/milestone/_004_100.png",
+      "bytes": 19958,
+      "sha256": "fa2ef2854fe81516ef4a0f88787f98820806128af5fa8216ca85afe82f3735e3"
+    },
+    {
+      "path": "assets/kuro/milestone/_005_100.png",
+      "bytes": 20676,
+      "sha256": "a110cde0dbcdaef72ec578ef1602db9f9dcc17744d870cb6d6e15c0e13737972"
+    },
+    {
+      "path": "assets/kuro/milestone/_006_100.png",
+      "bytes": 28978,
+      "sha256": "3f0003cd134b811905f80e425cb2f04b14b5eb547088dda93bcbcd8a2a0002a2"
+    },
+    {
+      "path": "assets/kuro/milestone/_007_100.png",
+      "bytes": 27724,
+      "sha256": "55c002cac0bff6f2d68378ff585d12a30eb896a63e98fb460d7b1e4aa4b7bdf6"
+    },
+    {
+      "path": "assets/kuro/milestone/_008_100.png",
+      "bytes": 29371,
+      "sha256": "1d9c3b407dc42105316be20a562761ed1a138061b751f70d2606782e152f421a"
+    },
+    {
+      "path": "assets/kuro/milestone/_009_100.png",
+      "bytes": 30595,
+      "sha256": "f0ef1d7c5de94934bb7f92c51ca6a3050c91716d92390c6c272d0f923eea6605"
+    },
+    {
+      "path": "assets/kuro/milestone/_010_100.png",
+      "bytes": 31039,
+      "sha256": "d4cb5a00a177c85b09684a31100c2d0381bbbc86972eeca4e3f4dca03203ea17"
+    },
+    {
+      "path": "assets/kuro/milestone/_011_100.png",
+      "bytes": 31098,
+      "sha256": "dbe806cd0a5a4dce865cbd95eab5974c3554f92c703b8d8da505d1eaa93c1892"
+    },
+    {
+      "path": "assets/kuro/milestone/_012_100.png",
+      "bytes": 30267,
+      "sha256": "e3ca0c1a65428671eef061a17bceee3bd28dd1d28ddcdd1448e9c99716912633"
+    },
+    {
+      "path": "assets/kuro/milestone/_013_100.png",
+      "bytes": 29976,
+      "sha256": "09e77f6f0f90ed652c08e7566691bcae29de6faa0c47f74d68992b5bbc758699"
+    },
+    {
+      "path": "assets/kuro/milestone/_014_100.png",
+      "bytes": 28745,
+      "sha256": "34b7bb85fa57a1d306b11682d6b3fc5d94845e25fd0159c53d81476dad5b3f4d"
+    },
+    {
+      "path": "assets/kuro/milestone/_015_100.png",
+      "bytes": 27297,
+      "sha256": "7aa7e76d3a85c81d03b86a54a5eb38a31e90dad1fbebe8f460cd6eb3bc7c3d2c"
+    },
+    {
+      "path": "assets/kuro/milestone/_016_100.png",
+      "bytes": 25857,
+      "sha256": "2f60f2bbe4f30a46aa17d516685f76365efe49bda996b67e06a607c0fe797f6a"
+    },
+    {
+      "path": "assets/kuro/milestone/_017_100.png",
+      "bytes": 25224,
+      "sha256": "a82bde3333f2b9ad9568b88cc270ebb0adfb3839bb1d3f82339bf0bb3730e2df"
+    },
+    {
+      "path": "assets/kuro/milestone/_018_100.png",
+      "bytes": 14612,
+      "sha256": "d5ffb5c234c949dbdc7311500f9c943856c1415fc51c5883ea709ff6df36cb66"
+    },
+    {
+      "path": "assets/kuro/milestone/_019_100.png",
+      "bytes": 14393,
+      "sha256": "0a6f8254fe801aa79abaa8c07cda2bb90de1405829612ff77e8ffbb0d283be88"
+    },
+    {
+      "path": "assets/kuro/oops/_000_85.png",
+      "bytes": 14715,
+      "sha256": "7e66c97e6a45adfb58e8d6ad40e8808c8dd7f57df2cf53f7ced803010e3404dc"
+    },
+    {
+      "path": "assets/kuro/oops/_001_85.png",
+      "bytes": 17215,
+      "sha256": "7eadf6b264a0985a929223bc7cacdd3d0d84b32c7dfc6432c95fd7b54ede969f"
+    },
+    {
+      "path": "assets/kuro/oops/_002_85.png",
+      "bytes": 18099,
+      "sha256": "b32150206783e3a6f9cab68c181cacadf48a4c7beb4025697a112aa8ec88d264"
+    },
+    {
+      "path": "assets/kuro/oops/_003_85.png",
+      "bytes": 19630,
+      "sha256": "f7875465d4f2b311f796437f4b3342126432e5ca714848410d766d23827ab32d"
+    },
+    {
+      "path": "assets/kuro/oops/_004_85.png",
+      "bytes": 19870,
+      "sha256": "1c275571c3e3741281c0d977d58496a99e6ec768d8ba9f2ac01cdd28a8933474"
+    },
+    {
+      "path": "assets/kuro/oops/_005_85.png",
+      "bytes": 19116,
+      "sha256": "c4e5e2ce2f9ff274ca60d21f02fc6ebabc7c260d49bb36ee9aa420b1dff2e0c9"
+    },
+    {
+      "path": "assets/kuro/oops/_006_85.png",
+      "bytes": 18924,
+      "sha256": "4b541653bc8bb565d6a47e08d6f6b5e1a7aa653c890176f43a736624eb5e2633"
+    },
+    {
+      "path": "assets/kuro/oops/_007_85.png",
+      "bytes": 19822,
+      "sha256": "c74fcf929f5dc05674c22a5629205e29716ee37cc39ea8157bae54d73c286120"
+    },
+    {
+      "path": "assets/kuro/oops/_008_85.png",
+      "bytes": 20785,
+      "sha256": "1d22a25f4198f834ee65c0fe0318034647bf8433cd4e75b8091866afa2af12be"
+    },
+    {
+      "path": "assets/kuro/oops/_009_85.png",
+      "bytes": 18896,
+      "sha256": "22f4f0bb2eb10d2846f63676666e29f9cdd83520f253f77c67bf48358d4ca8f0"
+    },
+    {
+      "path": "assets/kuro/oops/_010_85.png",
+      "bytes": 19198,
+      "sha256": "16878f37c75af34d44aef451f7f27a407297bf61658dff86a17d32897c103bd7"
+    },
+    {
+      "path": "assets/kuro/oops/_011_85.png",
+      "bytes": 16418,
+      "sha256": "e23b5e79e73101ef1b2dfc5e5092386415b7a28c6a4abfe9165ad6e9eb159df9"
+    },
+    {
+      "path": "assets/kuro/oops/_012_85.png",
+      "bytes": 14325,
+      "sha256": "c7a5b1f0234e1f591dba0b88e2c85f31666b2e1e279b6ffbfe1d72120b71292c"
+    },
+    {
+      "path": "assets/kuro/oops/_013_85.png",
+      "bytes": 14665,
+      "sha256": "66ddde35bfefd4648317b3d5e552c5bfea2886aebd2244c82027986cd1ae7fe8"
+    },
+    {
+      "path": "assets/kuro/oops/_014_85.png",
+      "bytes": 15313,
+      "sha256": "47af7fed3c81c4b05864f623030cdbeabd525c53753f3815da4eddde08c840c3"
+    },
+    {
+      "path": "assets/kuro/oops/_015_85.png",
+      "bytes": 14293,
+      "sha256": "ebce383e578c9d403bf852b05cd444efda7cdb252d5018322541e0e46d2ce29d"
+    },
+    {
+      "path": "assets/kuro/oops/_016_120.png",
+      "bytes": 14069,
+      "sha256": "03dd36e698b1c46db61d211ea41206799248a42e6bf551d60ef9f86632af60d8"
+    },
+    {
+      "path": "assets/kuro/pat/end/_000_70.png",
+      "bytes": 14888,
+      "sha256": "5fdf56ce96b3126d3374cb42f93411309a613c73695f2e38cf3e8f723ad85e4c"
+    },
+    {
+      "path": "assets/kuro/pat/end/_001_70.png",
+      "bytes": 14432,
+      "sha256": "6c9806bfd19063aeab2dc380df923ced46b46a631d5b805fb24b65cefb063205"
+    },
+    {
+      "path": "assets/kuro/pat/end/_002_70.png",
+      "bytes": 14125,
+      "sha256": "86bf2f50704ce93202ac2febefec5d8de4c001e8749398fbea53b291f2a679d3"
+    },
+    {
+      "path": "assets/kuro/pat/loop/_000_90.png",
+      "bytes": 14012,
+      "sha256": "57cf2c3fd63fdec38c47b00f65fd7f527be9e7d9c82d1a4f385ca9a516e78e39"
+    },
+    {
+      "path": "assets/kuro/pat/loop/_001_90.png",
+      "bytes": 15601,
+      "sha256": "b0e5071d28cf9d288905314a3d9ef074df5ae485beb80bcb305a0f091fbda579"
+    },
+    {
+      "path": "assets/kuro/pat/loop/_002_90.png",
+      "bytes": 16195,
+      "sha256": "51c379b4c7f4f494c871262aac5d3974ac4bc3025d32fcfc81a15b5bceeb1653"
+    },
+    {
+      "path": "assets/kuro/pat/loop/_003_90.png",
+      "bytes": 16040,
+      "sha256": "791f2ff3c0d0ac9428196c4edb8e5484253f0acc3112e2260d1f63961d46369a"
+    },
+    {
+      "path": "assets/kuro/pat/loop/_004_90.png",
+      "bytes": 16083,
+      "sha256": "8f56056aee4cf9615e282adc2cf6ba1816db438a0bd4c4f6dc3e3215243bf2ac"
+    },
+    {
+      "path": "assets/kuro/pat/loop/_005_90.png",
+      "bytes": 15376,
+      "sha256": "e01acb9ea1fcd6617fafad5731f47547f6118ab6b8594bb33b4cb1dada37d732"
+    },
+    {
+      "path": "assets/kuro/pat/loop/_006_90.png",
+      "bytes": 16554,
+      "sha256": "9159e8c7ccbafef5d150740b1b502e972cdd39afd7c9550496d3acf37edccbb3"
+    },
+    {
+      "path": "assets/kuro/pat/loop/_007_90.png",
+      "bytes": 16117,
+      "sha256": "e0c72d19d2027cbaedf6ee086078d45edd88ba3a9ff23d0efe5c537b225bc34d"
+    },
+    {
+      "path": "assets/kuro/pat/loop/_008_90.png",
+      "bytes": 15613,
+      "sha256": "da0d65997f1edca5bf57c0ac81da09571a8150b070b56febddccd9cf015cefcc"
+    },
+    {
+      "path": "assets/kuro/pat/loop/_009_90.png",
+      "bytes": 15147,
+      "sha256": "169f185877aba5ad5327fb007273dbe1a912d3bad0f8dbbc28dbf795cc1bd4dd"
+    },
+    {
+      "path": "assets/kuro/pat/start/_000_60.png",
+      "bytes": 15378,
+      "sha256": "888ae156fcd1d281e6ab9ca540d5a948a10fe827f43de2014623aa8c52ed6dff"
+    },
+    {
+      "path": "assets/kuro/pat/start/_001_60.png",
+      "bytes": 15261,
+      "sha256": "9f25a7f3b7559d0a6b8d82a561ea2c598c3fe317048fc763124979ab9aacc3db"
+    },
+    {
+      "path": "assets/kuro/pat/start/_002_60.png",
+      "bytes": 15459,
+      "sha256": "c26a4a7d348759c70558ae5847541f05d71be28ce08efe06b58661431cbcbc52"
+    },
+    {
+      "path": "assets/kuro/pat/start/_003_60.png",
+      "bytes": 15305,
+      "sha256": "c48701c06860b3c32ce27c95354440dec426df014901e07a37937c02db0c4d7e"
+    },
+    {
+      "path": "assets/kuro/poke/end/_000_70.png",
+      "bytes": 15078,
+      "sha256": "b1b3c1c8572951d2cdd07115173a3228e7cad68ee7478e8200420af30e6ff5ad"
+    },
+    {
+      "path": "assets/kuro/poke/end/_001_70.png",
+      "bytes": 14430,
+      "sha256": "5726cef36b1ec7a41e8bc67e0e39e8481fc070dc14b7c44f51a1c375fb24b285"
+    },
+    {
+      "path": "assets/kuro/poke/end/_002_70.png",
+      "bytes": 14127,
+      "sha256": "7b1ab735f6109331c871f9c53e63f41e9eef476b5dca0b772b3838c4288947d3"
+    },
+    {
+      "path": "assets/kuro/poke/loop/_000_75.png",
+      "bytes": 14184,
+      "sha256": "ba5e65f267750d7d00036dca596adbd0167076311eda32cdb6a6b5309b0f9efa"
+    },
+    {
+      "path": "assets/kuro/poke/loop/_001_75.png",
+      "bytes": 16844,
+      "sha256": "c259605a5a7a834a9828b09357ea7a37ddf44054f23e4ba7c472b99519a17c00"
+    },
+    {
+      "path": "assets/kuro/poke/loop/_002_75.png",
+      "bytes": 16514,
+      "sha256": "35b9c5d66b5c0e6335d8a411d40548e73cf84d35dfdf67704aea755e831f303a"
+    },
+    {
+      "path": "assets/kuro/poke/loop/_003_75.png",
+      "bytes": 17559,
+      "sha256": "2795f816acde37f1f23ca0b63a7d9a6334275c937d7ca38c60dbe44e98fc217b"
+    },
+    {
+      "path": "assets/kuro/poke/loop/_004_75.png",
+      "bytes": 17248,
+      "sha256": "f22c63bbf0b099fcf8d58c6254184c1322fc5273558015f43317d815796d5ca0"
+    },
+    {
+      "path": "assets/kuro/poke/loop/_005_75.png",
+      "bytes": 15188,
+      "sha256": "8cc599fc3eff72b42e237c2f48269a8dac6230680a727cd8fe1fbbb70a7addc1"
+    },
+    {
+      "path": "assets/kuro/poke/loop/_006_75.png",
+      "bytes": 17608,
+      "sha256": "80ed5b1967b74f11899eb8cc79e094e092aa6a3f4a2cdefc4c526400be2aba5d"
+    },
+    {
+      "path": "assets/kuro/poke/loop/_007_75.png",
+      "bytes": 16565,
+      "sha256": "1b041972260b397ea1c38641e65515c6ce96a0736d48ca6e84df255032a56d98"
+    },
+    {
+      "path": "assets/kuro/poke/loop/_008_75.png",
+      "bytes": 16888,
+      "sha256": "831303fc46c5e3d1235c9903dc053482e205cf18f4e6a7af4aec1615db8b099a"
+    },
+    {
+      "path": "assets/kuro/poke/loop/_009_75.png",
+      "bytes": 16250,
+      "sha256": "40190973482ed2e807ef564a597608004c75d17d1c1202187b1cde32b8bceadf"
+    },
+    {
+      "path": "assets/kuro/poke/start/_000_60.png",
+      "bytes": 15239,
+      "sha256": "8610b117c3022e110eb3c43f85c26efebbf438856f4baa46812997530aa40617"
+    },
+    {
+      "path": "assets/kuro/poke/start/_001_60.png",
+      "bytes": 15304,
+      "sha256": "8a54676952962596b53b221dea555e315e38e1017ca86835faaa87bf8f392e05"
+    },
+    {
+      "path": "assets/kuro/poke/start/_002_60.png",
+      "bytes": 15786,
+      "sha256": "8451899946e3abac3c1d24228b1a006d0953a6214da0f4c6ec526c8e5617930e"
+    },
+    {
+      "path": "assets/kuro/read/end/_000_70.png",
+      "bytes": 14417,
+      "sha256": "94bc577acc7c10aaab97efa2cf1e40818f2c9abfa21c8f117a4b3de8f1176dba"
+    },
+    {
+      "path": "assets/kuro/read/end/_001_70.png",
+      "bytes": 15118,
+      "sha256": "875d6988678dcda36734073d950bc4c4f7e7ec9d4607c1830b980463f2d9acce"
+    },
+    {
+      "path": "assets/kuro/read/end/_002_70.png",
+      "bytes": 15385,
+      "sha256": "d009a20ad7b98ca884a8a37ac7065f2920b30a18b60ad066bfd22ab27f04223d"
+    },
+    {
+      "path": "assets/kuro/read/end/_003_70.png",
+      "bytes": 15431,
+      "sha256": "708eb3bd54a072763cbdbdbd06cfe44ccbb43ca3ca8dd1546a3548b9a49e686a"
+    },
+    {
+      "path": "assets/kuro/read/end/_004_70.png",
+      "bytes": 14069,
+      "sha256": "03dd36e698b1c46db61d211ea41206799248a42e6bf551d60ef9f86632af60d8"
+    },
+    {
+      "path": "assets/kuro/read/loop/_000_130.png",
+      "bytes": 13866,
+      "sha256": "9d22a5b30be46663a4f30af66304ea6d8e1d9ec0a37eab19454681df03feca11"
+    },
+    {
+      "path": "assets/kuro/read/loop/_001_130.png",
+      "bytes": 14810,
+      "sha256": "6c2d2127c103d581f000b23fe4df6b888a8c38e6c79be0230983b093f037f3d6"
+    },
+    {
+      "path": "assets/kuro/read/loop/_002_130.png",
+      "bytes": 15149,
+      "sha256": "de294ca7f85a7ead715c67f93ef87ee2a87e1dcafe11262aca46dbf4ead6e01e"
+    },
+    {
+      "path": "assets/kuro/read/loop/_003_130.png",
+      "bytes": 15377,
+      "sha256": "cc3f234281dbd54bac0ee42ad2e287d9ab1130dc3fcd5a6f9c0e8c4f3fff66f9"
+    },
+    {
+      "path": "assets/kuro/read/loop/_004_130.png",
+      "bytes": 15575,
+      "sha256": "cf7011e9163aab081d310610a0b1acbed40f844af62b4008996a74947e648a6f"
+    },
+    {
+      "path": "assets/kuro/read/loop/_005_130.png",
+      "bytes": 15571,
+      "sha256": "bd11c7d3cf87810316faa9b8e9e5b279aa976d9c8815e938a5d5897c77346bbd"
+    },
+    {
+      "path": "assets/kuro/read/loop/_006_130.png",
+      "bytes": 15550,
+      "sha256": "21e72ea87ae5ef5ba34d99f2c61c115b8766b706409c31ee6c6420d682a62d15"
+    },
+    {
+      "path": "assets/kuro/read/loop/_007_130.png",
+      "bytes": 14747,
+      "sha256": "91a8bd860f1794af0aca7242b44f1d46f2d6a5c427fb5b2a1cdcc50ace1045d4"
+    },
+    {
+      "path": "assets/kuro/read/loop/_008_130.png",
+      "bytes": 14243,
+      "sha256": "7abb4de6e2780835c9fe3f590a15c2aeed661bbcd595045b6e4f091a6877bfd5"
+    },
+    {
+      "path": "assets/kuro/read/loop/_009_130.png",
+      "bytes": 14986,
+      "sha256": "fd8ed4948eaa0abf0933c574282bd7d6263a231fa9916241877e3909de922280"
+    },
+    {
+      "path": "assets/kuro/read/loop/_010_130.png",
+      "bytes": 14937,
+      "sha256": "286d05352f147d47b128a87c3ab42c04a200de961b900629738b5b02ff6524bf"
+    },
+    {
+      "path": "assets/kuro/read/loop/_011_130.png",
+      "bytes": 14831,
+      "sha256": "409e7abdb0e989e366211877265a616027317cbc78fe286b3461f2050bc52d72"
+    },
+    {
+      "path": "assets/kuro/read/loop/_012_130.png",
+      "bytes": 14883,
+      "sha256": "56d96b600c419c3b13760aabce781373be97fa2c4baf8e10ddbb4746b1a5c94f"
+    },
+    {
+      "path": "assets/kuro/read/loop/_013_130.png",
+      "bytes": 14778,
+      "sha256": "8f280ea03109e377b668bd8b1337c376aca67a93a5836df0efb449b40166f1c6"
+    },
+    {
+      "path": "assets/kuro/read/loop/_014_130.png",
+      "bytes": 14779,
+      "sha256": "266fb8170a93955ed1a4ab36030622105dd951342dc0444e28931ecabee57982"
+    },
+    {
+      "path": "assets/kuro/read/loop/_015_130.png",
+      "bytes": 14291,
+      "sha256": "17ac464972abca75930b61f8a5b8fd1534b1d149a5819ab3dd86c0e5c8ac40d3"
+    },
+    {
+      "path": "assets/kuro/read/start/_000_70.png",
+      "bytes": 15725,
+      "sha256": "821c107ff2ca631359bcc87397213af03dd96938ee24a2dd72e3dd97069b32d6"
+    },
+    {
+      "path": "assets/kuro/read/start/_001_70.png",
+      "bytes": 16044,
+      "sha256": "72bb8725093e598b0cff9cf0c3885850f5760849111aac00eac51ab77f978e20"
+    },
+    {
+      "path": "assets/kuro/read/start/_002_70.png",
+      "bytes": 15985,
+      "sha256": "7ff5c43accd70110551ad90ac2d4eff27db2c22b653adba5b09af1766c250a32"
+    },
+    {
+      "path": "assets/kuro/read/start/_003_70.png",
+      "bytes": 15590,
+      "sha256": "ac1b2905260023754e612c9d657cd805453889da6e8d03b1e03a957e2c062ca6"
+    },
+    {
+      "path": "assets/kuro/read/start/_004_70.png",
+      "bytes": 14548,
+      "sha256": "7120bb964a45cbedcf1dcf09c9014812229a2aecef621808d8e8e1f25c773588"
+    },
+    {
+      "path": "assets/kuro/read/start/_005_70.png",
+      "bytes": 13890,
+      "sha256": "9bf7cbff7a1791564ec5bd8377ca407757595e70f457b3e408bfce30961a099d"
+    },
+    {
+      "path": "assets/kuro/shuriken/_000_80.png",
+      "bytes": 14210,
+      "sha256": "2be65f82bdc4f45aa59ad00c652cf80ad2ef353a46a7a9487ec872f5a64389d7"
+    },
+    {
+      "path": "assets/kuro/shuriken/_001_80.png",
+      "bytes": 14283,
+      "sha256": "18d5462a62c0e8a22022f39233f11809813d3d45c37f2fd3c2675944eeaa94c7"
+    },
+    {
+      "path": "assets/kuro/shuriken/_002_80.png",
+      "bytes": 14613,
+      "sha256": "faf76444e1731ab39484175453c7497d2b0a8931bc69c33c00013cf3f3583867"
+    },
+    {
+      "path": "assets/kuro/shuriken/_003_80.png",
+      "bytes": 14855,
+      "sha256": "63849a1ced791e893737671275356f97d6a55813b3e57ee89c6111030c2fc42f"
+    },
+    {
+      "path": "assets/kuro/shuriken/_004_80.png",
+      "bytes": 14902,
+      "sha256": "b3f5f40703f85aa23743db92c126a75426daa783a4745babf3ec8f439203558b"
+    },
+    {
+      "path": "assets/kuro/shuriken/_005_80.png",
+      "bytes": 15231,
+      "sha256": "311fb1c959beeb24ef5db86a798ac2ccfa8dba89d3471f5567b9cc984abfca59"
+    },
+    {
+      "path": "assets/kuro/shuriken/_006_80.png",
+      "bytes": 15219,
+      "sha256": "6e8a9104d92229b31a32d52a7dc57036c8726dd241ab826d136dce8df70c50c3"
+    },
+    {
+      "path": "assets/kuro/shuriken/_007_80.png",
+      "bytes": 15177,
+      "sha256": "b3b23308b3985ec4a4f3c850a800aa41c9b7fcfcf68f48cd442bb7b02c8fbda6"
+    },
+    {
+      "path": "assets/kuro/shuriken/_008_80.png",
+      "bytes": 15351,
+      "sha256": "5f2ff5df80015ce4ce781a49227445df0ba4283ee90c2b63b1093f66f8ed0a23"
+    },
+    {
+      "path": "assets/kuro/shuriken/_009_80.png",
+      "bytes": 14766,
+      "sha256": "ed64a9776ee0e280c47dc8016832151581da264cbbfa3bf5f43b48fd2d416208"
+    },
+    {
+      "path": "assets/kuro/shuriken/_010_80.png",
+      "bytes": 15193,
+      "sha256": "48e256bbafc278b36ae179cb4237fb2183176c6fb5dcda6c9ec02a28c8f6186a"
+    },
+    {
+      "path": "assets/kuro/shuriken/_011_80.png",
+      "bytes": 15130,
+      "sha256": "bf31eba3a0fe944ce7c2d845332ed85f27b7b22b63f3c932b7a1c553cee02a9d"
+    },
+    {
+      "path": "assets/kuro/shuriken/_012_80.png",
+      "bytes": 15090,
+      "sha256": "475da99f07e2f329c0f4dc48c931e71a6d8dcdf7f9022da4dda256ca2eea8e1f"
+    },
+    {
+      "path": "assets/kuro/shuriken/_013_80.png",
+      "bytes": 14798,
+      "sha256": "1b12d38d3e1af84be20f7508efdc8b785f1d78a5545143470de544091f72957f"
+    },
+    {
+      "path": "assets/kuro/shuriken/_014_80.png",
+      "bytes": 14516,
+      "sha256": "3c90558e68f3665b657a05a763a09929199522f2afca439b8ac3e53ec4bef718"
+    },
+    {
+      "path": "assets/kuro/shuriken/_015_80.png",
+      "bytes": 13958,
+      "sha256": "a7d8da7f3002c830be3413bb058daa3b16b914ce4a9c51547d4fa2b253260e6a"
+    },
+    {
+      "path": "assets/kuro/shy/_000_100.png",
+      "bytes": 14138,
+      "sha256": "4279dcb8c383680e6a32419cbbf9e5c980ea07fc9ce5402685da8f898046824b"
+    },
+    {
+      "path": "assets/kuro/shy/_001_100.png",
+      "bytes": 17304,
+      "sha256": "445a9911dcc2f7ca42ee647caf3a028f5c7474a5562cb0592f5628a7ddc66e73"
+    },
+    {
+      "path": "assets/kuro/shy/_002_100.png",
+      "bytes": 18216,
+      "sha256": "a4917bf4a25117bf4481c3c0d16bff161817228cc6c1beabbc94d56fd9d61ed7"
+    },
+    {
+      "path": "assets/kuro/shy/_003_100.png",
+      "bytes": 17889,
+      "sha256": "d2208f33725fb436547bf05dba6b014017c4fd44a216473fbd2533372b34efd8"
+    },
+    {
+      "path": "assets/kuro/shy/_004_100.png",
+      "bytes": 17087,
+      "sha256": "8b85ed075312be8da347d1012e85de5517e4426e2b359e95d3fe562a70274567"
+    },
+    {
+      "path": "assets/kuro/shy/_005_100.png",
+      "bytes": 17127,
+      "sha256": "fe62d9b1490b43c7baf71dae39ab69654b8c13f26949f9d5a27a6b23e3c29c06"
+    },
+    {
+      "path": "assets/kuro/shy/_006_100.png",
+      "bytes": 17208,
+      "sha256": "9de7444974f0ffbfa37c73860fafb01f22ff862f7b138f147af9b59c7cdbbaff"
+    },
+    {
+      "path": "assets/kuro/shy/_007_100.png",
+      "bytes": 17482,
+      "sha256": "4e0821c65e8c09f6d3bde6053a5ccbfb58eac0ddafa9c39aafbb4174bb77bfc8"
+    },
+    {
+      "path": "assets/kuro/shy/_008_100.png",
+      "bytes": 17420,
+      "sha256": "eb8c0a90cb22335983eb93ad74286f3aa01ec18d81188198d6dee60bc5e18ca8"
+    },
+    {
+      "path": "assets/kuro/shy/_009_100.png",
+      "bytes": 17088,
+      "sha256": "e9ab9470aa6925b4f40981064d0b482b193a122bcb473a4fabe765c149eba434"
+    },
+    {
+      "path": "assets/kuro/shy/_010_100.png",
+      "bytes": 18104,
+      "sha256": "ca7f1a91ea61ad28f0edac005ddfa2671575f7b411dfddcd5765d0048c3f435d"
+    },
+    {
+      "path": "assets/kuro/shy/_011_100.png",
+      "bytes": 18580,
+      "sha256": "9a043ef14810cf41138e43748505f7379ea13dd9a07858b795ad4d2a2cb85ec7"
+    },
+    {
+      "path": "assets/kuro/shy/_012_100.png",
+      "bytes": 17897,
+      "sha256": "59dedbff6105454f56fce3dabcc12edce29248109d6e76179b4224258b209029"
+    },
+    {
+      "path": "assets/kuro/shy/_013_100.png",
+      "bytes": 14138,
+      "sha256": "4279dcb8c383680e6a32419cbbf9e5c980ea07fc9ce5402685da8f898046824b"
+    },
+    {
+      "path": "assets/kuro/sleep/end/_000_140.png",
+      "bytes": 13743,
+      "sha256": "8b5723e3f3668d52a5fee2cccd03c63fdcc559badaf342ac4dc62ffce687e0ff"
+    },
+    {
+      "path": "assets/kuro/sleep/end/_001_140.png",
+      "bytes": 13867,
+      "sha256": "a04858e07837fe24dc89da82eca75ab36421cab4562b4e6f0afb1b811574bd42"
+    },
+    {
+      "path": "assets/kuro/sleep/end/_002_140.png",
+      "bytes": 13989,
+      "sha256": "f8440c7a8f6facc2ef772ef18b9e86c6ca7163fb87f9b98771ba00d83b94486e"
+    },
+    {
+      "path": "assets/kuro/sleep/end/_003_180.png",
+      "bytes": 16236,
+      "sha256": "bddeac87c81d28f01bd054b7114100f5ef5c74ccf03cb0cc5fed8552bea64e6a"
+    },
+    {
+      "path": "assets/kuro/sleep/end/_004_180.png",
+      "bytes": 16156,
+      "sha256": "d358ee0e5130582d88bc6bcb7128c675c75bce8d378341abb73c9ab6d376e91a"
+    },
+    {
+      "path": "assets/kuro/sleep/end/_005_140.png",
+      "bytes": 15454,
+      "sha256": "5f8d7aaa100bb2c8ae3477e22bbec79a7c9495cbc641a37f9f2af7c91d0180ae"
+    },
+    {
+      "path": "assets/kuro/sleep/end/_006_140.png",
+      "bytes": 14848,
+      "sha256": "88217a05e36d7e5af59d75cd7ed6925023b02408d3c123cde80c44dc4e969d3f"
+    },
+    {
+      "path": "assets/kuro/sleep/loop/_000_150.png",
+      "bytes": 14478,
+      "sha256": "64aeb267f1ac74863983dea7d15e7b9090630d8f35da442975b67df5afb010d0"
+    },
+    {
+      "path": "assets/kuro/sleep/loop/_001_150.png",
+      "bytes": 14644,
+      "sha256": "70f293a3fb8e78f634046f937f86fb2afeae5b8ac8243ad071c8a1cc65a4e5cb"
+    },
+    {
+      "path": "assets/kuro/sleep/loop/_002_150.png",
+      "bytes": 14776,
+      "sha256": "e35fede83f4275a1556ce6d4444baec31eb33132492b6b5afe4c66774de4d9aa"
+    },
+    {
+      "path": "assets/kuro/sleep/loop/_003_150.png",
+      "bytes": 14786,
+      "sha256": "241f1e985ea1b38872385a9bd05cfaa43613400ed3de0bdaef9b541436912ae6"
+    },
+    {
+      "path": "assets/kuro/sleep/loop/_004_150.png",
+      "bytes": 15033,
+      "sha256": "40e03a2cbaf761c0ff9b6e2ed70c91fd0f945c70b2276a18dcfd5ca3b7d25859"
+    },
+    {
+      "path": "assets/kuro/sleep/loop/_005_150.png",
+      "bytes": 14683,
+      "sha256": "b8c610c243012b1d5c9a27266b1c6ca794652eaef83db55355a4d39466e22fa2"
+    },
+    {
+      "path": "assets/kuro/sleep/loop/_006_150.png",
+      "bytes": 14888,
+      "sha256": "cb5c077bd71b824f7e1f57c06d2cc69a0ffd2a85c69bab8764d1527dd6e2e43b"
+    },
+    {
+      "path": "assets/kuro/sleep/loop/_007_150.png",
+      "bytes": 14940,
+      "sha256": "dac9e359eda40777a316e2cb759fc27710df27cddac727e00b4dd8313de0fc8f"
+    },
+    {
+      "path": "assets/kuro/sleep/loop/_008_150.png",
+      "bytes": 15093,
+      "sha256": "2b09b88ca6d54c15f2636c0fbaabb9065de3fa7ebb2f01a6b9fb4a0027dd3181"
+    },
+    {
+      "path": "assets/kuro/sleep/loop/_009_150.png",
+      "bytes": 15277,
+      "sha256": "5f3347fba5806b00e21e66229cd3557e09e1b1849246a191e52e01dbafc392e7"
+    },
+    {
+      "path": "assets/kuro/sleep/loop/_010_150.png",
+      "bytes": 15090,
+      "sha256": "f7772b63c3d955ba8f38a4ca7cfd2a6a8cd0ea13cbceeec01b0e566d74589ae8"
+    },
+    {
+      "path": "assets/kuro/sleep/loop/_011_150.png",
+      "bytes": 15057,
+      "sha256": "bc79e2f7d628fcf0ba1303107a4e4cff68496dae8e3d64f425c9b764e2529ef1"
+    },
+    {
+      "path": "assets/kuro/sleep/loop/_012_150.png",
+      "bytes": 15375,
+      "sha256": "4009b04202dea183102172c1f27e0bb1381f9d68e7011fbe772ac0fd056aebbc"
+    },
+    {
+      "path": "assets/kuro/sleep/loop/_013_150.png",
+      "bytes": 15197,
+      "sha256": "45fda8c9ad80c1c44b9d12b918b1258bdf417217578d4cebc17f7091992f4b4a"
+    },
+    {
+      "path": "assets/kuro/sleep/loop/_014_150.png",
+      "bytes": 15337,
+      "sha256": "e4cdf1e896d7fd06661dd114e75bdadd02e8abfb4c434d164100f43d7f8c4abe"
+    },
+    {
+      "path": "assets/kuro/sleep/loop/_015_150.png",
+      "bytes": 15420,
+      "sha256": "35a9e4308dd3a653a3219d81a45886acb98cfeac54d4bf4c7d600a5402944dd7"
+    },
+    {
+      "path": "assets/kuro/sleep/start/_000_110.png",
+      "bytes": 14586,
+      "sha256": "2b727d360060b94f23610f4676ed54766e0b997110a20bd253b37a070da93009"
+    },
+    {
+      "path": "assets/kuro/sleep/start/_001_110.png",
+      "bytes": 14705,
+      "sha256": "5891af6513dbb52b9303d85cdcac528eb8b570f4bb7e4fe3248373c6f99404b1"
+    },
+    {
+      "path": "assets/kuro/sleep/start/_002_110.png",
+      "bytes": 13934,
+      "sha256": "0d1e69b3861f223b16640fcab6b992d9931d43a22dd257998d9f61a0fa2f5432"
+    },
+    {
+      "path": "assets/kuro/sleep/start/_003_110.png",
+      "bytes": 14155,
+      "sha256": "6ce073f28f410710529c242c67b6bdc0c23655cd474bd48e13dc4ba46aee5b72"
+    },
+    {
+      "path": "assets/kuro/sleep/start/_004_110.png",
+      "bytes": 15415,
+      "sha256": "b387d36a1138001edf5998709d31d26bc88c9529433713a5df3e06213d2426d0"
+    },
+    {
+      "path": "assets/kuro/sleep/start/_005_110.png",
+      "bytes": 14946,
+      "sha256": "bd7e9530052d3b7d822c59e7d1cddbb5ece923e522d5ad495c107b0974fe4e90"
+    },
+    {
+      "path": "assets/kuro/sleep/start/_006_110.png",
+      "bytes": 14637,
+      "sha256": "1ab707d0862b93e6b770cd4b2585595dedb68fc41fc0a042abc12a4eb9eb5e71"
+    },
+    {
+      "path": "assets/kuro/sleep/start/_007_110.png",
+      "bytes": 14277,
+      "sha256": "0cb6565208a624843d426ec175956f0273487d0048af01c9018d3253928039cf"
+    },
+    {
+      "path": "assets/kuro/snack/_000_80.png",
+      "bytes": 15395,
+      "sha256": "c3ca8ace4425672adec2a4db4850eadc8cc3c40f4b8ec004d0df51f6b8b957b2"
+    },
+    {
+      "path": "assets/kuro/snack/_001_80.png",
+      "bytes": 15266,
+      "sha256": "d6f7f66159846f07bcb93e8f24bb623bac136bbe6f1ab6d90c45dc25d669d5c1"
+    },
+    {
+      "path": "assets/kuro/snack/_002_80.png",
+      "bytes": 14452,
+      "sha256": "e8b8fb8072b48261c036707627fe0c1476f18bb39d989b42d5c63f7c8bb01175"
+    },
+    {
+      "path": "assets/kuro/snack/_003_80.png",
+      "bytes": 14461,
+      "sha256": "9581e06b3e70d1c697d86914af2937295c1ce6c876f6571d1d1408f184a0dbd2"
+    },
+    {
+      "path": "assets/kuro/snack/_004_80.png",
+      "bytes": 14594,
+      "sha256": "3bbca206abf3804ec4eb41d34e8ba7d16df1ec8a52b3615a9384dacceaae490c"
+    },
+    {
+      "path": "assets/kuro/snack/_005_80.png",
+      "bytes": 14847,
+      "sha256": "e97e62ed53cee208625fd8d536208e3aa66eadfca0f93954e10b91d4dfe9318e"
+    },
+    {
+      "path": "assets/kuro/snack/_006_80.png",
+      "bytes": 14964,
+      "sha256": "4c18e2131a9816a902383d2bb688453308ce7a6f96030622ee070ed7002ee78e"
+    },
+    {
+      "path": "assets/kuro/snack/_007_110.png",
+      "bytes": 15736,
+      "sha256": "56ff661a1a5b03ccd569b2d7238ba6219f4ffaa1291ec024993a003876483b2c"
+    },
+    {
+      "path": "assets/kuro/snack/_008_110.png",
+      "bytes": 15069,
+      "sha256": "75a960794eca7fcaa26b183ec8bd4357439881bd97d6ad1008dde712afb25439"
+    },
+    {
+      "path": "assets/kuro/snack/_009_110.png",
+      "bytes": 15072,
+      "sha256": "749ddeb60bcb0c357feb5f399d5365684a614c34e35b219f3fe7bb5410d2f3b2"
+    },
+    {
+      "path": "assets/kuro/snack/_010_110.png",
+      "bytes": 15927,
+      "sha256": "f5ee499716a744900b129a24d354d2c349893f8eb3c88d863ffacc8a6b5c0f56"
+    },
+    {
+      "path": "assets/kuro/snack/_011_110.png",
+      "bytes": 15209,
+      "sha256": "b814b6edd43cfc0283e586e9aa6bd4772c6ce45c0e7bb0e97a7acbaf0229a9d5"
+    },
+    {
+      "path": "assets/kuro/snack/_012_110.png",
+      "bytes": 15271,
+      "sha256": "a8ecb443d0cbbd6c2db9e564948f18da64ba49ad62095369ec54532597d43639"
+    },
+    {
+      "path": "assets/kuro/snack/_013_110.png",
+      "bytes": 16010,
+      "sha256": "cd48e525c907b75f6936667ecff459e2cefd275249c35eafec01fb1ff72b4699"
+    },
+    {
+      "path": "assets/kuro/snack/_014_110.png",
+      "bytes": 14826,
+      "sha256": "a6d07f2841aabfaec2a6602563d244d1642ba7acc7b20d2b2d7bf00bcf6ccea4"
+    },
+    {
+      "path": "assets/kuro/snack/_015_110.png",
+      "bytes": 15340,
+      "sha256": "c2afaa99d370d6b90bc31c8169bfce8087f0581d4376d94b6fa882a70c9268ef"
+    },
+    {
+      "path": "assets/kuro/snack/_016_90.png",
+      "bytes": 15399,
+      "sha256": "c50d923db22e929571c67e74c9430fde013d5d052b44254df34f6dd95fbec7fd"
+    },
+    {
+      "path": "assets/kuro/snack/_017_90.png",
+      "bytes": 15109,
+      "sha256": "017bb6f823834ef600d7ac9ca8db325138554b9735c1e8565932a20b4fbd2c83"
+    },
+    {
+      "path": "assets/kuro/snack/_018_90.png",
+      "bytes": 14982,
+      "sha256": "20fa4cf1b23b0f7efff19adfc3a8908f1c34987e2b3e844847f4adf89fd39759"
+    },
+    {
+      "path": "assets/kuro/snack/_019_200.png",
+      "bytes": 14529,
+      "sha256": "7f1ac6bd02aad0616fb231c27ba0946f953c36f7691dccf36354d1685416a173"
+    },
+    {
+      "path": "assets/kuro/startled/_000_70.png",
+      "bytes": 15447,
+      "sha256": "f02703ae2bb34e3cf2ec26706db6bbac90fe933fba29f051490e1f1edbf156af"
+    },
+    {
+      "path": "assets/kuro/startled/_001_70.png",
+      "bytes": 18572,
+      "sha256": "8d151ea122a042a89b36c2b6cef2e2068e57784398e8094019790a36070b0666"
+    },
+    {
+      "path": "assets/kuro/startled/_002_70.png",
+      "bytes": 18262,
+      "sha256": "5c480ce1cbf285207de7273828a86e6b294150c8b8f51ce6e296990901334ab1"
+    },
+    {
+      "path": "assets/kuro/startled/_003_70.png",
+      "bytes": 18271,
+      "sha256": "af251a0ee3b3c694dfbf7ae0bd29bcffaadfd3149b2bcef37a5d18a0568b9fb5"
+    },
+    {
+      "path": "assets/kuro/startled/_004_70.png",
+      "bytes": 16424,
+      "sha256": "6b0ae3a88aec6f2e0a778baa39c2b2378b652cade415a4f51c1c430433266b78"
+    },
+    {
+      "path": "assets/kuro/startled/_005_120.png",
+      "bytes": 16213,
+      "sha256": "8a69e0e3167b6fe5333d6ec38dac8475f2d58b3a4439586925088dfaf7307403"
+    },
+    {
+      "path": "assets/kuro/startled/_006_120.png",
+      "bytes": 15677,
+      "sha256": "e4eb59b19aa5e82d8c8a7608c057571716088ac55cf5ebb2e77de94acca8cc10"
+    },
+    {
+      "path": "assets/kuro/startled/_007_120.png",
+      "bytes": 15128,
+      "sha256": "945bbd250634b60d4446e181bcb65b573f4c0ecd0ad52dee5a0b3eae30c72bf9"
+    },
+    {
+      "path": "assets/kuro/stretch/_000_110.png",
+      "bytes": 14290,
+      "sha256": "2ac18cce5a7f68b7916aca9c2f61d94cc0bf845c48ca82161bd4847f93bc98e5"
+    },
+    {
+      "path": "assets/kuro/stretch/_001_110.png",
+      "bytes": 15574,
+      "sha256": "71061a385a0941fea2586377bb3f50fea9bbc4d74d716cc313cbbce39ecee5bf"
+    },
+    {
+      "path": "assets/kuro/stretch/_002_110.png",
+      "bytes": 17462,
+      "sha256": "c041f9a68f83072386e63c413d54ee0122d085ee3d7a59402b51ec442eac4dcc"
+    },
+    {
+      "path": "assets/kuro/stretch/_003_160.png",
+      "bytes": 16427,
+      "sha256": "4c57ccd1662a171d8e91f9b4dc448ecfa945c7a60891fa7b9988749195f234c0"
+    },
+    {
+      "path": "assets/kuro/stretch/_004_160.png",
+      "bytes": 17251,
+      "sha256": "3594c3a23c7839ea5e3960927b84e873e59fb4fe14008c31963ed4ccb301ce07"
+    },
+    {
+      "path": "assets/kuro/stretch/_005_110.png",
+      "bytes": 17367,
+      "sha256": "d8dcdb17b33c2061e70848b8af1c4f6666185c15ff063fab3f1a961718ad012b"
+    },
+    {
+      "path": "assets/kuro/stretch/_006_110.png",
+      "bytes": 16462,
+      "sha256": "1a36e0b091d6cab11f565199f9aefb3335e294ecec55285e4bf86c0d49a6ccef"
+    },
+    {
+      "path": "assets/kuro/stretch/_007_110.png",
+      "bytes": 16775,
+      "sha256": "e2aae036038baa241e4c3b0ca09a0286d1472bc2440b184de29b25d520a006d9"
+    },
+    {
+      "path": "assets/kuro/stretch/_008_110.png",
+      "bytes": 16655,
+      "sha256": "88f2c8df0ea516001b43b996ddf767a15653ced9bddcdf979000bec2d67e0e96"
+    },
+    {
+      "path": "assets/kuro/think/end/_000_70.png",
+      "bytes": 18623,
+      "sha256": "ef843f4167b0f51b3c1fed1d1c0133374f9aedea66c7415243cc5c03ea73186b"
+    },
+    {
+      "path": "assets/kuro/think/end/_001_70.png",
+      "bytes": 17839,
+      "sha256": "18484ca520503abd052bd5cc8d8c0a1ec805f63b943b66a77d3e4278627e548c"
+    },
+    {
+      "path": "assets/kuro/think/end/_002_70.png",
+      "bytes": 15049,
+      "sha256": "49512ae4b1d30eeaadb6f619eee11e9350d9f4af966e89531c2d613a594e3609"
+    },
+    {
+      "path": "assets/kuro/think/end/_003_70.png",
+      "bytes": 14528,
+      "sha256": "ba68733c9549363ee18ad89d7056def7244ab3826945d1c15740bf70eb0980c5"
+    },
+    {
+      "path": "assets/kuro/think/end/_004_70.png",
+      "bytes": 14069,
+      "sha256": "03dd36e698b1c46db61d211ea41206799248a42e6bf551d60ef9f86632af60d8"
+    },
+    {
+      "path": "assets/kuro/think/idea/_000_110.png",
+      "bytes": 19265,
+      "sha256": "032bcd8e8bd17dae1ca72d43a49cb8d747de315452c6179350640fbe499b44b1"
+    },
+    {
+      "path": "assets/kuro/think/idea/_001_110.png",
+      "bytes": 21533,
+      "sha256": "613ef3fd87790b70dabb663ca7c70f35bbe9da4943ba4d0ba1bcf84b5cdd3303"
+    },
+    {
+      "path": "assets/kuro/think/idea/_002_110.png",
+      "bytes": 21791,
+      "sha256": "26a08c2a4bbbbfd22851b16cda2223f83a0d5fb568f63b9d29b1b41c4fe0bea8"
+    },
+    {
+      "path": "assets/kuro/think/idea/_003_110.png",
+      "bytes": 21995,
+      "sha256": "ac91218e9a2da978d36fc9067c2e8a4ed7997a44b181516182bf0a09023fe118"
+    },
+    {
+      "path": "assets/kuro/think/idea/_004_110.png",
+      "bytes": 21405,
+      "sha256": "2ef4f12695f97701b75292a5b9f24f07edb0dcd121eee3025fc957b5c1d14ccd"
+    },
+    {
+      "path": "assets/kuro/think/idea/_005_110.png",
+      "bytes": 21117,
+      "sha256": "471b2f88347317ee367d61d661f65067376dd0d56a09f0c94961597d5a2ca84a"
+    },
+    {
+      "path": "assets/kuro/think/idea/_006_110.png",
+      "bytes": 20574,
+      "sha256": "25309e82794452e2f7ab23bd8d8852d116a71f5e0c22330acb73655fa634faca"
+    },
+    {
+      "path": "assets/kuro/think/idea/_007_110.png",
+      "bytes": 18789,
+      "sha256": "85a20ff29a29304e7ef5e75403c469f6c78e2f3d016491f0f08eec8e05bb2d7c"
+    },
+    {
+      "path": "assets/kuro/think/idea/_008_110.png",
+      "bytes": 20744,
+      "sha256": "68e9591a40add9a0728a1f08402a5378ce51173e4a6064c239b2173f99eb53e8"
+    },
+    {
+      "path": "assets/kuro/think/idea/_009_110.png",
+      "bytes": 21055,
+      "sha256": "7a3e9a99df6589012d2493e492c2584cb926347bc84189eb03cdbe041754d55a"
+    },
+    {
+      "path": "assets/kuro/think/idea/_010_110.png",
+      "bytes": 21036,
+      "sha256": "b8369d3364ad8af5299f931f07c8c37efea2f70a61d47f323c1f49d7c241b053"
+    },
+    {
+      "path": "assets/kuro/think/idea/_011_110.png",
+      "bytes": 21052,
+      "sha256": "0e4a76f1fa37c01edd6e20780ba5c19c6115b81dfd4f9cb9781c100a987f7efa"
+    },
+    {
+      "path": "assets/kuro/think/idea/_012_110.png",
+      "bytes": 20795,
+      "sha256": "3bd381f3d0cd3bfc573342c27e884e4488eae5bea8efb605476b80bff8edd1ab"
+    },
+    {
+      "path": "assets/kuro/think/idea/_013_110.png",
+      "bytes": 20483,
+      "sha256": "2f126ab85d5287a3ccc947f8e9271895d14c8ce9f9ae2b17ffe5edf2f000edbc"
+    },
+    {
+      "path": "assets/kuro/think/loop/_000_110.png",
+      "bytes": 17732,
+      "sha256": "f783f9e219594e6075e4edc796aa92f88497afaafa3f0df04022aeea07ae54f4"
+    },
+    {
+      "path": "assets/kuro/think/loop/_001_110.png",
+      "bytes": 19661,
+      "sha256": "1bc8d1e6f02e1fbd143904d445ff6e982213db0ede34c6c728b4320fa18b0db4"
+    },
+    {
+      "path": "assets/kuro/think/loop/_002_110.png",
+      "bytes": 19898,
+      "sha256": "6cd6bc64511f607cd02621a148847205072aa8be37e0344209254721e48988d2"
+    },
+    {
+      "path": "assets/kuro/think/loop/_003_110.png",
+      "bytes": 20192,
+      "sha256": "0979ccb58f743cc81b34846668f1467cabd3a0fb9b87c5c468d3e8b54369f573"
+    },
+    {
+      "path": "assets/kuro/think/loop/_004_110.png",
+      "bytes": 20388,
+      "sha256": "a121987a359491d56e673442e961993201bb4f13f5797e1f5394b34e6c2a8b87"
+    },
+    {
+      "path": "assets/kuro/think/loop/_005_110.png",
+      "bytes": 20241,
+      "sha256": "79b1615a1a522854cf58a6f80a74c6eb85b082587f4ae7949da62f7608d1d9ff"
+    },
+    {
+      "path": "assets/kuro/think/loop/_006_110.png",
+      "bytes": 19708,
+      "sha256": "d1580bd9e167c32248c3b45d321453700aea870936f535b4d375203e2e5c13c7"
+    },
+    {
+      "path": "assets/kuro/think/loop/_007_110.png",
+      "bytes": 17754,
+      "sha256": "bf833f1467eee557c6e3c22d66dc3ae92abecd7788e6ddc21fd1231a58e1b875"
+    },
+    {
+      "path": "assets/kuro/think/loop/_008_110.png",
+      "bytes": 19673,
+      "sha256": "cbbc148ffd81b74df2fab93dca9822cd6984ade849c6bad3b38d4f18b3542cdf"
+    },
+    {
+      "path": "assets/kuro/think/loop/_009_110.png",
+      "bytes": 19902,
+      "sha256": "a7421308fdde837920d1c1586aecce38299865ecbe8fea9a3f03092e576ab94c"
+    },
+    {
+      "path": "assets/kuro/think/loop/_010_110.png",
+      "bytes": 20062,
+      "sha256": "62c9b5c5cd5fee938a3a657e6c4e11ffe214540506cba13d514211e1e0301dc7"
+    },
+    {
+      "path": "assets/kuro/think/loop/_011_110.png",
+      "bytes": 20093,
+      "sha256": "3ffbceac0522a40f091b6eb6fe3f215a9aebd053090681ddcf8bc41721b4fd48"
+    },
+    {
+      "path": "assets/kuro/think/loop/_012_110.png",
+      "bytes": 19844,
+      "sha256": "9fcf40e8dc000491c8b01843a2b2899170ff73a6bc7e6db9b62f48f7279b1eac"
+    },
+    {
+      "path": "assets/kuro/think/loop/_013_110.png",
+      "bytes": 19617,
+      "sha256": "1d18a1f4b9229f3520c5af8395254c85032c4930d12403a448be4b0863be1d1c"
+    },
+    {
+      "path": "assets/kuro/think/start/_000_70.png",
+      "bytes": 14287,
+      "sha256": "b2c07770858241f3e2c1e610cea414f23b50853618d0b5850338588600896927"
+    },
+    {
+      "path": "assets/kuro/think/start/_001_70.png",
+      "bytes": 14622,
+      "sha256": "b0fe90868d360f25de4bdd28efc24b32014505651dcc59efa11d2ebc5207b2bc"
+    },
+    {
+      "path": "assets/kuro/think/start/_002_70.png",
+      "bytes": 14964,
+      "sha256": "33ae0f56cc8b6126d599f4ebcef147c29245140bf5e67881f38e0da2fe55ba9e"
+    },
+    {
+      "path": "assets/kuro/think/start/_003_70.png",
+      "bytes": 17982,
+      "sha256": "c0bc30d0be970173a40e0f0e3f445c595f6337c401e5e5612503d4cbf051893c"
+    },
+    {
+      "path": "assets/kuro/think/start/_004_70.png",
+      "bytes": 18541,
+      "sha256": "23e5f8d4075af91553bb4203ae5919110d2c0913a3281846a815472737365e5c"
+    },
+    {
+      "path": "assets/kuro/think/start/_005_70.png",
+      "bytes": 17953,
+      "sha256": "4a2e03126b695e5732529716a5ecf7d8cd1beaf4aebd9a02f35c6b6d9a541b76"
+    },
+    {
+      "path": "assets/kuro/tired/_000_150.png",
+      "bytes": 14129,
+      "sha256": "a9004f901ad8f31181aba39e88e96ebab6058e94d50743a34a9fc48bea6a57c2"
+    },
+    {
+      "path": "assets/kuro/tired/_001_150.png",
+      "bytes": 14076,
+      "sha256": "8a1ae04347bbfd29320e2722516913f90b85c6ffdf4bb7f09e1c17669b3ce678"
+    },
+    {
+      "path": "assets/kuro/tired/_002_150.png",
+      "bytes": 14338,
+      "sha256": "a551b7fa1903fc53ae2c1e3d5746dab559b4f5fb75efa183031efc291d6afe8d"
+    },
+    {
+      "path": "assets/kuro/tired/_003_150.png",
+      "bytes": 14347,
+      "sha256": "2ae5432d835f43553006b74388c8c6921f0ff79c3cc81e4db37d9f694f118006"
+    },
+    {
+      "path": "assets/kuro/tired/_004_150.png",
+      "bytes": 14327,
+      "sha256": "2d1ddadcab31555d0933f35f15fbc3329a6706277a5dd8efad4517f5b8e3d9e6"
+    },
+    {
+      "path": "assets/kuro/tired/_005_150.png",
+      "bytes": 14646,
+      "sha256": "3b5ce6a639c572b632cbba0f50b79ed07054ead04f31018954415a91b17cc1c8"
+    },
+    {
+      "path": "assets/kuro/tired/_006_150.png",
+      "bytes": 14486,
+      "sha256": "ab6a01355acde8da2f9e5690c3b8c6de3460c96bc4257689399e7969f599b6f1"
+    },
+    {
+      "path": "assets/kuro/tired/_007_150.png",
+      "bytes": 14679,
+      "sha256": "9a952aff0eddbbddfe96c63722d5cde195812ec8b3d3bee238344ea4f35403e1"
+    },
+    {
+      "path": "assets/kuro/tired/_008_150.png",
+      "bytes": 14394,
+      "sha256": "852f5fecd1ab752a3f6bf3a413956bf27d49ae529ea42c92a52d8f0708be991f"
+    },
+    {
+      "path": "assets/kuro/tired/_009_150.png",
+      "bytes": 14544,
+      "sha256": "1e71494c4caf21ad46f881d1d14544758a5a05574b1636532db82e21fbf4fb56"
+    },
+    {
+      "path": "assets/kuro/tired/_010_150.png",
+      "bytes": 14329,
+      "sha256": "d234a48480283849731546eb134887954f38860b5a6321aff4ea63942118b41d"
+    },
+    {
+      "path": "assets/kuro/tired/_011_150.png",
+      "bytes": 14093,
+      "sha256": "8f517a0a2dcb6cbcd9f75ece0f1327e107716c6316c5b0eb4f4e721ca6a3f9d8"
+    },
+    {
+      "path": "assets/kuro/tired/_012_150.png",
+      "bytes": 14119,
+      "sha256": "ff4ee1ed24fbe10fb9883f1c3b4db27190e9bc3a48ab3a0b7c0ad82e4d75a32c"
+    },
+    {
+      "path": "assets/kuro/tired/_013_150.png",
+      "bytes": 13873,
+      "sha256": "1c5912deea8a472dc847f17b926f9da8815e21f539373015702d49fccac1edcd"
+    },
+    {
+      "path": "assets/kuro/work/end/_000_70.png",
+      "bytes": 16011,
+      "sha256": "199828d88e70b04a0c7e1c7fee57f60c7eba580ec81146f70492416f1af6d7f6"
+    },
+    {
+      "path": "assets/kuro/work/end/_001_70.png",
+      "bytes": 13919,
+      "sha256": "a5aa7abde0088b5261eb068690dd14e5ef2e2c14a301fb2e5e4d2d9f074f09ad"
+    },
+    {
+      "path": "assets/kuro/work/end/_002_70.png",
+      "bytes": 14010,
+      "sha256": "2b4fa0fc2d481851fe0a17c40d4ffa7c9d4c5b46f9389465562756da462b47ba"
+    },
+    {
+      "path": "assets/kuro/work/end/_003_70.png",
+      "bytes": 14327,
+      "sha256": "7f8d3ccd0295a1222c7cec1759ba2fdb562cffc171eee6f587cd40002ab7f430"
+    },
+    {
+      "path": "assets/kuro/work/end/_004_70.png",
+      "bytes": 13319,
+      "sha256": "73b082ba083c386f02030c440920ff97eb9b4880d719c6fe6515d76ba54aa186"
+    },
+    {
+      "path": "assets/kuro/work/end/_005_160.png",
+      "bytes": 14122,
+      "sha256": "d6192a457ea3de0816c9072e481f439400a4467336395d3e5b546a3d7bc6760c"
+    },
+    {
+      "path": "assets/kuro/work/fast/_000_70.png",
+      "bytes": 15701,
+      "sha256": "5563e41d266db4af1cce52161e63d64e88ff140b905daa49a97aff8060654d14"
+    },
+    {
+      "path": "assets/kuro/work/fast/_001_70.png",
+      "bytes": 17055,
+      "sha256": "6b6c9b3dcf640c3fc06ed827f82bc4d4a98fe7dde88458b6ea5f17ab914da330"
+    },
+    {
+      "path": "assets/kuro/work/fast/_002_70.png",
+      "bytes": 16323,
+      "sha256": "5e910a0a17e19c1e284e745a662aa90e83a5a1077ac9798cd2a12b7a20458d21"
+    },
+    {
+      "path": "assets/kuro/work/fast/_003_70.png",
+      "bytes": 16403,
+      "sha256": "423ce93a00550ca6ef4de6facaf111774982d7242a7d09d74aca6450e0aa0c69"
+    },
+    {
+      "path": "assets/kuro/work/fast/_004_70.png",
+      "bytes": 16467,
+      "sha256": "6e3393413c3687c4ce69f56c2e4eba75c2952dc8db3aa093746d9b59d35f73bb"
+    },
+    {
+      "path": "assets/kuro/work/fast/_005_70.png",
+      "bytes": 17398,
+      "sha256": "d781d1ed95b6f3267db5ef6c5320e953dcdaf06fc9db8ddca77a57eb6a05ba20"
+    },
+    {
+      "path": "assets/kuro/work/fast/_006_70.png",
+      "bytes": 16306,
+      "sha256": "1b039d53755d376d32d2b854b3b235251eba24ae49389866251b12a2f9ab0653"
+    },
+    {
+      "path": "assets/kuro/work/fast/_007_70.png",
+      "bytes": 16503,
+      "sha256": "23bc9ba85ed9ef25583ebc149b2676d3565621cb1dea6c856fff7c1ce3111299"
+    },
+    {
+      "path": "assets/kuro/work/fast/_008_70.png",
+      "bytes": 16845,
+      "sha256": "42001e250bc448308e20272365f11b598491f17336cb9e20e8922a3fea83e1e1"
+    },
+    {
+      "path": "assets/kuro/work/fast/_009_70.png",
+      "bytes": 17202,
+      "sha256": "0e94978661724872e8958537092248daeea9e3af13d51f66615a26903675f1d8"
+    },
+    {
+      "path": "assets/kuro/work/fast/_010_70.png",
+      "bytes": 16250,
+      "sha256": "9da97752c63b5819ee26f61a7bb34054b5d460b981428457107db2ab77755100"
+    },
+    {
+      "path": "assets/kuro/work/fast/_011_70.png",
+      "bytes": 15761,
+      "sha256": "4b36b21dae9e70e145a7ff1062884b0554819dbd90160a03e6841b2092e835d4"
+    },
+    {
+      "path": "assets/kuro/work/loop/_000_100.png",
+      "bytes": 15486,
+      "sha256": "c71ffd7cf0571e09f697754e186ba09c198e9dc5986dd960a47806ee3f6146e8"
+    },
+    {
+      "path": "assets/kuro/work/loop/_001_100.png",
+      "bytes": 16782,
+      "sha256": "4f9e5c1b020c8a8ca128f8361ae0c7ae587816b16a69e99a9c9175e1eb9bf2d7"
+    },
+    {
+      "path": "assets/kuro/work/loop/_002_100.png",
+      "bytes": 16126,
+      "sha256": "8fa5fe061b9f1b93633581bacfb58be9d8de72b63838694efd432337ec6e438a"
+    },
+    {
+      "path": "assets/kuro/work/loop/_003_100.png",
+      "bytes": 16104,
+      "sha256": "275a57dd4af657b53b0377fcc4468d3ee59b28e270b78de8bad0dc73ce73ceaa"
+    },
+    {
+      "path": "assets/kuro/work/loop/_004_100.png",
+      "bytes": 16208,
+      "sha256": "f3e50fdaa646c63e8db365e60f0e1ca7124f6c28fe3f23d0000380ee7a8bd4ce"
+    },
+    {
+      "path": "assets/kuro/work/loop/_005_100.png",
+      "bytes": 17110,
+      "sha256": "a4a2ac7d0674307d8f5e3bb1eee683424960b6535aff82d4abd6ad0cc001cf0c"
+    },
+    {
+      "path": "assets/kuro/work/loop/_006_100.png",
+      "bytes": 16090,
+      "sha256": "072f32e8bf07c0ab297ec7dbbd10c21a4eddf6a4c02666f8e753659f51c941eb"
+    },
+    {
+      "path": "assets/kuro/work/loop/_007_100.png",
+      "bytes": 16236,
+      "sha256": "070d3ffab9f9268335da268cccd5609943eafb7df9a14747e8ed671ab943ecdb"
+    },
+    {
+      "path": "assets/kuro/work/loop/_008_100.png",
+      "bytes": 16534,
+      "sha256": "19a57b44e9305e286fb94b8f96c066c8db5000244aefad70529ba65d590253e9"
+    },
+    {
+      "path": "assets/kuro/work/loop/_009_100.png",
+      "bytes": 16902,
+      "sha256": "45c8116dc5be324f4cb3120dbc116ec6bed7b5c6c12a779742dafae483196939"
+    },
+    {
+      "path": "assets/kuro/work/loop/_010_100.png",
+      "bytes": 15937,
+      "sha256": "cedbfb79d14236a01dfb7041759ac702ce0ed586f6dafbbef30a97c06469f14c"
+    },
+    {
+      "path": "assets/kuro/work/loop/_011_100.png",
+      "bytes": 15488,
+      "sha256": "c9881f7ee44cb248070e55be675b5541cb80749448379f9a9d15c8a58ca1ff51"
+    },
+    {
+      "path": "assets/kuro/work/start/_000_70.png",
+      "bytes": 14274,
+      "sha256": "5d39620fe55870dee8ef823ecf93db748da323c3cbff04da7b70ec79a8c243c4"
+    },
+    {
+      "path": "assets/kuro/work/start/_001_70.png",
+      "bytes": 14264,
+      "sha256": "2f71c481c5b1ae53106abe4a91504ce723089f220d0a63148dc639f26de6d998"
+    },
+    {
+      "path": "assets/kuro/work/start/_002_70.png",
+      "bytes": 13482,
+      "sha256": "b6fb8789e6dcc4923c23102efcea897b7494471a2a425cc1e087332b4c9a16ad"
+    },
+    {
+      "path": "assets/kuro/work/start/_003_70.png",
+      "bytes": 16227,
+      "sha256": "7b459f42e50c1e88b6af2acaf49518faac3048cf99c411b2adc1302dab468317"
+    },
+    {
+      "path": "assets/kuro/work/start/_004_70.png",
+      "bytes": 15717,
+      "sha256": "dfc16b6813c490426ab0880068d2bc8b6bd311f3048e0f742053488d66ffe642"
+    },
+    {
+      "path": "assets/kuro/work/start/_005_70.png",
+      "bytes": 15486,
+      "sha256": "c71ffd7cf0571e09f697754e186ba09c198e9dc5986dd960a47806ee3f6146e8"
+    },
+    {
+      "path": "assets/kuro/yawn/_000_110.png",
+      "bytes": 14069,
+      "sha256": "03dd36e698b1c46db61d211ea41206799248a42e6bf551d60ef9f86632af60d8"
+    },
+    {
+      "path": "assets/kuro/yawn/_001_110.png",
+      "bytes": 15373,
+      "sha256": "764dc067938cdd0b8e067ac9ddf3089101f0706a205cc34e67defc1697771d38"
+    },
+    {
+      "path": "assets/kuro/yawn/_002_150.png",
+      "bytes": 16936,
+      "sha256": "29aced6a10d7b11a10b0c9f109e9257cfe3ace6ab9e6ec957ec3b84981208b6c"
+    },
+    {
+      "path": "assets/kuro/yawn/_003_150.png",
+      "bytes": 17441,
+      "sha256": "d3af4826d97c450b48a4028615105debcebf3fa75bb87030dc3faa3b1819605f"
+    },
+    {
+      "path": "assets/kuro/yawn/_004_150.png",
+      "bytes": 17464,
+      "sha256": "0c727f162f3466be910624a852579c146e3b0d242fc0b1b5cae7706a306a3a4a"
+    },
+    {
+      "path": "assets/kuro/yawn/_005_110.png",
+      "bytes": 17827,
+      "sha256": "d5adac3a55044c1a630b0d5f4d75de64cda429b9a48dddea726006c45ad8b995"
+    },
+    {
+      "path": "assets/kuro/yawn/_006_110.png",
+      "bytes": 14484,
+      "sha256": "b167b07ad137ff58ec4a442893cc7a1983ce1adee97c43168d4f285b4366f475"
+    },
+    {
+      "path": "assets/kuro/yawn/_007_110.png",
+      "bytes": 14181,
+      "sha256": "863b1219d658c4e37780903cc8a882fc3db6805eb85ad86c4e7f163979c162ee"
+    },
+    {
+      "path": "assets/kuro/yawn/_008_110.png",
+      "bytes": 14043,
+      "sha256": "fdff9c90b545b3ceb8b3853c135e0783e683bb89633bca72b1f6248155bb3c6b"
+    }
+  ]
+}

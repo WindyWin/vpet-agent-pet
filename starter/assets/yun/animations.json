@@ -1,0 +1,4656 @@
+{
+  "schema_version": 2,
+  "asset_root": "assets/yun",
+  "states": {
+    "idle": [
+      "idle"
+    ],
+    "thinking": [
+      "meditate/start",
+      "meditate/loop",
+      "meditate/end"
+    ],
+    "reading": [
+      "jade/start",
+      "jade/loop",
+      "jade/end"
+    ],
+    "working": [
+      "alchemy/start",
+      "alchemy/loop",
+      "alchemy/end"
+    ],
+    "needs_input": [
+      "talisman/start",
+      "talisman/loop",
+      "talisman/end"
+    ],
+    "tool_error": [
+      "tribulation"
+    ],
+    "out_of_quota": [
+      "deviation"
+    ],
+    "turn_finished": [
+      "breakthrough"
+    ],
+    "sleeping": [
+      "cloudnap/start",
+      "cloudnap/loop",
+      "cloudnap/end"
+    ],
+    "starting": [
+      "descend"
+    ],
+    "closing": [
+      "ascend"
+    ],
+    "angry": [
+      "fury"
+    ],
+    "closing_angry": [
+      "fury_vanish"
+    ],
+    "dragging": [
+      "held/start",
+      "held/loop",
+      "held/end"
+    ],
+    "touch_head": [
+      "pat/start",
+      "pat/loop",
+      "pat/end"
+    ],
+    "touch_body": [
+      "tickle/start",
+      "tickle/loop",
+      "tickle/end"
+    ],
+    "fall_left": [
+      "tumble/start_left",
+      "tumble/left",
+      "tumble/end_left"
+    ],
+    "fall_right": [
+      "tumble/start_right",
+      "tumble/right",
+      "tumble/end_right"
+    ],
+    "hide_left": [
+      "peek/start_left",
+      "peek/left",
+      "peek/end_left"
+    ],
+    "hide_right": [
+      "peek/start_right",
+      "peek/right",
+      "peek/end_right"
+    ],
+    "petal_rain": [
+      "petal_rain"
+    ],
+    "flute": [
+      "flute/start",
+      "flute/loop",
+      "flute/end"
+    ],
+    "butterflies": [
+      "butterflies"
+    ],
+    "peach": [
+      "peach"
+    ],
+    "tea": [
+      "tea"
+    ],
+    "yawn": [
+      "yawn"
+    ],
+    "startled": [
+      "startled"
+    ],
+    "love": [
+      "love"
+    ],
+    "birthday": [
+      "birthday"
+    ],
+    "taichi": [
+      "taichi"
+    ],
+    "shy": [
+      "shy"
+    ],
+    "fidget_look": [
+      "look"
+    ],
+    "sword_dance": [
+      "sword_dance"
+    ],
+    "fly_left": [
+      "fly/mount_left",
+      "fly/left",
+      "fly/dismount_left"
+    ],
+    "soar_left": [
+      "fly/mount_left",
+      "fly/rise_left",
+      "fly/dismount_left"
+    ],
+    "dive_left": [
+      "fly/mount_left",
+      "fly/dive_left",
+      "fly/dismount_left"
+    ],
+    "fly_right": [
+      "fly/mount_right",
+      "fly/right",
+      "fly/dismount_right"
+    ],
+    "soar_right": [
+      "fly/mount_right",
+      "fly/rise_right",
+      "fly/dismount_right"
+    ],
+    "dive_right": [
+      "fly/mount_right",
+      "fly/dive_right",
+      "fly/dismount_right"
+    ]
+  },
+  "sequences": [
+    {
+      "state": "idle",
+      "path": "idle",
+      "frames": [
+        {
+          "path": "assets/yun/idle/_000_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle/_001_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle/_002_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle/_003_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle/_004_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle/_005_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle/_006_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle/_007_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle/_008_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle/_009_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle/_010_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle/_011_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle/_012_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle/_013_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle/_014_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle/_015_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/yun/idle/_016_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/idle/_017_50.png",
+          "duration_ms": 50
+        }
+      ],
+      "duration_ms": 2270
+    },
+    {
+      "path": "alchemy/end",
+      "frames": [
+        {
+          "path": "assets/yun/alchemy/end/_000_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/alchemy/end/_001_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/alchemy/end/_002_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/alchemy/end/_003_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/alchemy/end/_004_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/alchemy/end/_005_80.png",
+          "duration_ms": 80
+        }
+      ],
+      "duration_ms": 480,
+      "state": "working"
+    },
+    {
+      "path": "alchemy/loop",
+      "frames": [
+        {
+          "path": "assets/yun/alchemy/loop/_000_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/alchemy/loop/_001_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/alchemy/loop/_002_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/alchemy/loop/_003_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/alchemy/loop/_004_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/alchemy/loop/_005_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/alchemy/loop/_006_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/alchemy/loop/_007_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/alchemy/loop/_008_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/alchemy/loop/_009_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/alchemy/loop/_010_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/alchemy/loop/_011_100.png",
+          "duration_ms": 100
+        }
+      ],
+      "duration_ms": 1200,
+      "state": "working"
+    },
+    {
+      "path": "alchemy/pill",
+      "frames": [
+        {
+          "path": "assets/yun/alchemy/pill/_000_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/alchemy/pill/_001_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/alchemy/pill/_002_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/alchemy/pill/_003_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/alchemy/pill/_004_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/alchemy/pill/_005_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/alchemy/pill/_006_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/alchemy/pill/_007_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/alchemy/pill/_008_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/alchemy/pill/_009_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/alchemy/pill/_010_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/alchemy/pill/_011_100.png",
+          "duration_ms": 100
+        }
+      ],
+      "duration_ms": 1200,
+      "state": "working"
+    },
+    {
+      "path": "alchemy/start",
+      "frames": [
+        {
+          "path": "assets/yun/alchemy/start/_000_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/alchemy/start/_001_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/alchemy/start/_002_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/alchemy/start/_003_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/alchemy/start/_004_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/alchemy/start/_005_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/alchemy/start/_006_80.png",
+          "duration_ms": 80
+        }
+      ],
+      "duration_ms": 560,
+      "state": "working"
+    },
+    {
+      "path": "alchemy/to_jade",
+      "frames": [
+        {
+          "path": "assets/yun/alchemy/to_jade/_000_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/alchemy/to_jade/_001_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/alchemy/to_jade/_002_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/alchemy/to_jade/_003_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/alchemy/to_jade/_004_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/alchemy/to_jade/_005_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/alchemy/to_jade/_006_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/alchemy/to_jade/_007_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/alchemy/to_jade/_008_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/alchemy/to_jade/_009_90.png",
+          "duration_ms": 90
+        }
+      ],
+      "duration_ms": 900,
+      "state": "working"
+    },
+    {
+      "path": "ascend",
+      "frames": [
+        {
+          "path": "assets/yun/ascend/_000_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/ascend/_001_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/ascend/_002_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/ascend/_003_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/ascend/_004_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/ascend/_005_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/ascend/_006_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/ascend/_007_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/ascend/_008_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/ascend/_009_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/ascend/_010_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/ascend/_011_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/ascend/_012_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/ascend/_013_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/ascend/_014_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/ascend/_015_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/ascend/_016_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/ascend/_017_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/ascend/_018_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/ascend/_019_280.png",
+          "duration_ms": 280
+        }
+      ],
+      "duration_ms": 1800,
+      "state": "closing"
+    },
+    {
+      "path": "birthday",
+      "frames": [
+        {
+          "path": "assets/yun/birthday/_000_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/birthday/_001_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/birthday/_002_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/birthday/_003_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/birthday/_004_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/birthday/_005_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/birthday/_006_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/birthday/_007_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/birthday/_008_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/birthday/_009_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/birthday/_010_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/birthday/_011_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/birthday/_012_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/birthday/_013_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/birthday/_014_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/birthday/_015_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/birthday/_016_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/birthday/_017_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/birthday/_018_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/birthday/_019_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/birthday/_020_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/birthday/_021_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/birthday/_022_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/birthday/_023_100.png",
+          "duration_ms": 100
+        }
+      ],
+      "duration_ms": 2400,
+      "state": "birthday"
+    },
+    {
+      "path": "breakthrough",
+      "frames": [
+        {
+          "path": "assets/yun/breakthrough/_000_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/breakthrough/_001_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/breakthrough/_002_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/breakthrough/_003_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/breakthrough/_004_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/breakthrough/_005_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/breakthrough/_006_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/breakthrough/_007_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/breakthrough/_008_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/breakthrough/_009_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/breakthrough/_010_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/breakthrough/_011_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/breakthrough/_012_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/breakthrough/_013_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/breakthrough/_014_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/breakthrough/_015_160.png",
+          "duration_ms": 160
+        }
+      ],
+      "duration_ms": 1435,
+      "state": "turn_finished"
+    },
+    {
+      "path": "butterflies",
+      "frames": [
+        {
+          "path": "assets/yun/butterflies/_000_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/butterflies/_001_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/butterflies/_002_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/butterflies/_003_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/butterflies/_004_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/butterflies/_005_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/butterflies/_006_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/butterflies/_007_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/butterflies/_008_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/butterflies/_009_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/butterflies/_010_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/butterflies/_011_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/butterflies/_012_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/butterflies/_013_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/butterflies/_014_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/butterflies/_015_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/butterflies/_016_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/butterflies/_017_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/butterflies/_018_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/butterflies/_019_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/butterflies/_020_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/butterflies/_021_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/butterflies/_022_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/butterflies/_023_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/butterflies/_024_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/butterflies/_025_90.png",
+          "duration_ms": 90
+        }
+      ],
+      "duration_ms": 2340,
+      "state": "butterflies"
+    },
+    {
+      "path": "cloudnap/end",
+      "frames": [
+        {
+          "path": "assets/yun/cloudnap/end/_000_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/yun/cloudnap/end/_001_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/yun/cloudnap/end/_002_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/yun/cloudnap/end/_003_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/yun/cloudnap/end/_004_130.png",
+          "duration_ms": 130
+        }
+      ],
+      "duration_ms": 650,
+      "state": "sleeping"
+    },
+    {
+      "path": "cloudnap/loop",
+      "frames": [
+        {
+          "path": "assets/yun/cloudnap/loop/_000_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/yun/cloudnap/loop/_001_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/yun/cloudnap/loop/_002_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/yun/cloudnap/loop/_003_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/yun/cloudnap/loop/_004_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/yun/cloudnap/loop/_005_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/yun/cloudnap/loop/_006_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/yun/cloudnap/loop/_007_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/yun/cloudnap/loop/_008_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/yun/cloudnap/loop/_009_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/yun/cloudnap/loop/_010_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/yun/cloudnap/loop/_011_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/yun/cloudnap/loop/_012_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/yun/cloudnap/loop/_013_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/yun/cloudnap/loop/_014_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/yun/cloudnap/loop/_015_150.png",
+          "duration_ms": 150
+        }
+      ],
+      "duration_ms": 2400,
+      "state": "sleeping"
+    },
+    {
+      "path": "cloudnap/start",
+      "frames": [
+        {
+          "path": "assets/yun/cloudnap/start/_000_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/cloudnap/start/_001_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/cloudnap/start/_002_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/cloudnap/start/_003_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/cloudnap/start/_004_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/cloudnap/start/_005_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/cloudnap/start/_006_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/cloudnap/start/_007_110.png",
+          "duration_ms": 110
+        }
+      ],
+      "duration_ms": 880,
+      "state": "sleeping"
+    },
+    {
+      "path": "descend",
+      "frames": [
+        {
+          "path": "assets/yun/descend/_000_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/descend/_001_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/descend/_002_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/descend/_003_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/descend/_004_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/descend/_005_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/descend/_006_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/descend/_007_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/descend/_008_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/descend/_009_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/descend/_010_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/descend/_011_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/descend/_012_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/descend/_013_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/descend/_014_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/descend/_015_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/descend/_016_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/descend/_017_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/descend/_018_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/descend/_019_80.png",
+          "duration_ms": 80
+        }
+      ],
+      "duration_ms": 1600,
+      "state": "starting"
+    },
+    {
+      "path": "deviation",
+      "frames": [
+        {
+          "path": "assets/yun/deviation/_000_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/yun/deviation/_001_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/yun/deviation/_002_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/yun/deviation/_003_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/yun/deviation/_004_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/yun/deviation/_005_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/yun/deviation/_006_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/yun/deviation/_007_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/yun/deviation/_008_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/yun/deviation/_009_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/yun/deviation/_010_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/yun/deviation/_011_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/yun/deviation/_012_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/yun/deviation/_013_150.png",
+          "duration_ms": 150
+        }
+      ],
+      "duration_ms": 2100,
+      "state": "out_of_quota"
+    },
+    {
+      "path": "flute/end",
+      "frames": [
+        {
+          "path": "assets/yun/flute/end/_000_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/flute/end/_001_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/flute/end/_002_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/flute/end/_003_80.png",
+          "duration_ms": 80
+        }
+      ],
+      "duration_ms": 320,
+      "state": "flute"
+    },
+    {
+      "path": "flute/loop",
+      "frames": [
+        {
+          "path": "assets/yun/flute/loop/_000_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/flute/loop/_001_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/flute/loop/_002_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/flute/loop/_003_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/flute/loop/_004_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/flute/loop/_005_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/flute/loop/_006_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/flute/loop/_007_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/flute/loop/_008_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/flute/loop/_009_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/flute/loop/_010_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/flute/loop/_011_110.png",
+          "duration_ms": 110
+        }
+      ],
+      "duration_ms": 1320,
+      "state": "flute"
+    },
+    {
+      "path": "flute/start",
+      "frames": [
+        {
+          "path": "assets/yun/flute/start/_000_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/flute/start/_001_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/flute/start/_002_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/flute/start/_003_80.png",
+          "duration_ms": 80
+        }
+      ],
+      "duration_ms": 320,
+      "state": "flute"
+    },
+    {
+      "path": "fly/dismount_left",
+      "frames": [
+        {
+          "path": "assets/yun/fly/dismount_left/_000_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/fly/dismount_left/_001_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/fly/dismount_left/_002_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/fly/dismount_left/_003_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/fly/dismount_left/_004_70.png",
+          "duration_ms": 70
+        }
+      ],
+      "duration_ms": 350,
+      "state": "fly_left"
+    },
+    {
+      "path": "fly/dismount_right",
+      "frames": [
+        {
+          "path": "assets/yun/fly/dismount_right/_000_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/fly/dismount_right/_001_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/fly/dismount_right/_002_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/fly/dismount_right/_003_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/fly/dismount_right/_004_70.png",
+          "duration_ms": 70
+        }
+      ],
+      "duration_ms": 350,
+      "state": "fly_right"
+    },
+    {
+      "path": "fly/dive_left",
+      "frames": [
+        {
+          "path": "assets/yun/fly/dive_left/_000_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/fly/dive_left/_001_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/fly/dive_left/_002_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/fly/dive_left/_003_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/fly/dive_left/_004_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/fly/dive_left/_005_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/fly/dive_left/_006_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/fly/dive_left/_007_70.png",
+          "duration_ms": 70
+        }
+      ],
+      "duration_ms": 560,
+      "state": "dive_left"
+    },
+    {
+      "path": "fly/dive_right",
+      "frames": [
+        {
+          "path": "assets/yun/fly/dive_right/_000_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/fly/dive_right/_001_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/fly/dive_right/_002_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/fly/dive_right/_003_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/fly/dive_right/_004_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/fly/dive_right/_005_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/fly/dive_right/_006_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/fly/dive_right/_007_70.png",
+          "duration_ms": 70
+        }
+      ],
+      "duration_ms": 560,
+      "state": "dive_right"
+    },
+    {
+      "path": "fly/left",
+      "frames": [
+        {
+          "path": "assets/yun/fly/left/_000_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/fly/left/_001_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/fly/left/_002_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/fly/left/_003_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/fly/left/_004_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/fly/left/_005_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/fly/left/_006_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/fly/left/_007_70.png",
+          "duration_ms": 70
+        }
+      ],
+      "duration_ms": 560,
+      "state": "fly_left"
+    },
+    {
+      "path": "fly/mount_left",
+      "frames": [
+        {
+          "path": "assets/yun/fly/mount_left/_000_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/fly/mount_left/_001_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/fly/mount_left/_002_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/fly/mount_left/_003_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/fly/mount_left/_004_70.png",
+          "duration_ms": 70
+        }
+      ],
+      "duration_ms": 350,
+      "state": "fly_left"
+    },
+    {
+      "path": "fly/mount_right",
+      "frames": [
+        {
+          "path": "assets/yun/fly/mount_right/_000_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/fly/mount_right/_001_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/fly/mount_right/_002_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/fly/mount_right/_003_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/fly/mount_right/_004_70.png",
+          "duration_ms": 70
+        }
+      ],
+      "duration_ms": 350,
+      "state": "fly_right"
+    },
+    {
+      "path": "fly/right",
+      "frames": [
+        {
+          "path": "assets/yun/fly/right/_000_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/fly/right/_001_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/fly/right/_002_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/fly/right/_003_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/fly/right/_004_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/fly/right/_005_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/fly/right/_006_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/fly/right/_007_70.png",
+          "duration_ms": 70
+        }
+      ],
+      "duration_ms": 560,
+      "state": "fly_right"
+    },
+    {
+      "path": "fly/rise_left",
+      "frames": [
+        {
+          "path": "assets/yun/fly/rise_left/_000_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/fly/rise_left/_001_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/fly/rise_left/_002_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/fly/rise_left/_003_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/fly/rise_left/_004_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/fly/rise_left/_005_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/fly/rise_left/_006_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/fly/rise_left/_007_70.png",
+          "duration_ms": 70
+        }
+      ],
+      "duration_ms": 560,
+      "state": "soar_left"
+    },
+    {
+      "path": "fly/rise_right",
+      "frames": [
+        {
+          "path": "assets/yun/fly/rise_right/_000_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/fly/rise_right/_001_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/fly/rise_right/_002_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/fly/rise_right/_003_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/fly/rise_right/_004_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/fly/rise_right/_005_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/fly/rise_right/_006_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/fly/rise_right/_007_70.png",
+          "duration_ms": 70
+        }
+      ],
+      "duration_ms": 560,
+      "state": "soar_right"
+    },
+    {
+      "path": "fury",
+      "frames": [
+        {
+          "path": "assets/yun/fury/_000_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/fury/_001_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/fury/_002_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/fury/_003_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/fury/_004_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/fury/_005_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/fury/_006_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/fury/_007_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/fury/_008_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/fury/_009_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/fury/_010_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/fury/_011_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/fury/_012_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/fury/_013_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/fury/_014_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/fury/_015_85.png",
+          "duration_ms": 85
+        }
+      ],
+      "duration_ms": 1360,
+      "state": "angry"
+    },
+    {
+      "path": "fury_vanish",
+      "frames": [
+        {
+          "path": "assets/yun/fury_vanish/_000_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/fury_vanish/_001_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/fury_vanish/_002_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/fury_vanish/_003_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/fury_vanish/_004_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/fury_vanish/_005_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/fury_vanish/_006_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/fury_vanish/_007_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/fury_vanish/_008_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/fury_vanish/_009_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/fury_vanish/_010_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/fury_vanish/_011_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/fury_vanish/_012_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/fury_vanish/_013_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/fury_vanish/_014_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/fury_vanish/_015_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/fury_vanish/_016_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/fury_vanish/_017_285.png",
+          "duration_ms": 285
+        }
+      ],
+      "duration_ms": 1730,
+      "state": "closing_angry"
+    },
+    {
+      "path": "held/end",
+      "frames": [
+        {
+          "path": "assets/yun/held/end/_000_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/held/end/_001_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/held/end/_002_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/held/end/_003_70.png",
+          "duration_ms": 70
+        }
+      ],
+      "duration_ms": 280,
+      "state": "dragging"
+    },
+    {
+      "path": "held/loop",
+      "frames": [
+        {
+          "path": "assets/yun/held/loop/_000_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/held/loop/_001_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/held/loop/_002_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/held/loop/_003_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/held/loop/_004_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/held/loop/_005_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/held/loop/_006_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/held/loop/_007_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/held/loop/_008_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/held/loop/_009_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/held/loop/_010_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/held/loop/_011_80.png",
+          "duration_ms": 80
+        }
+      ],
+      "duration_ms": 960,
+      "state": "dragging"
+    },
+    {
+      "path": "held/start",
+      "frames": [
+        {
+          "path": "assets/yun/held/start/_000_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/yun/held/start/_001_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/yun/held/start/_002_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/yun/held/start/_003_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/yun/held/start/_004_60.png",
+          "duration_ms": 60
+        }
+      ],
+      "duration_ms": 300,
+      "state": "dragging"
+    },
+    {
+      "path": "idle_breeze",
+      "frames": [
+        {
+          "path": "assets/yun/idle_breeze/_000_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_breeze/_001_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_breeze/_002_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_breeze/_003_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_breeze/_004_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_breeze/_005_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_breeze/_006_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_breeze/_007_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_breeze/_008_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_breeze/_009_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_breeze/_010_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_breeze/_011_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_breeze/_012_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_breeze/_013_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_breeze/_014_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_breeze/_015_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/yun/idle_breeze/_016_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/idle_breeze/_017_50.png",
+          "duration_ms": 50
+        }
+      ],
+      "duration_ms": 2270,
+      "state": "idle"
+    },
+    {
+      "path": "idle_float",
+      "frames": [
+        {
+          "path": "assets/yun/idle_float/_000_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_float/_001_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_float/_002_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_float/_003_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_float/_004_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_float/_005_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_float/_006_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_float/_007_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_float/_008_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_float/_009_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_float/_010_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_float/_011_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_float/_012_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_float/_013_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_float/_014_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_float/_015_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/yun/idle_float/_016_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/idle_float/_017_50.png",
+          "duration_ms": 50
+        }
+      ],
+      "duration_ms": 2270,
+      "state": "idle"
+    },
+    {
+      "path": "idle_happy",
+      "frames": [
+        {
+          "path": "assets/yun/idle_happy/_000_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_happy/_001_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_happy/_002_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_happy/_003_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_happy/_004_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_happy/_005_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_happy/_006_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_happy/_007_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_happy/_008_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_happy/_009_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_happy/_010_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_happy/_011_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_happy/_012_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_happy/_013_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_happy/_014_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_happy/_015_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/yun/idle_happy/_016_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/idle_happy/_017_50.png",
+          "duration_ms": 50
+        }
+      ],
+      "duration_ms": 2270,
+      "state": "idle"
+    },
+    {
+      "path": "idle_look",
+      "frames": [
+        {
+          "path": "assets/yun/idle_look/_000_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_look/_001_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_look/_002_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_look/_003_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_look/_004_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_look/_005_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_look/_006_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_look/_007_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_look/_008_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_look/_009_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_look/_010_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_look/_011_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_look/_012_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_look/_013_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_look/_014_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_look/_015_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/yun/idle_look/_016_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/idle_look/_017_50.png",
+          "duration_ms": 50
+        }
+      ],
+      "duration_ms": 2270,
+      "state": "idle"
+    },
+    {
+      "path": "idle_poor",
+      "frames": [
+        {
+          "path": "assets/yun/idle_poor/_000_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_poor/_001_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_poor/_002_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_poor/_003_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_poor/_004_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_poor/_005_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_poor/_006_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_poor/_007_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_poor/_008_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_poor/_009_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_poor/_010_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_poor/_011_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_poor/_012_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_poor/_013_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_poor/_014_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_poor/_015_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_poor/_016_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/idle_poor/_017_140.png",
+          "duration_ms": 140
+        }
+      ],
+      "duration_ms": 2520,
+      "state": "idle"
+    },
+    {
+      "path": "jade/end",
+      "frames": [
+        {
+          "path": "assets/yun/jade/end/_000_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/jade/end/_001_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/jade/end/_002_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/jade/end/_003_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/jade/end/_004_80.png",
+          "duration_ms": 80
+        }
+      ],
+      "duration_ms": 400,
+      "state": "reading"
+    },
+    {
+      "path": "jade/loop",
+      "frames": [
+        {
+          "path": "assets/yun/jade/loop/_000_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/yun/jade/loop/_001_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/yun/jade/loop/_002_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/yun/jade/loop/_003_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/yun/jade/loop/_004_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/yun/jade/loop/_005_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/yun/jade/loop/_006_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/yun/jade/loop/_007_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/yun/jade/loop/_008_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/yun/jade/loop/_009_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/yun/jade/loop/_010_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/yun/jade/loop/_011_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/yun/jade/loop/_012_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/yun/jade/loop/_013_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/yun/jade/loop/_014_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/yun/jade/loop/_015_120.png",
+          "duration_ms": 120
+        }
+      ],
+      "duration_ms": 1920,
+      "state": "reading"
+    },
+    {
+      "path": "jade/scroll",
+      "frames": [
+        {
+          "path": "assets/yun/jade/scroll/_000_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/yun/jade/scroll/_001_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/yun/jade/scroll/_002_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/yun/jade/scroll/_003_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/yun/jade/scroll/_004_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/yun/jade/scroll/_005_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/yun/jade/scroll/_006_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/yun/jade/scroll/_007_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/yun/jade/scroll/_008_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/yun/jade/scroll/_009_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/yun/jade/scroll/_010_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/yun/jade/scroll/_011_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/yun/jade/scroll/_012_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/yun/jade/scroll/_013_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/yun/jade/scroll/_014_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/yun/jade/scroll/_015_120.png",
+          "duration_ms": 120
+        }
+      ],
+      "duration_ms": 1920,
+      "state": "reading"
+    },
+    {
+      "path": "jade/start",
+      "frames": [
+        {
+          "path": "assets/yun/jade/start/_000_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/jade/start/_001_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/jade/start/_002_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/jade/start/_003_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/jade/start/_004_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/jade/start/_005_80.png",
+          "duration_ms": 80
+        }
+      ],
+      "duration_ms": 480,
+      "state": "reading"
+    },
+    {
+      "path": "jade/to_alchemy",
+      "frames": [
+        {
+          "path": "assets/yun/jade/to_alchemy/_000_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/jade/to_alchemy/_001_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/jade/to_alchemy/_002_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/jade/to_alchemy/_003_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/jade/to_alchemy/_004_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/jade/to_alchemy/_005_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/jade/to_alchemy/_006_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/jade/to_alchemy/_007_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/jade/to_alchemy/_008_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/jade/to_alchemy/_009_90.png",
+          "duration_ms": 90
+        }
+      ],
+      "duration_ms": 900,
+      "state": "reading"
+    },
+    {
+      "path": "look",
+      "frames": [
+        {
+          "path": "assets/yun/look/_000_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/yun/look/_001_260.png",
+          "duration_ms": 260
+        },
+        {
+          "path": "assets/yun/look/_002_260.png",
+          "duration_ms": 260
+        },
+        {
+          "path": "assets/yun/look/_003_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/yun/look/_004_260.png",
+          "duration_ms": 260
+        },
+        {
+          "path": "assets/yun/look/_005_300.png",
+          "duration_ms": 300
+        },
+        {
+          "path": "assets/yun/look/_006_140.png",
+          "duration_ms": 140
+        }
+      ],
+      "duration_ms": 1480,
+      "state": "fidget_look"
+    },
+    {
+      "path": "love",
+      "frames": [
+        {
+          "path": "assets/yun/love/_000_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/love/_001_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/love/_002_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/love/_003_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/love/_004_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/love/_005_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/love/_006_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/love/_007_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/love/_008_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/love/_009_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/love/_010_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/love/_011_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/love/_012_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/love/_013_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/love/_014_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/love/_015_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/love/_016_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/love/_017_100.png",
+          "duration_ms": 100
+        }
+      ],
+      "duration_ms": 1800,
+      "state": "love"
+    },
+    {
+      "path": "meditate/end",
+      "frames": [
+        {
+          "path": "assets/yun/meditate/end/_000_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/meditate/end/_001_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/meditate/end/_002_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/meditate/end/_003_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/meditate/end/_004_80.png",
+          "duration_ms": 80
+        }
+      ],
+      "duration_ms": 400,
+      "state": "thinking"
+    },
+    {
+      "path": "meditate/loop",
+      "frames": [
+        {
+          "path": "assets/yun/meditate/loop/_000_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/meditate/loop/_001_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/meditate/loop/_002_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/meditate/loop/_003_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/meditate/loop/_004_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/meditate/loop/_005_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/meditate/loop/_006_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/meditate/loop/_007_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/meditate/loop/_008_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/meditate/loop/_009_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/meditate/loop/_010_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/meditate/loop/_011_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/meditate/loop/_012_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/meditate/loop/_013_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/meditate/loop/_014_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/meditate/loop/_015_110.png",
+          "duration_ms": 110
+        }
+      ],
+      "duration_ms": 1760,
+      "state": "thinking"
+    },
+    {
+      "path": "meditate/lotus",
+      "frames": [
+        {
+          "path": "assets/yun/meditate/lotus/_000_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/meditate/lotus/_001_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/meditate/lotus/_002_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/meditate/lotus/_003_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/meditate/lotus/_004_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/meditate/lotus/_005_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/meditate/lotus/_006_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/meditate/lotus/_007_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/meditate/lotus/_008_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/meditate/lotus/_009_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/meditate/lotus/_010_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/meditate/lotus/_011_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/meditate/lotus/_012_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/meditate/lotus/_013_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/meditate/lotus/_014_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/meditate/lotus/_015_110.png",
+          "duration_ms": 110
+        }
+      ],
+      "duration_ms": 1760,
+      "state": "thinking"
+    },
+    {
+      "path": "meditate/start",
+      "frames": [
+        {
+          "path": "assets/yun/meditate/start/_000_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/meditate/start/_001_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/meditate/start/_002_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/meditate/start/_003_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/meditate/start/_004_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/meditate/start/_005_80.png",
+          "duration_ms": 80
+        }
+      ],
+      "duration_ms": 480,
+      "state": "thinking"
+    },
+    {
+      "path": "pat/end",
+      "frames": [
+        {
+          "path": "assets/yun/pat/end/_000_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/pat/end/_001_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/pat/end/_002_70.png",
+          "duration_ms": 70
+        }
+      ],
+      "duration_ms": 210,
+      "state": "touch_head"
+    },
+    {
+      "path": "pat/loop",
+      "frames": [
+        {
+          "path": "assets/yun/pat/loop/_000_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/pat/loop/_001_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/pat/loop/_002_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/pat/loop/_003_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/pat/loop/_004_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/pat/loop/_005_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/pat/loop/_006_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/pat/loop/_007_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/pat/loop/_008_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/pat/loop/_009_90.png",
+          "duration_ms": 90
+        }
+      ],
+      "duration_ms": 900,
+      "state": "touch_head"
+    },
+    {
+      "path": "pat/start",
+      "frames": [
+        {
+          "path": "assets/yun/pat/start/_000_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/yun/pat/start/_001_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/yun/pat/start/_002_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/yun/pat/start/_003_60.png",
+          "duration_ms": 60
+        }
+      ],
+      "duration_ms": 240,
+      "state": "touch_head"
+    },
+    {
+      "path": "peach",
+      "frames": [
+        {
+          "path": "assets/yun/peach/_000_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/peach/_001_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/peach/_002_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/peach/_003_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/peach/_004_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/peach/_005_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/peach/_006_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/peach/_007_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/peach/_008_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/peach/_009_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/peach/_010_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/peach/_011_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/peach/_012_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/peach/_013_220.png",
+          "duration_ms": 220
+        }
+      ],
+      "duration_ms": 1530,
+      "state": "peach"
+    },
+    {
+      "path": "peek/end_left",
+      "frames": [
+        {
+          "path": "assets/yun/peek/end_left/_000_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/peek/end_left/_001_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/peek/end_left/_002_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/peek/end_left/_003_80.png",
+          "duration_ms": 80
+        }
+      ],
+      "duration_ms": 320,
+      "state": "hide_left"
+    },
+    {
+      "path": "peek/end_right",
+      "frames": [
+        {
+          "path": "assets/yun/peek/end_right/_000_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/peek/end_right/_001_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/peek/end_right/_002_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/peek/end_right/_003_80.png",
+          "duration_ms": 80
+        }
+      ],
+      "duration_ms": 320,
+      "state": "hide_right"
+    },
+    {
+      "path": "peek/left",
+      "frames": [
+        {
+          "path": "assets/yun/peek/left/_000_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/yun/peek/left/_001_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/yun/peek/left/_002_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/yun/peek/left/_003_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/yun/peek/left/_004_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/yun/peek/left/_005_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/yun/peek/left/_006_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/yun/peek/left/_007_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/yun/peek/left/_008_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/yun/peek/left/_009_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/yun/peek/left/_010_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/yun/peek/left/_011_120.png",
+          "duration_ms": 120
+        }
+      ],
+      "duration_ms": 1440,
+      "state": "hide_left"
+    },
+    {
+      "path": "peek/right",
+      "frames": [
+        {
+          "path": "assets/yun/peek/right/_000_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/yun/peek/right/_001_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/yun/peek/right/_002_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/yun/peek/right/_003_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/yun/peek/right/_004_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/yun/peek/right/_005_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/yun/peek/right/_006_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/yun/peek/right/_007_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/yun/peek/right/_008_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/yun/peek/right/_009_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/yun/peek/right/_010_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/yun/peek/right/_011_120.png",
+          "duration_ms": 120
+        }
+      ],
+      "duration_ms": 1440,
+      "state": "hide_right"
+    },
+    {
+      "path": "peek/start_left",
+      "frames": [
+        {
+          "path": "assets/yun/peek/start_left/_000_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/peek/start_left/_001_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/peek/start_left/_002_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/peek/start_left/_003_80.png",
+          "duration_ms": 80
+        }
+      ],
+      "duration_ms": 320,
+      "state": "hide_left"
+    },
+    {
+      "path": "peek/start_right",
+      "frames": [
+        {
+          "path": "assets/yun/peek/start_right/_000_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/peek/start_right/_001_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/peek/start_right/_002_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/peek/start_right/_003_80.png",
+          "duration_ms": 80
+        }
+      ],
+      "duration_ms": 320,
+      "state": "hide_right"
+    },
+    {
+      "path": "petal_rain",
+      "frames": [
+        {
+          "path": "assets/yun/petal_rain/_000_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/petal_rain/_001_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/petal_rain/_002_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/petal_rain/_003_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/petal_rain/_004_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/petal_rain/_005_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/petal_rain/_006_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/petal_rain/_007_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/petal_rain/_008_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/petal_rain/_009_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/petal_rain/_010_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/petal_rain/_011_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/petal_rain/_012_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/petal_rain/_013_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/petal_rain/_014_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/petal_rain/_015_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/petal_rain/_016_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/petal_rain/_017_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/petal_rain/_018_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/petal_rain/_019_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/petal_rain/_020_150.png",
+          "duration_ms": 150
+        }
+      ],
+      "duration_ms": 1950,
+      "state": "petal_rain"
+    },
+    {
+      "path": "shy",
+      "frames": [
+        {
+          "path": "assets/yun/shy/_000_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/shy/_001_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/shy/_002_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/shy/_003_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/shy/_004_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/shy/_005_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/shy/_006_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/shy/_007_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/shy/_008_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/shy/_009_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/shy/_010_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/shy/_011_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/shy/_012_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/yun/shy/_013_100.png",
+          "duration_ms": 100
+        }
+      ],
+      "duration_ms": 1400,
+      "state": "shy"
+    },
+    {
+      "path": "startled",
+      "frames": [
+        {
+          "path": "assets/yun/startled/_000_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/startled/_001_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/startled/_002_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/startled/_003_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/startled/_004_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/startled/_005_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/yun/startled/_006_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/yun/startled/_007_120.png",
+          "duration_ms": 120
+        }
+      ],
+      "duration_ms": 710,
+      "state": "startled"
+    },
+    {
+      "path": "sword_dance",
+      "frames": [
+        {
+          "path": "assets/yun/sword_dance/_000_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/sword_dance/_001_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/sword_dance/_002_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/sword_dance/_003_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/sword_dance/_004_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/sword_dance/_005_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/sword_dance/_006_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/sword_dance/_007_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/sword_dance/_008_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/sword_dance/_009_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/sword_dance/_010_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/sword_dance/_011_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/sword_dance/_012_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/sword_dance/_013_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/sword_dance/_014_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/sword_dance/_015_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/sword_dance/_016_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/sword_dance/_017_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/yun/sword_dance/_018_180.png",
+          "duration_ms": 180
+        }
+      ],
+      "duration_ms": 1620,
+      "state": "sword_dance"
+    },
+    {
+      "path": "taichi",
+      "frames": [
+        {
+          "path": "assets/yun/taichi/_000_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/taichi/_001_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/taichi/_002_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/taichi/_003_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/taichi/_004_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/taichi/_005_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/taichi/_006_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/taichi/_007_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/taichi/_008_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/taichi/_009_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/taichi/_010_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/taichi/_011_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/taichi/_012_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/taichi/_013_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/taichi/_014_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/taichi/_015_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/taichi/_016_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/taichi/_017_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/taichi/_018_140.png",
+          "duration_ms": 140
+        }
+      ],
+      "duration_ms": 2120,
+      "state": "taichi"
+    },
+    {
+      "path": "talisman/end",
+      "frames": [
+        {
+          "path": "assets/yun/talisman/end/_000_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/talisman/end/_001_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/talisman/end/_002_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/talisman/end/_003_70.png",
+          "duration_ms": 70
+        }
+      ],
+      "duration_ms": 280,
+      "state": "needs_input"
+    },
+    {
+      "path": "talisman/loop",
+      "frames": [
+        {
+          "path": "assets/yun/talisman/loop/_000_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/talisman/loop/_001_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/talisman/loop/_002_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/talisman/loop/_003_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/talisman/loop/_004_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/talisman/loop/_005_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/talisman/loop/_006_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/talisman/loop/_007_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/talisman/loop/_008_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/talisman/loop/_009_90.png",
+          "duration_ms": 90
+        }
+      ],
+      "duration_ms": 900,
+      "state": "needs_input"
+    },
+    {
+      "path": "talisman/start",
+      "frames": [
+        {
+          "path": "assets/yun/talisman/start/_000_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/yun/talisman/start/_001_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/yun/talisman/start/_002_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/yun/talisman/start/_003_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/yun/talisman/start/_004_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/yun/talisman/start/_005_60.png",
+          "duration_ms": 60
+        }
+      ],
+      "duration_ms": 360,
+      "state": "needs_input"
+    },
+    {
+      "path": "tea",
+      "frames": [
+        {
+          "path": "assets/yun/tea/_000_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/tea/_001_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/tea/_002_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/tea/_003_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/tea/_004_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/tea/_005_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/tea/_006_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/tea/_007_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/tea/_008_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/tea/_009_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/tea/_010_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/tea/_011_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/tea/_012_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/tea/_013_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/tea/_014_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/tea/_015_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/tea/_016_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/tea/_017_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/tea/_018_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/tea/_019_90.png",
+          "duration_ms": 90
+        }
+      ],
+      "duration_ms": 1800,
+      "state": "tea"
+    },
+    {
+      "path": "tickle/end",
+      "frames": [
+        {
+          "path": "assets/yun/tickle/end/_000_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/tickle/end/_001_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/tickle/end/_002_70.png",
+          "duration_ms": 70
+        }
+      ],
+      "duration_ms": 210,
+      "state": "touch_body"
+    },
+    {
+      "path": "tickle/loop",
+      "frames": [
+        {
+          "path": "assets/yun/tickle/loop/_000_75.png",
+          "duration_ms": 75
+        },
+        {
+          "path": "assets/yun/tickle/loop/_001_75.png",
+          "duration_ms": 75
+        },
+        {
+          "path": "assets/yun/tickle/loop/_002_75.png",
+          "duration_ms": 75
+        },
+        {
+          "path": "assets/yun/tickle/loop/_003_75.png",
+          "duration_ms": 75
+        },
+        {
+          "path": "assets/yun/tickle/loop/_004_75.png",
+          "duration_ms": 75
+        },
+        {
+          "path": "assets/yun/tickle/loop/_005_75.png",
+          "duration_ms": 75
+        },
+        {
+          "path": "assets/yun/tickle/loop/_006_75.png",
+          "duration_ms": 75
+        },
+        {
+          "path": "assets/yun/tickle/loop/_007_75.png",
+          "duration_ms": 75
+        },
+        {
+          "path": "assets/yun/tickle/loop/_008_75.png",
+          "duration_ms": 75
+        },
+        {
+          "path": "assets/yun/tickle/loop/_009_75.png",
+          "duration_ms": 75
+        }
+      ],
+      "duration_ms": 750,
+      "state": "touch_body"
+    },
+    {
+      "path": "tickle/start",
+      "frames": [
+        {
+          "path": "assets/yun/tickle/start/_000_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/yun/tickle/start/_001_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/yun/tickle/start/_002_60.png",
+          "duration_ms": 60
+        }
+      ],
+      "duration_ms": 180,
+      "state": "touch_body"
+    },
+    {
+      "path": "tribulation",
+      "frames": [
+        {
+          "path": "assets/yun/tribulation/_000_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/tribulation/_001_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/tribulation/_002_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/tribulation/_003_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/tribulation/_004_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/tribulation/_005_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/tribulation/_006_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/tribulation/_007_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/tribulation/_008_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/tribulation/_009_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/tribulation/_010_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/tribulation/_011_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/tribulation/_012_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/tribulation/_013_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/tribulation/_014_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/tribulation/_015_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/tribulation/_016_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/tribulation/_017_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/tribulation/_018_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/tribulation/_019_85.png",
+          "duration_ms": 85
+        },
+        {
+          "path": "assets/yun/tribulation/_020_120.png",
+          "duration_ms": 120
+        }
+      ],
+      "duration_ms": 1820,
+      "state": "tool_error"
+    },
+    {
+      "path": "tumble/end_left",
+      "frames": [
+        {
+          "path": "assets/yun/tumble/end_left/_000_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/tumble/end_left/_001_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/tumble/end_left/_002_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/tumble/end_left/_003_90.png",
+          "duration_ms": 90
+        }
+      ],
+      "duration_ms": 360,
+      "state": "fall_left"
+    },
+    {
+      "path": "tumble/end_right",
+      "frames": [
+        {
+          "path": "assets/yun/tumble/end_right/_000_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/tumble/end_right/_001_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/tumble/end_right/_002_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/yun/tumble/end_right/_003_90.png",
+          "duration_ms": 90
+        }
+      ],
+      "duration_ms": 360,
+      "state": "fall_right"
+    },
+    {
+      "path": "tumble/left",
+      "frames": [
+        {
+          "path": "assets/yun/tumble/left/_000_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/tumble/left/_001_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/tumble/left/_002_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/tumble/left/_003_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/tumble/left/_004_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/tumble/left/_005_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/tumble/left/_006_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/tumble/left/_007_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/tumble/left/_008_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/tumble/left/_009_70.png",
+          "duration_ms": 70
+        }
+      ],
+      "duration_ms": 700,
+      "state": "fall_left"
+    },
+    {
+      "path": "tumble/right",
+      "frames": [
+        {
+          "path": "assets/yun/tumble/right/_000_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/tumble/right/_001_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/tumble/right/_002_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/tumble/right/_003_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/tumble/right/_004_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/tumble/right/_005_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/tumble/right/_006_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/tumble/right/_007_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/tumble/right/_008_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/yun/tumble/right/_009_70.png",
+          "duration_ms": 70
+        }
+      ],
+      "duration_ms": 700,
+      "state": "fall_right"
+    },
+    {
+      "path": "tumble/start_left",
+      "frames": [
+        {
+          "path": "assets/yun/tumble/start_left/_000_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/yun/tumble/start_left/_001_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/yun/tumble/start_left/_002_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/yun/tumble/start_left/_003_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/yun/tumble/start_left/_004_60.png",
+          "duration_ms": 60
+        }
+      ],
+      "duration_ms": 300,
+      "state": "fall_left"
+    },
+    {
+      "path": "tumble/start_right",
+      "frames": [
+        {
+          "path": "assets/yun/tumble/start_right/_000_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/yun/tumble/start_right/_001_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/yun/tumble/start_right/_002_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/yun/tumble/start_right/_003_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/yun/tumble/start_right/_004_60.png",
+          "duration_ms": 60
+        }
+      ],
+      "duration_ms": 300,
+      "state": "fall_right"
+    },
+    {
+      "path": "yawn",
+      "frames": [
+        {
+          "path": "assets/yun/yawn/_000_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/yawn/_001_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/yawn/_002_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/yun/yawn/_003_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/yun/yawn/_004_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/yun/yawn/_005_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/yawn/_006_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/yun/yawn/_007_110.png",
+          "duration_ms": 110
+        }
+      ],
+      "duration_ms": 1000,
+      "state": "yawn"
+    }
+  ],
+  "playback": {
+    "idle": {
+      "mode": "loop",
+      "after": "idle",
+      "weight": 2
+    },
+    "thinking": {
+      "mode": "phased",
+      "after": "idle"
+    },
+    "reading": {
+      "mode": "phased",
+      "after": "idle"
+    },
+    "working": {
+      "mode": "phased",
+      "after": "idle"
+    },
+    "needs_input": {
+      "mode": "phased",
+      "after": "idle"
+    },
+    "tool_error": {
+      "mode": "once",
+      "after": "previous"
+    },
+    "out_of_quota": {
+      "mode": "loop",
+      "after": "idle"
+    },
+    "turn_finished": {
+      "mode": "once",
+      "after": "idle"
+    },
+    "sleeping": {
+      "mode": "phased",
+      "after": "idle"
+    },
+    "starting": {
+      "mode": "once",
+      "after": "idle"
+    },
+    "closing": {
+      "mode": "once",
+      "after": "stop"
+    },
+    "angry": {
+      "mode": "once",
+      "after": "stop"
+    },
+    "closing_angry": {
+      "mode": "once",
+      "after": "stop"
+    },
+    "dragging": {
+      "mode": "phased",
+      "after": "idle"
+    },
+    "touch_head": {
+      "mode": "phased",
+      "after": "idle"
+    },
+    "touch_body": {
+      "mode": "phased",
+      "after": "idle"
+    },
+    "fall_left": {
+      "mode": "phased",
+      "after": "idle"
+    },
+    "fall_right": {
+      "mode": "phased",
+      "after": "idle"
+    },
+    "hide_left": {
+      "mode": "phased",
+      "after": "idle"
+    },
+    "hide_right": {
+      "mode": "phased",
+      "after": "idle"
+    },
+    "petal_rain": {
+      "mode": "once",
+      "after": "idle"
+    },
+    "butterflies": {
+      "mode": "once",
+      "after": "idle"
+    },
+    "peach": {
+      "mode": "once",
+      "after": "idle"
+    },
+    "tea": {
+      "mode": "once",
+      "after": "idle"
+    },
+    "yawn": {
+      "mode": "once",
+      "after": "idle"
+    },
+    "startled": {
+      "mode": "once",
+      "after": "idle"
+    },
+    "love": {
+      "mode": "once",
+      "after": "idle"
+    },
+    "birthday": {
+      "mode": "once",
+      "after": "idle"
+    },
+    "taichi": {
+      "mode": "once",
+      "after": "idle"
+    },
+    "shy": {
+      "mode": "once",
+      "after": "idle"
+    },
+    "fidget_look": {
+      "mode": "once",
+      "after": "idle"
+    },
+    "sword_dance": {
+      "mode": "once",
+      "after": "idle"
+    },
+    "flute": {
+      "mode": "phased",
+      "after": "idle",
+      "loops": 2
+    },
+    "fly_left": {
+      "mode": "phased",
+      "after": "idle",
+      "loops": 5
+    },
+    "soar_left": {
+      "mode": "phased",
+      "after": "idle",
+      "loops": 3
+    },
+    "dive_left": {
+      "mode": "phased",
+      "after": "idle",
+      "loops": 3
+    },
+    "fly_right": {
+      "mode": "phased",
+      "after": "idle",
+      "loops": 5
+    },
+    "soar_right": {
+      "mode": "phased",
+      "after": "idle",
+      "loops": 3
+    },
+    "dive_right": {
+      "mode": "phased",
+      "after": "idle",
+      "loops": 3
+    }
+  },
+  "variants": {
+    "idle": [
+      {
+        "sequences": [
+          "idle_float"
+        ],
+        "weight": 1
+      },
+      {
+        "sequences": [
+          "idle_breeze"
+        ],
+        "weight": 1
+      },
+      {
+        "sequences": [
+          "idle_look"
+        ],
+        "weight": 1
+      }
+    ]
+  },
+  "moods": {
+    "happy": {
+      "idle": [
+        {
+          "sequences": [
+            "idle_happy"
+          ],
+          "weight": 1
+        }
+      ]
+    },
+    "poor": {
+      "idle": [
+        {
+          "sequences": [
+            "idle_poor"
+          ],
+          "weight": 1
+        }
+      ]
+    }
+  },
+  "cues": {
+    "celebrate": [
+      {
+        "state": "turn_finished",
+        "weight": 2
+      },
+      {
+        "state": "petal_rain",
+        "weight": 1
+      },
+      {
+        "state": "sword_dance",
+        "weight": 1
+      }
+    ],
+    "snack": [
+      {
+        "state": "peach",
+        "weight": 1
+      }
+    ],
+    "lunch": [
+      {
+        "state": "peach",
+        "weight": 1
+      }
+    ],
+    "water": [
+      {
+        "state": "tea",
+        "weight": 1
+      }
+    ],
+    "milestone": [
+      {
+        "state": "turn_finished",
+        "weight": 1
+      },
+      {
+        "state": "butterflies",
+        "weight": 1
+      }
+    ],
+    "long-turn": [
+      {
+        "state": "turn_finished",
+        "weight": 2
+      },
+      {
+        "state": "flute",
+        "weight": 1
+      }
+    ],
+    "friday-evening": [
+      {
+        "state": "flute",
+        "weight": 1
+      }
+    ],
+    "may20": [
+      {
+        "state": "love",
+        "weight": 1
+      }
+    ],
+    "birthday": [
+      {
+        "state": "birthday",
+        "weight": 1
+      }
+    ],
+    "late-night": [
+      {
+        "state": "yawn",
+        "weight": 1
+      }
+    ],
+    "monday": [
+      {
+        "state": "yawn",
+        "weight": 2
+      },
+      {
+        "state": "taichi",
+        "weight": 1
+      }
+    ],
+    "leave-work": [
+      {
+        "state": "flute",
+        "weight": 1
+      },
+      {
+        "state": "taichi",
+        "weight": 1
+      }
+    ],
+    "sleep": [
+      {
+        "state": "yawn",
+        "weight": 1
+      }
+    ],
+    "konami": [
+      {
+        "state": "butterflies",
+        "weight": 2
+      },
+      {
+        "state": "love",
+        "weight": 1
+      }
+    ],
+    "danger": [
+      {
+        "state": "startled",
+        "weight": 1
+      }
+    ],
+    "eye-break": [
+      {
+        "state": "taichi",
+        "weight": 1
+      }
+    ],
+    "reminder-done": [
+      {
+        "state": "shy",
+        "weight": 1
+      }
+    ]
+  },
+  "ambient": {
+    "sleep_after_s": 600,
+    "fidgets": [
+      {
+        "state": "fidget_look",
+        "weight": 3
+      },
+      {
+        "state": "sword_dance",
+        "weight": 2,
+        "min_idle_s": 60
+      },
+      {
+        "state": "taichi",
+        "weight": 2,
+        "min_idle_s": 90
+      },
+      {
+        "state": "yawn",
+        "weight": 2,
+        "min_idle_s": 120
+      },
+      {
+        "state": "flute",
+        "weight": 1,
+        "min_idle_s": 180
+      },
+      {
+        "state": "fly_left",
+        "weight": 2,
+        "min_idle_s": 240
+      },
+      {
+        "state": "fly_right",
+        "weight": 2,
+        "min_idle_s": 240
+      },
+      {
+        "state": "soar_left",
+        "weight": 1,
+        "min_idle_s": 240
+      },
+      {
+        "state": "soar_right",
+        "weight": 1,
+        "min_idle_s": 240
+      },
+      {
+        "state": "dive_left",
+        "weight": 2,
+        "min_idle_s": 240
+      },
+      {
+        "state": "dive_right",
+        "weight": 2,
+        "min_idle_s": 240
+      },
+      {
+        "state": "butterflies",
+        "weight": 1,
+        "rare": true
+      }
+    ]
+  },
+  "touch": {
+    "scale": 500,
+    "regions": [
+      {
+        "state": "touch_head",
+        "rect": [
+          170,
+          190,
+          160,
+          170
+        ]
+      },
+      {
+        "state": "touch_body",
+        "rect": [
+          180,
+          362,
+          140,
+          112
+        ]
+      }
+    ],
+    "fall": {
+      "left": "fall_left",
+      "right": "fall_right"
+    },
+    "edge": {
+      "left": {
+        "state": "hide_left",
+        "at": 219
+      },
+      "right": {
+        "state": "hide_right",
+        "at": 281
+      }
+    }
+  },
+  "moves": {
+    "scale": 500,
+    "list": [
+      {
+        "state": "fly_left",
+        "speed": [
+          -170,
+          0
+        ],
+        "room": {
+          "left": 200
+        },
+        "keep": {
+          "left": 100
+        }
+      },
+      {
+        "state": "soar_left",
+        "speed": [
+          -120,
+          -70
+        ],
+        "room": {
+          "left": 200,
+          "top": 300
+        },
+        "keep": {
+          "left": 100,
+          "top": 120
+        }
+      },
+      {
+        "state": "dive_left",
+        "speed": [
+          -120,
+          70
+        ],
+        "room": {
+          "left": 200,
+          "bottom": 120
+        },
+        "keep": {
+          "left": 100,
+          "bottom": 10
+        }
+      },
+      {
+        "state": "fly_right",
+        "speed": [
+          170,
+          0
+        ],
+        "room": {
+          "right": 200
+        },
+        "keep": {
+          "right": 100
+        }
+      },
+      {
+        "state": "soar_right",
+        "speed": [
+          120,
+          -70
+        ],
+        "room": {
+          "right": 200,
+          "top": 300
+        },
+        "keep": {
+          "right": 100,
+          "top": 120
+        }
+      },
+      {
+        "state": "dive_right",
+        "speed": [
+          120,
+          70
+        ],
+        "room": {
+          "right": 200,
+          "bottom": 120
+        },
+        "keep": {
+          "right": 100,
+          "bottom": 10
+        }
+      }
+    ]
+  },
+  "activity": {
+    "thinking": {
+      "loops": [
+        {
+          "sequence": "meditate/lotus",
+          "weight": 1,
+          "style": "playful"
+        }
+      ]
+    },
+    "reading": {
+      "loops": [
+        {
+          "sequence": "jade/scroll",
+          "weight": 1
+        }
+      ],
+      "handover": {
+        "working": "jade/to_alchemy"
+      }
+    },
+    "working": {
+      "loops": [
+        {
+          "sequence": "alchemy/pill",
+          "weight": 1,
+          "style": "playful"
+        }
+      ],
+      "handover": {
+        "reading": "alchemy/to_jade"
+      }
+    }
+  }
+}
