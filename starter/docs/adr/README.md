@@ -44,6 +44,7 @@ the order the decisions were made. For a map of the code, start with the
 | [0035](0035-built-in-triggers-as-rules.md) | The pet's own triggers as rules | 2026-10-09 |
 | [0036](0036-fat-cat-pet.md) | Fat Cat, the first on-demand pet | 2026-10-09 |
 | [0037](0037-drawn-pets.md) | Kuro and Yun, pets drawn from code | 2026-10-09 |
+| [0038](0038-reminder-confirm-and-snooze.md) | Confirmable reminders, re-remind and Snooze | 2026-10-09 |
 
 ## Writing a record
 

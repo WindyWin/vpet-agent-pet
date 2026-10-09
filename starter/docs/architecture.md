@@ -31,6 +31,7 @@ The code map below describes the current implementation.
 | On-demand pets (store, downloads) | `PetLibrary` (store, stamps, `prune`), `src/desktop/pet_downloader.*`, `scripts/pet_blobs.py` | [0030](adr/0030-on-demand-pets.md) |
 | Idle, active, mood, touch, eggs, walking | `src/animation`, `src/desktop` | [0011](adr/0011-idle-animation.md), [0021](adr/0021-active-animation.md), [0012](adr/0012-mood.md), [0013](adr/0013-touch-reactions.md), [0015](adr/0015-easter-eggs.md), [0016](adr/0016-walking.md) |
 | Recap, wellness | `src/sessions/recap.*`, `src/desktop/wellness.*` | [0018](adr/0018-daily-recap.md), [0019](adr/0019-wellness-reminders.md) |
+| Snooze, re-remind | `src/desktop/snooze.*` | [0038](adr/0038-reminder-confirm-and-snooze.md) |
 | Packaging, updates | `scripts/package*.py`, `src/updates`, [install](install.md) | [0009](adr/0009-linux-packaging.md), [0010](adr/0010-application-updates.md) |
 | macOS | `src/platform/macos`, `src/platform/posix` | [0020](adr/0020-macos-port.md) |
 | Windows | `src/platform/windows`, `packaging/windows` | [0024](adr/0024-windows-port.md) |

@@ -56,6 +56,7 @@ public:
     static QString bedtimeNote(); // Shown once a night when a turn finishes late.
     // The wellness reminder whose note is showing, until it is answered or another note replaces it.
     QString reminder() const { return reminder_; }
+    Nudges &nudges() { return nudges_; } // Which reminders were asked, and when they ask again.
     int restLeft() const { return restLeft_; } // Seconds left of an eye break the user took; 0 for none.
     void setRestTickMs(int ms) { rest_.setInterval(ms); } // One countdown second; tests shorten it.
 private:
@@ -66,6 +67,13 @@ private:
     void syncBehavior(qint64 now); // What the monitor knows that decides when a reminder may show.
     void outcome(const behavior::Intent &intent, behavior::Outcome outcome);
     void answered();
+    void putOff();
+    void skipped();
+    bool confirmable(const QString &reminder) const;
+    void give(const QString &reminder); // Counts a reminder as given: its next interval, or tomorrow.
+    void ask(const QString &reminder);
+    void released(bool ignored); // The reminder on screen went away unanswered.
+    bool quiet() const { return window_.quiet(now_); }
     bool react(const QString &trigger, qint64 stamp, qint64 now);
     void rest();
     void dropReminder(); // Hides a shown reminder or countdown without counting it as answered.
@@ -82,6 +90,7 @@ private:
     Recap recap_; // Persisted shortly after each change, and when monitoring stops.
     std::unique_ptr<Receiver> receiver_;
     QTimer timer_, rest_, recapTimer_;
+    Nudges nudges_;
     QString reminder_, sessionPath_;
     QPoint lastPointer_;
     int restLeft_ = 0;

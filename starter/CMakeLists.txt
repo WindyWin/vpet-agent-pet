@@ -86,7 +86,7 @@ qt_add_resources(pet_i18n pet_translations PREFIX "/i18n" BASE "${CMAKE_CURRENT_
 qt_add_library(pet_ui STATIC
     src/desktop/pet_window.cpp
     src/desktop/pet_picker.cpp src/desktop/pet_downloader.cpp src/desktop/plugin_list.cpp
-    src/desktop/touch.cpp src/desktop/wander.cpp src/desktop/wellness.cpp src/desktop/alert_bubble.cpp src/desktop/monitor.cpp
+    src/desktop/touch.cpp src/desktop/wander.cpp src/desktop/wellness.cpp src/desktop/snooze.cpp src/desktop/alert_bubble.cpp src/desktop/monitor.cpp
     src/desktop/session_list.cpp src/updates/controller.cpp)
 target_include_directories(pet_ui PUBLIC src "${CMAKE_CURRENT_BINARY_DIR}/generated")
 target_link_libraries(pet_ui PUBLIC Qt6::Widgets pet_animation pet_events pet_updates pet_i18n Qt6::Network PRIVATE pet_native)

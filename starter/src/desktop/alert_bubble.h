@@ -39,6 +39,8 @@ private:
 // A short speech bubble for the pet's own remarks (bedtime, Monday blues): the alert bubble's look
 // without buttons. It dismisses itself after `ms`, or when clicked. A remark with `details`, such as the
 // daily recap, shows them on the first click instead and stays up a little longer.
+// `ask` is a remark that wants an answer (a reminder): it adds Done, Later and Skip today. A click on the
+// words (after any details) counts as Done, so `clicked` is the answer "done" however it was given.
 class NoteBubble : public QWidget {
     Q_OBJECT
 public:
@@ -46,10 +48,15 @@ public:
     explicit NoteBubble(QWidget *parent = nullptr);
     void say(const QString &text, const QRect &pet, const QVector<QRect> &screens, const QString &details = {},
              int ms = defaultMs);
+    void ask(const QString &text, const QRect &pet, const QVector<QRect> &screens, const QString &details = {},
+             int ms = defaultMs);
     QString text() const { return label_->text(); }
+    bool asking() const { return !buttons_->isHidden(); }
     bool hasDetails() const { return !details_.isEmpty(); }
 signals:
-    void clicked(); // A click that hides it, before it hides.
+    void clicked(); // A click that hides it, before it hides; for a question, the answer "done".
+    void later(); // The question was put off; it hid.
+    void skipped(); // The question was dropped for today; it hid.
     void outdated(); // The language changed while it showed; it hid, since its words were in the old one.
 protected:
     void changeEvent(QEvent *) override;
@@ -57,7 +64,10 @@ protected:
     void mouseReleaseEvent(QMouseEvent *) override;
 private:
     void present(const QString &text, int ms);
+    void retranslate();
     QLabel *label_;
+    QWidget *buttons_;
+    QPushButton *done_, *later_, *skip_;
     QTimer hide_;
     QString details_;
     QRect pet_;

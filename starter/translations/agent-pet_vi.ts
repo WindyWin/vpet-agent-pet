@@ -607,8 +607,32 @@
         <translation>Lời nhắn của Agent Pet</translation>
     </message>
     <message>
+        <source>Done</source>
+        <translation>Xong</translation>
+    </message>
+    <message>
+        <source>Later</source>
+        <translation>Lát nữa</translation>
+    </message>
+    <message>
+        <source>Skip today</source>
+        <translation>Bỏ qua hôm nay</translation>
+    </message>
+    <message>
+        <source>Remind me again in 10 minutes</source>
+        <translation>Nhắc lại sau 10 phút</translation>
+    </message>
+    <message>
+        <source>Don&apos;t remind me again until tomorrow</source>
+        <translation>Đừng nhắc lại đến ngày mai</translation>
+    </message>
+    <message>
         <source>Click for more</source>
         <translation>Nhấp để xem thêm</translation>
+    </message>
+    <message>
+        <source>Click to say it&apos;s done</source>
+        <translation>Bấm để báo là đã xong</translation>
     </message>
 </context>
 <context>
@@ -703,6 +727,39 @@ Nhấp chuột phải để mở menu · Esc để thoát</translation>
         <translation>Tắt thông báo</translation>
     </message>
     <message>
+        <source>Snoozed</source>
+        <translation>Đang tạm hoãn</translation>
+    </message>
+    <message>
+        <source>Snooze</source>
+        <translation>Tạm hoãn</translation>
+    </message>
+    <message>
+        <source>For 1 hour</source>
+        <translation>Trong 1 giờ</translation>
+    </message>
+    <message>
+        <source>For %1 minutes</source>
+        <translation>Trong %1 phút</translation>
+    </message>
+    <message>
+        <source>Until this turn finishes</source>
+        <translation>Đến khi lượt này xong</translation>
+    </message>
+    <message>
+        <source>Until tomorrow</source>
+        <translation>Đến ngày mai</translation>
+    </message>
+    <message>
+        <source>Resume now (%1 min left)</source>
+        <extracomment>%1 = minutes left of a snooze</extracomment>
+        <translation>Tiếp tục ngay (còn %1 phút)</translation>
+    </message>
+    <message>
+        <source>Resume now</source>
+        <translation>Tiếp tục ngay</translation>
+    </message>
+    <message>
         <source>Always on top</source>
         <translation>Luôn ở trên cùng</translation>
     </message>
@@ -777,6 +834,10 @@ Nhấp chuột phải để mở menu · Esc để thoát</translation>
     <message>
         <source>%1 tool errors</source>
         <translation>%1 lỗi công cụ</translation>
+    </message>
+    <message>
+        <source>snoozed</source>
+        <translation>đang tạm hoãn</translation>
     </message>
     <message>
         <source>Artwork unavailable
@@ -1072,11 +1133,13 @@ Bạn có thể xem Tổng kết hôm nay trong menu bất cứ lúc nào.</tran
         <source>While you are active (agent activity or moving the pointer), the pet now and then reminds you
 to rest your eyes and to drink some water. It waits while an alert or approval is waiting, while
 alerts are muted and from 22:00 to 06:00. Five minutes away counts as a break and starts both over.
-Click a reminder to say you did it.</source>
-        <translation>Khi bạn đang dùng máy (agent hoạt động hoặc bạn di chuyển con trỏ), thú cưng thỉnh thoảng nhắc bạn
-nghỉ mắt và uống nước. Lời nhắc tạm dừng khi có thông báo hoặc yêu cầu phê duyệt đang chờ,
-khi bạn tắt thông báo và từ 22:00 đến 06:00. Rời máy năm phút được tính là nghỉ và đặt lại thời gian cho cả hai lời nhắc.
-Nhấp vào lời nhắc để xác nhận bạn đã làm.</translation>
+A reminder has Done, Later (asks again in 10 minutes) and Skip today; one you ignore asks again after a while.
+Snooze (right-click menu) silences reminders and alerts for a while.</source>
+        <translation>Khi bạn đang hoạt động (agent hoạt động hoặc di chuyển con trỏ), thú cưng thỉnh thoảng nhắc bạn
+cho mắt nghỉ và uống nước. Nó chờ khi đang có cảnh báo hoặc phê duyệt, khi
+cảnh báo bị tắt và từ 22:00 đến 06:00. Rời đi năm phút được tính là nghỉ và bắt đầu lại cả hai.
+Lời nhắc có Xong, Lát nữa (nhắc lại sau 10 phút) và Bỏ qua hôm nay; nếu bạn bỏ mặc, nó sẽ nhắc lại sau một lúc.
+Tạm hoãn (trình đơn chuột phải) tắt lời nhắc và cảnh báo trong một lúc.</translation>
     </message>
     <message>
         <source>Every %1 minutes</source>
