@@ -1,0 +1,4946 @@
+{
+  "schema_version": 2,
+  "asset_root": "assets/long",
+  "states": {
+    "idle": [
+      "idle"
+    ],
+    "thinking": [
+      "holo/start",
+      "holo/loop",
+      "holo/end"
+    ],
+    "reading": [
+      "scan/start",
+      "scan/loop",
+      "scan/end"
+    ],
+    "working": [
+      "forge/start",
+      "forge/loop",
+      "forge/end"
+    ],
+    "needs_input": [
+      "signal/start",
+      "signal/loop",
+      "signal/end"
+    ],
+    "tool_error": [
+      "short_circuit"
+    ],
+    "out_of_quota": [
+      "power_down"
+    ],
+    "turn_finished": [
+      "victory"
+    ],
+    "sleeping": [
+      "standby/start",
+      "standby/loop",
+      "standby/end"
+    ],
+    "starting": [
+      "landing"
+    ],
+    "closing": [
+      "depart"
+    ],
+    "angry": [
+      "rage"
+    ],
+    "closing_angry": [
+      "rage_blast"
+    ],
+    "dragging": [
+      "held/start",
+      "held/loop",
+      "held/end"
+    ],
+    "touch_head": [
+      "pat/start",
+      "pat/loop",
+      "pat/end"
+    ],
+    "touch_body": [
+      "poke/start",
+      "poke/loop",
+      "poke/end"
+    ],
+    "fall_left": [
+      "tumble/start_left",
+      "tumble/left",
+      "tumble/end_left"
+    ],
+    "fall_right": [
+      "tumble/start_right",
+      "tumble/right",
+      "tumble/end_right"
+    ],
+    "hide_left": [
+      "peek/start_left",
+      "peek/left",
+      "peek/end_left"
+    ],
+    "hide_right": [
+      "peek/start_right",
+      "peek/right",
+      "peek/end_right"
+    ],
+    "fidget_look": [
+      "look"
+    ],
+    "kata": [
+      "kata"
+    ],
+    "blade_check": [
+      "blade_check"
+    ],
+    "preen": [
+      "preen"
+    ],
+    "vent": [
+      "vent"
+    ],
+    "startled": [
+      "startled"
+    ],
+    "love": [
+      "love"
+    ],
+    "birthday": [
+      "birthday"
+    ],
+    "refuel": [
+      "refuel"
+    ],
+    "coolant": [
+      "coolant"
+    ],
+    "shy": [
+      "shy"
+    ],
+    "calibrate": [
+      "calibrate"
+    ],
+    "war_drum": [
+      "war_drum"
+    ],
+    "fly_left": [
+      "fly/mount_left",
+      "fly/left",
+      "fly/land_left"
+    ],
+    "soar_left": [
+      "fly/mount_left",
+      "fly/rise_left",
+      "fly/land_left"
+    ],
+    "dive_left": [
+      "fly/mount_left",
+      "fly/dive_left",
+      "fly/land_left"
+    ],
+    "dash_left": [
+      "dash/start_left",
+      "dash/left",
+      "dash/end_left"
+    ],
+    "fly_right": [
+      "fly/mount_right",
+      "fly/right",
+      "fly/land_right"
+    ],
+    "soar_right": [
+      "fly/mount_right",
+      "fly/rise_right",
+      "fly/land_right"
+    ],
+    "dive_right": [
+      "fly/mount_right",
+      "fly/dive_right",
+      "fly/land_right"
+    ],
+    "dash_right": [
+      "dash/start_right",
+      "dash/right",
+      "dash/end_right"
+    ]
+  },
+  "sequences": [
+    {
+      "state": "birthday",
+      "path": "birthday",
+      "frames": [
+        {
+          "path": "assets/long/birthday/_000_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/birthday/_001_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/birthday/_002_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/birthday/_003_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/birthday/_004_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/birthday/_005_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/birthday/_006_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/birthday/_007_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/birthday/_008_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/birthday/_009_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/birthday/_010_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/birthday/_011_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/birthday/_012_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/birthday/_013_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/birthday/_014_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/birthday/_015_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/birthday/_016_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/birthday/_017_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/birthday/_018_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/birthday/_019_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/birthday/_020_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/birthday/_021_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/birthday/_022_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/birthday/_023_100.png",
+          "duration_ms": 100
+        }
+      ],
+      "duration_ms": 2360
+    },
+    {
+      "state": "blade_check",
+      "path": "blade_check",
+      "frames": [
+        {
+          "path": "assets/long/blade_check/_000_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/blade_check/_001_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/blade_check/_002_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/blade_check/_003_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/blade_check/_004_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/blade_check/_005_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/blade_check/_006_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/blade_check/_007_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/blade_check/_008_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/blade_check/_009_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/blade_check/_010_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/blade_check/_011_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/blade_check/_012_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/blade_check/_013_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/blade_check/_014_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/blade_check/_015_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/blade_check/_016_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/blade_check/_017_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/blade_check/_018_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/blade_check/_019_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/blade_check/_020_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/blade_check/_021_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/blade_check/_022_200.png",
+          "duration_ms": 200
+        },
+        {
+          "path": "assets/long/blade_check/_023_100.png",
+          "duration_ms": 100
+        }
+      ],
+      "duration_ms": 2240
+    },
+    {
+      "state": "calibrate",
+      "path": "calibrate",
+      "frames": [
+        {
+          "path": "assets/long/calibrate/_000_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/calibrate/_001_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/calibrate/_002_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/calibrate/_003_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/calibrate/_004_200.png",
+          "duration_ms": 200
+        },
+        {
+          "path": "assets/long/calibrate/_005_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/calibrate/_006_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/calibrate/_007_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/calibrate/_008_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/calibrate/_009_200.png",
+          "duration_ms": 200
+        },
+        {
+          "path": "assets/long/calibrate/_010_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/calibrate/_011_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/calibrate/_012_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/calibrate/_013_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/calibrate/_014_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/long/calibrate/_015_120.png",
+          "duration_ms": 120
+        }
+      ],
+      "duration_ms": 1720
+    },
+    {
+      "state": "coolant",
+      "path": "coolant",
+      "frames": [
+        {
+          "path": "assets/long/coolant/_000_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/coolant/_001_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/coolant/_002_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/coolant/_003_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/coolant/_004_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/coolant/_005_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/coolant/_006_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/coolant/_007_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/coolant/_008_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/coolant/_009_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/coolant/_010_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/coolant/_011_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/coolant/_012_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/coolant/_013_110.png",
+          "duration_ms": 110
+        }
+      ],
+      "duration_ms": 1540
+    },
+    {
+      "state": "dash_left",
+      "path": "dash/end_left",
+      "frames": [
+        {
+          "path": "assets/long/dash/end_left/_000_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/dash/end_left/_001_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/dash/end_left/_002_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/dash/end_left/_003_110.png",
+          "duration_ms": 110
+        }
+      ],
+      "duration_ms": 350
+    },
+    {
+      "state": "dash_right",
+      "path": "dash/end_right",
+      "frames": [
+        {
+          "path": "assets/long/dash/end_right/_000_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/dash/end_right/_001_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/dash/end_right/_002_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/dash/end_right/_003_110.png",
+          "duration_ms": 110
+        }
+      ],
+      "duration_ms": 350
+    },
+    {
+      "state": "dash_left",
+      "path": "dash/left",
+      "frames": [
+        {
+          "path": "assets/long/dash/left/_000_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/dash/left/_001_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/dash/left/_002_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/dash/left/_003_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/dash/left/_004_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/dash/left/_005_60.png",
+          "duration_ms": 60
+        }
+      ],
+      "duration_ms": 360
+    },
+    {
+      "state": "dash_right",
+      "path": "dash/right",
+      "frames": [
+        {
+          "path": "assets/long/dash/right/_000_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/dash/right/_001_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/dash/right/_002_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/dash/right/_003_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/dash/right/_004_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/dash/right/_005_60.png",
+          "duration_ms": 60
+        }
+      ],
+      "duration_ms": 360
+    },
+    {
+      "state": "dash_left",
+      "path": "dash/start_left",
+      "frames": [
+        {
+          "path": "assets/long/dash/start_left/_000_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/dash/start_left/_001_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/dash/start_left/_002_60.png",
+          "duration_ms": 60
+        }
+      ],
+      "duration_ms": 190
+    },
+    {
+      "state": "dash_right",
+      "path": "dash/start_right",
+      "frames": [
+        {
+          "path": "assets/long/dash/start_right/_000_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/dash/start_right/_001_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/dash/start_right/_002_60.png",
+          "duration_ms": 60
+        }
+      ],
+      "duration_ms": 190
+    },
+    {
+      "state": "closing",
+      "path": "depart",
+      "frames": [
+        {
+          "path": "assets/long/depart/_000_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/depart/_001_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/depart/_002_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/depart/_003_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/depart/_004_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/depart/_005_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/depart/_006_55.png",
+          "duration_ms": 55
+        },
+        {
+          "path": "assets/long/depart/_007_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/long/depart/_008_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/long/depart/_009_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/long/depart/_010_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/depart/_011_100.png",
+          "duration_ms": 100
+        }
+      ],
+      "duration_ms": 795
+    },
+    {
+      "state": "dive_left",
+      "path": "fly/dive_left",
+      "frames": [
+        {
+          "path": "assets/long/fly/dive_left/_000_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/fly/dive_left/_001_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/fly/dive_left/_002_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/fly/dive_left/_003_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/fly/dive_left/_004_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/fly/dive_left/_005_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/fly/dive_left/_006_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/fly/dive_left/_007_70.png",
+          "duration_ms": 70
+        }
+      ],
+      "duration_ms": 560
+    },
+    {
+      "state": "dive_right",
+      "path": "fly/dive_right",
+      "frames": [
+        {
+          "path": "assets/long/fly/dive_right/_000_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/fly/dive_right/_001_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/fly/dive_right/_002_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/fly/dive_right/_003_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/fly/dive_right/_004_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/fly/dive_right/_005_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/fly/dive_right/_006_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/fly/dive_right/_007_70.png",
+          "duration_ms": 70
+        }
+      ],
+      "duration_ms": 560
+    },
+    {
+      "state": "fly_left",
+      "path": "fly/land_left",
+      "frames": [
+        {
+          "path": "assets/long/fly/land_left/_000_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/fly/land_left/_001_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/fly/land_left/_002_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/fly/land_left/_003_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/fly/land_left/_004_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/fly/land_left/_005_100.png",
+          "duration_ms": 100
+        }
+      ],
+      "duration_ms": 440
+    },
+    {
+      "state": "fly_right",
+      "path": "fly/land_right",
+      "frames": [
+        {
+          "path": "assets/long/fly/land_right/_000_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/fly/land_right/_001_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/fly/land_right/_002_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/fly/land_right/_003_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/fly/land_right/_004_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/fly/land_right/_005_100.png",
+          "duration_ms": 100
+        }
+      ],
+      "duration_ms": 440
+    },
+    {
+      "state": "fly_left",
+      "path": "fly/left",
+      "frames": [
+        {
+          "path": "assets/long/fly/left/_000_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/fly/left/_001_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/fly/left/_002_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/fly/left/_003_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/fly/left/_004_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/fly/left/_005_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/fly/left/_006_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/fly/left/_007_70.png",
+          "duration_ms": 70
+        }
+      ],
+      "duration_ms": 560
+    },
+    {
+      "state": "fly_left",
+      "path": "fly/mount_left",
+      "frames": [
+        {
+          "path": "assets/long/fly/mount_left/_000_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/fly/mount_left/_001_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/fly/mount_left/_002_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/fly/mount_left/_003_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/fly/mount_left/_004_80.png",
+          "duration_ms": 80
+        }
+      ],
+      "duration_ms": 340
+    },
+    {
+      "state": "fly_right",
+      "path": "fly/mount_right",
+      "frames": [
+        {
+          "path": "assets/long/fly/mount_right/_000_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/fly/mount_right/_001_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/fly/mount_right/_002_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/fly/mount_right/_003_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/fly/mount_right/_004_80.png",
+          "duration_ms": 80
+        }
+      ],
+      "duration_ms": 340
+    },
+    {
+      "state": "fly_right",
+      "path": "fly/right",
+      "frames": [
+        {
+          "path": "assets/long/fly/right/_000_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/fly/right/_001_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/fly/right/_002_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/fly/right/_003_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/fly/right/_004_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/fly/right/_005_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/fly/right/_006_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/fly/right/_007_70.png",
+          "duration_ms": 70
+        }
+      ],
+      "duration_ms": 560
+    },
+    {
+      "state": "soar_left",
+      "path": "fly/rise_left",
+      "frames": [
+        {
+          "path": "assets/long/fly/rise_left/_000_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/fly/rise_left/_001_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/fly/rise_left/_002_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/fly/rise_left/_003_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/fly/rise_left/_004_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/fly/rise_left/_005_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/fly/rise_left/_006_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/fly/rise_left/_007_70.png",
+          "duration_ms": 70
+        }
+      ],
+      "duration_ms": 560
+    },
+    {
+      "state": "soar_right",
+      "path": "fly/rise_right",
+      "frames": [
+        {
+          "path": "assets/long/fly/rise_right/_000_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/fly/rise_right/_001_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/fly/rise_right/_002_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/fly/rise_right/_003_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/fly/rise_right/_004_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/fly/rise_right/_005_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/fly/rise_right/_006_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/fly/rise_right/_007_70.png",
+          "duration_ms": 70
+        }
+      ],
+      "duration_ms": 560
+    },
+    {
+      "state": "working",
+      "path": "forge/end",
+      "frames": [
+        {
+          "path": "assets/long/forge/end/_000_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/forge/end/_001_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/forge/end/_002_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/forge/end/_003_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/forge/end/_004_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/forge/end/_005_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/forge/end/_006_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/forge/end/_007_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/long/forge/end/_008_100.png",
+          "duration_ms": 100
+        }
+      ],
+      "duration_ms": 690
+    },
+    {
+      "state": "working",
+      "path": "forge/loop",
+      "frames": [
+        {
+          "path": "assets/long/forge/loop/_000_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/forge/loop/_001_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/forge/loop/_002_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/forge/loop/_003_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/forge/loop/_004_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/forge/loop/_005_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/forge/loop/_006_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/forge/loop/_007_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/forge/loop/_008_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/forge/loop/_009_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/forge/loop/_010_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/forge/loop/_011_90.png",
+          "duration_ms": 90
+        }
+      ],
+      "duration_ms": 1080
+    },
+    {
+      "state": "working",
+      "path": "forge/start",
+      "frames": [
+        {
+          "path": "assets/long/forge/start/_000_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/long/forge/start/_001_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/long/forge/start/_002_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/forge/start/_003_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/forge/start/_004_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/forge/start/_005_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/forge/start/_006_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/forge/start/_007_100.png",
+          "duration_ms": 100
+        }
+      ],
+      "duration_ms": 540
+    },
+    {
+      "state": "working",
+      "path": "forge/to_scan",
+      "frames": [
+        {
+          "path": "assets/long/forge/to_scan/_000_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/forge/to_scan/_001_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/forge/to_scan/_002_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/forge/to_scan/_003_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/forge/to_scan/_004_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/forge/to_scan/_005_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/forge/to_scan/_006_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/forge/to_scan/_007_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/forge/to_scan/_008_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/forge/to_scan/_009_110.png",
+          "duration_ms": 110
+        }
+      ],
+      "duration_ms": 830
+    },
+    {
+      "state": "working",
+      "path": "forge/weld",
+      "frames": [
+        {
+          "path": "assets/long/forge/weld/_000_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/forge/weld/_001_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/forge/weld/_002_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/forge/weld/_003_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/forge/weld/_004_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/forge/weld/_005_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/forge/weld/_006_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/forge/weld/_007_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/forge/weld/_008_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/forge/weld/_009_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/forge/weld/_010_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/forge/weld/_011_90.png",
+          "duration_ms": 90
+        }
+      ],
+      "duration_ms": 1080
+    },
+    {
+      "state": "dragging",
+      "path": "held/end",
+      "frames": [
+        {
+          "path": "assets/long/held/end/_000_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/held/end/_001_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/held/end/_002_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/held/end/_003_100.png",
+          "duration_ms": 100
+        }
+      ],
+      "duration_ms": 310
+    },
+    {
+      "state": "dragging",
+      "path": "held/loop",
+      "frames": [
+        {
+          "path": "assets/long/held/loop/_000_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/held/loop/_001_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/held/loop/_002_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/held/loop/_003_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/held/loop/_004_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/held/loop/_005_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/held/loop/_006_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/held/loop/_007_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/held/loop/_008_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/held/loop/_009_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/held/loop/_010_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/held/loop/_011_80.png",
+          "duration_ms": 80
+        }
+      ],
+      "duration_ms": 960
+    },
+    {
+      "state": "dragging",
+      "path": "held/start",
+      "frames": [
+        {
+          "path": "assets/long/held/start/_000_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/long/held/start/_001_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/long/held/start/_002_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/held/start/_003_70.png",
+          "duration_ms": 70
+        }
+      ],
+      "duration_ms": 230
+    },
+    {
+      "state": "thinking",
+      "path": "holo/end",
+      "frames": [
+        {
+          "path": "assets/long/holo/end/_000_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/holo/end/_001_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/holo/end/_002_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/holo/end/_003_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/holo/end/_004_100.png",
+          "duration_ms": 100
+        }
+      ],
+      "duration_ms": 380
+    },
+    {
+      "state": "thinking",
+      "path": "holo/loop",
+      "frames": [
+        {
+          "path": "assets/long/holo/loop/_000_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/holo/loop/_001_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/holo/loop/_002_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/holo/loop/_003_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/holo/loop/_004_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/holo/loop/_005_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/holo/loop/_006_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/holo/loop/_007_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/holo/loop/_008_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/holo/loop/_009_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/holo/loop/_010_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/holo/loop/_011_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/holo/loop/_012_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/holo/loop/_013_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/holo/loop/_014_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/holo/loop/_015_110.png",
+          "duration_ms": 110
+        }
+      ],
+      "duration_ms": 1760
+    },
+    {
+      "state": "thinking",
+      "path": "holo/plan",
+      "frames": [
+        {
+          "path": "assets/long/holo/plan/_000_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/holo/plan/_001_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/holo/plan/_002_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/holo/plan/_003_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/holo/plan/_004_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/holo/plan/_005_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/holo/plan/_006_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/holo/plan/_007_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/holo/plan/_008_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/holo/plan/_009_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/holo/plan/_010_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/holo/plan/_011_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/holo/plan/_012_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/holo/plan/_013_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/holo/plan/_014_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/holo/plan/_015_110.png",
+          "duration_ms": 110
+        }
+      ],
+      "duration_ms": 1760
+    },
+    {
+      "state": "thinking",
+      "path": "holo/start",
+      "frames": [
+        {
+          "path": "assets/long/holo/start/_000_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/holo/start/_001_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/holo/start/_002_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/holo/start/_003_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/holo/start/_004_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/holo/start/_005_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/holo/start/_006_100.png",
+          "duration_ms": 100
+        }
+      ],
+      "duration_ms": 530
+    },
+    {
+      "state": "idle",
+      "path": "idle",
+      "frames": [
+        {
+          "path": "assets/long/idle/_000_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle/_001_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle/_002_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle/_003_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle/_004_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle/_005_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle/_006_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle/_007_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle/_008_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle/_009_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle/_010_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle/_011_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle/_012_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle/_013_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/idle/_014_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/idle/_015_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/idle/_016_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle/_017_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle/_018_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle/_019_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle/_020_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle/_021_130.png",
+          "duration_ms": 130
+        }
+      ],
+      "duration_ms": 2660
+    },
+    {
+      "state": "idle",
+      "path": "idle_happy",
+      "frames": [
+        {
+          "path": "assets/long/idle_happy/_000_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_happy/_001_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_happy/_002_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_happy/_003_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_happy/_004_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_happy/_005_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_happy/_006_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_happy/_007_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_happy/_008_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_happy/_009_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_happy/_010_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_happy/_011_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_happy/_012_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_happy/_013_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/idle_happy/_014_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/idle_happy/_015_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/idle_happy/_016_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_happy/_017_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_happy/_018_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_happy/_019_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_happy/_020_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_happy/_021_130.png",
+          "duration_ms": 130
+        }
+      ],
+      "duration_ms": 2660
+    },
+    {
+      "state": "idle",
+      "path": "idle_plume",
+      "frames": [
+        {
+          "path": "assets/long/idle_plume/_000_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_plume/_001_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_plume/_002_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_plume/_003_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_plume/_004_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_plume/_005_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_plume/_006_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_plume/_007_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_plume/_008_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_plume/_009_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_plume/_010_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_plume/_011_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_plume/_012_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_plume/_013_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_plume/_014_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_plume/_015_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_plume/_016_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_plume/_017_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_plume/_018_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_plume/_019_130.png",
+          "duration_ms": 130
+        }
+      ],
+      "duration_ms": 2600
+    },
+    {
+      "state": "idle",
+      "path": "idle_poor",
+      "frames": [
+        {
+          "path": "assets/long/idle_poor/_000_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_poor/_001_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_poor/_002_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_poor/_003_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_poor/_004_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_poor/_005_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_poor/_006_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_poor/_007_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_poor/_008_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_poor/_009_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_poor/_010_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_poor/_011_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_poor/_012_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_poor/_013_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_poor/_014_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_poor/_015_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_poor/_016_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_poor/_017_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_poor/_018_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_poor/_019_130.png",
+          "duration_ms": 130
+        }
+      ],
+      "duration_ms": 2600
+    },
+    {
+      "state": "idle",
+      "path": "idle_scan",
+      "frames": [
+        {
+          "path": "assets/long/idle_scan/_000_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_scan/_001_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_scan/_002_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_scan/_003_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_scan/_004_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_scan/_005_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_scan/_006_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_scan/_007_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_scan/_008_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_scan/_009_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_scan/_010_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_scan/_011_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_scan/_012_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_scan/_013_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_scan/_014_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_scan/_015_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_scan/_016_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_scan/_017_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_scan/_018_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_scan/_019_130.png",
+          "duration_ms": 130
+        }
+      ],
+      "duration_ms": 2600
+    },
+    {
+      "state": "idle",
+      "path": "idle_shift",
+      "frames": [
+        {
+          "path": "assets/long/idle_shift/_000_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_shift/_001_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_shift/_002_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_shift/_003_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_shift/_004_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_shift/_005_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_shift/_006_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_shift/_007_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_shift/_008_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_shift/_009_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_shift/_010_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_shift/_011_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_shift/_012_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_shift/_013_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/idle_shift/_014_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/idle_shift/_015_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/idle_shift/_016_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_shift/_017_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_shift/_018_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_shift/_019_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_shift/_020_130.png",
+          "duration_ms": 130
+        },
+        {
+          "path": "assets/long/idle_shift/_021_130.png",
+          "duration_ms": 130
+        }
+      ],
+      "duration_ms": 2660
+    },
+    {
+      "state": "kata",
+      "path": "kata",
+      "frames": [
+        {
+          "path": "assets/long/kata/_000_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/kata/_001_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/kata/_002_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/kata/_003_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/long/kata/_004_45.png",
+          "duration_ms": 45
+        },
+        {
+          "path": "assets/long/kata/_005_45.png",
+          "duration_ms": 45
+        },
+        {
+          "path": "assets/long/kata/_006_45.png",
+          "duration_ms": 45
+        },
+        {
+          "path": "assets/long/kata/_007_45.png",
+          "duration_ms": 45
+        },
+        {
+          "path": "assets/long/kata/_008_45.png",
+          "duration_ms": 45
+        },
+        {
+          "path": "assets/long/kata/_009_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/long/kata/_010_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/long/kata/_011_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/long/kata/_012_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/kata/_013_260.png",
+          "duration_ms": 260
+        },
+        {
+          "path": "assets/long/kata/_014_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/long/kata/_015_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/long/kata/_016_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/long/kata/_017_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/long/kata/_018_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/long/kata/_019_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/long/kata/_020_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/long/kata/_021_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/long/kata/_022_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/kata/_023_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/kata/_024_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/kata/_025_220.png",
+          "duration_ms": 220
+        },
+        {
+          "path": "assets/long/kata/_026_110.png",
+          "duration_ms": 110
+        }
+      ],
+      "duration_ms": 2015
+    },
+    {
+      "state": "starting",
+      "path": "landing",
+      "frames": [
+        {
+          "path": "assets/long/landing/_000_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/long/landing/_001_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/long/landing/_002_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/long/landing/_003_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/long/landing/_004_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/long/landing/_005_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/long/landing/_006_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/long/landing/_007_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/landing/_008_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/landing/_009_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/landing/_010_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/landing/_011_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/landing/_012_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/landing/_013_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/landing/_014_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/landing/_015_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/landing/_016_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/long/landing/_017_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/long/landing/_018_100.png",
+          "duration_ms": 100
+        }
+      ],
+      "duration_ms": 1380
+    },
+    {
+      "state": "fidget_look",
+      "path": "look",
+      "frames": [
+        {
+          "path": "assets/long/look/_000_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/long/look/_001_260.png",
+          "duration_ms": 260
+        },
+        {
+          "path": "assets/long/look/_002_260.png",
+          "duration_ms": 260
+        },
+        {
+          "path": "assets/long/look/_003_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/long/look/_004_260.png",
+          "duration_ms": 260
+        },
+        {
+          "path": "assets/long/look/_005_300.png",
+          "duration_ms": 300
+        },
+        {
+          "path": "assets/long/look/_006_140.png",
+          "duration_ms": 140
+        }
+      ],
+      "duration_ms": 1480
+    },
+    {
+      "state": "love",
+      "path": "love",
+      "frames": [
+        {
+          "path": "assets/long/love/_000_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/long/love/_001_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/long/love/_002_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/long/love/_003_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/long/love/_004_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/long/love/_005_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/long/love/_006_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/long/love/_007_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/long/love/_008_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/long/love/_009_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/long/love/_010_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/long/love/_011_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/long/love/_012_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/long/love/_013_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/long/love/_014_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/long/love/_015_100.png",
+          "duration_ms": 100
+        }
+      ],
+      "duration_ms": 1600
+    },
+    {
+      "state": "touch_head",
+      "path": "pat/end",
+      "frames": [
+        {
+          "path": "assets/long/pat/end/_000_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/pat/end/_001_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/pat/end/_002_90.png",
+          "duration_ms": 90
+        }
+      ],
+      "duration_ms": 230
+    },
+    {
+      "state": "touch_head",
+      "path": "pat/loop",
+      "frames": [
+        {
+          "path": "assets/long/pat/loop/_000_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/pat/loop/_001_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/pat/loop/_002_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/pat/loop/_003_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/pat/loop/_004_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/pat/loop/_005_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/pat/loop/_006_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/pat/loop/_007_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/pat/loop/_008_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/pat/loop/_009_90.png",
+          "duration_ms": 90
+        }
+      ],
+      "duration_ms": 900
+    },
+    {
+      "state": "touch_head",
+      "path": "pat/start",
+      "frames": [
+        {
+          "path": "assets/long/pat/start/_000_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/pat/start/_001_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/pat/start/_002_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/pat/start/_003_60.png",
+          "duration_ms": 60
+        }
+      ],
+      "duration_ms": 240
+    },
+    {
+      "state": "hide_left",
+      "path": "peek/end_left",
+      "frames": [
+        {
+          "path": "assets/long/peek/end_left/_000_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/peek/end_left/_001_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/peek/end_left/_002_100.png",
+          "duration_ms": 100
+        }
+      ],
+      "duration_ms": 240
+    },
+    {
+      "state": "hide_right",
+      "path": "peek/end_right",
+      "frames": [
+        {
+          "path": "assets/long/peek/end_right/_000_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/peek/end_right/_001_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/peek/end_right/_002_100.png",
+          "duration_ms": 100
+        }
+      ],
+      "duration_ms": 240
+    },
+    {
+      "state": "hide_left",
+      "path": "peek/left",
+      "frames": [
+        {
+          "path": "assets/long/peek/left/_000_220.png",
+          "duration_ms": 220
+        },
+        {
+          "path": "assets/long/peek/left/_001_160.png",
+          "duration_ms": 160
+        },
+        {
+          "path": "assets/long/peek/left/_002_260.png",
+          "duration_ms": 260
+        },
+        {
+          "path": "assets/long/peek/left/_003_200.png",
+          "duration_ms": 200
+        },
+        {
+          "path": "assets/long/peek/left/_004_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/peek/left/_005_200.png",
+          "duration_ms": 200
+        },
+        {
+          "path": "assets/long/peek/left/_006_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/peek/left/_007_300.png",
+          "duration_ms": 300
+        }
+      ],
+      "duration_ms": 1520
+    },
+    {
+      "state": "hide_right",
+      "path": "peek/right",
+      "frames": [
+        {
+          "path": "assets/long/peek/right/_000_220.png",
+          "duration_ms": 220
+        },
+        {
+          "path": "assets/long/peek/right/_001_160.png",
+          "duration_ms": 160
+        },
+        {
+          "path": "assets/long/peek/right/_002_260.png",
+          "duration_ms": 260
+        },
+        {
+          "path": "assets/long/peek/right/_003_200.png",
+          "duration_ms": 200
+        },
+        {
+          "path": "assets/long/peek/right/_004_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/peek/right/_005_200.png",
+          "duration_ms": 200
+        },
+        {
+          "path": "assets/long/peek/right/_006_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/peek/right/_007_300.png",
+          "duration_ms": 300
+        }
+      ],
+      "duration_ms": 1520
+    },
+    {
+      "state": "hide_left",
+      "path": "peek/start_left",
+      "frames": [
+        {
+          "path": "assets/long/peek/start_left/_000_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/peek/start_left/_001_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/peek/start_left/_002_100.png",
+          "duration_ms": 100
+        }
+      ],
+      "duration_ms": 230
+    },
+    {
+      "state": "hide_right",
+      "path": "peek/start_right",
+      "frames": [
+        {
+          "path": "assets/long/peek/start_right/_000_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/peek/start_right/_001_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/peek/start_right/_002_100.png",
+          "duration_ms": 100
+        }
+      ],
+      "duration_ms": 230
+    },
+    {
+      "state": "touch_body",
+      "path": "poke/end",
+      "frames": [
+        {
+          "path": "assets/long/poke/end/_000_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/poke/end/_001_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/poke/end/_002_90.png",
+          "duration_ms": 90
+        }
+      ],
+      "duration_ms": 230
+    },
+    {
+      "state": "touch_body",
+      "path": "poke/loop",
+      "frames": [
+        {
+          "path": "assets/long/poke/loop/_000_75.png",
+          "duration_ms": 75
+        },
+        {
+          "path": "assets/long/poke/loop/_001_75.png",
+          "duration_ms": 75
+        },
+        {
+          "path": "assets/long/poke/loop/_002_75.png",
+          "duration_ms": 75
+        },
+        {
+          "path": "assets/long/poke/loop/_003_75.png",
+          "duration_ms": 75
+        },
+        {
+          "path": "assets/long/poke/loop/_004_75.png",
+          "duration_ms": 75
+        },
+        {
+          "path": "assets/long/poke/loop/_005_75.png",
+          "duration_ms": 75
+        },
+        {
+          "path": "assets/long/poke/loop/_006_75.png",
+          "duration_ms": 75
+        },
+        {
+          "path": "assets/long/poke/loop/_007_75.png",
+          "duration_ms": 75
+        },
+        {
+          "path": "assets/long/poke/loop/_008_75.png",
+          "duration_ms": 75
+        },
+        {
+          "path": "assets/long/poke/loop/_009_75.png",
+          "duration_ms": 75
+        }
+      ],
+      "duration_ms": 750
+    },
+    {
+      "state": "touch_body",
+      "path": "poke/start",
+      "frames": [
+        {
+          "path": "assets/long/poke/start/_000_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/poke/start/_001_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/poke/start/_002_70.png",
+          "duration_ms": 70
+        }
+      ],
+      "duration_ms": 190
+    },
+    {
+      "state": "out_of_quota",
+      "path": "power_down",
+      "frames": [
+        {
+          "path": "assets/long/power_down/_000_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/long/power_down/_001_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/long/power_down/_002_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/long/power_down/_003_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/long/power_down/_004_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/long/power_down/_005_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/long/power_down/_006_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/long/power_down/_007_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/long/power_down/_008_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/long/power_down/_009_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/long/power_down/_010_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/long/power_down/_011_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/long/power_down/_012_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/long/power_down/_013_140.png",
+          "duration_ms": 140
+        }
+      ],
+      "duration_ms": 1960
+    },
+    {
+      "state": "preen",
+      "path": "preen",
+      "frames": [
+        {
+          "path": "assets/long/preen/_000_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/preen/_001_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/preen/_002_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/preen/_003_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/preen/_004_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/preen/_005_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/preen/_006_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/long/preen/_007_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/long/preen/_008_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/long/preen/_009_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/long/preen/_010_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/long/preen/_011_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/long/preen/_012_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/long/preen/_013_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/long/preen/_014_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/long/preen/_015_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/preen/_016_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/preen/_017_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/preen/_018_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/preen/_019_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/preen/_020_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/preen/_021_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/preen/_022_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/preen/_023_100.png",
+          "duration_ms": 100
+        }
+      ],
+      "duration_ms": 2060
+    },
+    {
+      "state": "angry",
+      "path": "rage",
+      "frames": [
+        {
+          "path": "assets/long/rage/_000_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/rage/_001_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/rage/_002_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/rage/_003_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/rage/_004_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/rage/_005_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/rage/_006_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/rage/_007_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/rage/_008_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/rage/_009_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/rage/_010_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/rage/_011_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/rage/_012_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/long/rage/_013_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/long/rage/_014_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/long/rage/_015_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/long/rage/_016_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/long/rage/_017_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/long/rage/_018_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/long/rage/_019_100.png",
+          "duration_ms": 100
+        }
+      ],
+      "duration_ms": 1320
+    },
+    {
+      "state": "closing_angry",
+      "path": "rage_blast",
+      "frames": [
+        {
+          "path": "assets/long/rage_blast/_000_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/rage_blast/_001_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/rage_blast/_002_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/rage_blast/_003_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/rage_blast/_004_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/rage_blast/_005_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/rage_blast/_006_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/rage_blast/_007_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/rage_blast/_008_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/rage_blast/_009_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/rage_blast/_010_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/rage_blast/_011_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/rage_blast/_012_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/long/rage_blast/_013_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/long/rage_blast/_014_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/long/rage_blast/_015_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/long/rage_blast/_016_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/long/rage_blast/_017_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/long/rage_blast/_018_150.png",
+          "duration_ms": 150
+        }
+      ],
+      "duration_ms": 1320
+    },
+    {
+      "state": "refuel",
+      "path": "refuel",
+      "frames": [
+        {
+          "path": "assets/long/refuel/_000_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/refuel/_001_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/refuel/_002_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/refuel/_003_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/refuel/_004_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/refuel/_005_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/refuel/_006_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/refuel/_007_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/refuel/_008_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/refuel/_009_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/refuel/_010_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/refuel/_011_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/refuel/_012_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/refuel/_013_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/refuel/_014_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/refuel/_015_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/refuel/_016_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/refuel/_017_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/refuel/_018_100.png",
+          "duration_ms": 100
+        }
+      ],
+      "duration_ms": 1580
+    },
+    {
+      "state": "reading",
+      "path": "scan/end",
+      "frames": [
+        {
+          "path": "assets/long/scan/end/_000_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/scan/end/_001_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/scan/end/_002_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/scan/end/_003_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/scan/end/_004_100.png",
+          "duration_ms": 100
+        }
+      ],
+      "duration_ms": 370
+    },
+    {
+      "state": "reading",
+      "path": "scan/flick",
+      "frames": [
+        {
+          "path": "assets/long/scan/flick/_000_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/scan/flick/_001_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/scan/flick/_002_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/scan/flick/_003_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/scan/flick/_004_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/scan/flick/_005_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/scan/flick/_006_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/scan/flick/_007_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/scan/flick/_008_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/scan/flick/_009_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/scan/flick/_010_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/scan/flick/_011_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/scan/flick/_012_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/scan/flick/_013_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/scan/flick/_014_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/scan/flick/_015_110.png",
+          "duration_ms": 110
+        }
+      ],
+      "duration_ms": 1760
+    },
+    {
+      "state": "reading",
+      "path": "scan/loop",
+      "frames": [
+        {
+          "path": "assets/long/scan/loop/_000_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/scan/loop/_001_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/scan/loop/_002_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/scan/loop/_003_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/scan/loop/_004_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/scan/loop/_005_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/scan/loop/_006_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/scan/loop/_007_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/scan/loop/_008_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/scan/loop/_009_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/scan/loop/_010_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/scan/loop/_011_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/scan/loop/_012_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/scan/loop/_013_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/scan/loop/_014_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/scan/loop/_015_110.png",
+          "duration_ms": 110
+        }
+      ],
+      "duration_ms": 1760
+    },
+    {
+      "state": "reading",
+      "path": "scan/start",
+      "frames": [
+        {
+          "path": "assets/long/scan/start/_000_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/scan/start/_001_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/scan/start/_002_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/scan/start/_003_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/scan/start/_004_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/scan/start/_005_100.png",
+          "duration_ms": 100
+        }
+      ],
+      "duration_ms": 430
+    },
+    {
+      "state": "reading",
+      "path": "scan/to_forge",
+      "frames": [
+        {
+          "path": "assets/long/scan/to_forge/_000_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/scan/to_forge/_001_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/scan/to_forge/_002_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/scan/to_forge/_003_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/scan/to_forge/_004_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/scan/to_forge/_005_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/scan/to_forge/_006_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/scan/to_forge/_007_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/scan/to_forge/_008_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/scan/to_forge/_009_110.png",
+          "duration_ms": 110
+        }
+      ],
+      "duration_ms": 830
+    },
+    {
+      "state": "tool_error",
+      "path": "short_circuit",
+      "frames": [
+        {
+          "path": "assets/long/short_circuit/_000_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/short_circuit/_001_55.png",
+          "duration_ms": 55
+        },
+        {
+          "path": "assets/long/short_circuit/_002_55.png",
+          "duration_ms": 55
+        },
+        {
+          "path": "assets/long/short_circuit/_003_55.png",
+          "duration_ms": 55
+        },
+        {
+          "path": "assets/long/short_circuit/_004_55.png",
+          "duration_ms": 55
+        },
+        {
+          "path": "assets/long/short_circuit/_005_55.png",
+          "duration_ms": 55
+        },
+        {
+          "path": "assets/long/short_circuit/_006_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/short_circuit/_007_160.png",
+          "duration_ms": 160
+        },
+        {
+          "path": "assets/long/short_circuit/_008_260.png",
+          "duration_ms": 260
+        },
+        {
+          "path": "assets/long/short_circuit/_009_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/short_circuit/_010_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/short_circuit/_011_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/short_circuit/_012_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/short_circuit/_013_160.png",
+          "duration_ms": 160
+        }
+      ],
+      "duration_ms": 1335
+    },
+    {
+      "state": "shy",
+      "path": "shy",
+      "frames": [
+        {
+          "path": "assets/long/shy/_000_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/shy/_001_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/shy/_002_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/shy/_003_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/long/shy/_004_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/long/shy/_005_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/long/shy/_006_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/long/shy/_007_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/long/shy/_008_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/long/shy/_009_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/shy/_010_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/shy/_011_80.png",
+          "duration_ms": 80
+        }
+      ],
+      "duration_ms": 1200
+    },
+    {
+      "state": "needs_input",
+      "path": "signal/end",
+      "frames": [
+        {
+          "path": "assets/long/signal/end/_000_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/signal/end/_001_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/signal/end/_002_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/signal/end/_003_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/long/signal/end/_004_90.png",
+          "duration_ms": 90
+        }
+      ],
+      "duration_ms": 380
+    },
+    {
+      "state": "needs_input",
+      "path": "signal/loop",
+      "frames": [
+        {
+          "path": "assets/long/signal/loop/_000_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/signal/loop/_001_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/signal/loop/_002_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/signal/loop/_003_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/signal/loop/_004_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/signal/loop/_005_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/signal/loop/_006_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/signal/loop/_007_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/signal/loop/_008_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/signal/loop/_009_90.png",
+          "duration_ms": 90
+        }
+      ],
+      "duration_ms": 900
+    },
+    {
+      "state": "needs_input",
+      "path": "signal/start",
+      "frames": [
+        {
+          "path": "assets/long/signal/start/_000_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/signal/start/_001_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/signal/start/_002_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/long/signal/start/_003_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/long/signal/start/_004_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/signal/start/_005_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/signal/start/_006_90.png",
+          "duration_ms": 90
+        }
+      ],
+      "duration_ms": 450
+    },
+    {
+      "state": "sleeping",
+      "path": "standby/end",
+      "frames": [
+        {
+          "path": "assets/long/standby/end/_000_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/standby/end/_001_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/standby/end/_002_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/standby/end/_003_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/standby/end/_004_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/standby/end/_005_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/standby/end/_006_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/standby/end/_007_120.png",
+          "duration_ms": 120
+        }
+      ],
+      "duration_ms": 640
+    },
+    {
+      "state": "sleeping",
+      "path": "standby/loop",
+      "frames": [
+        {
+          "path": "assets/long/standby/loop/_000_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/long/standby/loop/_001_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/long/standby/loop/_002_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/long/standby/loop/_003_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/long/standby/loop/_004_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/long/standby/loop/_005_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/long/standby/loop/_006_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/long/standby/loop/_007_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/long/standby/loop/_008_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/long/standby/loop/_009_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/long/standby/loop/_010_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/long/standby/loop/_011_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/long/standby/loop/_012_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/long/standby/loop/_013_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/long/standby/loop/_014_150.png",
+          "duration_ms": 150
+        },
+        {
+          "path": "assets/long/standby/loop/_015_150.png",
+          "duration_ms": 150
+        }
+      ],
+      "duration_ms": 2400
+    },
+    {
+      "state": "sleeping",
+      "path": "standby/start",
+      "frames": [
+        {
+          "path": "assets/long/standby/start/_000_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/standby/start/_001_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/standby/start/_002_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/standby/start/_003_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/standby/start/_004_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/long/standby/start/_005_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/long/standby/start/_006_160.png",
+          "duration_ms": 160
+        }
+      ],
+      "duration_ms": 750
+    },
+    {
+      "state": "startled",
+      "path": "startled",
+      "frames": [
+        {
+          "path": "assets/long/startled/_000_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/startled/_001_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/startled/_002_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/startled/_003_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/startled/_004_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/startled/_005_500.png",
+          "duration_ms": 500
+        },
+        {
+          "path": "assets/long/startled/_006_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/long/startled/_007_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/long/startled/_008_120.png",
+          "duration_ms": 120
+        }
+      ],
+      "duration_ms": 1180
+    },
+    {
+      "state": "fall_left",
+      "path": "tumble/end_left",
+      "frames": [
+        {
+          "path": "assets/long/tumble/end_left/_000_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/tumble/end_left/_001_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/tumble/end_left/_002_160.png",
+          "duration_ms": 160
+        },
+        {
+          "path": "assets/long/tumble/end_left/_003_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/tumble/end_left/_004_110.png",
+          "duration_ms": 110
+        }
+      ],
+      "duration_ms": 500
+    },
+    {
+      "state": "fall_right",
+      "path": "tumble/end_right",
+      "frames": [
+        {
+          "path": "assets/long/tumble/end_right/_000_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/tumble/end_right/_001_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/tumble/end_right/_002_160.png",
+          "duration_ms": 160
+        },
+        {
+          "path": "assets/long/tumble/end_right/_003_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/tumble/end_right/_004_110.png",
+          "duration_ms": 110
+        }
+      ],
+      "duration_ms": 500
+    },
+    {
+      "state": "fall_left",
+      "path": "tumble/left",
+      "frames": [
+        {
+          "path": "assets/long/tumble/left/_000_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/tumble/left/_001_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/tumble/left/_002_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/tumble/left/_003_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/tumble/left/_004_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/tumble/left/_005_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/tumble/left/_006_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/tumble/left/_007_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/tumble/left/_008_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/tumble/left/_009_70.png",
+          "duration_ms": 70
+        }
+      ],
+      "duration_ms": 700
+    },
+    {
+      "state": "fall_right",
+      "path": "tumble/right",
+      "frames": [
+        {
+          "path": "assets/long/tumble/right/_000_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/tumble/right/_001_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/tumble/right/_002_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/tumble/right/_003_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/tumble/right/_004_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/tumble/right/_005_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/tumble/right/_006_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/tumble/right/_007_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/tumble/right/_008_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/tumble/right/_009_70.png",
+          "duration_ms": 70
+        }
+      ],
+      "duration_ms": 700
+    },
+    {
+      "state": "fall_left",
+      "path": "tumble/start_left",
+      "frames": [
+        {
+          "path": "assets/long/tumble/start_left/_000_55.png",
+          "duration_ms": 55
+        },
+        {
+          "path": "assets/long/tumble/start_left/_001_55.png",
+          "duration_ms": 55
+        },
+        {
+          "path": "assets/long/tumble/start_left/_002_55.png",
+          "duration_ms": 55
+        },
+        {
+          "path": "assets/long/tumble/start_left/_003_55.png",
+          "duration_ms": 55
+        },
+        {
+          "path": "assets/long/tumble/start_left/_004_55.png",
+          "duration_ms": 55
+        }
+      ],
+      "duration_ms": 275
+    },
+    {
+      "state": "fall_right",
+      "path": "tumble/start_right",
+      "frames": [
+        {
+          "path": "assets/long/tumble/start_right/_000_55.png",
+          "duration_ms": 55
+        },
+        {
+          "path": "assets/long/tumble/start_right/_001_55.png",
+          "duration_ms": 55
+        },
+        {
+          "path": "assets/long/tumble/start_right/_002_55.png",
+          "duration_ms": 55
+        },
+        {
+          "path": "assets/long/tumble/start_right/_003_55.png",
+          "duration_ms": 55
+        },
+        {
+          "path": "assets/long/tumble/start_right/_004_55.png",
+          "duration_ms": 55
+        }
+      ],
+      "duration_ms": 275
+    },
+    {
+      "state": "vent",
+      "path": "vent",
+      "frames": [
+        {
+          "path": "assets/long/vent/_000_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/vent/_001_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/vent/_002_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/vent/_003_260.png",
+          "duration_ms": 260
+        },
+        {
+          "path": "assets/long/vent/_004_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/vent/_005_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/vent/_006_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/long/vent/_007_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/vent/_008_160.png",
+          "duration_ms": 160
+        },
+        {
+          "path": "assets/long/vent/_009_120.png",
+          "duration_ms": 120
+        }
+      ],
+      "duration_ms": 1180
+    },
+    {
+      "state": "turn_finished",
+      "path": "victory",
+      "frames": [
+        {
+          "path": "assets/long/victory/_000_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/victory/_001_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/victory/_002_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/victory/_003_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/victory/_004_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/victory/_005_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/victory/_006_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/victory/_007_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/long/victory/_008_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/long/victory/_009_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/long/victory/_010_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/long/victory/_011_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/long/victory/_012_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/long/victory/_013_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/long/victory/_014_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/victory/_015_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/victory/_016_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/victory/_017_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/victory/_018_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/victory/_019_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/victory/_020_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/victory/_021_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/victory/_022_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/victory/_023_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/victory/_024_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/long/victory/_025_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/victory/_026_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/long/victory/_027_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/long/victory/_028_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/long/victory/_029_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/long/victory/_030_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/long/victory/_031_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/long/victory/_032_200.png",
+          "duration_ms": 200
+        },
+        {
+          "path": "assets/long/victory/_033_100.png",
+          "duration_ms": 100
+        }
+      ],
+      "duration_ms": 2650
+    },
+    {
+      "state": "war_drum",
+      "path": "war_drum",
+      "frames": [
+        {
+          "path": "assets/long/war_drum/_000_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/long/war_drum/_001_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/long/war_drum/_002_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/long/war_drum/_003_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/long/war_drum/_004_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/long/war_drum/_005_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/long/war_drum/_006_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/long/war_drum/_007_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/long/war_drum/_008_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/long/war_drum/_009_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/long/war_drum/_010_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/long/war_drum/_011_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/long/war_drum/_012_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/long/war_drum/_013_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/long/war_drum/_014_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/long/war_drum/_015_100.png",
+          "duration_ms": 100
+        }
+      ],
+      "duration_ms": 1600
+    }
+  ],
+  "playback": {
+    "idle": {
+      "mode": "loop",
+      "after": "idle",
+      "weight": 2
+    },
+    "thinking": {
+      "mode": "phased",
+      "after": "idle"
+    },
+    "reading": {
+      "mode": "phased",
+      "after": "idle"
+    },
+    "working": {
+      "mode": "phased",
+      "after": "idle"
+    },
+    "needs_input": {
+      "mode": "phased",
+      "after": "idle"
+    },
+    "tool_error": {
+      "mode": "once",
+      "after": "previous"
+    },
+    "out_of_quota": {
+      "mode": "loop",
+      "after": "idle"
+    },
+    "turn_finished": {
+      "mode": "once",
+      "after": "idle"
+    },
+    "sleeping": {
+      "mode": "phased",
+      "after": "idle"
+    },
+    "starting": {
+      "mode": "once",
+      "after": "idle"
+    },
+    "closing": {
+      "mode": "once",
+      "after": "stop"
+    },
+    "angry": {
+      "mode": "once",
+      "after": "stop"
+    },
+    "closing_angry": {
+      "mode": "once",
+      "after": "stop"
+    },
+    "dragging": {
+      "mode": "phased",
+      "after": "idle"
+    },
+    "touch_head": {
+      "mode": "phased",
+      "after": "idle"
+    },
+    "touch_body": {
+      "mode": "phased",
+      "after": "idle"
+    },
+    "fall_left": {
+      "mode": "phased",
+      "after": "idle"
+    },
+    "fall_right": {
+      "mode": "phased",
+      "after": "idle"
+    },
+    "hide_left": {
+      "mode": "phased",
+      "after": "idle"
+    },
+    "hide_right": {
+      "mode": "phased",
+      "after": "idle"
+    },
+    "fidget_look": {
+      "mode": "once",
+      "after": "idle"
+    },
+    "kata": {
+      "mode": "once",
+      "after": "idle"
+    },
+    "blade_check": {
+      "mode": "once",
+      "after": "idle"
+    },
+    "preen": {
+      "mode": "once",
+      "after": "idle"
+    },
+    "vent": {
+      "mode": "once",
+      "after": "idle"
+    },
+    "startled": {
+      "mode": "once",
+      "after": "idle"
+    },
+    "love": {
+      "mode": "once",
+      "after": "idle"
+    },
+    "birthday": {
+      "mode": "once",
+      "after": "idle"
+    },
+    "refuel": {
+      "mode": "once",
+      "after": "idle"
+    },
+    "coolant": {
+      "mode": "once",
+      "after": "idle"
+    },
+    "shy": {
+      "mode": "once",
+      "after": "idle"
+    },
+    "calibrate": {
+      "mode": "once",
+      "after": "idle"
+    },
+    "war_drum": {
+      "mode": "once",
+      "after": "idle"
+    },
+    "fly_left": {
+      "mode": "phased",
+      "after": "idle",
+      "loops": 5
+    },
+    "soar_left": {
+      "mode": "phased",
+      "after": "idle",
+      "loops": 3
+    },
+    "dive_left": {
+      "mode": "phased",
+      "after": "idle",
+      "loops": 3
+    },
+    "dash_left": {
+      "mode": "phased",
+      "after": "idle",
+      "loops": 6
+    },
+    "fly_right": {
+      "mode": "phased",
+      "after": "idle",
+      "loops": 5
+    },
+    "soar_right": {
+      "mode": "phased",
+      "after": "idle",
+      "loops": 3
+    },
+    "dive_right": {
+      "mode": "phased",
+      "after": "idle",
+      "loops": 3
+    },
+    "dash_right": {
+      "mode": "phased",
+      "after": "idle",
+      "loops": 6
+    }
+  },
+  "variants": {
+    "idle": [
+      {
+        "sequences": [
+          "idle_scan"
+        ],
+        "weight": 1
+      },
+      {
+        "sequences": [
+          "idle_plume"
+        ],
+        "weight": 1
+      },
+      {
+        "sequences": [
+          "idle_shift"
+        ],
+        "weight": 1
+      }
+    ]
+  },
+  "moods": {
+    "happy": {
+      "idle": [
+        {
+          "sequences": [
+            "idle_happy"
+          ],
+          "weight": 1
+        }
+      ]
+    },
+    "poor": {
+      "idle": [
+        {
+          "sequences": [
+            "idle_poor"
+          ],
+          "weight": 1
+        }
+      ]
+    }
+  },
+  "cues": {
+    "celebrate": [
+      {
+        "state": "turn_finished",
+        "weight": 2
+      },
+      {
+        "state": "kata",
+        "weight": 1
+      },
+      {
+        "state": "preen",
+        "weight": 1
+      }
+    ],
+    "snack": [
+      {
+        "state": "refuel",
+        "weight": 1
+      }
+    ],
+    "lunch": [
+      {
+        "state": "refuel",
+        "weight": 1
+      }
+    ],
+    "water": [
+      {
+        "state": "coolant",
+        "weight": 1
+      }
+    ],
+    "milestone": [
+      {
+        "state": "turn_finished",
+        "weight": 1
+      },
+      {
+        "state": "preen",
+        "weight": 1
+      }
+    ],
+    "long-turn": [
+      {
+        "state": "turn_finished",
+        "weight": 2
+      },
+      {
+        "state": "war_drum",
+        "weight": 1
+      }
+    ],
+    "friday-evening": [
+      {
+        "state": "war_drum",
+        "weight": 1
+      }
+    ],
+    "may20": [
+      {
+        "state": "love",
+        "weight": 1
+      }
+    ],
+    "birthday": [
+      {
+        "state": "birthday",
+        "weight": 1
+      }
+    ],
+    "late-night": [
+      {
+        "state": "vent",
+        "weight": 1
+      }
+    ],
+    "monday": [
+      {
+        "state": "vent",
+        "weight": 2
+      },
+      {
+        "state": "calibrate",
+        "weight": 1
+      }
+    ],
+    "leave-work": [
+      {
+        "state": "war_drum",
+        "weight": 1
+      },
+      {
+        "state": "calibrate",
+        "weight": 1
+      }
+    ],
+    "sleep": [
+      {
+        "state": "vent",
+        "weight": 1
+      }
+    ],
+    "konami": [
+      {
+        "state": "preen",
+        "weight": 2
+      },
+      {
+        "state": "love",
+        "weight": 1
+      }
+    ],
+    "danger": [
+      {
+        "state": "startled",
+        "weight": 1
+      }
+    ],
+    "eye-break": [
+      {
+        "state": "calibrate",
+        "weight": 1
+      }
+    ],
+    "reminder-done": [
+      {
+        "state": "shy",
+        "weight": 1
+      }
+    ]
+  },
+  "ambient": {
+    "sleep_after_s": 600,
+    "fidgets": [
+      {
+        "state": "fidget_look",
+        "weight": 3
+      },
+      {
+        "state": "blade_check",
+        "weight": 2,
+        "min_idle_s": 60
+      },
+      {
+        "state": "kata",
+        "weight": 2,
+        "min_idle_s": 90
+      },
+      {
+        "state": "vent",
+        "weight": 2,
+        "min_idle_s": 120
+      },
+      {
+        "state": "calibrate",
+        "weight": 1,
+        "min_idle_s": 150
+      },
+      {
+        "state": "war_drum",
+        "weight": 1,
+        "min_idle_s": 180
+      },
+      {
+        "state": "fly_left",
+        "weight": 2,
+        "min_idle_s": 240
+      },
+      {
+        "state": "fly_right",
+        "weight": 2,
+        "min_idle_s": 240
+      },
+      {
+        "state": "soar_left",
+        "weight": 1,
+        "min_idle_s": 240
+      },
+      {
+        "state": "soar_right",
+        "weight": 1,
+        "min_idle_s": 240
+      },
+      {
+        "state": "dive_left",
+        "weight": 1,
+        "min_idle_s": 240
+      },
+      {
+        "state": "dive_right",
+        "weight": 1,
+        "min_idle_s": 240
+      },
+      {
+        "state": "dash_left",
+        "weight": 2,
+        "min_idle_s": 200
+      },
+      {
+        "state": "dash_right",
+        "weight": 2,
+        "min_idle_s": 200
+      },
+      {
+        "state": "preen",
+        "weight": 1,
+        "rare": true
+      }
+    ]
+  },
+  "touch": {
+    "scale": 500,
+    "regions": [
+      {
+        "state": "touch_head",
+        "rect": [
+          205,
+          180,
+          90,
+          86
+        ]
+      },
+      {
+        "state": "touch_body",
+        "rect": [
+          212,
+          268,
+          76,
+          84
+        ]
+      }
+    ],
+    "fall": {
+      "left": "fall_left",
+      "right": "fall_right"
+    },
+    "edge": {
+      "left": {
+        "state": "hide_left",
+        "at": 205
+      },
+      "right": {
+        "state": "hide_right",
+        "at": 295
+      }
+    }
+  },
+  "moves": {
+    "scale": 500,
+    "list": [
+      {
+        "state": "fly_left",
+        "speed": [
+          -170,
+          0
+        ],
+        "room": {
+          "left": 200
+        },
+        "keep": {
+          "left": 100
+        }
+      },
+      {
+        "state": "soar_left",
+        "speed": [
+          -120,
+          -70
+        ],
+        "room": {
+          "left": 200,
+          "top": 300
+        },
+        "keep": {
+          "left": 100,
+          "top": 120
+        }
+      },
+      {
+        "state": "dive_left",
+        "speed": [
+          -120,
+          70
+        ],
+        "room": {
+          "left": 200,
+          "bottom": 120
+        },
+        "keep": {
+          "left": 100,
+          "bottom": 10
+        }
+      },
+      {
+        "state": "dash_left",
+        "speed": [
+          -300,
+          0
+        ],
+        "room": {
+          "left": 260
+        },
+        "keep": {
+          "left": 120
+        }
+      },
+      {
+        "state": "fly_right",
+        "speed": [
+          170,
+          0
+        ],
+        "room": {
+          "right": 200
+        },
+        "keep": {
+          "right": 100
+        }
+      },
+      {
+        "state": "soar_right",
+        "speed": [
+          120,
+          -70
+        ],
+        "room": {
+          "right": 200,
+          "top": 300
+        },
+        "keep": {
+          "right": 100,
+          "top": 120
+        }
+      },
+      {
+        "state": "dive_right",
+        "speed": [
+          120,
+          70
+        ],
+        "room": {
+          "right": 200,
+          "bottom": 120
+        },
+        "keep": {
+          "right": 100,
+          "bottom": 10
+        }
+      },
+      {
+        "state": "dash_right",
+        "speed": [
+          300,
+          0
+        ],
+        "room": {
+          "right": 260
+        },
+        "keep": {
+          "right": 120
+        }
+      }
+    ]
+  },
+  "activity": {
+    "thinking": {
+      "loops": [
+        {
+          "sequence": "holo/plan",
+          "weight": 1,
+          "style": "playful"
+        }
+      ]
+    },
+    "reading": {
+      "loops": [
+        {
+          "sequence": "scan/flick",
+          "weight": 1
+        }
+      ],
+      "handover": {
+        "working": "scan/to_forge"
+      }
+    },
+    "working": {
+      "loops": [
+        {
+          "sequence": "forge/weld",
+          "weight": 1,
+          "style": "playful"
+        }
+      ],
+      "handover": {
+        "reading": "forge/to_scan"
+      }
+    }
+  }
+}

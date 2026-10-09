@@ -16,6 +16,10 @@ The PNG frames in `assets/fat-cat/` are the **Orange Fat Cat** pack by **shuaa**
 
 The PNG frames in `assets/kuro/` and `assets/yun/` are original Agent Pet artwork, not third-party material. They are drawn from vector shapes by `scripts/draw_kuro.py` and `scripts/draw_yun.py` (with `scripts/pet_art.py`) and dedicated to the public domain under [CC0 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/); see [Kuro's terms](licenses/KURO-ARTWORK-TERMS.md) and [Yun's terms](licenses/YUN-ARTWORK-TERMS.md). Neither pet is bundled: each downloads when chosen in Settings.
 
+## Long pet artwork
+
+The PNG frames in `assets/long/` are drawn from vector shapes by `scripts/draw_long.py` (with `scripts/pet_art.py`) after an original mecha design by WindyWin. The frames may be copied and distributed with Agent Pet, changed or not. Other uses of the design need its author's permission; see [Long's terms](licenses/LONG-ARTWORK-TERMS.md). Long is not bundled: it downloads when chosen in Settings.
+
 ## Agent Pet application icon
 
 `packaging/agent-pet.png` (installed as the `agent-pet` icon) is a cropped, resized copy of the idle frame `Default/Nomal/1/_000_250.png` and is covered by the artwork terms above, not by the application code license. `assets/vpet/preview.png`, VPet's tile in Settings, is the same image under the same terms.
