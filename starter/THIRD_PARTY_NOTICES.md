@@ -18,7 +18,7 @@ The PNG frames in `assets/kuro/` and `assets/yun/` are original Agent Pet artwor
 
 ## Long pet artwork
 
-The PNG frames in `assets/long/` are drawn from vector shapes by `scripts/draw_long.py` (with `scripts/pet_art.py`) after an original mecha design by WindyWin. The frames may be copied and distributed with Agent Pet, changed or not. Other uses of the design need its author's permission; see [Long's terms](licenses/LONG-ARTWORK-TERMS.md). Long is not bundled: it downloads when chosen in Settings.
+The PNG frames in `assets/long/` are made from WindyWin's own painted design sheet (`scripts/long_art/`): its poses are cut out and rigged as a cutout puppet, then posed, relit and given effects by `scripts/draw_long.py` (with `scripts/pet_art.py`). The poses were matted with the isnet-general-use model of [rembg](https://github.com/danielgatis/rembg) (MIT), which is a tool only and is not distributed. The frames may be copied and distributed with Agent Pet, changed or not. Other uses of the design need its author's permission; see [Long's terms](licenses/LONG-ARTWORK-TERMS.md). Long is not bundled: it downloads when chosen in Settings.
 
 ## Agent Pet application icon
 

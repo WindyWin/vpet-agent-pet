@@ -1,94 +1,116 @@
-# 0038. Long, a mecha pet from a contributor's design
+# 0038. Long, a contributor's painted design rigged as a cutout puppet
 
 - Status: Accepted
-- Date: 2026-10-09
+- Date: 2026-10-10
 
 ## Context
 
-[0037](0037-drawn-pets.md) showed that a pet can be drawn entirely by a script. Kuro and Yun are small, round chibi
-figures, so they did not test a tall, many-part figure with long appendages and a weapon. Those need more than the
-shared kit: limbs that bend correctly in every pose, parts that move independently, and effects that stay inside
-the 1000 × 1000 canvas.
+[0037](0037-drawn-pets.md) showed that a pet can be drawn entirely by a script. A contributor, WindyWin, then
+supplied an original chibi warlord mecha. It is not based on any existing kit or franchise. The design is a sheet
+of four painted poses:
+- standing with a spear;
+- a lunge;
+- a fist at the chin;
+- a cheer with the spear raised and a shout.
 
-A contributor, WindyWin, supplied a design sheet and a written brief for an original warlord mecha. It is not
-based on an existing kit or franchise. The brief fixes the following:
+The design is fixed by what is painted:
+- a gold crown with a cyan gem;
+- a black helm with glowing cyan eyes;
+- layered gold-rimmed pauldrons with cyan gems;
+- violet crystals behind the shoulders;
+- red segmented tendrils hanging at the sides;
+- violet thigh plates and red shin fins;
+- a black and gold spear with a steel head.
 
-- **Silhouette:** a gold crest of horns, red plumes on the back and a halberd longer than the suit.
-- **Proportions:** a small head, shoulders about 1.6 times the hips, long legs.
-- **Colours:** a black and silver base. Gold appears only on the crest, the chest trim and the joint accents; violet
-  only on the shoulders and thighs; red only on the plumes, the shin blades and the halberd head; cyan only as one
-  small light per shoulder.
-- **Parts:** the plumes are segmented, are not wings, and attach to a backpack frame rather than to the shoulders.
-  The halberd head comes off its shaft. The left hand is a bare mechanical hand.
+The first attempt (commit `bd49d4c`) redrew the design from a written brief as vector shapes in the style of
+Kuro and Yun. The designer rejected it as looking nothing like the sheet. Flat vector plates cannot carry a
+painted look.
 
-Some earlier requests in the same work asked for characters from existing franchises; those were declined, and
-this design is the contributor's own.
+The second attempt used the four painted poses whole, moving them as rigid images. The designer asked for full
+animation instead: the character itself moving, not four pictures sliding about.
 
 ## Decision
 
-- Add **Long** (`assets/long/`, `scripts/draw_long.py`, [terms](../../licenses/LONG-ARTWORK-TERMS.md)): 83
-  sequences, 894 frames, about 45 MB. Like Kuro and Yun, it downloads when chosen.
-- Credit the design to its author.
-  - The terms let anyone copy and distribute the frames with Agent Pet, changed or not.
-  - Other uses of the design need the author's permission, so Long is not CC0 like Kuro and Yun.
-  - `pet.json` credits "WindyWin (design), Agent Pet contributors".
-- Draw the suit from faceted plates on a two-bone rig.
-  - Elbows and knees take whichever inverse-kinematics solution points outwards, so crouches and raised arms keep
-    a wide mecha stance.
-  - The whole suit draws at 0.7 scale (`BODY`), which leaves room for the halberd and plumes.
-  - A `spin` field turns the suit about its waist for tumbles.
-- Give the parts the brief describes their own motion.
-  - **Plumes:** four chains of 18 lacquer segments pinned to the backpack frame. They arc up and out. They respond
-    to `wind` and `flutter`, to `spread` (a pheasant display), to `droop` (power loss) and to the shared
-    `follow_through` drag.
-  - **Plumes reaching (`reach`):** the plumes on the side of a target leave their arcs on a curve, come over the
-    shoulder and work there as extra hands. This is used for the forge and for covering the face.
-  - **Halberd head (`blade`):** detaches and flies on its own path. Thinking, working and a fidget take it off and
-    click it back with a spark.
-  - **Halberd grip (`w_grip`):** the hand moves along the shaft so the halberd can spin about its middle or be
-    raised without leaving the canvas.
-  - **Crystal jets:** violet jets under the crystal hinges carry flight and landings.
-  - **Afterimages:** violet silhouettes of the suit where it just was, for dashes, tumbles and take-offs.
-- Map every cue to Long's own art:
+- Animate the designer's own pixels; draw nothing of the character by script.
+  - The sheet is kept as the source: `scripts/long_art/design-sheet.png`.
+  - Its four poses were matted with rembg's `isnet-general-use` model.
+  - `scripts/long_art/split_poses.py` splits them apart (`pose1.png`…`pose4.png`). Where a spear lay over the
+    next figure, it goes to its owner and what it hid is inpainted.
+- Rig the standing pose as a cutout puppet, as Spine or Live2D would. `scripts/long_art/make_rig.py`:
+  - cuts it into 13 parts by polygons: head, two arms, spear, two thighs, two shins, two boots, two tendril
+    clusters and the body. The tendrils take everything beside the torso, and only red lacquer where they cross
+    it;
+  - gives each part a few pixels of overlap past its cut, drawn under the part in front, so joints show no seam;
+  - inpaints what a part hid on the body;
+  - drops crumbs of other parts;
+  - writes `rig/rig.json` with the draw order and the joints.
+- `scripts/draw_long.py` poses the puppet each frame:
+  - the head turns about the neck, the arms about the shoulders, and the spear about (and slides through) the
+    fist;
+  - the upper body leans and shifts about the hips;
+  - the legs follow two-bone IK from the hips to wherever the feet are put, bending outwards, with the boots kept
+    flat and a foot that cannot be reached hanging from the straight leg;
+  - the tendrils sway in a travelling wave and fan out.
+- The other three poses are used whole for the moments the sheet paints. The switch from one drawing to another
+  happens on a squash: the old pose dips and the new one springs past rest.
+- The script also relights the drawing's own cyan gems and eyes and its violet crystals. It can dim them, turn
+  them red, or make them bloom with a halo past the outline.
+- It adds effects in the sheet's palette, laid out in the same units as before:
+  - a strategy hologram and a scan sheet with a beam from the eyes;
+  - sparks, strike flashes and spear swooshes;
+  - shockwaves and cracks, a red beacon, fireworks and confetti;
+  - violet afterimages and jets, steam from the vents, a heart hologram, a blush, a diagnostic sweep.
+- Cue mapping (83 sequences, 41 states):
 
 | Cue or feature | Long |
 | --- | --- |
-| Thinking | A strategy hologram projected from the open left palm: rings, nodes lighting in turn, links drawing themselves; a variant moves a red marker along the plan (Playful). |
-| Reading | A floating text sheet that the visor scans line by line with a red beam; a variant flicks through pages. |
-| Working | The halberd head flies to the left, two plumes reach over the shoulder and forge it with white-hot sparks; a welding variant flashes (Playful). Reading and working hand over directly: the sheet folds as the head lifts off, and back. |
-| Attention | The halberd raised high with its head glowing, a red "!" beacon pulsing over the crest. |
-| Error, quota | A short circuit: the core flares, arcs crawl over the suit, the plumes spasm, a slump, then a reboot with flickering eyes. For the quota, a low squat leaning on the halberd with the plumes trailing on the floor and a red battery blinking. |
-| Turn finished | Two eased twirls of the halberd with a swoosh, the blade raised to fireworks, then the butt slammed down: shockwave, ground cracks, plumes flared. |
-| Sleep, start, quit | Standby (eyes dark, plumes folded, drifting Z marks) and a boot-up; landing on the jets with afterimages and a shockwave; a lift-off out of the top of the frame. Annoyance ends in a dash off-screen, an angry quit in a jet blast upwards. |
-| Touch | Patting the crest: happy eyes and wagging plumes with a small heart hologram. Poking the chest: the core flickers and the suit twitches. Thrown: a spin about the waist with afterimages, the jets catch it, a three-point landing. At a screen edge it leans out and scans. |
-| Moves | Jet flight (level, climbing, diving) to each side with the halberd held forward, and a low ground dash with afterimages and dust (speed 300, needs 260 units of room). |
-| Reactions and fidgets | A halberd kata (sweep, lunge, twirl), checking the halberd head, the plume display, venting steam, a startled jump into guard, a heart hologram, birthday fireworks and confetti, refuelling with an energy cell, coolant mist, covering the face with the plumes, a joint calibration routine, a war-drum rhythm with the halberd. |
+| Idle | Breathing through the knees with the head, free arm and spear following a beat late and the tendrils swaying. Variants: fist to the chin with a "?" (the sheet's pose), a crystal surge, a weight shift that lifts and plants the spear. Moods: happy (bouncing, fist pumping), poor (sagging, gems flickering). |
+| Thinking | The sheet's fist-at-chin pose with a hologram projected from the eyes; a variant moves a marker along the plan. |
+| Reading | The free hand comes up, a text sheet unfolds beside it, the eyes scan it line by line, or flick pages. |
+| Working | Spear drills from a guard: thrusts slide the spear through the fist with a lunge, a strike flash and afterimages. A variant twirls the spear like a windmill. Reading and working hand over directly. |
+| Attention | Up into the sheet's cheer (spear raised, shouting) with a red beacon. |
+| Error, quota | Every joint twitches under crawling arcs and red flashes, the light dies, a slump, a reboot that straightens him up. For the quota, sagging onto the spear with the head hanging and a red cell blinking. |
+| Turn finished | A crouch, a jump that becomes the cheer, fireworks, a landing with a shockwave and cracks. |
+| Sleep, start, quit | Asleep on his feet: the eyes fade, the head nods down; waking snaps it up. Dropping in on jets with knees tucked and landing in the lunge; launching out of the top of the frame. Annoyance: red eyes, flared tendrils, a shaking fist and a stomp, then a dash away or a jet blast. |
+| Touch | Dragged: a pendulum swing with dangling, kicking legs. Patted: the head tips into the hand. Poked: a ticklish twitch. Thrown: a spin with flung limbs, the jets catch him in the lunge, a heavy landing. At an edge he leans out with his fist at his chin. |
+| Moves | Jet flight (level, climbing, diving) leaning forward with the spear levelled and the legs trailing, and a low dash in a lunge with afterimages and dust. |
+| Reactions and fidgets | A spear kata (sweep, lunging thrust, twirl, planted butt), checking the spear with a glint, a crystal surge, venting steam, a startled jump into guard, a heart hologram, birthday, refuelling with an energy cell, coolant mist, a shy blush, a joint-by-joint calibration under a diagnostic sweep, a war-drum rhythm with the spear. |
 
 ## Consequences
 
-- Long is the largest drawn pet at about 45 MB, because its plates are shaded and it covers more of the canvas.
-  The download is on demand and pack by pack, so only users who choose Long pay for it.
-- The `pets` release gets 83 more packs at the next release.
-- Long's terms differ from Kuro's and Yun's: a pack based on Long's design must keep its terms and credit.
-- To change the art, edit `draw_long.py` and render again. As with every pet, renaming a sequence folder renames its
-  pack.
+- Long's frames carry the painting's texture, so they compress far less than flat art. The pack is about
+  83 MB (896 files), larger than Kuro (11 MB) and Yun (17 MB) but smaller than VPet's painted frames (176 MB).
+  Long downloads on demand, so only users who choose it pay for that.
+- Long's terms differ from Kuro's and Yun's: the design and artwork are WindyWin's. They may be distributed with
+  Agent Pet; other uses need the author's permission.
+- To change the motion, edit `draw_long.py` and render again. To change a cut or a joint, edit
+  `long_art/make_rig.py` and run it, then render again.
+- New painted poses from the designer can be added to the sheet. They are cut the same way, and a new view
+  could even be rigged.
+- The rig cannot turn the body round or show its back, because a single front view has neither. Large rotations
+  of a part would show the inpainted areas, so the motion keeps joints within the range a front view supports.
+- The drawing tools need `numpy` and `scipy`; cutting needs `opencv-python-headless`, and matting needs `rembg`.
+  The app needs none of them.
 
 ## Validation
 
-### Long evidence — 2026-10-09
+### Long evidence — 2026-10-10
 
 - Ubuntu 24.04 container. `python3 scripts/verify_assets.py` reported
   `OK: fat-cat (9 sequences), kuro (60 sequences), long (83 sequences), vpet (141 sequences), yun (79 sequences)`.
 - Scratch copy built against the distribution's Qt 6.4.2. For the experiment only, the version requirement and the
   `QDataStream::Qt_6_5` references were lowered.
-  - `ctest --test-dir build -j 2` passed all 16 tests.
-  - With Long, Kuro and Yun added to `everyCuePlaysOnEveryPet` in that copy, `pets` passed: every state cue plays
-    and every reaction in every pool can be selected on each of them.
+  - `pets`, `plugins` and `pet-scaffold` passed after the new pack was built.
+  - With Long added to `everyCuePlaysOnEveryPet` in that copy, every state cue played and every reaction in
+    every pool could be selected.
 - Rendering `draw_long.py` again produced frames byte-identical to the committed ones.
-- Contact sheets of each sequence were checked:
-  - The halberd, plumes and effects stay inside the canvas, apart from deliberate exits (dash, take-off, landing).
-  - The colour rules of the brief hold.
+- Contact sheets were checked:
+  - the rest pose matches the sheet with no seams;
+  - crouches, raised arms, spear spins and leg steps show no holes or stray strips;
+  - effects stay inside the canvas apart from deliberate exits.
+- A test reel was sent to the designer for review.
 - Open:
-  - Throws, edge hiding and moves by hand on a desktop.
-  - CI on Qt 6.5+, macOS and Windows.
-  - The first download through the `pets` release.
+  - the designer's verdict on the motion;
+  - throws, edge hiding and moves by hand on a desktop;
+  - CI on Qt 6.5+, macOS and Windows;
+  - the first download through the `pets` release.

@@ -230,7 +230,7 @@ Native Wayland placement and stacking support remain unverified.
 
 ## Pets
 
-VPet is the bundled pet. **Fat Cat** (an orange cat, CC0 art by shuaa of megupets), **Kuro** (a little ninja), **Yun** (a xianxia cultivator who meditates, brews pills and flies on a sword) and **Long** (a warlord mecha with a halberd, red plumes and violet crystal jets) download when chosen in Settings. Kuro and Yun are original art drawn by scripts in `scripts/` and released under CC0. Long is drawn by `scripts/draw_long.py` from WindyWin's design, under its own terms. The app is built for more. A pet is a folder of frames, a catalog, a
+VPet is the bundled pet. **Fat Cat** (an orange cat, CC0 art by shuaa of megupets), **Kuro** (a little ninja), **Yun** (a xianxia cultivator who meditates, brews pills and flies on a sword) and **Long** (a chibi warlord mecha with a spear, red tendrils and violet crystals) download when chosen in Settings. Kuro and Yun are original art drawn by scripts in `scripts/` and released under CC0. Long is WindyWin's own painted design, rigged as a cutout puppet and animated by `scripts/draw_long.py`, under its own terms. The app is built for more. A pet is a folder of frames, a catalog, a
 preview and its own art terms under `assets/`, and a rebuild picks up every such folder with no code
 changes. Once two or more pets are installed, Settings → Pet → **Character** shows a tile per pet. The
 chosen pet appears the next time Agent Pet starts, and only its artwork is loaded. `--pet <id>` runs
@@ -499,7 +499,7 @@ automatic updates.
 
 ## Artwork and publishing
 
-Fat Cat's artwork is **Orange Fat Cat** by shuaa ([megupets](https://www.megupets.com)), released under [CC0 1.0](licenses/FAT-CAT-ARTWORK-TERMS.md). Kuro and Yun are original Agent Pet artwork, drawn by `scripts/draw_kuro.py` and `scripts/draw_yun.py` and released under CC0 1.0 ([Kuro](licenses/KURO-ARTWORK-TERMS.md), [Yun](licenses/YUN-ARTWORK-TERMS.md)). Long is drawn by `scripts/draw_long.py` from an original design by WindyWin. The frames may be distributed with Agent Pet; other uses of the design need its author's permission ([terms](licenses/LONG-ARTWORK-TERMS.md)). The rest of this section is about VPet's art.
+Fat Cat's artwork is **Orange Fat Cat** by shuaa ([megupets](https://www.megupets.com)), released under [CC0 1.0](licenses/FAT-CAT-ARTWORK-TERMS.md). Kuro and Yun are original Agent Pet artwork, drawn by `scripts/draw_kuro.py` and `scripts/draw_yun.py` and released under CC0 1.0 ([Kuro](licenses/KURO-ARTWORK-TERMS.md), [Yun](licenses/YUN-ARTWORK-TERMS.md)). Long is WindyWin's original painted design, animated from the designer's sheet by `scripts/draw_long.py`. The frames may be distributed with Agent Pet; other uses of the design need its author's permission ([terms](licenses/LONG-ARTWORK-TERMS.md)). The rest of this section is about VPet's art.
 
 Artwork credit: **VUP-Simulator team**, via [LorisYounger/VPet](https://github.com/LorisYounger/VPet). See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and the [upstream artwork terms](licenses/VPET-ARTWORK-TERMS.md).
 

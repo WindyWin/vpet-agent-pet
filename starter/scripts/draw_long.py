@@ -1,90 +1,118 @@
 #!/usr/bin/env python3
-"""Draw Long, the warlord mecha pet, frame by frame.
+"""Draw Long, the chibi warlord mecha pet, frame by frame, from WindyWin's own design sheet.
 
-    pip install pycairo pillow
+    pip install pycairo pillow numpy scipy
     python3 scripts/draw_long.py OUT              # every sequence, as OUT/<sequence>/_NNN_<ms>.png
     python3 scripts/draw_long.py OUT idle         # only these sequences
 
-Long follows WindyWin's design sheet and brief: a many-branched gold crest, a closed mask with narrow red eyes,
-violet crystal blades and red segmented plumes carried on a backpack frame (plumes, not wings), a violet chest
-with a small red core over a gold spearhead plate, a narrow waist with a short uneven skirt, shoulders about
-1.6 times the hips on big hinges, violet thighs with red shin blades, clawed feet, and a halberd longer than the
-suit whose red head comes off the shaft. Gold is kept to the crest, the chest trim and the joint dots; red to
-the plumes, shin blades and halberd head; cyan to one small light per shoulder.
+The art is WindyWin's painted design sheet (scripts/long_art/design-sheet.png): four poses, standing with the
+spear, a lunge, a fist at the chin and a cheer with the spear raised. The poses were matted with rembg's
+isnet-general-use model and split by long_art/split_poses.py (pose1.png .. pose4.png).
 
-The suit is built from faceted vector plates on a two-bone rig (hips, knees, shoulders, elbows; elbows and
-knees always point outwards) with the shared kit in scripts/pet_art.py, so this script is the art's source.
+The standing pose is a cutout puppet, the way Spine or Live2D rig a character. long_art/make_rig.py cuts it into
+the designer's own pixels per part: head, both arms, the spear, thighs, shins, boots, the two clusters of red
+tendrils and the body. It inpaints what each part hid, and records the joints in long_art/rig/rig.json. Here
+every part turns about its joint:
+- the head about the neck, the arms about the shoulders, the spear about (and sliding through) the fist;
+- the upper body about the hips;
+- the legs by two-bone IK from the hips to wherever the feet are put, with the boots kept flat;
+- the tendrils sway in a travelling wave and fan out.
+The other three poses are used whole for the moments the sheet draws (the lunge, the hand at the chin, the shout).
+A swap between drawings happens on a squash, so it reads as a snap rather than a cut.
+
+On top of either, this script moves the figure: offsets, rotation, squash and stretch, and afterimages. It also
+relights the drawing's own cyan gems and eyes and its violet crystals (dimmed, turned red, or blooming), and adds
+effects in the drawing's palette (holograms, a scan sheet, sparks, shockwaves, a beacon, fireworks and the rest).
+It never repaints the suit. Everything is deterministic, so the sheet, the rig and this script are the art's
+source.
 """
+import json
 import math
 import random
 from dataclasses import dataclass, field, replace
+from pathlib import Path
 
 import cairo
+import numpy as np
+from PIL import Image
+from scipy import ndimage
 
-from pet_art import (CX, GROUND, INK, SIZE, WHITE, back_out, ease, ease_in, ease_out, ellipse, follow_through, hop, lerp,
+from pet_art import (CX, GROUND, INK, SIZE, WHITE, back_out, ease, ease_in, ease_out, ellipse, hop, lerp,
                      linear, mix, osc, puff, rgb, run, star, tween)
 
 BLACK = (0.17, 0.17, 0.19)
 BLACK_LIGHT = (0.30, 0.30, 0.34)
 SILVER = (0.66, 0.67, 0.70)
 SILVER_LIGHT = (0.86, 0.87, 0.89)
-GOLD = (0.79, 0.64, 0.36)
-GOLD_LIGHT = (0.96, 0.84, 0.56)
-VIOLET = (0.42, 0.25, 0.63)
-VIOLET_LIGHT = (0.64, 0.46, 0.88)
-RED = (0.66, 0.09, 0.17)
-RED_LIGHT = (0.90, 0.25, 0.30)
-CYAN = (0.10, 0.80, 0.86)
-EYE = (1.0, 0.18, 0.18)
+GOLD = (0.74, 0.60, 0.32)
+GOLD_LIGHT = (0.95, 0.84, 0.55)
+VIOLET = (0.45, 0.30, 0.70)
+VIOLET_LIGHT = (0.70, 0.55, 0.96)
+RED = (0.62, 0.08, 0.14)
+RED_LIGHT = (0.90, 0.24, 0.30)
+CYAN = (0.25, 0.88, 0.96)
+EYE = (0.40, 0.95, 1.0)
 LINE = 9
 
-THIGH, SHIN, FOOT_H = 162, 172, 42
-BODY = 0.70                 # the whole suit, so the halberd and plumes fit the canvas
-HEAD = 0.84
-# Plumes: side, x on the frame, start angle (degrees, -90 straight up), how far each arcs over, length.
-PLUMES = ((-1, -66, -112, 146, 600), (-1, -42, -100, 120, 500), (1, 42, -80, 120, 500), (1, 66, -68, 146, 600))
-UPPER, FORE = 126, 122
+ART = Path(__file__).resolve().parent / 'long_art'
+S = 1.3                     # drawing pixels to canvas pixels
+OLD = 0.62                  # effect units to canvas pixels (the effects below are laid out in these units)
+PAD = 48                    # transparent margin round each pose, so a bloom is not cut off
+
+# Each pose: file, anchor (the point between the feet, in the drawing's pixels) and landmarks relative to it
+# (x right, y up negative), measured on the drawing: the eyes' row, the head, chest gem, shoulders, fists and
+# the spear's tip and butt.
+POSES = {
+    1: dict(file='pose1.png', anchor=(157, 579), eyes=(-17, -352, 18), head=(3, -350), chest=(-12, -284),
+            shoulders=((-61, -302), (60, -303)), hands=((-114, -271), (86, -211)), tip=(-117, -575), butt=(-112, -25)),
+    2: dict(file='pose2.png', anchor=(200, 448), eyes=(-23, -345, 16), head=(-10, -350), chest=(0, -274),
+            shoulders=((-71, -300), (29, -286)), hands=((-87, -203), (63, -213)), tip=(146, -33), butt=(-192, -293)),
+    3: dict(file='pose3.png', anchor=(100, 450), eyes=(-6, -346, 22), head=(-10, -348), chest=(-14, -277),
+            shoulders=((-56, -297), (51, -296)), hands=((-35, -315), (76, -227)), tip=None, butt=None),
+    4: dict(file='pose4.png', anchor=(195, 589), eyes=(1, -369, 18), head=(1, -368), chest=(-15, -299),
+            shoulders=((-49, -336), (52, -334)), hands=((-113, -433), (132, -438)), tip=(55, -585), butt=(-182, -365)),
+}
 
 
 @dataclass
 class Pose:
+    pose: int = 1               # which drawing: 1 stand, 2 lunge, 3 fist at the chin, 4 cheer
     x: float = 0
     lift: float = 0
-    squash: float = 1
-    lean: float = 0             # torso tilt, degrees
-    tilt: float = 0             # head tilt, degrees
-    crouch: float = 0           # 0 standing .. 1 deep crouch
-    feet: tuple = ((-64, 0), (64, 0))      # foot positions (left, right), body space
-    hands: tuple = ((-150, -378), (150, -392))  # hand targets (left, right), body space
-    fist: tuple = (0, 1)        # 1 closed fist, 0 open hand
-    eyes: str = 'open'          # open, wide, closed, angry, happy, x, scan
-    glow: float = 1             # eye and core glow
-    crystal: float = 0.5        # crystal light
-    jet: float = 0              # violet energy jets from the crystals
-    flicker: float = 0
-    wind: float = 0.15          # tendrils streaming back
-    flutter: float = 0
-    drag: float = 0             # tendrils pulled by vertical motion (pet_art.follow_through)
-    spread: float = 0           # tendrils fanned out (power-up)
-    weapon: str = 'held'        # held (right hand), free (w_pos), none
-    w_angle: float = -6         # halberd angle from vertical, degrees
-    w_pos: tuple = None
-    w_glow: float = 0
-    soot: float = 0
-    alpha: float = 1
+    rot: float = 0              # degrees, about `pivot`
+    pivot: float = 0            # canvas pixels above the feet that the rotation turns about
+    squash: float = 1           # vertical scale about the feet; width follows inversely
     scale: float = 1
     face: int = 1
-    shadow: bool = True
+    alpha: float = 1
+    shake: float = 0            # sideways jitter, canvas pixels
+    gems: float = 1             # light of the cyan gems: 0 dark, 1 as drawn, >1 blooming
+    eyes: float = 1             # light of the eyes alone
+    eye_red: float = 0          # eyes and gems turned red (anger, faults)
+    crystal: float = 0          # violet bloom of the crystals
+    dim: float = 0              # the whole suit darkened (power loss)
+    blush: float = 0
+    jet: float = 0              # violet thrust under the crystals
+    flicker: float = 0
+    flutter: float = 0          # phase for effects
+    drag: float = 0             # set by pet_art.follow_through; unused by the drawing
     ghosts: tuple = ()          # afterimages: (dx, alpha[, dlift])
-    spin: float = 0             # whole-suit rotation about the waist, degrees (tumbles)
-    look: float = 0             # scan-visor dot, -1 .. 1
-    droop: float = 0            # plumes hang (power loss)
-    reach: float = 0            # plumes leave their arcs and work at reach_to
-    reach_to: tuple = (0, -900)
-    tip_glow: float = 0         # plume tips hot (welding)
-    w_grip: float = 0           # hand further up the shaft (+) for spins and raised poses
-    w_behind: bool = False      # halberd behind the body
-    blade: tuple = None         # halberd head off its shaft: (x, y, angle[, glow]) body space
+    # The puppet (pose 1 only), in the drawing's pixels and degrees:
+    head_rot: float = 0         # about the neck; + turns clockwise on screen
+    head_dx: float = 0
+    head_dy: float = 0
+    arm_l: float = 0            # the spear arm, about its shoulder (+ raises the fist)
+    arm_r: float = 0            # the free arm (- swings the fist out and up)
+    spear_rot: float = 0        # the spear turning in the fist (- tips it to the left)
+    spear_dy: float = 0         # the spear sliding through the fist along its shaft (- towards the tip)
+    body_rot: float = 0         # the upper body leaning about the hips
+    hip_dx: float = 0
+    hip_dy: float = 0           # + lowers the hips (a crouch: the knees bend)
+    feet: tuple = ((0, 0), (0, 0))          # foot offsets (left, right); - lifts
+    foot_rot: tuple = (0, 0)
+    wave: float = 0.6           # tendril sway
+    spread: float = 0           # tendrils lifted and fanned
+    shadow: bool = True
     under: list = field(default_factory=list)
     back: list = field(default_factory=list)
     front: list = field(default_factory=list)
@@ -104,11 +132,7 @@ def metal(ctx, pts, base, light, axis=None, width=LINE, highlight=True):
     """A faceted plate: a gradient across it, a dark outline and a bright edge on the lit side."""
     poly(ctx, pts)
     xs, ys = [q[0] for q in pts], [q[1] for q in pts]
-    x0, x1, y0, y1 = min(xs), max(xs), min(ys), max(ys)
-    if axis == 'v':
-        g = cairo.LinearGradient(0, y0, 0, y1)
-    else:
-        g = cairo.LinearGradient(x0, y0, x1, y1)
+    g = cairo.LinearGradient(min(xs), min(ys), max(xs), max(ys))
     g.add_color_stop_rgb(0, *light)
     g.add_color_stop_rgb(0.55, *base)
     g.add_color_stop_rgb(1, *mix(base, (0, 0, 0), 0.35))
@@ -116,19 +140,7 @@ def metal(ctx, pts, base, light, axis=None, width=LINE, highlight=True):
     ctx.fill_preserve()
     rgb(ctx, INK)
     ctx.set_line_width(width)
-    ctx.set_line_join(cairo.LINE_JOIN_MITER)
     ctx.stroke()
-    ctx.set_line_join(cairo.LINE_JOIN_ROUND)
-    if highlight and len(pts) > 2:
-        ctx.move_to(*lerp_pt(pts[0], pts[1], 0.12))
-        ctx.line_to(*lerp_pt(pts[0], pts[1], 0.88))
-        rgb(ctx, WHITE, 0.35)
-        ctx.set_line_width(3)
-        ctx.stroke()
-
-
-def lerp_pt(a, b, t):
-    return (lerp(a[0], b[0], t), lerp(a[1], b[1], t))
 
 
 def glow(ctx, x, y, r, color, alpha):
@@ -155,13 +167,171 @@ def gem(ctx, x, y, w, h, color, light=1.0):
     rgb(ctx, INK)
     ctx.set_line_width(5)
     ctx.stroke()
-    poly(ctx, [(x, y - h * 0.7), (x + w * 0.35, y - h * 0.1), (x - w * 0.2, y)])
-    rgb(ctx, WHITE, 0.55)
-    ctx.fill()
+
+
+# ---------------------------------------------------------------- the drawing, relit
+
+class Art:
+    """Pixels and the masks used to relight them: cyan (gems and eyes), the eyes alone, and violet crystal above
+    `crystal_below`. Arrays are cropped to the art plus a margin; `offset` is where (0, 0) of the drawing is."""
+    def __init__(self, im, eyes=None, crystal_below=None):
+        ys, xs = np.nonzero(im[..., 3] > 0)
+        y0, y1, x0, x1 = max(0, ys.min() - 2), ys.max() + 3, max(0, xs.min() - 2), xs.max() + 3
+        im = np.pad(im[y0:y1, x0:x1], ((PAD, PAD), (PAD, PAD), (0, 0)))
+        self.offset = (x0 - PAD, y0 - PAD)          # drawing coordinates of this array's (0, 0)
+        self.rgb, self.a = im[..., :3], im[..., 3]
+        r, g, b = self.rgb[..., 0], self.rgb[..., 1], self.rgb[..., 2]
+        cyan = np.clip((np.minimum(g, b) - r - 0.12) / 0.25, 0, 1) * np.clip((b - 0.45) / 0.2, 0, 1) * self.a
+        self.cyan = ndimage.gaussian_filter(cyan, 0.6)
+        H, W = self.a.shape
+        yy, xx = np.mgrid[0:H, 0:W]
+        yy, xx = yy + self.offset[1], xx + self.offset[0]
+        if eyes:
+            cx, cy, half = eyes
+            box = np.clip(1 - np.maximum(np.abs(xx - cx) / 52, np.abs(yy - cy) / half), 0, 1)
+            self.eye = self.cyan * np.clip(box * 4, 0, 1)
+        else:
+            self.eye = np.zeros_like(self.cyan)
+        self.gem = np.clip(self.cyan - self.eye, 0, 1)
+        violet = np.clip((b - g - 0.08) / 0.2, 0, 1) * np.clip((r - g + 0.02) / 0.15, 0, 1) * self.a
+        self.crystal = violet * (yy < crystal_below) if crystal_below is not None else np.zeros_like(violet)
+        self.lit = (self.cyan.max() > 0.05) or (self.crystal.max() > 0.05)
+        self._cache = {}
+
+    def surface(self, p):
+        key = (round(p.gems, 2), round(p.eyes, 2), round(p.eye_red, 2), round(p.crystal, 2), round(p.dim, 2))
+        if not self.lit:
+            key = (0, 0, 0, 0, key[4])
+        if key in self._cache:
+            return self._cache[key]
+        rgb = self.rgb.copy()
+        lum = rgb.mean(-1, keepdims=True)
+        for mask, level in ((self.gem, p.gems), (self.eye, p.eyes)):
+            m = mask[..., None]
+            if level < 1:
+                rgb = rgb * (1 - m * (1 - level) * 0.88)
+            if p.eye_red > 0:
+                red = np.concatenate([np.clip(lum * 1.5, 0, 1), lum * 0.18, lum * 0.24], -1)
+                rgb = rgb + (red - rgb) * m * p.eye_red
+        if p.dim > 0:
+            rgb = rgb * (1 - 0.45 * p.dim)
+        a = self.a
+        add = np.zeros_like(rgb)
+        if self.lit:
+            bloom = (max(0.0, p.gems - 1) * 1.2, self.gem), (max(0.0, p.eyes - 1) * 1.4 + 0.25 * (p.eyes >= 1), self.eye)
+            for strength, mask in bloom:
+                if strength > 0 and mask.max() > 0.05:
+                    color = mix(EYE, RED_LIGHT, p.eye_red)
+                    halo = ndimage.gaussian_filter(mask, 7) * strength * 2.2
+                    add += halo[..., None] * np.array(color)
+            if p.crystal > 0 and self.crystal.max() > 0.05:
+                halo = ndimage.gaussian_filter(self.crystal, 9) * p.crystal * 1.1
+                add += halo[..., None] * np.array(VIOLET_LIGHT)
+                rgb = rgb + self.crystal[..., None] * p.crystal * 0.12
+        # Light adds over the drawing and spills past its edge as a soft halo.
+        glow_a = np.clip(add.max(-1), 0, 1)
+        out_a = a + glow_a * (1 - a)
+        out_rgb = np.clip((rgb * a[..., None] + add) / np.maximum(out_a[..., None], 1e-4), 0, 1)
+        surface = to_surface(out_rgb, out_a)
+        if len(self._cache) > 64:
+            self._cache.clear()
+        self._cache[key] = surface
+        return surface
+
+    def silhouette(self):
+        if 'sil' not in self._cache:
+            self._cache['sil'] = to_surface(np.ones_like(self.rgb), self.a)
+        return self._cache['sil']
+
+    def paint(self, ctx, surface):
+        ctx.set_source_surface(surface, *self.offset)
+        ctx.get_source().set_filter(cairo.FILTER_GOOD)
+        ctx.paint()
+
+
+def to_surface(rgb, a):
+    """A cairo surface (premultiplied BGRA) from float RGB and alpha arrays."""
+    H, W = a.shape
+    pm = np.dstack([rgb[..., 2] * a, rgb[..., 1] * a, rgb[..., 0] * a, a])
+    surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, W, H)
+    stride = surface.get_stride()
+    view = np.ndarray((H, stride // 4, 4), dtype=np.uint8, buffer=surface.get_data())
+    view[:, :W] = (pm * 255 + 0.5).astype(np.uint8)
+    surface.mark_dirty()
+    return surface
+
+
+def load(path):
+    return np.asarray(Image.open(path).convert('RGBA'), dtype=np.float32) / 255
+
+
+_ART = {}
+
+
+def pose_art(n):
+    """A whole drawing (poses 2 to 4, and pose 1 for afterimages), in drawing coordinates."""
+    if n not in _ART:
+        spec = POSES[n]
+        ax, ay = spec['anchor']
+        _ART[n] = Art(load(ART / spec['file']), eyes=(ax + spec['eyes'][0], ay + spec['eyes'][1], spec['eyes'][2]),
+                      crystal_below=ay + spec['chest'][1] + 10)
+    return _ART[n]
+
+
+# ---------------------------------------------------------------- the cutout rig of pose 1 (long_art/make_rig.py)
+
+RIG = json.loads((ART / 'rig' / 'rig.json').read_text())
+PIV = {k: tuple(v) for k, v in RIG['pivots'].items()}
+_PARTS = {}
+
+
+def part(name):
+    if name not in _PARTS:
+        spec = POSES[1]
+        ax, ay = spec['anchor']
+        _PARTS[name] = Art(load(ART / 'rig' / f'{name}.png'),
+                           eyes=(ax + spec['eyes'][0], ay + spec['eyes'][1], spec['eyes'][2]) if name == 'head' else None,
+                           crystal_below=ay + spec['chest'][1] + 10 if name == 'body' else None)
+    return _PARTS[name]
+
+
+def rotate_about(ctx, pivot, degrees):
+    if degrees:
+        ctx.translate(*pivot)
+        ctx.rotate(math.radians(degrees))
+        ctx.translate(-pivot[0], -pivot[1])
+
+
+def body_matrix(p):
+    """Where the upper body sits: moved by the hips and leaned about them."""
+    m = cairo.Matrix()
+    m.translate(p.hip_dx, p.hip_dy)
+    hx, hy = PIV['hips']
+    m.translate(hx, hy)
+    m.rotate(math.radians(p.body_rot))
+    m.translate(-hx, -hy)
+    return m
+
+
+def leg_bones(p, side):
+    """Hip, knee and ankle of one leg (drawing coordinates) after the pose: hips follow the body, the ankle the
+    foot offset, and the knee comes from two-bone IK, bending outwards like the drawing."""
+    s = '_l' if side < 0 else '_r'
+    m = body_matrix(p)
+    hip = m.transform_point(*PIV['hip' + s])
+    foot = p.feet[0 if side < 0 else 1]
+    ankle = (PIV['ankle' + s][0] + foot[0], PIV['ankle' + s][1] + foot[1])
+    lt = math.dist(PIV['hip' + s], PIV['knee' + s])
+    ls = math.dist(PIV['knee' + s], PIV['ankle' + s])
+    reach = math.dist(hip, ankle)
+    if reach > lt + ls - 0.5:       # a leg cannot stretch: the foot hangs from the straight leg instead
+        k = (lt + ls - 0.5) / reach
+        ankle = (hip[0] + (ankle[0] - hip[0]) * k, hip[1] + (ankle[1] - hip[1]) * k)
+    knee = max((ik(hip, ankle, lt, ls, b) for b in (-1, 1)), key=lambda q: side * q[0])
+    return hip, knee, ankle
 
 
 def ik(a, b, l1, l2, bend_side):
-    """Two-bone IK in 2D: the middle joint between a and b, bending towards bend_side (+1 right, -1 left)."""
     dx, dy = b[0] - a[0], b[1] - a[1]
     d = max(1e-3, min(math.hypot(dx, dy), l1 + l2 - 1e-3))
     a1 = math.atan2(dy, dx)
@@ -171,605 +341,172 @@ def ik(a, b, l1, l2, bend_side):
     return (a[0] + math.cos(ang) * l1, a[1] + math.sin(ang) * l1)
 
 
-def bone_frame(ctx, a, b):
-    """Move the context so the bone a->b runs down the local y axis from (0, 0); returns its length."""
-    ang = math.atan2(b[1] - a[1], b[0] - a[0]) - math.pi / 2
-    ctx.translate(*a)
-    ctx.rotate(ang)
-    return math.hypot(b[0] - a[0], b[1] - a[1])
+def bone_delta(rest0, rest1, now0, now1):
+    """Degrees a part turns so its rest bone rest0->rest1 lies along now0->now1."""
+    return math.degrees(math.atan2(now1[1] - now0[1], now1[0] - now0[0]) - math.atan2(rest1[1] - rest0[1], rest1[0] - rest0[0]))
 
 
-# ---------------------------------------------------------------- the rig
+def tendril_surface(name, p):
+    """The tendrils swaying: pixels shift sideways more the further they hang from the root, in a travelling wave."""
+    art = part(name)
+    if not p.wave and not p.spread:
+        return art.surface(p)
+    rx, ry = PIV[name]
+    side = -1 if name.endswith('_l') else 1
+    H, W = art.a.shape
+    yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+    gx, gy = xx + art.offset[0], yy + art.offset[1]
+    d = np.hypot(gx - rx, gy - ry)
+    u = np.clip(d / 170, 0, 1.4)
+    phase = p.flutter * 2 * math.pi + d * 0.035
+    sx = side * (p.wave * 9 * u ** 1.5 * np.sin(phase) + p.spread * 30 * u ** 1.3)
+    sy = -p.spread * 26 * u ** 1.6 + p.wave * 3 * u * np.cos(phase)
+    coords = [yy - sy, xx - sx]
+    surf = art.surface(p)
+    stride = surf.get_stride()
+    data = np.ndarray((H, stride // 4, 4), dtype=np.uint8, buffer=surf.get_data())[:, :W].astype(np.float32)
+    warped = np.stack([ndimage.map_coordinates(data[..., c], coords, order=1, mode='constant') for c in range(4)], -1)
+    out = cairo.ImageSurface(cairo.FORMAT_ARGB32, W, H)
+    view = np.ndarray((H, out.get_stride() // 4, 4), dtype=np.uint8, buffer=out.get_data())
+    view[:, :W] = np.clip(warped + 0.5, 0, 255).astype(np.uint8)
+    out.mark_dirty()
+    return out
+
+
+def draw_rig(ctx, p, silhouette=False):
+    """Pose 1 as a cutout puppet, in drawing coordinates."""
+    def paint(name, surface=None):
+        art = part(name)
+        if silhouette:
+            ctx.set_source_rgba(*VIOLET_LIGHT, 1)
+            ctx.mask_surface(art.silhouette(), *art.offset)
+        else:
+            art.paint(ctx, surface or art.surface(p))
+    upper = body_matrix(p)
+    legs = {side: leg_bones(p, side) for side in (-1, 1)}
+    for name in RIG['order']:
+        ctx.save()
+        if name.startswith('tendrils'):
+            ctx.transform(upper)
+            paint(name, None if silhouette else tendril_surface(name, p))
+        elif name[:5] in ('thigh', 'shin_', 'boot_'):
+            side = -1 if name.endswith('_l') else 1
+            s = '_l' if side < 0 else '_r'
+            hip, knee, ankle = legs[side]
+            if name.startswith('thigh'):
+                rest0, rest1, now0, now1 = PIV['hip' + s], PIV['knee' + s], hip, knee
+            elif name.startswith('shin'):
+                rest0, rest1, now0, now1 = PIV['knee' + s], PIV['ankle' + s], knee, ankle
+            else:
+                rest0, rest1, now0, now1 = PIV['ankle' + s], None, ankle, None
+            ctx.translate(now0[0] - rest0[0], now0[1] - rest0[1])
+            if rest1:
+                rotate_about(ctx, rest0, bone_delta(rest0, rest1, now0, now1))
+            else:
+                rotate_about(ctx, rest0, p.foot_rot[0 if side < 0 else 1])
+            paint(name)
+        else:
+            ctx.transform(upper)
+            if name == 'arm_r':
+                rotate_about(ctx, PIV['arm_r'], p.arm_r)
+            elif name in ('arm_l', 'spear'):
+                rotate_about(ctx, PIV['arm_l'], p.arm_l)
+                if name == 'spear':
+                    rotate_about(ctx, PIV['fist_l'], p.spear_rot)
+                    ctx.translate(0, p.spear_dy)
+            elif name == 'head':
+                ctx.translate(p.head_dx, p.head_dy)
+                rotate_about(ctx, PIV['head'], p.head_rot)
+            paint(name)
+        ctx.restore()
+
 
 def rig(p):
-    c = p.crouch
-    hip_y = -(FOOT_H + (THIGH + SHIN) * (1 - 0.30 * c)) + 4
-    pelvis = (0.0, hip_y)
-    lean = math.radians(p.lean)
-    def up(length, base, extra=0.0):
-        a = lean + extra
-        return (base[0] + math.sin(a) * length, base[1] - math.cos(a) * length)
-    waist = up(70, pelvis)
-    chest_top = up(170, waist)
-    neck = up(30, chest_top)
-    head = up(62, neck)
-    def side_pt(base, dx):
-        return (base[0] + math.cos(lean) * dx, base[1] + math.sin(lean) * dx)
-    shoulders = (side_pt(up(-6, chest_top), -96), side_pt(up(-6, chest_top), 96))
-    hips = (side_pt(pelvis, -44), side_pt(pelvis, 44))
-    feet = tuple((fx, fy - FOOT_H) for fx, fy in p.feet)
-    # Knees point outwards too, so crouches read as a wide mecha stance, never knock-kneed.
-    knees = tuple(max((ik(hips[i], feet[i], THIGH, SHIN, b) for b in (-1, 1)), key=lambda e: side * e[0])
-                  for i, side in ((0, -1), (1, 1)))
-    hands = p.hands
-    # Elbows always point outwards, whichever way the hand goes.
-    elbows = tuple(max((ik(shoulders[i], hands[i], UPPER, FORE, b) for b in (-1, 1)), key=lambda e: side * e[0])
-                   for i, side in ((0, -1), (1, 1)))
-    return dict(pelvis=pelvis, waist=waist, chest=chest_top, neck=neck, head=head, shoulders=shoulders, hips=hips,
-                knees=knees, ankles=feet, elbows=elbows, hands=hands, lean=lean)
+    """The pose's landmarks in effect units, for effects that sit on the suit (the eyes, chest, fists)."""
+    spec = POSES[p.pose]
+    k = S / OLD
+    ax, ay = spec['anchor']
+    pt = lambda q: (q[0] * k, q[1] * k) if q else None
+    if p.pose == 1:
+        # Follow the puppet: the body, head and fists move with their bones.
+        upper = body_matrix(p)
+        def moved(q, extra=None):
+            x, y = q[0] + ax, q[1] + ay
+            if extra:
+                x, y = extra.transform_point(x, y)
+            x, y = upper.transform_point(x, y)
+            return ((x - ax) * k, (y - ay) * k)
+        def turn(pivot, deg):
+            m = cairo.Matrix()
+            m.translate(*pivot)
+            m.rotate(math.radians(deg))
+            m.translate(-pivot[0], -pivot[1])
+            return m
+        arm_l, arm_r = turn(PIV['arm_l'], p.arm_l), turn(PIV['arm_r'], p.arm_r)
+        slide = cairo.Matrix(y0=p.spear_dy)
+        spear = slide.multiply(turn(PIV['fist_l'], p.spear_rot)).multiply(arm_l)
+        chest = moved(spec['chest'])
+        return dict(head=moved(spec['head']), chest=(chest[0], chest[1] - 66), gem=chest,
+                    hands=(moved(spec['hands'][0], arm_l), moved(spec['hands'][1], arm_r)),
+                    shoulders=tuple(moved(q) for q in spec['shoulders']), tip=moved(spec['tip'], spear),
+                    butt=moved(spec['butt'], spear))
+    chest = pt(spec['chest'])
+    return dict(head=pt(spec['head']), chest=(chest[0], chest[1] - 66), gem=chest, hands=tuple(map(pt, spec['hands'])),
+                shoulders=tuple(map(pt, spec['shoulders'])), tip=pt(spec['tip']), butt=pt(spec['butt']))
 
 
-# ---------------------------------------------------------------- parts
+def body_transform(ctx, p, dx=0.0, dlift=0.0):
+    ctx.translate(CX + p.x + dx + p.shake, GROUND - p.lift - dlift)
+    if p.rot:
+        ctx.translate(0, -p.pivot)
+        ctx.rotate(math.radians(p.rot) * p.face)
+        ctx.translate(0, p.pivot)
+    s = S * p.scale
+    ctx.scale(p.face * s / max(p.squash, 0.2) ** 0.5, s * p.squash)
 
-def draw_backpack(ctx, p, r):
-    """The backpack frame behind the upper back; crystals and tendrils hang from it, not from the shoulders."""
-    cx, cy = r['chest']
+
+def draw_figure(ctx, p, silhouette=False):
+    ax, ay = POSES[p.pose]['anchor']
     ctx.save()
-    ctx.translate(cx, cy)
-    ctx.rotate(r['lean'])
-    metal(ctx, [(-70, 10), (70, 10), (92, 60), (70, 150), (-70, 150), (-92, 60)], BLACK, BLACK_LIGHT)
-    for side in (-1, 1):
-        metal(ctx, [(side * 60, 18), (side * 104, 30), (side * 110, 70), (side * 74, 64)], BLACK_LIGHT, SILVER,
-              width=6, highlight=False)
-        ellipse(ctx, side * 96, 50, 12, 12)
-        rgb(ctx, GOLD)
-        ctx.fill_preserve()
-        rgb(ctx, INK)
-        ctx.set_line_width(4)
-        ctx.stroke()
-    ctx.restore()
-
-
-def frame_pt(r, dx, dy):
-    cx, cy = r['chest']
-    a = r['lean']
-    return (cx + math.cos(a) * dx - math.sin(a) * dy, cy + math.sin(a) * dx + math.cos(a) * dy)
-
-
-def lacquer(ctx, pts, w):
-    """Glossy red lacquer: deep red, a sharp highlight stripe along the top."""
-    poly(ctx, pts)
-    g = cairo.LinearGradient(0, -w, 0, w)
-    g.add_color_stop_rgb(0, *RED_LIGHT)
-    g.add_color_stop_rgb(0.45, *RED)
-    g.add_color_stop_rgb(1, *mix(RED, (0, 0, 0), 0.45))
-    ctx.set_source(g)
-    ctx.fill_preserve()
-    rgb(ctx, INK)
-    ctx.set_line_width(4)
-    ctx.stroke()
-    xs = [q[0] for q in pts]
-    ctx.move_to(min(xs) * 0.7, -w * 0.45)
-    ctx.line_to(max(xs) * 0.6, -w * 0.45)
-    rgb(ctx, WHITE, 0.7)
-    ctx.set_line_width(2.5)
-    ctx.stroke()
-
-
-def violet_plate(ctx, pts):
-    """Semi-translucent violet armour: the black frame shows faintly through."""
-    poly(ctx, pts)
-    xs, ys = [q[0] for q in pts], [q[1] for q in pts]
-    g = cairo.LinearGradient(min(xs), min(ys), max(xs), max(ys))
-    g.add_color_stop_rgba(0, *VIOLET_LIGHT, 0.92)
-    g.add_color_stop_rgba(0.55, *VIOLET, 0.85)
-    g.add_color_stop_rgba(1, *mix(VIOLET, (0, 0, 0), 0.35), 0.9)
-    ctx.set_source(g)
-    ctx.fill_preserve()
-    rgb(ctx, INK)
-    ctx.set_line_width(LINE)
-    ctx.set_line_join(cairo.LINE_JOIN_MITER)
-    ctx.stroke()
-    ctx.set_line_join(cairo.LINE_JOIN_ROUND)
-    ctx.move_to(*lerp_pt(pts[0], pts[1], 0.15))
-    ctx.line_to(*lerp_pt(pts[0], pts[1], 0.85))
-    rgb(ctx, WHITE, 0.4)
-    ctx.set_line_width(3)
-    ctx.stroke()
-
-
-def draw_tendrils(ctx, p, r, layer='back'):
-    """04: mechanical pheasant plumes. Each is a chain of red lacquer segments pinned to the top of the backpack
-    frame; they rise behind the shoulders and arc out and down, so the back reads from far away. With `reach` the
-    tips leave their arcs and come over the shoulders to work at `reach_to`, like extra hands."""
-    for k, (side, bx, a0, turn, length) in enumerate(PLUMES):
-        x, y = frame_pt(r, bx, 22)
-        base = (x, y)
-        a = math.radians(a0) + r['lean']
-        bend = math.radians(turn) * side * (1 - 0.5 * p.spread + 0.25 * max(0.0, -p.drag) + 0.35 * p.droop)
-        n = 18
-        seg = length / n
-        pts = [(x, y)]
-        for i in range(1, n + 1):
-            u = i / n
-            sway = math.sin(p.flutter * 2 * math.pi + u * 3.0 + k * 1.3) * 0.12 * u
-            ai = a + bend * u ** 1.25 + sway * side
-            dx = math.cos(ai) - p.wind * 0.9 * u
-            dy = math.sin(ai) - p.drag * 0.8 * u + p.droop * 0.9 * u * u
-            d = math.hypot(dx, dy) or 1
-            x += dx / d * seg
-            y += dy / d * seg
-            pts.append((x, y))
-        working = p.reach_to[0] * side > -100      # only the plumes on the work's side reach (all for the middle)
-        in_front = working and p.reach >= 0.5
-        if in_front != (layer == 'front'):
-            continue
-        if p.reach > 0 and working:
-            tx, ty = p.reach_to
-            tx += (k - 1.5) * 34 + 18 * math.sin(p.flutter * 2 * math.pi * 2 + k * 1.7)
-            ty += abs(k - 1.5) * 24 + 14 * math.cos(p.flutter * 2 * math.pi * 2 + k * 2.1)
-            cx_, cy_ = base[0] + side * 150, base[1] - 300
-            bez = []
-            for i in range(n + 1):
-                u = i / n
-                bez.append(((1 - u) ** 2 * base[0] + 2 * (1 - u) * u * cx_ + u * u * tx,
-                            (1 - u) ** 2 * base[1] + 2 * (1 - u) * u * cy_ + u * u * ty))
-            w = ease(min(1.0, p.reach))
-            pts = [lerp_pt(a_, b_, w) for a_, b_ in zip(pts, bez)]
-        for i in range(n, 0, -1):
-            (x0, y0), (x1, y1) = pts[i - 1], pts[i]
-            w = 15 * (1 - 0.62 * i / n) + 3
-            ctx.save()
-            ctx.translate((x0 + x1) / 2, (y0 + y1) / 2)
-            ctx.rotate(math.atan2(y1 - y0, x1 - x0))
-            L = max(4.0, math.hypot(x1 - x0, y1 - y0) * 0.62)
-            lacquer(ctx, [(-L, -w), (L * 0.8, -w * 0.9), (L, 0), (L * 0.8, w * 0.9), (-L, w), (-L * 0.75, 0)], w)
-            ctx.restore()
-        (x0, y0), (x1, y1) = pts[-2], pts[-1]
-        ctx.save()
-        ctx.translate(x1, y1)
-        ctx.rotate(math.atan2(y1 - y0, x1 - x0))
-        lacquer(ctx, [(-4, -6), (34, 0), (-4, 6)], 6)
-        if working and p.reach > 0.6 and p.tip_glow > 0:
-            glow(ctx, 34, 0, 40, (1.0, 0.85, 0.6), 0.8 * p.tip_glow)
-        ctx.restore()
-        ellipse(ctx, *pts[0], 12, 12)
-        rgb(ctx, BLACK_LIGHT)
-        ctx.fill_preserve()
-        rgb(ctx, INK)
-        ctx.set_line_width(4)
-        ctx.stroke()
-
-
-def draw_crystals(ctx, p, r):
-    """03: violet blade crystals fanned out of the backpack frame, translucent."""
-    for side in (-1, 1):
-        sx, sy = frame_pt(r, side * 96, 50)
-        for k, (ang, length, w) in enumerate(((-60, 230, 30), (-38, 180, 24), (-82, 160, 22))):
-            a = math.radians(ang if side > 0 else -180 - ang) + r['lean']
-            ux, uy = math.cos(a), math.sin(a)
-            nx, ny = -uy, ux
-            tip = (sx + ux * length, sy + uy * length)
-            pts = [(sx + nx * w * 0.5, sy + ny * w * 0.5), (sx + ux * length * 0.6 + nx * w, sy + uy * length * 0.6 + ny * w),
-                   tip, (sx + ux * length * 0.6 - nx * w, sy + uy * length * 0.6 - ny * w),
-                   (sx - nx * w * 0.5, sy - ny * w * 0.5)]
-            if p.jet > 0:
-                jl = 150 * p.jet * (0.85 + 0.15 * math.sin(p.flicker * 2 * math.pi * 3 + k))
-                glow(ctx, sx - ux * jl * 0.4, sy - uy * jl * 0.4 + jl * 0.3, jl * 0.8, VIOLET_LIGHT, 0.4)
-            glow(ctx, *lerp_pt((sx, sy), tip, 0.6), w * 2.4, VIOLET_LIGHT, 0.22 * p.crystal)
-            poly(ctx, pts)
-            g = cairo.LinearGradient(sx, sy, *tip)
-            g.add_color_stop_rgba(0, *VIOLET, 0.88)
-            g.add_color_stop_rgba(0.7, *mix(VIOLET_LIGHT, WHITE, 0.15 * p.crystal), 0.8)
-            g.add_color_stop_rgba(1, *mix(VIOLET_LIGHT, WHITE, 0.45), 0.85)
-            ctx.set_source(g)
-            ctx.fill_preserve()
-            rgb(ctx, INK)
-            ctx.set_line_width(5)
-            ctx.set_line_join(cairo.LINE_JOIN_MITER)
-            ctx.stroke()
-            ctx.set_line_join(cairo.LINE_JOIN_ROUND)
-            ctx.move_to(*pts[0])
-            ctx.line_to(*tip)
-            ctx.line_to(*pts[1])
-            rgb(ctx, WHITE, 0.3 + 0.3 * p.crystal)
-            ctx.set_line_width(2.5)
-            ctx.stroke()
-
-
-def draw_leg(ctx, p, r, i):
-    side = -1 if i == 0 else 1
-    hip, knee, ankle = r['hips'][i], r['knees'][i], r['ankles'][i]
-    ctx.save()
-    L = bone_frame(ctx, hip, knee)
-    metal(ctx, [(-28, -6), (28, -6), (34, L * 0.5), (22, L), (-22, L), (-34, L * 0.5)], BLACK, BLACK_LIGHT)
-    violet_plate(ctx, [(-24, 6), (22, 4), (30, L * 0.5), (12, L * 0.86), (-14, L * 0.86), (-28, L * 0.48)])
-    ctx.restore()
-    ctx.save()
-    ctx.translate(*knee)
-    metal(ctx, [(-24, -18), (24, -18), (28, 8), (0, 28), (-28, 8)], BLACK, BLACK_LIGHT)
-    ellipse(ctx, 0, 2, 8, 8)
-    rgb(ctx, GOLD)
-    ctx.fill()
-    ctx.restore()
-    ctx.save()
-    L = bone_frame(ctx, knee, ankle)
-    o = -side
-    ctx.save()
-    ctx.scale(1, 1)
-    lacquer_blade = [(o * 26, L * 0.08), (o * 60, L * 0.28), (o * 46, L * 0.74), (o * 28, L * 0.86)]
-    poly(ctx, lacquer_blade)
-    g = cairo.LinearGradient(o * 26, 0, o * 60, 0)
-    g.add_color_stop_rgb(0, *RED_LIGHT)
-    g.add_color_stop_rgb(0.5, *RED)
-    g.add_color_stop_rgb(1, *mix(RED, (0, 0, 0), 0.4))
-    ctx.set_source(g)
-    ctx.fill_preserve()
-    rgb(ctx, INK)
-    ctx.set_line_width(5)
-    ctx.stroke()
-    ctx.restore()
-    metal(ctx, [(-26, 10), (26, 10), (32, L * 0.6), (24, L + 4), (-24, L + 4), (-32, L * 0.6)], BLACK, BLACK_LIGHT)
-    metal(ctx, [(-16, 24), (16, 24), (12, L * 0.55), (-12, L * 0.55)], SILVER, SILVER_LIGHT, width=5)
-    ctx.restore()
-    ax, ay = ankle
-    ellipse(ctx, ax, ay - 2, 12, 12)
-    rgb(ctx, GOLD)
-    ctx.fill_preserve()
-    rgb(ctx, INK)
-    ctx.set_line_width(4)
-    ctx.stroke()
-    # Heel spur at the back, toe claws at the front: the weight sits on both.
-    metal(ctx, [(ax - side * 30, ay + 10), (ax - side * 58, ay + FOOT_H + 2), (ax - side * 20, ay + FOOT_H - 4)],
-          BLACK_LIGHT, SILVER, width=5, highlight=False)
-    metal(ctx, [(ax - 34, ay - 4), (ax + 34, ay - 4), (ax + 44, ay + 28), (ax - 44, ay + 28)], BLACK, BLACK_LIGHT)
-    for k, dx in enumerate((-28, 0, 28)):
-        tip = (ax + dx * 1.45, ay + FOOT_H + 2)
-        metal(ctx, [(ax + dx - 10, ay + 24), (ax + dx + 10, ay + 24), tip], GOLD, GOLD_LIGHT, width=4, highlight=False)
-
-
-def draw_skirt(ctx, p, r):
-    """06: a short, asymmetric armoured skirt: longer on the left."""
-    px, py = r['pelvis']
-    ctx.save()
-    ctx.translate(px, py)
-    ctx.rotate(r['lean'])
-    metal(ctx, [(-20, -26), (-86, -22), (-100, 54), (-64, 66), (-20, 26)], BLACK, BLACK_LIGHT)
-    metal(ctx, [(-28, -14), (-80, -12), (-88, 40), (-60, 50)], SILVER, SILVER_LIGHT, width=6)
-    metal(ctx, [(20, -26), (80, -22), (90, 22), (58, 32), (20, 14)], BLACK, BLACK_LIGHT)
-    metal(ctx, [(28, -14), (74, -12), (80, 14), (56, 22)], SILVER, SILVER_LIGHT, width=6)
-    metal(ctx, [(-22, -30), (22, -30), (16, 30), (0, 46), (-16, 30)], BLACK, BLACK_LIGHT)
-    ctx.restore()
-
-
-def draw_torso(ctx, p, r):
-    """05: violet chest with gold trim and a small red core; gold spearhead plate over a narrow black waist."""
-    wx, wy = r['waist']
-    ctx.save()
-    ctx.translate(wx, wy)
-    ctx.rotate(r['lean'])
-    # Narrow waist.
-    metal(ctx, [(-36, -4), (36, -4), (42, 70), (-42, 70)], BLACK, BLACK_LIGHT, axis='v')
-    # Chest frame and violet plates.
-    metal(ctx, [(-100, -150), (100, -150), (88, -64), (44, -8), (-44, -8), (-88, -64)], BLACK, BLACK_LIGHT)
-    violet_plate(ctx, [(-88, -140), (-14, -132), (-16, -46), (-46, -16), (-78, -64)])
-    violet_plate(ctx, [(88, -140), (14, -132), (16, -46), (46, -16), (78, -64)])
-    # Gold trim round the chest: brushed metal.
-    metal(ctx, [(-98, -152), (-78, -152), (-20, -98), (20, -98), (78, -152), (98, -152), (26, -82), (-26, -82)],
-          GOLD, GOLD_LIGHT, width=6)
-    # Gold spearhead on the abdomen, point down.
-    metal(ctx, [(-34, -70), (34, -70), (24, -10), (0, 64), (-24, -10)], GOLD, GOLD_LIGHT, width=6)
-    poly(ctx, [(-10, -58), (0, -60), (0, 40), (-6, -10)])
-    rgb(ctx, WHITE, 0.25)
-    ctx.fill()
-    # Collar and the neck's ball joint.
-    metal(ctx, [(-44, -172), (44, -172), (54, -148), (-54, -148)], SILVER, SILVER_LIGHT, width=6)
-    # Small red core.
-    glow(ctx, 0, -118, 50, RED_LIGHT, 0.35 * p.glow)
-    poly(ctx, [(0, -134), (12, -118), (0, -102), (-12, -118)])
-    g = cairo.LinearGradient(-12, -134, 12, -102)
-    g.add_color_stop_rgb(0, *mix(RED_LIGHT, WHITE, 0.4))
-    g.add_color_stop_rgb(1, *RED)
-    ctx.set_source(g)
-    ctx.fill_preserve()
-    rgb(ctx, INK)
-    ctx.set_line_width(4)
-    ctx.stroke()
-    if p.soot > 0:
-        rnd = random.Random(5)
-        for _ in range(6):
-            ellipse(ctx, rnd.uniform(-80, 80), rnd.uniform(-140, 40), rnd.uniform(14, 26), rnd.uniform(8, 14))
-            rgb(ctx, (0.05, 0.05, 0.06), 0.5 * p.soot)
-            ctx.fill()
-    ctx.restore()
-
-
-def draw_shoulder(ctx, p, r, i):
-    """A big shoulder hinge under a violet pauldron, a small cyan light on top."""
-    side = -1 if i == 0 else 1
-    sx, sy = r['shoulders'][i]
-    ctx.save()
-    ctx.translate(sx, sy)
-    ctx.rotate(r['lean'] * 0.6)
-    ellipse(ctx, 0, 0, 34, 34)
-    rgb(ctx, BLACK_LIGHT)
-    ctx.fill_preserve()
-    rgb(ctx, INK)
-    ctx.set_line_width(LINE)
-    ctx.stroke()
-    ellipse(ctx, 0, 0, 12, 12)
-    rgb(ctx, GOLD)
-    ctx.fill()
-    violet_plate(ctx, [(-side * 26, -50), (side * 44, -46), (side * 66, -6), (side * 56, 40), (side * 10, 30),
-                       (-side * 34, -8)])
-    metal(ctx, [(side * 42, -42), (side * 64, -6), (side * 54, 2)], BLACK_LIGHT, SILVER, width=5, highlight=False)
-    gem(ctx, side * 26, -14, 8, 11, CYAN, p.glow)
-    ctx.restore()
-
-
-def draw_arm(ctx, p, r, i):
-    side = -1 if i == 0 else 1
-    sh, el, ha = r['shoulders'][i], r['elbows'][i], r['hands'][i]
-    ctx.save()
-    L = bone_frame(ctx, sh, el)
-    metal(ctx, [(-22, 0), (22, 0), (24, L), (-24, L)], BLACK, BLACK_LIGHT)
-    ctx.restore()
-    ctx.save()
-    ctx.translate(*el)
-    ellipse(ctx, 0, 0, 20, 20)
-    rgb(ctx, BLACK_LIGHT)
-    ctx.fill_preserve()
-    rgb(ctx, INK)
-    ctx.set_line_width(LINE)
-    ctx.stroke()
-    ellipse(ctx, 0, 0, 7, 7)
-    rgb(ctx, GOLD)
-    ctx.fill()
-    ctx.restore()
-    ctx.save()
-    L = bone_frame(ctx, el, ha)
-    metal(ctx, [(-28, 6), (28, 6), (32, L * 0.7), (22, L - 6), (-22, L - 6), (-32, L * 0.7)], BLACK, BLACK_LIGHT)
-    metal(ctx, [(-18, 16), (18, 16), (14, L * 0.6), (-14, L * 0.6)], SILVER, SILVER_LIGHT, width=5)
-    metal(ctx, [(-side * 28, L * 0.15), (-side * 46, L * 0.42), (-side * 28, L * 0.62)], BLACK_LIGHT, SILVER, width=5,
-          highlight=False)
-    ctx.restore()
-
-
-def draw_hand(ctx, p, r, i):
-    """07/08: right fist round the halberd, left mechanical hand."""
-    hx, hy = r['hands'][i]
-    el = r['elbows'][i]
-    ctx.save()
-    bone_frame(ctx, el, (hx, hy))
-    if p.fist[i] > 0.5:
-        metal(ctx, [(-24, -4), (24, -4), (26, 36), (-26, 36)], BLACK, BLACK_LIGHT)
-        for k in range(4):
-            poly(ctx, [(-22 + k * 12, 30), (-12 + k * 12, 30), (-12 + k * 12, 42), (-22 + k * 12, 42)])
-            rgb(ctx, BLACK_LIGHT)
-            ctx.fill_preserve()
-            rgb(ctx, INK)
-            ctx.set_line_width(3)
-            ctx.stroke()
+    ctx.translate(-ax, -ay)
+    if p.pose == 1:
+        draw_rig(ctx, p, silhouette)
     else:
-        metal(ctx, [(-22, -4), (22, -4), (24, 24), (-24, 24)], BLACK, BLACK_LIGHT)
-        for k in range(4):
-            x = -18 + k * 12
-            metal(ctx, [(x - 5, 22), (x + 5, 22), (x + 4, 58), (x - 4, 58)], BLACK_LIGHT, SILVER, width=3,
-                  highlight=False)
+        art = pose_art(p.pose)
+        if silhouette:
+            ctx.set_source_rgba(*VIOLET_LIGHT, 1)
+            ctx.mask_surface(art.silhouette(), *art.offset)
+        else:
+            art.paint(ctx, art.surface(p))
     ctx.restore()
 
 
-def draw_head(ctx, p, r):
-    """01/02: a many-branched gold crest on a black helm; a closed mask with narrow red eyes, separate cheek
-    and chin plates, on a ball-jointed neck."""
-    nx, ny = r['neck']
-    ellipse(ctx, nx, ny, 22, 20)
-    rgb(ctx, BLACK_LIGHT)
-    ctx.fill_preserve()
-    rgb(ctx, INK)
-    ctx.set_line_width(LINE)
-    ctx.stroke()
-    hx, hy = r['head']
+def effects(ctx, p, props):
     ctx.save()
-    ctx.translate(hx, hy)
-    ctx.rotate(r['lean'] + math.radians(p.tilt))
-    ctx.scale(HEAD, HEAD)
-    # Crest: a central blade and three tines a side, like a crown of antlers.
-    for side in (-1, 1):
-        for k, (bx, by, tx, ty, w) in enumerate(((8, -50, 40, -132, 9), (20, -46, 78, -116, 8),
-                                                 (30, -40, 100, -76, 7), (36, -30, 92, -34, 6))):
-            metal(ctx, [(side * (bx - w), by), (side * tx, ty), (side * (bx + w), by + 8)], GOLD, GOLD_LIGHT,
-                  width=5, highlight=k == 0)
-    metal(ctx, [(-10, -50), (0, -166), (10, -50)], GOLD, GOLD_LIGHT, width=5)
-    metal(ctx, [(-28, -58), (28, -58), (20, -36), (-20, -36)], GOLD, GOLD_LIGHT, width=5)
-    # Helm.
-    metal(ctx, [(-50, -44), (0, -60), (50, -44), (58, 2), (42, 46), (-42, 46), (-58, 2)], BLACK, BLACK_LIGHT)
-    # Closed mask, narrow eyes.
-    metal(ctx, [(-44, -10), (44, -10), (40, 18), (-40, 18)], BLACK_LIGHT, BLACK, width=5, highlight=False)
-    draw_eyes(ctx, p)
-    for side in (-1, 1):
-        metal(ctx, [(side * 10, 20), (side * 50, 12), (side * 46, 38), (side * 14, 50)], SILVER, SILVER_LIGHT, width=5)
-    metal(ctx, [(-12, 36), (12, 36), (0, 64)], SILVER, SILVER_LIGHT, width=5, highlight=False)
+    ctx.scale(OLD / S, OLD / S)
+    for prop in props:
+        prop(ctx, p)
     ctx.restore()
 
 
-def draw_eyes(ctx, p):
-    g = p.glow
-    color = mix(EYE, (0.35, 0.05, 0.05), 1 - g)
-    ctx.set_line_cap(cairo.LINE_CAP_ROUND)
-    for side in (-1, 1):
-        cx, cy = side * 22, 2
-        if p.eyes == 'scan':
-            continue
-        if p.eyes in ('open', 'angry', 'wide'):
-            slope = {'open': 5, 'angry': 9, 'wide': 2}[p.eyes]
-            h = {'open': 5, 'angry': 4, 'wide': 8}[p.eyes]
-            glow(ctx, cx, cy, 26, EYE, 0.45 * g)
-            poly(ctx, [(cx - side * 15, cy - slope), (cx + side * 15, cy), (cx + side * 13, cy + h),
-                       (cx - side * 13, cy - slope + h)])
-            rgb(ctx, color)
-            ctx.fill()
-        elif p.eyes == 'closed':
-            ctx.move_to(cx - 13, cy + 3)
-            ctx.line_to(cx + 13, cy + 3)
-            rgb(ctx, mix(color, BLACK, 0.5))
-            ctx.set_line_width(3)
-            ctx.stroke()
-        elif p.eyes == 'happy':
-            glow(ctx, cx, cy, 24, EYE, 0.4 * g)
-            ctx.move_to(cx - 13, cy + 6)
-            ctx.curve_to(cx - 6, cy - 4, cx + 6, cy - 4, cx + 13, cy + 6)
-            rgb(ctx, color)
-            ctx.set_line_width(5)
-            ctx.stroke()
-        elif p.eyes == 'x':
-            for a, b in ((-7, -6), (-7, 6)):
-                ctx.move_to(cx + a, cy + 2 + b)
-                ctx.line_to(cx - a, cy + 2 - b)
-            rgb(ctx, color)
-            ctx.set_line_width(4)
-            ctx.stroke()
-    if p.eyes == 'scan':
-        poly(ctx, [(-40, -2), (40, -2), (38, 5), (-38, 5)])
-        rgb(ctx, mix(color, (0, 0, 0), 0.45))
-        ctx.fill()
-        dot = p.look * 32
-        glow(ctx, dot, 1, 30, EYE, 0.6 * g)
-        poly(ctx, [(dot - 12, -3), (dot + 12, -3), (dot + 10, 6), (dot - 10, 6)])
-        rgb(ctx, mix(color, WHITE, 0.3))
-        ctx.fill()
-
-
-def draw_jets(ctx, p, r):
-    """Violet thrust from two nozzles under the backpack frame, pointing down the body's own axis."""
+def draw_jets(ctx, p):
+    """Violet thrust from behind the shoulders, pointing down the body's axis."""
     if p.jet <= 0:
         return
-    for side in (-1, 1):
-        a = r['lean'] - side * math.radians(14)
-        x, y = frame_pt(r, side * 124, 120)
-        ux, uy = -math.sin(a), math.cos(a)
-        length = 260 * p.jet * (0.85 + 0.15 * math.sin(p.flicker * 2 * math.pi * 3 + side))
-        tx, ty = x + ux * length, y + uy * length
-        glow(ctx, x + ux * length * 0.4, y + uy * length * 0.4, length * 0.6, VIOLET_LIGHT, 0.45)
+    r = rig(p)
+    for side, (sx, sy) in zip((-1, 1), r['shoulders']):
+        x, y = sx + side * 70, sy + 250
+        length = 520 * p.jet * (0.85 + 0.15 * math.sin(p.flicker * 2 * math.pi * 3 + side))
+        tx, ty = x - side * 30, y + length
+        glow(ctx, x, y + length * 0.4, length * 0.6, VIOLET_LIGHT, 0.45)
         for wmul, color, alpha in ((1.0, VIOLET_LIGHT, 0.85), (0.5, mix(VIOLET_LIGHT, WHITE, 0.7), 0.95)):
-            w = 30 * wmul
-            ctx.move_to(x - uy * w, y + ux * w)
-            ctx.curve_to(x - uy * w * 0.8 + ux * length * 0.4, y + ux * w * 0.8 + uy * length * 0.4, tx, ty, tx, ty)
-            ctx.curve_to(tx, ty, x + uy * w * 0.8 + ux * length * 0.4, y - ux * w * 0.8 + uy * length * 0.4,
-                         x + uy * w, y - ux * w)
+            w = 34 * wmul
+            ctx.move_to(x - w, y)
+            ctx.curve_to(x - w * 0.8, y + length * 0.4, tx, ty, tx, ty)
+            ctx.curve_to(tx, ty, x + w * 0.8, y + length * 0.4, x + w, y)
             ctx.close_path()
             rgb(ctx, color, alpha)
             ctx.fill()
-        metal(ctx, [(x - 20, y - 14), (x + 20, y - 14), (x + 26, y + 12), (x - 26, y + 12)], BLACK_LIGHT, SILVER,
-              width=4, highlight=False)
-
-
-BLADE = [[(-14, 0), (0, -200), (14, 0)]]
-for _side in (-1, 1):
-    BLADE.append([(_side * 8, 4), (_side * 58, -46), (_side * 70, -160), (_side * 40, -64), (_side * 24, 28)])
-    BLADE.append([(_side * 22, 30), (_side * 66, 14), (_side * 28, 58)])
-
-
-def draw_blade(ctx, p, light=0.0):
-    """The red lacquer head of the halberd, socket line at (0, 0), pointing up."""
-    if light > 0:
-        glow(ctx, 0, -90, 120, RED_LIGHT, 0.4 * light)
-    metal(ctx, [(-15, 6), (15, 6), (12, 40), (-12, 40)], SILVER, SILVER_LIGHT, width=4)
-    for pts in BLADE:
-        poly(ctx, pts)
-        xs = [q[0] for q in pts]
-        g = cairo.LinearGradient(min(xs), 0, max(xs), 0)
-        g.add_color_stop_rgb(0, *mix(RED_LIGHT, WHITE, 0.4 * light))
-        g.add_color_stop_rgb(0.5, *mix(RED, RED_LIGHT, 0.6 * light))
-        g.add_color_stop_rgb(1, *mix(RED, (0, 0, 0), 0.4))
-        ctx.set_source(g)
-        ctx.fill_preserve()
-        rgb(ctx, INK)
-        ctx.set_line_width(5)
-        ctx.set_line_join(cairo.LINE_JOIN_MITER)
-        ctx.stroke()
-        ctx.set_line_join(cairo.LINE_JOIN_ROUND)
-    ctx.move_to(-4, -20)
-    ctx.line_to(0, -180)
-    rgb(ctx, WHITE, 0.6)
-    ctx.set_line_width(3)
-    ctx.stroke()
-
-
-def halberd(ctx, gx, gy, angle, p, scale=1.0):
-    """11: the halberd, longer than the suit: a straight dark shaft and a red head on a separate socket, which
-    comes off (p.blade) and flies on its own."""
-    ctx.save()
-    ctx.translate(gx, gy)
-    ctx.rotate(math.radians(angle))
-    ctx.scale(scale, scale)
-    ctx.translate(0, p.w_grip)
-    top, bottom = -560, 352
-    metal(ctx, [(-7, top), (7, top), (7, bottom), (-7, bottom)], BLACK, BLACK_LIGHT, width=5, highlight=False)
-    for y in (-40, 40):
-        metal(ctx, [(-11, y - 8), (11, y - 8), (11, y + 8), (-11, y + 8)], BLACK_LIGHT, SILVER, width=4, highlight=False)
-    if p.blade is None:
-        ctx.save()
-        ctx.translate(0, top)
-        draw_blade(ctx, p, p.w_glow)
-        ctx.restore()
-    else:
-        metal(ctx, [(-10, top - 30), (10, top - 30), (10, top), (-10, top)], SILVER, SILVER_LIGHT, width=4,
-              highlight=False)
-    poly(ctx, [(-11, bottom), (11, bottom), (0, bottom + 34)])
-    rgb(ctx, RED)
-    ctx.fill_preserve()
-    rgb(ctx, INK)
-    ctx.set_line_width(4)
-    ctx.stroke()
-    ctx.restore()
-
-
-def draw_long(ctx, p):
-    r = rig(p)
-    ctx.save()
-    ctx.translate(CX + p.x, GROUND - p.lift)
-    s = BODY * p.scale
-    ctx.scale(p.face * s / max(p.squash, 0.2) ** 0.45, s * p.squash)
-    if p.spin:
-        ctx.translate(0, -440)
-        ctx.rotate(math.radians(p.spin))
-        ctx.translate(0, 440)
-    for prop in p.back:
-        prop(ctx, p)
-    draw_jets(ctx, p, r)
-    draw_tendrils(ctx, p, r)
-    draw_crystals(ctx, p, r)
-    draw_backpack(ctx, p, r)
-    if p.weapon == 'free' and p.w_pos:
-        halberd(ctx, p.w_pos[0], p.w_pos[1], p.w_angle, p)
-    if p.weapon == 'held' and p.w_behind:
-        halberd(ctx, r['hands'][1][0], r['hands'][1][1] + 16, p.w_angle, p)
-    for i in (0, 1):
-        draw_leg(ctx, p, r, i)
-    draw_skirt(ctx, p, r)
-    draw_torso(ctx, p, r)
-    draw_arm(ctx, p, r, 0)
-    draw_hand(ctx, p, r, 0)
-    draw_shoulder(ctx, p, r, 0)
-    draw_head(ctx, p, r)
-    draw_arm(ctx, p, r, 1)
-    if p.weapon == 'held' and not p.w_behind:
-        halberd(ctx, r['hands'][1][0], r['hands'][1][1] + 16, p.w_angle, p)
-    draw_hand(ctx, p, r, 1)
-    draw_shoulder(ctx, p, r, 1)
-    if p.reach >= 0.5:
-        draw_tendrils(ctx, p, r, 'front')
-    if p.blade is not None:
-        bx, by, ba = p.blade[:3]
-        ctx.save()
-        ctx.translate(bx, by)
-        ctx.rotate(math.radians(ba))
-        draw_blade(ctx, p, p.blade[3] if len(p.blade) > 3 else 0.0)
-        ctx.restore()
-    for prop in p.front:
-        prop(ctx, p)
-    ctx.restore()
 
 
 def render(p):
@@ -781,20 +518,27 @@ def render(p):
     if p.alpha > 0 and p.scale > 0.01:
         if p.shadow:
             k = 1 / (1 + p.lift / 220)
-            ellipse(ctx, CX + p.x, GROUND + 2, 120 * p.scale * k, 15 * k)
-            rgb(ctx, (0, 0, 0), 0.18 * k * p.alpha)
+            ellipse(ctx, CX + p.x, GROUND + 4, 150 * p.scale * k, 18 * k)
+            rgb(ctx, (0, 0, 0), 0.2 * k * p.alpha)
             ctx.fill()
-        # Afterimages: violet silhouettes of the suit where it just was.
         for ghost in p.ghosts:
             dx, a = ghost[0], ghost[1]
             dy = ghost[2] if len(ghost) > 2 else 0
             ctx.push_group()
-            draw_long(ctx, replace(p, x=p.x + dx, lift=p.lift + dy, front=[], back=[], blade=None))
-            pattern = ctx.pop_group()
-            ctx.set_source_rgba(*VIOLET_LIGHT, a * p.alpha)
-            ctx.mask(pattern)
+            ctx.save()
+            body_transform(ctx, p, dx, dy)
+            draw_figure(ctx, p, silhouette=True)
+            ctx.restore()
+            ctx.pop_group_to_source()
+            ctx.paint_with_alpha(a * p.alpha)
         ctx.push_group()
-        draw_long(ctx, p)
+        ctx.save()
+        body_transform(ctx, p)
+        effects(ctx, p, p.back)
+        effects(ctx, p, [lambda c, q: draw_jets(c, q)])
+        draw_figure(ctx, p)
+        effects(ctx, p, p.front)
+        ctx.restore()
         ctx.pop_group_to_source()
         ctx.paint_with_alpha(p.alpha)
     for prop in p.over:
@@ -809,14 +553,14 @@ HOT = (1.0, 0.88, 0.62)         # sparks: white-hot light, not the armour's gold
 STEAM = (0.93, 0.93, 0.97)
 
 
-def hologram(t, size=1.0, kind='map', at=(-340, -800)):
+def hologram(t, size=1.0, kind='map', at=(-380, -1040)):
     """Thinking: a strategy table projected from the open left palm, a disc of rings with nodes that light in turn
     and links that draw themselves; 'plan' moves a red marker along the links."""
     def draw(ctx, p):
         if size <= 0.02:
             return
         r = rig(p)
-        hx, hy = r['hands'][0]
+        hx, hy = r['head'][0] - 36, r['head'][1] + 8
         cx, cy = at
         R = 170 * size
         ctx.move_to(hx, hy - 10)
@@ -887,7 +631,7 @@ def hologram(t, size=1.0, kind='map', at=(-340, -800)):
     return draw
 
 
-def data_panel(t, open_=1.0, at=(330, -830), beam=None, flick=0.0):
+def data_panel(t, open_=1.0, at=(390, -900), beam=None, flick=0.0):
     """Reading: a floating translucent sheet of text lines; `beam` (0..1, top to bottom) is the scan line the eyes
     cast on it; `flick` slides in the next page."""
     def draw(ctx, p):
@@ -1031,7 +775,7 @@ def beacon(t, light=1.0):
         if light <= 0.02:
             return
         r = rig(p)
-        x, y = r['head'][0], r['head'][1] - 290
+        x, y = r['head'][0], r['head'][1] - 420
         for k in range(2):
             u = (t + k * 0.5) % 1
             ellipse(ctx, x, y, 60 + 140 * u, (60 + 140 * u) * 0.9)
@@ -1247,8 +991,8 @@ def standby(t):
         hx, hy = r['head']
         for i in range(3):
             local = (t + i / 3) % 1
-            x = hx + 90 + local * 80 + math.sin(local * 5) * 10
-            y = hy - 80 - local * 240
+            x = hx + 160 + local * 80 + math.sin(local * 5) * 10
+            y = hy - 120 - local * 240
             s = 12 + local * 20
             a = 1 - ease(max(0, local - 0.6) / 0.4)
             rgb(ctx, mix(VIOLET_LIGHT, WHITE, 0.3), a)
@@ -1266,7 +1010,7 @@ def standby(t):
 def low_power(blink):
     def draw(ctx, p):
         r = rig(p)
-        x, y = r['head'][0] + 150, r['head'][1] - 150
+        x, y = r['head'][0] + 240, r['head'][1] - 140
         poly(ctx, [(x - 60, y - 28), (x + 56, y - 28), (x + 56, y + 28), (x - 60, y + 28)])
         rgb(ctx, BLACK)
         ctx.fill_preserve()
@@ -1314,25 +1058,91 @@ def dust(t, x=0, y=0, side=-1, amount=3):
     return draw
 
 
+# ---------------------------------------------------------------- more effects for the drawn poses
+
+def glint(t, a, b):
+    """A star of light running along the spear from a to b (effect units), t 0..1."""
+    def draw(ctx, p):
+        if not 0 < t < 1.1:
+            return
+        u = min(1.0, t)
+        x, y = lerp(a[0], b[0], ease(u)), lerp(a[1], b[1], ease(u))
+        s = 34 + 30 * math.sin(math.pi * min(1.0, t))
+        glow(ctx, x, y, s * 2.4, (0.8, 0.98, 1.0), 0.55)
+        star(ctx, x, y, s, WHITE, outline=False, points=4, inner=0.18, rot=t * 2)
+    return draw
+
+
+def twinkles(t, points, seed=3, color=WHITE):
+    def draw(ctx, p):
+        rnd = random.Random(seed)
+        for i, (x, y) in enumerate(points):
+            local = (t * 1.5 + rnd.uniform(0, 1)) % 1
+            s = math.sin(local * math.pi) * rnd.uniform(16, 30)
+            if s > 2:
+                star(ctx, x + rnd.uniform(-30, 30), y + rnd.uniform(-30, 30), s, color, outline=False, points=4, inner=0.2)
+    return draw
+
+
+def blush(amount):
+    def draw(ctx, p):
+        r = rig(p)
+        hx, hy = r['head']
+        for side in (-1, 1):
+            glow(ctx, hx + side * 70, hy + 40, 46, (1.0, 0.45, 0.6), 0.55 * amount)
+    return draw
+
+
+def scan_grid(t):
+    """A diagnostic sweep: a cyan line runs down the suit with a faint grid behind it."""
+    def draw(ctx, p):
+        y = lerp(-1000, 0, ease(t))
+        for k in range(-8, 9):
+            ctx.move_to(k * 60, -1000)
+            ctx.line_to(k * 60, 0)
+        for k in range(0, 18):
+            ctx.move_to(-480, -k * 60)
+            ctx.line_to(480, -k * 60)
+        rgb(ctx, CYAN, 0.12)
+        ctx.set_line_width(2)
+        ctx.stroke()
+        glow(ctx, 0, y, 260, CYAN, 0.18)
+        ctx.move_to(-460, y)
+        ctx.line_to(460, y)
+        rgb(ctx, mix(CYAN, WHITE, 0.4), 0.9)
+        ctx.set_line_width(6)
+        ctx.stroke()
+    return draw
+
+
+def question(t):
+    def draw(ctx, p):
+        r = rig(p)
+        x, y = r['head'][0] + 230, r['head'][1] - 230 - 20 * math.sin(t * 2 * math.pi)
+        ctx.select_font_face('Sans', cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
+        ctx.set_font_size(150)
+        glow(ctx, x + 40, y - 50, 110, CYAN, 0.3)
+        ctx.move_to(x, y)
+        ctx.text_path('?')
+        rgb(ctx, CYAN)
+        ctx.fill_preserve()
+        rgb(ctx, INK)
+        ctx.set_line_width(6)
+        ctx.stroke()
+    return draw
+
+
 # ---------------------------------------------------------------- sequences: lists of (Pose, duration_ms)
 
-LH, RH = (-150, -378), (150, -392)
 BASE = Pose()
-WORK = (-300, -720)                         # where the plumes forge the blade
-GUARD = dict(crouch=0.28, feet=((-120, 0), (96, 0)), lean=3, hands=((-120, -470), (176, -470)), fist=(1, 1),
-             w_angle=28, eyes='angry')
 
 
-def breathe(t, amount=0.008):
+def P(**kw):
+    return replace(BASE, **kw)
+
+
+def breathe(t, amount=0.010):
     return 1 + amount * math.sin(2 * math.pi * t)
-
-
-def shaft_top(p):
-    """Where the halberd head sits on the shaft (body space), from the right hand, angle and grip."""
-    hx, hy = p.hands[1]
-    th = math.radians(p.w_angle)
-    d = -560 + p.w_grip
-    return (hx - d * math.sin(th), hy + 16 + d * math.cos(th))
 
 
 def fx(seq, fn):
@@ -1346,84 +1156,127 @@ def mirrored(seq):
             for p, ms in seq]
 
 
+def pop(a, b, ms=(60, 60, 90)):
+    """Change drawings on a squash: the old pose dips, the new one springs up past rest and settles."""
+    return [(replace(a, squash=a.squash * 0.93), ms[0]), (replace(b, squash=b.squash * 1.05), ms[1]),
+            (replace(b, squash=b.squash * 0.99), ms[2])]
+
+
+def at(p, name):
+    return rig(p)[name]
+
+
+def keys(start, segments):
+    """tween() with the flutter phase running on, so the tendrils keep swaying through keyframed moves."""
+    out = tween(start, segments)
+    n = len(out)
+    return [(replace(p, flutter=p.flutter + i / max(1, n) * 1.5), ms) for i, (p, ms) in enumerate(out)]
+
+
+REST = dict(head_rot=0, head_dx=0, head_dy=0, arm_l=0, arm_r=0, spear_rot=0, spear_dy=0, body_rot=0, hip_dx=0, hip_dy=0,
+            feet=((0, 0), (0, 0)), foot_rot=(0, 0), spread=0, wave=0.6)
+GUARD = dict(hip_dy=16, body_rot=-4, feet=((-12, 0), (8, 0)), spear_rot=-55, arm_l=10, arm_r=-14, head_rot=-3,
+             eyes=1.6, gems=1.2)
+CROUCH = dict(hip_dy=26, feet=((-8, 0), (8, 0)), arm_r=14, arm_l=-6, head_dy=3)
+
+
+# Idle -------------------------------------------------------------------------------------------------------
+
 def idle(kind='plain'):
-    """Idle loops: breathing, the plumes rippling one after another, crystal and eye light pulsing."""
+    """Breathing: the knees give a little, the head and the free arm follow a beat late, the tendrils sway."""
     out = []
     n = 20
     for i in range(n):
         t = i / n
-        p = replace(BASE, squash=breathe(t), flutter=t, wind=0.15 + 0.06 * osc(t), crystal=0.5 + 0.2 * osc(t, 1, 0.3),
-                    glow=0.9 + 0.1 * osc(t, 0.5), tilt=1.2 * math.sin(2 * math.pi * (t - 0.15)),
-                    hands=(LH, (RH[0], RH[1] + 4 * osc(t, 1, -0.2))))
-        if kind == 'scan':
-            plan = [0, 0, -0.6, -1, -1, -1, -0.4, 0.3, 1, 1, 1, 1, 0.5, 0, 0, 0, 0, 0, 0, 0]
-            p = replace(p, eyes='scan' if 2 <= i < 15 else 'open', look=plan[i], tilt=plan[i] * 7)
-        elif kind == 'plume':
-            s = hop(min(1.0, t * 1.3))
-            p = replace(p, spread=0.9 * s, flutter=t * 2, crystal=0.5 + 0.5 * s, wind=0.15 * (1 - s), lean=-2 * s,
-                        tilt=-4 * s, eyes='happy' if 0.35 < t < 0.65 else 'open')
+        p = P(hip_dy=1.6 + 1.6 * math.sin(2 * math.pi * t), head_rot=1.4 * math.sin(2 * math.pi * (t - 0.12)),
+              head_dy=0.8 * math.sin(2 * math.pi * (t - 0.08)), arm_r=-2.5 * math.sin(2 * math.pi * (t - 0.2)),
+              arm_l=1.2 * math.sin(2 * math.pi * (t - 0.15)), spear_rot=-0.8 * math.sin(2 * math.pi * (t - 0.25)),
+              gems=1 + 0.12 * osc(t), eyes=1 + 0.15 * osc(t, 0.5), crystal=0.12 + 0.1 * osc(t, 1, 0.3), flutter=t,
+              wave=0.7)
+        if kind == 'surge':
+            s = hop(min(1.0, t * 1.25))
+            p = replace(p, crystal=0.15 + 1.0 * s, gems=1 + 0.6 * s, eyes=1 + 0.5 * s, spread=0.8 * s, head_rot=-5 * s,
+                        head_dy=-3 * s, arm_r=-30 * s, arm_l=8 * s, hip_dy=-4 * s, lift=8 * s,
+                        front=[twinkles(t, [(-200, -800), (200, -800), (-260, -650), (260, -650)],
+                                        seed=4, color=mix(VIOLET_LIGHT, WHITE, 0.5))] if 0.2 < t < 0.8 else [])
         elif kind == 'shift':
-            # Lift the halberd a hand's width, tilt it, plant it again: a small dust puff and a jolt.
+            # Weight onto one leg, the spear lifted a hand and planted again with a puff of dust.
             k = [0, 0, 0.3, 0.7, 1, 1, 1, 0.8, 0.4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0][i]
-            p = replace(p, hands=(LH, (RH[0] + 10 * k, RH[1] - 40 * k)), w_angle=-6 - 10 * k, x=6 * k,
-                        lean=-2 * k, squash=0.97 if i == 9 else p.squash,
-                        front=[dust(0.2 + (i - 9) / 6, x=RH[0] + 70, y=0, side=1, amount=2)] if 9 <= i < 14 else [])
+            w = ease(min(1.0, i / 6)) * (1 - ease(max(0.0, (i - 12) / 7)))
+            p = replace(p, hip_dx=8 * w, body_rot=-2.5 * w, head_rot=p.head_rot + 3 * w, arm_l=10 * k, spear_dy=-14 * k,
+                        hip_dy=p.hip_dy + 3 * w,
+                        front=[dust((i - 9) / 5, x=at(p, 'butt')[0], y=0, side=-1, amount=2)] if 9 <= i < 14 else [])
         elif kind == 'happy':
-            p = replace(p, eyes='happy' if 4 <= i < 16 else 'open', spread=0.35 + 0.25 * osc(t, 0.5), flutter=t * 2,
-                        lift=10 * max(0.0, osc(t, 0.5)), crystal=0.8, glow=1)
+            b = max(0.0, math.sin(2 * math.pi * t * 2))
+            p = replace(p, hip_dy=8 * b, lift=10 * max(0.0, -math.sin(2 * math.pi * t * 2)), arm_r=-60 - 50 * b,
+                        head_rot=4 * math.sin(2 * math.pi * t * 2), gems=1.3, eyes=1.6, crystal=0.4, wave=1.2)
         elif kind == 'poor':
             flick = i in (6, 7, 15)
-            p = replace(p, droop=0.7, wind=0.0, glow=0.15 if flick else 0.45, crystal=0.1, crouch=0.15, lean=5,
-                        tilt=10, squash=breathe(t, 0.005), hands=((-138, -340), (156, -372)), w_angle=2)
+            p = replace(p, hip_dy=14 + 1.5 * osc(t), body_rot=3.5, head_rot=10 + osc(t), head_dy=7, arm_r=10, arm_l=-4,
+                        spear_rot=4, dim=0.35, gems=0.15 if flick else 0.45, eyes=0.1 if flick else 0.5, crystal=0, wave=0.25)
         out.append((p, 130))
-    if kind in ('plain', 'shift', 'happy'):
-        at = 13
-        p = out[at][0]
-        out[at:at + 1] = [(replace(p, glow=0.25), 60), (replace(p, glow=0.05, eyes='closed'), 70), (replace(p, glow=0.6), 60)]
+    if kind in ('plain', 'shift'):
+        p = out[13][0]
+        out[13:14] = [(replace(p, eyes=0.3), 60), (replace(p, eyes=0.0), 70), (replace(p, eyes=0.5), 60)]
     return out
 
 
-# Thinking: the strategy hologram.
-PALM_UP = (-200, -560)
+def ponder():
+    """A fidget: fist to the chin for a moment, a question mark, a small sway; back to standing."""
+    out = [(P(head_rot=-4), 200)]
+    out += pop(P(head_rot=-4), P(pose=3))
+    for i in range(10):
+        t = i / 10
+        out.append((P(pose=3, rot=1.5 * osc(t), eyes=1.2 + 0.3 * osc(t * 2), front=[question(t)] if 3 <= i < 9 else []), 130))
+    out += pop(P(pose=3), P())
+    out.append((P(), 120))
+    return out
 
+
+def look_around():
+    """The head turns one way, the body follows a little later; then the other way; back."""
+    return keys(P(), [
+        (3, [80, 80, 100], ease, dict(head_rot=-9, head_dx=-4, body_rot=-1.5, eyes=1.5, arm_r=3)),
+        (1, 300, linear, dict(head_rot=-10)),
+        (4, [70, 70, 80, 110], ease, dict(head_rot=9, head_dx=4, body_rot=1.5, arm_r=-4)),
+        (1, 320, linear, dict(head_rot=10)),
+        (3, [80, 90, 120], ease, dict(head_rot=0, head_dx=0, body_rot=0, eyes=1.0, arm_r=0)),
+    ])
+
+
+# Agent states ---------------------------------------------------------------------------------------------
 
 def think(phase, kind='map'):
     if phase == 'start':
-        out = []
-        for i, u in enumerate((0.2, 0.45, 0.7, 0.9, 1.0, 1.0, 1.0)):
-            h = ease(u)
-            size = back_out(max(0.0, (i - 2) / 4)) if i >= 2 else 0
-            out.append((replace(BASE, hands=(lerp_pt(LH, PALM_UP, h), RH), fist=(0, 1), eyes='scan' if i > 2 else 'open',
-                                look=-0.6 * h, tilt=-5 * h, flutter=i / 7,
-                                front=[hologram(i / 7, size=size, kind=kind)]), (60, 60, 70, 70, 80, 90, 100)[i]))
+        out = pop(P(head_rot=-3), P(pose=3))
+        for i, u in enumerate((0.3, 0.6, 0.85, 1.0)):
+            out.append((P(pose=3, eyes=1 + 0.4 * u, front=[hologram(i / 4, size=back_out(u), kind=kind)]), (60, 70, 80, 100)[i]))
         return out
     if phase == 'loop':
         out = []
         n = 16
         for i in range(n):
             t = i / n
-            out.append((replace(BASE, hands=((PALM_UP[0], PALM_UP[1] + 6 * osc(t)), RH), fist=(0, 1), eyes='scan',
-                                look=-0.6 + 0.5 * math.sin(2 * math.pi * t), tilt=-5 + 2 * osc(t), flutter=t,
-                                crystal=0.55 + 0.25 * osc(t, 0.5), squash=breathe(t, 0.006),
-                                front=[hologram(t, kind=kind)]), 110))
+            out.append((P(pose=3, rot=1.2 * osc(t), squash=breathe(t, 0.008), eyes=1.4 + 0.2 * osc(t * 2),
+                          gems=1.1 + 0.15 * osc(t), crystal=0.2 + 0.15 * osc(t, 0.5), flutter=t,
+                          front=[hologram(t, kind=kind)]), 110))
         return out
-    out = []
-    for i, u in enumerate((1.0, 0.6, 0.25, 0.0)):
-        h = ease(u)
-        out.append((replace(BASE, hands=(lerp_pt(LH, PALM_UP, h), RH), fist=(0, 1),
-                            eyes='scan' if u > 0.5 else 'open', look=-0.6 * h, tilt=-5 * h, flutter=i / 4,
-                            front=[hologram(0.9, size=1.08 if i == 0 else u * 0.9)]), (70, 60, 60, 90)[i]))
-    out.append((BASE, 100))
+    out = [(P(pose=3, eyes=1.2, front=[hologram(0.9, size=u)]), (60, 60, 70)[i]) for i, u in enumerate((1.08, 0.6, 0.2))]
+    out += pop(P(pose=3), P())
     return out
 
 
-# Reading: the scan panel.
+READ = dict(head_rot=6, head_dx=3, arm_r=-48, body_rot=1.5, eyes=1.5)
+
+
 def scan(phase, flicking=False):
+    """Reading: the free hand comes up, a text sheet unfolds beside it, the eyes scan it line by line."""
     if phase == 'start':
         out = []
         for i, u in enumerate((0.15, 0.4, 0.75, 1.0, 1.06, 1.0)):
-            out.append((replace(BASE, eyes='scan' if i > 0 else 'wide', look=0.7 * min(1.0, u), tilt=5 * min(1.0, u),
-                                flutter=i / 6, front=[data_panel(0, open_=min(1.08, u))]), (60, 60, 70, 70, 70, 100)[i]))
+            e = ease(min(1.0, u))
+            out.append((P(head_rot=6 * e, head_dx=3 * e, arm_r=-48 * e, body_rot=1.5 * e, eyes=1 + 0.5 * e, flutter=i / 6,
+                          front=[data_panel(0, open_=min(1.08, u))]), (60, 60, 70, 70, 70, 100)[i]))
         return out
     if phase == 'loop':
         out = []
@@ -1433,544 +1286,433 @@ def scan(phase, flicking=False):
             if flicking:
                 f = ease(max(0.0, min(1.0, ((t * 2) % 1 - 0.55) / 0.3)))
                 props = [data_panel(t * 0.5, flick=f, beam=None if f > 0 else (t * 2 % 1) / 0.55)]
-                look = 0.7 - 0.6 * f
+                arm = -48 - 18 * math.sin(math.pi * f)
             else:
                 u = (t * 2) % 1
                 props = [data_panel(t, beam=ease(u))]
-                look = 0.7
-            out.append((replace(BASE, eyes='scan', look=look, tilt=5 + 1.5 * osc(t), flutter=t, squash=breathe(t, 0.006),
-                                crystal=0.5 + 0.2 * osc(t, 0.5), front=props), 110))
+                arm = -48
+            out.append((P(**{**READ, 'arm_r': arm, 'head_rot': 6 + 2.5 * (ease((t * 2) % 1) - 0.5) if not flicking else 6},
+                          hip_dy=1.5 + 1.5 * math.sin(2 * math.pi * t), gems=1.1, flutter=t, front=props), 110))
         return out
     out = []
     for i, u in enumerate((1.0, 0.6, 0.2, 0.0)):
-        out.append((replace(BASE, eyes='scan' if u > 0.5 else 'open', look=0.7 * u, tilt=5 * u, flutter=i / 4,
-                            front=[data_panel(0, open_=u)]), (60, 60, 60, 90)[i]))
-    out.append((BASE, 100))
+        e = ease(u)
+        out.append((P(head_rot=6 * e, head_dx=3 * e, arm_r=-48 * e, body_rot=1.5 * e, eyes=1 + 0.5 * e,
+                      front=[data_panel(0, open_=u)] if u else []), (60, 60, 60, 90)[i]))
+    out.append((P(), 100))
     return out
 
 
-# Working: the plumes forge the halberd's head.
-def forge_pose(t, weld=False):
-    flash = weld and (int(t * 12) % 3 == 0)
-    hot = 0.6 + 0.4 * osc(t * 3)
-    return replace(BASE, reach=1, reach_to=(WORK[0] + 30, WORK[1] + 10), tip_glow=hot, flutter=t,
-                   blade=(WORK[0], WORK[1], 90 + 4 * osc(t), 0.4 + 0.5 * hot), eyes='scan',
-                   look=-0.8 + 0.2 * osc(t * 2), tilt=-6, hands=((-230, -520), RH), fist=(0, 1), crystal=0.6,
-                   front=[sparks(t, WORK[0] + 40, WORK[1] + 10, seed=3, count=18 if weld else 10, speed=1.2 if weld else 1)]
-                   + ([burst(0.25, WORK[0] + 40, WORK[1] + 10, seed=int(t * 50), radius=200, color=WHITE)] if flash else []))
-
-
-def forge(phase, weld=False):
+def drill(phase, spin=False):
+    """Working: spear drills. Guard, then thrusts that slide the spear through the fist with a lunge, a flash at
+    the tip and afterimages, each eased back to guard; the variant twirls the spear like a windmill."""
+    guard = P(**GUARD)
     if phase == 'start':
-        out = []
-        top = shaft_top(BASE)
-        for i in range(8):
-            t = (i + 1) / 8
-            u = ease(t)
-            path = (lerp(top[0], WORK[0], u), lerp(top[1], WORK[1], u) - 120 * math.sin(math.pi * u))
-            out.append((replace(BASE, blade=(path[0], path[1], lerp(-6, 90, u), 0.3 * t), reach=ease(min(1, t * 1.3)),
-                                reach_to=(WORK[0] + 30, WORK[1] + 10), eyes='scan' if t > 0.3 else 'open', look=-0.8 * u,
-                                tilt=-6 * u, hands=(lerp_pt(LH, (-230, -520), u), RH), fist=(0, 1), flutter=t,
-                                front=[burst(t * 2.5, *top, seed=4, count=8, radius=120)] if t < 0.4 else []),
-                        (50, 50, 60, 60, 70, 70, 80, 100)[i]))
+        return keys(P(), [(2, [60, 60], ease, dict(hip_dy=22, squash=0.97)),
+                          (3, [60, 70, 100], back_out, dict(GUARD, squash=1.0))])
+    if phase == 'end':
+        return keys(guard, [(1, 70, ease, dict(hip_dy=24)), (3, [70, 80, 110], ease_out, dict(REST, eyes=1.0, gems=1.0))])
+    out = []
+    if spin:
+        n = 16
+        prev = -55
+        fist = None
+        for i in range(n):
+            t = i / n
+            ang = -55 - 720 * t
+            p = replace(guard, spear_rot=ang, arm_l=18 + 6 * math.sin(4 * math.pi * t), body_rot=-3 + 2 * math.sin(4 * math.pi * t),
+                        hip_dy=16 + 3 * math.sin(4 * math.pi * t), flutter=t * 2, wave=1.1)
+            fist = at(p, 'hands')[0]
+            p = replace(p, back=[spin_smear(prev, ang, fist, radius=700, width=200, color=(0.75, 0.95, 1.0))])
+            out.append((p, 60))
+            prev = ang
         return out
-    if phase == 'loop':
-        n = 12
-        return [(forge_pose(i / n, weld), 90) for i in range(n)]
-    out = []
-    top = shaft_top(BASE)
-    for i in range(7):
-        t = (i + 1) / 7
-        u = ease(t)
-        path = (lerp(WORK[0], top[0], u), lerp(WORK[1], top[1], u) - 120 * math.sin(math.pi * u))
-        last = i == 6
-        out.append((replace(BASE, blade=None if last else (path[0], path[1], lerp(90, -6, u), 0.5 * (1 - t)),
-                            reach=1 - ease(t), reach_to=(WORK[0] + 30, WORK[1] + 10), eyes='open' if t > 0.5 else 'scan',
-                            look=-0.8 * (1 - u), tilt=-6 * (1 - u), hands=(lerp_pt((-230, -520), LH, u), RH), fist=(0, 1),
-                            flutter=t, w_glow=0.8 if last else 0,
-                            front=[burst(0.3, *top, seed=6, count=10, radius=140)] if last else []),
-                    (60, 60, 60, 70, 70, 80, 70)[i]))
-    out.append((replace(BASE, w_glow=0.3), 120))
-    out.append((BASE, 100))
+    beats = [  # hip shift, spear slide, body lean, ms
+        (0, 0, -4, 110), (6, 14, -2, 70), (-20, -70, -11, 45), (-18, -66, -10, 70), (-8, -30, -7, 70), (0, 0, -4, 90)]
+    for rep in range(2):
+        for k, (dx, slide, lean, ms) in enumerate(beats):
+            p = replace(guard, hip_dx=dx, spear_dy=slide, body_rot=lean, feet=((-12 - (14 if k in (2, 3) else 0), 0), (8, 0)),
+                        arm_l=10 + (6 if k in (2, 3) else 0), flutter=(rep * 6 + k) / 12, wave=0.9)
+            tip = at(p, 'tip')
+            p = replace(p, ghosts=((24, 0.35), (48, 0.18)) if k == 2 else (),
+                        front=[burst(0.12 if k == 2 else 0.45, tip[0], tip[1], seed=rep * 7 + k, radius=180)] if k in (2, 3) else [])
+            out.append((p, ms))
     return out
 
 
-def scan_to_forge():
-    """Reading to working without a reset: the sheet folds while the head already lifts off the shaft."""
+def scan_to_drill():
+    """Reading to working without stopping: the sheet folds as he sinks into guard."""
     out = []
-    top = shaft_top(BASE)
-    for i in range(10):
-        t = (i + 1) / 10
-        panel = max(0.0, 1 - t * 2.2)
-        u = ease(max(0.0, min(1.0, (t - 0.25) / 0.75)))
-        path = (lerp(top[0], WORK[0], u), lerp(top[1], WORK[1], u) - 120 * math.sin(math.pi * u))
-        out.append((replace(BASE, eyes='scan', look=lerp(0.7, -0.8, ease(t)), tilt=lerp(5, -6, ease(t)),
-                            blade=(path[0], path[1], lerp(-6, 90, u), 0.3 * u) if t > 0.25 else None,
-                            reach=ease(max(0.0, min(1.0, (t - 0.3) / 0.6))), reach_to=(WORK[0] + 30, WORK[1] + 10),
-                            hands=(lerp_pt(LH, (-230, -520), u), RH), fist=(0, 1), flutter=t,
-                            front=[data_panel(0, open_=panel)] if panel > 0 else []), 80 if i < 9 else 110))
+    for i, u in enumerate((0.7, 0.35, 0.0)):
+        e = ease(1 - u)
+        q = {k: lerp(READ.get(k, 0), GUARD.get(k, 0), e) for k in ('head_rot', 'arm_r', 'body_rot', 'hip_dy', 'spear_rot', 'arm_l')}
+        out.append((P(**q, eyes=1.5, front=[data_panel(0, open_=u)] if u else []), 70))
+    out += keys(out[-1][0], [(3, [60, 70, 100], back_out, dict(GUARD, front=[]))])
     return out
 
 
-def forge_to_scan():
-    out = []
-    top = shaft_top(BASE)
-    for i in range(10):
-        t = (i + 1) / 10
-        u = ease(min(1.0, t * 1.4))
-        panel = ease(max(0.0, min(1.0, (t - 0.5) / 0.5)))
-        path = (lerp(WORK[0], top[0], u), lerp(WORK[1], top[1], u) - 120 * math.sin(math.pi * u))
-        out.append((replace(BASE, eyes='scan', look=lerp(-0.8, 0.7, ease(t)), tilt=lerp(-6, 5, ease(t)),
-                            blade=None if u >= 1 else (path[0], path[1], lerp(90, -6, u), 0.3 * (1 - u)),
-                            reach=1 - u, reach_to=(WORK[0] + 30, WORK[1] + 10), hands=(lerp_pt((-230, -520), LH, u), RH),
-                            fist=(0, 1), flutter=t,
-                            front=[data_panel(0, open_=panel)] if panel > 0 else []), 80 if i < 9 else 110))
+def drill_to_scan():
+    out = keys(P(**GUARD), [(3, [70, 70, 90], ease, dict(REST, **READ, gems=1.1))])
+    for i, u in enumerate((0.4, 0.8, 1.06, 1.0)):
+        out.append((P(**READ, front=[data_panel(0, open_=u)]), (60, 60, 70, 100)[i]))
     return out
-
-
-# Needs input: the halberd goes up as a signal, a red beacon over the crest.
-RAISED = dict(hands=(LH, (226, -760)), w_grip=250, w_angle=0, w_glow=1, spread=0.6, eyes='wide', crystal=0.8)
 
 
 def signal(phase):
+    """Needs input: up into the cheer with the spear raised and a shout, a red beacon over the crest."""
+    cheer = P(pose=4, eyes=1.6, gems=1.3)
     if phase == 'start':
-        seq = tween(BASE, [
-            (2, 60, ease, dict(crouch=0.14, squash=0.97, hands=(LH, (156, -360)), eyes='open')),
-            (4, [50, 50, 60, 80], ease_out, dict(crouch=0, squash=1.02, **RAISED)),
-            (1, 90, linear, dict(squash=1.0)),
-        ])
-        return fx(seq, lambda p, t, i: replace(p, flutter=t, front=[beacon(t, light=ease(max(0.0, t * 1.6 - 0.6)))]))
+        out = keys(P(), [(2, [60, 70], ease, dict(CROUCH, eyes=1.3))])
+        out += pop(out[-1][0], cheer)[1:]
+        return fx(out + [(cheer, 80)], lambda p, t, i: replace(p, front=[beacon(t, light=ease(t))]))
     if phase == 'loop':
         out = []
         n = 10
         for i in range(n):
             t = i / n
-            out.append((replace(BASE, **{**RAISED, 'w_glow': 0.7 + 0.3 * osc(t * 2), 'spread': 0.55 + 0.15 * osc(t),
-                                         'eyes': 'wide' if i % 5 else 'open'},
-                                flutter=t * 2, tilt=-3 * osc(t), front=[beacon(t)]), 90))
+            out.append((replace(cheer, lift=6 * max(0.0, osc(t * 2)), gems=1.2 + 0.4 * osc(t * 2), crystal=0.3 * osc(t),
+                                flutter=t, front=[beacon(t)]), 90))
         return out
-    seq = tween(replace(BASE, **RAISED), [
-        (3, [60, 60, 70], ease, dict(hands=(LH, RH), w_grip=0, w_angle=-6, w_glow=0, spread=0, eyes='open',
-                                    crystal=0.5)),
-        (1, 100, linear, dict(squash=0.98)),
-        (1, 90, linear, dict(squash=1.0)),
-    ])
-    return fx(seq, lambda p, t, i: replace(p, flutter=t, front=[beacon(0.5, light=max(0.0, 1 - t * 2))]))
+    out = pop(cheer, P(hip_dy=10))
+    out += keys(out[-1][0], [(2, [80, 100], ease, dict(hip_dy=0))])
+    return fx(out, lambda p, t, i: replace(p, front=[beacon(0.5, light=max(0.0, 1 - t * 2))]))
 
 
 def short_circuit():
-    """Tool error: the core flares, arcs crawl over the suit, the plumes spasm and the light dies; a slump held,
-    then a reboot with the eyes flickering back."""
-    out = [(replace(BASE, glow=1.4, eyes='wide', front=[burst(0.15, 0, -560, seed=1, radius=200)]), 70)]
-    for k in range(5):
+    """Tool error: the gems flare, arcs crawl over the suit while every joint twitches, red flashes, the light
+    dies and he slumps; a beat; a reboot that straightens him up."""
+    chest = at(P(), 'gem')
+    out = [(P(gems=2.2, eyes=2.0, head_rot=-3, front=[burst(0.15, chest[0], chest[1], seed=1, radius=240)]), 70)]
+    rnd = random.Random(8)
+    for k in range(6):
         j = (-1) ** k
-        out.append((replace(BASE, x=7 * j, lean=4 * j, tilt=-8 * j, eyes='x', glow=1.0 if k % 2 else 0.4,
-                            spread=0.4 + 0.3 * (k % 2), flutter=k * 0.37, w_angle=-6 - 5 * k, squash=1.02,
-                            front=[bolts(k / 5, seed=k + 2), burst(0.2 + k * 0.15, 0, -560, seed=k, radius=260)]), 55))
-    slump = replace(BASE, crouch=0.35, lean=8, tilt=16, eyes='closed', glow=0.05, droop=0.8, wind=0, w_angle=-34,
-                    hands=((-140, -330), (168, -330)), crystal=0.0)
+        out.append((P(shake=6 * j, head_rot=rnd.uniform(-9, 9), arm_r=rnd.uniform(-35, 10), arm_l=rnd.uniform(-8, 14),
+                      body_rot=rnd.uniform(-3, 3), spear_rot=rnd.uniform(-8, 8), hip_dy=rnd.uniform(0, 8),
+                      eye_red=1.0 if k % 2 else 0.0, gems=1.8 if k % 2 else 0.3, eyes=1.8 if k % 2 else 0.2, wave=2.0,
+                      flutter=k * 0.37, front=[bolts(k / 6, seed=k + 2), burst(0.2 + k * 0.12, chest[0], chest[1], seed=k, radius=280)]),
+                    55))
+    SLUMP = dict(hip_dy=24, body_rot=6, head_rot=16, head_dy=10, arm_r=14, arm_l=-8, spear_rot=-10, dim=0.45, gems=0.1,
+                 eyes=0.0, wave=0.1)
+    slump = P(**SLUMP)
+    out += keys(out[-1][0], [(2, [60, 80], ease_in, dict(SLUMP, shake=0, eye_red=0, front=[]))])
     for k in range(3):
-        out.append((replace(slump, squash=(0.94, 0.97, 0.96)[k], front=[smoke_up(k / 6, x=0, y=-700, size=1.1)]),
-                    (80, 160, 260)[k]))
-    for k, (g, e) in enumerate(((0.6, 'open'), (0.0, 'closed'), (1.0, 'wide'), (0.3, 'open'), (1.0, 'open'))):
-        u = ease((k + 1) / 5)
-        out.append((replace(slump, glow=g, eyes=e, crouch=lerp(0.35, 0, u), lean=lerp(8, 0, u), tilt=lerp(16, 0, u),
-                            droop=lerp(0.8, 0, u), wind=0.15 * u, w_angle=lerp(-34, -6, u), crystal=0.5 * u,
-                            hands=(lerp_pt((-140, -330), LH, u), lerp_pt((168, -330), RH, u)),
-                            front=[smoke_up(0.5 + k / 10, x=0, y=-700, size=1.1)]), (80, 70, 90, 90, 160)[k]))
+        out.append((replace(slump, hip_dy=24 + (2, 0, 1)[k], front=[smoke_up(k / 6, x=0, y=-760, size=1.1)]), (80, 160, 260)[k]))
+    for k, (e, g) in enumerate(((1.2, 0.3), (0.0, 0.1), (1.8, 1.0), (0.4, 0.6), (1.0, 1.0))):
+        u = back_out((k + 1) / 5) if k < 4 else 1.0
+        q = {key: lerp(getattr(slump, key), 0, u) for key in ('hip_dy', 'body_rot', 'head_rot', 'head_dy', 'arm_r', 'arm_l',
+                                                               'spear_rot', 'dim')}
+        out.append((P(**q, eyes=e, gems=g, front=[smoke_up(0.5 + k / 10, x=0, y=-760, size=1.1)]), (80, 70, 90, 90, 160)[k]))
     return out
 
 
-KNEEL = dict(crouch=1.0, feet=((-150, 0), (130, 0)), lean=9, tilt=18, hands=((-100, -300), (176, -330)), w_angle=6,
-             droop=1.0, wind=0, crystal=0.05, fist=(0, 1))
-
-
 def power_down():
-    """Out of quota: down on one knee, leaning on the halberd, the plumes trailing on the floor; a red cell blinks."""
+    """Out of quota: sagging onto the spear, knees bent, the head hanging, the suit dark, a red cell blinking."""
     out = []
     n = 14
     for i in range(n):
         t = i / n
-        out.append((replace(BASE, **KNEEL, squash=breathe(t, 0.006), glow=0.2 + 0.08 * osc(t) + (0.4 if i == 9 else 0),
-                            eyes='open' if i == 9 else 'closed', flutter=t * 0.5,
-                            front=[low_power(i % 7 < 4)]), 140))
+        out.append((P(hip_dy=30 + 2 * osc(t), body_rot=-4, head_rot=-13 + osc(t), head_dy=10, arm_r=12, arm_l=-6,
+                      spear_rot=5, feet=((-10, 0), (10, 0)), dim=0.45, gems=0.25 + (0.5 if i == 9 else 0),
+                      eyes=0.15 + (0.8 if i == 9 else 0), wave=0.15, flutter=t * 0.5, front=[low_power(i % 7 < 4)]), 140))
     return out
 
 
 def victory():
-    """Turn finished: anticipation, two twirls of the halberd in front (eased, with a swoosh), the blade raised
-    to the sky with fireworks, then the butt slammed down: shockwave, cracks, plumes flared; settle."""
-    out = []
-    pivot_hand = (40, -620)
-    out += tween(BASE, [
-        (2, 60, ease, dict(crouch=0.18, squash=0.97, hands=(LH, (110, -520)), eyes='angry')),
-        (2, 60, ease, dict(hands=((-60, -560), pivot_hand), w_grip=200, w_angle=-20, fist=(1, 1), spread=0.3)),
-    ])
-    spin = []
-    n = 12
-    prev = -20
-    for i in range(n):
-        u = ease((i + 1) / n)
-        ang = lerp(-20, 720, u)
-        spin.append((replace(out[-1][0], w_angle=ang, eyes='angry', spread=0.3 + 0.4 * u, flutter=i / 6,
-                             wind=0.4, crouch=0.15, lean=2 * math.sin(i),
-                             back=[spin_smear(prev, ang, (pivot_hand[0], pivot_hand[1] + 16), radius=560, width=180)]),
-                     50 if 2 < i < 10 else 70))
-        prev = ang
-    out += spin
-    raised = replace(BASE, **RAISED)
-    out += tween(spin[-1][0], [
-        (3, [60, 70, 80], ease_out, {**RAISED, 'back': [], 'crouch': 0, 'lean': 0, 'eyes': 'happy', 'spread': 1.0,
-                                     'crystal': 1.0, 'w_angle': 720, 'fist': (0, 1)}),
-    ])
-    for k in range(6):
-        t = k / 6
-        out.append((replace(raised, eyes='happy', spread=1.0, crystal=1.0, flutter=t,
-                            over=[fireworks(t * 0.9, seed=11)]), 110))
-    slam_from = replace(raised, eyes='angry', spread=1.0, crystal=1.0)
-    out.append((replace(slam_from, hands=(LH, (170, -720)), w_grip=250, crouch=0.05, lift=20, over=[fireworks(0.92, seed=11)]),
-                60))
-    hit = replace(BASE, crouch=0.35, squash=0.92, eyes='angry', spread=1.0, crystal=1.0, hands=((-170, -360), (168, -360)),
-                  w_angle=-6, glow=1.3)
-    for k in range(6):
-        t = (k + 1) / 7
-        out.append((replace(hit, crouch=lerp(0.35, 0.0, ease(t)), squash=lerp(0.92, 1.0, ease(t)),
-                            spread=lerp(1.0, 0.1, ease(t)), crystal=lerp(1.0, 0.6, t), drag=-0.5 * (1 - t),
-                            eyes='angry' if k < 3 else 'happy', flutter=t,
-                            back=[shockwave(t, x=180, y=0)], front=[cracks(t * 2, x=180, y=0)]), (50, 60, 70, 80, 100, 120)[k]))
-    out.append((replace(BASE, eyes='happy'), 200))
-    out.append((BASE, 100))
+    """Turn finished: a deep crouch with the arm drawn back, a jump that becomes the cheer at the top, fireworks,
+    a heavy landing with a shockwave and cracks, the cheer held, then down to standing."""
+    cheer = P(pose=4, eyes=1.8, gems=1.6, crystal=0.7)
+    out = keys(P(), [(2, [70, 90], ease, dict(CROUCH, arm_r=24, head_rot=4, eyes=1.4, squash=0.97)),
+                     (1, 60, linear, dict(squash=1.0))])
+    out.append((P(lift=50, squash=1.08, arm_r=-80, arm_l=20, feet=((0, 14), (0, 14)), spread=0.6, eyes=1.6), 50))
+    for k, lift in enumerate((120, 165, 180, 172, 140, 80)):
+        out.append((replace(cheer, lift=lift, squash=1.03 if k < 2 else 1.0, flutter=k / 6, over=[fireworks(k / 12, seed=11)]),
+                    (50, 60, 90, 90, 60, 50)[k]))
+    for k in range(5):
+        t = (k + 1) / 6
+        out.append((replace(cheer, squash=lerp(0.9, 1.0, ease(t)), flutter=t, over=[fireworks(0.5 + t * 0.4, seed=11)],
+                            back=[shockwave(t, x=0, y=0, size=1.1)], front=[cracks(t * 2, x=0, y=0)]), (50, 60, 70, 90, 110)[k]))
+    for k in range(4):
+        out.append((replace(cheer, gems=1.4 + 0.3 * osc(k / 4), over=[fireworks(0.95 + k * 0.02, seed=11)]), 110))
+    out += pop(cheer, P(hip_dy=8, eyes=1.4))
+    out += keys(out[-1][0], [(2, [90, 120], ease, dict(hip_dy=0, eyes=1.0))])
     return out
 
 
+SLEEP = dict(head_rot=12, head_dy=9, hip_dy=8, body_rot=2, arm_r=8, arm_l=-3, eyes=0.0, gems=0.3, dim=0.2, wave=0.2)
+
+
 def standby_mode(phase):
+    """Sleeping on his feet: the light fades out of the eyes, the head nods down onto the chest, the tendrils
+    settle; standby letters drift. Waking, the eyes flash, the head snaps up past level and the tendrils flare."""
     if phase == 'start':
-        seq = tween(BASE, [
-            (3, [90, 90, 110], ease, dict(glow=0.3, crouch=0.15, lean=4, tilt=10, droop=0.5, wind=0, crystal=0.2)),
-            (1, 80, linear, dict(glow=0.6)),
-            (3, [100, 120, 160], ease_in, dict(glow=0.0, eyes='closed', droop=0.85, crystal=0.05, crouch=0.2, tilt=14,
-                                              hands=((-140, -350), (156, -372)))),
-        ])
-        return fx(seq, lambda p, t, i: replace(p, flutter=t * 0.5))
+        return keys(P(), [(2, [90, 110], ease, dict(eyes=0.4, head_rot=4, head_dy=3)),
+                          (1, 120, linear, dict(eyes=0.8, head_rot=2)),     # catches itself once
+                          (4, [110, 130, 150, 180], ease_in, dict(SLEEP))])
     if phase == 'loop':
         out = []
         n = 16
         for i in range(n):
             t = i / n
-            out.append((replace(BASE, glow=0.0, eyes='closed', droop=0.85 + 0.05 * osc(t), wind=0, crystal=0.05 + 0.1 * osc(t),
-                                crouch=0.2, lean=4, tilt=14 + osc(t), squash=breathe(t, 0.01), flutter=t * 0.4,
-                                hands=((-140, -350), (156, -372)), front=[standby(t)]), 150))
+            out.append((P(**{**SLEEP, 'head_rot': 12 + 1.5 * osc(t, 1, 0.1), 'hip_dy': 8 + 1.5 * osc(t),
+                             'gems': 0.3 + 0.1 * osc(t)}, flutter=t * 0.5, front=[standby(t)]), 150))
         return out
-    seq = tween(replace(BASE, glow=0.0, eyes='closed', droop=0.85, wind=0, crystal=0.05, crouch=0.2, lean=4, tilt=14,
-                        hands=((-140, -350), (156, -372))), [
-        (1, 90, linear, dict(eyes='wide', glow=1.4)),
-        (1, 60, linear, dict(glow=0.2, eyes='open')),
-        (1, 70, linear, dict(glow=1.2, eyes='wide', crystal=1.0)),
-        (3, [60, 70, 90], back_out, dict(eyes='open', glow=1, droop=-0.4, spread=0.4, crouch=0, lean=0, tilt=0,
-                                         crystal=0.7, hands=(LH, RH), lift=16, squash=1.04, wind=0.15)),
-        (2, [80, 120], ease, dict(droop=0, spread=0, lift=0, squash=1.0, crystal=0.5)),
-    ])
-    return fx(seq, lambda p, t, i: replace(p, flutter=t))
+    out = [(P(**{**SLEEP, 'eyes': 2.0, 'gems': 1.5}), 90), (P(**{**SLEEP, 'eyes': 0.3}), 60)]
+    out += keys(P(**{**SLEEP, 'eyes': 1.8, 'gems': 1.4}), [
+        (2, [50, 60], back_out, dict(REST, head_rot=-6, head_dy=-3, spread=0.7, eyes=1.6, gems=1.2, dim=0, lift=12)),
+        (3, [70, 90, 120], ease, dict(REST, eyes=1.0, gems=1.0, lift=0))])
+    return out
 
 
 def landing():
-    """Starting: drops in on violet jets with a trail of afterimages, brakes, lands in a crouch with a shockwave,
-    rises; the plumes float up on the way down (follow-through) and settle."""
+    """Starting: dropping in on violet jets with knees tucked and afterimages trailing up; braking; landing in the
+    lunge with a shockwave; then standing up."""
     out = []
-    for k, lift in enumerate((1050, 820, 600, 400, 240, 130, 60)):
-        out.append((replace(BASE, lift=lift, jet=0.6 + 0.4 * (k > 3), eyes='angry', crouch=0.1, lean=0,
-                            feet=((-50, -10), (60, -20)), shadow=lift < 700, flicker=k / 3, wind=0,
-                            ghosts=((0, 0.25, 160), (0, 0.15, 320)) if k < 5 else ((0, 0.2, 80),)), 50))
-    out.append((replace(BASE, lift=20, jet=1.2, eyes='angry', crouch=0.3, flicker=0.6, wind=0), 60))
-    land = replace(BASE, crouch=0.75, squash=0.9, eyes='angry', jet=0, spread=0.6, lean=6,
-                   hands=((-190, -270), (176, -300)), w_angle=10, crystal=1.0)
+    for k, lift in enumerate((1150, 900, 660, 450, 280, 150, 60)):
+        out.append((P(lift=lift, jet=0.7 + 0.3 * (k > 3), eyes=1.6, flicker=k / 3, shadow=lift < 700, feet=((4, -24), (-4, -18)),
+                      hip_dy=6, arm_r=-30, arm_l=12, spread=0.8, wave=1.4, flutter=k / 4,
+                      ghosts=((0, 0.25, 180), (0, 0.12, 360)) if k < 5 else ((0, 0.2, 90),)), 50))
+    out.append((P(lift=16, jet=1.2, squash=0.95, eyes=1.6, flicker=0.6, feet=((0, -8), (0, -6)), spread=0.5), 50))
+    land = P(pose=2, eyes=1.8, gems=1.6, crystal=0.6)
     for k in range(5):
         t = (k + 1) / 6
-        out.append((replace(land, front=[shockwave(t, size=1.2)], squash=lerp(0.9, 0.98, t), flutter=t, glow=1.3 - 0.3 * t),
-                    (60, 70, 80, 90, 110)[k]))
-    out += tween(land, [
-        (4, [70, 70, 80, 100], ease, dict(crouch=0, squash=1.0, lean=0, hands=(LH, RH), w_angle=-6, spread=0,
-                                         eyes='open', crystal=0.5)),
-        (1, 140, linear, dict(eyes='happy')),
-        (1, 100, linear, dict(eyes='open')),
-    ])
-    return follow_through(out)
+        out.append((replace(land, squash=lerp(0.9, 1.0, ease(t)), front=[shockwave(t, size=1.2)]), (60, 70, 80, 100, 120)[k]))
+    out.append((replace(land, gems=1.2, eyes=1.4, crystal=0.2), 200))
+    out += pop(land, P(**CROUCH))
+    out += keys(out[-1][0], [(3, [80, 90, 120], ease, dict(REST))])
+    return out
 
 
 def depart():
-    """Closing: a crouch, the jets light, a heavy lift-off that speeds up and leaves the frame upwards."""
-    out = tween(BASE, [
-        (2, 80, ease, dict(crouch=0.4, squash=0.95, eyes='angry', spread=0.3, hands=((-180, -300), (170, -330)))),
-        (2, 70, linear, dict(jet=0.7, flicker=0.6, crystal=1.0)),
-    ])
-    for k, lift in enumerate((30, 90, 200, 380, 620, 900, 1250)):
-        out.append((replace(out[-1][0], lift=lift, crouch=0.05, squash=1.06, jet=1.2, flicker=k / 3, wind=0,
-                            feet=((-50, -10), (60, -20)), hands=(LH, RH),
-                            ghosts=((0, 0.25, -120 - 30 * k), (0, 0.12, -240 - 60 * k)) if k > 1 else (),
-                            front=[dust(k / 4, x=-60, side=-1), dust(k / 4, x=60, side=1)] if k < 3 else []),
-                    (70, 60, 55, 50, 50, 50, 60)[k]))
-    out.append((replace(out[-1][0], lift=1500, alpha=0), 100))
-    return follow_through(out)
+    """Closing: a deep crouch, the jets light, a heavy launch that speeds up and leaves the frame upwards."""
+    out = keys(P(), [(2, [80, 90], ease, dict(CROUCH, arm_r=20, eyes=1.5)), (1, 70, linear, dict(jet=0.6, flicker=0.6))])
+    for k, lift in enumerate((30, 100, 220, 400, 650, 950, 1300)):
+        out.append((P(lift=lift, squash=1.06, jet=1.2, flicker=k / 3, eyes=1.6, feet=((0, 10), (0, 10)), arm_r=-20, arm_l=6,
+                      spread=0.6, wave=1.6, flutter=k / 4,
+                      ghosts=((0, 0.25, -120 - 40 * k), (0, 0.12, -240 - 70 * k)) if k > 1 else (),
+                      front=[dust(k / 4, x=-120, side=-1), dust(k / 4, x=120, side=1)] if k < 3 else []), (70, 60, 55, 50, 50, 50, 60)[k]))
+    out.append((P(lift=1500, alpha=0), 100))
+    return out
 
 
 def rage(leave='dash'):
-    """Angry: plumes flare, crystals blaze, vents steam, a stomp; then either a dash off-screen with afterimages
-    or a straight jet-blast upwards."""
-    out = tween(BASE, [
-        (3, [70, 70, 90], ease, dict(**GUARD, spread=1.0, crystal=1.0, glow=1.3, w_glow=1)),
-    ])
-    out = fx(out, lambda p, t, i: replace(p, front=[vents(t)], flutter=t))
+    """Angry: eyes and gems go red, the tendrils flare, the fist shakes, steam, a stomp; then a dash off-screen
+    with afterimages, or a jet blast straight up."""
+    out = keys(P(), [(3, [70, 70, 90], ease, dict(eye_red=1, eyes=1.8, gems=1.6, crystal=1.0, spread=1.0, hip_dy=12,
+                                                    arm_r=-40, head_rot=-6, head_dy=4))])
+    angry = out[-1][0]
     for k in range(6):
         j = (-1) ** k
-        out.append((replace(out[-1][0], x=5 * j, flutter=k / 3 + 0.1, spread=1.0 + 0.1 * j, front=[vents(0.4 + k / 8),
-                            sparks(k / 6, 0, -560, seed=2, count=8)]), 60))
-    stomp = replace(out[-1][0], x=0, crouch=0.4, squash=0.94, feet=((-150, 0), (96, 0)))
+        out.append((replace(angry, shake=5 * j, arm_r=-40 + 8 * j, head_rot=-6 + 2 * j, wave=2.0, flutter=k * 0.3,
+                            front=[vents(0.3 + k / 8), sparks(k / 6, 0, -560, seed=2, count=8)]), 60))
+    out += keys(angry, [(2, [70, 60], ease_out, dict(feet=((0, 0), (6, -36)), hip_dx=-6, body_rot=-3))])
     for k in range(4):
         t = (k + 1) / 5
-        out.append((replace(stomp, front=[shockwave(t, x=-150, size=0.9), vents(0.9)], flutter=t), (60, 70, 80, 120)[k]))
+        out.append((replace(angry, squash=lerp(0.92, 1.0, t), front=[shockwave(t, x=70, size=0.9), vents(0.9)]), (60, 70, 80, 120)[k]))
     if leave == 'dash':
+        dash_pose = P(pose=2, eye_red=1, eyes=1.8, gems=1.6, crystal=1.0)
         for k, x in enumerate((0, 60, 220, 460, 760, 1100)):
-            out.append((replace(stomp, x=x, crouch=0.35, lean=18, squash=1.0, wind=1.0, flutter=k / 3, feet=((-150, -10), (40, 0)),
-                                ghosts=tuple((-d, a) for d, a in ((120, 0.4), (240, 0.25), (360, 0.12))) if k > 1 else (),
+            out.append((replace(dash_pose, x=x, rot=6, pivot=200, ghosts=((-120, 0.4), (-240, 0.25), (-360, 0.12)) if k > 1 else (),
                                 front=[dust(k / 6, x=-200, side=-1)]), 50))
     else:
         for k, lift in enumerate((40, 140, 330, 620, 1000, 1400)):
-            out.append((replace(stomp, lift=lift, crouch=0.05, squash=1.08, jet=1.4, flicker=k / 3, wind=0,
-                                feet=((-60, -10), (60, -20)),
+            out.append((replace(angry, lift=lift, squash=1.08, jet=1.4, flicker=k / 3, feet=((0, 10), (0, 10)),
                                 ghosts=((0, 0.35, -140), (0, 0.18, -280)) if k > 0 else ()), 50))
     out.append((replace(out[-1][0], alpha=0), 100))
-    return follow_through(out)
+    return out
 
 
 def held(phase):
-    dangle = dict(feet=((-40, 30), (56, 50)), lift=60, eyes='wide', shadow=False, w_angle=12, wind=0,
-                  hands=((-160, -360), (150, -380)))
+    """Dragging: lifted by the head and swinging like a pendulum; the legs dangle and kick out of step, the arms
+    hang, the jets sputter as if to fly off."""
+    top = 640
+    hang = dict(feet=((4, 16), (-4, 16)), arm_r=10, arm_l=-6, shadow=False)
     if phase == 'start':
-        seq = tween(BASE, [(4, [50, 50, 60, 70], ease_out, dict(**dangle, squash=1.05, drag=-0.7))])
-        return fx(seq, lambda p, t, i: replace(p, flutter=t))
+        return keys(P(), [(4, [50, 50, 60, 70], ease_out, dict(hang, lift=48, squash=1.05, eyes=1.6, rot=6, pivot=top, spread=0.5))])
     if phase == 'loop':
         out = []
         n = 12
         for i in range(n):
             t = i / n
-            out.append((replace(BASE, **{**dangle, 'feet': ((-40 + 24 * osc(t, 0.5), 30), (56 - 24 * osc(t, 0.5), 50)),
-                                         'eyes': 'wide' if i % 6 else 'x'},
-                                lean=7 * osc(t), squash=1.04, flutter=t * 2, drag=0.3 * osc(t, 1, 0.25),
-                                jet=0.25 if i % 4 == 0 else 0, flicker=t * 3), 80))
+            sw = math.sin(2 * math.pi * t)
+            out.append((P(**{**hang, 'feet': ((4 + 10 * math.sin(2 * math.pi * (t * 2)), 16 - 8 * max(0.0, math.sin(2 * math.pi * t * 2))),
+                                              (-4 - 10 * math.sin(2 * math.pi * (t * 2 + 0.5)), 16 - 8 * max(0.0, -math.sin(2 * math.pi * t * 2)))),
+                             'arm_r': 10 + 8 * sw, 'arm_l': -6 - 5 * sw},
+                          lift=48, squash=1.05, rot=8 * sw, pivot=top, head_rot=-4 * math.sin(2 * math.pi * (t - 0.1)), eyes=1.6 if i % 6 else 0.3, wave=1.6, flutter=t * 2,
+                          jet=0.35 if i % 4 == 0 else 0, flicker=t * 3), 80))
         return out
-    return [(replace(BASE, lift=20, eyes='wide', feet=((-50, 10), (60, 20)), drag=0.6), 60),
-            (replace(BASE, crouch=0.4, squash=0.9, eyes='angry', front=[shockwave(0.3, size=0.6)]), 80),
-            (replace(BASE, crouch=0.1, squash=1.03, front=[shockwave(0.6, size=0.6)]), 70),
-            (replace(BASE), 100)]
+    return [(P(lift=20, eyes=1.6, squash=1.04, feet=((0, 8), (0, 8))), 60),
+            (P(**CROUCH, squash=0.92, eyes=1.8, front=[shockwave(0.3, size=0.6)]), 80),
+            (P(hip_dy=10, squash=1.02, front=[shockwave(0.6, size=0.6)]), 70),
+            (P(hip_dy=3), 90), (P(), 100)]
 
 
 def pat(phase):
+    """Patted on the crest: the head tips into the hand, the knees dip, the eyes brighten, a little heart."""
     if phase == 'start':
-        seq = tween(BASE, [(4, 60, ease, dict(crouch=0.1, tilt=7, eyes='happy', spread=0.3, glow=1.1))])
-        return fx(seq, lambda p, t, i: replace(p, flutter=t))
+        return keys(P(), [(3, 60, ease, dict(hip_dy=8, head_rot=-7, head_dy=5, eyes=1.7, gems=1.3, arm_r=-10))])
     if phase == 'loop':
         out = []
         n = 10
         for i in range(n):
             t = i / n
-            out.append((replace(BASE, crouch=0.1 + 0.03 * osc(t, 0.5), tilt=7 * osc(t), eyes='happy', glow=1.1,
-                                spread=0.3 + 0.35 * max(0.0, osc(t, 0.5)), flutter=t * 2, crystal=0.8,
-                                front=[holo_heart(t, size=0.45)]), 90))
+            out.append((P(hip_dy=8 + 3 * osc(t, 0.5), head_rot=-7 + 4 * math.sin(2 * math.pi * t), head_dy=5, eyes=1.7,
+                          gems=1.3, arm_r=-10 - 6 * osc(t), crystal=0.3 + 0.2 * osc(t), wave=1.0, flutter=t,
+                          front=[holo_heart(t, size=0.5, at_hand=0), blush(0.8)]), 90))
         return out
-    return [(replace(BASE, crouch=0.05, eyes='happy', spread=0.2, squash=1.03), 70),
-            (replace(BASE, eyes='happy', squash=0.99), 70), (BASE, 90)]
+    return keys(P(hip_dy=8, head_rot=-7, head_dy=5, eyes=1.7), [(1, 70, back_out, dict(hip_dy=-3, head_rot=2, head_dy=-2)),
+                                                                 (2, [70, 90], ease, dict(REST, eyes=1.0))])
 
 
 def poke(phase):
-    """Touching the chest: the core flickers, the suit twitches as if ticklish; the plumes jitter."""
+    """Poked in the chest: the gem flashes, the body jerks back, the free arm flails; ticklish twitches."""
+    chest = at(P(), 'gem')
     if phase == 'start':
-        return [(replace(BASE, glow=1.5, eyes='wide', squash=0.96, lean=-4, front=[burst(0.2, 0, -560, radius=120, count=8)]),
-                 60),
-                (replace(BASE, glow=0.6, eyes='x', squash=1.04, lean=3, spread=0.4), 60),
-                (replace(BASE, glow=1.2, eyes='happy', squash=0.98, lean=-2, spread=0.2), 70)]
+        return [(P(gems=2.2, eyes=1.8, body_rot=4, head_rot=6, arm_r=-40, hip_dx=4,
+                   front=[burst(0.2, chest[0], chest[1], radius=140, count=8)]), 60),
+                (P(gems=0.6, body_rot=-2, arm_r=-10, head_rot=-3), 60), (P(gems=1.6, eyes=1.6, body_rot=1, arm_r=-25), 70)]
     if phase == 'loop':
         out = []
         n = 10
         for i in range(n):
             t = i / n
-            out.append((replace(BASE, squash=1 + 0.03 * osc(t, 0.25), lean=4 * osc(t, 0.5), x=4 * osc(t, 0.25),
-                                eyes='happy' if i % 4 else 'x', glow=0.8 + 0.6 * (i % 2), spread=0.2 + 0.3 * (i % 3 == 0),
-                                flutter=t * 3, hands=((-120, -470 + 10 * osc(t, 0.25)), RH), fist=(1, 1),
-                                front=[sparks(t, 0, -560, seed=9, count=5, speed=0.6)]), 75))
+            out.append((P(body_rot=3 * math.sin(2 * math.pi * t * 2), head_rot=-5 * math.sin(2 * math.pi * (t * 2 - 0.1)),
+                          arm_r=-25 - 20 * math.sin(2 * math.pi * t * 4), hip_dy=3 + 3 * osc(t, 0.25), gems=1.0 + 0.8 * (i % 2),
+                          eyes=1.7, wave=1.5, flutter=t * 2,
+                          front=[sparks(t, chest[0], chest[1], seed=9, count=5, speed=0.6), blush(0.6)]), 75))
         return out
-    return [(replace(BASE, squash=1.03, eyes='happy'), 70), (replace(BASE, squash=0.99, eyes='happy'), 70), (BASE, 90)]
+    return keys(P(arm_r=-25, eyes=1.5), [(3, [70, 70, 90], ease, dict(REST, eyes=1.0))])
 
 
 def tumble(phase):
-    """Thrown (faces right): a fast spin about the waist with afterimages, the jets catch him and he hovers
-    tilted, then a three-point landing."""
+    """Thrown (faces right): a spin about the middle with limbs flung out and afterimages; the jets catch him in
+    the lunge; a heavy landing."""
+    mid = 300
     if phase == 'start':
-        out = []
-        for k, ang in enumerate((-60, -140, -220, -300, -360)):
-            out.append((replace(BASE, spin=ang, lift=60, eyes='x',
-                                shadow=False, wind=0.9, flutter=k / 2, crouch=0.3, jet=0.5 if k == 4 else 0,
-                                feet=((-50, -20), (60, -40)),
-                                ghosts=((-60, 0.3), (-120, 0.15)) if k < 4 else ()), 55))
-        return out
+        return [(P(rot=ang, pivot=mid, lift=60, eyes=1.8, shadow=False, arm_r=-90, arm_l=30, spear_rot=-30, feet=((-20, -30), (20, -40)),
+                   spread=1.0, wave=2.0, flutter=k / 3, ghosts=((-60, 0.3), (-120, 0.15)) if k < 4 else ()), 55)
+                for k, ang in enumerate((60, 140, 220, 300, 360))]
     if phase == 'loop':
         out = []
         n = 10
         for i in range(n):
             t = i / n
-            out.append((replace(BASE, lift=60 + 8 * osc(t, 0.5), lean=-14 + 6 * osc(t), jet=0.9, flicker=t * 3,
-                                eyes='wide', shadow=False, wind=1.0, flutter=t * 3, crouch=0.2,
-                                feet=((-50, -20), (60, -40)), hands=((-200, -440), (176, -420)), w_angle=40,
-                                back=[speed_lines(0.7)]), 70))
+            out.append((P(pose=2, lift=70 + 8 * osc(t, 0.5), rot=-6 + 4 * osc(t), pivot=mid, jet=0.9, flicker=t * 3,
+                          eyes=1.6, shadow=False, back=[speed_lines(0.7)]), 70))
         return out
-    return [(replace(BASE, lift=20, jet=0.4, eyes='wide', crouch=0.2, w_angle=30), 60),
-            (replace(BASE, crouch=0.8, squash=0.9, eyes='angry', hands=((-170, -150), (176, -300)), w_angle=20, fist=(0, 1),
-                     lean=10, front=[shockwave(0.3, size=0.7)]), 90),
-            (replace(BASE, crouch=0.8, squash=0.95, eyes='angry', hands=((-170, -150), (176, -300)), w_angle=20,
-                     fist=(0, 1), lean=10, front=[shockwave(0.6, size=0.7)]), 160),
-            (replace(BASE, crouch=0.2, eyes='open', squash=1.02), 80),
-            (BASE, 110)]
+    out = [(P(pose=2, lift=24, jet=0.4, eyes=1.6), 60),
+           (P(pose=2, squash=0.9, eyes=1.8, gems=1.4, front=[shockwave(0.3, size=0.7)]), 90),
+           (P(pose=2, squash=0.97, eyes=1.6, front=[shockwave(0.6, size=0.7)]), 160)]
+    out += pop(P(pose=2), P(**CROUCH))
+    return out + keys(out[-1][0], [(2, [90, 110], ease, dict(REST))])
 
 
 def peek(phase):
-    """Hiding at the screen edge (faces right): leans out from behind the edge, scans, ducks back."""
-    pose = dict(x=-80, lean=12, tilt=10, eyes='scan', w_angle=-20, hands=(LH, (130, -400)), wind=0.4)
+    """Hiding at the screen edge (faces right): leans out from the edge, fist at the chin, and ducks back."""
+    def pose(out_amt, **kw):
+        return P(pose=3, rot=10 * out_amt, x=-70 - 70 * (1 - out_amt), eyes=1 + 0.6 * out_amt, **kw)
     if phase == 'start':
-        return [(replace(BASE, **{**pose, 'lean': 12 * t, 'tilt': 10 * t, 'x': -80 * t}, flutter=t), ms)
-                for t, ms in ((0.4, 60), (0.8, 70), (1.0, 100))]
+        return [(pose(t), ms) for t, ms in ((0.4, 60), (0.8, 70), (1.0, 100))]
     if phase == 'loop':
-        plan = [(1.0, -1, 220), (1.0, 0, 160), (1.0, 1, 260), (1.0, 1, 200), (0.3, 0, 90), (0.0, 0, 200), (0.6, 0, 90),
-                (1.0, -1, 300)]
-        out = []
-        for i, (out_amt, look, ms) in enumerate(plan):
-            out.append((replace(BASE, **{**pose, 'lean': 12 * out_amt, 'tilt': 10 * out_amt, 'x': -80 - 60 * (1 - out_amt),
-                                         'eyes': 'scan' if out_amt > 0.5 else 'open'},
-                                look=look, flutter=i / 8), ms))
-        return out
-    return [(replace(BASE, **{**pose, 'lean': 12 * (1 - t), 'tilt': 10 * (1 - t), 'x': -80 * (1 - t), 'eyes': 'open'},
-                     flutter=t), ms) for t, ms in ((0.4, 70), (0.8, 70), (1.0, 100))]
+        plan = [(1.0, 220), (1.0, 160), (1.0, 260), (0.3, 90), (0.0, 220), (0.6, 90), (1.0, 300), (1.0, 200)]
+        return [(pose(a, flutter=i / 8, front=[question(i / 8)] if i in (1, 2) else []), ms) for i, (a, ms) in enumerate(plan)]
+    return [(pose(1 - t), ms) for t, ms in ((0.4, 70), (0.8, 70), (1.0, 100))]
 
 
-def look_around():
-    plan = [(0, 0, 140), (-1, -7, 260), (-1, -7, 260), (0, 0, 120), (1, 7, 260), (1, 7, 300), (0, 0, 140)]
-    return [(replace(BASE, eyes='scan', look=look, tilt=tilt, flutter=i / len(plan)), ms)
-            for i, (look, tilt, ms) in enumerate(plan)]
-
+# Reactions and fidgets -------------------------------------------------------------------------------------
 
 def kata():
-    """Halberd form: guard, a wide sweep with a swoosh, a lunging side thrust held, a twirl, back to plant."""
-    out = tween(BASE, [
-        (3, [70, 70, 90], ease, dict(**GUARD)),
-        (1, 120, linear, dict(squash=0.98)),
-    ])
-    sweep = []
-    prev = 28
-    for i, u in enumerate((0.1, 0.35, 0.7, 0.92, 1.0)):
-        ang = lerp(28, -110, ease(u))
-        sweep.append((replace(out[-1][0], w_angle=ang, hands=((-150, -470), (lerp(176, -60, u), -500)), lean=lerp(3, -8, u),
-                              squash=1.0, flutter=u, back=[spin_smear(prev, ang, (lerp(176, -60, u), -484), radius=760,
-                                                                       width=170)]), 45))
+    """A spear form: guard; a wide sweep over the head with a swoosh; a lunging thrust with a strike flash, held;
+    a full twirl in the fist; the butt planted with a ground ring."""
+    out = keys(P(), [(3, [70, 70, 90], ease, dict(GUARD)), (1, 140, linear, dict(hip_dy=18))])
+    prev = GUARD['spear_rot']
+    g = out[-1][0]
+    for k, u in enumerate((0.15, 0.4, 0.7, 0.9, 1.0)):
+        ang = lerp(-55, -235, ease(u))
+        p = replace(g, spear_rot=ang, arm_l=lerp(10, 30, math.sin(math.pi * u)), body_rot=lerp(-4, 4, u), head_rot=lerp(-3, 4, u),
+                    flutter=u, wave=1.2)
+        p = replace(p, back=[spin_smear(prev, ang, at(p, 'hands')[0], radius=700, width=200, color=(0.75, 0.95, 1.0))])
+        out.append((p, 45))
         prev = ang
-    out += sweep
-    thrust = replace(out[-1][0], back=[], w_angle=90, w_grip=300, hands=((70, -500), (210, -510)),
-                     feet=((-150, 0), (150, 0)), crouch=0.45, lean=14, eyes='angry', fist=(1, 1), spread=0.5, wind=0.7)
-    out += tween(replace(out[-1][0], back=[]), [
-        (4, [50, 50, 50, 60], back_out, {k: getattr(thrust, k) for k in
-                                         ('w_angle', 'w_grip', 'hands', 'feet', 'crouch', 'lean', 'spread', 'wind')})])
-    out.append((replace(thrust, front=[burst(0.3, 210 + 460, -526, seed=3, radius=160, count=10)]), 260))
-    twirl_hand = (60, -600)
-    base = replace(thrust, hands=((-60, -560), twirl_hand), w_grip=200, feet=GUARD['feet'], crouch=0.2, lean=0)
-    prev = 90
+    thrust = replace(g, spear_rot=-90, spear_dy=-80, hip_dx=-24, body_rot=-12, hip_dy=22, feet=((-34, 0), (10, 0)), arm_l=16,
+                     head_rot=-5, back=[])
+    out += keys(replace(out[-1][0], back=[]), [(2, [45, 50], ease_out, {k: getattr(thrust, k) for k in
+                                                                       ('spear_rot', 'spear_dy', 'hip_dx', 'body_rot', 'hip_dy', 'feet', 'arm_l', 'head_rot')})])
+    tip = at(thrust, 'tip')
+    out.append((replace(thrust, ghosts=((30, 0.35), (60, 0.18)), front=[burst(0.15, tip[0], tip[1], seed=3, radius=220, count=12)]), 60))
+    out.append((replace(thrust, front=[burst(0.5, tip[0], tip[1], seed=3, radius=220, count=12)]), 300))
+    base = replace(thrust, spear_dy=0, hip_dx=0, body_rot=-2, feet=GUARD['feet'], hip_dy=14, arm_l=20)
+    prev = -90
     for i in range(8):
         u = ease((i + 1) / 8)
-        ang = lerp(90, 90 + 540, u)
-        out.append((replace(base, w_angle=ang, flutter=i / 4, back=[spin_smear(prev, ang, (twirl_hand[0], twirl_hand[1] + 16),
-                                                                                  radius=500, width=140)]), 50))
+        ang = lerp(-90, -90 - 270, u)
+        p = replace(base, spear_rot=ang, flutter=i / 4, wave=1.2)
+        p = replace(p, back=[spin_smear(prev, ang, at(p, 'hands')[0], radius=700, width=200, color=(0.75, 0.95, 1.0))])
+        out.append((p, 50))
         prev = ang
-    out += tween(replace(out[-1][0], back=[], w_angle=(90 + 540) % 360), [
-        (3, [70, 80, 90], ease, dict(hands=(LH, RH), w_grip=0, w_angle=-6, feet=BASE.feet, crouch=0.2, spread=0.2,
-                                    eyes='open', fist=(0, 1), wind=0.3)),
-    ])
-    out.append((replace(BASE, crouch=0.2, squash=0.97, eyes='closed', front=[shockwave(0.4, x=150, size=0.5, dust=False)]),
-                220))
-    out.append((BASE, 110))
+    out += keys(replace(out[-1][0], back=[], spear_rot=0), [(2, [70, 80], ease_in, dict(REST, hip_dy=20, eyes=1.6))])
+    butt = at(P(), 'butt')
+    for k in range(4):
+        t = (k + 1) / 5
+        out.append((P(hip_dy=lerp(20, 0, ease(t)), eyes=1.5, front=[shockwave(t, x=butt[0], size=0.6, dust=False)]), 70))
+    out.append((P(), 110))
     return out
 
 
-def blade_check():
-    """The head comes off the shaft into the left hand; turned in front of the visor, scanned, a puff of dust
-    blown off, clicked back on with a spark."""
-    top = shaft_top(BASE)
-    look_at = (-200, -840)
-    out = []
-    for i in range(6):
-        t = (i + 1) / 6
-        u = ease(t)
-        pos = (lerp(top[0], look_at[0], u), lerp(top[1], look_at[1], u) - 80 * math.sin(math.pi * u))
-        out.append((replace(BASE, blade=(pos[0], pos[1], lerp(-6, -40, u)), hands=(lerp_pt(LH, (look_at[0], look_at[1] + 120), u), RH),
-                            fist=(0, 1), eyes='open', tilt=-6 * u, flutter=t), 70))
-    for i in range(10):
-        t = i / 10
-        ang = -40 + 70 * math.sin(t * math.pi)
-        out.append((replace(BASE, blade=(look_at[0], look_at[1] + 6 * osc(t), ang, 0.3 if 4 <= i < 7 else 0),
-                            hands=((look_at[0], look_at[1] + 120), RH), fist=(0, 1), eyes='scan', look=-0.7 + 0.4 * osc(t),
-                            tilt=-6, flutter=t,
-                            front=[smoke_up(t, x=look_at[0] - 40, y=look_at[1] - 120, amount=2, size=0.6)] if i >= 7 else []),
-                    110))
-    for i in range(6):
-        t = (i + 1) / 6
-        u = ease(t)
-        pos = (lerp(look_at[0], top[0], u), lerp(look_at[1], top[1], u) - 80 * math.sin(math.pi * u))
-        last = i == 5
-        out.append((replace(BASE, blade=None if last else (pos[0], pos[1], lerp(-40, -6, u)),
-                            hands=(lerp_pt((look_at[0], look_at[1] + 120), LH, u), RH), fist=(0, 1), tilt=-6 * (1 - u),
-                            eyes='open', w_glow=0.9 if last else 0, flutter=t,
-                            front=[burst(0.25, *top, seed=7, radius=150, count=10)] if last else []), 70))
-    out.append((replace(BASE, eyes='happy', w_glow=0.3), 200))
-    out.append((BASE, 100))
+def shine():
+    """Checking the spear: the fist raises it and tips it towards the visor; a glint runs up the shaft to the tip
+    and flares; a satisfied nod as it is planted again."""
+    look = dict(arm_l=22, spear_rot=16, head_rot=-8, head_dx=-3, body_rot=-1.5, eyes=1.5)
+    out = keys(P(), [(3, [70, 80, 100], ease, look)])
+    p = out[-1][0]
+    for k in range(1, 9):
+        out.append((replace(p, flutter=k / 8, front=[glint(k / 8, at(p, 'butt'), at(p, 'tip'))]), 70))
+    tip = at(p, 'tip')
+    out += [(replace(p, gems=1.6, front=[burst(0.2 + 0.2 * k, tip[0], tip[1], seed=6, radius=150, count=8,
+                                              color=(0.8, 0.98, 1.0))]), 80) for k in range(4)]
+    out += keys(p, [(3, [80, 90, 110], ease, dict(REST, head_rot=5, head_dy=3, eyes=1.6)),
+                    (2, [90, 120], ease, dict(head_rot=0, head_dy=0, eyes=1.0))])
     return out
 
 
-def preen():
-    """The plume display: the four plumes rise and fan out like a pheasant's, ripple twice, crystals shimmer;
-    then fold back with a shake."""
+def crystal_surge():
+    """The crystals blaze: arms open, chest up, the tendrils fan out, twinkles round the shoulders; then a shake
+    back to rest."""
     out = []
-    n = 20
+    n = 18
     for i in range(n):
         t = i / (n - 1)
-        s = ease(min(1.0, t * 3)) * (1 - ease(max(0.0, (t - 0.75) / 0.25)))
-        out.append((replace(BASE, spread=1.1 * s, drag=0.5 * s, flutter=t * 3, crystal=0.5 + 0.5 * s, lean=-3 * s,
-                            tilt=-6 * s, eyes='happy' if 0.3 < t < 0.7 else 'open', squash=1 + 0.02 * s,
-                            front=[burst((t - 0.3) * 2, -380 + 760 * (i % 2), -980, seed=i, count=6, radius=90,
-                                         color=VIOLET_LIGHT)] if 0.3 < t < 0.75 else []), 100 if 5 < i < 15 else 80))
-    for k in range(3):
-        out.append((replace(BASE, x=4 * (-1) ** k, flutter=k / 2 + 0.2, spread=0.15 * (-1) ** k), 60))
-    out.append((BASE, 100))
+        s = ease(min(1.0, t * 3)) * (1 - ease(max(0.0, (t - 0.7) / 0.3)))
+        out.append((P(crystal=1.3 * s, gems=1 + 0.7 * s, eyes=1 + 0.8 * s, lift=12 * s, spread=1.0 * s, arm_r=-45 * s,
+                      arm_l=10 * s, head_rot=-6 * s, head_dy=-3 * s, hip_dy=-2 * s, wave=0.6 + s, flutter=t * 1.5,
+                      front=[twinkles(t, [(-230, -820), (230, -820), (-300, -660), (300, -660), (0, -980)], seed=7,
+                                      color=mix(VIOLET_LIGHT, WHITE, 0.5))] if 0.15 < t < 0.8 else []), 100))
+    out += [(P(shake=4 * (-1) ** k, head_rot=2 * (-1) ** k), 60) for k in range(3)] + [(P(), 100)]
     return out
 
 
 def vent():
-    """A sigh: shoulders up, a pause, steam blows out of the shoulder vents and the suit sinks."""
-    out = tween(BASE, [
-        (3, [90, 90, 110], ease, dict(lift=10, squash=1.04, eyes='closed', tilt=-6, spread=0.2)),
-        (1, 260, linear, dict(squash=1.045)),
-        (4, [70, 80, 90, 110], ease_out, dict(lift=0, squash=0.96, crouch=0.12, tilt=6, spread=0, droop=0.3)),
-        (2, [160, 120], ease, dict(squash=1.0, crouch=0, tilt=0, droop=0, eyes='open')),
+    """A sigh: shoulders up, a held breath, steam blows from the shoulder vents and the whole suit sags."""
+    out = keys(P(), [
+        (3, [90, 90, 110], ease, dict(hip_dy=-4, head_dy=-4, head_rot=-4, arm_r=-6, eyes=0.7, lift=4)),
+        (1, 260, linear, dict(head_rot=-5)),
+        (4, [70, 80, 90, 110], ease_out, dict(hip_dy=10, head_dy=6, head_rot=6, arm_r=8, arm_l=-4, eyes=0.4, lift=0, wave=0.2)),
+        (2, [160, 120], ease, dict(REST, eyes=1.0)),
     ])
-    return fx(out, lambda p, t, i: replace(p, flutter=t, front=[vents((i - 4) / 6, 1.0 - max(0, i - 8) * 0.4)] if i >= 4 else []))
+    return fx(out, lambda p, t, i: replace(p, front=[vents((i - 4) / 6, 1.0 - max(0, i - 8) * 0.4)] if i >= 4 else []))
 
 
 def startled():
-    """Danger: a jump back into guard, plumes snapping up, the visor wide, a beacon flash."""
-    out = [(replace(BASE, eyes='wide', squash=1.06, lift=40, x=-30, spread=1.0, drag=-0.8, front=[beacon(0.1, 0.8)]), 60),
-           (replace(BASE, eyes='wide', lift=60, x=-50, spread=1.1, drag=-0.6, front=[beacon(0.3, 1.0)]), 70)]
-    out += tween(replace(BASE, x=-50, lift=60, eyes='wide', spread=1.1), [
-        (2, [60, 80], ease_in, dict(lift=0, **GUARD, spread=0.9)),
-        (1, 90, linear, dict(squash=0.94)),
-        (1, 500, linear, dict(squash=1.0, eyes='angry')),
-        (3, [100, 100, 120], ease, dict(x=0, crouch=0, feet=BASE.feet, lean=0, hands=(LH, RH), fist=(0, 1), w_angle=-6,
-                                       spread=0, eyes='open')),
-    ])
-    return fx(out, lambda p, t, i: replace(p, flutter=t * 2))
+    """Danger: a jump back with the arms flung, tendrils snapping up, then down into a guard; it holds, relaxes."""
+    out = [(P(eyes=2.0, lift=40, x=-30, arm_r=-70, arm_l=24, spear_rot=-20, feet=((10, -24), (-10, -18)), spread=1.0,
+              head_rot=-6, wave=2.0, front=[beacon(0.1, 0.8)]), 60),
+           (P(eyes=2.0, lift=60, x=-50, arm_r=-60, arm_l=20, spear_rot=-24, feet=((10, -20), (-10, -14)), spread=1.0,
+              wave=2.0, flutter=0.3, front=[beacon(0.3, 1.0)]), 70)]
+    out += keys(out[-1][0], [(2, [50, 60], ease_in, dict(lift=0, feet=((0, 0), (0, 0)), arm_r=-20, front=[])),
+                             (1, 80, linear, dict(GUARD, x=-50, squash=0.94, spread=0.6)),
+                             (1, 80, linear, dict(squash=1.02)),
+                             (1, 500, linear, dict(squash=1.0, spread=0.3)),
+                             (4, [100, 100, 110, 130], ease, dict(REST, x=0, eyes=1.0, gems=1.0))])
+    return out
 
 
 def love():
@@ -1979,166 +1721,161 @@ def love():
     for i in range(n):
         t = i / (n - 1)
         size = back_out(min(1.0, t * 2.5)) * (1 - ease(max(0.0, (t - 0.8) / 0.2)))
-        out.append((replace(BASE, eyes='happy', glow=1.2, spread=0.3 + 0.2 * osc(t, 0.5), flutter=t * 2, crystal=0.8,
-                            hands=((-170, -520), RH), fist=(0, 1), tilt=4 * osc(t),
-                            front=[holo_heart(t, size=size)]), 100))
-    return out
+        out.append((P(pose=3, eyes=1.6, gems=1.3, crystal=0.3, rot=2 * osc(t), front=[holo_heart(t, size=size, at_hand=0),
+                                                                                      blush(0.7 * size)]), 100))
+    return pop(P(), P(pose=3))[:2] + out + pop(P(pose=3), P())[1:]
 
 
 def birthday():
-    out = tween(BASE, [
-        (2, 70, ease, dict(crouch=0.15, squash=0.97, eyes='happy')),
-        (3, [60, 60, 90], ease_out, dict(crouch=0, squash=1.0, **{**RAISED, 'eyes': 'happy'})),
-    ])
+    out = keys(P(), [(2, [70, 80], ease, dict(CROUCH, eyes=1.4))])
+    out += pop(out[-1][0], P(pose=4, eyes=1.7, gems=1.4))[1:]
     n = 16
     for i in range(n):
         t = i / (n - 1)
-        out.append((replace(BASE, **{**RAISED, 'eyes': 'happy', 'spread': 0.8 + 0.2 * osc(t, 0.5)}, flutter=t * 2,
-                            lift=8 * max(0.0, osc(t, 0.5)),
-                            front=[confetti_burst(min(1.0, t * 1.1))], over=[fireworks(t, seed=21, bursts=5)]), 110))
-    out += tween(out[-1][0], [(3, [70, 80, 100], ease, dict(hands=(LH, RH), w_grip=0, w_angle=-6, w_glow=0, spread=0,
-                                                           crystal=0.5, lift=0, front=[], over=[]))])
+        out.append((P(pose=4, eyes=1.7, gems=1.3 + 0.3 * osc(t * 2), crystal=0.5, lift=10 * max(0.0, osc(t, 0.5)),
+                      front=[confetti_burst(min(1.0, t * 1.1))], over=[fireworks(t, seed=21, bursts=5)]), 110))
+    out += pop(P(pose=4), P(hip_dy=8))
+    out += keys(out[-1][0], [(2, [90, 110], ease, dict(hip_dy=0))])
     return out
 
 
 def refuel():
-    """Snack: a violet energy cell from the left hand pressed into the chest core; the core and crystals light."""
+    """Snack: the head turns to watch a violet energy cell fly in and lock into the chest gem; the gems and
+    crystals surge; a happy hop."""
     out = []
-    start = (-300, -260)
-    core = (0, -566)
-    for i in range(6):
-        t = (i + 1) / 6
+    chest = at(P(), 'gem')
+    start = (-420, -260)
+    for i in range(7):
+        t = (i + 1) / 7
         u = ease(t)
-        pos = (lerp(start[0], core[0] - 60, u), lerp(start[1], core[1], u) - 80 * math.sin(math.pi * u))
-        out.append((replace(BASE, hands=((pos[0] - 10, pos[1] + 50), RH), fist=(0, 1), eyes='happy' if t > 0.6 else 'open',
-                            tilt=4 * u, flutter=t, front=[energy_cell(pos[0], pos[1], -30 + 30 * u, size=min(1.0, t * 2))]), 80))
-    for i in range(4):
-        t = (i + 1) / 4
-        out.append((replace(BASE, hands=((core[0] - 60 + 50 * t, core[1] + 50), RH), fist=(0, 1), eyes='happy', tilt=4,
-                            front=[energy_cell(core[0] - 60 + 60 * t, core[1], 0, size=1 - t * 0.9)]), 70))
+        pos = (lerp(start[0], chest[0], u), lerp(start[1], chest[1], u) - 140 * math.sin(math.pi * u))
+        out.append((P(eyes=1.2 + 0.4 * u, head_rot=lerp(-8, 8, u), head_dy=4 * u, arm_r=-12 * u, flutter=t,
+                      front=[energy_cell(pos[0], pos[1], -40 + 40 * u, size=min(1.0, t * 2) * (1 - 0.8 * (t > 0.9)))]), 80))
     for i in range(8):
         t = i / 7
-        out.append((replace(BASE, glow=1.5 - 0.5 * t, crystal=1.0 - 0.5 * t, eyes='happy', squash=1 + 0.03 * math.sin(t * 6),
-                            spread=0.5 * (1 - t), flutter=t * 2, hands=(lerp_pt((core[0] - 10, core[1] + 50), LH, ease(t)), RH),
-                            fist=(0, 1), front=[burst(t, 0, -566, seed=4, radius=240, count=12, color=VIOLET_LIGHT)]), 90))
-    out.append((BASE, 100))
+        hopping = math.sin(t * math.pi)
+        out.append((P(gems=2.0 - 0.9 * t, crystal=1.0 - 0.8 * t, eyes=1.8 - 0.6 * t, lift=16 * hopping,
+                      feet=((0, -10 * hopping), (0, -10 * hopping)), arm_r=-60 * hopping, head_rot=8 * (1 - t), head_dy=4 * (1 - t),
+                      spread=0.6 * hopping, wave=1.0, flutter=t * 2,
+                      front=[burst(t, chest[0], chest[1], seed=4, radius=260, count=12, color=VIOLET_LIGHT)]), 90))
+    out.append((P(), 100))
     return out
 
 
 def coolant():
-    """Water: coolant mist blasts from the shoulder vents, the suit relaxes with closed eyes."""
+    """Water: coolant mist blasts from the shoulder vents; the head tips back, eyes dim with relief."""
     out = []
     n = 14
     for i in range(n):
         t = i / (n - 1)
-        out.append((replace(BASE, eyes='closed' if 2 < i < 12 else 'open', tilt=-5 * hop(t), lift=6 * hop(t),
-                            squash=1 + 0.02 * hop(t), flutter=t, droop=0.2 * hop(t),
-                            front=[vents(t * 2 % 1, 1.0 if i < 11 else 0.5), vents((t * 2 + 0.5) % 1, 0.8)]), 110))
+        h = hop(t)
+        out.append((P(eyes=lerp(1.0, 0.4, h), head_rot=-6 * h, head_dy=-3 * h, arm_r=-16 * h, arm_l=4 * h, hip_dy=-2 * h,
+                      lift=4 * h, wave=0.4, flutter=t,
+                      front=[vents(t * 2 % 1, 1.0 if i < 11 else 0.5), vents((t * 2 + 0.5) % 1, 0.8)]), 110))
     return out
 
 
 def shy():
-    """The plumes curl forward over the face like a fan; the visor peeks between them once."""
-    out = []
-    cover = (0, -760)
-    plan = [(0.3, 'open'), (0.7, 'happy'), (1.0, 'happy'), (1.0, 'happy'), (1.0, 'closed'), (0.85, 'happy'),
-            (0.85, 'happy'), (1.0, 'closed'), (1.0, 'closed'), (0.6, 'happy'), (0.2, 'happy'), (0.0, 'open')]
-    for i, (r, e) in enumerate(plan):
-        out.append((replace(BASE, reach=r, reach_to=cover, eyes=e, tilt=8 * r, crouch=0.08 * r, flutter=i / 6,
-                            hands=((-120, -470 * r - 378 * (1 - r)), RH), fist=(0, 1)), 120 if 2 < i < 9 else 80))
+    """Reminder done: fist to the face, a step back, a blush on the mask; peeks; back."""
+    out = pop(P(head_rot=-4), P(pose=3, eyes=0.8))
+    plan = [(-2, 0.4, 120), (-4, 0.8, 140), (-5, 1.0, 160), (-5, 1.0, 200), (-3, 0.8, 140), (-5, 1.0, 220)]
+    out += [(P(pose=3, rot=r, x=-10 * b, eyes=0.7 if i != 4 else 1.6, front=[blush(b)]), ms) for i, (r, b, ms) in enumerate(plan)]
+    out += pop(P(pose=3, eyes=0.8), P())
     return out
 
 
 def calibrate():
-    """Eye break: a joint calibration routine: the left arm sweeps up in an arc, the waist leans each way, the
-    head scans, and every joint ticks into place."""
-    out = tween(BASE, [
-        (4, 90, ease, dict(hands=((-330, -760), RH), fist=(0, 1), lean=-6, eyes='scan', look=-1)),
-        (1, 200, linear, dict(squash=1.01)),
-        (4, 90, ease, dict(hands=((-60, -980), RH), lean=6, look=1, tilt=8)),
-        (1, 200, linear, dict(squash=1.0)),
-        (4, 90, ease, dict(hands=(LH, RH), lean=0, look=0, tilt=0, eyes='open')),
-        (1, 120, linear, dict(squash=0.98, eyes='happy')),
-        (1, 120, linear, dict(squash=1.0)),
-    ])
-    return fx(out, lambda p, t, i: replace(p, flutter=t, crystal=0.5 + 0.4 * (i in (4, 9, 15))))
-
-
-def war_drum():
-    """Friday evening: the butt of the halberd beats a slow-slow-quick-quick rhythm, a ring on every hit."""
-    beats = (0, 4, 8, 10, 12)
+    """Eye break: a joint check under a diagnostic sweep: the head left and right, the free arm up and down, the
+    spear arm, the knees; each joint ticked off with a flash of the gems."""
+    tests = [dict(head_rot=-10), dict(head_rot=10), dict(arm_r=-110), dict(arm_r=20), dict(arm_l=26, spear_rot=-10),
+             dict(hip_dy=26, feet=((-10, 0), (10, 0))), dict()]
     out = []
-    n = 16
-    for i in range(n):
-        t = i / n
-        hit = i in beats
-        up = (i + 1) in beats or (i + 1) % n in beats
-        rh = (RH[0], RH[1] - (36 if up else 0))
-        out.append((replace(BASE, hands=(LH, rh), crouch=0.08 if hit else 0, squash=0.98 if hit else 1.0,
-                            spread=0.4 if hit else 0.15, eyes='happy' if 4 <= i < 12 else 'open', flutter=t * 2,
-                            tilt=4 * osc(t, 0.5), crystal=0.9 if hit else 0.5,
-                            front=[shockwave(0.25, x=176, size=0.4, dust=False)] if hit else []), 100))
+    cur = P(eyes=1.5)
+    for k, test in enumerate(tests):
+        target = dict(REST, eyes=1.5, **test)
+        seg = keys(cur, [(3, [80, 80, 100], ease, target)])
+        seg = [(replace(p, front=[scan_grid((k * 3 + j + 1) / (len(tests) * 3))]), ms) for j, (p, ms) in enumerate(seg)]
+        out += seg
+        cur = seg[-1][0]
+        out.append((replace(cur, gems=1.7, front=[]), 140))
+    out += keys(replace(cur, front=[]), [(2, [90, 110], ease, dict(REST, eyes=1.0))])
     return out
 
 
-# Moves: flying on the crystal jets, and a ground dash.
+def war_drum():
+    """Friday evening: the spear beats the ground slow, slow, quick-quick; the knees bounce, the head nods and
+    the free fist pumps on every hit; a ring each time."""
+    beats = (0, 4, 8, 10, 12)
+    out = []
+    n = 16
+    butt = at(P(), 'butt')
+    for i in range(n):
+        t = i / n
+        hit = i in beats
+        up = (i + 1) % n in beats
+        out.append((P(arm_l=14 if up else 0, spear_dy=-16 if up else 0, hip_dy=10 if hit else (2 if up else 4),
+                      head_rot=5 if hit else -2, head_dy=3 if hit else 0, arm_r=-70 if hit else -30,
+                      gems=1.6 if hit else 1.0, eyes=1.6 if hit else 1.1, crystal=0.5 if hit else 0.1, wave=1.0, flutter=t,
+                      front=[shockwave(0.25, x=butt[0], size=0.4, dust=False)] if hit else []), 100))
+    return out
+
+
+# Moves ------------------------------------------------------------------------------------------------------
+
+FLY = dict(feet=((-16, -22), (-30, -40)), hip_dy=8, arm_r=-22, arm_l=-14, spear_rot=68, body_rot=0, head_rot=-4, eyes=1.6,
+           gems=1.2, spread=0.4, wave=1.6)
+
+
 def fly(phase, angle=0.0):
-    """Faces right. Mount: crouch, jets light, lift; loop tilted by `angle` (degrees, + climbs); land."""
-    forward = dict(hands=((-100, -520), (230, -470)), w_angle=70, w_grip=300, fist=(1, 1))
+    """Faces right. Mount: crouch, jets light, rise leaning into the flight with the spear levelled forward and
+    the legs trailing; loop tilted by `angle` (+ climbs); land with a shockwave."""
+    mid = 300
     if phase == 'start':
-        out = tween(BASE, [
-            (2, 70, ease, dict(crouch=0.3, squash=0.95, eyes='angry', jet=0.3, flicker=0.3)),
-            (3, [60, 60, 80], ease_out, dict(crouch=0.05, squash=1.03, lift=60, jet=1.0, lean=12, wind=0.8,
-                                            feet=((-80, -10), (40, -30)), flicker=1.0, **forward)),
-        ])
-        return follow_through(out)
+        out = keys(P(), [(2, [70, 70], ease, dict(CROUCH, eyes=1.4, jet=0.3, flicker=0.3))])
+        out += keys(out[-1][0], [(3, [60, 60, 80], ease_out, dict(REST, **FLY, lift=70, rot=12, pivot=mid, jet=1.0, flicker=1.2))])
+        return out
     if phase == 'loop':
         out = []
         n = 8
         for i in range(n):
             t = i / n
-            out.append((replace(BASE, lift=60 + 10 * osc(t), lean=12 - angle * 0.4, tilt=-angle * 0.3, jet=1.0 + 0.3 * (angle > 0),
-                                flicker=t * 2, eyes='angry', wind=1.0, flutter=t * 2, feet=((-80, -10), (40, -30)),
-                                back=[speed_lines(0.7 + 0.3 * osc(t))], **forward), 70))
+            out.append((P(**FLY, lift=70 + 10 * osc(t), rot=12 - angle * 0.6, pivot=mid, jet=1.0 + 0.3 * (angle > 0),
+                          flicker=t * 2, flutter=t * 2, ghosts=((-90, 0.22),), back=[speed_lines(0.7 + 0.3 * osc(t))]), 70))
         return out
-    out = tween(replace(BASE, lift=60, lean=12, jet=1.0, eyes='angry', wind=1.0, feet=((-80, -10), (40, -30)), **forward), [
-        (2, [60, 60], ease, dict(lean=-6, lift=40, jet=1.2)),
-        (1, 70, linear, dict(lift=0, jet=0, crouch=0.4, squash=0.92, lean=0, feet=BASE.feet, wind=0.4)),
-        (3, [70, 80, 100], ease, dict(crouch=0, squash=1.0, hands=(LH, RH), w_angle=-6, w_grip=0, fist=(0, 1), eyes='open',
-                                     wind=0.15)),
-    ])
-    out = fx(out, lambda p, t, i: replace(p, front=[shockwave(0.2 + (i - 3) * 0.2, size=0.6)] if 3 <= i < 7 else []))
-    return follow_through(out)
+    out = keys(P(**FLY, lift=70, rot=12, pivot=mid, jet=1.0), [
+        (2, [60, 60], ease, dict(rot=-4, lift=30, jet=1.2, feet=((0, -6), (0, -6)))),
+        (1, 60, linear, dict(REST, lift=0, rot=0, jet=0, hip_dy=26, squash=0.94, feet=((-8, 0), (8, 0)), eyes=1.6))])
+    out = fx(out, lambda p, t, i: replace(p, front=[shockwave(0.3, size=0.6)] if i == len(out) - 1 else []))
+    out += keys(out[-1][0], [(3, [80, 90, 110], ease, dict(REST, squash=1.0, eyes=1.0, front=[]))])
+    return out
+
+
+DASH = dict(hip_dy=22, body_rot=10, feet=((-34, 0), (22, 0)), spear_rot=72, arm_l=-10, arm_r=24, head_rot=-6, eyes=1.7,
+            gems=1.3, spread=0.5, wave=1.8)
 
 
 def dash(phase):
-    """Faces right: low skim over the ground with violet afterimages and dust."""
-    low = dict(crouch=0.45, lean=20, feet=((-150, -10), (40, 0)), hands=((-200, -420), (190, -440)), w_angle=74, w_grip=300,
-               fist=(1, 1), eyes='angry', wind=1.0)
+    """Faces right: a low skim with the spear forward, violet afterimages and dust; a skidding stop."""
     if phase == 'start':
-        return [(replace(BASE, crouch=0.3, squash=0.95, eyes='angry', lean=6), 70),
-                (replace(BASE, **low, squash=0.97), 60),
-                (replace(BASE, **low, ghosts=((-90, 0.3),)), 60)]
+        return keys(P(), [(1, 70, ease, dict(CROUCH, eyes=1.4)), (2, [60, 60], ease_out, dict(DASH))])
     if phase == 'loop':
         out = []
         n = 6
         for i in range(n):
             t = i / n
-            out.append((replace(BASE, **low, lift=8 + 4 * osc(t, 0.5), flutter=t * 3,
-                                ghosts=((-110, 0.4), (-220, 0.22), (-330, 0.1)),
-                                front=[dust(t, x=-160, side=-1)], back=[speed_lines(0.9)]), 60))
+            out.append((P(**DASH, lift=4 + 3 * osc(t, 0.5), flutter=t * 2, ghosts=((-110, 0.4), (-220, 0.22), (-330, 0.1)),
+                          front=[dust(t, x=-160, side=-1)], back=[speed_lines(0.9, y0=-700, y1=-120)]), 60))
         return out
-    return [(replace(BASE, **{**low, 'lean': -6}, front=[dust(0.1, x=40, side=1)]), 70),
-            (replace(BASE, **{**low, 'lean': -10, 'crouch': 0.5}, front=[dust(0.4, x=60, side=1)]), 80),
-            (replace(BASE, crouch=0.2, lean=0, eyes='open', front=[dust(0.7, x=60, side=1)]), 90),
-            (BASE, 110)]
+    out = keys(P(**DASH), [(2, [70, 80], ease_out, dict(body_rot=-8, hip_dx=-6, feet=((-20, 0), (30, 0)))),
+                           (3, [80, 90, 110], ease, dict(REST, eyes=1.0, gems=1.0))])
+    return fx(out, lambda p, t, i: replace(p, front=[dust(0.1 + t * 0.8, x=80, side=1)] if i < 4 else []))
 
 
 SEQUENCES = {
     'idle': lambda: idle(),
-    'idle_scan': lambda: idle('scan'),
-    'idle_plume': lambda: idle('plume'),
+    'idle_surge': lambda: idle('surge'),
     'idle_shift': lambda: idle('shift'),
+    'idle_ponder': ponder,
     'idle_happy': lambda: idle('happy'),
     'idle_poor': lambda: idle('poor'),
     'holo/start': lambda: think('start'),
@@ -2149,12 +1886,12 @@ SEQUENCES = {
     'scan/loop': lambda: scan('loop'),
     'scan/flick': lambda: scan('loop', flicking=True),
     'scan/end': lambda: scan('end'),
-    'scan/to_forge': scan_to_forge,
-    'forge/start': lambda: forge('start'),
-    'forge/loop': lambda: forge('loop'),
-    'forge/weld': lambda: forge('loop', weld=True),
-    'forge/end': lambda: forge('end'),
-    'forge/to_scan': forge_to_scan,
+    'scan/to_drill': scan_to_drill,
+    'drill/start': lambda: drill('start'),
+    'drill/loop': lambda: drill('loop'),
+    'drill/spin': lambda: drill('loop', spin=True),
+    'drill/end': lambda: drill('end'),
+    'drill/to_scan': drill_to_scan,
     'signal/start': lambda: signal('start'),
     'signal/loop': lambda: signal('loop'),
     'signal/end': lambda: signal('end'),
@@ -2191,8 +1928,8 @@ SEQUENCES = {
     'peek/end_right': lambda: mirrored(peek('end')),
     'look': look_around,
     'kata': kata,
-    'blade_check': blade_check,
-    'preen': preen,
+    'shine': shine,
+    'crystal_surge': crystal_surge,
     'vent': vent,
     'startled': startled,
     'love': love,
