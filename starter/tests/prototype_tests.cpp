@@ -19,6 +19,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QMenu>
+#include <QPushButton>
 #include <QRandomGenerator>
 #include <QScopeGuard>
 #include <QSignalSpy>
@@ -1969,7 +1970,7 @@ private slots:
             QCOMPARE(monitor.note().text(), pet::EasterEggs::reminderNote("leave-work") + "\n" + summary);
             QVERIFY(monitor.note().hasDetails());
             window.setRecapEnabled(false); QVERIFY(window.savePreferences());
-            monitor.note().hide(); // A reminder waits until nothing else is being said.
+            emit monitor.note().clicked(); monitor.note().hide(); // Done; the next day's reminder is a new one. playOut(window.player()); playOut(window.player());
             local = QDateTime(QDate(2026, 10, 8), QTime(16, 50)); monitor.update(now + 2);
             QCOMPARE(monitor.note().text(), pet::EasterEggs::reminderNote("leave-work")); QVERIFY(!monitor.note().hasDetails());
             monitor.stop(); // Writes the counters now rather than after the short delay.
@@ -2121,8 +2122,11 @@ private slots:
         QCOMPARE(window.eggs().dueReminder(), QString("lunch"));
         QVERIFY(monitor.apply(event("session_end"), t)); tick();
         QVERIFY(monitor.note().isVisible()); QCOMPARE(monitor.note().text(), pet::EasterEggs::reminderNote("lunch"));
-        QCOMPARE(player.requestedState(), QString("snack_hungry")); QVERIFY(window.eggs().dueReminder().isEmpty());
+        QCOMPARE(player.requestedState(), QString("snack_hungry"));
+        // It asks to be confirmed, and is only given once answered.
+        QVERIFY(monitor.note().asking()); QCOMPARE(window.eggs().dueReminder(), QString("lunch"));
         QTest::mouseClick(&monitor.note(), Qt::LeftButton); QVERIFY(!monitor.note().isVisible());
+        QVERIFY(window.eggs().dueReminder().isEmpty());
         QCOMPARE(player.requestedState(), QString("cheer_shy"));
         playOut(player); tick(); QVERIFY(!monitor.note().isVisible());
         local = local.addDays(1);
@@ -2231,6 +2235,101 @@ private slots:
         locked.activity(t0 + minute, false); QCOMPARE(locked.eyesActiveMs(t0 + minute + 30000), qint64(0));
         locked.activity(t0 + 2 * minute); locked.activity(t0 + 2 * minute + 30000, false);
         QCOMPARE(locked.eyesActiveMs(t0 + 2 * minute + 30000), qint64(30000));
+    }
+    void snoozeAndNudges() {
+        using pet::Snooze; using pet::Nudges;
+        Snooze snooze;
+        QVERIFY(!snooze.activeAt(1000));
+        snooze.start(1000, 15 * 60000);
+        QVERIFY(snooze.activeAt(1000 + 15 * 60000 - 1)); QVERIFY(!snooze.activeAt(1000 + 15 * 60000));
+        QCOMPARE(snooze.remaining(1000 + 5 * 60000), qint64(10 * 60000));
+        snooze.resume(); QVERIFY(!snooze.activeAt(2000));
+        snooze.startUntilTurnEnds(); QVERIFY(snooze.activeAt(1e15)); QCOMPARE(snooze.remaining(2000), qint64(0));
+        snooze.turnFinished(); QVERIFY(!snooze.activeAt(2000));
+        // Tomorrow morning: today's six o'clock if it has not come yet, else the next day's.
+        QCOMPARE(Snooze::tomorrowMs(QDateTime(QDate(2026, 10, 7), QTime(2, 0))), qint64(4 * 3600 * 1000));
+        QCOMPARE(Snooze::tomorrowMs(QDateTime(QDate(2026, 10, 7), QTime(14, 0))), qint64(16 * 3600 * 1000));
+        Nudges nudges;
+        QVERIFY(!nudges.held("water", 0));
+        nudges.shown("water"); QVERIFY(nudges.held("water", 1e12)); // On screen.
+        QVERIFY(!nudges.ignored("water", 100)); // One ask of three used.
+        QVERIFY(nudges.held("water", 100 + Nudges::laterMs - 1)); QVERIFY(!nudges.held("water", 100 + Nudges::laterMs));
+        nudges.shown("water"); nudges.later("water", 500); // Put off: that ask is not used up.
+        QCOMPARE(nudges.asks("water"), 1); QVERIFY(nudges.held("water", 501));
+        nudges.shown("water"); QVERIFY(!nudges.ignored("water", 0));
+        nudges.shown("water"); QVERIFY(nudges.ignored("water", 0)); // Asked three times: let go.
+        nudges.shown("eyes"); nudges.settle("eyes", 0); QCOMPARE(nudges.asks("eyes"), 1); // Still on screen.
+        nudges.settle({}, 10); QCOMPARE(nudges.asks("eyes"), 0); QVERIFY(nudges.held("eyes", 11)); // Replaced by something else.
+        nudges.forget("eyes"); QVERIFY(!nudges.held("eyes", 11));
+    }
+    void remindersAreConfirmedAndAskedAgain() {
+        pet::PetWindow window(nullptr, {}, false); window.show();
+        pet::Monitor monitor(window); auto &player = window.player(); player.setPaused(true);
+        window.ambient().setLevel(pet::AmbientLevel::Off);
+        QDateTime local(QDate(2026, 10, 7), QTime(14, 0)); window.eggs().setClock([&] { return local; });
+        QPoint pointer; monitor.pointer = [&] { return pointer; };
+        window.setEyeMinutes(0); window.setWaterMinutes(45);
+        const qint64 minute = 60000; qint64 t = QDateTime::currentMSecsSinceEpoch();
+        auto work = [&](qint64 minutes) {
+            for (const qint64 end = t + minutes * minute; t < end;) { t += 30000; pointer += QPoint(1, 0); monitor.update(t); }
+        };
+        auto settle = [&] { playOut(player); playOut(player); };
+        auto press = [&](const QString &text) {
+            for (auto *button : monitor.note().findChildren<QPushButton*>()) if (button->text() == text) { button->click(); return; }
+            QFAIL(qPrintable("no button " + text));
+        };
+        pointer = QPoint(1, 1); monitor.update(t);
+        work(45);
+        QVERIFY(monitor.note().isVisible()); QVERIFY(monitor.note().asking());
+        QCOMPARE(monitor.note().text(), pet::Wellness::note("water"));
+        // Later: not given, and asked again in ten minutes.
+        press("Later"); QVERIFY(!monitor.note().isVisible()); QCOMPARE(window.wellness().due(t), QString("water"));
+        settle(); work(9); QVERIFY(!monitor.note().isVisible());
+        work(2); QVERIFY(monitor.note().isVisible()); QVERIFY(monitor.note().asking());
+        // Ignored, it fades and comes back too, but only so many times; then it is let go until the next interval.
+        for (int asked = 1; asked < pet::Nudges::maxAsks; ++asked) {
+            monitor.note().hide(); settle(); work(1); QVERIFY(!monitor.note().isVisible());
+            work(10); QVERIFY2(monitor.note().isVisible(), qPrintable(QString::number(asked)));
+        }
+        monitor.note().hide(); settle(); work(1);
+        QCOMPARE(window.wellness().due(t), QString()); work(12); QVERIFY(!monitor.note().isVisible());
+        // Skip today: the interval starts over without the happy reaction.
+        work(45); QVERIFY(monitor.note().isVisible());
+        press("Skip today"); QVERIFY(!monitor.note().isVisible()); QCOMPARE(window.wellness().due(t), QString());
+        QVERIFY(player.requestedState() != "cheer_shy");
+        // Done is the same as clicking the words.
+        settle(); work(45); QVERIFY(monitor.note().isVisible());
+        press("Done"); QVERIFY(!monitor.note().isVisible()); QCOMPARE(window.wellness().due(t), QString());
+        QCOMPARE(player.requestedState(), QString("cheer_shy"));
+    }
+    void snoozeSilencesEverythingButTheBadge() {
+        pet::PetWindow window(nullptr, {}, false); window.show();
+        pet::Monitor monitor(window); auto &player = window.player(); player.setPaused(true);
+        window.ambient().setLevel(pet::AmbientLevel::Off);
+        QDateTime local(QDate(2026, 10, 7), QTime(14, 0)); window.eggs().setClock([&] { return local; });
+        QPoint pointer; monitor.pointer = [&] { return pointer; };
+        window.setEyeMinutes(0); window.setWaterMinutes(45);
+        const qint64 minute = 60000; qint64 t = QDateTime::currentMSecsSinceEpoch();
+        auto work = [&](qint64 minutes) {
+            for (const qint64 end = t + minutes * minute; t < end;) { t += 30000; pointer += QPoint(1, 0); monitor.update(t); }
+        };
+        qint64 seq = 0;
+        auto event = [&](QString kind) { ++seq; return pet::Event{"claude", "z1", QString::number(seq), kind, {}, {}, "/work/abc-web", {}, t, {}}; };
+        pointer = QPoint(1, 1); monitor.update(t);
+        window.snooze().start(t, 50 * minute);
+        work(45);
+        QVERIFY(window.snoozeShown()); QVERIFY(window.quiet(t)); QVERIFY(!monitor.note().isVisible());
+        // An approval keeps its badge, but no bubble comes.
+        QVERIFY(monitor.apply(event("attention"), t)); work(1);
+        QCOMPARE(window.attention(), 1); QVERIFY(!monitor.bubble().isVisible());
+        QVERIFY(window.statusText().contains("snoozed"));
+        // Resuming brings the one waiting alert, not a replay of anything.
+        window.resumeSnooze(); work(1);
+        QVERIFY(!window.snoozeShown()); QVERIFY(monitor.bubble().isVisible()); QVERIFY(!window.statusText().contains("snoozed"));
+        // A snooze ends by itself, and one "until this turn finishes" ends with the turn.
+        window.snooze().start(t, 5 * minute); work(6); QVERIFY(!window.snoozeShown());
+        window.snoozeUntilTurnEnds(); work(1); QVERIFY(window.snoozeShown());
+        QVERIFY(monitor.apply(event("turn_finished"), t)); work(1); QVERIFY(!window.snoozeShown());
     }
     void monitorWithdrawsTurnedOffReminders() {
         QTemporaryDir directory;

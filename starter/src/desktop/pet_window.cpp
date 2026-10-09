@@ -117,6 +117,17 @@ PetWindow::PetWindow(QWidget *parent, const QString &path, bool persist)
     muteAction_ = menu_.addAction(QString());
     muteAction_->setCheckable(true); muteAction_->setChecked(muted_);
     connect(muteAction_, &QAction::toggled, this, &PetWindow::setMuted);
+    snoozeMenu_ = menu_.addMenu(QString());
+    for (const int minutes : Snooze::minuteChoices) {
+        snoozeActions_.append(snoozeMenu_->addAction(QString(), this, [this, minutes] { snoozeFor(minutes); }));
+        snoozeActions_.last()->setData(minutes);
+    }
+    turnSnoozeAction_ = snoozeMenu_->addAction(QString(), this, &PetWindow::snoozeUntilTurnEnds);
+    tomorrowSnoozeAction_ = snoozeMenu_->addAction(QString(), this, &PetWindow::snoozeUntilTomorrow);
+    snoozeMenu_->addSeparator();
+    resumeAction_ = snoozeMenu_->addAction(QString(), this, &PetWindow::resumeSnooze);
+    // The remaining time is worded when the menu opens, and Resume only shows while there is something to resume.
+    connect(snoozeMenu_, &QMenu::aboutToShow, this, &PetWindow::retranslate);
     onTopAction_ = menu_.addAction(QString());
     onTopAction_->setCheckable(true); onTopAction_->setChecked(preferences.onTop);
     connect(onTopAction_, &QAction::toggled, this, &PetWindow::setOnTop);
@@ -219,6 +230,19 @@ void PetWindow::retranslate() {
     sessionsAction_->setText(tr("Running sessions…"));
     recapAction_->setText(tr("Today's recap"));
     muteAction_->setText(tr("Mute alerts"));
+    {
+        const auto now = QDateTime::currentMSecsSinceEpoch();
+        const bool snoozed = snooze_.activeAt(now);
+        snoozeMenu_->setTitle(snoozed ? tr("Snoozed") : tr("Snooze"));
+        for (auto *action : snoozeActions_)
+            action->setText(action->data().toInt() == 60 ? tr("For 1 hour") : tr("For %1 minutes").arg(action->data().toInt()));
+        turnSnoozeAction_->setText(tr("Until this turn finishes"));
+        tomorrowSnoozeAction_->setText(tr("Until tomorrow"));
+        resumeAction_->setVisible(snoozed);
+        const auto left = int((snooze_.remaining(now) + 59999) / 60000);
+        //: %1 = minutes left of a snooze
+        resumeAction_->setText(left > 0 ? tr("Resume now (%1 min left)").arg(left) : tr("Resume now"));
+    }
     onTopAction_->setText(tr("Always on top"));
     settingsAction_->setText(tr("Settings…"));
     moreMenu_->setTitle(tr("More"));
@@ -329,6 +353,22 @@ void PetWindow::setMuted(bool muted) {
     if (muted == muted_) return;
     muted_ = muted; emit notificationsChanged();
     if (ready_) saveTimer_.start();
+}
+void PetWindow::snoozeFor(int minutes) {
+    snooze_.start(QDateTime::currentMSecsSinceEpoch(), minutes * 60000LL);
+    retranslate(); emit notificationsChanged();
+}
+void PetWindow::snoozeUntilTurnEnds() { snooze_.startUntilTurnEnds(); retranslate(); emit notificationsChanged(); }
+void PetWindow::snoozeUntilTomorrow() {
+    snooze_.start(QDateTime::currentMSecsSinceEpoch(), Snooze::tomorrowMs(eggs_.now()));
+    retranslate(); emit notificationsChanged();
+}
+void PetWindow::resumeSnooze() { snooze_.resume(); retranslate(); emit notificationsChanged(); }
+void PetWindow::setSnoozeShown(bool snoozed) {
+    if (snoozed == snoozeShown_) return;
+    snoozeShown_ = snoozed;
+    retranslate(); update(); updateTrayIcon();
+    setStatus(statusSessions_, statusAttention_, statusErrors_); // The tooltip says it.
 }
 void PetWindow::setSound(bool enabled) {
     if (enabled == sound_) return;
@@ -466,6 +506,7 @@ void PetWindow::setStatus(int sessions, int attention, int errors) {
                                  : tr("Agent Pet — %1 sessions").arg(sessions);
     if (attention > 0) text += " · " + (attention == 1 ? tr("1 needs attention") : tr("%1 need attention").arg(attention));
     if (errors > 0) text += " · " + (errors == 1 ? tr("1 tool error") : tr("%1 tool errors").arg(errors));
+    if (snoozeShown_) text += " · " + tr("snoozed");
     if (tray_.toolTip() != text) tray_.setToolTip(text);
     // Redraw only on a change: every icon update is a D-Bus round trip on desktop trays.
     const int badge = qBound(0, attention, 9);
@@ -489,6 +530,7 @@ void PetWindow::updateTrayIcon() {
     const QRect badge(size * 9 / 16, 1, size * 7 / 16 - 1, size * 7 / 16 - 1);
     if (trayAttention_ > 0) drawBadge(painter, badge, QColor("#d9480f"), trayAttention_ > 1 ? QString::number(trayAttention_) : "!");
     else if (trayError_) drawBadge(painter, badge, QColor("#c92a2a"), "!");
+    else if (snoozeShown_) drawBadge(painter, badge, QColor("#5c7cfa"), "z");
     painter.end();
     tray_.setIcon(QIcon(icon));
 }
@@ -564,6 +606,12 @@ void PetWindow::paintEvent(QPaintEvent *) {
         const int diameter = qMax(26, width() / 8);
         const QRect badge(width() * 3 / 4 - diameter / 2, height() / 8, diameter, diameter);
         drawBadge(painter, badge, QColor("#d9480f"), attention_ > 1 ? QString::number(qMin(attention_, 9)) : "!");
+    }
+    if (snoozeShown_) {
+        // A small "z" beside the attention badge, or in its place.
+        const int diameter = qMax(22, width() / 10);
+        const int x = width() * 3 / 4 - diameter / 2 - (attention_ > 0 ? qMax(26, width() / 8) + 2 : 0);
+        drawBadge(painter, QRect(x, height() / 8, diameter, diameter), QColor("#5c7cfa"), "z");
     }
 }
 void PetWindow::requestQuit() {
@@ -909,7 +957,8 @@ QWidget *PetWindow::reminderSettings(QWidget *parent) {
     box->setToolTip(tr("While you are active (agent activity or moving the pointer), the pet now and then reminds you\n"
                     "to rest your eyes and to drink some water. It waits while an alert or approval is waiting, while\n"
                     "alerts are muted and from 22:00 to 06:00. Five minutes away counts as a break and starts both over.\n"
-                    "Click a reminder to say you did it."));
+                    "A reminder has Done, Later (asks again in 10 minutes) and Skip today; one you ignore asks again after a while.\n"
+                    "Snooze (right-click menu) silences reminders and alerts for a while."));
     auto *layout = new QFormLayout(box);
     const auto choices = [box](const auto &minutes, int current, const QString &name) {
         auto *combo = new QComboBox(box); combo->setAccessibleName(name);

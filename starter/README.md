@@ -174,7 +174,7 @@ weekdays it blows bubbles and tells you to get ready to go home, and at 10 PM it
 tells you to go to sleep (each once a day, while it is running and visible; like the
 wellness reminders, it waits until you are around and nothing else needs you, and
 muted alerts hold it).
-Click the lunch bubble to dismiss it with a happy reaction.
+Lunch and go-home are questions like the wellness reminders below: **Done**, **Later** or **Skip today**.
 Settings → **Monday reminder**, **Lunch reminder**, **Go-home reminder** and **Sleep reminder** let
 you change these local times; the times above are the defaults. Turns finished
 on a Friday evening end in a dance, and a turn that ran for a quarter of an hour or
@@ -191,8 +191,10 @@ While you work, the pet reminds you to rest your eyes and to drink some water. A
 20 minutes of activity it says "Look at something far away for 20 seconds" and
 closes its eyes for a stretch (the 20-20-20 rule); click the note and it counts the 20 seconds down, then
 cheers. After 60 minutes it gets thirsty and says "Time for some water 💧"; click to
-say you had some and it cheers. Ignored, a reminder fades and comes back only after
-the next interval. Activity means moving the pointer, sending a prompt, or agent
+say you had some and it cheers. Each reminder (also lunch and go-home) is a question with
+**Done**, **Later** (asks again in 10 minutes) and **Skip today** (until the next interval, or tomorrow).
+Ignored, it fades and is asked again after 10 minutes, up to three times, then left until the next
+interval. Activity means moving the pointer, sending a prompt, or agent
 events while you were around in the last five minutes: a few idle minutes pause the
 timers, and five minutes away (or a locked screen) counts as a break and starts both
 over. Reminders wait until you have moved the pointer in the last minute, and while
@@ -200,6 +202,15 @@ an alert bubble shows, an agent waits on you or alerts are muted. They skip quie
 note). Settings → **Reminders** sets the eye break (off, 20, 30 or 45 minutes) and
 water (off, 45, 60 or 90 minutes); both are on by default. See
 [the design record](docs/adr/0019-wellness-reminders.md).
+
+### Snooze
+
+Right-click the pet (or the tray icon) → **Snooze**: 15 minutes, 30 minutes, 1 hour, until the
+current turn finishes, or until tomorrow morning (6 AM). While snoozed there are no alert bubbles,
+sounds, reminders or remarks; the attention badge still shows (with a small "z"), the animations keep
+following your sessions, and the menu shows the time left with **Resume now**. When it ends, the
+alerts that are still waiting show as one bubble. A restart clears a snooze. See
+[the design record](docs/adr/0037-reminder-confirm-and-snooze.md).
 
 ## Daily recap
 

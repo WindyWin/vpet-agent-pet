@@ -8,6 +8,7 @@
 #include "desktop/touch.h"
 #include "desktop/alert_bubble.h"
 #include "desktop/wander.h"
+#include "desktop/snooze.h"
 #include "desktop/wellness.h"
 #include "settings/preferences.h"
 #include <QDialog>
@@ -106,6 +107,17 @@ public:
     int attention() const { return attention_; }
     void setMuted(bool muted);
     bool muted() const { return muted_; }
+    // Snooze (#34): alerts, sounds, reminders and remarks are silent for a while; the badge stays. In memory only.
+    Snooze &snooze() { return snooze_; }
+    void snoozeFor(int minutes);
+    void snoozeUntilTurnEnds();
+    void snoozeUntilTomorrow();
+    void resumeSnooze();
+    // Muted or snoozed at `now`: nothing but the attention badge shows.
+    bool quiet(qint64 now) const { return muted_ || snooze_.activeAt(now); }
+    // The monitor tells whether the snooze is still on, so the pet shows its "z" and the tray tooltip says so.
+    void setSnoozeShown(bool snoozed);
+    bool snoozeShown() const { return snoozeShown_; }
     void setSound(bool enabled);
     bool sound() const { return sound_; }
     void setBubbles(int level);
@@ -180,6 +192,7 @@ private:
     Mood mood_;
     EasterEggs eggs_;
     Wellness wellness_;
+    Snooze snooze_;
     PreferencesStore store_;
     QMenu menu_;
     QSystemTrayIcon tray_;
@@ -187,10 +200,12 @@ private:
     QVariantAnimation slide_; // Eases a let-go pet to its hiding place before the hide plays, or a climber on and off its wall.
     QPointer<QDialog> settingsDialog_, previewDialog_, aboutDialog_;
     QAction *clickAction_ = nullptr, *onTopAction_ = nullptr, *muteAction_ = nullptr, *showAction_ = nullptr;
+    QAction *resumeAction_ = nullptr, *turnSnoozeAction_ = nullptr, *tomorrowSnoozeAction_ = nullptr;
+    QVector<QAction *> snoozeActions_; // One per Snooze::minuteChoices.
     QAction *updateAction_ = nullptr, *updatesItem_ = nullptr;
     QAction *sessionsAction_ = nullptr, *recapAction_ = nullptr, *settingsAction_ = nullptr, *previewAction_ = nullptr;
     QAction *recoverAction_ = nullptr, *aboutAction_ = nullptr, *quitAction_ = nullptr;
-    QMenu *moreMenu_ = nullptr, *statesMenu_ = nullptr;
+    QMenu *moreMenu_ = nullptr, *statesMenu_ = nullptr, *snoozeMenu_ = nullptr;
     QString language_ = "auto";
     QString pet_ = "vpet";
     QStringList plugins_;
@@ -200,7 +215,7 @@ private:
     int trayAttention_ = 0; // Badge shown on the tray icon; -1 forces a redraw.
     bool trayError_ = false;
     QPoint dragOffset_;
-    bool fallbackDrag_ = false, dragging_ = false, clickThrough_ = false, touchEnabled_ = true, wanderEnabled_ = true, recapEnabled_ = true;
+    bool snoozeShown_ = false, fallbackDrag_ = false, dragging_ = false, clickThrough_ = false, touchEnabled_ = true, wanderEnabled_ = true, recapEnabled_ = true;
     bool persist_ = true, ready_ = false, quitting_ = false, muted_ = false, sound_ = false, autostart_ = false;
     int attention_ = 0, bubbles_ = Preferences::RequestsAndErrors;
     QPoint pressPosition_;

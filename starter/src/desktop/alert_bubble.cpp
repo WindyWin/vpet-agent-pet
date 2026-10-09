@@ -3,6 +3,7 @@
 #include <QHBoxLayout>
 #include <QMouseEvent>
 #include <QPainter>
+#include <QVBoxLayout>
 
 namespace pet {
 AlertBubble::AlertBubble(QWidget *parent) : QWidget(parent) {
@@ -91,25 +92,56 @@ NoteBubble::NoteBubble(QWidget *parent) : QWidget(parent) {
     setAttribute(Qt::WA_ShowWithoutActivating);
     setAttribute(Qt::WA_MacAlwaysShowToolWindow);
     setAccessibleName(tr("Agent Pet note"));
-    auto *layout = new QHBoxLayout(this);
-    layout->setContentsMargins(16, 8, 16, 8);
+    auto *layout = new QVBoxLayout(this);
+    layout->setContentsMargins(16, 8, 16, 8); layout->setSpacing(4);
     label_ = new QLabel(this);
     label_->setTextFormat(Qt::PlainText); label_->setWordWrap(true);
     label_->setStyleSheet("color:#453324; font-weight:600;");
     label_->setMaximumWidth(260);
     layout->addWidget(label_);
+    // The answers to a question, hidden for a plain remark.
+    buttons_ = new QWidget(this);
+    auto *row = new QHBoxLayout(buttons_);
+    row->setContentsMargins(0, 0, 0, 0); row->setSpacing(6);
+    done_ = new QPushButton(buttons_); later_ = new QPushButton(buttons_); skip_ = new QPushButton(buttons_);
+    done_->setStyleSheet("QPushButton{color:#fff7e3; background:#8a4b12; border:0; border-radius:8px; padding:2px 10px; font-weight:600;}"
+                         "QPushButton:hover{background:#6f3b0d;}");
+    for (auto *button : {later_, skip_})
+        button->setStyleSheet("QPushButton{color:#8a4b12; background:#f3e3c3; border:0; border-radius:8px; padding:2px 10px; font-weight:600;}"
+                              "QPushButton:hover{background:#ecd3a5;}");
+    for (auto *button : {done_, later_, skip_}) { button->setFlat(true); button->setCursor(Qt::PointingHandCursor); row->addWidget(button); }
+    row->addStretch();
+    layout->addWidget(buttons_);
+    buttons_->hide();
+    retranslate();
     hide_.setSingleShot(true);
     connect(&hide_, &QTimer::timeout, this, &QWidget::hide);
+    connect(done_, &QPushButton::clicked, this, [this] { hide(); emit clicked(); });
+    connect(later_, &QPushButton::clicked, this, [this] { hide(); emit later(); });
+    connect(skip_, &QPushButton::clicked, this, [this] { hide(); emit skipped(); });
+}
+void NoteBubble::retranslate() {
+    setAccessibleName(tr("Agent Pet note"));
+    done_->setText(tr("Done")); later_->setText(tr("Later")); skip_->setText(tr("Skip today"));
+    later_->setToolTip(tr("Remind me again in 10 minutes")); skip_->setToolTip(tr("Don't remind me again until tomorrow"));
 }
 void NoteBubble::say(const QString &text, const QRect &pet, const QVector<QRect> &screens, const QString &details, int ms) {
     details_ = details; pet_ = pet; screens_ = screens;
+    buttons_->hide();
     setCursor(details.isEmpty() ? Qt::ArrowCursor : Qt::PointingHandCursor);
     setToolTip(details.isEmpty() ? QString() : tr("Click for more"));
     present(text, ms);
 }
+void NoteBubble::ask(const QString &text, const QRect &pet, const QVector<QRect> &screens, const QString &details, int ms) {
+    details_ = details; pet_ = pet; screens_ = screens;
+    buttons_->show();
+    setCursor(Qt::PointingHandCursor);
+    setToolTip(details.isEmpty() ? tr("Click to say it's done") : tr("Click for more"));
+    present(text, ms);
+}
 void NoteBubble::changeEvent(QEvent *event) {
     if (event->type() == QEvent::LanguageChange) {
-        setAccessibleName(tr("Agent Pet note"));
+        retranslate(); adjustSize();
         // What it says was worded in the old language and cannot be translated here: it goes, and whoever said it
         // may say it again.
         if (isVisible()) { hide_.stop(); details_.clear(); hide(); emit outdated(); }
@@ -129,7 +161,7 @@ void NoteBubble::mouseReleaseEvent(QMouseEvent *) {
     if (details_.isEmpty()) { hide(); emit clicked(); return; }
     const auto details = details_; details_.clear();
     setCursor(Qt::ArrowCursor); setToolTip({});
-    present(details, 15000);
+    present(details, qMax(15000, hide_.interval()));
 }
 void NoteBubble::paintEvent(QPaintEvent *) {
     QPainter painter(this);

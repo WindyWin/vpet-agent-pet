@@ -133,3 +133,4 @@ on a real desktop, and CI on Qt 6.5.3.
   Settings and lunch tests passed again after grouping the clock inputs.
 - A separate snooze/focus feature (#34) is not implemented in this revision;
   lunch uses the existing runtime Reminder policy and muted-notifications gate.
+  (Later: [0037](0037-reminder-confirm-and-snooze.md) added Snooze and turned these reminders into questions.)
