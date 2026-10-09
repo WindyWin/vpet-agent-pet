@@ -103,7 +103,9 @@ A phased state has three sequences (start, loop, end) and no `loops` count: it e
 on. Art without separate start and end can list the same sequence three times. Cues may share a state.
 
 A **reaction cue** draws one state from a weighted pool, and plays nothing when the pet maps none. Each
-state in a pool must end by itself and return to idle (`once`, or `phased` with `loops`).
+state in a pool must end by itself and return to idle (`once`, or `phased` with `loops`). The app never
+draws from a pool directly: each of [the pet's own triggers](plugins.md#the-pets-own-triggers) has a
+built-in rule that draws from the pool of its cue, and a plugin pack's rules can join it.
 
 A cue is a request, not a promise: the behavior runtime ([0031](adr/0031-behavior-runtime.md)) decides
 when it may play, so a surprise waits out an urgent session and a reminder waits until the user is free.

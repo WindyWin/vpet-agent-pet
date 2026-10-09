@@ -51,12 +51,13 @@ void Mood::keep(const QString &cue) {
     if (cue == "milestone" || (cue == "snack" && treat_.isEmpty())) treat_ = cue;
 }
 Mood::Celebration Mood::celebrate(const QString &occasion) {
-    const bool occasional = treat_ != "milestone" && !player_.pool(occasion).isEmpty();
+    const auto &rules = player_.rules();
+    const bool occasional = treat_ != "milestone" && rules.answers(occasion);
     auto cue = occasional ? occasion : treat_;
-    auto pool = player_.pool(cue);
     if (!occasional) treat_.clear();
-    if (pool.isEmpty()) { cue = "celebrate"; pool = player_.pool(cue); }
-    if (pool.isEmpty()) return {"turn-finished", player_.stateFor("turn-finished")};
-    return {cue, drawReaction(pool, random_)};
+    if (!rules.answers(cue)) cue = "celebrate";
+    const auto reaction = rules.draw(cue, random_);
+    if (!reaction || reaction->state.isEmpty()) return {"turn-finished", player_.stateFor("turn-finished")};
+    return {cue, reaction->state, reaction->say};
 }
 }

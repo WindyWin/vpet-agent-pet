@@ -14,6 +14,7 @@ Player::Player(QObject *parent) : QObject(parent) {
         error = tr("Cannot load the artwork pack. Reinstall Agent Pet to restore it.");
     }
     open(library.catalog(), error);
+    setRules(library.eventRules().rules());
 }
 Player::Player(QObject *parent, const QString &root, const QString &pet) : QObject(parent) {
     QString error;
@@ -29,8 +30,13 @@ void Player::open(const Catalog &catalog, const QString &error) {
     connect(&timer_, &QTimer::timeout, this, &Player::advance);
     if (!catalog.valid()) { fail(error); return; }
     catalog_ = catalog;
+    rules_ = EventRules(catalog_.pools);
     // The first idle is always the catalog's own entry; variants start with the second pass.
     variants_ = false; enter("idle"); variants_ = true;
+}
+void Player::setRules(const QVector<EventRule> &packs) {
+    rules_ = EventRules(catalog_.pools);
+    rules_.add(packs);
 }
 const Move *Player::move(const QString &state) const {
     const auto found = catalog_.moves.constFind(state);

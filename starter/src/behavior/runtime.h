@@ -60,6 +60,8 @@ struct Intent {
     // The state a producer already drew from the cue's pool, handed to presentation as is. The runtime never
     // reads it; empty lets presentation resolve the cue itself.
     QString state;
+    // What the pet says once the intent is admitted, such as a plugin rule's remark. The runtime never reads it.
+    QString remark;
 };
 
 // What submit() decided at once.

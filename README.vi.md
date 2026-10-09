@@ -253,7 +253,7 @@ flowchart TB
 
 ### Lộ trình theo kiến trúc
 
-Các công việc còn mở, đã đối chiếu với mã nguồn đã merge ngày 2026-10-08 (#62, #64, #67 và giai đoạn 1–2 của #43 đã hoàn thành; chưa kiểm tra lại trạng thái issue trên GitHub). Mỗi issue chứa danh sách tiêu chí nghiệm thu chi tiết; đánh dấu hàng tương ứng khi giai đoạn hoàn thành và cập nhật sơ đồ khi một lớp dự kiến đã được triển khai.
+Các công việc còn mở, đã đối chiếu với mã nguồn đã merge ngày 2026-10-08 (#62, #64, #67 và giai đoạn 1–3 của #43 đã hoàn thành; chưa kiểm tra lại trạng thái issue trên GitHub). Mỗi issue chứa danh sách tiêu chí nghiệm thu chi tiết; đánh dấu hàng tương ứng khi giai đoạn hoàn thành và cập nhật sơ đồ khi một lớp dự kiến đã được triển khai.
 
 ```mermaid
 flowchart LR
@@ -272,7 +272,7 @@ flowchart LR
 | ☑ | Bộ điều phối hành vi | [#67 — phân xử ý định và vòng đời](https://github.com/WindyWin/vpet-agent-pet/issues/67) | #64 |
 | ☑ | Catalog plugin | [#43 Giai đoạn 1 — phần bổ sung catalog và cài đặt plugin](https://github.com/WindyWin/vpet-agent-pet/issues/43) | #62 Phần 1 |
 | ☑ | Sự kiện plugin | [#43 Giai đoạn 2 — sự kiện tùy chỉnh và quy tắc sự kiện của plugin](https://github.com/WindyWin/vpet-agent-pet/issues/43) | Phần bổ sung catalog, #64 và #67 |
-| ☐ | Điều kiện kích hoạt có sẵn → quy tắc | [#43 Giai đoạn 3 — chuyển các điều kiện kích hoạt viết cứng sang bảng quy tắc](https://github.com/WindyWin/vpet-agent-pet/issues/43) | Sự kiện plugin |
+| ☑ | Điều kiện kích hoạt có sẵn → quy tắc | [#43 Giai đoạn 3 — chuyển các điều kiện kích hoạt viết cứng sang bảng quy tắc](https://github.com/WindyWin/vpet-agent-pet/issues/43) | Sự kiện plugin |
 | ☑ | Phân phối thú cưng | [#62 Phần 2 — tải theo yêu cầu có kiểm tra tính toàn vẹn](https://github.com/WindyWin/vpet-agent-pet/issues/62) | #62 Phần 1 |
 | ☐ | Adapter provider | [#36 — client agent thứ ba](https://github.com/WindyWin/vpet-agent-pet/issues/36) | Hợp đồng sự kiện hiện có |
 | ☐ | Thông báo / cài đặt | [#34 — tạm hoãn / chế độ tập trung](https://github.com/WindyWin/vpet-agent-pet/issues/34) | Luồng thông báo hiện có |

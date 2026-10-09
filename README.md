@@ -261,7 +261,7 @@ See the [code map](starter/docs/architecture.md#code-map) for source paths and d
 
 ### Roadmap mapped to the architecture
 
-Open work, reconciled with the merged code on 2026-10-08 (#62, #64, #67 and #43 phases 1–2 landed; issue state not re-checked on GitHub). Each issue owns its detailed
+Open work, reconciled with the merged code on 2026-10-08 (#62, #64, #67 and #43 phases 1–3 landed; issue state not re-checked on GitHub). Each issue owns its detailed
 acceptance checklist; check a row here when that phase lands and update the chart
 when a planned layer becomes implemented.
 
@@ -282,7 +282,7 @@ flowchart LR
 | ☑ | Behavior runtime | [#67 — intent arbitration and lifecycle](https://github.com/WindyWin/vpet-agent-pet/issues/67) | #64 |
 | ☑ | Plugin catalog | [#43 Phase 1 — catalog fragments and plugin settings](https://github.com/WindyWin/vpet-agent-pet/issues/43) | #62 Part 1 |
 | ☑ | Plugin events | [#43 Phase 2 — custom events and plugin event rules](https://github.com/WindyWin/vpet-agent-pet/issues/43) | Catalog fragments, #64 and #67 |
-| ☐ | Built-in triggers → rules | [#43 Phase 3 — move the hard-coded triggers onto the rule table](https://github.com/WindyWin/vpet-agent-pet/issues/43) | Plugin events |
+| ☑ | Built-in triggers → rules | [#43 Phase 3 — move the hard-coded triggers onto the rule table](https://github.com/WindyWin/vpet-agent-pet/issues/43) | Plugin events |
 | ☑ | Pet distribution | [#62 Part 2 — verified on-demand downloads](https://github.com/WindyWin/vpet-agent-pet/issues/62) | #62 Part 1 |
 | ☐ | Provider adapters | [#36 — third agent client](https://github.com/WindyWin/vpet-agent-pet/issues/36) | Existing event contract |
 | ☐ | Alerts / settings | [#34 — snooze / focus mode](https://github.com/WindyWin/vpet-agent-pet/issues/34) | Existing alert delivery |

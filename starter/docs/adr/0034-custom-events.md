@@ -48,7 +48,7 @@ flood the pet with reactions, and the `hook` path must stay fast, silent and con
   `turn_finished` that only waits on background work is not an occurrence. Rules for agent events and custom
   names are separate: a custom event never matches `turn_finished`.
 - **Out of scope here:** a toast through the tray, sound, conditions on rules (project, day), custom events
-  without a pack, hot reload. Phase 3 (the built-in triggers as rules) stays open.
+  without a pack, hot reload. Phase 3, the built-in triggers as rules, is [0035](0035-built-in-triggers-as-rules.md).
 
 ## Consequences
 

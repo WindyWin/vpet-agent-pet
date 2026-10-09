@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "description": "The pet's own triggers (docs/plugins.md): moments the app raises by name, each answered through the same rule table as a plugin pack's events.json. A trigger's class is how the app plays what a rule chose: a surprise plays now or never, a celebration takes a finished turn's place, a fidget plays while the pet idles, a reminder waits for calm. Its built-in rule draws a state from the first of its cues the pet has a pool for; with none, the pet has no rule of its own for it. Code raises the trigger and keeps its timing; the catalog and the packs' rules decide what plays.",
+  "triggers": {
+    "danger": { "class": "surprise", "cues": ["danger"] },
+    "konami": { "class": "surprise", "cues": ["konami"] },
+    "reminder-done": { "class": "surprise", "cues": ["reminder-done"] },
+    "celebrate": { "class": "celebration", "cues": ["celebrate"] },
+    "snack": { "class": "celebration", "cues": ["snack"] },
+    "milestone": { "class": "celebration", "cues": ["milestone"] },
+    "long-turn": { "class": "celebration", "cues": ["long-turn"] },
+    "birthday": { "class": "celebration", "cues": ["birthday"] },
+    "friday-evening": { "class": "celebration", "cues": ["friday-evening"] },
+    "may20": { "class": "fidget", "cues": ["may20"] },
+    "birthday-greeting": { "class": "fidget", "cues": ["birthday"] },
+    "late-night": { "class": "fidget", "cues": ["late-night"] },
+    "monday": { "class": "reminder", "cues": ["monday"] },
+    "lunch": { "class": "reminder", "cues": ["lunch", "snack", "celebrate"] },
+    "leave-work": { "class": "reminder", "cues": ["leave-work"] },
+    "sleep": { "class": "reminder", "cues": ["sleep"] },
+    "eye-break": { "class": "reminder", "cues": ["eye-break"] },
+    "water": { "class": "reminder", "cues": ["water"] }
+  }
+}
