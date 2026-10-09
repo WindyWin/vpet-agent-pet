@@ -34,6 +34,7 @@
     "danger": { "kind": "reaction" },
     "eye-break": { "kind": "reaction" },
     "water": { "kind": "reaction" },
-    "reminder-done": { "kind": "reaction" }
+    "reminder-done": { "kind": "reaction" },
+    "plugin-event": { "kind": "reaction" }
   }
 }

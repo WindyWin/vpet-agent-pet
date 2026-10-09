@@ -5,10 +5,10 @@ own PNG frames, more ways to play the pet's reactions and fidgets, and, when it 
 replacements for the pet's own states and cue mappings. Packs hold only data (JSON and PNG). They never
 run code, and the app loads them only when the user turns them on.
 
-A pack extends one pet. To make a new character instead, see [the pet guide](pets.md). Custom events
-that trigger a pack's reactions from scripts are planned separately
-([#43](https://github.com/WindyWin/vpet-agent-pet/issues/43) phase 2). Until then, a pack plays through the
-pet's existing cues: celebrations, snacks, reminders, fidgets and so on.
+A pack extends one pet. To make a new character instead, see [the pet guide](pets.md). A pack plays
+through the pet's existing cues (celebrations, snacks, reminders, fidgets and so on), and its
+[`events.json`](#eventsjson) can also react to events from scripts, such as `deploy_succeeded` from CI,
+or to the agent's own (a finished turn).
 
 ## Installing and turning on
 
@@ -37,6 +37,7 @@ it still loads:
 example/
   plugin.json
   animations.json
+  events.json            (optional)
   frames/heart/0.png … 3.png
 ```
 
@@ -72,6 +73,19 @@ celebration and as an idle fidget:
   "playback": { "example.heart": { "mode": "once", "after": "idle" } },
   "cues": { "celebrate": [{ "state": "example.heart", "weight": 1 }] },
   "ambient": { "fidgets": [{ "state": "example.heart", "weight": 1 }] }
+}
+```
+
+Its `events.json` makes the heart play, with a remark, when a script runs
+`agent-pet emit --custom deploy_succeeded`, and gives the pet a remark alone for `tests_failed`:
+
+```json
+{
+  "schema_version": 1,
+  "rules": [
+    { "on": "custom:deploy_succeeded", "state": "example.heart", "say": "Shipped!", "cooldown_ms": 10000 },
+    { "on": "custom:tests_failed", "say": "Oh no, the tests failed." }
+  ]
 }
 ```
 
@@ -151,12 +165,53 @@ replace the same thing: the second one in id order is left out and names the fir
 still meet the cue contract, so a state cue keeps its playback shape: `turn-finished` stays a `once`
 state that returns to idle.
 
+## events.json
+
+Optional rules that make the pet react to something that happened. A reaction is a *surprise* for the
+[behavior runtime](adr/0031-behavior-runtime.md), like the danger startle or the Konami code: it plays when the
+pet is free, and it is dropped, never queued, while a session needs the user (attention, out of quota,
+a failed turn), while the pet is held or hidden, or while another surprise plays. A pack cannot make its
+reaction urgent, and nothing in `events.json` changes what the sessions show.
+
+```json
+{
+  "schema_version": 1,
+  "rules": [
+    { "on": "custom:deploy_succeeded", "state": "example.heart", "say": "Shipped!", "weight": 2, "cooldown_ms": 30000 }
+  ]
+}
+```
+
+| Key | Required | Rule |
+| --- | --- | --- |
+| `on` | yes | What to react to: `custom:<name>`, a [custom event](events.md#custom-events) sent with `agent-pet emit --custom <name>` (`[a-z0-9_-]{1,64}`), or an agent event: `session_start`, `prompt`, `attention`, `error`, `turn_finished`, `turn_failed`, `interrupt` or `session_end` |
+| `state` | one of `state` and `say` | A state to play, the pack's own or the pet's. It must end by itself and return to idle, like a reaction pool's entries (`once`, or `phased` with `loops`, and `after: idle`) |
+| `say` | one of `state` and `say` | A remark for the speech bubble, 1–120 characters. It is plain text in the pack's own language, so it is not translated, and it is not shown while the pet is muted |
+| `weight` | no | 1–1000, default 1. When several rules (from any packs) match one event, one is drawn by weight |
+| `cooldown_ms` | no | A whole number, 1,000–3,600,000, default 10,000. After a reaction plays, the same `on` rests this long |
+
+Up to 128 rules and 64 KiB per pack, and any other key is an error. The rules are checked against the
+merged catalog when the pack loads, so a state that does not exist or does not end is reported in Settings and the
+log, and the whole pack is left out, rules and animations alike.
+
+- **Agent events** match after the sessions accept them. A duplicate or stale event does not react, a
+  `turn_finished` with background work still running (`waiting`) is not a finish, and tool events cannot be
+  matched.
+- **Custom events** are not sessions and never match agent rules. An event whose time is more than a minute
+  from the pet's clock is ignored.
+- **Rate limits** keep a noisy script from holding the pet in reactions: each `on` rests for its
+  `cooldown_ms` after it reacted, at most 12 reactions play a minute, and a reaction that was held off
+  does not start the rest.
+- A toast through the tray, sound and rules that depend on conditions (the project, the day) are not
+  supported yet.
+
 ## Limits
 
 | Limit | Value |
 | --- | --- |
 | `plugin.json` | 64 KiB |
 | `animations.json` | 1 MiB |
+| `events.json` | 64 KiB, 128 rules |
 | Frames per pack | 2,000 (1,000 per sequence) |
 | One frame | 4 MiB, at most 2,048 pixels on a side |
 | All frames of a pack | 64 MiB |

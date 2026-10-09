@@ -80,7 +80,10 @@ void Monitor::restoreSessions(const QString &path) {
 bool Monitor::checkpointSessions() {
     return sessionPath_.isEmpty() || saveSessions(sessionPath_, sessions_);
 }
+// A custom event is a named occurrence from a script (docs/events.md). It is a reaction, not session state: it never
+// reaches the sessions, the recap or the wellness timers, so it cannot change what the sessions show.
 bool Monitor::apply(const Event &event, qint64 now) {
+    if (active_ && event.kind == "custom") return react("custom:" + event.name, event.timestamp, now);
     if (!active_ || !sessions_.apply(event, now)) return false;
     now_ = now;
     const auto it = sessions_.records().find(event.provider + QChar(0x1f) + event.session);
@@ -102,6 +105,25 @@ bool Monitor::apply(const Event &event, qint64 now) {
     // Work going on deep into the night earns one gentle note.
     if (event.kind == "turn_finished" && !event.waiting && !window_.muted() && !window_.petHidden() && window_.eggs().bedtime())
         say(bedtimeNote());
+    // Background work that is still running is not a finished turn.
+    if (!(event.kind == "turn_finished" && event.waiting)) react(event.kind, event.timestamp, now);
+    return true;
+}
+// What a plugin pack says should happen now (events.json). Only an event from the last minute is worth a reaction.
+// The reaction is a Surprise: it plays unless a session needs the user, the pet is held, hidden or busy with something
+// bigger, and then it is let go; the trigger rests only once a reaction actually played.
+bool Monitor::react(const QString &trigger, qint64 stamp, qint64 now) {
+    constexpr qint64 recentMs = 60 * 1000;
+    if (rules_.isEmpty() || stamp < now - recentMs || stamp > now + recentMs) return false;
+    const auto reaction = rules_.pick(trigger, now, random);
+    if (!reaction) return false;
+    using namespace behavior;
+    remarks_[trigger] = reaction->say;
+    const auto submitted = window_.stage().runtime().submit({"plugin", trigger, "plugin-event", Policy::Surprise, Lifetime::OneShot,
+                                                              0, {}, reaction->state});
+    remarks_.remove(trigger);
+    if (submitted != Submission::Admitted) return false;
+    rules_.commit(*reaction, now);
     return true;
 }
 void Monitor::update(qint64 now) {
@@ -177,7 +199,11 @@ void Monitor::outcome(const behavior::Intent &intent, behavior::Outcome outcome)
     if (outcome == Outcome::Started && intent.source == "mood" && intent.cue == "birthday") window_.eggs().cheered();
     if (intent.source == "mood" && (outcome == Outcome::Dropped || outcome == Outcome::Expired)) window_.mood().keep(intent.cue);
     if (outcome != Outcome::Admitted) return;
-    if (intent.source == "wellness") {
+    if (intent.source == "plugin") {
+        // The remark comes with the reaction, or alone for a rule without art.
+        const auto remark = remarks_.value(intent.key);
+        if (!remark.isEmpty() && !window_.muted()) say(remark);
+    } else if (intent.source == "wellness") {
         window_.wellness().given(intent.key, now_); // Ignored, it fades and comes back after the next interval.
         say(Wellness::note(intent.key));
         reminder_ = intent.key;

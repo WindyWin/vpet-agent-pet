@@ -1,5 +1,6 @@
 #pragma once
 #include "catalog.h"
+#include "event_rules.h"
 #include <QString>
 #include <QStringList>
 #include <QVector>
@@ -28,7 +29,9 @@ QString defaultFolder(); // "plugins" in the per-user application data folder.
 QVector<PluginPack> scan(const QString &folder, const QString &appVersion);
 // Merges each pack whose id is in `enabled` and whose pet is `pet` into `source`, in id order. A pack is kept only
 // when the merged catalog still builds and meets the cue contract; otherwise `source` stays as it was and the pack
-// is Rejected. Sets every pack's status.
-void apply(CatalogSource &source, const QString &pet, const QStringList &enabled, QVector<PluginPack> &packs);
+// is Rejected. Sets every pack's status. A pack's events.json, if it has one, is checked against the merged catalog and
+// its rules are added to `rules` (when given) with the pack; a rule that is wrong rejects the whole pack.
+void apply(CatalogSource &source, const QString &pet, const QStringList &enabled, QVector<PluginPack> &packs,
+           EventRules *rules = nullptr);
 }
 }

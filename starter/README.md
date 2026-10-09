@@ -251,6 +251,12 @@ turns packs on or off for the next start. A pack that fails validation is left o
 and the pet starts without it. To make one, see [the plugin guide](docs/plugins.md) and its
 [design record](docs/adr/0033-plugin-packs.md).
 
+A pack can also react to events: `agent-pet emit --custom deploy_succeeded` from a script or CI job
+makes the pet play the pack's animation and say its remark, and a pack can answer the agent's own events,
+such as a finished turn. These reactions never change what the sessions show and give way to a session
+that needs you; see [custom events](docs/events.md#custom-events) and its
+[design record](docs/adr/0034-custom-events.md).
+
 ## Language
 
 The pet speaks English or Vietnamese (Tiếng Việt). By default it follows the system

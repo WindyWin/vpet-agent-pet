@@ -19,6 +19,8 @@ struct Event {
     bool risky = false;
     // turn_finished only: background work remains in flight.
     bool waiting = false;
+    // custom only: what happened, such as "deploy_succeeded" (event_name.h). Names a reaction rule of a plugin pack (docs/plugins.md); never a session.
+    QString name;
     // Host fields are checked against the registry's hosts (the built-in ones by default).
     static bool parse(const QByteArray &data, Event &event, QString &error,
                       const hosts::Registry &hosts = hosts::Registry::builtin());
@@ -62,6 +64,7 @@ public:
     static constexpr qint64 activityHoldMs = 4000;
     QByteArray checkpoint() const;
     bool restore(const QByteArray &data, qint64 now, const std::function<bool(const Session &)> &running);
+    // False for a custom event, which is a reaction and never session state.
     bool apply(const Event &event, qint64 now);
     void expire(qint64 now);
     QString aggregate(qint64 now) const;

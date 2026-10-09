@@ -1,4 +1,5 @@
 #include "state.h"
+#include "event_name.h"
 #include <QJsonDocument>
 #include <QDataStream>
 #include <cmath>
@@ -55,7 +56,7 @@ bool Event::parse(const QByteArray &data, Event &e, QString &error, const hosts:
     if (!doc.isObject()) { error = "Expected a JSON object"; return false; }
     const auto o = doc.object();
     const QSet<QString> fields{"version", "provider", "session_id", "event_id", "kind", "timestamp_ms", "tool_id", "parent_id", "project_path", "activity", "reason",
-                              "host", "host_pids", "host_window", "host_target", "risky", "waiting"};
+                              "host", "host_pids", "host_window", "host_target", "risky", "waiting", "name"};
     for (auto it = o.begin(); it != o.end(); ++it) {
         if (!fields.contains(it.key())) { error = "Unknown event field"; return false; }
         if (it.key() == "waiting") {
@@ -81,13 +82,25 @@ bool Event::parse(const QByteArray &data, Event &e, QString &error, const hosts:
          o.value("kind").toString(), o.value("tool_id").toString(), o.value("parent_id").toString(),
          o.value("project_path").toString(), o.value("activity").toString(), static_cast<qint64>(stamp),
          o.value("reason").toString(), o.value("host").toString(), o.value("host_pids").toString(),
-         o.value("host_window").toString(), o.value("host_target").toString(), o.value("risky").toBool(), o.value("waiting").toBool()};
+         o.value("host_window").toString(), o.value("host_target").toString(), o.value("risky").toBool(), o.value("waiting").toBool(), o.value("name").toString()};
     const QSet<QString> kinds{"session_start", "prompt", "tool_start", "tool_end", "attention", "error", "turn_finished", "turn_failed",
-                              "interrupt", "session_end"};
+                              "interrupt", "session_end", "custom"};
+    // A custom event is a named occurrence from a script, not part of any agent session: it has the provider "custom",
+    // a name, and only the fields that identify it.
+    const bool custom = e.kind == "custom";
+    if (custom != (e.provider == "custom") || custom != o.contains("name") || (custom && !validEventName(e.name))) {
+        error = "A custom event needs the provider custom and a name of up to 64 characters (a-z, 0-9, _ and -)";
+        return false;
+    }
+    if (custom) {
+        static const char *const agentOnly[] = {"tool_id", "parent_id", "project_path", "activity", "reason", "host", "host_pids",
+                                                "host_window", "host_target", "risky", "waiting"};
+        for (const auto *field : agentOnly) if (o.contains(field)) { error = "Unsupported field for a custom event"; return false; }
+    }
     const bool reasonValid = e.reason.isEmpty() ||
         (e.kind == "attention" && (e.reason == "approval" || e.reason == "input")) ||
         (e.kind == "turn_failed" && (e.reason == "limit" || e.reason == "billing"));
-    if ((e.provider != "claude" && e.provider != "codex") || e.session.isEmpty() || e.id.isEmpty() || !kinds.contains(e.kind) ||
+    if ((e.provider != "claude" && e.provider != "codex" && !custom) || e.session.isEmpty() || e.id.isEmpty() || !kinds.contains(e.kind) ||
         ((e.kind == "tool_start" || e.kind == "tool_end") && e.tool.isEmpty()) ||
         (!e.activity.isEmpty() && e.activity != "reading" && e.activity != "working") ||
         !reasonValid || (e.kind == "turn_failed" && !e.tool.isEmpty()) ||
@@ -110,6 +123,7 @@ template<class T> static void trimOldest(QMap<QString, T> &map, int limit) {
     }
 }
 bool Sessions::apply(const Event &e, qint64 now) {
+    if (e.kind == "custom") return false;
     expire(now);
     const auto k = key(e.provider, e.session), eventKey = k + QChar(0x1f) + e.id;
     if (e.timestamp > now + 60000 || e.timestamp < now - expiryMs || events_.contains(eventKey)) return false;

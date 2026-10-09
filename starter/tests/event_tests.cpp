@@ -40,6 +40,53 @@ private slots:
             o["kind"] = kind; QVERIFY(!pet::Event::parse(QJsonDocument(o).toJson(), e, error));
         }
     }
+    void customEventWire() {
+        QJsonObject o{{"version", 1}, {"provider", "custom"}, {"session_id", "ci"}, {"event_id", "1"},
+                      {"kind", "custom"}, {"timestamp_ms", double(now)}, {"name", "deploy_succeeded"}};
+        pet::Event e; QString error;
+        QVERIFY2(pet::Event::parse(QJsonDocument(o).toJson(), e, error), qPrintable(error));
+        QCOMPARE(e.kind, QString("custom")); QCOMPARE(e.name, QString("deploy_succeeded")); QCOMPARE(e.provider, QString("custom"));
+        for (const auto *name : {"a", "tests-failed", "a_b-c9", "0"}) {
+            o["name"] = name; QVERIFY(pet::Event::parse(QJsonDocument(o).toJson(), e, error));
+        }
+        o["name"] = QString(64, 'a'); QVERIFY(pet::Event::parse(QJsonDocument(o).toJson(), e, error));
+        // A name is [a-z0-9_-]{1,64}, and a custom event is exactly the provider custom with the kind custom.
+        for (const auto &name : {QString(), QString(65, 'a'), QString("Deploy"), QString("a b"), QString("a.b"), QString("é"), QString("a/b")}) {
+            o["name"] = name; QVERIFY2(!pet::Event::parse(QJsonDocument(o).toJson(), e, error), qPrintable(name));
+        }
+        o["name"] = "ok";
+        auto without = o; without.remove("name"); QVERIFY(!pet::Event::parse(QJsonDocument(without).toJson(), e, error));
+        auto agent = o; agent["provider"] = "claude"; QVERIFY(!pet::Event::parse(QJsonDocument(agent).toJson(), e, error));
+        auto notCustom = o; notCustom["kind"] = "prompt"; QVERIFY(!pet::Event::parse(QJsonDocument(notCustom).toJson(), e, error));
+        notCustom["provider"] = "claude"; QVERIFY(!pet::Event::parse(QJsonDocument(notCustom).toJson(), e, error)); // name on an agent event
+        auto bare = o; bare["provider"] = "custom"; bare["kind"] = "prompt"; bare.remove("name");
+        QVERIFY(!pet::Event::parse(QJsonDocument(bare).toJson(), e, error)); // The provider custom sends custom events only.
+        // None of the agent-only fields belong on one.
+        const QJsonObject extras{{"tool_id", "t"}, {"parent_id", "p"}, {"project_path", "/p"}, {"activity", "reading"}, {"reason", "input"},
+                                 {"host", "tmux"}, {"host_pids", "1"}, {"host_window", "1"}, {"host_target", "x"}, {"risky", true}, {"waiting", true}};
+        for (auto it = extras.begin(); it != extras.end(); ++it) {
+            auto with = o; with[it.key()] = it.value(); QVERIFY2(!pet::Event::parse(QJsonDocument(with).toJson(), e, error), qPrintable(it.key()));
+        }
+        // Identity is still required: the sender, an id and a time.
+        for (const auto *key : {"session_id", "event_id", "timestamp_ms", "version"}) {
+            auto missing = o; missing.remove(key); QVERIFY2(!pet::Event::parse(QJsonDocument(missing).toJson(), e, error), key);
+        }
+    }
+    void customEventsAreNotSessionState() {
+        pet::Sessions sessions;
+        pet::Event custom{"custom", "ci", "1", "custom", {}, {}, {}, {}, now + 1};
+        custom.name = "deploy_succeeded";
+        QVERIFY(!sessions.apply(custom, now + 1));
+        QVERIFY(sessions.records().isEmpty()); QVERIFY(sessions.pending().isEmpty());
+        QCOMPARE(sessions.aggregate(now + 1), QString("idle"));
+        // Attention stays what the sessions show.
+        auto attention = event("attention", 2); attention.reason = "input";
+        QVERIFY(sessions.apply(attention, now + 2));
+        custom.id = "2"; custom.timestamp = now + 3;
+        QVERIFY(!sessions.apply(custom, now + 3));
+        QCOMPARE(sessions.aggregate(now + 3), QString("attention"));
+        QCOMPARE(sessions.records().size(), 1);
+    }
     void waitingPreservesTurnAndRecap() {
         pet::Sessions sessions; pet::Recap recap; const QDate date(2026, 10, 7);
         QVERIFY(sessions.apply(event("prompt", 1), now + 1));
@@ -518,6 +565,17 @@ private slots:
             receiver.received = [&](const pet::Event &e) { ++received; QCOMPARE(e.session, "s"); QVERIFY(!e.id.isEmpty()); };
             QCOMPARE(run({"emit", "--provider", "claude"}, payload), 0);
             QTRY_COMPARE(received, 1);
+            // A custom event takes its name from the command line, with no input.
+            receiver.received = [&](const pet::Event &e) { ++received; QCOMPARE(e.kind, QString("custom")); QCOMPARE(e.name, QString("deploy_succeeded")); };
+            QCOMPARE(run({"emit", "--custom", "deploy_succeeded"}, {}, false), 0);
+            QTRY_COMPARE(received, 2);
+            QCOMPARE(run({"emit", "--provider", "custom"}, R"({"version":1,"session_id":"ci","kind":"custom","name":"deploy_succeeded"})"), 0);
+            QTRY_COMPARE(received, 3);
+            QCOMPARE(run({"emit", "--custom", "Not Valid"}, {}, false), 1);
+            QCOMPARE(run({"emit", "--custom", "ok", "--provider", "claude"}, {}, false), 1);
+            QCOMPARE(run({"hook", "--provider", "custom"}, {}, false), 0); // The hook never sends custom events.
+            QCOMPARE(received, 3);
+            receiver.received = [&](const pet::Event &e) { ++received; QCOMPARE(e.session, "s"); QVERIFY(!e.id.isEmpty()); };
             // Fill the queue while this thread deliberately does not drain it.
             for (int i = 0; i < 20; ++i) QCOMPARE(run({"hook", "--provider", "claude"}, R"({"session_id":"s","hook_event_name":"UserPromptSubmit"})"), 0);
             QCOMPARE(run({"hook", "--provider", "claude"}, "malformed"), 0);

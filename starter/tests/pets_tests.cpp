@@ -192,7 +192,7 @@ private slots:
     }
     void cuesComeFromTheirDataFile() {
         const auto &cues = pet::cues();
-        QCOMPARE(cues.size(), 33);
+        QCOMPARE(cues.size(), 34);
         QVERIFY(std::is_sorted(cues.begin(), cues.end(), [](const pet::Cue &a, const pet::Cue &b) { return a.name < b.name; }));
         auto shape = [](const QString &name) {
             const auto *cue = pet::findCue(name);

@@ -1,0 +1,7 @@
+{
+  "schema_version": 1,
+  "rules": [
+    { "on": "custom:deploy_succeeded", "state": "example.heart", "say": "Shipped!", "cooldown_ms": 10000 },
+    { "on": "custom:tests_failed", "say": "Oh no, the tests failed." }
+  ]
+}

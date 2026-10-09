@@ -2,9 +2,11 @@
 #include "animation/pet_library.h"
 #include "animation/player.h"
 #include "animation/plugins.h"
+#include "desktop/monitor.h"
 #include "desktop/pet_window.h"
 #include "desktop/plugin_list.h"
 #include "settings/preferences.h"
+#include <QDateTime>
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
@@ -86,6 +88,25 @@ void writePack(const QString &folder, const QString &id, const QJsonObject &frag
             image.fill(Qt::red);
             image.save(path, "PNG");
         }
+}
+// A rule of events.json; fields in `more` replace or add to the defaults.
+QJsonObject rule(const QString &on, const QString &state, const QJsonObject &more = {}) {
+    QJsonObject object{{"on", on}, {"state", state}};
+    for (auto it = more.begin(); it != more.end(); ++it) {
+        if (it.value().isNull()) object.remove(it.key());
+        else object[it.key()] = it.value();
+    }
+    return object;
+}
+void writeRules(const QString &folder, const QString &id, const QJsonArray &rules, const QJsonObject &more = {}) {
+    QJsonObject document{{"schema_version", 1}, {"rules", rules}};
+    for (auto it = more.begin(); it != more.end(); ++it) document[it.key()] = it.value();
+    writeJson(folder + "/" + id + "/events.json", document);
+}
+// The reaction on stage plays out.
+void finish(pet::PetWindow &window) {
+    auto &runtime = window.stage().runtime();
+    if (const auto instance = runtime.current()) runtime.report(*instance, pet::behavior::Feedback::Completed);
 }
 const pet::PluginPack *find(const QVector<pet::PluginPack> &packs, const QString &id) {
     const auto found = std::find_if(packs.begin(), packs.end(), [&](const pet::PluginPack &pack) { return pack.id == id; });
@@ -393,8 +414,12 @@ private slots:
         auto source = pet::Catalog::read(PET_SOURCE, "vpet", &error);
         QVERIFY2(source.valid(), qPrintable(error));
         auto packs = pet::plugins::scan(PET_SOURCE "/tests/fixtures/plugins", "1.0.0");
-        pet::plugins::apply(source, "vpet", {"example"}, packs);
+        pet::EventRules rules;
+        pet::plugins::apply(source, "vpet", {"example"}, packs, &rules);
         QCOMPARE(status(packs, "example"), QString("applied"));
+        QCOMPARE(rules.size(), 2);
+        QCOMPARE(rules.pick("custom:deploy_succeeded", 0)->state, QString("example.heart"));
+        QCOMPARE(rules.pick("custom:tests_failed", 0)->say, QString("Oh no, the tests failed."));
         const auto catalog = pet::Catalog::build(source, &error);
         QVERIFY2(catalog.valid(), qPrintable(error));
         QCOMPARE(catalog.contractError(), QString());
@@ -435,6 +460,307 @@ private slots:
         QVERIFY2(plain.activate("mini", &error), qPrintable(error));
         QVERIFY(!plain.catalog().animations.contains("wave.dance"));
         QCOMPARE(plain.pluginFolder(), pet::plugins::defaultFolder());
+    }
+    void rulesAreReadWithTheirPack() {
+        QTemporaryDir folder;
+        writePack(folder.path(), "wave", danceFragment("wave"));
+        writeRules(folder.path(), "wave", {rule("custom:deploy_succeeded", "wave.dance", {{"say", "Shipped!"}, {"weight", 3}, {"cooldown_ms", 5000}}),
+                                           rule("turn_finished", "cheer"), // The pet's own state is fine too.
+                                           QJsonObject{{"on", "custom:tests_failed"}, {"say", "Oh no."}}}); // A remark alone is too.
+        writePack(folder.path(), "plain", danceFragment("plain")); // No events.json: no rules.
+        QVector<pet::PluginPack> packs;
+        pet::EventRules rules;
+        QString error;
+        auto source = pet::Catalog::read(base_.path(), "test", &error);
+        packs = pet::plugins::scan(folder.path(), "1.0.0");
+        pet::plugins::apply(source, "test", {"wave", "plain"}, packs, &rules);
+        QCOMPARE(status(packs, "wave"), QString("applied")); QCOMPARE(status(packs, "plain"), QString("applied"));
+        QCOMPARE(rules.size(), 3);
+        const auto &first = rules.rules().first();
+        QCOMPARE(first.pack, QString("wave")); QCOMPARE(first.on, QString("custom:deploy_succeeded")); QCOMPARE(first.state, QString("wave.dance"));
+        QCOMPARE(first.say, QString("Shipped!")); QCOMPARE(first.weight, 3); QCOMPARE(first.cooldownMs, qint64(5000));
+        QCOMPARE(rules.rules()[1].cooldownMs, pet::EventRules::defaultCooldownMs);
+        QCOMPARE(rules.rules()[1].weight, 1);
+        QCOMPARE(rules.rules()[2].state, QString()); QCOMPARE(rules.rules()[2].say, QString("Oh no."));
+        // Without somewhere to put them the rules are checked all the same and the pack loads.
+        auto again = pet::Catalog::read(base_.path(), "test", &error);
+        auto others = pet::plugins::scan(folder.path(), "1.0.0");
+        pet::plugins::apply(again, "test", {"wave"}, others);
+        QCOMPARE(status(others, "wave"), QString("applied"));
+    }
+    void aWrongRuleRejectsItsPack() {
+        const QList<QPair<QJsonArray, QString>> wrong{
+            {{rule("custom:Bad Name", "wave.dance")}, "Invalid \"on\""},
+            {{rule("custom:", "wave.dance")}, "Invalid \"on\""},
+            {{rule("tool_start", "wave.dance")}, "Invalid \"on\""},
+            {{rule("nonsense", "wave.dance")}, "Invalid \"on\""},
+            {{QJsonObject{{"state", "wave.dance"}}}, "Invalid \"on\""},
+            {{rule("prompt", "missing")}, "the state of a rule"},
+            {{rule("prompt", "idle")}, "the state of a rule"}, // Never ends.
+            {{rule("prompt", "thinking")}, "the state of a rule"}, // Phased without loops, and returns to idle only by being replaced.
+            {{rule("prompt", "wave.dance", {{"say", ""}})}, "say must be"},
+            {{rule("prompt", "wave.dance", {{"say", QString(121, 'x')}})}, "say must be"},
+            {{rule("prompt", "wave.dance", {{"say", "a\nb"}})}, "control"},
+            {{QJsonObject{{"on", "prompt"}}}, "needs a state, a say"},
+            {{rule("prompt", "wave.dance", {{"weight", 0}})}, "weight"},
+            {{rule("prompt", "wave.dance", {{"weight", 1001}})}, "weight"},
+            {{rule("prompt", "wave.dance", {{"cooldown_ms", 999}})}, "cooldown_ms"},
+            {{rule("prompt", "wave.dance", {{"cooldown_ms", 3600001}})}, "cooldown_ms"},
+            {{rule("prompt", "wave.dance", {{"cooldown_ms", 1e300}})}, "cooldown_ms"}, // Out of range for an integer.
+            {{rule("prompt", "wave.dance", {{"cooldown_ms", -1e300}})}, "cooldown_ms"},
+            {{rule("prompt", "wave.dance", {{"cooldown_ms", 1500.5}})}, "cooldown_ms"}, // Not a whole number.
+            {{rule("prompt", "wave.dance", {{"cooldown_ms", "5000"}})}, "cooldown_ms"},
+            {{rule("prompt", "wave.dance", {{"sound", "bark.wav"}})}, "unknown key sound"},
+            {QJsonArray(), "between 1 and"},
+        };
+        for (const auto &[rules, why] : wrong) {
+            QTemporaryDir folder;
+            writePack(folder.path(), "wave", danceFragment("wave"));
+            writeRules(folder.path(), "wave", rules);
+            QVector<pet::PluginPack> packs;
+            QString error;
+            auto source = pet::Catalog::read(base_.path(), "test", &error);
+            packs = pet::plugins::scan(folder.path(), "1.0.0");
+            pet::EventRules loaded;
+            pet::plugins::apply(source, "test", {"wave"}, packs, &loaded);
+            const auto result = status(packs, "wave");
+            QVERIFY2(result.startsWith("rejected: events.json: ") && result.contains(why), qPrintable(result + " for " + why));
+            QVERIFY(loaded.isEmpty());
+            QVERIFY(!source.document.value("states").toObject().contains("wave.dance")); // The pack is out as a whole.
+        }
+        // The file itself.
+        const QList<QPair<QJsonObject, QString>> files{
+            {{{"schema_version", 2}, {"rules", QJsonArray{rule("prompt", "cheer")}}}, "schema_version"},
+            {{{"schema_version", 1}, {"rules", QJsonObject()}}, "rules must be a list"},
+            {{{"schema_version", 1}, {"rules", QJsonArray{rule("prompt", "cheer")}}, {"extra", 1}}, "unknown key extra"},
+        };
+        for (const auto &[document, why] : files) {
+            QTemporaryDir folder;
+            writePack(folder.path(), "wave", danceFragment("wave"));
+            writeJson(folder.path() + "/wave/events.json", document);
+            QVector<pet::PluginPack> packs;
+            QString error;
+            auto source = pet::Catalog::read(base_.path(), "test", &error);
+            packs = pet::plugins::scan(folder.path(), "1.0.0");
+            pet::plugins::apply(source, "test", {"wave"}, packs);
+            QVERIFY2(status(packs, "wave").contains(why), qPrintable(status(packs, "wave")));
+        }
+        QTemporaryDir folder; // Not JSON at all, and too many rules.
+        writePack(folder.path(), "wave", danceFragment("wave"));
+        QFile broken(folder.path() + "/wave/events.json");
+        QVERIFY(broken.open(QIODevice::WriteOnly)); broken.write("not json"); broken.close();
+        QVector<pet::PluginPack> packs;
+        QString error;
+        auto source = pet::Catalog::read(base_.path(), "test", &error);
+        packs = pet::plugins::scan(folder.path(), "1.0.0");
+        pet::plugins::apply(source, "test", {"wave"}, packs);
+        QVERIFY2(status(packs, "wave").contains("Invalid events.json format"), qPrintable(status(packs, "wave")));
+        QJsonArray many;
+        for (int n = 0; n <= pet::EventRules::maxRulesPerPack; ++n) many.append(rule("prompt", "wave.dance"));
+        writeRules(folder.path(), "wave", many);
+        source = pet::Catalog::read(base_.path(), "test", &error);
+        pet::plugins::apply(source, "test", {"wave"}, packs);
+        QVERIFY2(status(packs, "wave").contains("between 1 and"), qPrintable(status(packs, "wave")));
+    }
+    void rulesFollowTheirPackAndKeepPackOrder() {
+        QTemporaryDir folder;
+        writePack(folder.path(), "b", danceFragment("b"));
+        writeRules(folder.path(), "b", {rule("custom:go", "b.dance")});
+        writePack(folder.path(), "a", danceFragment("a"));
+        writeRules(folder.path(), "a", {rule("custom:go", "a.dance")});
+        writePack(folder.path(), "c", danceFragment("c"));
+        writeRules(folder.path(), "c", {rule("custom:go", "nothing")}); // Wrong: c is out, and so are its rules.
+        writePack(folder.path(), "d", danceFragment("d"), {{"pet", "other"}});
+        writeRules(folder.path(), "d", {rule("custom:go", "d.dance")}); // For another pet.
+        QString error;
+        auto source = pet::Catalog::read(base_.path(), "test", &error);
+        auto packs = pet::plugins::scan(folder.path(), "1.0.0");
+        pet::EventRules rules;
+        pet::plugins::apply(source, "test", {"a", "b", "c", "d"}, packs, &rules);
+        QCOMPARE(status(packs, "c").left(8), QString("rejected"));
+        QCOMPARE(status(packs, "d"), QString("other pet"));
+        QCOMPARE(rules.size(), 2);
+        QCOMPARE(rules.rules()[0].pack, QString("a")); QCOMPARE(rules.rules()[1].pack, QString("b"));
+    }
+    void aLaterPackCannotBreakAnEarlierPacksRule() {
+        QTemporaryDir folder;
+        writePack(folder.path(), "a", danceFragment("a"));
+        writeRules(folder.path(), "a", {rule("prompt", "a.dance")});
+        // Pack b replaces a's state with one that never ends. The catalog is still fine, but a's rule would not be.
+        writePack(folder.path(), "b", QJsonObject{{"schema_version", pet::catalogSchema}, {"sequences", QJsonArray{sequence("hold")}},
+                                                  {"states", QJsonObject{{"a.dance", QJsonArray{"hold"}}}},
+                                                  {"playback", QJsonObject{{"a.dance", QJsonObject{{"mode", "loop"}, {"after", "idle"}}}}},
+                                                  {"overrides", QJsonArray{"states.a.dance"}}});
+        for (const bool collect : {true, false}) {
+            QString error;
+            auto source = pet::Catalog::read(base_.path(), "test", &error);
+            auto packs = pet::plugins::scan(folder.path(), "1.0.0");
+            pet::EventRules rules;
+            pet::plugins::apply(source, "test", {"a", "b"}, packs, collect ? &rules : nullptr);
+            QCOMPARE(status(packs, "a"), QString("applied"));
+            QVERIFY2(status(packs, "b").startsWith("rejected: Replaces state a.dance, which a rule of plugin a plays"), qPrintable(status(packs, "b")));
+            if (collect) QCOMPARE(rules.size(), 1);
+        }
+    }
+    void rulesPickByWeightAndRest() {
+        pet::EventRules rules;
+        rules.add({{"a", "custom:go", "a.one", {}, 1, 4000}, {"b", "custom:go", "b.two", "Hi", 3, 4000}, {"a", "prompt", "a.one", {}, 1, 1000}});
+        QVERIFY(!rules.isEmpty());
+        QVERIFY(!rules.pick("custom:nothing", 0)); // No rule, no reaction.
+        QVERIFY(!rules.pick("turn_finished", 0));
+        auto draw = [](int roll) { return pet::Random([roll](int bound) { return roll % bound; }); };
+        QCOMPARE(rules.pick("custom:go", 0, draw(0))->state, QString("a.one"));
+        QCOMPARE(rules.pick("custom:go", 0, draw(1))->state, QString("b.two"));
+        QCOMPARE(rules.pick("custom:go", 0, draw(3))->state, QString("b.two"));
+        QCOMPARE(rules.pick("custom:go", 0, draw(1))->say, QString("Hi"));
+        QCOMPARE(rules.pick("custom:go", 0, draw(1))->trigger, QString("custom:go"));
+        // Asking changes nothing; only a reaction that played makes its trigger rest, for its rule's cooldown.
+        const auto played = *rules.pick("custom:go", 1000, draw(1));
+        QVERIFY(rules.pick("custom:go", 1000));
+        rules.commit(played, 1000);
+        QVERIFY(!rules.pick("custom:go", 1000));
+        QVERIFY(!rules.pick("custom:go", 4999));
+        QVERIFY(rules.pick("custom:go", 5000));
+        QVERIFY(rules.pick("prompt", 1000)); // Other triggers are not held back by it.
+    }
+    void rulesLimitTheWholePet() {
+        pet::EventRules rules;
+        QVector<pet::EventRule> list;
+        for (int n = 0; n < 40; ++n) list.append({"a", QString("custom:e%1").arg(n), "a.one", {}, 1, 1000});
+        rules.add(list);
+        qint64 now = 100000;
+        for (int n = 0; n < pet::EventRules::maxPerMinute; ++n) {
+            const auto reaction = rules.pick(QString("custom:e%1").arg(n), now + n * 100);
+            QVERIFY(reaction); rules.commit(*reaction, now + n * 100);
+        }
+        // A noisy script with ever new names gets no more in that minute...
+        QVERIFY(!rules.pick("custom:e30", now + 5000));
+        QVERIFY(!rules.pick("custom:e30", now + 59000));
+        // ...and some again as the minute moves on.
+        QVERIFY(rules.pick("custom:e30", now + 60001));
+    }
+    void customEventsMakeThePetReact() {
+        QTemporaryDir directory;
+        pet::PetWindow window(nullptr, directory.path() + "/preferences.json"); window.show();
+        window.setBubbles(pet::Preferences::AllAlerts);
+        window.eggs().setClock([] { return QDateTime(QDate(2026, 10, 7), QTime(14, 0)); });
+        pet::Monitor monitor(window);
+        const auto pool = window.player().pool("celebrate");
+        QVERIFY(!pool.isEmpty());
+        const auto state = pool.first().state;
+        monitor.setRules([&] {
+            pet::EventRules rules;
+            rules.add({{"ci", "custom:deploy_succeeded", state, "Shipped!", 1, 5000},
+                       {"ci", "custom:quiet", {}, "Just a remark.", 1, 5000},
+                       {"ci", "custom:tests_failed", state, {}, 1, 5000},
+                       {"ci", "turn_finished", state, "Done.", 1, 5000}});
+            return rules;
+        }());
+        const qint64 now = QDateTime::currentMSecsSinceEpoch();
+        int serial = 0;
+        auto custom = [&](const QString &name, qint64 at) {
+            pet::Event e{"custom", "ci", QString::number(++serial), "custom", {}, {}, {}, {}, at};
+            e.name = name;
+            return e;
+        };
+        // A name no rule answers does nothing. The sessions never hear of any of it.
+        QVERIFY(!monitor.apply(custom("unknown", now), now));
+        QVERIFY(!window.stage().runtime().showing() || window.stage().runtime().showing()->source != "plugin");
+        QVERIFY(monitor.apply(custom("deploy_succeeded", now), now));
+        QVERIFY(window.stage().runtime().showing());
+        QCOMPARE(window.stage().runtime().showing()->source, QString("plugin"));
+        QCOMPARE(window.stage().runtime().showing()->state, state);
+        QVERIFY(monitor.note().isVisible()); QCOMPARE(monitor.note().text(), QString("Shipped!"));
+        QTRY_COMPARE(window.player().requestedState(), state);
+        QVERIFY(monitor.sessions().records().isEmpty());
+        QVERIFY(monitor.sessions().pending().isEmpty());
+        QCOMPARE(window.attention(), 0);
+        QVERIFY(monitor.recap().day(QDate::currentDate()).turns == 0);
+        // The same event right away is too soon; after its cooldown it plays again.
+        QVERIFY(!monitor.apply(custom("deploy_succeeded", now + 1000), now + 1000));
+        // An event far from now (an old queue, a clock gone wrong) is no news.
+        QVERIFY(!monitor.apply(custom("tests_failed", now - 120000), now));
+        QVERIFY(!monitor.apply(custom("tests_failed", now + 120000), now));
+        // A remark needs no art, and a custom event is not an agent event: it never matches turn_finished.
+        finish(window); // The first reaction played out.
+        monitor.note().hide();
+        QVERIFY(monitor.apply(custom("quiet", now + 2000), now + 2000));
+        QCOMPARE(monitor.note().text(), QString("Just a remark."));
+        QVERIFY(monitor.sessions().records().isEmpty());
+    }
+    void customEventsNeverMaskAttention() {
+        QTemporaryDir directory;
+        pet::PetWindow window(nullptr, directory.path() + "/preferences.json"); window.show();
+        window.eggs().setClock([] { return QDateTime(QDate(2026, 10, 7), QTime(14, 0)); });
+        pet::Monitor monitor(window);
+        const auto state = window.player().pool("celebrate").first().state;
+        pet::EventRules rules;
+        rules.add({{"ci", "custom:go", state, "Hi", 1, 5000}});
+        monitor.setRules(rules);
+        const qint64 now = QDateTime::currentMSecsSinceEpoch();
+        pet::Event ask{"claude", "s", "1", "attention", {}, {}, "/project", {}, now};
+        ask.reason = "input";
+        QVERIFY(monitor.apply(ask, now));
+        QCOMPARE(window.attention(), 1);
+        QCOMPARE(window.stage().runtime().activity(), QString("attention"));
+        const auto shown = window.player().requestedState();
+        pet::Event event{"custom", "ci", "2", "custom", {}, {}, {}, {}, now + 1};
+        event.name = "go";
+        QVERIFY(!monitor.apply(event, now + 1)); // Held off, and it does not rest for a reaction that never played.
+        QVERIFY(monitor.note().text() != "Hi");
+        QCOMPARE(window.player().requestedState(), shown);
+        QCOMPARE(window.stage().runtime().activity(), QString("attention"));
+        QCOMPARE(window.attention(), 1);
+        // Once the request is answered the same event reacts.
+        pet::Event end{"claude", "s", "3", "session_end", {}, {}, {}, {}, now + 2};
+        QVERIFY(monitor.apply(end, now + 2));
+        QCOMPARE(window.attention(), 0);
+        event.id = "4"; event.timestamp = now + 3;
+        QVERIFY(monitor.apply(event, now + 3));
+        QCOMPARE(monitor.note().text(), QString("Hi"));
+    }
+    void staleAgentEventsDoNotReact() {
+        QTemporaryDir directory;
+        pet::PetWindow window(nullptr, directory.path() + "/preferences.json"); window.show();
+        window.eggs().setClock([] { return QDateTime(QDate(2026, 10, 7), QTime(14, 0)); });
+        pet::Monitor monitor(window);
+        pet::EventRules rules;
+        rules.add({{"fun", "prompt", window.player().pool("celebrate").first().state, "On it!", 1, 5000}});
+        monitor.setRules(rules);
+        const qint64 now = QDateTime::currentMSecsSinceEpoch();
+        // The sessions accept a callback that is minutes late, but it is no longer news.
+        pet::Event late{"claude", "late", "1", "prompt", {}, {}, "/project", {}, now - 5 * 60 * 1000};
+        QVERIFY(monitor.apply(late, now));
+        QVERIFY(!monitor.note().isVisible());
+        pet::Event fresh{"claude", "fresh", "2", "prompt", {}, {}, "/project", {}, now};
+        QVERIFY(monitor.apply(fresh, now));
+        QCOMPARE(monitor.note().text(), QString("On it!"));
+    }
+    void agentEventsCanTriggerRules() {
+        QTemporaryDir directory;
+        pet::PetWindow window(nullptr, directory.path() + "/preferences.json"); window.show();
+        window.eggs().setClock([] { return QDateTime(QDate(2026, 10, 7), QTime(14, 0)); });
+        pet::Monitor monitor(window);
+        const auto state = window.player().pool("celebrate").first().state;
+        pet::EventRules rules;
+        rules.add({{"fun", "prompt", state, "On it!", 1, 5000}});
+        monitor.setRules(rules);
+        const qint64 now = QDateTime::currentMSecsSinceEpoch();
+        // A duplicate or stale event the sessions refuse is not an occurrence either.
+        pet::Event prompt{"claude", "s", "1", "prompt", {}, {}, "/project", {}, now};
+        QVERIFY(monitor.apply(prompt, now));
+        QCOMPARE(monitor.note().text(), QString("On it!"));
+        monitor.note().hide();
+        finish(window);
+        QVERIFY(!monitor.apply(prompt, now + 10));
+        QVERIFY(!monitor.note().isVisible());
+        // Tool events never match: a rule cannot name them, and rest holds the prompt for its cooldown anyway.
+        pet::Event tool{"claude", "s", "2", "tool_start", "t", {}, "/project", {}, now + 20};
+        QVERIFY(monitor.apply(tool, now + 20));
+        QVERIFY(!monitor.note().isVisible());
+        prompt.id = "3"; prompt.timestamp = now + 30;
+        QVERIFY(monitor.apply(prompt, now + 30)); // Accepted by the sessions, but the rule is resting.
+        QVERIFY(!monitor.note().isVisible());
     }
     void preferencesKeepEnabledPacks() {
         QTemporaryDir directory;

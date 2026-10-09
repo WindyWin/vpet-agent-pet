@@ -54,6 +54,8 @@ public:
     QString pluginFolder() const { return pluginFolder_.isEmpty() ? plugins::defaultFolder() : pluginFolder_; }
     // The packs in the plugin folder now, each with what activation made of it: one added since is Off (or Invalid).
     QVector<PluginPack> plugins() const;
+    // The reaction rules (events.json) of the packs activate() applied, in pack id order; empty without any.
+    const EventRules &eventRules() const { return rules_; }
     QString active() const { return active_; }
     const Catalog &catalog() const { return catalog_; } // The active pet's; empty before activate().
     QString root() const { return ":" + mapRoot_; } // Pets are at <root>/assets/<id>/.
@@ -65,6 +67,7 @@ private:
     QStringList enabledPlugins_;
     QVector<PluginPack> loadedPlugins_; // As activate() found them.
     Catalog catalog_;
+    EventRules rules_;
     QStringList packs_; // Registered pack files.
     bool indexRegistered_ = false;
 };
