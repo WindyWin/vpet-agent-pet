@@ -230,7 +230,7 @@ Native Wayland placement and stacking support remain unverified.
 
 ## Pets
 
-VPet is the bundled pet. **Fat Cat** (an orange cat, CC0 art by shuaa of megupets), **Kuro** (a little ninja), **Yun** (a xianxia cultivator who meditates, brews pills and flies on a sword) and **Long** (a chibi warlord mecha with a spear, red tendrils and violet crystals) download when chosen in Settings. Kuro and Yun are original art drawn by scripts in `scripts/` and released under CC0. Long is WindyWin's own painted design, rigged as a cutout puppet and animated by `scripts/draw_long.py`, under its own terms. The app is built for more. A pet is a folder of frames, a catalog, a
+VPet is the bundled pet. **Fat Cat** (an orange cat, CC0 art by shuaa of megupets), **Kuro** (a little ninja), **Yun** (a xianxia cultivator who meditates, brews pills and flies on a sword) and **Phù Đồ** (a transforming mecha with four combat forms) download when chosen in Settings. Kuro and Yun are original art drawn by scripts in `scripts/` and released under CC0. Phù Đồ is WindyWin's own design sheet, animated by `scripts/draw_phudo.py`, under its own terms. The app is built for more. A pet is a folder of frames, a catalog, a
 preview and its own art terms under `assets/`, and a rebuild picks up every such folder with no code
 changes. Once two or more pets are installed, Settings → Pet → **Character** shows a tile per pet. The
 chosen pet appears the next time Agent Pet starts, and only its artwork is loaded. `--pet <id>` runs
@@ -239,7 +239,7 @@ instead. VPet ships with the app; other pets show their download size and downlo
 pack by pack against hashes the app already carries, with progress and Cancel in Settings. The app tells a pet what is happening through named cues (a session needs you, a turn finished,
 time for water), and each pet decides which of its animations answers each one. To make a pet, see
 [the pet guide](docs/pets.md) and the design records for [pet packs](docs/adr/0028-pet-packs.md),
-[cues](docs/adr/0029-cues.md) and [on-demand pets](docs/adr/0030-on-demand-pets.md), [Fat Cat](docs/adr/0036-fat-cat-pet.md), [Kuro and Yun](docs/adr/0037-drawn-pets.md), and [Long](docs/adr/0038-long-mecha-pet.md).
+[cues](docs/adr/0029-cues.md) and [on-demand pets](docs/adr/0030-on-demand-pets.md), [Fat Cat](docs/adr/0036-fat-cat-pet.md), [Kuro and Yun](docs/adr/0037-drawn-pets.md), and [Phù Đồ](docs/adr/0038-phudo-mecha-pet.md).
 
 ## Plugin packs
 
@@ -499,7 +499,7 @@ automatic updates.
 
 ## Artwork and publishing
 
-Fat Cat's artwork is **Orange Fat Cat** by shuaa ([megupets](https://www.megupets.com)), released under [CC0 1.0](licenses/FAT-CAT-ARTWORK-TERMS.md). Kuro and Yun are original Agent Pet artwork, drawn by `scripts/draw_kuro.py` and `scripts/draw_yun.py` and released under CC0 1.0 ([Kuro](licenses/KURO-ARTWORK-TERMS.md), [Yun](licenses/YUN-ARTWORK-TERMS.md)). Long is WindyWin's original painted design, animated from the designer's sheet by `scripts/draw_long.py`. The frames may be distributed with Agent Pet; other uses of the design need its author's permission ([terms](licenses/LONG-ARTWORK-TERMS.md)). The rest of this section is about VPet's art.
+Fat Cat's artwork is **Orange Fat Cat** by shuaa ([megupets](https://www.megupets.com)), released under [CC0 1.0](licenses/FAT-CAT-ARTWORK-TERMS.md). Kuro and Yun are original Agent Pet artwork, drawn by `scripts/draw_kuro.py` and `scripts/draw_yun.py` and released under CC0 1.0 ([Kuro](licenses/KURO-ARTWORK-TERMS.md), [Yun](licenses/YUN-ARTWORK-TERMS.md)). Phù Đồ is WindyWin's original design, animated from the designer's sheet by `scripts/draw_phudo.py`. The frames may be distributed with Agent Pet; other uses of the design need its author's permission ([terms](licenses/PHUDO-ARTWORK-TERMS.md)). The rest of this section is about VPet's art.
 
 Artwork credit: **VUP-Simulator team**, via [LorisYounger/VPet](https://github.com/LorisYounger/VPet). See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and the [upstream artwork terms](licenses/VPET-ARTWORK-TERMS.md).
 

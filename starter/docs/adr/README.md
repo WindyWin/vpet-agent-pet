@@ -44,7 +44,7 @@ the order the decisions were made. For a map of the code, start with the
 | [0035](0035-built-in-triggers-as-rules.md) | The pet's own triggers as rules | 2026-10-09 |
 | [0036](0036-fat-cat-pet.md) | Fat Cat, the first on-demand pet | 2026-10-09 |
 | [0037](0037-drawn-pets.md) | Kuro and Yun, pets drawn from code | 2026-10-09 |
-| [0038](0038-long-mecha-pet.md) | Long, a contributor's painted design rigged as a cutout puppet | 2026-10-10 |
+| [0038](0038-phudo-mecha-pet.md) | Phù Đồ, a transforming mecha from a contributor's sheet | 2026-10-10 |
 
 ## Writing a record
 

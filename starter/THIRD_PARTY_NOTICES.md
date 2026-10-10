@@ -16,9 +16,9 @@ The PNG frames in `assets/fat-cat/` are the **Orange Fat Cat** pack by **shuaa**
 
 The PNG frames in `assets/kuro/` and `assets/yun/` are original Agent Pet artwork, not third-party material. They are drawn from vector shapes by `scripts/draw_kuro.py` and `scripts/draw_yun.py` (with `scripts/pet_art.py`) and dedicated to the public domain under [CC0 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/); see [Kuro's terms](licenses/KURO-ARTWORK-TERMS.md) and [Yun's terms](licenses/YUN-ARTWORK-TERMS.md). Neither pet is bundled: each downloads when chosen in Settings.
 
-## Long pet artwork
+## Phù Đồ pet artwork
 
-The PNG frames in `assets/long/` are made from WindyWin's own painted design sheet (`scripts/long_art/`): its poses are cut out and rigged as a cutout puppet, then posed, relit and given effects by `scripts/draw_long.py` (with `scripts/pet_art.py`). The poses were matted with the isnet-general-use model of [rembg](https://github.com/danielgatis/rembg) (MIT), which is a tool only and is not distributed. The frames may be copied and distributed with Agent Pet, changed or not. Other uses of the design need its author's permission; see [Long's terms](licenses/LONG-ARTWORK-TERMS.md). Long is not bundled: it downloads when chosen in Settings.
+The PNG frames in `assets/phudo/` are made from WindyWin's own game-asset design sheet (`scripts/phudo_art/`): its four combat forms, transformation stages and greatsword are cut out, then animated, relit and given effects by `scripts/draw_phudo.py` (with `scripts/pet_art.py`). The cut-outs were upscaled with the anime model of [Real-ESRGAN](https://github.com/xinntao/Real-ESRGAN) (BSD-3-Clause) and matted with the isnet-anime model of [rembg](https://github.com/danielgatis/rembg) (MIT); both are tools only and are not distributed. The frames may be copied and distributed with Agent Pet, changed or not. Other uses of the design need its author's permission; see [Phù Đồ's terms](licenses/PHUDO-ARTWORK-TERMS.md). Phù Đồ is not bundled: it downloads when chosen in Settings.
 
 ## Agent Pet application icon
 
