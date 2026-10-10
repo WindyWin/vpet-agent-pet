@@ -47,6 +47,19 @@ They also gave a four-phase transformation pipeline to follow:
   - the visor can flare;
   - the whole figure moves with offsets, rotation, squash and stretch, screen shake and afterimages.
   All forms are scaled to one body height.
+- Rig the arms of Phong Lôi and Tứ Thủ so they move on their own joints:
+  - each arm is the set of armour plates mostly inside a drawn zone, so it comes away whole, outline and all;
+  - it is split at the elbow, with a round cap over the joint so a folded forearm leaves no gap;
+  - the body behind it is painted in as the dark inner frame.
+  The body is warped rather than cut, so it has no seams:
+  - the chest turns at the waist;
+  - the head nods;
+  - the weight shifts sideways over planted feet;
+  - the knees bend and bow out.
+  Each arm hangs from where that warp takes its shoulder. Poses are keyframed angles with eased in-betweens:
+  anticipation before a strike, follow-through, a hit-stop on contact, and the body and legs driving each swing.
+  The greatsword is gripped at the wrist along the forearm. It leaves a smear along the path its blade actually
+  swept, and it bites the ground, with the shock and debris where it meets it.
 - Transform piece by piece, as in Transformers and Iron Man, following the designer's four phases:
   1. **Unlock:** the locks clack open, plasma vents, and every plate opens out from the chest with energy light
      in the seams.
@@ -70,30 +83,32 @@ They also gave a four-phase transformation pipeline to follow:
 | Cue or feature | Phù Đồ |
 | --- | --- |
 | Idle | Phong Lôi breathing, its plumes swaying. Variants: crackling lightning, venting, a visor sweep. Moods: happy (bouncing, sparkles), poor (dark, flickering). |
-| Thinking, reading | A strategy hologram (a plan variant); a scanned text sheet (a page-flick variant). |
-| Working | Transforms into Tứ Thủ: four-arm slash combos with blade streaks and hit-stop. Playful variant: the Đại Trảm Đao materialises and cleaves. Also a flame roar. Reading and working hand over through the transformation. |
+| Thinking, reading | The left hand raised, projecting a strategy hologram (a plan variant); the right hand up beside a scanned text sheet (a page-flick variant). |
+| Working | Transforms into Tứ Thủ: each arm in turn cocks back, whips through its strike with the body turning and the knees dropping, and recoils, then all four strike at once. Playful variant: the Đại Trảm Đao materialises in the lower right hand, is raised overhead and brought down into the ground. Also a flame roar with the arms flared. Reading and working hand over through the transformation. |
 | Attention | Transforms into Hắc Tháp: the cannons charge under a red beacon. |
 | Error, quota | Overheating, arcs and shaking, a dead slump with smoke, a flickering reboot; for the quota, sagging and dark with a blinking cell. |
-| Turn finished | Lightning strikes the polearm twice, a jump with fireworks, a landing shock. |
+| Turn finished | A fist punched to the sky, struck twice by lightning; both arms up for a jump with fireworks; a crouching landing shock. |
 | Sleep, start, quit | Standby and a flare-up wake; Hỏa Dực streaks down and transforms on landing; it transforms and launches away. Anger: an overheated transformation, a roar in flames, then a dash or a jet blast. |
 | Touch | Dragged (pendulum swing), patted (heart hologram), poked (sparks and twitches). Thrown: a spin that snaps into Hỏa Dực, hovering on jets, transforming back down. Peeking at an edge. |
 | Moves | Hỏa Dực flight (level, climbing, diving) entered and left through the transformation; a ground dash with afterimages. |
-| Reactions and fidgets | Phong Lôi Kích (lightning into the polearm, a charged lunge); Đại Trảm Đao summoned and swung; Tứ Thủ Loạn Trảm; the Đại Pháo Ray beam from Hỏa Dực; a Hắc Tháp artillery barrage; the Aegis barrier dome (danger); a war drum of the anchors; a full form cycle (milestones, Konami); refuel, coolant, vent, a heart, a bow, a systems calibration of every form. |
+| Reactions and fidgets | Phong Lôi Kích (lightning into the raised fist, then a crouching thrust with the bolt along the arm); Đại Trảm Đao summoned into the hand and swung down into the ground; Tứ Thủ Loạn Trảm; the Đại Pháo Ray beam from Hỏa Dực; a Hắc Tháp artillery barrage; the Aegis barrier dome (danger); a war drum of the anchors; a full form cycle (milestones, Konami); refuel (the hand catches a cell and brings it to the gem), coolant, vent, a heart (hands to the chest), a bow, a joint-by-joint calibration, a hand to the chin. |
 
 ## Consequences
 
-- The pack is about 206 MB (1,429 files), more than VPet (176 MB). The regraded, sharper drawings compress less
+- The pack is about 209 MB (1,474 files), more than VPet (176 MB). The regraded, sharper drawings compress less
   than the first soft cut, and the piece-by-piece transformations are long. It downloads on demand, so only users
   who choose Phù Đồ pay for it.
 - The terms credit the design and artwork to WindyWin. They may be distributed with Agent Pet; other uses need
   the author's permission.
-- To change the motion, edit `draw_phudo.py` and render again. To re-cut the art (a new sheet, a new pose), add a
-  box to `extract.py`, run it and `make_plates.py`. Their tools (torch, rembg, opencv, scikit-image) are needed
-  only for cutting.
+- To change the motion, edit `draw_phudo.py` and render again; it needs opencv to paint in the body behind the
+  arms. To re-cut the art (a new sheet, a new pose), add a box to `extract.py`, run it and `make_plates.py`. Their
+  tools (torch, rembg, scikit-image) are needed only for cutting. A new arm to rig needs its zone and joints in
+  `RIGS`.
 - The sheet is 1024 × 637 pixels, so each form was drawn about 240 pixels tall. Upscaling cannot recover detail
   that is not there; a higher-resolution export of each form would make the pet sharper still.
-- The drawings are single views, so a form never turns round. Hỏa Dực is drawn facing left, so rightward flight
-  mirrors it.
+- The drawings are single views, so a form never turns round, and the arms turn only in the picture plane: a
+  swipe cannot come towards the viewer. Tendrils drawn over an arm stay with the body when the arm moves. Hỏa Dực
+  is drawn facing left, so rightward flight mirrors it.
 
 ## Validation
 
@@ -125,3 +140,22 @@ They also gave a four-phase transformation pipeline to follow:
 - `verify_assets.py` reported `OK: ... phudo (86 sequences) ...`. In the scratch Qt 6.4.2 build, `pets` (with Phù
   Đồ in `everyCuePlaysOnEveryPet`), `plugins` and `pet-scaffold` passed.
 - Re-rendering a transformation and re-running `make_plates.py` reproduced the committed files byte for byte.
+
+### Arms and legs that move — 2026-10-10
+
+- The designer found the slashes and weapon moves stiff: the drawings slid and leaned, but the arms and legs never
+  moved.
+- The arms of Phong Lôi and Tứ Thủ were rigged and the body warp gained the chest turn, the nod, the weight shift
+  and the crouch described above. Every attack, desk state, touch reaction and fidget of those two forms was
+  re-keyed with arm angles: anticipation, strike, hit-stop, recoil. The greatsword now rides in the hand and buries
+  itself where the swing meets the ground.
+- First renders showed two faults, both fixed before the pack was rebuilt:
+  - a pale smear at the hips and elbows, where two half-transparent pieces met after turning;
+  - the claws breaking up when the chest turned, because the arm masks and the warped pixels disagreed.
+  The fixes were a warp for the body instead of cut pieces, arms cut from the unwarped drawing, and a hard elbow cut
+  with a joint cap.
+- Contact sheets of the sword swings, the claw combo, Phong Lôi Kích, the victory and the folded-arm poses (chin,
+  heart, bow) were checked by eye.
+- `verify_assets.py` reported `OK: ... phudo (86 sequences) ...`. In the scratch Qt 6.4.2 build, `pets` (with Phù
+  Đồ in `everyCuePlaysOnEveryPet`), `plugins` and `pet-scaffold` passed.
+- Re-rendering `sword_summon` and `tu/claws` reproduced the committed frames byte for byte.

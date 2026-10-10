@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Draw Phù Đồ (Chiến Giáp Phá Đá Đế, mecha code Buddha), frame by frame, from WindyWin's own design sheet.
 
-    pip install pycairo pillow numpy scipy
+    pip install pycairo pillow numpy scipy opencv-python-headless
     python3 scripts/draw_phudo.py OUT             # every sequence, as OUT/<sequence>/_NNN_<ms>.png
     python3 scripts/draw_phudo.py OUT idle        # only these sequences
 
@@ -14,6 +14,14 @@ each form into its armour plates along the ink lines. This script never repaints
 It brings the drawings to life: breathing and a lean warp the upper body, the red plumes and tendrils sway in a
 travelling wave, and the drawing's own cyan, violet and red lights are relit (dimmed, blooming, overheated) and the
 visor flares. The figure moves with offsets, rotation, squash, screen shake and afterimages.
+
+Phong Lôi and Tứ Thủ are rigged (RIGS): each arm is cut out of the drawing along its armour plates and turns on its
+own shoulder and elbow, with the hidden body behind it painted in. The body itself is warped: the chest turns at
+the waist, the head nods, the weight shifts sideways over planted feet and the knees bend and bow out. The arms hang
+from where that warp takes their shoulders. Poses are keyframed angles with eased in-betweens: anticipation before
+a strike, follow-through, hit-stop on contact, the body and legs driving every swing. A greatsword is gripped at
+the wrist along the forearm, leaves a smear along the path its blade actually swept, and bites the ground where it
+meets it.
 
 Transformations are piece by piece, in the designer's four phases:
 1. Disengage and vent: the locks clack open, plasma vents, and every plate opens out from the body with energy
@@ -33,6 +41,7 @@ from dataclasses import dataclass, field, replace
 from pathlib import Path
 
 import cairo
+import cv2
 import numpy as np
 from PIL import Image
 from scipy import ndimage
@@ -100,6 +109,10 @@ class Pose:
     shake_y: float = 0
     breathe: float = 0          # upper body raised, in the drawing's pixels
     lean: float = 0             # upper body leaning (+ to the right), in the drawing's pixels at the crest
+    hips: float = 0             # weight shift: everything above the waist moved sideways over planted feet, the legs
+                                # slanting (+ right), landmark units
+    crouch: float = 0           # knees bent: everything above the waist lowered, the legs shortened and bowed out,
+                                # landmark units
     sway: float = 0.6           # plume and tendril sway
     flutter: float = 0          # phase for sway and effects
     eyes: float = 1             # visor light: 0 dark, 1 as drawn, >1 flaring
@@ -112,6 +125,9 @@ class Pose:
     seam: float = 0             # energy light showing between the plates
     morph_to: str = None        # transformation: the form the plates are flying to
     morph: float = 0            # how far the plate-by-plate transformation has gone, 0..1
+    limbs: tuple = ()           # posed limbs of a rigged form: (name, upper arm, forearm) in degrees, + raises
+    twist: float = 0            # the upper body turning about the waist, degrees (+ clockwise on screen)
+    nod: float = 0              # the head turning about the neck, degrees (+ clockwise on screen)
     ghosts: tuple = ()          # afterimages: (dx, alpha[, dlift])
     shadow: bool = True
     drag: float = 0             # set by pet_art.follow_through; unused
@@ -199,6 +215,7 @@ class Art:
         for x0, y0, x1, y1 in spec['rigid']:
             rigid[int(y0 * SRC) + PAD:int(y1 * SRC) + PAD, int(x0 * SRC) + PAD:int(x1 * SRC) + PAD] = True
         plume = ndimage.binary_dilation(crimson & ~rigid, iterations=3) & (a > 0.05)
+        self.bendable = 1 - ndimage.gaussian_filter(rigid.astype(np.float32), 4 * SRC)
         self.plume = ndimage.gaussian_filter(plume.astype(np.float32), 2)
         cx, cy = spec['chest']
         d = np.hypot(gx - cx, gy - cy)
@@ -206,15 +223,65 @@ class Art:
         self.ux, self.uy = gx, gy
         top = spec['anchor'][1] - spec['height']
         self.upper = np.clip((spec['waist'] - gy) / max(1, spec['waist'] - top), 0, 1.3)
+        # Down the legs: 0 at the waist (and above), 1 at the feet; the knee side (-1 left, +1 right).
+        self.leg = np.clip((gy - spec['waist']) / max(1, spec['anchor'][1] - spec['waist']), 0, 1)
+        self.side = np.tanh((gx - spec['anchor'][0]) / 20)
         self.offset = (spec['anchor'][0] * SRC + PAD, spec['anchor'][1] * SRC + PAD)
         self.k = BODY_H / (spec['height'] * SRC)
         self._sil = None
         self._halo = None
         self._plates = None
+        # What the chest turns about (twist) and the head nods about, in drawing pixels; art() fills in a rigged
+        # form's own.
+        hx, hy = spec['head']
+        self.waist_px = (spec['anchor'][0] * SRC + PAD, spec['waist'] * SRC + PAD)
+        self.neck_px = (hx * SRC + PAD, (hy + 40) * SRC + PAD)
+        self.head_px = (hx * SRC + PAD, hy * SRC + PAD)
+        self.head_r = 50 * SRC
 
-    def pixels(self, p, still=False):
-        """Warped and relit premultiplied RGBA for this pose (`still`: lit but not warped)."""
-        pm = self.pm
+    def body_shift(self, p, x, y):
+        """Where the breath, lean, weight shift and crouch move a drawing pixel (no turning)."""
+        spec = self.spec
+        gy = (y - PAD) / SRC
+        top = spec['anchor'][1] - spec['height']
+        upper = min(1.3, max(0.0, (spec['waist'] - gy) / max(1, spec['waist'] - top)))
+        leg = min(1.0, max(0.0, (gy - spec['waist']) / max(1, spec['anchor'][1] - spec['waist'])))
+        return (x + p.lean * SRC * upper ** 1.6 + p.hips * SRC * (1 - leg),
+                y - p.breathe * SRC * upper + p.crouch * SRC * (1 - leg))
+
+    def turns(self, p):
+        """The chest's and the head's pivots for pose p, as (pivot, degrees, weight(x, y)) in drawing pixels: the
+        chest turns about the waist, fully a little above it; the head nods about the neck."""
+        wx, wy = self.body_shift(p, *self.waist_px)
+        def chest_w(x, y):
+            return np.clip((wy + 18 * SRC - y) / (36 * SRC), 0, 1)
+        def about(q, deg, pivot):
+            r = math.radians(deg)
+            c, s = math.cos(r), math.sin(r)
+            return (pivot[0] + c * (q[0] - pivot[0]) - s * (q[1] - pivot[1]),
+                    pivot[1] + s * (q[0] - pivot[0]) + c * (q[1] - pivot[1]))
+        neck = about(self.body_shift(p, *self.neck_px), p.twist, (wx, wy))
+        head = about(self.body_shift(p, *self.head_px), p.twist, (wx, wy))
+        r = self.head_r
+        def head_w(x, y):
+            return np.clip((r + 3 * SRC - np.hypot(x - head[0], y - head[1])) / (6 * SRC), 0, 1)
+        return [((wx, wy), p.twist, chest_w), (neck, p.nod, head_w)], about
+
+    def moved(self, p, q):
+        """Where the body's warp (breath, lean, weight, crouch, twist, nod; not the plumes' sway) takes a drawing
+        pixel: the limbs are hung from these points."""
+        x, y = self.body_shift(p, *q)
+        turns, about = self.turns(p)
+        for pivot, deg, weight in turns:
+            if deg:
+                x, y = about((x, y), deg * float(weight(x, y)), pivot)
+        return x, y
+
+    def pixels(self, p, still=False, pm=None):
+        """Warped and relit RGB and alpha for this pose (`still`: lit but not warped; `pm`: other premultiplied
+        pixels of the same drawing, such as the puppet's body with the limbs painted out)."""
+        src_a = None if pm is None else pm[..., 3]
+        pm = self.pm if pm is None else pm
         dx = np.zeros_like(self.xx)
         dy = np.zeros_like(self.yy)
         if not still:
@@ -222,6 +289,22 @@ class Art:
                 dy -= p.breathe * SRC * self.upper
             if p.lean:
                 dx += p.lean * SRC * self.upper ** 1.6
+            if p.hips:
+                dx += p.hips * SRC * (1 - self.leg)
+            if p.crouch:
+                dy += p.crouch * SRC * (1 - self.leg)
+                dx += p.crouch * 0.7 * SRC * np.sin(math.pi * self.leg) * self.side * self.bendable
+            if p.twist or p.nod:
+                # Turning: each pixel comes from where the turn (by its weight, taken where it lands) started it.
+                turns, _ = self.turns(p)
+                for pivot, deg, weight in turns:
+                    if not deg:
+                        continue
+                    th = np.radians(deg) * weight(self.xx, self.yy)
+                    c, s_ = np.cos(th), np.sin(th)
+                    rx, ry = self.xx - pivot[0], self.yy - pivot[1]
+                    dx += rx - (c * rx + s_ * ry)
+                    dy += ry - (-s_ * rx + c * ry)
             if p.sway:
                 phase = p.flutter * 2 * math.pi
                 dx += self.plume_u * p.sway * 14 * SRC * np.sin(phase + self.uy * 0.018 + self.ux * 0.006)
@@ -233,6 +316,9 @@ class Art:
         a = pm[..., 3]
         rgb_ = pm[..., :3] / np.maximum(a[..., None], 1e-4)
         energy, eye = self.energy, self.eye
+        if src_a is not None:
+            # Only the lights on these pixels glow (not those of limbs painted out of them).
+            energy, eye = energy * src_a, eye * src_a
         if warped:
             energy = ndimage.map_coordinates(energy, coords, order=1)
             eye = ndimage.map_coordinates(eye, coords, order=1)
@@ -305,7 +391,13 @@ _ART = {}
 
 def art(form):
     if form not in _ART:
-        _ART[form] = Art(FORMS[form])
+        a = Art(FORMS[form])
+        if form in RIGS:
+            r = RIGS[form]
+            def px(q):
+                return (q[0] * SRC + PAD, q[1] * SRC + PAD)
+            a.waist_px, a.neck_px, a.head_px, a.head_r = px(r['waist']), px(r['neck']), px(r['head']), r['head_r'] * SRC
+        _ART[form] = a
     return _ART[form]
 
 
@@ -368,6 +460,202 @@ def effects(ctx, p, props):
     for prop in props:
         prop(ctx, p)
     ctx.restore()
+
+
+# ---------------------------------------------------------------- limb rigs: the arms move on their own joints
+
+# Per rigged form, in landmark units: the waist and neck the upper body and head turn about, the head's radius,
+# and each limb's zone (polygon), joints (shoulder, elbow, wrist), draw layer, `raise_sign` (+1 when a positive
+# angle lifts it on screen), and whether red lacquer inside the zone belongs to it (a red hand) or to the tendrils
+# behind it.
+RIGS = {
+    'phong': dict(waist=(375, 400), neck=(375, 228), head=(375, 178), head_r=52, limbs={
+        'arm_l': dict(poly=((275, 212), (305, 252), (245, 300), (205, 330), (155, 357), (108, 362), (82, 346), (98, 322),
+                            (148, 292), (198, 258), (238, 222)),
+                      joints=((265, 228), (185, 290), (105, 340)), layer='front', raise_sign=1, red=False),
+        'arm_r': dict(poly=((468, 212), (512, 202), (562, 238), (612, 278), (628, 305), (628, 345), (598, 348), (572, 322),
+                            (528, 292), (494, 266), (466, 246)),
+                      joints=((488, 228), (552, 262), (612, 315)), layer='front', raise_sign=-1, red=False),
+    }),
+    'tu': dict(waist=(437, 470), neck=(437, 312), head=(437, 268), head_r=48, limbs={
+        'claw_l': dict(poly=((345, 228), (330, 268), (285, 240), (240, 205), (195, 165), (160, 210), (140, 205), (108, 195),
+                             (108, 105), (150, 66), (205, 92), (235, 128), (268, 170), (310, 205)),
+                       joints=((322, 240), (228, 172), (155, 108)), layer='back', raise_sign=1, red=False),
+        'claw_r': dict(poly=((540, 222), (590, 196), (630, 160), (668, 146), (712, 148), (712, 220), (690, 232), (660, 200),
+                             (630, 205), (590, 238), (556, 262)),
+                       joints=((555, 236), (632, 180), (700, 168)), layer='back', raise_sign=-1, red=False),
+        'reach_l': dict(poly=((345, 280), (340, 318), (290, 345), (240, 372), (195, 412), (172, 432), (105, 430), (100, 385),
+                              (160, 378), (215, 338), (265, 302), (300, 284)),
+                        joints=((332, 296), (248, 332), (160, 404)), layer='front', raise_sign=1, red=True),
+        'reach_r': dict(poly=((535, 282), (590, 284), (632, 300), (680, 345), (720, 380), (770, 384), (770, 438), (712, 436),
+                              (668, 400), (622, 360), (575, 330), (540, 316)),
+                        joints=((548, 300), (628, 330), (735, 405)), layer='front', raise_sign=-1, red=True),
+    }),
+}
+
+
+def soft(mask, sigma):
+    return np.clip(ndimage.gaussian_filter(mask.astype(np.float32), sigma), 0, 1)
+
+
+class Puppet:
+    """A rigged form cut into pieces of the designer's own pixels: the body (with what the limbs hid painted in)
+    and each limb, split softly into upper arm and forearm. The body bends, turns at the waist and nods by the
+    drawing's warp (Art.pixels); each limb, cut from the unwarped drawing, is carried to where that warp took its
+    shoulder, turned with the chest, and turns on its own joints."""
+    def __init__(self, art_, spec):
+        self.art = art_
+        self.spec = spec
+        H, W = art_.pm.shape[:2]
+        def px(q):
+            return (q[0] * SRC + PAD, q[1] * SRC + PAD)
+        self.px = px
+        a = art_.pm[..., 3]
+        rgb_ = art_.pm[..., :3] / np.maximum(a[..., None], 1e-4)
+        r, g, b = rgb_[..., 0], rgb_[..., 1], rgb_[..., 2]
+        red = (r > 0.22) & (g < r * 0.55) & (b < r * 0.75)
+        yy, xx = art_.yy, art_.xx
+        self.limbs = {}
+        taken = np.zeros((H, W), np.float32)
+        # A limb is the armour plates (make_plates.py) mostly inside its zone, so it comes away whole, outline and all.
+        labels = np.pad(np.asarray(Image.open(ART / 'plates' / art_.spec['file'])), PAD)
+        areas = np.bincount(labels.ravel())
+        for name, limb in spec['limbs'].items():
+            poly = np.zeros((H, W), np.uint8)
+            cv2.fillPoly(poly, [np.array([px(q) for q in limb['poly']], np.int32)], 1)
+            inside = np.bincount(labels[poly > 0].ravel(), minlength=len(areas))
+            chosen = np.nonzero((inside >= 0.5 * np.maximum(areas, 1)) & (np.arange(len(areas)) > 0))[0]
+            zone = np.isin(labels, chosen) | ((poly > 0) & (labels == 0))
+            zone = ndimage.binary_dilation(zone, iterations=1) & (a > 0.02)
+            if not limb['red']:
+                zone &= ~red
+            w = zone.astype(np.float32)
+            (sx, sy), (ex, ey), (wx, wy) = [px(q) for q in limb['joints']]
+            d1 = seg_dist(xx, yy, sx, sy, ex, ey)
+            d2 = seg_dist(xx, yy, ex, ey, wx, wy)
+            # A hard cut at the elbow, the forearm drawn over the upper arm, and the upper arm keeping a round cap
+            # over the joint so a folded forearm leaves no gap and no half-transparent seam.
+            fore = (d2 < d1).astype(np.float32)
+            cap = soft(np.hypot(xx - ex, yy - ey) < 16 * SRC, 0.8)
+            self.limbs[name] = dict(upper=w * np.maximum(1 - fore, cap), fore=w * fore, joints=[px(q) for q in limb['joints']],
+                                    layer=limb['layer'], sign=limb['raise_sign'])
+            taken = np.maximum(taken, w)
+        # The body: everything the limbs did not take, with what they hid painted in where the body surrounds it.
+        body = a * (taken < 0.5)
+        inside = ndimage.binary_closing(body > 0.5, iterations=int(10 * SRC)) & (taken >= 0.5)
+        keep = (body > 0.5)
+        bgr = (np.clip(rgb_[..., ::-1], 0, 1) * 255).astype(np.uint8)
+        filled = cv2.inpaint(np.where(keep[..., None], bgr, 0).astype(np.uint8), (~keep).astype(np.uint8) * 255,
+                             int(5 * SRC), cv2.INPAINT_TELEA)[..., ::-1].astype(np.float32) / 255
+        # Where a limb has swung away, the dark inner frame under the armour shows.
+        filled = filled * 0.42 + np.array([0.03, 0.03, 0.06], np.float32)
+        body_a = np.maximum(body, soft(inside, 1.0) * (a > 0.02))
+        base_rgb = np.where(keep[..., None], rgb_, filled)
+        self.base_pm = np.dstack([base_rgb * body_a[..., None], body_a])
+
+    def matrices(self, p):
+        """Each limb piece's transform (warped drawing pixels to drawing pixels) for pose p."""
+        def turn(pivot, deg, after=None):
+            m = cairo.Matrix()
+            m.translate(*pivot)
+            m.rotate(math.radians(deg))
+            m.translate(-pivot[0], -pivot[1])
+            return m.multiply(after) if after is not None else m
+        out = {}
+        angles = dict((n, (u, f)) for n, u, f in p.limbs)
+        for name, limb in self.limbs.items():
+            u, f = angles.get(name, (0.0, 0.0))
+            sh, el = limb['joints'][0], limb['joints'][1]
+            # The limb rides on the body: its shoulder goes where the body's warp took it, turned with the chest.
+            to = self.art.moved(p, sh)
+            body = cairo.Matrix()
+            body.translate(*to)
+            body.rotate(math.radians(p.twist))
+            body.translate(-sh[0], -sh[1])
+            upper = turn(sh, limb['sign'] * u).multiply(body)
+            out[name + '.upper'] = upper
+            out[name + '.fore'] = turn(el, limb['sign'] * f).multiply(upper)
+        return out
+
+    def tip(self, p, name):
+        """The wrist of a limb and its forearm's direction (degrees on screen), in effect units."""
+        limb = self.limbs[name]
+        m = self.matrices(p)[name + '.fore']
+        el = m.transform_point(*limb['joints'][1])
+        wr = m.transform_point(*limb['joints'][2])
+        a = self.art
+        conv = lambda q: ((q[0] - a.offset[0]) * a.k / OLD, (q[1] - a.offset[1]) * a.k / OLD)
+        return conv(wr), math.degrees(math.atan2(wr[1] - el[1], wr[0] - el[0]))
+
+    def draw(self, ctx, p, full, base):
+        """Paint the pieces in order (back limbs, body, front limbs) from the relit pixels of the whole drawing
+        (`full`) and of the body with the limbs painted out (`base`)."""
+        mats = self.matrices(p)
+        a = self.art
+        order = [(n, l) for n, l in self.limbs.items() if l['layer'] == 'back']
+        rest = [(n, l) for n, l in self.limbs.items() if l['layer'] != 'back']
+        ctx.save()
+        ctx.scale(a.k, a.k)
+        ctx.translate(-a.offset[0], -a.offset[1])
+        def piece(rgb_, alpha, weight, matrix):
+            ys, xs = np.nonzero(weight > 0.01)
+            if not len(ys):
+                return
+            y0, y1, x0, x1 = ys.min(), ys.max() + 1, xs.min(), xs.max() + 1
+            surf = to_surface(rgb_[y0:y1, x0:x1], alpha[y0:y1, x0:x1] * weight[y0:y1, x0:x1])
+            ctx.save()
+            ctx.transform(matrix)
+            ctx.set_source_surface(surf, x0, y0)
+            ctx.get_source().set_filter(cairo.FILTER_GOOD)
+            ctx.paint()
+            ctx.restore()
+        def chain(pieces):
+            for args in pieces:
+                piece(*args)
+        for name, limb in order:
+            chain([(*full, limb['upper'], mats[name + '.upper']), (*full, limb['fore'], mats[name + '.fore'])])
+        chain([(*base, np.ones_like(base[1]), cairo.Matrix())])
+        for name, limb in rest:
+            chain([(*full, limb['upper'], mats[name + '.upper']), (*full, limb['fore'], mats[name + '.fore'])])
+        ctx.restore()
+
+
+def seg_dist(xx, yy, ax, ay, bx, by):
+    dx, dy = bx - ax, by - ay
+    t = np.clip(((xx - ax) * dx + (yy - ay) * dy) / max(1e-6, dx * dx + dy * dy), 0, 1)
+    return np.hypot(xx - (ax + t * dx), yy - (ay + t * dy))
+
+
+_PUPPETS = {}
+
+
+def puppet(form):
+    if form not in RIGS:
+        return None
+    if form not in _PUPPETS:
+        _PUPPETS[form] = Puppet(art(form), RIGS[form])
+    return _PUPPETS[form]
+
+
+def posed(p):
+    return bool(p.limbs or p.twist or p.nod)
+
+
+def draw_form(ctx, p):
+    """The form at rest as one image, or, when its limbs, chest or head are posed, as a puppet."""
+    pup = puppet(p.form)
+    a = art(p.form)
+    if pup is None or not posed(p):
+        draw_art(ctx, p.form, a.surface(p))
+        return
+    # The limbs are cut from the drawing unbent (their matrices carry them with the body); the body is warped.
+    full = a.pixels(replace(p, twist=0, nod=0, hips=0, crouch=0, breathe=0, lean=0))
+    base = a.pixels(p, pm=pup.base_pm)
+    pup.draw(ctx, p, full, base)
+
+
+def limb_tip(p, name):
+    return puppet(p.form).tip(p, name)
 
 
 # ---------------------------------------------------------------- piece-by-piece transformation
@@ -530,7 +818,7 @@ def render(p):
         elif p.gap > 0:
             draw_opened(ctx, p)
         else:
-            draw_art(ctx, p.form, art(p.form).surface(p))
+            draw_form(ctx, p)
         effects(ctx, p, p.front)
         ctx.restore()
         ctx.pop_group_to_source()
@@ -1526,17 +1814,31 @@ def flash(strength, color=WHITE):
 _SWORD = None
 
 
-def greatsword(x, y, angle, materialise=1.0, scale=1.0, light=0.0):
-    """The Đại Trảm Đao from the sheet, appearing out of a scan line (materialise 0..1) and glowing."""
+def sword_surface():
+    global _SWORD
+    if _SWORD is None:
+        im = np.asarray(Image.open(ART / 'greatsword.png').convert('RGBA'), dtype=np.float32) / 255
+        _SWORD = to_surface(im[..., :3], im[..., 3])
+    return _SWORD
+
+
+def blade_length(scale=1.0):
+    """From the grip to the point, effect units."""
+    return sword_surface().get_width() * 0.88 * 1.35 * scale
+
+
+def greatsword(x, y, angle, materialise=1.0, scale=1.0, light=0.0, ground=False):
+    """The Đại Trảm Đao from the sheet, appearing out of a scan line (materialise 0..1) and glowing; `ground`:
+    the part below the ground is hidden (the blade is buried in it)."""
     def draw(ctx, p):
-        global _SWORD
         if materialise <= 0:
             return
-        if _SWORD is None:
-            im = np.asarray(Image.open(ART / 'greatsword.png').convert('RGBA'), dtype=np.float32) / 255
-            _SWORD = to_surface(im[..., :3], im[..., 3])
-        W, H = _SWORD.get_width(), _SWORD.get_height()
+        sword = sword_surface()
+        W, H = sword.get_width(), sword.get_height()
         ctx.save()
+        if ground:
+            ctx.rectangle(-5000, -5000, 10000, 5000 + 6)
+            ctx.clip()
         ctx.translate(x, y)
         ctx.rotate(math.radians(angle))
         ctx.scale(scale * 1.35, scale * 1.35)
@@ -1546,7 +1848,7 @@ def greatsword(x, y, angle, materialise=1.0, scale=1.0, light=0.0):
         ctx.save()
         ctx.rectangle(W * (1 - materialise), -20, W * materialise + 20, H + 40)
         ctx.clip()
-        ctx.set_source_surface(_SWORD, 0, 0)
+        ctx.set_source_surface(sword, 0, 0)
         ctx.paint()
         ctx.restore()
         if materialise < 1:
@@ -1587,15 +1889,243 @@ def at(form, name, i=None):
 
 
 def living(form, t, **kw):
-    """A form at rest: breathing, the plumes swaying, the lights pulsing; t is the loop phase 0..1."""
+    """A form at rest: breathing, the arms swinging a little a beat behind the breath, the head following, the
+    plumes swaying and the lights pulsing; t is the loop phase 0..1. `limbs`, `twist` and `nod` add to the sway."""
     base = dict(form=form, breathe=2.5 + 2.5 * math.sin(2 * math.pi * t), sway=0.6, flutter=t,
                 energy=1 + 0.12 * osc(t), eyes=1.05 + 0.15 * osc(t, 0.5))
+    rigged = form in RIGS
+    extra = dict((n, (u, f)) for n, u, f in kw.pop('limbs', ()))
+    if rigged:
+        sway = {}
+        for name in RIGS[form]['limbs']:
+            pu, pf = IDLE_SWAY.get(name, (0.0, 0.0))
+            u0, f0 = extra.get(name, (0.0, 0.0))
+            amp = 1.0 if form == 'phong' else 2.2
+            sway[name] = (u0 + amp * 2.2 * math.sin(2 * math.pi * (t - pu)), f0 + amp * 3.0 * math.sin(2 * math.pi * (t - pf)))
+        base['limbs'] = arms(**sway)
+        base['twist'] = kw.pop('twist', 0.0) + 0.6 * math.sin(2 * math.pi * (t - 0.1))
+        base['nod'] = kw.pop('nod', 0.0) + 1.2 * math.sin(2 * math.pi * (t - 0.2))
+    if form != 'hoa':
+        base['hips'] = kw.pop('hips', 0.0) + 1.5 * math.sin(2 * math.pi * (t - 0.35))
     base.update(kw)
     return P(**base)
 
 
 def loop(n, ms, make):
     return [(make(i / n, i), ms) for i in range(n)]
+
+
+# Limb poses: keyframes of arm angles, with the in-betweens eased ------------------------------------------
+
+def linear(t):
+    return t
+
+
+def arms(**angles):
+    """Limb angles for a pose: arms(arm_r=(upper, forearm), ...) in degrees, + raising."""
+    return tuple((name, float(u), float(f)) for name, (u, f) in sorted(angles.items()))
+
+
+def blend_arms(a, b, u):
+    """Arms between two poses (by name; a limb missing on one side is at rest there)."""
+    da, db = {n: (x, y) for n, x, y in a}, {n: (x, y) for n, x, y in b}
+    out = {}
+    for n in set(da) | set(db):
+        x0, y0 = da.get(n, (0.0, 0.0))
+        x1, y1 = db.get(n, (0.0, 0.0))
+        out[n] = (lerp(x0, x1, u), lerp(y0, y1, u))
+    return arms(**out)
+
+
+IDLE_SWAY = {'arm_l': (0.0, 0.3), 'arm_r': (0.5, 0.8), 'claw_l': (0.1, 0.4), 'claw_r': (0.6, 0.9), 'reach_l': (0.25, 0.55),
+             'reach_r': (0.75, 0.05)}
+
+
+def keyed(keys, make, start_t=0.0, span=1.0):
+    """keys: list of (frames, ms, curve, state) where state is a dict of numbers or (u, f) tuples. Returns the
+    in-between states fed to make(state, t, index)."""
+    cur = keys[0][3]
+    seq = [(cur, keys[0][1])]
+    for n, ms, curve, target in keys[1:]:
+        for k in range(1, n + 1):
+            w = curve(k / n)
+            st = {}
+            for key in set(cur) | set(target):
+                a, b = cur.get(key), target.get(key)
+                if a is None:
+                    a = (0.0, 0.0) if isinstance(b, tuple) else 0.0
+                if b is None:
+                    b = (0.0, 0.0) if isinstance(a, tuple) else 0.0
+                st[key] = (lerp(a[0], b[0], w), lerp(a[1], b[1], w)) if isinstance(a, tuple) else lerp(a, b, w)
+            seq.append((st, ms[k - 1] if isinstance(ms, (list, tuple)) else ms))
+        cur = {**cur, **target}
+    total = len(seq)
+    return [(make(st, start_t + span * i / max(1, total - 1), i), ms) for i, (st, ms) in enumerate(seq)]
+
+
+def split_state(st, form):
+    """Pull the limb tuples out of a keyed state into a limbs tuple."""
+    names = RIGS[form]['limbs']
+    limbs = arms(**{n: st[n] for n in names if n in st})
+    rest = {k: v for k, v in st.items() if k not in names}
+    return limbs, rest
+
+
+def phong_pose(st, t, i=0, **kw):
+    limbs, rest = split_state(st, 'phong')
+    return living('phong', t, limbs=limbs, **{**rest, **kw})
+
+
+def tu_pose(st, t, i=0, **kw):
+    limbs, rest = split_state(st, 'tu')
+    return living('tu', t, limbs=limbs, **{'eyes': 1.7 + 0.2 * osc(t * 2), 'energy': 1.25, 'sway': 1.0, **rest, **kw})
+
+
+# Phong Lôi -------------------------------------------------------------------------------------------------
+
+
+PROJECT = dict(arm_l=(55, 45))      # the left hand raised, palm up, projecting a hologram
+
+
+READ = dict(arm_r=(60, 40))         # the right hand up beside the text sheet
+
+
+SLEEP = dict(eyes=0.0, energy=0.35, dim=0.2, sway=0.2, nod=11, twist=-2)
+
+
+SWORD_SCALE = 0.68              # the greatsword in a hand, against the sheet's drawing
+
+
+def blend_state(a, b, w):
+    """A keyed state between two others (a missing limb is at rest, a missing number 0)."""
+    st = {}
+    for key in set(a) | set(b):
+        x, y = a.get(key), b.get(key)
+        if x is None:
+            x = (0.0, 0.0) if isinstance(y, tuple) else 0.0
+        if y is None:
+            y = (0.0, 0.0) if isinstance(x, tuple) else 0.0
+        st[key] = (lerp(x[0], y[0], w), lerp(x[1], y[1], w)) if isinstance(x, tuple) else lerp(x, y, w)
+    return st
+
+
+def blade(p, limb, scale=SWORD_SCALE):
+    """The greatsword held in a limb: the grip (the wrist), the blade's direction (degrees on screen) and the point."""
+    grip, d = limb_tip(p, limb)
+    L = blade_length(scale)
+    r = math.radians(d)
+    return grip, d, (grip[0] + math.cos(r) * L, grip[1] + math.sin(r) * L)
+
+
+def ground_hit(p, limb, scale=SWORD_SCALE):
+    """Where the blade meets the ground, or None when it is clear of it."""
+    grip, d, point = blade(p, limb, scale)
+    if point[1] <= 0 or grip[1] >= 0:
+        return None
+    s = -grip[1] / (point[1] - grip[1])
+    return lerp(grip[0], point[0], s)
+
+
+def held_sword(p, limb, materialise=1.0, light=1.0, scale=SWORD_SCALE):
+    """The Đại Trảm Đao gripped in a hand: its blade carries on along the forearm, buried where it meets the
+    ground."""
+    grip, d, _ = blade(p, limb, scale)
+    return greatsword(grip[0], grip[1], d - 180, materialise=materialise, light=light, scale=scale,
+                      ground=ground_hit(p, limb, scale) is not None)
+
+
+def sword_trail(samples, color=VIOLET_LIGHT):
+    """The smear a swung blade leaves: a ribbon between the blade's middle and its point along the path it swept
+    (samples: (inner, outer, age) with age 0 now and 1 faded), white along the leading edge."""
+    def draw(ctx, p):
+        live = [(i, o, a) for i, o, a in samples if a < 1]
+        for (i0, o0, a0), (i1, o1, a1) in zip(live, live[1:]):
+            alpha = (1 - max(a0, a1)) ** 1.5
+            if alpha <= 0.01:
+                continue
+            poly(ctx, [i0, o0, o1, i1])
+            g = cairo.LinearGradient(*i1, *o1)
+            g.add_color_stop_rgba(0, *color, 0.0)
+            g.add_color_stop_rgba(0.55, *color, 0.75 * alpha)
+            g.add_color_stop_rgba(1, *mix(color, WHITE, 0.6), 0.95 * alpha)
+            ctx.set_source(g)
+            ctx.fill()
+        if len(live) > 1:
+            ctx.set_line_cap(cairo.LINE_CAP_ROUND)
+            for (_, o0, a0), (_, o1, a1) in zip(live, live[1:]):
+                ctx.move_to(*o0)
+                ctx.line_to(*o1)
+                rgb(ctx, WHITE, 0.9 * (1 - max(a0, a1)) ** 1.5)
+                ctx.set_line_width(7)
+                ctx.stroke()
+    return draw
+
+
+def swept(pose_fn, limb, keys, upto, sub=5, scale=SWORD_SCALE, fade=2.5):
+    """Trail samples for a swing through `keys` (states), shown at key index `upto` (it may run past the last key
+    to let the trail fade): `sub` samples between keys, the oldest fading after `fade` keys."""
+    out = []
+    for j in range(1, int(min(upto, len(keys) - 1)) + 1):
+        for k in range(0 if j == 1 else 1, sub + 1):
+            w = k / sub
+            st = blend_state(keys[j - 1], keys[j], ease_out(w))
+            grip, d, point = blade(pose_fn(st, 0.4), limb, scale)
+            r = math.radians(d)
+            L = blade_length(scale)
+            inner = (grip[0] + math.cos(r) * L * 0.35, min(0.0, grip[1] + math.sin(r) * L * 0.35))
+            outer = (point[0], min(0.0, point[1]))
+            out.append((inner, outer, max(0.0, (upto - (j - 1 + w)) / fade)))
+    return out
+
+
+def sword_swing(pose_fn, limb, summon, windup, strikes, recover, color=VIOLET_LIGHT):
+    """The greatsword summoned into a hand along the forearm, a wind-up that coils the body (anticipation), the
+    swing through the strike keys with the body turning and the knees dropping into it and the blade's smear
+    following its real path, a hit-stop with shake where the blade bites the ground (shock, cracks, debris at the
+    point of contact), then the arm comes back as the blade dissolves. Keys are states for pose_fn; strikes are
+    (state, ms)."""
+    out = []
+    rest = {limb: (0, 0), 'twist': 0, 'nod': 0}
+    out += keyed([(0, 70, linear, rest), (4, [70, 70, 80, 90], back_out, summon)],
+                 lambda st, t, i: (lambda p: replace(p, front=[held_sword(p, limb, materialise=min(1.0, i / 4), light=0.8)]))(pose_fn(st, t * 0.3, eyes=1.4 + 0.1 * i)))
+    out += keyed([(0, 70, linear, summon), (3, [90, 110, 160], ease_out, windup)],
+                 lambda st, t, i: (lambda p: replace(p, front=[held_sword(p, limb, light=0.9)]))(pose_fn(st, 0.3 + t * 0.1, eyes=1.8)))
+    keys = [windup] + [k for k, _ in strikes]
+    hit_at = None
+    for j, (key, ms) in enumerate(strikes):
+        p = pose_fn(key, 0.45 + j * 0.04, eyes=2.0, energy=1.5)
+        gx = ground_hit(p, limb)
+        props = [sword_trail(swept(pose_fn, limb, keys, j + 1), color), held_sword(p, limb, light=1.0)]
+        if gx is not None:
+            hit_at = j if hit_at is None else hit_at
+            k = (j - hit_at) / 2.5
+            props += [shockwave(0.15 + k, x=gx, size=1.0, color=color), debris(0.15 + k, gx, 0, seed=2), cracks(0.4 + k, gx, 0),
+                      sparks(0.1 + k, gx, -10, seed=7, count=14, speed=1.3)]
+            p = replace(p, shake=(12 if j == hit_at else 6 if j == hit_at + 1 else 0) * (-1) ** j, shake_y=4 if j == hit_at else 0,
+                        over=[flash(0.25, color)] if j == hit_at else [])
+        elif 0 < j:
+            p = replace(p, ghosts=((0, 0.18),))
+        out.append((replace(p, front=props), ms))
+    last = strikes[-1][0]
+    n = len(keys)
+    def back(st, t, i):
+        p = pose_fn(st, 0.8 + t * 0.2)
+        props = [sword_trail(swept(pose_fn, limb, keys, n - 1 + (i + 1) * 0.8), color)] if i < 3 else []
+        if i < 5:
+            props.append(held_sword(p, limb, materialise=max(0.0, 1 - i / 4), light=0.6))
+        if hit_at is not None and i < 3:
+            gx = ground_hit(pose_fn(last, 0.8), limb)
+            if gx is not None:
+                props.append(debris(0.55 + i * 0.15, gx, 0, seed=2))
+        return replace(p, front=props)
+    out += keyed([(0, 120, linear, last), (5, [90, 90, 100, 110, 130], ease, recover)], back)
+    return out
+
+
+STRIKES = {   # wind-up and strike for each arm: (upper, forearm)
+    'claw_l': ((28, 35), (-55, -45)), 'claw_r': ((28, 35), (-55, -45)),
+    'reach_l': ((45, 45), (-30, -55)), 'reach_r': ((45, 45), (-30, -55)),
+}
 
 
 # Transformations: the designer's four-phase pipeline --------------------------------------------------------
@@ -1681,23 +2211,30 @@ def idle(kind='plain'):
         t = i / n
         p = living('phong', t)
         if kind == 'thunder':
-            tip = at('phong', 'tip')
-            k = i % 7
-            p = replace(p, energy=1.2 + 0.3 * (k < 2), front=[bolts(t, seed=i // 3, amount=0.6)] +
-                        ([lightning(0.3 + 0.2 * k, tip[0] + 60, tip[1] - 300, tip[0], tip[1], seed=i, width=0.5)] if k < 2 else []))
+            # The right fist rises a little and lightning crackles down to it.
+            lift = hop(min(1.0, t * 1.4))
+            p = living('phong', t, limbs=arms(arm_r=(40 * lift, 25 * lift)), nod=-3 * lift, energy=1.2 + 0.4 * lift)
+            tip, _ = limb_tip(p, 'arm_r')
+            k = i % 5
+            p = replace(p, front=[bolts(t, seed=i // 3, amount=0.6)] +
+                        ([lightning(0.25 + 0.2 * k, tip[0] + 80, tip[1] - 520, tip[0], tip[1], seed=i, width=0.5)] if lift > 0.6 and k < 2 else []))
         elif kind == 'vent':
             s = hop(min(1.0, t * 1.4))
-            p = replace(p, breathe=p.breathe + 4 * s, front=[plasma_vent(min(0.99, t * 1.2), None, color=STEAM, seed=4, power=0.5 * s)])
+            p = living('phong', t, limbs=arms(arm_l=(8 * s, 4 * s), arm_r=(8 * s, 4 * s)), breathe=2.5 + 2.5 * math.sin(2 * math.pi * t) + 4 * s,
+                       front=[plasma_vent(min(0.99, t * 1.2), None, color=STEAM, seed=4, power=0.5 * s)])
         elif kind == 'scan':
             look = math.sin(2 * math.pi * t)
-            p = replace(p, eyes=1.8, lean=-4 * look, front=[eye_scan(t, look)])
+            p = living('phong', t, eyes=1.8, nod=-5 * look, twist=-2 * look, limbs=arms(arm_l=(6 * max(0, look), 10 * max(0, look))),
+                       front=[eye_scan(t, look)])
         elif kind == 'happy':
             b = max(0.0, math.sin(2 * math.pi * t * 2))
-            p = replace(p, lift=10 * b, squash=1 + 0.02 * b, energy=1.5, eyes=1.6, sway=1.2,
-                        front=[twinkles(t, [(-300, -900), (300, -900), (-380, -600), (380, -600)], seed=2, color=CYAN)])
+            p = living('phong', t, limbs=arms(arm_r=(95 * b + 10, 30 - 25 * b), arm_l=(30 * b, 20 * b)), lift=10 * b, crouch=4 * (1 - b), squash=1 + 0.02 * b,
+                       energy=1.5, eyes=1.6, sway=1.2, nod=-4 * b,
+                       front=[twinkles(t, [(-300, -900), (300, -900), (-380, -600), (380, -600)], seed=2, color=CYAN)])
         elif kind == 'poor':
             flick = i in (5, 6, 14)
-            p = replace(p, breathe=1 + osc(t), lean=-5, dim=0.35, energy=0.3 if flick else 0.5, eyes=0.2 if flick else 0.5, sway=0.2)
+            p = living('phong', t, limbs=arms(arm_l=(-12, -8), arm_r=(-12, -8)), nod=9, breathe=1 + osc(t), lean=-5, dim=0.35,
+                       energy=0.3 if flick else 0.5, eyes=0.2 if flick else 0.5, sway=0.2)
         out.append((p, 130))
     if kind in ('plain', 'vent'):
         p = out[13][0]
@@ -1726,104 +2263,138 @@ def eye_scan(t, look):
 
 
 def look_around():
-    return loop(10, 120, lambda t, i: living('phong', t, eyes=1.8, lean=-5 * math.sin(2 * math.pi * t),
+    return loop(12, 120, lambda t, i: living('phong', t, eyes=1.8, nod=-6 * math.sin(2 * math.pi * t), twist=-2.5 * math.sin(2 * math.pi * t),
+                                             limbs=arms(arm_l=(8 * max(0, -math.sin(2 * math.pi * t)), 6), arm_r=(8 * max(0, math.sin(2 * math.pi * t)), 6)),
                                              front=[eye_scan(t, math.sin(2 * math.pi * t))]))
 
 
 def think(phase, kind='map'):
     if phase == 'start':
-        return [(living('phong', i / 6, eyes=1 + 0.15 * i, front=[hologram(i / 6, size=back_out(i / 5), kind=kind)]),
-                 (70, 70, 80, 80, 90, 110)[i]) for i in range(6)]
+        return keyed([(0, 70, linear, {'arm_l': (0, 0)}), (3, [60, 70, 90], back_out, {'arm_l': PROJECT['arm_l'], 'nod': -4})],
+                     lambda st, t, i: phong_pose(st, t, eyes=1 + 0.15 * i, front=[hologram(i / 4, size=back_out(min(1.0, i / 3)), kind=kind)]))
     if phase == 'loop':
-        return loop(16, 110, lambda t, i: living('phong', t, eyes=1.7 + 0.2 * osc(t * 2), energy=1.25 + 0.15 * osc(t),
-                                                 lean=-2, front=[hologram(t, kind=kind)]))
-    return [(living('phong', i / 4, eyes=1.4 - 0.1 * i, front=[hologram(0.9, size=u)] if u else []), 70)
-            for i, u in enumerate((1.08, 0.6, 0.2, 0.0))]
+        return loop(16, 110, lambda t, i: living('phong', t, limbs=arms(arm_l=(PROJECT['arm_l'][0] + 3 * math.sin(2 * math.pi * t), PROJECT['arm_l'][1])),
+                                                 nod=-4 + 2 * math.sin(2 * math.pi * t * 2), eyes=1.7 + 0.2 * osc(t * 2),
+                                                 energy=1.25 + 0.15 * osc(t), front=[hologram(t, kind=kind)]))
+    return keyed([(0, 70, linear, {'arm_l': PROJECT['arm_l'], 'nod': -4}), (3, [60, 70, 100], ease, {'arm_l': (0, 0), 'nod': 0})],
+                 lambda st, t, i: phong_pose(st, t, eyes=1.4 - 0.1 * i, front=[hologram(0.9, size=(1.08, 0.6, 0.2, 0.0)[i])] if i < 3 else []))
 
 
 def scan(phase, flicking=False):
     if phase == 'start':
-        return [(living('phong', i / 6, eyes=1 + 0.12 * i, lean=2 * min(1.0, u), front=[data_panel(0, open_=min(1.08, u))]),
-                 (60, 60, 70, 70, 70, 100)[i]) for i, u in enumerate((0.15, 0.4, 0.75, 1.0, 1.06, 1.0))]
+        return keyed([(0, 60, linear, {'arm_r': (0, 0)}), (5, [60, 70, 70, 70, 100], back_out, {'arm_r': READ['arm_r'], 'nod': 4})],
+                     lambda st, t, i: phong_pose(st, t, eyes=1 + 0.12 * i, front=[data_panel(0, open_=min(1.0, i / 4))]))
     if phase == 'loop':
         def frame(t, i):
             if flicking:
                 f = ease(max(0.0, min(1.0, ((t * 2) % 1 - 0.55) / 0.3)))
                 props = [data_panel(t * 0.5, flick=f, beam=None if f > 0 else (t * 2 % 1) / 0.55)]
-            else:
-                props = [data_panel(t, beam=ease((t * 2) % 1))]
-            return living('phong', t, eyes=1.7, lean=2, front=props)
+                flick = math.sin(math.pi * f)
+                return living('phong', t, limbs=arms(arm_r=(READ['arm_r'][0] + 20 * flick, READ['arm_r'][1] - 30 * flick)), nod=4, eyes=1.7, front=props)
+            props = [data_panel(t, beam=ease((t * 2) % 1))]
+            return living('phong', t, limbs=arms(**READ), nod=4 + 3 * (ease((t * 2) % 1) - 0.5), eyes=1.7, front=props)
         return loop(16, 110, frame)
-    return [(living('phong', i / 4, eyes=1.5 - 0.1 * i, lean=2 * u, front=[data_panel(0, open_=u)] if u else []), 60)
-            for i, u in enumerate((1.0, 0.6, 0.2, 0.0))]
+    return keyed([(0, 60, linear, {'arm_r': READ['arm_r'], 'nod': 4}), (4, [60, 60, 70, 90], ease, {'arm_r': (0, 0), 'nod': 0})],
+                 lambda st, t, i: phong_pose(st, t, eyes=1.5 - 0.1 * i, front=[data_panel(0, open_=1 - i / 4)] if i < 4 else []))
 
 
 def short_circuit():
-    """Tool error: the lights flare and overheat, arcs crawl over the suit with the frame shaking, the power dies;
-    a slump with smoke, then a reboot of flickering lights."""
-    out = [(living('phong', 0, energy=2.4, eyes=2.2, front=[burst(0.15, *at('phong', 'gem'), seed=1, radius=300)]), 70)]
-    for k in range(6):
+    """Tool error: the lights flare and overheat, arcs crawl over the suit while every joint jerks, the power
+    dies and the arms drop; a slump with smoke, then a reboot that brings the arms back up."""
+    gem = at('phong', 'gem')
+    out = [(living('phong', 0, energy=2.4, eyes=2.2, limbs=arms(arm_l=(20, 30), arm_r=(20, 30)), front=[burst(0.15, *gem, seed=1, radius=300)]), 70)]
+    rnd = random.Random(12)
+    for k in range(7):
         j = (-1) ** k
-        out.append((living('phong', k / 6, shake=10 * j, shake_y=3 * j, heat=1.0 if k % 2 else 0.2, energy=1.8 if k % 2 else 0.3,
-                           eyes=2.0 if k % 2 else 0.1, lean=4 * j, sway=2.0,
-                           front=[bolts(k / 6, seed=k + 2, amount=1.4), burst(0.2 + k * 0.12, *at('phong', 'gem'), seed=k, radius=320)]), 55))
+        out.append((living('phong', k / 7, shake=10 * j, shake_y=3 * j, heat=1.0 if k % 2 else 0.2, energy=1.8 if k % 2 else 0.3,
+                           eyes=2.0 if k % 2 else 0.1, sway=2.0, twist=4 * j, nod=rnd.uniform(-10, 10),
+                           limbs=arms(arm_l=(rnd.uniform(-15, 55), rnd.uniform(-30, 60)), arm_r=(rnd.uniform(-15, 55), rnd.uniform(-30, 60))),
+                           front=[bolts(k / 7, seed=k + 2, amount=1.4), burst(0.2 + k * 0.11, *gem, seed=k, radius=320)]), 55))
+    slump = dict(limbs=arms(arm_l=(-14, -10), arm_r=(-14, -10)), nod=12, twist=-3, breathe=-6, squash=0.96, dim=0.5, energy=0.1, eyes=0.0, sway=0.1)
     for k in range(4):
-        out.append((living('phong', 0.3, breathe=-6, squash=0.96, lean=-6, dim=0.5, energy=0.1, eyes=0.0, sway=0.1,
-                           front=[smoke_up(k / 6, x=0, y=-900, size=1.4)]), (80, 140, 220, 260)[k]))
+        out.append((living('phong', 0.3, **slump, front=[smoke_up(k / 6, x=0, y=-900, size=1.4)]), (80, 140, 220, 260)[k]))
     for k, (e, g) in enumerate(((1.5, 0.3), (0.0, 0.1), (2.0, 1.2), (0.4, 0.6), (1.2, 1.0))):
-        u = (k + 1) / 5
-        out.append((living('phong', 0.3 + u * 0.3, breathe=lerp(-6, 2, u), squash=lerp(0.96, 1.0, u), lean=lerp(-6, 0, u),
+        u = back_out((k + 1) / 5) if k < 4 else 1.0
+        out.append((living('phong', 0.3 + k / 15, limbs=arms(arm_l=(lerp(-14, 0, u), lerp(-10, 0, u)), arm_r=(lerp(-14, 0, u), lerp(-10, 0, u))),
+                           nod=lerp(12, 0, u), twist=lerp(-3, 0, u), breathe=lerp(-6, 2, u), squash=lerp(0.96, 1.0, u),
                            dim=lerp(0.5, 0, u), energy=g, eyes=e, front=[smoke_up(0.6 + k / 10, x=0, y=-900, size=1.4)]),
                     (80, 70, 90, 90, 160)[k]))
     return out
 
 
 def standby_mode(phase):
-    sleep = dict(eyes=0.0, energy=0.35, dim=0.2, sway=0.2, lean=-3)
     if phase == 'start':
-        return [(living('phong', i / 6, eyes=lerp(1, 0, (i + 1) / 6), energy=lerp(1, 0.35, (i + 1) / 6), dim=0.2 * (i + 1) / 6,
-                        breathe=2 - i, lean=-0.5 * i), (90, 100, 110, 130, 150, 180)[i]) for i in range(6)]
+        out = []
+        for i in range(6):
+            u = ease((i + 1) / 6)
+            out.append((living('phong', i / 6, eyes=lerp(1, 0, u), energy=lerp(1, 0.35, u), dim=0.2 * u, nod=11 * u - (3 if i == 2 else 0),
+                               twist=-2 * u, limbs=arms(arm_l=(-10 * u, -6 * u), arm_r=(-10 * u, -6 * u)), breathe=2 - i),
+                        (90, 100, 110, 130, 150, 180)[i]))
+        return out
     if phase == 'loop':
-        return loop(16, 150, lambda t, i: living('phong', t * 0.5, breathe=1 + 2 * math.sin(2 * math.pi * t), **sleep,
+        return loop(16, 150, lambda t, i: living('phong', t * 0.5, breathe=1 + 2 * math.sin(2 * math.pi * t),
+                                                 limbs=arms(arm_l=(-10, -6), arm_r=(-10, -6)), **{**SLEEP, 'nod': 11 + 1.5 * math.sin(2 * math.pi * t)},
                                                  front=[standby(t)]))
-    out = [(living('phong', 0, **{**sleep, 'eyes': 2.4, 'energy': 1.8}), 90), (living('phong', 0, **sleep), 60)]
-    out += [(living('phong', 0.1 * k, eyes=2.0 - 0.2 * k, energy=1.6 - 0.12 * k, lift=10 * hop(k / 4), sway=1.4 - 0.2 * k,
-                    front=[plasma_vent(0.3 + k * 0.15, None, color=CYAN, power=0.4)]), 80) for k in range(5)]
+    out = [(living('phong', 0, limbs=arms(arm_l=(-10, -6), arm_r=(-10, -6)), **{**SLEEP, 'eyes': 2.4, 'energy': 1.8}), 90),
+           (living('phong', 0, limbs=arms(arm_l=(-10, -6), arm_r=(-10, -6)), **SLEEP), 60)]
+    for k in range(5):
+        u = back_out((k + 1) / 5)
+        out.append((living('phong', 0.1 * k, eyes=2.0 - 0.2 * k, energy=1.6 - 0.12 * k, lift=10 * hop(k / 4), sway=1.4 - 0.2 * k,
+                           nod=lerp(11, -4, u) if k < 4 else 0, limbs=arms(arm_l=(lerp(-10, 25, u) if k < 4 else 0, 0), arm_r=(lerp(-10, 25, u) if k < 4 else 0, 0)),
+                           front=[plasma_vent(0.3 + k * 0.15, None, color=CYAN, power=0.4)]), 80))
     return out
 
 
 def held(phase):
+    """Dragged: hanging from the crest and swinging like a pendulum; the arms swing a beat behind, flailing."""
     top = 640
     if phase == 'start':
-        return [(living('phong', k / 4, lift=12 * k, rot=2 * k, pivot=top, squash=1 + 0.012 * k, eyes=1.6, shadow=False, sway=1.4), 60)
-                for k in (1, 2, 3, 4)]
+        return [(living('phong', k / 4, lift=12 * k, rot=2 * k, pivot=top, squash=1 + 0.012 * k, eyes=1.6, shadow=False, sway=1.4,
+                        limbs=arms(arm_l=(10 * k, 10 * k), arm_r=(10 * k, 10 * k)), nod=-2 * k), 60) for k in (1, 2, 3, 4)]
     if phase == 'loop':
-        return loop(12, 80, lambda t, i: living('phong', t * 2, lift=48, rot=9 * math.sin(2 * math.pi * t), pivot=top, squash=1.05,
-                                                eyes=1.8 if i % 6 else 0.2, sway=1.8, shadow=False, lean=-6 * math.sin(2 * math.pi * t)))
-    return [(living('phong', 0, lift=20, squash=1.04, eyes=1.8), 60),
-            (living('phong', 0.1, squash=0.9, eyes=2.0, front=[shockwave(0.3, size=0.7)]), 80),
-            (living('phong', 0.2, squash=1.03, front=[shockwave(0.6, size=0.7)]), 70), (living('phong', 0.3), 100)]
+        def frame(t, i):
+            s = math.sin(2 * math.pi * t)
+            lag = math.sin(2 * math.pi * (t - 0.18))
+            return living('phong', t * 2, lift=48, rot=9 * s, pivot=top, squash=1.05, eyes=1.8 if i % 6 else 0.2, sway=1.8, shadow=False,
+                          limbs=arms(arm_l=(35 + 25 * lag, 30 + 30 * math.sin(2 * math.pi * (t - 0.3))),
+                                     arm_r=(35 - 25 * lag, 30 - 30 * math.sin(2 * math.pi * (t - 0.3)))), nod=-6 * lag)
+        return loop(12, 80, frame)
+    return [(living('phong', 0, lift=20, squash=1.04, eyes=1.8, limbs=arms(arm_l=(30, 20), arm_r=(30, 20))), 60),
+            (living('phong', 0.1, squash=0.9, eyes=2.0, limbs=arms(arm_l=(-12, -10), arm_r=(-12, -10)), nod=6, front=[shockwave(0.3, size=0.7)]), 80),
+            (living('phong', 0.2, squash=1.03, limbs=arms(arm_l=(6, 4), arm_r=(6, 4)), front=[shockwave(0.6, size=0.7)]), 70), (living('phong', 0.3), 100)]
 
 
 def pat(phase):
+    """Patted on the crest: the head tips into the hand, the shoulders rise, the hands come together."""
     if phase == 'start':
-        return [(living('phong', k / 3, squash=1 - 0.02 * k, eyes=1 + 0.3 * k, energy=1 + 0.15 * k), 60) for k in (1, 2, 3)]
+        return [(living('phong', k / 3, squash=1 - 0.02 * k, eyes=1 + 0.3 * k, energy=1 + 0.15 * k, nod=-3 * k,
+                        limbs=arms(arm_l=(12 * k, 15 * k), arm_r=(12 * k, 15 * k))), 60) for k in (1, 2, 3)]
     if phase == 'loop':
         return loop(10, 90, lambda t, i: living('phong', t, squash=0.95 + 0.02 * osc(t, 0.5), eyes=1.9, energy=1.5,
-                                                lean=4 * math.sin(2 * math.pi * t), front=[holo_heart(t, size=0.55, at_hand=0)]))
-    return [(living('phong', 0, squash=1.03, eyes=1.6), 70), (living('phong', 0.2, squash=0.99), 70), (living('phong', 0.4), 90)]
+                                                nod=-9 + 6 * math.sin(2 * math.pi * t), twist=2 * math.sin(2 * math.pi * t),
+                                                limbs=arms(arm_l=(36 + 5 * math.sin(2 * math.pi * t), 45), arm_r=(36 - 5 * math.sin(2 * math.pi * t), 45)),
+                                                front=[holo_heart(t, size=0.55, at_hand=0)]))
+    return [(living('phong', 0, squash=1.03, eyes=1.6, nod=-4, limbs=arms(arm_l=(20, 20), arm_r=(20, 20))), 70),
+            (living('phong', 0.2, squash=0.99, limbs=arms(arm_l=(6, 6), arm_r=(6, 6))), 70), (living('phong', 0.4), 90)]
 
 
 def poke(phase):
+    """Poked in the chest: the gem flashes, the body jerks back, the arms fly up; ticklish twitches."""
     gem = at('phong', 'gem')
     if phase == 'start':
-        return [(living('phong', 0, energy=2.2, eyes=2.0, squash=0.96, shake=-8, front=[burst(0.2, *gem, radius=160, count=8)]), 60),
-                (living('phong', 0.1, energy=0.6, squash=1.04, shake=6), 60), (living('phong', 0.2, energy=1.6, eyes=1.8), 70)]
+        return [(living('phong', 0, energy=2.2, eyes=2.0, squash=0.96, shake=-8, nod=-8, limbs=arms(arm_l=(70, 50), arm_r=(80, 60)),
+                        front=[burst(0.2, *gem, radius=160, count=8)]), 60),
+                (living('phong', 0.1, energy=0.6, squash=1.04, shake=6, limbs=arms(arm_l=(40, 30), arm_r=(50, 30))), 60),
+                (living('phong', 0.2, energy=1.6, eyes=1.8, limbs=arms(arm_l=(30, 40), arm_r=(30, 40))), 70)]
     if phase == 'loop':
-        return loop(10, 75, lambda t, i: living('phong', t * 2, shake=6 * math.sin(2 * math.pi * t * 4), lean=4 * math.sin(2 * math.pi * t * 2),
-                                                energy=1.0 + 0.8 * (i % 2), eyes=1.8, sway=1.6,
-                                                front=[sparks(t, *gem, seed=9, count=6, speed=0.7)]))
-    return [(living('phong', 0, squash=1.03, eyes=1.6), 70), (living('phong', 0.2, squash=0.99), 70), (living('phong', 0.4), 90)]
+        def frame(t, i):
+            w = math.sin(2 * math.pi * t * 4)
+            return living('phong', t * 2, shake=6 * w, twist=4 * math.sin(2 * math.pi * t * 2), nod=-5 * w, energy=1.0 + 0.8 * (i % 2),
+                          eyes=1.8, sway=1.6, limbs=arms(arm_l=(35 + 20 * w, 40 - 25 * w), arm_r=(35 - 20 * w, 40 + 25 * w)),
+                          front=[sparks(t, *gem, seed=9, count=6, speed=0.7)])
+        return loop(10, 75, frame)
+    return [(living('phong', 0, squash=1.03, eyes=1.6, limbs=arms(arm_l=(20, 20), arm_r=(20, 20))), 70),
+            (living('phong', 0.2, squash=0.99, limbs=arms(arm_l=(6, 6), arm_r=(6, 6))), 70), (living('phong', 0.4), 90)]
 
 
 def peek(phase):
@@ -1841,53 +2412,75 @@ def peek(phase):
 # Tứ Thủ: working, anger --------------------------------------------------------------------------------
 
 def berserk(t, **kw):
-    return living('tu', t, **{'eyes': 1.7 + 0.2 * osc(t * 2), 'energy': 1.25, 'sway': 1.0, **kw})
+    """Tứ Thủ at rest: the four arms flex and weave out of step, claws opening and closing."""
+    limbs = kw.pop('limbs', ())
+    weave = dict((n, (u, f)) for n, u, f in limbs)
+    for name, ph in (('claw_l', 0.0), ('claw_r', 0.5), ('reach_l', 0.25), ('reach_r', 0.75)):
+        u, f = weave.get(name, (0.0, 0.0))
+        weave[name] = (u + 4 * math.sin(2 * math.pi * (t * 2 - ph)), f + 8 * math.sin(2 * math.pi * (t * 2 - ph - 0.15)))
+    return living('tu', t, limbs=arms(**weave), **{'eyes': 1.7 + 0.2 * osc(t * 2), 'energy': 1.25, 'sway': 1.0, **kw})
 
 
 def flurry(variant='claws'):
-    """Working loops in Tứ Thủ. 'claws': the four arms slash in turn (crescents from each claw, lunges, sparks,
-    hit-stop on every hit). 'sword': the Đại Trảm Đao is scanned into being and swung in a huge arc. 'roar':
-    the plume flares, a roar ring, flame."""
+    """Working loops in Tứ Thủ.
+    'claws': each of the four arms in turn cocks back (anticipation), whips through its strike with the body
+    turning into it and a blade of light along the claw's path, holds a beat on the hit (hit-stop) with sparks,
+    and recoils; the last beat strikes with all four at once.
+    'sword': the Đại Trảm Đao materialises in the lower right hand, is cocked overhead and brought down in a
+    huge arc with a ground cleave.
+    'roar': all four arms flare up and out, the plume bursts into flame, a roar ring."""
     out = []
     if variant == 'claws':
-        # Four slashes in turn, one per arm, crossing in front of the suit: wind-up, strike with hit-stop, recover.
-        cuts = [((-620, -1150), (520, -250), -1), ((620, -1150), (-520, -250), 1), ((-700, -620), (680, -520), -1),
-                ((700, -820), (-640, -300), 1)]
-        for k, (a0, a1, side) in enumerate(cuts):
+        order = (('claw_l', -1), ('claw_r', 1), ('reach_l', -1), ('reach_r', 1))
+        for k, (name, side) in enumerate(order):
+            wind, hit = STRIKES[name]
             color = mix(VIOLET_LIGHT, RED_LIGHT, 0.25 + 0.2 * (k % 2))
-            for j, (ms, hs, lean, shake) in enumerate(((70, 0.0, -5, 0), (40, 0.3, 10, 0), (90, 0.55, 8, 9), (60, 0.85, 3, 0))):
-                props = [] if j == 0 else [streak(hs, *a0, *a1, bulge=0.12 * side, width=110, color=color),
-                                           sparks(hs, (a0[0] + a1[0]) / 2, (a0[1] + a1[1]) / 2, seed=k * 4 + j, count=12, speed=1.3)]
-                out.append((berserk(k / 4 + j / 16, x=side * (12 if j == 1 else 4), lean=side * lean, shake=shake * side,
-                                    squash=0.98 if j == 1 else 1.0, front=props), ms))
+            p_wind = berserk(k / 4, limbs=arms(**{name: wind}), twist=-4 * side, nod=-3, hips=-6 * side, crouch=3)
+            p_hit = berserk(k / 4 + 0.1, limbs=arms(**{name: hit}), twist=7 * side, nod=3, hips=9 * side, crouch=13)
+            a, _ = limb_tip(p_wind, name)
+            b, _ = limb_tip(p_hit, name)
+            mid = {name: ((wind[0] + hit[0]) / 2, (wind[1] + hit[1]) / 2)}
+            beats = [(p_wind, 80, 0.0, 0), (berserk(k / 4 + 0.05, limbs=arms(**mid), twist=2 * side, hips=2 * side, crouch=8), 35, 0.3, 0),
+                     (replace(p_hit, shake=9 * side), 90, 0.55, 1),
+                     (berserk(k / 4 + 0.15, limbs=arms(**{name: (hit[0] * 0.6, hit[1] * 0.6)}), twist=3 * side, hips=4 * side, crouch=6), 70, 0.9, 0)]
+            for j, (p, ms, hs, sp) in enumerate(beats):
+                props = [] if j == 0 else [streak(hs, *a, *b, bulge=0.25 * side, width=110, color=color)]
+                if sp:
+                    props.append(sparks(0.2, b[0], b[1], seed=k, count=14, speed=1.4))
+                out.append((replace(p, front=props), ms))
+        all_wind = arms(**{n: STRIKES[n][0] for n in STRIKES})
+        all_hit = arms(**{n: STRIKES[n][1] for n in STRIKES})
+        out.append((berserk(0.0, limbs=all_wind, breathe=5, nod=-5, eyes=2.2, crouch=-3), 140))
+        p_hit = berserk(0.1, limbs=all_hit, breathe=-4, nod=4, eyes=2.4, shake=12, crouch=20)
+        cuts = []
+        for n in STRIKES:
+            a, _ = limb_tip(berserk(0.0, limbs=all_wind), n)
+            b, _ = limb_tip(p_hit, n)
+            cuts.append(streak(0.3, *a, *b, bulge=0.2, width=100, color=mix(VIOLET_LIGHT, RED_LIGHT, 0.4)))
+        out.append((replace(p_hit, front=cuts + [burst(0.2, 0, -560, seed=3, radius=360, count=18)], over=[flash(0.25, RED_LIGHT)]), 100))
+        out.append((replace(p_hit, shake=-6, front=[burst(0.55, 0, -560, seed=3, radius=360, count=18)]), 120))
+        out.append((berserk(0.3, limbs=blend_arms(all_hit, (), 0.5), crouch=8), 110))
         return out
     if variant == 'sword':
-        hand = at('tu', 'hands', 1)
-        grip = (hand[0] - 40, hand[1] - 40)
-        for j in range(8):
-            u = (j + 1) / 8
-            out.append((berserk(u * 0.4, eyes=1.9, front=[greatsword(*grip, 100, materialise=u, light=0.8),
-                                                          charge(u, grip[0] + 200, grip[1] - 200, color=VIOLET_LIGHT, radius=320)]), 70))
-        swings = ((100, 120, 0), (82, 70, 0), (50, 45, 4), (18, 45, 8), (-12, 50, 12), (-28, 70, 6), (-32, 160, 0))
-        for j, (ang, ms, shake) in enumerate(swings):
-            props = [greatsword(*grip, ang, light=1.0)]
-            if j >= 2:
-                props.append(slash(min(1.3, (j - 2) / 3), grip[0], grip[1], 860, 280, 180 + ang, width=180, color=VIOLET_LIGHT))
-            if j >= 4:
-                props += [shockwave((j - 4) / 3, x=-560, size=0.9, color=VIOLET_LIGHT), debris((j - 4) / 3, -560, 0, seed=2),
-                          cracks((j - 4) / 1.5, -560, 0)]
-            out.append((berserk(0.4 + j / 15, lean=-8 * math.sin(math.pi * j / 6), shake=shake * (-1) ** j, front=props), ms))
-        for j in range(5):
-            u = (j + 1) / 5
-            out.append((berserk(0.85 + u * 0.15, front=[greatsword(*grip, -32, materialise=1 - u, light=0.6)]), 70))
-        return out
+        summon = {'reach_r': (60, 10), 'twist': 2}
+        windup = {'reach_r': (112, 55), 'claw_r': (35, 25), 'reach_l': (30, 20), 'twist': -6, 'nod': -5, 'breathe': 5, 'hips': -8, 'crouch': 4}
+        strikes = [({'reach_r': (106, 20), 'claw_r': (30, 20), 'reach_l': (25, 15), 'twist': -3, 'nod': -2, 'hips': -4, 'crouch': 2}, 45),
+                   ({'reach_r': (66, -6), 'claw_r': (15, 10), 'reach_l': (25, 10), 'twist': 2, 'nod': 1, 'hips': 4, 'crouch': 6}, 35),
+                   ({'reach_r': (18, -18), 'claw_r': (-5, 0), 'reach_l': (40, 5), 'twist': 7, 'nod': 4, 'breathe': -3, 'hips': 10, 'crouch': 14}, 35),
+                   ({'reach_r': (-14, -22), 'claw_r': (-10, -5), 'reach_l': (50, 0), 'twist': 9, 'nod': 6, 'breathe': -5, 'hips': 13, 'crouch': 20}, 90),
+                   ({'reach_r': (-12, -20), 'claw_r': (-8, -4), 'reach_l': (48, 0), 'twist': 8, 'nod': 5, 'breathe': -4, 'hips': 12, 'crouch': 18}, 220)]
+        recover = {'reach_r': (0, 0), 'claw_r': (0, 0), 'reach_l': (0, 0), 'twist': 0, 'nod': 0, 'breathe': 0, 'hips': 0, 'crouch': 0}
+        return sword_swing(lambda st, t, **kw: tu_pose(st, t, **kw), 'reach_r', summon, windup, strikes, recover,
+                           color=mix(VIOLET_LIGHT, RED_LIGHT, 0.35))
     head = at('tu', 'head')
     plume = at('tu', 'plume')
+    flare = arms(claw_l=(25, 30), claw_r=(25, 30), reach_l=(55, 25), reach_r=(55, 25))
     for j in range(12):
         u = j / 11
-        out.append((berserk(u, heat=0.8 * math.sin(math.pi * u), eyes=2.4, energy=1.6, sway=2.0, breathe=6 * math.sin(math.pi * u),
-                            shake=8 * math.sin(math.pi * u) * (-1) ** j,
-                            front=[roar(u, head[0], head[1]), flames(u, plume[0], plume[1], size=1.5, seed=3)]), 80))
+        s = math.sin(math.pi * u)
+        out.append((berserk(u, limbs=blend_arms((), flare, ease(min(1.0, u * 2.5)) * (1 - ease(max(0.0, (u - 0.8) / 0.2)))),
+                            heat=0.8 * s, eyes=2.4, energy=1.6, sway=2.0, breathe=6 * s, nod=-8 * s,
+                            shake=8 * s * (-1) ** j, front=[roar(u, head[0], head[1]), flames(u, plume[0], plume[1], size=1.5, seed=3)]), 80))
     return out
 
 
@@ -2030,61 +2623,69 @@ def tumble(phase):
     return loop(10, 70, lambda t, i: flight(t, angle=6 * osc(t), shadow=False))
 
 def dash(phase):
-    """Moves (facing right): a low Phong Lôi charge leaning into the run, afterimages, dust, a skidding stop."""
+    """Moves (facing right): a low charge leaning into the run with both arms swept back, afterimages, dust, a
+    skidding stop with the arms thrown forward for balance."""
+    back = arms(arm_l=(-20, -15), arm_r=(25, 40))
     if phase == 'start':
-        return [(living('phong', 0, squash=0.95, breathe=-4, eyes=1.6), 60), (living('phong', 0.1, rot=7, pivot=200, eyes=1.8), 60)]
+        return [(living('phong', 0, squash=0.95, breathe=-4, eyes=1.6, limbs=arms(arm_l=(10, 10), arm_r=(10, 10))), 60),
+                (living('phong', 0.1, rot=7, pivot=200, eyes=1.8, limbs=back, twist=4), 60)]
     if phase == 'loop':
-        return loop(6, 60, lambda t, i: living('phong', t * 2, rot=8, pivot=200, lift=4 + 3 * osc(t, 0.5), eyes=1.8, sway=1.8,
+        return loop(6, 60, lambda t, i: living('phong', t * 2, rot=8, pivot=200, lift=4 + 3 * osc(t, 0.5), eyes=1.8, sway=1.8, twist=4,
+                                               limbs=blend_arms(back, arms(arm_l=(-15, -10), arm_r=(30, 45)), 0.5 + 0.5 * math.sin(2 * math.pi * t * 2)),
                                                ghosts=((-110, 0.4), (-220, 0.22), (-330, 0.1)),
                                                front=[dust(t, x=-200, side=-1)], back=[speed_lines(0.9, y0=-800, y1=-120)]))
-    return [(living('phong', 0.1, rot=-6, pivot=200, front=[dust(0.2, x=100, side=1)]), 70),
-            (living('phong', 0.2, rot=-3, pivot=200, squash=0.95, front=[dust(0.5, x=120, side=1)]), 80),
-            (living('phong', 0.3, squash=1.01), 90), (living('phong', 0.4), 110)]
+    return [(living('phong', 0.1, rot=-6, pivot=200, limbs=arms(arm_l=(45, 20), arm_r=(-10, 0)), twist=-4, front=[dust(0.2, x=100, side=1)]), 70),
+            (living('phong', 0.2, rot=-3, pivot=200, squash=0.95, limbs=arms(arm_l=(30, 15), arm_r=(0, 0)), front=[dust(0.5, x=120, side=1)]), 80),
+            (living('phong', 0.3, squash=1.01, limbs=arms(arm_l=(10, 5))), 90), (living('phong', 0.4), 110)]
 
 def thunder_strike():
-    """Phong Lôi Kích: wind gathers round the suit, the sky answers with a bolt into the spear's blade, the suit
-    lunges with the charged spear and the bolt bursts along the ground; aftershock crackle."""
-    tip, gem = at('phong', 'tip'), at('phong', 'gem')
+    """Phong Lôi Kích: the right arm rises to the sky with wind gathering, lightning strikes the raised fist, the
+    arm drops into a thrust to the side with the body turning into it, and the bolt bursts out along the line of
+    the arm; aftershock crackle, then the arm settles."""
+    gem = at('phong', 'gem')
     out = []
-    for j in range(8):
-        u = (j + 1) / 8
-        out.append((living('phong', u * 0.5, breathe=-3 * u, squash=1 - 0.03 * u, eyes=1.2 + u, energy=1 + 0.8 * u, sway=1.6,
-                           front=[charge(u, gem[0], gem[1], color=CYAN, radius=560, seed=2), bolts(u, seed=j, amount=0.8 * u)],
-                           back=[spin_smear(0, 300 * u, (0, -520), radius=600, width=160, color=CYAN)]), 70))
+    keys = [(0, 70, linear, {'arm_r': (0, 0), 'arm_l': (0, 0), 'twist': 0, 'nod': 0}),
+            (4, [70, 70, 80, 90], ease, {'arm_r': (112, 8), 'arm_l': (-10, 20), 'twist': -4, 'nod': -6, 'hips': -5}),
+            (3, [90, 90, 90], linear, {'arm_r': (108, 4)})]
+    out += keyed(keys, lambda st, t, i: phong_pose(st, t * 0.5, breathe=-3, eyes=1.2 + 0.15 * i, energy=1 + 0.12 * i, sway=1.6,
+                                                   front=[charge(min(1.0, i / 7), gem[0], gem[1], color=CYAN, radius=560, seed=2),
+                                                          bolts(i / 7, seed=i, amount=0.1 * i)],
+                                                   back=[spin_smear(0, 40 * i, (0, -520), radius=600, width=160, color=CYAN)]))
+    raised = phong_pose({'arm_r': (108, 4), 'arm_l': (-10, 20), 'twist': -4, 'nod': -6, 'hips': -5}, 0.6, eyes=2.4, energy=2.4)
+    fist, _ = limb_tip(raised, 'arm_r')
     for j in range(3):
-        out.append((living('phong', 0.6, eyes=2.4, energy=2.4, shake=10 * (-1) ** j, front=[lightning(0.1 + 0.25 * j, tip[0] + 80, -2200, tip[0], tip[1], seed=4, width=1.4)],
-                           over=[flash(0.7 - 0.2 * j, CYAN)]), 50))
-    for j, (x, lean, ms) in enumerate(((-30, -10, 45), (-70, -14, 50), (-60, -12, 90), (-40, -8, 120))):
-        out.append((living('phong', 0.7, x=x, lean=lean, eyes=2.2, energy=2.0 - 0.2 * j, ghosts=((40, 0.35), (80, 0.18)) if j == 0 else (),
-                           front=[lightning(0.2 + 0.2 * j, tip[0], tip[1], tip[0] - 1200, tip[1] + 20, seed=7, width=1.2),
-                                  shockwave(0.2 + 0.2 * j, x=tip[0], y=0, size=0.9, color=CYAN)]), ms))
-    out += [(living('phong', 0.8 + 0.05 * k, x=-40 * (1 - (k + 1) / 5), eyes=1.6, energy=1.4 - 0.08 * k, front=[bolts(k / 5, seed=k + 9, amount=0.6)]), 90)
-            for k in range(5)]
+        out.append((replace(raised, shake=10 * (-1) ** j, front=[lightning(0.1 + 0.25 * j, fist[0] + 60, -2200, fist[0], fist[1], seed=4, width=1.4)],
+                            over=[flash(0.45 - 0.15 * j, CYAN)]), 50))
+    # The thrust: the arm comes down and out to the side in three frames, the body turning into it.
+    for j, (u, f, tw, x, c, ms) in enumerate(((90, -10, 2, 10, 4, 40), (55, -6, 8, 30, 12, 40), (34, 0, 10, 40, 20, 60),
+                                               (34, 0, 9, 38, 18, 120), (36, 2, 7, 30, 15, 120))):
+        p = phong_pose({'arm_r': (u, f), 'arm_l': (lerp(-10, 40, min(1.0, j / 2)), lerp(20, 30, min(1.0, j / 2))), 'twist': tw, 'nod': -2,
+                        'hips': 2 * c / 3, 'crouch': c}, 0.7 + j * 0.03, x=x, eyes=2.2, energy=2.0 - 0.15 * j,
+                       ghosts=((-30, 0.35), (-60, 0.18)) if j < 2 else ())
+        tip, d = limb_tip(p, 'arm_r')
+        far = (tip[0] + math.cos(math.radians(d)) * 1400, tip[1] + math.sin(math.radians(d)) * 1400)
+        p = replace(p, front=[lightning(0.15 + 0.17 * j, tip[0], tip[1], far[0], far[1], seed=7, width=1.2)] if j >= 1 else [],
+                    over=[flash(0.3, CYAN)] if j == 2 else [])
+        out.append((p, ms))
+    out += keyed([(0, 90, linear, {'arm_r': (36, 2), 'arm_l': (40, 30), 'twist': 7, 'x': 30, 'hips': 10, 'crouch': 15}),
+                  (5, [90, 90, 100, 110, 130], ease, {'arm_r': (0, 0), 'arm_l': (0, 0), 'twist': 0, 'x': 0, 'hips': 0, 'crouch': 0})],
+                 lambda st, t, i: phong_pose(st, 0.85 + t * 0.15, eyes=1.6, energy=1.4 - 0.08 * i, front=[bolts(i / 5, seed=i + 9, amount=0.6)]))
     return out
 
 
 def sword_summon():
-    """Đại Trảm Đao in Phong Lôi's hand: scanned into being beside it, swung up over the crest and down in a
-    cleave to the left with a shockwave, cracks and debris, then dissolved back into light."""
-    hand = at('phong', 'hands', 1)
-    grip = (hand[0] - 30, hand[1])
-    out = []
-    for j in range(8):
-        u = (j + 1) / 8
-        out.append((living('phong', u * 0.4, eyes=1.4 + 0.5 * u, energy=1.2 + 0.4 * u,
-                           front=[greatsword(*grip, 100, materialise=u, light=0.8), charge(u, grip[0] + 200, grip[1] - 200, color=VIOLET_LIGHT, radius=320)]), 70))
-    swings = ((100, 140, 0), (82, 70, 0), (50, 45, 4), (18, 45, 8), (-12, 50, 12), (-28, 70, 6), (-32, 160, 0))
-    for j, (ang, ms, shake) in enumerate(swings):
-        props = [greatsword(*grip, ang, light=1.0)]
-        if j >= 2:
-            props.append(slash(min(1.3, (j - 2) / 3), grip[0], grip[1], 860, 280, 180 + ang, width=190, color=VIOLET_LIGHT))
-        if j >= 4:
-            props += [shockwave((j - 4) / 3, x=-560, size=1.0, color=VIOLET_LIGHT), debris((j - 4) / 3, -560, 0, seed=2), cracks((j - 4) / 1.5, -560, 0)]
-        out.append((living('phong', 0.4 + j / 15, lean=-10 * math.sin(math.pi * j / 6), breathe=-4 * j / 6, shake=shake * (-1) ** j,
-                           eyes=2.0, energy=1.6, front=props), ms))
-    out += [(living('phong', 0.85 + u * 0.15, front=[greatsword(*grip, -32, materialise=1 - u, light=0.6)]), 70)
-            for u in (0.2, 0.4, 0.6, 0.8, 1.0)]
-    return out
+    """Đại Trảm Đao in Phong Lôi's right hand: it materialises along the raised arm, the arm cocks back over the
+    shoulder (anticipation), then whips across the body in a big diagonal cleave with the body turning into it,
+    the blade's arc trailing; a ground cleave with shock, cracks and debris; the blade dissolves as the arm returns."""
+    summon = {'arm_r': (70, 10), 'arm_l': (10, 10), 'twist': -2, 'nod': -2}
+    windup = {'arm_r': (118, 60), 'arm_l': (45, 25), 'twist': -7, 'nod': -5, 'breathe': 5, 'hips': -8, 'crouch': 4}
+    strikes = [({'arm_r': (112, 22), 'arm_l': (35, 20), 'twist': -4, 'nod': -3, 'hips': -4, 'crouch': 2}, 45),
+               ({'arm_r': (72, -6), 'arm_l': (20, 15), 'twist': 2, 'nod': 1, 'hips': 4, 'crouch': 6}, 35),
+               ({'arm_r': (22, -18), 'arm_l': (40, 5), 'twist': 7, 'nod': 4, 'breathe': -3, 'hips': 10, 'crouch': 14}, 35),
+               ({'arm_r': (-12, -22), 'arm_l': (55, 0), 'twist': 9, 'nod': 6, 'breathe': -5, 'hips': 13, 'crouch': 20}, 90),
+               ({'arm_r': (-10, -20), 'arm_l': (52, 0), 'twist': 8, 'nod': 5, 'breathe': -4, 'hips': 12, 'crouch': 18}, 220)]
+    recover = {'arm_r': (0, 0), 'arm_l': (0, 0), 'twist': 0, 'nod': 0, 'breathe': 0, 'hips': 0, 'crouch': 0}
+    return sword_swing(lambda st, t, **kw: phong_pose(st, t, **kw), 'arm_r', summon, windup, strikes, recover)
 
 def claw_flurry():
     """Tứ Thủ Loạn Trảm: the four-arm slash combo, then a roar in flames."""
@@ -2105,90 +2706,120 @@ def form_cycle():
 
 
 def victory():
-    """Turn finished: Phong Lôi raises its power, lightning strikes the spear twice, a jump with fireworks, a
-    landing shock; the lights flare and settle."""
-    tip = at('phong', 'tip')
-    out = [(living('phong', 0.1 * j, breathe=-2 * j, squash=1 - 0.012 * j, eyes=1.3 + 0.2 * j, energy=1.2 + 0.2 * j), 70) for j in range(4)]
-    for j in range(6):
-        out.append((living('phong', 0.5, eyes=2.4, energy=2.2, lift=60 * hop(j / 5), shake=8 * (-1) ** j if j < 3 else 0,
-                           front=[lightning(0.1 + 0.3 * (j % 3), tip[0] + 100 - 200 * (j // 3), -2200, tip[0], tip[1], seed=j // 3, width=1.3)],
-                           over=[fireworks(j / 12, seed=11), flash(0.5 if j % 3 == 0 else 0, CYAN)]), 60))
+    """Turn finished: the right fist punches up to the sky, lightning strikes it twice, both arms go up as the
+    suit jumps with fireworks, then a landing shock with the arms swinging down."""
+    out = keyed([(0, 70, linear, {'arm_r': (0, 0), 'arm_l': (0, 0), 'breathe': 0}),
+                 (2, [70, 80], ease_in, {'arm_r': (-15, -40), 'arm_l': (-10, 10), 'breathe': -3, 'nod': 5, 'crouch': 14}),
+                 (3, [45, 50, 70], back_out, {'arm_r': (112, 0), 'arm_l': (20, 20), 'breathe': 3, 'nod': -6, 'crouch': 0})],
+                lambda st, t, i: phong_pose(st, 0.1 * i, eyes=1.3 + 0.2 * i, energy=1.2 + 0.2 * i))
+    raised = phong_pose({'arm_r': (112, 0), 'arm_l': (20, 20), 'nod': -6}, 0.5, eyes=2.4, energy=2.2)
+    fist, _ = limb_tip(raised, 'arm_r')
+    for j in range(4):
+        out.append((replace(raised, shake=8 * (-1) ** j if j < 3 else 0,
+                            front=[lightning(0.1 + 0.3 * (j % 2), fist[0] + 100 - 200 * (j // 2), -2200, fist[0], fist[1], seed=j // 2, width=1.3)],
+                            over=[fireworks(j / 12, seed=11), flash(0.4 if j % 2 == 0 else 0, CYAN)]), 60))
+    for j in range(5):
+        u = j / 4
+        out.append((phong_pose({'arm_r': (112 + 8 * u, 0), 'arm_l': (lerp(20, 122, ease(u)), lerp(20, 0, u)), 'nod': -6,
+                                'crouch': 12 * (1 - min(1.0, u * 3))}, 0.5 + 0.05 * j, lift=70 * hop(u), eyes=2.2, energy=2.0, over=[fireworks(0.35 + j * 0.05, seed=11)]), 60))
     for j in range(6):
         t = (j + 1) / 7
-        out.append((living('phong', 0.6 + t * 0.4, squash=lerp(0.92, 1.0, ease(t)), eyes=2.0 - 0.6 * t, energy=1.8 - 0.5 * t,
-                           back=[shockwave(t, size=1.2, color=CYAN)], front=[cracks(t * 2)], over=[fireworks(0.5 + t * 0.45, seed=11)]),
+        u = ease(t)
+        out.append((phong_pose({'arm_r': (lerp(120, 0, u), 0), 'arm_l': (lerp(122, 0, u), 0), 'nod': lerp(-6, 0, u),
+                                'crouch': 18 * math.sin(math.pi * min(1.0, t * 1.6))}, 0.6 + t * 0.4,
+                               squash=lerp(0.92, 1.0, u), eyes=2.0 - 0.6 * t, energy=1.8 - 0.5 * t,
+                               back=[shockwave(t, size=1.2, color=CYAN)], front=[cracks(t * 2)], over=[fireworks(0.6 + t * 0.35, seed=11)]),
                     (50, 60, 70, 90, 110, 160)[j]))
     return out
 
 
 def vent():
+    """A sigh: the shoulders lift with the arms, a held breath, steam from the vents, everything sags."""
     out = []
     for i in range(12):
         t = i / 11
         h = hop(t)
-        out.append((living('phong', t, breathe=4 * h - 2 * max(0.0, t - 0.5), eyes=lerp(1.0, 0.5, h), sway=0.4,
+        drop = max(0.0, t - 0.5) * 2
+        out.append((living('phong', t, breathe=4 * h - 2 * drop, eyes=lerp(1.0, 0.5, h), sway=0.4, nod=-4 * h + 6 * drop,
+                           limbs=arms(arm_l=(10 * h - 8 * drop, 6 * h), arm_r=(10 * h - 8 * drop, 6 * h)),
                            front=[plasma_vent(min(0.99, max(0.01, (t - 0.25) * 1.4)), None, color=STEAM, seed=6, power=0.8)]), 110))
     return out
 
 
 def coolant():
-    return loop(14, 110, lambda t, i: living('phong', t, eyes=lerp(1.0, 0.4, hop(t)), breathe=2 * hop(t),
+    """Water: coolant mist from the shoulder vents, arms spread to let it out, the head tipping back."""
+    return loop(14, 110, lambda t, i: living('phong', t, eyes=lerp(1.0, 0.4, hop(t)), breathe=2 * hop(t), nod=-6 * hop(t),
+                                             limbs=arms(arm_l=(30 * hop(t), 10 * hop(t)), arm_r=(30 * hop(t), 10 * hop(t))),
                                              front=[vents(t * 2 % 1, 1.0), vents((t * 2 + 0.5) % 1, 0.8)]))
 
 
 def refuel():
-    out = []
+    """Snack: the left hand reaches out and catches a violet energy cell, brings it to the chest gem, and the
+    gems and crystals surge; a little hop."""
     gem = at('phong', 'gem')
-    start = (-520, -260)
-    for i in range(7):
-        t = (i + 1) / 7
-        u = ease(t)
-        pos = (lerp(start[0], gem[0], u), lerp(start[1], gem[1], u) - 160 * math.sin(math.pi * u))
-        out.append((living('phong', t * 0.3, eyes=1.2 + 0.4 * u, front=[energy_cell(pos[0], pos[1], -40 + 40 * u, size=min(1.0, t * 2) * (1 - 0.8 * (t > 0.9)))]), 80))
+    out = []
+    reach = {'arm_l': (60, -10), 'nod': -3}
+    hold = {'arm_l': (-25, -115), 'nod': 4}
+    out += keyed([(0, 80, linear, {'arm_l': (0, 0)}), (4, [80, 80, 90, 100], ease_out, reach)],
+                 lambda st, t, i: (lambda p: replace(p, front=[energy_cell(*limb_tip(p, 'arm_l')[0], -40, size=min(1.0, i / 3))]))(phong_pose(st, t * 0.3, eyes=1.2 + 0.1 * i)))
+    out += keyed([(0, 80, linear, reach), (4, [80, 80, 90, 110], ease, hold)],
+                 lambda st, t, i: (lambda p: replace(p, front=[energy_cell(*limb_tip(p, 'arm_l')[0], -40 + 10 * i, size=1.0 - 0.2 * max(0, i - 2))]))(phong_pose(st, 0.3 + t * 0.2, eyes=1.6)))
     for i in range(8):
         t = i / 7
-        out.append((living('phong', 0.3 + t * 0.5, energy=2.2 - t, eyes=1.9 - 0.6 * t, lift=14 * math.sin(t * math.pi), sway=1.4,
-                           front=[burst(t, gem[0], gem[1], seed=4, radius=300, count=14, color=CYAN)]), 90))
+        out.append((phong_pose({'arm_l': (lerp(-25, 0, ease(t)), lerp(-115, 0, ease(t))), 'arm_r': (40 * math.sin(t * math.pi), 20 * math.sin(t * math.pi))},
+                               0.5 + t * 0.5, energy=2.2 - t, eyes=1.9 - 0.6 * t, lift=14 * math.sin(t * math.pi), sway=1.4,
+                               front=[burst(t, gem[0], gem[1], seed=4, radius=300, count=14, color=CYAN)]), 90))
     return out
 
 
 def love():
+    """Both hands come together over the chest gem and a heart hologram rises from them."""
     out = []
     n = 16
     for i in range(n):
         t = i / (n - 1)
         size = back_out(min(1.0, t * 2.5)) * (1 - ease(max(0.0, (t - 0.8) / 0.2)))
-        out.append((living('phong', t, eyes=1.8, energy=1.4, front=[holo_heart(t, size=size, at_hand=0)]), 100))
+        k = ease(min(1.0, t * 3)) * (1 - ease(max(0.0, (t - 0.85) / 0.15)))
+        out.append((living('phong', t, eyes=1.8, energy=1.4, nod=-4 * k, limbs=arms(arm_l=(-25 * k, -115 * k), arm_r=(-25 * k, -115 * k)),
+                           front=[holo_heart(t, size=size, at_hand=0)]), 100))
     return out
 
 
 def birthday():
-    """In Tứ Thủ: bouncing with all four arms up, confetti and fireworks."""
-    return loop(14, 110, lambda t, i: berserk(t, lift=10 * max(0.0, osc(t, 0.5)), heat=0.3, front=[confetti_burst(min(1.0, t * 1.1))],
-                                              over=[fireworks(t, seed=21, bursts=5)]))
+    """In Tứ Thủ: bouncing with all four arms waving overhead, confetti and fireworks."""
+    def frame(t, i):
+        w = math.sin(2 * math.pi * t * 2)
+        limbs = arms(claw_l=(20 + 15 * w, 20), claw_r=(20 - 15 * w, 20), reach_l=(90 + 25 * w, 30), reach_r=(90 - 25 * w, 30))
+        return berserk(t, limbs=limbs, lift=10 * max(0.0, osc(t, 0.5)), heat=0.3, front=[confetti_burst(min(1.0, t * 1.1))],
+                       over=[fireworks(t, seed=21, bursts=5)])
+    return loop(14, 110, frame)
 
 def bow():
-    """Reminder done: a small bow of the head (the upper body dips), the visor softening, a sparkle."""
+    """Reminder done: the head bows, the hands come in front, the visor softens, a sparkle."""
     out = []
     for i in range(10):
         t = i / 9
         h = hop(t)
-        out.append((living('phong', t, breathe=-5 * h, lean=0, eyes=lerp(1.0, 0.5, h), squash=1 - 0.015 * h,
+        out.append((living('phong', t, breathe=-5 * h, nod=14 * h, eyes=lerp(1.0, 0.5, h), squash=1 - 0.015 * h,
+                           limbs=arms(arm_l=(-15 * h, -80 * h), arm_r=(-15 * h, -80 * h)), crouch=5 * h,
                            front=[twinkles(t, [(-200, -1000), (220, -980)], seed=5, color=CYAN)] if t > 0.5 else []), 110))
     return out
 
 
 def calibrate():
-    """Eye break: a systems check of every form under a diagnostic sweep: Phong Lôi, Hỏa Dực, Tứ Thủ, Hắc Tháp,
-    each scanned and ticked off with a flash, then back."""
+    """Eye break: a joint-by-joint systems check under a diagnostic sweep: the head left and right, each arm up
+    and bent, the waist turning; each joint ticked off with a flash of the gems."""
+    tests = [dict(nod=-9), dict(nod=9), dict(arm_l=(120, 0)), dict(arm_l=(40, 90)), dict(arm_r=(120, 0)), dict(arm_r=(40, 90)),
+             dict(twist=-7), dict(twist=7), dict()]
     out = []
-    order = ('phong', 'hoa', 'tu', 'thap', 'phong')
-    for k, form in enumerate(order):
-        lift = 180 if form == 'hoa' else 0
-        for i in range(4):
-            t = (i + 1) / 4
-            out.append((living(form, t, lift=lift, eyes=1.7, energy=1.3 + 0.4 * (i == 3), front=[scan_grid(t)] if i < 3 else [],
-                               over=[flash(0.25, CYAN)] if i == 0 and k else []), 90 if i < 3 else 160))
+    cur = {'arm_l': (0, 0), 'arm_r': (0, 0), 'nod': 0, 'twist': 0}
+    for k, test in enumerate(tests):
+        target = {'arm_l': (0, 0), 'arm_r': (0, 0), 'nod': 0, 'twist': 0, **test}
+        seg = keyed([(0, 0, linear, cur), (3, [80, 80, 100], ease, target)],
+                    lambda st, t, i, k=k: phong_pose(st, (k * 3 + i) / 27, eyes=1.6, front=[scan_grid((k * 3 + i) / 27)]))[1:]
+        out += seg
+        out.append((phong_pose(target, (k * 3 + 3) / 27, eyes=1.7, energy=1.7), 140))
+        cur = target
     return out
 
 
@@ -2207,9 +2838,18 @@ def war_drum():
     return out
 
 def ponder():
-    """A fidget: the suit settles its weight, the visor scans the ground, a question mark."""
-    return loop(12, 120, lambda t, i: living('phong', t, eyes=1.6, lean=-4 * math.sin(2 * math.pi * t),
-                                             front=[eye_scan(t, math.sin(2 * math.pi * t)), question(t)] if 2 <= i < 10 else []))
+    """A fidget: a hand rises to the chin, the head tilts, the visor scans the ground, a question mark."""
+    chin = {'arm_r': (40, 175), 'arm_l': (-15, -70), 'nod': 6, 'twist': -2}
+    out = keyed([(0, 90, linear, {'arm_r': (0, 0), 'nod': 0, 'twist': 0}), (3, [80, 90, 110], ease, chin)],
+                lambda st, t, i: phong_pose(st, t * 0.2))
+    out += loop(10, 120, lambda t, i: living('phong', 0.2 + t * 0.6, limbs=arms(arm_r=chin['arm_r'], arm_l=chin['arm_l']), nod=6 + 3 * math.sin(2 * math.pi * t),
+                                             twist=-2, eyes=1.6, front=[eye_scan(t, math.sin(2 * math.pi * t)), question(t)] if 1 <= i < 9 else []))
+    out += keyed([(0, 90, linear, chin), (3, [90, 100, 120], ease, {'arm_r': (0, 0), 'arm_l': (0, 0), 'nod': 0, 'twist': 0})],
+                 lambda st, t, i: phong_pose(st, 0.8 + t * 0.2))
+    return out
+
+
+# Tứ Thủ ----------------------------------------------------------------------------------------------------
 
 
 SEQUENCES = {
