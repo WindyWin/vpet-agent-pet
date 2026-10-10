@@ -543,24 +543,24 @@
           "duration_ms": 60
         },
         {
-          "path": "assets/phudo/depart/_003_60.png",
-          "duration_ms": 60
+          "path": "assets/phudo/depart/_003_70.png",
+          "duration_ms": 70
         },
         {
           "path": "assets/phudo/depart/_004_60.png",
           "duration_ms": 60
         },
         {
-          "path": "assets/phudo/depart/_005_55.png",
-          "duration_ms": 55
+          "path": "assets/phudo/depart/_005_60.png",
+          "duration_ms": 60
         },
         {
-          "path": "assets/phudo/depart/_006_55.png",
-          "duration_ms": 55
+          "path": "assets/phudo/depart/_006_90.png",
+          "duration_ms": 90
         },
         {
-          "path": "assets/phudo/depart/_007_55.png",
-          "duration_ms": 55
+          "path": "assets/phudo/depart/_007_70.png",
+          "duration_ms": 70
         },
         {
           "path": "assets/phudo/depart/_008_55.png",
@@ -595,59 +595,91 @@
           "duration_ms": 55
         },
         {
-          "path": "assets/phudo/depart/_016_50.png",
-          "duration_ms": 50
+          "path": "assets/phudo/depart/_016_55.png",
+          "duration_ms": 55
         },
         {
-          "path": "assets/phudo/depart/_017_60.png",
+          "path": "assets/phudo/depart/_017_55.png",
+          "duration_ms": 55
+        },
+        {
+          "path": "assets/phudo/depart/_018_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/phudo/depart/_019_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/phudo/depart/_020_60.png",
           "duration_ms": 60
         },
         {
-          "path": "assets/phudo/depart/_018_60.png",
-          "duration_ms": 60
+          "path": "assets/phudo/depart/_021_45.png",
+          "duration_ms": 45
         },
         {
-          "path": "assets/phudo/depart/_019_80.png",
+          "path": "assets/phudo/depart/_022_45.png",
+          "duration_ms": 45
+        },
+        {
+          "path": "assets/phudo/depart/_023_80.png",
           "duration_ms": 80
         },
         {
-          "path": "assets/phudo/depart/_020_90.png",
+          "path": "assets/phudo/depart/_024_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/phudo/depart/_025_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/phudo/depart/_026_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/phudo/depart/_027_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/phudo/depart/_028_90.png",
           "duration_ms": 90
         },
         {
-          "path": "assets/phudo/depart/_021_120.png",
+          "path": "assets/phudo/depart/_029_120.png",
           "duration_ms": 120
         },
         {
-          "path": "assets/phudo/depart/_022_55.png",
+          "path": "assets/phudo/depart/_030_55.png",
           "duration_ms": 55
         },
         {
-          "path": "assets/phudo/depart/_023_55.png",
+          "path": "assets/phudo/depart/_031_55.png",
           "duration_ms": 55
         },
         {
-          "path": "assets/phudo/depart/_024_55.png",
+          "path": "assets/phudo/depart/_032_55.png",
           "duration_ms": 55
         },
         {
-          "path": "assets/phudo/depart/_025_55.png",
+          "path": "assets/phudo/depart/_033_55.png",
           "duration_ms": 55
         },
         {
-          "path": "assets/phudo/depart/_026_55.png",
+          "path": "assets/phudo/depart/_034_55.png",
           "duration_ms": 55
         },
         {
-          "path": "assets/phudo/depart/_027_55.png",
+          "path": "assets/phudo/depart/_035_55.png",
           "duration_ms": 55
         },
         {
-          "path": "assets/phudo/depart/_028_155.png",
+          "path": "assets/phudo/depart/_036_155.png",
           "duration_ms": 155
         }
       ],
-      "duration_ms": 1850
+      "duration_ms": 2395
     },
     {
       "state": "dive_left",
@@ -888,44 +920,44 @@
       "path": "form_cycle",
       "frames": [
         {
-          "path": "assets/phudo/form_cycle/_000_55.png",
-          "duration_ms": 55
-        },
-        {
-          "path": "assets/phudo/form_cycle/_001_55.png",
-          "duration_ms": 55
-        },
-        {
-          "path": "assets/phudo/form_cycle/_002_55.png",
-          "duration_ms": 55
-        },
-        {
-          "path": "assets/phudo/form_cycle/_003_55.png",
-          "duration_ms": 55
-        },
-        {
-          "path": "assets/phudo/form_cycle/_004_55.png",
-          "duration_ms": 55
-        },
-        {
-          "path": "assets/phudo/form_cycle/_005_60.png",
+          "path": "assets/phudo/form_cycle/_000_60.png",
           "duration_ms": 60
         },
         {
-          "path": "assets/phudo/form_cycle/_006_70.png",
+          "path": "assets/phudo/form_cycle/_001_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/phudo/form_cycle/_002_70.png",
           "duration_ms": 70
         },
         {
-          "path": "assets/phudo/form_cycle/_007_90.png",
+          "path": "assets/phudo/form_cycle/_003_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/phudo/form_cycle/_004_90.png",
           "duration_ms": 90
         },
         {
-          "path": "assets/phudo/form_cycle/_008_110.png",
-          "duration_ms": 110
+          "path": "assets/phudo/form_cycle/_005_55.png",
+          "duration_ms": 55
         },
         {
-          "path": "assets/phudo/form_cycle/_009_160.png",
-          "duration_ms": 160
+          "path": "assets/phudo/form_cycle/_006_55.png",
+          "duration_ms": 55
+        },
+        {
+          "path": "assets/phudo/form_cycle/_007_55.png",
+          "duration_ms": 55
+        },
+        {
+          "path": "assets/phudo/form_cycle/_008_55.png",
+          "duration_ms": 55
+        },
+        {
+          "path": "assets/phudo/form_cycle/_009_55.png",
+          "duration_ms": 55
         },
         {
           "path": "assets/phudo/form_cycle/_010_55.png",
@@ -936,76 +968,76 @@
           "duration_ms": 55
         },
         {
-          "path": "assets/phudo/form_cycle/_012_55.png",
-          "duration_ms": 55
-        },
-        {
-          "path": "assets/phudo/form_cycle/_013_55.png",
-          "duration_ms": 55
-        },
-        {
-          "path": "assets/phudo/form_cycle/_014_55.png",
-          "duration_ms": 55
-        },
-        {
-          "path": "assets/phudo/form_cycle/_015_60.png",
-          "duration_ms": 60
-        },
-        {
-          "path": "assets/phudo/form_cycle/_016_70.png",
+          "path": "assets/phudo/form_cycle/_012_70.png",
           "duration_ms": 70
         },
         {
-          "path": "assets/phudo/form_cycle/_017_90.png",
+          "path": "assets/phudo/form_cycle/_013_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/phudo/form_cycle/_014_45.png",
+          "duration_ms": 45
+        },
+        {
+          "path": "assets/phudo/form_cycle/_015_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/phudo/form_cycle/_016_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/phudo/form_cycle/_017_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/phudo/form_cycle/_018_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/phudo/form_cycle/_019_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/phudo/form_cycle/_020_90.png",
           "duration_ms": 90
         },
         {
-          "path": "assets/phudo/form_cycle/_018_110.png",
+          "path": "assets/phudo/form_cycle/_021_110.png",
           "duration_ms": 110
         },
         {
-          "path": "assets/phudo/form_cycle/_019_160.png",
-          "duration_ms": 160
+          "path": "assets/phudo/form_cycle/_022_140.png",
+          "duration_ms": 140
         },
         {
-          "path": "assets/phudo/form_cycle/_020_55.png",
-          "duration_ms": 55
-        },
-        {
-          "path": "assets/phudo/form_cycle/_021_55.png",
-          "duration_ms": 55
-        },
-        {
-          "path": "assets/phudo/form_cycle/_022_55.png",
-          "duration_ms": 55
-        },
-        {
-          "path": "assets/phudo/form_cycle/_023_55.png",
-          "duration_ms": 55
-        },
-        {
-          "path": "assets/phudo/form_cycle/_024_55.png",
-          "duration_ms": 55
-        },
-        {
-          "path": "assets/phudo/form_cycle/_025_60.png",
+          "path": "assets/phudo/form_cycle/_023_60.png",
           "duration_ms": 60
         },
         {
-          "path": "assets/phudo/form_cycle/_026_70.png",
+          "path": "assets/phudo/form_cycle/_024_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/phudo/form_cycle/_025_70.png",
           "duration_ms": 70
+        },
+        {
+          "path": "assets/phudo/form_cycle/_026_60.png",
+          "duration_ms": 60
         },
         {
           "path": "assets/phudo/form_cycle/_027_90.png",
           "duration_ms": 90
         },
         {
-          "path": "assets/phudo/form_cycle/_028_110.png",
-          "duration_ms": 110
+          "path": "assets/phudo/form_cycle/_028_55.png",
+          "duration_ms": 55
         },
         {
-          "path": "assets/phudo/form_cycle/_029_160.png",
-          "duration_ms": 160
+          "path": "assets/phudo/form_cycle/_029_55.png",
+          "duration_ms": 55
         },
         {
           "path": "assets/phudo/form_cycle/_030_55.png",
@@ -1028,27 +1060,235 @@
           "duration_ms": 55
         },
         {
-          "path": "assets/phudo/form_cycle/_035_60.png",
-          "duration_ms": 60
-        },
-        {
-          "path": "assets/phudo/form_cycle/_036_70.png",
+          "path": "assets/phudo/form_cycle/_035_70.png",
           "duration_ms": 70
         },
         {
-          "path": "assets/phudo/form_cycle/_037_90.png",
+          "path": "assets/phudo/form_cycle/_036_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/phudo/form_cycle/_037_45.png",
+          "duration_ms": 45
+        },
+        {
+          "path": "assets/phudo/form_cycle/_038_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/phudo/form_cycle/_039_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/phudo/form_cycle/_040_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/phudo/form_cycle/_041_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/phudo/form_cycle/_042_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/phudo/form_cycle/_043_90.png",
           "duration_ms": 90
         },
         {
-          "path": "assets/phudo/form_cycle/_038_110.png",
+          "path": "assets/phudo/form_cycle/_044_110.png",
           "duration_ms": 110
         },
         {
-          "path": "assets/phudo/form_cycle/_039_160.png",
-          "duration_ms": 160
+          "path": "assets/phudo/form_cycle/_045_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/phudo/form_cycle/_046_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/phudo/form_cycle/_047_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/phudo/form_cycle/_048_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/phudo/form_cycle/_049_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/phudo/form_cycle/_050_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/phudo/form_cycle/_051_55.png",
+          "duration_ms": 55
+        },
+        {
+          "path": "assets/phudo/form_cycle/_052_55.png",
+          "duration_ms": 55
+        },
+        {
+          "path": "assets/phudo/form_cycle/_053_55.png",
+          "duration_ms": 55
+        },
+        {
+          "path": "assets/phudo/form_cycle/_054_55.png",
+          "duration_ms": 55
+        },
+        {
+          "path": "assets/phudo/form_cycle/_055_55.png",
+          "duration_ms": 55
+        },
+        {
+          "path": "assets/phudo/form_cycle/_056_55.png",
+          "duration_ms": 55
+        },
+        {
+          "path": "assets/phudo/form_cycle/_057_55.png",
+          "duration_ms": 55
+        },
+        {
+          "path": "assets/phudo/form_cycle/_058_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/phudo/form_cycle/_059_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/phudo/form_cycle/_060_45.png",
+          "duration_ms": 45
+        },
+        {
+          "path": "assets/phudo/form_cycle/_061_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/phudo/form_cycle/_062_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/phudo/form_cycle/_063_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/phudo/form_cycle/_064_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/phudo/form_cycle/_065_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/phudo/form_cycle/_066_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/phudo/form_cycle/_067_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/phudo/form_cycle/_068_140.png",
+          "duration_ms": 140
+        },
+        {
+          "path": "assets/phudo/form_cycle/_069_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/phudo/form_cycle/_070_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/phudo/form_cycle/_071_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/phudo/form_cycle/_072_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/phudo/form_cycle/_073_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/phudo/form_cycle/_074_55.png",
+          "duration_ms": 55
+        },
+        {
+          "path": "assets/phudo/form_cycle/_075_55.png",
+          "duration_ms": 55
+        },
+        {
+          "path": "assets/phudo/form_cycle/_076_55.png",
+          "duration_ms": 55
+        },
+        {
+          "path": "assets/phudo/form_cycle/_077_55.png",
+          "duration_ms": 55
+        },
+        {
+          "path": "assets/phudo/form_cycle/_078_55.png",
+          "duration_ms": 55
+        },
+        {
+          "path": "assets/phudo/form_cycle/_079_55.png",
+          "duration_ms": 55
+        },
+        {
+          "path": "assets/phudo/form_cycle/_080_55.png",
+          "duration_ms": 55
+        },
+        {
+          "path": "assets/phudo/form_cycle/_081_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/phudo/form_cycle/_082_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/phudo/form_cycle/_083_45.png",
+          "duration_ms": 45
+        },
+        {
+          "path": "assets/phudo/form_cycle/_084_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/phudo/form_cycle/_085_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/phudo/form_cycle/_086_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/phudo/form_cycle/_087_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/phudo/form_cycle/_088_120.png",
+          "duration_ms": 120
+        },
+        {
+          "path": "assets/phudo/form_cycle/_089_90.png",
+          "duration_ms": 90
+        },
+        {
+          "path": "assets/phudo/form_cycle/_090_110.png",
+          "duration_ms": 110
+        },
+        {
+          "path": "assets/phudo/form_cycle/_091_140.png",
+          "duration_ms": 140
         }
       ],
-      "duration_ms": 3060
+      "duration_ms": 6520
     },
     {
       "state": "dragging",
@@ -2037,24 +2277,24 @@
           "duration_ms": 60
         },
         {
-          "path": "assets/phudo/landing/_012_60.png",
-          "duration_ms": 60
+          "path": "assets/phudo/landing/_012_70.png",
+          "duration_ms": 70
         },
         {
           "path": "assets/phudo/landing/_013_60.png",
           "duration_ms": 60
         },
         {
-          "path": "assets/phudo/landing/_014_55.png",
-          "duration_ms": 55
+          "path": "assets/phudo/landing/_014_60.png",
+          "duration_ms": 60
         },
         {
-          "path": "assets/phudo/landing/_015_55.png",
-          "duration_ms": 55
+          "path": "assets/phudo/landing/_015_90.png",
+          "duration_ms": 90
         },
         {
-          "path": "assets/phudo/landing/_016_55.png",
-          "duration_ms": 55
+          "path": "assets/phudo/landing/_016_70.png",
+          "duration_ms": 70
         },
         {
           "path": "assets/phudo/landing/_017_55.png",
@@ -2089,31 +2329,63 @@
           "duration_ms": 55
         },
         {
-          "path": "assets/phudo/landing/_025_50.png",
-          "duration_ms": 50
+          "path": "assets/phudo/landing/_025_55.png",
+          "duration_ms": 55
         },
         {
-          "path": "assets/phudo/landing/_026_60.png",
+          "path": "assets/phudo/landing/_026_55.png",
+          "duration_ms": 55
+        },
+        {
+          "path": "assets/phudo/landing/_027_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/phudo/landing/_028_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/phudo/landing/_029_60.png",
           "duration_ms": 60
         },
         {
-          "path": "assets/phudo/landing/_027_60.png",
-          "duration_ms": 60
+          "path": "assets/phudo/landing/_030_45.png",
+          "duration_ms": 45
         },
         {
-          "path": "assets/phudo/landing/_028_80.png",
+          "path": "assets/phudo/landing/_031_45.png",
+          "duration_ms": 45
+        },
+        {
+          "path": "assets/phudo/landing/_032_80.png",
           "duration_ms": 80
         },
         {
-          "path": "assets/phudo/landing/_029_90.png",
+          "path": "assets/phudo/landing/_033_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/phudo/landing/_034_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/phudo/landing/_035_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/phudo/landing/_036_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/phudo/landing/_037_90.png",
           "duration_ms": 90
         },
         {
-          "path": "assets/phudo/landing/_030_120.png",
+          "path": "assets/phudo/landing/_038_120.png",
           "duration_ms": 120
         }
       ],
-      "duration_ms": 1835
+      "duration_ms": 2380
     },
     {
       "state": "fidget_look",
@@ -2688,24 +2960,24 @@
           "duration_ms": 60
         },
         {
-          "path": "assets/phudo/rage/_002_60.png",
-          "duration_ms": 60
+          "path": "assets/phudo/rage/_002_70.png",
+          "duration_ms": 70
         },
         {
           "path": "assets/phudo/rage/_003_60.png",
           "duration_ms": 60
         },
         {
-          "path": "assets/phudo/rage/_004_55.png",
-          "duration_ms": 55
+          "path": "assets/phudo/rage/_004_90.png",
+          "duration_ms": 90
         },
         {
           "path": "assets/phudo/rage/_005_55.png",
           "duration_ms": 55
         },
         {
-          "path": "assets/phudo/rage/_006_90.png",
-          "duration_ms": 90
+          "path": "assets/phudo/rage/_006_55.png",
+          "duration_ms": 55
         },
         {
           "path": "assets/phudo/rage/_007_55.png",
@@ -2716,8 +2988,8 @@
           "duration_ms": 55
         },
         {
-          "path": "assets/phudo/rage/_009_90.png",
-          "duration_ms": 90
+          "path": "assets/phudo/rage/_009_55.png",
+          "duration_ms": 55
         },
         {
           "path": "assets/phudo/rage/_010_55.png",
@@ -2728,24 +3000,24 @@
           "duration_ms": 55
         },
         {
-          "path": "assets/phudo/rage/_012_90.png",
-          "duration_ms": 90
-        },
-        {
-          "path": "assets/phudo/rage/_013_55.png",
+          "path": "assets/phudo/rage/_012_55.png",
           "duration_ms": 55
         },
         {
-          "path": "assets/phudo/rage/_014_55.png",
-          "duration_ms": 55
+          "path": "assets/phudo/rage/_013_70.png",
+          "duration_ms": 70
         },
         {
-          "path": "assets/phudo/rage/_015_55.png",
-          "duration_ms": 55
+          "path": "assets/phudo/rage/_014_60.png",
+          "duration_ms": 60
         },
         {
-          "path": "assets/phudo/rage/_016_55.png",
-          "duration_ms": 55
+          "path": "assets/phudo/rage/_015_45.png",
+          "duration_ms": 45
+        },
+        {
+          "path": "assets/phudo/rage/_016_80.png",
+          "duration_ms": 80
         },
         {
           "path": "assets/phudo/rage/_017_50.png",
@@ -2828,7 +3100,7 @@
           "duration_ms": 100
         }
       ],
-      "duration_ms": 2490
+      "duration_ms": 2465
     },
     {
       "state": "closing_angry",
@@ -2843,24 +3115,24 @@
           "duration_ms": 60
         },
         {
-          "path": "assets/phudo/rage_blast/_002_60.png",
-          "duration_ms": 60
+          "path": "assets/phudo/rage_blast/_002_70.png",
+          "duration_ms": 70
         },
         {
           "path": "assets/phudo/rage_blast/_003_60.png",
           "duration_ms": 60
         },
         {
-          "path": "assets/phudo/rage_blast/_004_55.png",
-          "duration_ms": 55
+          "path": "assets/phudo/rage_blast/_004_90.png",
+          "duration_ms": 90
         },
         {
           "path": "assets/phudo/rage_blast/_005_55.png",
           "duration_ms": 55
         },
         {
-          "path": "assets/phudo/rage_blast/_006_90.png",
-          "duration_ms": 90
+          "path": "assets/phudo/rage_blast/_006_55.png",
+          "duration_ms": 55
         },
         {
           "path": "assets/phudo/rage_blast/_007_55.png",
@@ -2871,8 +3143,8 @@
           "duration_ms": 55
         },
         {
-          "path": "assets/phudo/rage_blast/_009_90.png",
-          "duration_ms": 90
+          "path": "assets/phudo/rage_blast/_009_55.png",
+          "duration_ms": 55
         },
         {
           "path": "assets/phudo/rage_blast/_010_55.png",
@@ -2883,24 +3155,24 @@
           "duration_ms": 55
         },
         {
-          "path": "assets/phudo/rage_blast/_012_90.png",
-          "duration_ms": 90
-        },
-        {
-          "path": "assets/phudo/rage_blast/_013_55.png",
+          "path": "assets/phudo/rage_blast/_012_55.png",
           "duration_ms": 55
         },
         {
-          "path": "assets/phudo/rage_blast/_014_55.png",
-          "duration_ms": 55
+          "path": "assets/phudo/rage_blast/_013_70.png",
+          "duration_ms": 70
         },
         {
-          "path": "assets/phudo/rage_blast/_015_55.png",
-          "duration_ms": 55
+          "path": "assets/phudo/rage_blast/_014_60.png",
+          "duration_ms": 60
         },
         {
-          "path": "assets/phudo/rage_blast/_016_55.png",
-          "duration_ms": 55
+          "path": "assets/phudo/rage_blast/_015_45.png",
+          "duration_ms": 45
+        },
+        {
+          "path": "assets/phudo/rage_blast/_016_80.png",
+          "duration_ms": 80
         },
         {
           "path": "assets/phudo/rage_blast/_017_50.png",
@@ -2979,7 +3251,7 @@
           "duration_ms": 150
         }
       ],
-      "duration_ms": 2490
+      "duration_ms": 2465
     },
     {
       "state": "refuel",
@@ -3269,24 +3541,24 @@
           "duration_ms": 60
         },
         {
-          "path": "assets/phudo/scan/to_work/_005_60.png",
-          "duration_ms": 60
+          "path": "assets/phudo/scan/to_work/_005_70.png",
+          "duration_ms": 70
         },
         {
           "path": "assets/phudo/scan/to_work/_006_60.png",
           "duration_ms": 60
         },
         {
-          "path": "assets/phudo/scan/to_work/_007_55.png",
-          "duration_ms": 55
+          "path": "assets/phudo/scan/to_work/_007_90.png",
+          "duration_ms": 90
         },
         {
           "path": "assets/phudo/scan/to_work/_008_55.png",
           "duration_ms": 55
         },
         {
-          "path": "assets/phudo/scan/to_work/_009_90.png",
-          "duration_ms": 90
+          "path": "assets/phudo/scan/to_work/_009_55.png",
+          "duration_ms": 55
         },
         {
           "path": "assets/phudo/scan/to_work/_010_55.png",
@@ -3297,8 +3569,8 @@
           "duration_ms": 55
         },
         {
-          "path": "assets/phudo/scan/to_work/_012_90.png",
-          "duration_ms": 90
+          "path": "assets/phudo/scan/to_work/_012_55.png",
+          "duration_ms": 55
         },
         {
           "path": "assets/phudo/scan/to_work/_013_55.png",
@@ -3309,24 +3581,24 @@
           "duration_ms": 55
         },
         {
-          "path": "assets/phudo/scan/to_work/_015_90.png",
-          "duration_ms": 90
-        },
-        {
-          "path": "assets/phudo/scan/to_work/_016_55.png",
+          "path": "assets/phudo/scan/to_work/_015_55.png",
           "duration_ms": 55
         },
         {
-          "path": "assets/phudo/scan/to_work/_017_55.png",
-          "duration_ms": 55
+          "path": "assets/phudo/scan/to_work/_016_70.png",
+          "duration_ms": 70
         },
         {
-          "path": "assets/phudo/scan/to_work/_018_55.png",
-          "duration_ms": 55
+          "path": "assets/phudo/scan/to_work/_017_60.png",
+          "duration_ms": 60
         },
         {
-          "path": "assets/phudo/scan/to_work/_019_55.png",
-          "duration_ms": 55
+          "path": "assets/phudo/scan/to_work/_018_45.png",
+          "duration_ms": 45
+        },
+        {
+          "path": "assets/phudo/scan/to_work/_019_80.png",
+          "duration_ms": 80
         },
         {
           "path": "assets/phudo/scan/to_work/_020_50.png",
@@ -3345,7 +3617,7 @@
           "duration_ms": 120
         }
       ],
-      "duration_ms": 1550
+      "duration_ms": 1525
     },
     {
       "state": "tool_error",
@@ -3663,8 +3935,8 @@
           "duration_ms": 60
         },
         {
-          "path": "assets/phudo/tf/hoa_phong_left/_004_60.png",
-          "duration_ms": 60
+          "path": "assets/phudo/tf/hoa_phong_left/_004_70.png",
+          "duration_ms": 70
         },
         {
           "path": "assets/phudo/tf/hoa_phong_left/_005_60.png",
@@ -3675,20 +3947,20 @@
           "duration_ms": 60
         },
         {
-          "path": "assets/phudo/tf/hoa_phong_left/_007_55.png",
-          "duration_ms": 55
+          "path": "assets/phudo/tf/hoa_phong_left/_007_60.png",
+          "duration_ms": 60
         },
         {
-          "path": "assets/phudo/tf/hoa_phong_left/_008_55.png",
-          "duration_ms": 55
+          "path": "assets/phudo/tf/hoa_phong_left/_008_70.png",
+          "duration_ms": 70
         },
         {
-          "path": "assets/phudo/tf/hoa_phong_left/_009_55.png",
-          "duration_ms": 55
+          "path": "assets/phudo/tf/hoa_phong_left/_009_90.png",
+          "duration_ms": 90
         },
         {
-          "path": "assets/phudo/tf/hoa_phong_left/_010_55.png",
-          "duration_ms": 55
+          "path": "assets/phudo/tf/hoa_phong_left/_010_70.png",
+          "duration_ms": 70
         },
         {
           "path": "assets/phudo/tf/hoa_phong_left/_011_55.png",
@@ -3735,43 +4007,91 @@
           "duration_ms": 55
         },
         {
-          "path": "assets/phudo/tf/hoa_phong_left/_022_50.png",
-          "duration_ms": 50
+          "path": "assets/phudo/tf/hoa_phong_left/_022_55.png",
+          "duration_ms": 55
         },
         {
-          "path": "assets/phudo/tf/hoa_phong_left/_023_50.png",
-          "duration_ms": 50
+          "path": "assets/phudo/tf/hoa_phong_left/_023_55.png",
+          "duration_ms": 55
         },
         {
-          "path": "assets/phudo/tf/hoa_phong_left/_024_60.png",
-          "duration_ms": 60
+          "path": "assets/phudo/tf/hoa_phong_left/_024_55.png",
+          "duration_ms": 55
         },
         {
-          "path": "assets/phudo/tf/hoa_phong_left/_025_60.png",
-          "duration_ms": 60
+          "path": "assets/phudo/tf/hoa_phong_left/_025_55.png",
+          "duration_ms": 55
         },
         {
           "path": "assets/phudo/tf/hoa_phong_left/_026_70.png",
           "duration_ms": 70
         },
         {
-          "path": "assets/phudo/tf/hoa_phong_left/_027_80.png",
+          "path": "assets/phudo/tf/hoa_phong_left/_027_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/phudo/tf/hoa_phong_left/_028_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/phudo/tf/hoa_phong_left/_029_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/phudo/tf/hoa_phong_left/_030_45.png",
+          "duration_ms": 45
+        },
+        {
+          "path": "assets/phudo/tf/hoa_phong_left/_031_45.png",
+          "duration_ms": 45
+        },
+        {
+          "path": "assets/phudo/tf/hoa_phong_left/_032_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/phudo/tf/hoa_phong_left/_033_80.png",
           "duration_ms": 80
         },
         {
-          "path": "assets/phudo/tf/hoa_phong_left/_028_90.png",
+          "path": "assets/phudo/tf/hoa_phong_left/_034_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/phudo/tf/hoa_phong_left/_035_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/phudo/tf/hoa_phong_left/_036_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/phudo/tf/hoa_phong_left/_037_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/phudo/tf/hoa_phong_left/_038_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/phudo/tf/hoa_phong_left/_039_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/phudo/tf/hoa_phong_left/_040_90.png",
           "duration_ms": 90
         },
         {
-          "path": "assets/phudo/tf/hoa_phong_left/_029_100.png",
+          "path": "assets/phudo/tf/hoa_phong_left/_041_100.png",
           "duration_ms": 100
         },
         {
-          "path": "assets/phudo/tf/hoa_phong_left/_030_120.png",
+          "path": "assets/phudo/tf/hoa_phong_left/_042_120.png",
           "duration_ms": 120
         }
       ],
-      "duration_ms": 1925
+      "duration_ms": 2705
     },
     {
       "state": "fall_left",
@@ -3794,8 +4114,8 @@
           "duration_ms": 60
         },
         {
-          "path": "assets/phudo/tf/hoa_phong_right/_004_60.png",
-          "duration_ms": 60
+          "path": "assets/phudo/tf/hoa_phong_right/_004_70.png",
+          "duration_ms": 70
         },
         {
           "path": "assets/phudo/tf/hoa_phong_right/_005_60.png",
@@ -3806,20 +4126,20 @@
           "duration_ms": 60
         },
         {
-          "path": "assets/phudo/tf/hoa_phong_right/_007_55.png",
-          "duration_ms": 55
+          "path": "assets/phudo/tf/hoa_phong_right/_007_60.png",
+          "duration_ms": 60
         },
         {
-          "path": "assets/phudo/tf/hoa_phong_right/_008_55.png",
-          "duration_ms": 55
+          "path": "assets/phudo/tf/hoa_phong_right/_008_70.png",
+          "duration_ms": 70
         },
         {
-          "path": "assets/phudo/tf/hoa_phong_right/_009_55.png",
-          "duration_ms": 55
+          "path": "assets/phudo/tf/hoa_phong_right/_009_90.png",
+          "duration_ms": 90
         },
         {
-          "path": "assets/phudo/tf/hoa_phong_right/_010_55.png",
-          "duration_ms": 55
+          "path": "assets/phudo/tf/hoa_phong_right/_010_70.png",
+          "duration_ms": 70
         },
         {
           "path": "assets/phudo/tf/hoa_phong_right/_011_55.png",
@@ -3866,43 +4186,91 @@
           "duration_ms": 55
         },
         {
-          "path": "assets/phudo/tf/hoa_phong_right/_022_50.png",
-          "duration_ms": 50
+          "path": "assets/phudo/tf/hoa_phong_right/_022_55.png",
+          "duration_ms": 55
         },
         {
-          "path": "assets/phudo/tf/hoa_phong_right/_023_50.png",
-          "duration_ms": 50
+          "path": "assets/phudo/tf/hoa_phong_right/_023_55.png",
+          "duration_ms": 55
         },
         {
-          "path": "assets/phudo/tf/hoa_phong_right/_024_60.png",
-          "duration_ms": 60
+          "path": "assets/phudo/tf/hoa_phong_right/_024_55.png",
+          "duration_ms": 55
         },
         {
-          "path": "assets/phudo/tf/hoa_phong_right/_025_60.png",
-          "duration_ms": 60
+          "path": "assets/phudo/tf/hoa_phong_right/_025_55.png",
+          "duration_ms": 55
         },
         {
           "path": "assets/phudo/tf/hoa_phong_right/_026_70.png",
           "duration_ms": 70
         },
         {
-          "path": "assets/phudo/tf/hoa_phong_right/_027_80.png",
+          "path": "assets/phudo/tf/hoa_phong_right/_027_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/phudo/tf/hoa_phong_right/_028_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/phudo/tf/hoa_phong_right/_029_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/phudo/tf/hoa_phong_right/_030_45.png",
+          "duration_ms": 45
+        },
+        {
+          "path": "assets/phudo/tf/hoa_phong_right/_031_45.png",
+          "duration_ms": 45
+        },
+        {
+          "path": "assets/phudo/tf/hoa_phong_right/_032_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/phudo/tf/hoa_phong_right/_033_80.png",
           "duration_ms": 80
         },
         {
-          "path": "assets/phudo/tf/hoa_phong_right/_028_90.png",
+          "path": "assets/phudo/tf/hoa_phong_right/_034_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/phudo/tf/hoa_phong_right/_035_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/phudo/tf/hoa_phong_right/_036_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/phudo/tf/hoa_phong_right/_037_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/phudo/tf/hoa_phong_right/_038_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/phudo/tf/hoa_phong_right/_039_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/phudo/tf/hoa_phong_right/_040_90.png",
           "duration_ms": 90
         },
         {
-          "path": "assets/phudo/tf/hoa_phong_right/_029_100.png",
+          "path": "assets/phudo/tf/hoa_phong_right/_041_100.png",
           "duration_ms": 100
         },
         {
-          "path": "assets/phudo/tf/hoa_phong_right/_030_120.png",
+          "path": "assets/phudo/tf/hoa_phong_right/_042_120.png",
           "duration_ms": 120
         }
       ],
-      "duration_ms": 1925
+      "duration_ms": 2705
     },
     {
       "state": "railgun",
@@ -3925,8 +4293,8 @@
           "duration_ms": 60
         },
         {
-          "path": "assets/phudo/tf/phong_hoa_left/_004_60.png",
-          "duration_ms": 60
+          "path": "assets/phudo/tf/phong_hoa_left/_004_70.png",
+          "duration_ms": 70
         },
         {
           "path": "assets/phudo/tf/phong_hoa_left/_005_60.png",
@@ -3937,20 +4305,20 @@
           "duration_ms": 60
         },
         {
-          "path": "assets/phudo/tf/phong_hoa_left/_007_55.png",
-          "duration_ms": 55
+          "path": "assets/phudo/tf/phong_hoa_left/_007_60.png",
+          "duration_ms": 60
         },
         {
-          "path": "assets/phudo/tf/phong_hoa_left/_008_55.png",
-          "duration_ms": 55
+          "path": "assets/phudo/tf/phong_hoa_left/_008_70.png",
+          "duration_ms": 70
         },
         {
-          "path": "assets/phudo/tf/phong_hoa_left/_009_55.png",
-          "duration_ms": 55
+          "path": "assets/phudo/tf/phong_hoa_left/_009_90.png",
+          "duration_ms": 90
         },
         {
-          "path": "assets/phudo/tf/phong_hoa_left/_010_55.png",
-          "duration_ms": 55
+          "path": "assets/phudo/tf/phong_hoa_left/_010_70.png",
+          "duration_ms": 70
         },
         {
           "path": "assets/phudo/tf/phong_hoa_left/_011_55.png",
@@ -3997,43 +4365,91 @@
           "duration_ms": 55
         },
         {
-          "path": "assets/phudo/tf/phong_hoa_left/_022_50.png",
-          "duration_ms": 50
+          "path": "assets/phudo/tf/phong_hoa_left/_022_55.png",
+          "duration_ms": 55
         },
         {
-          "path": "assets/phudo/tf/phong_hoa_left/_023_50.png",
-          "duration_ms": 50
+          "path": "assets/phudo/tf/phong_hoa_left/_023_55.png",
+          "duration_ms": 55
         },
         {
-          "path": "assets/phudo/tf/phong_hoa_left/_024_60.png",
-          "duration_ms": 60
+          "path": "assets/phudo/tf/phong_hoa_left/_024_55.png",
+          "duration_ms": 55
         },
         {
-          "path": "assets/phudo/tf/phong_hoa_left/_025_60.png",
-          "duration_ms": 60
+          "path": "assets/phudo/tf/phong_hoa_left/_025_55.png",
+          "duration_ms": 55
         },
         {
           "path": "assets/phudo/tf/phong_hoa_left/_026_70.png",
           "duration_ms": 70
         },
         {
-          "path": "assets/phudo/tf/phong_hoa_left/_027_80.png",
+          "path": "assets/phudo/tf/phong_hoa_left/_027_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/phudo/tf/phong_hoa_left/_028_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/phudo/tf/phong_hoa_left/_029_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/phudo/tf/phong_hoa_left/_030_45.png",
+          "duration_ms": 45
+        },
+        {
+          "path": "assets/phudo/tf/phong_hoa_left/_031_45.png",
+          "duration_ms": 45
+        },
+        {
+          "path": "assets/phudo/tf/phong_hoa_left/_032_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/phudo/tf/phong_hoa_left/_033_80.png",
           "duration_ms": 80
         },
         {
-          "path": "assets/phudo/tf/phong_hoa_left/_028_90.png",
+          "path": "assets/phudo/tf/phong_hoa_left/_034_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/phudo/tf/phong_hoa_left/_035_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/phudo/tf/phong_hoa_left/_036_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/phudo/tf/phong_hoa_left/_037_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/phudo/tf/phong_hoa_left/_038_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/phudo/tf/phong_hoa_left/_039_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/phudo/tf/phong_hoa_left/_040_90.png",
           "duration_ms": 90
         },
         {
-          "path": "assets/phudo/tf/phong_hoa_left/_029_100.png",
+          "path": "assets/phudo/tf/phong_hoa_left/_041_100.png",
           "duration_ms": 100
         },
         {
-          "path": "assets/phudo/tf/phong_hoa_left/_030_120.png",
+          "path": "assets/phudo/tf/phong_hoa_left/_042_120.png",
           "duration_ms": 120
         }
       ],
-      "duration_ms": 1925
+      "duration_ms": 2705
     },
     {
       "state": "fly_right",
@@ -4056,8 +4472,8 @@
           "duration_ms": 60
         },
         {
-          "path": "assets/phudo/tf/phong_hoa_right/_004_60.png",
-          "duration_ms": 60
+          "path": "assets/phudo/tf/phong_hoa_right/_004_70.png",
+          "duration_ms": 70
         },
         {
           "path": "assets/phudo/tf/phong_hoa_right/_005_60.png",
@@ -4068,20 +4484,20 @@
           "duration_ms": 60
         },
         {
-          "path": "assets/phudo/tf/phong_hoa_right/_007_55.png",
-          "duration_ms": 55
+          "path": "assets/phudo/tf/phong_hoa_right/_007_60.png",
+          "duration_ms": 60
         },
         {
-          "path": "assets/phudo/tf/phong_hoa_right/_008_55.png",
-          "duration_ms": 55
+          "path": "assets/phudo/tf/phong_hoa_right/_008_70.png",
+          "duration_ms": 70
         },
         {
-          "path": "assets/phudo/tf/phong_hoa_right/_009_55.png",
-          "duration_ms": 55
+          "path": "assets/phudo/tf/phong_hoa_right/_009_90.png",
+          "duration_ms": 90
         },
         {
-          "path": "assets/phudo/tf/phong_hoa_right/_010_55.png",
-          "duration_ms": 55
+          "path": "assets/phudo/tf/phong_hoa_right/_010_70.png",
+          "duration_ms": 70
         },
         {
           "path": "assets/phudo/tf/phong_hoa_right/_011_55.png",
@@ -4128,43 +4544,91 @@
           "duration_ms": 55
         },
         {
-          "path": "assets/phudo/tf/phong_hoa_right/_022_50.png",
-          "duration_ms": 50
+          "path": "assets/phudo/tf/phong_hoa_right/_022_55.png",
+          "duration_ms": 55
         },
         {
-          "path": "assets/phudo/tf/phong_hoa_right/_023_50.png",
-          "duration_ms": 50
+          "path": "assets/phudo/tf/phong_hoa_right/_023_55.png",
+          "duration_ms": 55
         },
         {
-          "path": "assets/phudo/tf/phong_hoa_right/_024_60.png",
-          "duration_ms": 60
+          "path": "assets/phudo/tf/phong_hoa_right/_024_55.png",
+          "duration_ms": 55
         },
         {
-          "path": "assets/phudo/tf/phong_hoa_right/_025_60.png",
-          "duration_ms": 60
+          "path": "assets/phudo/tf/phong_hoa_right/_025_55.png",
+          "duration_ms": 55
         },
         {
           "path": "assets/phudo/tf/phong_hoa_right/_026_70.png",
           "duration_ms": 70
         },
         {
-          "path": "assets/phudo/tf/phong_hoa_right/_027_80.png",
+          "path": "assets/phudo/tf/phong_hoa_right/_027_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/phudo/tf/phong_hoa_right/_028_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/phudo/tf/phong_hoa_right/_029_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/phudo/tf/phong_hoa_right/_030_45.png",
+          "duration_ms": 45
+        },
+        {
+          "path": "assets/phudo/tf/phong_hoa_right/_031_45.png",
+          "duration_ms": 45
+        },
+        {
+          "path": "assets/phudo/tf/phong_hoa_right/_032_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/phudo/tf/phong_hoa_right/_033_80.png",
           "duration_ms": 80
         },
         {
-          "path": "assets/phudo/tf/phong_hoa_right/_028_90.png",
+          "path": "assets/phudo/tf/phong_hoa_right/_034_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/phudo/tf/phong_hoa_right/_035_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/phudo/tf/phong_hoa_right/_036_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/phudo/tf/phong_hoa_right/_037_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/phudo/tf/phong_hoa_right/_038_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/phudo/tf/phong_hoa_right/_039_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/phudo/tf/phong_hoa_right/_040_90.png",
           "duration_ms": 90
         },
         {
-          "path": "assets/phudo/tf/phong_hoa_right/_029_100.png",
+          "path": "assets/phudo/tf/phong_hoa_right/_041_100.png",
           "duration_ms": 100
         },
         {
-          "path": "assets/phudo/tf/phong_hoa_right/_030_120.png",
+          "path": "assets/phudo/tf/phong_hoa_right/_042_120.png",
           "duration_ms": 120
         }
       ],
-      "duration_ms": 1925
+      "duration_ms": 2705
     },
     {
       "state": "needs_input",
@@ -4187,8 +4651,8 @@
           "duration_ms": 60
         },
         {
-          "path": "assets/phudo/tf/phong_thap/_004_60.png",
-          "duration_ms": 60
+          "path": "assets/phudo/tf/phong_thap/_004_70.png",
+          "duration_ms": 70
         },
         {
           "path": "assets/phudo/tf/phong_thap/_005_60.png",
@@ -4199,20 +4663,20 @@
           "duration_ms": 60
         },
         {
-          "path": "assets/phudo/tf/phong_thap/_007_55.png",
-          "duration_ms": 55
+          "path": "assets/phudo/tf/phong_thap/_007_60.png",
+          "duration_ms": 60
         },
         {
-          "path": "assets/phudo/tf/phong_thap/_008_55.png",
-          "duration_ms": 55
+          "path": "assets/phudo/tf/phong_thap/_008_70.png",
+          "duration_ms": 70
         },
         {
-          "path": "assets/phudo/tf/phong_thap/_009_55.png",
-          "duration_ms": 55
+          "path": "assets/phudo/tf/phong_thap/_009_90.png",
+          "duration_ms": 90
         },
         {
-          "path": "assets/phudo/tf/phong_thap/_010_55.png",
-          "duration_ms": 55
+          "path": "assets/phudo/tf/phong_thap/_010_70.png",
+          "duration_ms": 70
         },
         {
           "path": "assets/phudo/tf/phong_thap/_011_55.png",
@@ -4259,43 +4723,91 @@
           "duration_ms": 55
         },
         {
-          "path": "assets/phudo/tf/phong_thap/_022_50.png",
-          "duration_ms": 50
+          "path": "assets/phudo/tf/phong_thap/_022_55.png",
+          "duration_ms": 55
         },
         {
-          "path": "assets/phudo/tf/phong_thap/_023_50.png",
-          "duration_ms": 50
+          "path": "assets/phudo/tf/phong_thap/_023_55.png",
+          "duration_ms": 55
         },
         {
-          "path": "assets/phudo/tf/phong_thap/_024_60.png",
-          "duration_ms": 60
+          "path": "assets/phudo/tf/phong_thap/_024_55.png",
+          "duration_ms": 55
         },
         {
-          "path": "assets/phudo/tf/phong_thap/_025_60.png",
-          "duration_ms": 60
+          "path": "assets/phudo/tf/phong_thap/_025_55.png",
+          "duration_ms": 55
         },
         {
           "path": "assets/phudo/tf/phong_thap/_026_70.png",
           "duration_ms": 70
         },
         {
-          "path": "assets/phudo/tf/phong_thap/_027_80.png",
+          "path": "assets/phudo/tf/phong_thap/_027_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/phudo/tf/phong_thap/_028_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/phudo/tf/phong_thap/_029_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/phudo/tf/phong_thap/_030_45.png",
+          "duration_ms": 45
+        },
+        {
+          "path": "assets/phudo/tf/phong_thap/_031_45.png",
+          "duration_ms": 45
+        },
+        {
+          "path": "assets/phudo/tf/phong_thap/_032_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/phudo/tf/phong_thap/_033_80.png",
           "duration_ms": 80
         },
         {
-          "path": "assets/phudo/tf/phong_thap/_028_90.png",
+          "path": "assets/phudo/tf/phong_thap/_034_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/phudo/tf/phong_thap/_035_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/phudo/tf/phong_thap/_036_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/phudo/tf/phong_thap/_037_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/phudo/tf/phong_thap/_038_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/phudo/tf/phong_thap/_039_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/phudo/tf/phong_thap/_040_90.png",
           "duration_ms": 90
         },
         {
-          "path": "assets/phudo/tf/phong_thap/_029_100.png",
+          "path": "assets/phudo/tf/phong_thap/_041_100.png",
           "duration_ms": 100
         },
         {
-          "path": "assets/phudo/tf/phong_thap/_030_120.png",
+          "path": "assets/phudo/tf/phong_thap/_042_120.png",
           "duration_ms": 120
         }
       ],
-      "duration_ms": 1925
+      "duration_ms": 2705
     },
     {
       "state": "working",
@@ -4318,8 +4830,8 @@
           "duration_ms": 60
         },
         {
-          "path": "assets/phudo/tf/phong_tu/_004_60.png",
-          "duration_ms": 60
+          "path": "assets/phudo/tf/phong_tu/_004_70.png",
+          "duration_ms": 70
         },
         {
           "path": "assets/phudo/tf/phong_tu/_005_60.png",
@@ -4330,24 +4842,24 @@
           "duration_ms": 60
         },
         {
-          "path": "assets/phudo/tf/phong_tu/_007_55.png",
-          "duration_ms": 55
+          "path": "assets/phudo/tf/phong_tu/_007_60.png",
+          "duration_ms": 60
         },
         {
-          "path": "assets/phudo/tf/phong_tu/_008_55.png",
-          "duration_ms": 55
+          "path": "assets/phudo/tf/phong_tu/_008_70.png",
+          "duration_ms": 70
         },
         {
-          "path": "assets/phudo/tf/phong_tu/_009_55.png",
-          "duration_ms": 55
-        },
-        {
-          "path": "assets/phudo/tf/phong_tu/_010_55.png",
-          "duration_ms": 55
-        },
-        {
-          "path": "assets/phudo/tf/phong_tu/_011_90.png",
+          "path": "assets/phudo/tf/phong_tu/_009_90.png",
           "duration_ms": 90
+        },
+        {
+          "path": "assets/phudo/tf/phong_tu/_010_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/phudo/tf/phong_tu/_011_55.png",
+          "duration_ms": 55
         },
         {
           "path": "assets/phudo/tf/phong_tu/_012_55.png",
@@ -4366,8 +4878,8 @@
           "duration_ms": 55
         },
         {
-          "path": "assets/phudo/tf/phong_tu/_016_90.png",
-          "duration_ms": 90
+          "path": "assets/phudo/tf/phong_tu/_016_55.png",
+          "duration_ms": 55
         },
         {
           "path": "assets/phudo/tf/phong_tu/_017_55.png",
@@ -4386,8 +4898,8 @@
           "duration_ms": 55
         },
         {
-          "path": "assets/phudo/tf/phong_tu/_021_90.png",
-          "duration_ms": 90
+          "path": "assets/phudo/tf/phong_tu/_021_55.png",
+          "duration_ms": 55
         },
         {
           "path": "assets/phudo/tf/phong_tu/_022_55.png",
@@ -4406,55 +4918,75 @@
           "duration_ms": 55
         },
         {
-          "path": "assets/phudo/tf/phong_tu/_026_55.png",
-          "duration_ms": 55
+          "path": "assets/phudo/tf/phong_tu/_026_70.png",
+          "duration_ms": 70
         },
         {
-          "path": "assets/phudo/tf/phong_tu/_027_55.png",
-          "duration_ms": 55
+          "path": "assets/phudo/tf/phong_tu/_027_70.png",
+          "duration_ms": 70
         },
         {
-          "path": "assets/phudo/tf/phong_tu/_028_55.png",
-          "duration_ms": 55
+          "path": "assets/phudo/tf/phong_tu/_028_60.png",
+          "duration_ms": 60
         },
         {
           "path": "assets/phudo/tf/phong_tu/_029_50.png",
           "duration_ms": 50
         },
         {
-          "path": "assets/phudo/tf/phong_tu/_030_50.png",
-          "duration_ms": 50
+          "path": "assets/phudo/tf/phong_tu/_030_45.png",
+          "duration_ms": 45
         },
         {
-          "path": "assets/phudo/tf/phong_tu/_031_60.png",
-          "duration_ms": 60
+          "path": "assets/phudo/tf/phong_tu/_031_45.png",
+          "duration_ms": 45
         },
         {
           "path": "assets/phudo/tf/phong_tu/_032_60.png",
           "duration_ms": 60
         },
         {
-          "path": "assets/phudo/tf/phong_tu/_033_70.png",
-          "duration_ms": 70
-        },
-        {
-          "path": "assets/phudo/tf/phong_tu/_034_80.png",
+          "path": "assets/phudo/tf/phong_tu/_033_80.png",
           "duration_ms": 80
         },
         {
-          "path": "assets/phudo/tf/phong_tu/_035_90.png",
+          "path": "assets/phudo/tf/phong_tu/_034_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/phudo/tf/phong_tu/_035_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/phudo/tf/phong_tu/_036_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/phudo/tf/phong_tu/_037_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/phudo/tf/phong_tu/_038_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/phudo/tf/phong_tu/_039_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/phudo/tf/phong_tu/_040_90.png",
           "duration_ms": 90
         },
         {
-          "path": "assets/phudo/tf/phong_tu/_036_100.png",
+          "path": "assets/phudo/tf/phong_tu/_041_100.png",
           "duration_ms": 100
         },
         {
-          "path": "assets/phudo/tf/phong_tu/_037_120.png",
+          "path": "assets/phudo/tf/phong_tu/_042_120.png",
           "duration_ms": 120
         }
       ],
-      "duration_ms": 2415
+      "duration_ms": 2705
     },
     {
       "state": "needs_input",
@@ -4477,8 +5009,8 @@
           "duration_ms": 60
         },
         {
-          "path": "assets/phudo/tf/thap_phong/_004_60.png",
-          "duration_ms": 60
+          "path": "assets/phudo/tf/thap_phong/_004_70.png",
+          "duration_ms": 70
         },
         {
           "path": "assets/phudo/tf/thap_phong/_005_60.png",
@@ -4489,20 +5021,20 @@
           "duration_ms": 60
         },
         {
-          "path": "assets/phudo/tf/thap_phong/_007_55.png",
-          "duration_ms": 55
+          "path": "assets/phudo/tf/thap_phong/_007_60.png",
+          "duration_ms": 60
         },
         {
-          "path": "assets/phudo/tf/thap_phong/_008_55.png",
-          "duration_ms": 55
+          "path": "assets/phudo/tf/thap_phong/_008_70.png",
+          "duration_ms": 70
         },
         {
-          "path": "assets/phudo/tf/thap_phong/_009_55.png",
-          "duration_ms": 55
+          "path": "assets/phudo/tf/thap_phong/_009_90.png",
+          "duration_ms": 90
         },
         {
-          "path": "assets/phudo/tf/thap_phong/_010_55.png",
-          "duration_ms": 55
+          "path": "assets/phudo/tf/thap_phong/_010_70.png",
+          "duration_ms": 70
         },
         {
           "path": "assets/phudo/tf/thap_phong/_011_55.png",
@@ -4549,43 +5081,91 @@
           "duration_ms": 55
         },
         {
-          "path": "assets/phudo/tf/thap_phong/_022_50.png",
-          "duration_ms": 50
+          "path": "assets/phudo/tf/thap_phong/_022_55.png",
+          "duration_ms": 55
         },
         {
-          "path": "assets/phudo/tf/thap_phong/_023_50.png",
-          "duration_ms": 50
+          "path": "assets/phudo/tf/thap_phong/_023_55.png",
+          "duration_ms": 55
         },
         {
-          "path": "assets/phudo/tf/thap_phong/_024_60.png",
-          "duration_ms": 60
+          "path": "assets/phudo/tf/thap_phong/_024_55.png",
+          "duration_ms": 55
         },
         {
-          "path": "assets/phudo/tf/thap_phong/_025_60.png",
-          "duration_ms": 60
+          "path": "assets/phudo/tf/thap_phong/_025_55.png",
+          "duration_ms": 55
         },
         {
           "path": "assets/phudo/tf/thap_phong/_026_70.png",
           "duration_ms": 70
         },
         {
-          "path": "assets/phudo/tf/thap_phong/_027_80.png",
+          "path": "assets/phudo/tf/thap_phong/_027_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/phudo/tf/thap_phong/_028_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/phudo/tf/thap_phong/_029_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/phudo/tf/thap_phong/_030_45.png",
+          "duration_ms": 45
+        },
+        {
+          "path": "assets/phudo/tf/thap_phong/_031_45.png",
+          "duration_ms": 45
+        },
+        {
+          "path": "assets/phudo/tf/thap_phong/_032_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/phudo/tf/thap_phong/_033_80.png",
           "duration_ms": 80
         },
         {
-          "path": "assets/phudo/tf/thap_phong/_028_90.png",
+          "path": "assets/phudo/tf/thap_phong/_034_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/phudo/tf/thap_phong/_035_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/phudo/tf/thap_phong/_036_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/phudo/tf/thap_phong/_037_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/phudo/tf/thap_phong/_038_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/phudo/tf/thap_phong/_039_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/phudo/tf/thap_phong/_040_90.png",
           "duration_ms": 90
         },
         {
-          "path": "assets/phudo/tf/thap_phong/_029_100.png",
+          "path": "assets/phudo/tf/thap_phong/_041_100.png",
           "duration_ms": 100
         },
         {
-          "path": "assets/phudo/tf/thap_phong/_030_120.png",
+          "path": "assets/phudo/tf/thap_phong/_042_120.png",
           "duration_ms": 120
         }
       ],
-      "duration_ms": 1925
+      "duration_ms": 2705
     },
     {
       "state": "working",
@@ -4608,8 +5188,8 @@
           "duration_ms": 60
         },
         {
-          "path": "assets/phudo/tf/tu_phong/_004_60.png",
-          "duration_ms": 60
+          "path": "assets/phudo/tf/tu_phong/_004_70.png",
+          "duration_ms": 70
         },
         {
           "path": "assets/phudo/tf/tu_phong/_005_60.png",
@@ -4620,24 +5200,24 @@
           "duration_ms": 60
         },
         {
-          "path": "assets/phudo/tf/tu_phong/_007_55.png",
-          "duration_ms": 55
+          "path": "assets/phudo/tf/tu_phong/_007_60.png",
+          "duration_ms": 60
         },
         {
-          "path": "assets/phudo/tf/tu_phong/_008_55.png",
-          "duration_ms": 55
+          "path": "assets/phudo/tf/tu_phong/_008_70.png",
+          "duration_ms": 70
         },
         {
-          "path": "assets/phudo/tf/tu_phong/_009_55.png",
-          "duration_ms": 55
-        },
-        {
-          "path": "assets/phudo/tf/tu_phong/_010_55.png",
-          "duration_ms": 55
-        },
-        {
-          "path": "assets/phudo/tf/tu_phong/_011_90.png",
+          "path": "assets/phudo/tf/tu_phong/_009_90.png",
           "duration_ms": 90
+        },
+        {
+          "path": "assets/phudo/tf/tu_phong/_010_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/phudo/tf/tu_phong/_011_55.png",
+          "duration_ms": 55
         },
         {
           "path": "assets/phudo/tf/tu_phong/_012_55.png",
@@ -4656,8 +5236,8 @@
           "duration_ms": 55
         },
         {
-          "path": "assets/phudo/tf/tu_phong/_016_90.png",
-          "duration_ms": 90
+          "path": "assets/phudo/tf/tu_phong/_016_55.png",
+          "duration_ms": 55
         },
         {
           "path": "assets/phudo/tf/tu_phong/_017_55.png",
@@ -4676,8 +5256,8 @@
           "duration_ms": 55
         },
         {
-          "path": "assets/phudo/tf/tu_phong/_021_90.png",
-          "duration_ms": 90
+          "path": "assets/phudo/tf/tu_phong/_021_55.png",
+          "duration_ms": 55
         },
         {
           "path": "assets/phudo/tf/tu_phong/_022_55.png",
@@ -4696,55 +5276,75 @@
           "duration_ms": 55
         },
         {
-          "path": "assets/phudo/tf/tu_phong/_026_55.png",
-          "duration_ms": 55
+          "path": "assets/phudo/tf/tu_phong/_026_70.png",
+          "duration_ms": 70
         },
         {
-          "path": "assets/phudo/tf/tu_phong/_027_55.png",
-          "duration_ms": 55
+          "path": "assets/phudo/tf/tu_phong/_027_70.png",
+          "duration_ms": 70
         },
         {
-          "path": "assets/phudo/tf/tu_phong/_028_55.png",
-          "duration_ms": 55
+          "path": "assets/phudo/tf/tu_phong/_028_60.png",
+          "duration_ms": 60
         },
         {
           "path": "assets/phudo/tf/tu_phong/_029_50.png",
           "duration_ms": 50
         },
         {
-          "path": "assets/phudo/tf/tu_phong/_030_50.png",
-          "duration_ms": 50
+          "path": "assets/phudo/tf/tu_phong/_030_45.png",
+          "duration_ms": 45
         },
         {
-          "path": "assets/phudo/tf/tu_phong/_031_60.png",
-          "duration_ms": 60
+          "path": "assets/phudo/tf/tu_phong/_031_45.png",
+          "duration_ms": 45
         },
         {
           "path": "assets/phudo/tf/tu_phong/_032_60.png",
           "duration_ms": 60
         },
         {
-          "path": "assets/phudo/tf/tu_phong/_033_70.png",
-          "duration_ms": 70
-        },
-        {
-          "path": "assets/phudo/tf/tu_phong/_034_80.png",
+          "path": "assets/phudo/tf/tu_phong/_033_80.png",
           "duration_ms": 80
         },
         {
-          "path": "assets/phudo/tf/tu_phong/_035_90.png",
+          "path": "assets/phudo/tf/tu_phong/_034_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/phudo/tf/tu_phong/_035_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/phudo/tf/tu_phong/_036_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/phudo/tf/tu_phong/_037_60.png",
+          "duration_ms": 60
+        },
+        {
+          "path": "assets/phudo/tf/tu_phong/_038_70.png",
+          "duration_ms": 70
+        },
+        {
+          "path": "assets/phudo/tf/tu_phong/_039_80.png",
+          "duration_ms": 80
+        },
+        {
+          "path": "assets/phudo/tf/tu_phong/_040_90.png",
           "duration_ms": 90
         },
         {
-          "path": "assets/phudo/tf/tu_phong/_036_100.png",
+          "path": "assets/phudo/tf/tu_phong/_041_100.png",
           "duration_ms": 100
         },
         {
-          "path": "assets/phudo/tf/tu_phong/_037_120.png",
+          "path": "assets/phudo/tf/tu_phong/_042_120.png",
           "duration_ms": 120
         }
       ],
-      "duration_ms": 2415
+      "duration_ms": 2705
     },
     {
       "state": "barrage",
@@ -5617,9 +6217,17 @@
         {
           "path": "assets/phudo/tumble/start_left/_007_45.png",
           "duration_ms": 45
+        },
+        {
+          "path": "assets/phudo/tumble/start_left/_008_45.png",
+          "duration_ms": 45
+        },
+        {
+          "path": "assets/phudo/tumble/start_left/_009_45.png",
+          "duration_ms": 45
         }
       ],
-      "duration_ms": 410
+      "duration_ms": 500
     },
     {
       "state": "fall_right",
@@ -5656,9 +6264,17 @@
         {
           "path": "assets/phudo/tumble/start_right/_007_45.png",
           "duration_ms": 45
+        },
+        {
+          "path": "assets/phudo/tumble/start_right/_008_45.png",
+          "duration_ms": 45
+        },
+        {
+          "path": "assets/phudo/tumble/start_right/_009_45.png",
+          "duration_ms": 45
         }
       ],
-      "duration_ms": 410
+      "duration_ms": 500
     },
     {
       "state": "vent",
@@ -5799,24 +6415,24 @@
           "duration_ms": 60
         },
         {
-          "path": "assets/phudo/work/to_scan/_002_60.png",
-          "duration_ms": 60
+          "path": "assets/phudo/work/to_scan/_002_70.png",
+          "duration_ms": 70
         },
         {
           "path": "assets/phudo/work/to_scan/_003_60.png",
           "duration_ms": 60
         },
         {
-          "path": "assets/phudo/work/to_scan/_004_55.png",
-          "duration_ms": 55
+          "path": "assets/phudo/work/to_scan/_004_90.png",
+          "duration_ms": 90
         },
         {
           "path": "assets/phudo/work/to_scan/_005_55.png",
           "duration_ms": 55
         },
         {
-          "path": "assets/phudo/work/to_scan/_006_90.png",
-          "duration_ms": 90
+          "path": "assets/phudo/work/to_scan/_006_55.png",
+          "duration_ms": 55
         },
         {
           "path": "assets/phudo/work/to_scan/_007_55.png",
@@ -5827,8 +6443,8 @@
           "duration_ms": 55
         },
         {
-          "path": "assets/phudo/work/to_scan/_009_90.png",
-          "duration_ms": 90
+          "path": "assets/phudo/work/to_scan/_009_55.png",
+          "duration_ms": 55
         },
         {
           "path": "assets/phudo/work/to_scan/_010_55.png",
@@ -5839,24 +6455,24 @@
           "duration_ms": 55
         },
         {
-          "path": "assets/phudo/work/to_scan/_012_90.png",
-          "duration_ms": 90
-        },
-        {
-          "path": "assets/phudo/work/to_scan/_013_55.png",
+          "path": "assets/phudo/work/to_scan/_012_55.png",
           "duration_ms": 55
         },
         {
-          "path": "assets/phudo/work/to_scan/_014_55.png",
-          "duration_ms": 55
+          "path": "assets/phudo/work/to_scan/_013_70.png",
+          "duration_ms": 70
         },
         {
-          "path": "assets/phudo/work/to_scan/_015_55.png",
-          "duration_ms": 55
+          "path": "assets/phudo/work/to_scan/_014_60.png",
+          "duration_ms": 60
         },
         {
-          "path": "assets/phudo/work/to_scan/_016_55.png",
-          "duration_ms": 55
+          "path": "assets/phudo/work/to_scan/_015_45.png",
+          "duration_ms": 45
+        },
+        {
+          "path": "assets/phudo/work/to_scan/_016_80.png",
+          "duration_ms": 80
         },
         {
           "path": "assets/phudo/work/to_scan/_017_50.png",
@@ -5891,7 +6507,7 @@
           "duration_ms": 100
         }
       ],
-      "duration_ms": 1660
+      "duration_ms": 1635
     }
   ],
   "playback": {

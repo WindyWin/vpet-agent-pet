@@ -13,11 +13,11 @@ It is not based on any existing model kit or franchise.
 
 **Where the frames come from.** They are made from the designer's game-asset sheet,
 [`scripts/phudo_art/design-sheet.png`](../scripts/phudo_art/design-sheet.png):
-1. The forms, the transformation stages and the greatsword are cut out of it (`scripts/phudo_art/*.png`).
+1. The forms and the greatsword are cut out of it, regraded and split into armour plates (`scripts/phudo_art/`).
 2. [`scripts/draw_phudo.py`](../scripts/draw_phudo.py) animates, relights and adds effects to them.
 
 The effects are drawn by the script; the character in every frame is the designer's own drawing.
 
-**What you may do.** The frames, the preview, the sheet and the cut-outs may be copied and distributed with Agent
+**What you may do.** The frames, the preview, the sheet, the cut-outs and the plate maps may be copied and distributed with Agent
 Pet, changed or not, as part of the app or of a pet pack for it. For any other use of the design or the artwork,
 ask its author. Agent Pet credits WindyWin in About.

@@ -230,7 +230,7 @@ Native Wayland placement and stacking support remain unverified.
 
 ## Pets
 
-VPet is the bundled pet. **Fat Cat** (an orange cat, CC0 art by shuaa of megupets), **Kuro** (a little ninja), **Yun** (a xianxia cultivator who meditates, brews pills and flies on a sword) and **Phù Đồ** (a transforming mecha with four combat forms) download when chosen in Settings. Kuro and Yun are original art drawn by scripts in `scripts/` and released under CC0. Phù Đồ is WindyWin's own design sheet, animated by `scripts/draw_phudo.py`, under its own terms. The app is built for more. A pet is a folder of frames, a catalog, a
+VPet is the bundled pet. **Fat Cat** (an orange cat, CC0 art by shuaa of megupets), **Kuro** (a little ninja), **Yun** (a xianxia cultivator who meditates, brews pills and flies on a sword) and **Phù Đồ** (a transforming mecha with four combat forms) download when chosen in Settings. Kuro and Yun are original art drawn by scripts in `scripts/` and released under CC0. Phù Đồ is WindyWin's own design sheet, animated by `scripts/draw_phudo.py`; it transforms piece by piece between its forms. It is under its own terms. The app is built for more. A pet is a folder of frames, a catalog, a
 preview and its own art terms under `assets/`, and a rebuild picks up every such folder with no code
 changes. Once two or more pets are installed, Settings → Pet → **Character** shows a tile per pet. The
 chosen pet appears the next time Agent Pet starts, and only its artwork is loaded. `--pet <id>` runs

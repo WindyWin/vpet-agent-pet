@@ -5,29 +5,27 @@
     python3 scripts/draw_phudo.py OUT             # every sequence, as OUT/<sequence>/_NNN_<ms>.png
     python3 scripts/draw_phudo.py OUT idle        # only these sequences
 
-The art is the designer's game-asset sheet, scripts/phudo_art/design-sheet.png. It shows:
-- four combat forms: Phong Lôi (balanced vanguard), Hỏa Dực (aerial assault), Tứ Thủ (four-armed berserker) and
-  Hắc Tháp (heavy fortress);
-- the three stages of the transformation pipeline;
-- the weapon arsenal.
+The art is the designer's game-asset sheet, scripts/phudo_art/design-sheet.png: four combat forms (Phong Lôi the
+balanced vanguard, Hỏa Dực the aerial assault, Tứ Thủ the four-armed berserker, Hắc Tháp the heavy fortress) and
+the weapon arsenal. phudo_art/extract.py cuts them out (labels inpainted, upscaled 4x with Real-ESRGAN's anime
+model, matted with isnet-anime, regraded off the blueprint's haze and sharpened); phudo_art/make_plates.py splits
+each form into its armour plates along the ink lines. This script never repaints the suit.
 
-phudo_art/extract.py cut them out: it inpaints the labels, upscales 4x with Real-ESRGAN's anime model, mattes
-with isnet-anime and cleans up (the files are in phudo_art/). This script never repaints the suit.
+It brings the drawings to life: breathing and a lean warp the upper body, the red plumes and tendrils sway in a
+travelling wave, and the drawing's own cyan, violet and red lights are relit (dimmed, blooming, overheated) and the
+visor flares. The figure moves with offsets, rotation, squash, screen shake and afterimages.
 
-It places a drawing on the 1000 x 1000 canvas and brings it to life:
-- breathing and a lean warp the upper body;
-- the red energy plumes and tendrils sway in a travelling wave;
-- the drawing's own cyan, violet and red lights are relit (dimmed, blooming, overheated), and the visor can flare.
-On top of that it moves the figure: offsets, rotation, squash, screen shake and afterimages.
+Transformations are piece by piece, in the designer's four phases:
+1. Disengage and vent: the locks clack open, plasma vents, and every plate opens out from the body with energy
+   light in the seams.
+2. Articulation: each plate flies to its place in the new form along an arc round an energy core, spinning and
+   flipping over on the way (the old plate turns edge-on, the new one turns face-on); legs first, the head last,
+   a spark as each lands. Plates the new form lacks fold into the core; extra ones grow out of it.
+3. Armour snap: the new form's plates close onto the body and lock.
+4. Ignition: a shock ring, flame on the plume, a flash and a screen shake.
 
-Transformations follow the designer's four-phase pipeline:
-1. Disengage and vent: the stance drops, the joints clack open, plasma and smoke vent.
-2. Articulation: the drawing passes through the sheet's own transformation stages under an energy outline.
-3. Armour snap: the new form is scanned in from the top with a bright seam.
-4. Ignition: the visor flares, flame on the plume, a ground shock and a screen shake.
-
-Effects are drawn in the sheet's palette. Everything is deterministic, so the sheet, the cut-outs and this
-script are the art's source.
+Effects are drawn in the sheet's palette. Everything is deterministic, so the sheet, the cut-outs, the plate maps
+and this script are the art's source.
 """
 import math
 import random
@@ -61,11 +59,12 @@ LINE = 9
 ART = Path(__file__).resolve().parent / 'phudo_art'
 BODY_H = 640                # canvas pixels from crest to feet, the same for every form
 OLD = 0.62                  # effect units to canvas pixels (the effects are laid out in these units)
-PAD = 40
+PAD = 48
+SRC = 4 / 3                 # the cut-outs' pixels per landmark unit (landmarks were measured at 3x the sheet)
 
-# Each drawing: file, anchor (the point between the feet, in its own pixels), crest-to-feet height, and landmarks:
-# eyes (x, y, half height of the visor box), head, chest, shoulders, hands, vents (where plasma and smoke come out),
-# rigid boxes (weapons the plume sway must not bend), and the waist line the breathing bends about.
+# Each drawing: file, anchor (the point between the feet), crest-to-feet height, and landmarks, all in landmark
+# units: eyes (x, y, half height of the visor box), head, chest, shoulders, hands, vents (where plasma and smoke
+# come out), rigid boxes (weapons the plume sway must not bend), and the waist line the breathing bends about.
 FORMS = {
     'phong': dict(file='form1.png', anchor=(375, 705), height=590, eyes=(375, 188, 14), head=(375, 190), chest=(375, 300),
                   shoulders=((250, 205), (500, 205)), hands=((105, 345), (605, 300)), waist=420,
@@ -83,15 +82,6 @@ FORMS = {
                  shoulders=((130, 130), (350, 130)), hands=((75, 330), (410, 330)), waist=380,
                  vents=((130, 125), (350, 125), (200, 420), (290, 420)), rigid=((0, 0, 548, 632),),
                  cannons=((85, 28), (395, 38)), shield=(470, 260), spike=(240, 612), plume=(240, 60)),
-    'p1': dict(file='phase1.png', anchor=(182, 504), height=490, eyes=(185, 100, 12), head=(185, 100), chest=(182, 180),
-               shoulders=((95, 110), (270, 110)), hands=((40, 260), (330, 260)), waist=300,
-               vents=((95, 110), (270, 125), (150, 250), (215, 250)), rigid=(), plume=(185, 30)),
-    'p2': dict(file='phase2.png', anchor=(246, 504), height=490, eyes=(250, 100, 12), head=(250, 100), chest=(246, 180),
-               shoulders=((150, 110), (345, 110)), hands=((40, 280), (460, 280)), waist=300,
-               vents=((150, 110), (345, 110), (210, 250), (285, 250)), rigid=(), plume=(250, 30)),
-    'p3': dict(file='phase3.png', anchor=(173, 504), height=490, eyes=(172, 105, 12), head=(172, 105), chest=(173, 180),
-               shoulders=((85, 110), (260, 110)), hands=((40, 240), (310, 240)), waist=300,
-               vents=((85, 110), (260, 110), (130, 250), (215, 250)), rigid=(), plume=(172, 30)),
 }
 
 
@@ -118,8 +108,10 @@ class Pose:
     dim: float = 0              # the whole suit darkened (power loss)
     aura: float = 0             # an energy outline round the figure
     aura_color: tuple = CYAN
-    wipe_to: str = None         # transformation: the form being scanned in from the top
-    wipe: float = 0             # how far down it has come, 0..1
+    gap: float = 0              # the armour plates opened out from the body (unlock / lock), 0..1
+    seam: float = 0             # energy light showing between the plates
+    morph_to: str = None        # transformation: the form the plates are flying to
+    morph: float = 0            # how far the plate-by-plate transformation has gone, 0..1
     ghosts: tuple = ()          # afterimages: (dx, alpha[, dlift])
     shadow: bool = True
     drag: float = 0             # set by pet_art.follow_through; unused
@@ -194,52 +186,54 @@ class Art:
         sat = (mx - mn) / np.maximum(mx, 1e-3)
         H, W = a.shape
         self.yy, self.xx = np.mgrid[0:H, 0:W].astype(np.float32)
-        gx, gy = self.xx - PAD, self.yy - PAD
+        gx, gy = (self.xx - PAD) / SRC, (self.yy - PAD) / SRC          # landmark units
         bright = np.clip((mx - 0.45) / 0.3, 0, 1) * np.clip((sat - 0.35) / 0.3, 0, 1) * a
         cyan = bright * (b > r + 0.1) * (g > r)
         violet = bright * (b > g + 0.1) * (r > g)
-        self.energy = ndimage.gaussian_filter(np.clip(cyan + violet, 0, 1), 0.7)
-        self.energy_color = np.dstack([cyan, cyan, cyan]) * np.array(CYAN) + np.dstack([violet] * 3) * np.array(VIOLET_LIGHT)
-        self.energy_color = ndimage.gaussian_filter(self.energy_color, (0.7, 0.7, 0))
+        self.energy = ndimage.gaussian_filter(np.clip(cyan + violet, 0, 1), 0.9)
         ex, ey, half = spec['eyes']
         box = np.clip(1 - np.maximum(np.abs(gx - ex) / 46, np.abs(gy - ey) / half), 0, 1)
         self.eye = np.clip(box * 3, 0, 1) * a * np.clip((mx - 0.3) / 0.3, 0, 1)
         crimson = (r > 0.22) & (g < r * 0.55) & (b < r * 0.75)
         rigid = np.zeros_like(crimson)
         for x0, y0, x1, y1 in spec['rigid']:
-            rigid[y0 + PAD:y1 + PAD, x0 + PAD:x1 + PAD] = True
-        plume = ndimage.binary_dilation(crimson & ~rigid, iterations=2) & (a > 0.05)
-        self.plume = ndimage.gaussian_filter(plume.astype(np.float32), 1.5)
+            rigid[int(y0 * SRC) + PAD:int(y1 * SRC) + PAD, int(x0 * SRC) + PAD:int(x1 * SRC) + PAD] = True
+        plume = ndimage.binary_dilation(crimson & ~rigid, iterations=3) & (a > 0.05)
+        self.plume = ndimage.gaussian_filter(plume.astype(np.float32), 2)
         cx, cy = spec['chest']
         d = np.hypot(gx - cx, gy - cy)
         self.plume_u = np.clip(d / 300, 0, 1.6) * self.plume
-        self.waist = spec['waist'] + PAD
-        top = spec['anchor'][1] - spec['height'] + PAD
-        self.upper = np.clip((self.waist - self.yy) / max(1, self.waist - top), 0, 1.3)
-        self.offset = (spec['anchor'][0] + PAD, spec['anchor'][1] + PAD)
-        self.k = BODY_H / spec['height']
+        self.ux, self.uy = gx, gy
+        top = spec['anchor'][1] - spec['height']
+        self.upper = np.clip((spec['waist'] - gy) / max(1, spec['waist'] - top), 0, 1.3)
+        self.offset = (spec['anchor'][0] * SRC + PAD, spec['anchor'][1] * SRC + PAD)
+        self.k = BODY_H / (spec['height'] * SRC)
         self._sil = None
+        self._halo = None
+        self._plates = None
 
-    def pixels(self, p):
-        """Warped and relit premultiplied RGBA for this pose."""
+    def pixels(self, p, still=False):
+        """Warped and relit premultiplied RGBA for this pose (`still`: lit but not warped)."""
         pm = self.pm
         dx = np.zeros_like(self.xx)
         dy = np.zeros_like(self.yy)
-        if p.breathe:
-            dy -= p.breathe * self.upper
-        if p.lean:
-            dx += p.lean * self.upper ** 1.6
-        if p.sway:
-            phase = p.flutter * 2 * math.pi
-            dx += self.plume_u * p.sway * 14 * np.sin(phase + self.yy * 0.018 + self.xx * 0.006)
-            dy += self.plume_u * p.sway * 6 * np.cos(phase * 1.3 + self.xx * 0.015)
-        if dx.any() or dy.any():
+        if not still:
+            if p.breathe:
+                dy -= p.breathe * SRC * self.upper
+            if p.lean:
+                dx += p.lean * SRC * self.upper ** 1.6
+            if p.sway:
+                phase = p.flutter * 2 * math.pi
+                dx += self.plume_u * p.sway * 14 * SRC * np.sin(phase + self.uy * 0.018 + self.ux * 0.006)
+                dy += self.plume_u * p.sway * 6 * SRC * np.cos(phase * 1.3 + self.ux * 0.015)
+        warped = bool(dx.any() or dy.any())
+        if warped:
             coords = [self.yy - dy, self.xx - dx]
             pm = np.stack([ndimage.map_coordinates(pm[..., c], coords, order=1, mode='constant') for c in range(4)], -1)
         a = pm[..., 3]
         rgb_ = pm[..., :3] / np.maximum(a[..., None], 1e-4)
         energy, eye = self.energy, self.eye
-        if dx.any() or dy.any():
+        if warped:
             energy = ndimage.map_coordinates(energy, coords, order=1)
             eye = ndimage.map_coordinates(eye, coords, order=1)
         if p.energy < 1:
@@ -254,9 +248,9 @@ class Art:
         add = np.zeros_like(rgb_)
         if p.energy > 1 or p.heat > 0:
             color = np.array(mix(CYAN, FLAME, min(1.0, p.heat)))
-            add += ndimage.gaussian_filter(energy, 6)[..., None] * color * (max(0.0, p.energy - 1) * 2.2 + p.heat * 1.5)
+            add += ndimage.gaussian_filter(energy, 7)[..., None] * color * (max(0.0, p.energy - 1) * 2.0 + p.heat * 1.4)
         if p.eyes > 0.95:
-            add += ndimage.gaussian_filter(eye, 5)[..., None] * np.array(EYE) * (0.6 + max(0.0, p.eyes - 1) * 2.5)
+            add += ndimage.gaussian_filter(eye, 6)[..., None] * np.array(EYE) * (0.5 + max(0.0, p.eyes - 1) * 2.2)
         glow_a = np.clip(add.max(-1), 0, 1)
         out_a = a + glow_a * (1 - a)
         out_rgb = np.clip((rgb_ * a[..., None] + add) / np.maximum(out_a[..., None], 1e-4), 0, 1)
@@ -272,11 +266,38 @@ class Art:
 
     def halo(self):
         """A soft glow mask round the figure: its outline spread and blurred, the figure itself kept."""
-        if getattr(self, '_halo', None) is None:
+        if self._halo is None:
             a = self.pm[..., 3]
-            spread = np.maximum(ndimage.gaussian_filter(a, 5) * 2.0, ndimage.gaussian_filter(a, 12) * 1.2)
+            spread = np.maximum(ndimage.gaussian_filter(a, 6) * 2.0, ndimage.gaussian_filter(a, 16) * 1.2)
             self._halo = to_surface(np.ones_like(self.pm[..., :3]), np.clip(spread, 0, 1))
         return self._halo
+
+    def plates(self):
+        """The armour plates (phudo_art/make_plates.py): each one's pixels, its centre and an ordering key."""
+        if self._plates is None:
+            labels = np.asarray(Image.open(ART / 'plates' / self.spec['file']))
+            labels = np.pad(labels, PAD)
+            rgb_, a = self.pixels(replace(Pose(), eyes=1.3, energy=1.15), still=True)
+            out = []
+            chest = (self.spec['chest'][0] * SRC + PAD, self.spec['chest'][1] * SRC + PAD)
+            for i, sl in enumerate(ndimage.find_objects(labels), 1):
+                if sl is None:
+                    continue
+                y0, y1 = max(0, sl[0].start - 2), min(labels.shape[0], sl[0].stop + 2)
+                x0, x1 = max(0, sl[1].start - 2), min(labels.shape[1], sl[1].stop + 2)
+                m = labels[y0:y1, x0:x1] == i
+                # A pixel of overlap so neighbouring plates meet without a hairline.
+                m = ndimage.binary_dilation(m, iterations=1) & (a[y0:y1, x0:x1] > 0)
+                if m.sum() < 30:
+                    continue
+                pa = np.where(m, a[y0:y1, x0:x1], 0)
+                ys, xs = np.nonzero(m)
+                cx, cy = x0 + xs.mean(), y0 + ys.mean()
+                out.append(dict(surface=to_surface(rgb_[y0:y1, x0:x1], pa), origin=(x0, y0), centre=(cx, cy),
+                                body=((cx - self.offset[0]) * self.k, (cy - self.offset[1]) * self.k),
+                                out=(cx - chest[0], cy - chest[1]), area=int(m.sum())))
+            self._plates = out
+        return self._plates
 
 
 _ART = {}
@@ -312,18 +333,10 @@ def body_transform(ctx, p, dx=0.0, dlift=0.0):
     ctx.scale(p.face * p.scale / max(p.squash, 0.2) ** 0.5, p.scale * p.squash)
 
 
-def draw_art(ctx, form, surface, clip=None):
-    """Paint a drawing with its feet at the origin, scaled to the common body height; `clip` keeps only canvas
-    rows above (+1) or below (-1) a line `y` (body space, canvas pixels)."""
+def draw_art(ctx, form, surface):
+    """Paint a drawing with its feet at the origin, scaled to the common body height."""
     a = art(form)
     ctx.save()
-    if clip:
-        sign, y = clip
-        if sign > 0:
-            ctx.rectangle(-2000, -3000, 4000, 3000 + y)
-        else:
-            ctx.rectangle(-2000, y, 4000, 3000)
-        ctx.clip()
     ctx.scale(a.k, a.k)
     ctx.set_source_surface(surface, -a.offset[0], -a.offset[1])
     ctx.get_source().set_filter(cairo.FILTER_GOOD)
@@ -331,30 +344,18 @@ def draw_art(ctx, form, surface, clip=None):
     ctx.restore()
 
 
-def draw_silhouette(ctx, form, color, alpha, grow=1.0, clip=None):
+def draw_silhouette(ctx, form, color, alpha):
     a = art(form)
     ctx.save()
-    if clip:
-        sign, y = clip
-        ctx.rectangle(-2000, -3000 if sign > 0 else y, 4000, 3000 + y if sign > 0 else 3000)
-        ctx.clip()
-    top = -BODY_H * 0.5
-    ctx.translate(0, top)
-    ctx.scale(grow, grow)
-    ctx.translate(0, -top)
     ctx.scale(a.k, a.k)
     ctx.set_source_rgba(*color, alpha)
     ctx.mask_surface(a.silhouette(), -a.offset[0], -a.offset[1])
     ctx.restore()
 
 
-def draw_halo(ctx, form, color, alpha, clip=None):
+def draw_halo(ctx, form, color, alpha):
     a = art(form)
     ctx.save()
-    if clip:
-        sign, y = clip
-        ctx.rectangle(-2000, -3000 if sign > 0 else y, 4000, 3000 + y if sign > 0 else 3000)
-        ctx.clip()
     ctx.scale(a.k, a.k)
     ctx.set_source_rgba(*color, alpha)
     ctx.mask_surface(a.halo(), -a.offset[0], -a.offset[1])
@@ -369,9 +370,132 @@ def effects(ctx, p, props):
     ctx.restore()
 
 
-def wipe_line(p):
-    """The seam of a transformation scan, in body space (canvas pixels): from above the crest to the feet."""
-    return lerp(-BODY_H - 160, 30, ease(min(1.0, p.wipe)))
+# ---------------------------------------------------------------- piece-by-piece transformation
+
+def paint_plate(ctx, form, plate, pos, angle=0.0, sx=1.0, s=1.0, alpha=1.0):
+    """Draw one armour plate with its centre at `pos` (body space), turned by `angle` degrees, flipped by `sx`."""
+    a = art(form)
+    ctx.save()
+    ctx.translate(*pos)
+    if angle:
+        ctx.rotate(math.radians(angle))
+    ctx.scale(sx * s * a.k, s * a.k)
+    ctx.translate(-plate['centre'][0], -plate['centre'][1])
+    ctx.set_source_surface(plate['surface'], *plate['origin'])
+    ctx.get_source().set_filter(cairo.FILTER_GOOD)
+    ctx.paint_with_alpha(alpha)
+    ctx.restore()
+
+
+def opened(form, plate, gap, key):
+    """Where a plate sits when the armour is opened by `gap`: pushed out from the chest, turned a little."""
+    a = art(form)
+    ox, oy = plate['out']
+    d = math.hypot(ox, oy) or 1
+    push = gap * (8 + d * 0.075) * a.k
+    rnd = random.Random(f'{key[0]}:{key[1]}')
+    return ((plate['body'][0] + ox / d * push, plate['body'][1] + oy / d * push), gap * rnd.uniform(-6, 6))
+
+
+def stagger(u, delay, width):
+    return max(0.0, min(1.0, (u - delay) / width))
+
+
+_PAIRS = {}
+
+
+def pairing(a, b):
+    """Which plate of form a becomes which plate of form b: nearest by body position, solved as an assignment;
+    leftovers of a fold into the core, extras of b grow out of it."""
+    if (a, b) not in _PAIRS:
+        from scipy.optimize import linear_sum_assignment
+        pa, pb = art(a).plates(), art(b).plates()
+        cost = np.array([[math.dist(x['body'], y['body']) for y in pb] for x in pa])
+        rows, cols = linear_sum_assignment(cost)
+        src = {int(c): int(r) for r, c in zip(rows, cols)}
+        gone = sorted(set(range(len(pa))) - set(src.values()))
+        _PAIRS[(a, b)] = (src, gone)
+    return _PAIRS[(a, b)]
+
+
+def draw_morph(ctx, p):
+    """The plates of p.form fly to their places in p.morph_to: each flips over on its way (showing the old plate,
+    then the new one), spins and arcs out from the body; legs first, the head last, a spark as each one lands."""
+    a, b = p.form, p.morph_to
+    pa, pb = art(a).plates(), art(b).plates()
+    src, gone = pairing(a, b)
+    core = (0.0, -BODY_H * 0.55)
+    flights, sparks_at = [], []
+    ys = [q['body'][1] for q in pb]
+    lo, hi = min(ys), max(ys)
+    for j, plate in enumerate(pb):
+        order = (hi - plate['body'][1]) / max(1.0, hi - lo)          # 0 at the feet .. 1 at the crest
+        local = ease(stagger(p.morph, order * 0.55, 0.45))
+        end, end_rot = opened(b, plate, 1.0, (b, j))
+        if j in src:
+            i = src[j]
+            start, start_rot = opened(a, pa[i], 1.0, (a, i))
+            old = pa[i]
+        else:
+            start, start_rot, old = core, 0.0, None
+        mid = ((start[0] + end[0]) / 2, (start[1] + end[1]) / 2)
+        out = (mid[0] - core[0], mid[1] - core[1])
+        d = math.hypot(*out) or 1
+        ctrl = (mid[0] + out[0] / d * 140, mid[1] + out[1] / d * 140 - 60)
+        pos = ((1 - local) ** 2 * start[0] + 2 * (1 - local) * local * ctrl[0] + local * local * end[0],
+               (1 - local) ** 2 * start[1] + 2 * (1 - local) * local * ctrl[1] + local * local * end[1])
+        spin = (1 if j % 2 else -1) * (180 if plate['area'] > 4000 else 360)
+        angle = lerp(start_rot, end_rot, local) + spin * local * (1 - local) * 4 * 0.5
+        sx = math.cos(math.pi * local)
+        s = 1 + 0.18 * math.sin(math.pi * local)
+        if old is None:
+            s *= max(0.05, local)
+        flights.append((local, pos, angle, sx, s, old, plate))
+        if 0.82 < local < 0.999:
+            sparks_at.append((end, (local - 0.82) / 0.18))
+    for i in gone:
+        order = 1 - (pa[i]['body'][1] - min(q['body'][1] for q in pa)) / max(1.0, max(q['body'][1] for q in pa) - min(q['body'][1] for q in pa))
+        local = ease(stagger(p.morph, order * 0.4, 0.4))
+        start, rot = opened(a, pa[i], 1.0, (a, i))
+        pos = lerp_pt(start, core, local)
+        flights.append((local * 0.999, pos, rot + 300 * local, 1.0, max(0.05, 1 - local), pa[i], None))
+    # Energy core and tethers to the plates in flight.
+    glow(ctx, *core, 90 + 40 * math.sin(math.pi * p.morph), CYAN, 0.35 * math.sin(math.pi * p.morph))
+    glow(ctx, *core, 30 + 14 * math.sin(math.pi * p.morph * 3), WHITE, 0.8 * math.sin(math.pi * p.morph))
+    ctx.set_line_cap(cairo.LINE_CAP_ROUND)
+    for local, pos, *_ in flights:
+        w = math.sin(math.pi * local)
+        if w > 0.05:
+            ctx.move_to(*core)
+            ctx.line_to(*pos)
+            rgb(ctx, CYAN, 0.18 * w)
+            ctx.set_line_width(2.5)
+            ctx.stroke()
+    # Plates still waiting or landed underneath, plates in flight on top.
+    for local, pos, angle, sx, s, old, plate in sorted(flights, key=lambda f: 0 if f[0] in (0.0, 1.0) else 1):
+        if plate is None:                               # an old plate folding into the core
+            paint_plate(ctx, a, old, pos, angle, 1.0, s, alpha=max(0.0, 1 - local))
+        elif old is not None and local < 0.5:           # the old plate, turning edge-on
+            paint_plate(ctx, a, old, pos, angle, max(0.04, sx), s)
+        else:                                           # the new plate, turning face-on (or growing from the core)
+            paint_plate(ctx, b, plate, pos, angle, max(0.04, abs(sx)) if old is not None else 1.0, s)
+        if 0.02 < local < 0.98:
+            glow(ctx, *pos, 26 * s, CYAN, 0.25 * math.sin(math.pi * local))
+    for (x, y), u in sparks_at:
+        glow(ctx, x, y, 60, CYAN, 0.7 * (1 - u))
+        star(ctx, x, y, 34 * (1 - u) + 6, WHITE, outline=False, points=4, inner=0.18, rot=u)
+
+
+def draw_opened(ctx, p):
+    """The armour opened by p.gap: each plate pushed out from the chest (outer plates first), light between."""
+    form = p.form
+    plates = art(form).plates()
+    ds = [math.hypot(*q['out']) for q in plates]
+    dmax = max(ds) or 1
+    for j, plate in enumerate(plates):
+        g = max(0.0, min(1.0, p.gap * 1.5 - (1 - ds[j] / dmax) * 0.5))
+        pos, rot = opened(form, plate, g, (form, j))
+        paint_plate(ctx, form, plate, pos, rot)
 
 
 def render(p):
@@ -398,17 +522,13 @@ def render(p):
         body_transform(ctx, p)
         effects(ctx, p, p.back)
         if p.aura > 0:
-            if p.wipe_to and p.wipe > 0:
-                draw_halo(ctx, p.form, p.aura_color, 0.5 * p.aura, clip=(-1, wipe_line(p)))
-                draw_halo(ctx, p.wipe_to, p.aura_color, 0.5 * p.aura, clip=(1, wipe_line(p)))
-            else:
-                draw_halo(ctx, p.form, p.aura_color, 0.5 * p.aura)
-        if p.wipe_to and p.wipe > 0:
-            y = wipe_line(p)
-            draw_art(ctx, p.form, art(p.form).surface(p), clip=(-1, y))
-            draw_art(ctx, p.wipe_to, art(p.wipe_to).surface(replace(p, form=p.wipe_to)), clip=(1, y))
-            if p.wipe < 1:
-                seam(ctx, y)
+            draw_halo(ctx, p.form, p.aura_color, 0.5 * p.aura)
+        if p.seam > 0 and not p.morph_to:
+            draw_halo(ctx, p.form, CYAN, 0.55 * p.seam)
+        if p.morph_to:
+            draw_morph(ctx, p)
+        elif p.gap > 0:
+            draw_opened(ctx, p)
         else:
             draw_art(ctx, p.form, art(p.form).surface(p))
         effects(ctx, p, p.front)
@@ -418,40 +538,6 @@ def render(p):
     for prop in p.over:
         prop(ctx, p)
     return surface
-
-
-def seam(ctx, y):
-    """The bright seam of a transformation scan: a white core, cyan halo, sparks thrown off it; it fades out
-    towards its ends, so it reads as light on the suit rather than a bar."""
-    ctx.push_group()
-    g = cairo.LinearGradient(0, y - 60, 0, y + 60)
-    g.add_color_stop_rgba(0, *CYAN, 0)
-    g.add_color_stop_rgba(0.5, *CYAN, 0.45)
-    g.add_color_stop_rgba(1, *CYAN, 0)
-    ctx.set_source(g)
-    ctx.rectangle(-420, y - 60, 840, 120)
-    ctx.fill()
-    ctx.move_to(-420, y)
-    ctx.line_to(420, y)
-    rgb(ctx, WHITE, 0.95)
-    ctx.set_line_width(5)
-    ctx.stroke()
-    rnd = random.Random(int(y))
-    ctx.set_line_cap(cairo.LINE_CAP_ROUND)
-    for _ in range(12):
-        x = rnd.uniform(-300, 300)
-        L = rnd.uniform(12, 36)
-        ang = rnd.uniform(-math.pi, 0)
-        ctx.move_to(x, y)
-        ctx.line_to(x + math.cos(ang) * L, y + math.sin(ang) * L)
-        rgb(ctx, (0.85, 1.0, 1.0), 0.9)
-        ctx.set_line_width(3)
-        ctx.stroke()
-    ctx.pop_group_to_source()
-    fade = cairo.LinearGradient(-420, 0, 420, 0)
-    for stop, alpha in ((0, 0), (0.25, 1), (0.75, 1), (1, 0)):
-        fade.add_color_stop_rgba(stop, 0, 0, 0, alpha)
-    ctx.mask(fade)
 
 
 # ---------------------------------------------------------------- effects (props): body space unless noted
@@ -1514,7 +1600,6 @@ def loop(n, ms, make):
 
 # Transformations: the designer's four-phase pipeline --------------------------------------------------------
 
-STAGES = {('phong', 'tu'): ('p1', 'p2', 'p3'), ('tu', 'phong'): ('p3', 'p2', 'p1')}
 FORM_COLOR = {'phong': CYAN, 'hoa': CYAN, 'tu': RED_LIGHT, 'thap': VIOLET_LIGHT}
 
 
@@ -1522,11 +1607,13 @@ HOVER = 160                 # Hỏa Dực's cruising height above the ground, ca
 
 
 def transform(a, b, speed=1.0, lift0=0.0, lift1=None):
-    """From form a to form b in the designer's four phases:
-    1. Disengage and vent: the stance drops, locks clack open at the shoulders and spine, plasma and smoke vent.
-    2. Articulation: an energy outline; through the sheet's own stages where it draws them (Phong Lôi and Tứ
-       Thủ), the visor flaring and the head dipping.
-    3. Armour snap: the new form is scanned in from the crest down behind a bright seam.
+    """From form a to form b piece by piece, in the designer's four phases:
+    1. Disengage and vent: the stance drops, locks clack open, plasma vents, and every armour plate opens out from
+       the body with energy light between them (outer plates first).
+    2. Articulation: the plates fly to their places in the new form, each flipping over on the way (the old plate
+       turning edge-on, the new one turning face-on), spinning and arcing round an energy core; legs first, the
+       head last, a spark as each one lands.
+    3. Armour snap: the new form's plates close in onto the body and lock.
     4. Ignition: a lock thud and a ground shock, the visor and lights flare, flame on the plume, a screen shake.
     `speed` > 1 drops frames from every phase; the height eases from lift0 to lift1 (Hỏa Dực hovers)."""
     lift1 = lift0 if lift1 is None else lift1
@@ -1536,39 +1623,33 @@ def transform(a, b, speed=1.0, lift0=0.0, lift1=None):
     color = FORM_COLOR.get(b, CYAN)
     va = rig(P(form=a))
     joints = [va['shoulders'][0], va['shoulders'][1], va['gem']]
-    n1 = n(7)
-    for i in range(n1):
-        u = (i + 1) / n1
-        out.append((P(form=a, squash=1 - 0.045 * ease(u), breathe=-4 * u, eyes=1 + 0.8 * (i % 2), energy=1 + 0.5 * u,
-                      shake=(4 if i in (2, 4) else 0) * (-1) ** i, flutter=u * 0.6, sway=1.0,
-                      front=[plasma_vent(u * 0.95, None, color=VIOLET_LIGHT if a != 'tu' else FLAME, seed=3),
+    # Phase 1: unlock and open.
+    m = n(4)
+    for i in range(m):
+        u = (i + 1) / m
+        out.append((P(form=a, squash=1 - 0.04 * ease(u), breathe=-4 * u, eyes=1 + 0.8 * (i % 2), energy=1 + 0.5 * u,
+                      shake=(4 if i % 2 else -4), flutter=u * 0.4, sway=1.0,
+                      front=[plasma_vent(u * 0.6, None, color=VIOLET_LIGHT if a != 'tu' else FLAME, seed=3),
                              clack(u, joints, seed=4)]), 60))
-    stages = STAGES.get((a, b), ())
-    cur = a
-    if stages:
-        for k, st in enumerate(stages):
-            m = n(4)
-            for j in range(m):
-                u = (j + 1) / m
-                out.append((P(form=cur, wipe_to=st, wipe=u, squash=0.96, aura=0.8, aura_color=color, eyes=1.6 + 0.4 * u,
-                              energy=1.4, flutter=0.6 + k * 0.3 + u * 0.3, sway=1.0,
-                              front=[plasma_vent(0.5 + 0.1 * j, None, color=color, seed=5 + k, power=0.6)]), 55))
-            cur = st
-            out.append((P(form=cur, squash=0.97, aura=0.9, aura_color=color, eyes=2.0, energy=1.5, flutter=0.9 + k * 0.3,
-                          sway=1.0, front=[clack(0.3, [rig(P(form=cur))['gem']], seed=k)]), 90))
-    else:
-        m = n(8)
-        for j in range(m):
-            u = (j + 1) / m
-            out.append((P(form=a, squash=0.96 + 0.02 * u, aura=u, aura_color=color, eyes=1 + u, energy=1 + 0.6 * u,
-                          lean=3 * math.sin(math.pi * u), flutter=0.6 + u * 0.5, sway=1.0,
-                          front=[plasma_vent(0.5 + 0.06 * j, None, color=color, seed=7, power=0.5),
-                                 charge(u, 0, rig(P(form=a))['gem'][1], color=color, radius=420, seed=3)]), 55))
-    m = n(7)
-    for j in range(m):
-        u = (j + 1) / m
-        out.append((P(form=cur, wipe_to=b, wipe=u, aura=1.0, aura_color=color, eyes=2.0, energy=1.6, flutter=1.2 + u * 0.4,
-                      sway=1.0), 55))
+    m = n(6)
+    for i in range(m):
+        u = (i + 1) / m
+        out.append((P(form=a, gap=back_out(u) if u < 1 else 1.0, seam=u, aura_color=color, squash=0.96,
+                      front=[plasma_vent(0.6 + 0.35 * u, None, color=color, seed=5, power=0.7)]), (70, 60, 60, 60, 70, 90)[min(5, round(i * 5 / max(1, m - 1)))]))
+    # Phase 2: the plates fly over.
+    m = n(18)
+    for i in range(m):
+        u = (i + 1) / m
+        out.append((P(form=a, morph_to=b, morph=u, aura_color=color), 55 if 0.1 < u < 0.9 else 70))
+    # Phase 3: lock.
+    m = n(6)
+    vb_plates = rig(P(form=b))
+    locks = [vb_plates['shoulders'][0], vb_plates['shoulders'][1], vb_plates['gem'], vb_plates['head']]
+    for i in range(m):
+        u = (i + 1) / m
+        out.append((P(form=b, gap=1 - ease_in(u), seam=1 - 0.6 * u, aura_color=color, squash=1.0 - 0.03 * u,
+                      front=[clack(u, locks, seed=6)]), (60, 50, 45, 45, 60, 80)[min(5, round(i * 5 / max(1, m - 1)))]))
+    # Phase 4: ignite.
     vb = rig(P(form=b))
     m = n(9)
     for j in range(m):
@@ -1583,9 +1664,9 @@ def transform(a, b, speed=1.0, lift0=0.0, lift1=None):
         if b == 'hoa':
             props.append(jets(u, power=0.4 + 0.6 * u))
         out.append((P(form=b, squash=(0.94, 1.03, 1.0)[min(2, j)], shake=shake, shake_y=abs(shake) * 0.3,
-                      aura=1 - u, aura_color=color, eyes=2.2 - 0.9 * u, energy=2.0 - 0.8 * u,
-                      heat=0.6 * (1 - u) if b == 'tu' else 0, flutter=1.6 + u, sway=1.2 - 0.4 * u, front=props,
-                      over=[flash(0.6 * (1 - u) ** 2, mix(color, WHITE, 0.5))] if j < 3 else []),
+                      seam=0.3 * (1 - u), aura_color=color, eyes=1.8 - 0.6 * u, energy=1.5 - 0.3 * u,
+                      heat=0.3 * (1 - u) if b == 'tu' else 0, flutter=1.6 + u, sway=1.2 - 0.4 * u, front=props,
+                      over=[flash(0.3 * (1 - u) ** 2, mix(color, WHITE, 0.5))] if j < 2 else []),
                     (50, 50, 60, 60, 70, 80, 90, 100, 120)[min(8, round(j * 8 / max(1, m - 1)))]))
     total = len(out)
     return [(replace(p, lift=lerp(lift0, lift1, ease(i / max(1, total - 1)))), ms) for i, (p, ms) in enumerate(out)]
@@ -1944,7 +2025,8 @@ def tumble(phase):
     if phase == 'start':
         out = [(living('phong', k / 5, rot=ang, pivot=330, lift=lerp(60, HOVER, k / 5), eyes=2.0, shadow=False, sway=2.0,
                        ghosts=((-60, 0.3), (-120, 0.15)) if k < 4 else ()), 55) for k, ang in enumerate((60, 140, 220, 300, 360))]
-        return out + [(P(form='phong', wipe_to='hoa', wipe=u, lift=HOVER, aura=1.0, eyes=2.0, shadow=False), 45) for u in (0.35, 0.7, 1.0)]
+        snap = [(P(form='phong', morph_to='hoa', morph=u, lift=HOVER, shadow=False), 45) for u in (0.2, 0.4, 0.6, 0.8, 1.0)]
+        return out + snap
     return loop(10, 70, lambda t, i: flight(t, angle=6 * osc(t), shadow=False))
 
 def dash(phase):
@@ -2009,20 +2091,18 @@ def claw_flurry():
     return flurry('claws') + flurry('roar')
 
 def form_cycle():
-    """The arsenal at a glance: every form scanned in from the crest in turn, each with an ignition flash."""
+    """The arsenal at a glance: the plates fly from form to form, Phong Lôi to Hỏa Dực to Tứ Thủ to Hắc Tháp and
+    back, each form held for a beat with its own light."""
     out = []
     chain = ('phong', 'hoa', 'tu', 'thap', 'phong')
     for a, b in zip(chain, chain[1:]):
         la = HOVER if a == 'hoa' else 0
         lb = HOVER if b == 'hoa' else 0
-        for j, u in enumerate((0.2, 0.45, 0.7, 0.9, 1.0)):
-            out.append((P(form=a, wipe_to=b, wipe=u, lift=lerp(la, lb, u), aura=1.0, aura_color=FORM_COLOR[b], eyes=2.0,
-                          energy=1.6, flutter=u), 55))
+        out += transform(a, b, speed=2.2, lift0=la, lift1=lb)
         hold = flight if b == 'hoa' else (berserk if b == 'tu' else (fortress if b == 'thap' else (lambda t, **k: living('phong', t, **k))))
-        for j in range(5):
-            u = j / 4
-            out.append((hold(u, eyes=2.2 - 0.6 * u, over=[flash(0.5 * (1 - u) ** 2, FORM_COLOR[b])] if j < 2 else []), (60, 70, 90, 110, 160)[j]))
+        out += [(hold(j / 3, back=[]) if b == 'hoa' else hold(j / 3), (90, 110, 140)[j]) for j in range(3)]
     return out
+
 
 def victory():
     """Turn finished: Phong Lôi raises its power, lightning strikes the spear twice, a jump with fireworks, a

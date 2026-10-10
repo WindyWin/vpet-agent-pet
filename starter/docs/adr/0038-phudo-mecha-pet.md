@@ -31,30 +31,40 @@ They also gave a four-phase transformation pipeline to follow:
 - Add **Phù Đồ** (`assets/phudo/`, `scripts/draw_phudo.py`, [terms](../../licenses/PHUDO-ARTWORK-TERMS.md)). It
   downloads when chosen, and replaces the earlier Long pet entirely.
 - Animate the designer's own drawings; draw nothing of the suit by script.
-  `scripts/phudo_art/extract.py` cuts every form, the transformation stages and the greatsword off the sheet:
-  1. It inpaints the labels and dimension lines.
-  2. It upscales 4x with Real-ESRGAN's anime model (`esrgan.py`, CPU).
-  3. It mattes with rembg's `isnet-anime`, hardens the matte and removes enclosed background.
-  4. It saves at 3x the sheet's resolution. Running it again reproduces the committed cut-outs exactly.
-- Bring each drawing to life without cutting it apart:
+  - `scripts/phudo_art/extract.py` cuts every form and the greatsword off the sheet:
+    1. It inpaints the labels and dimension lines, and also the drop shadow where a label covers the drawing.
+    2. It upscales 4x with Real-ESRGAN's anime model (`esrgan.py`, CPU).
+    3. It mattes with rembg's `isnet-anime` and removes enclosed background.
+    4. It regrades the cut-outs (`grade.py`): it pulls them off the blueprint's blue haze into deep indigo steel,
+       deepens the blacks, restores the palette's saturation, adds local contrast and sharpens the ink.
+    The cut-outs are kept at the full 4x resolution.
+  - `make_plates.py` splits each form into 52–80 armour plates with a watershed walled by the drawing's ink lines.
+  - Both scripts reproduce the committed files exactly.
+- Bring each drawing to life without repainting it:
   - breathing and a lean warp the upper body;
   - the crimson plumes and tendrils sway in a travelling wave, with weapons kept rigid;
-  - the drawing's own cyan, violet and red lights are relit: dimmed, blooming, or overheated orange;
-  - the visor can flare, and a soft energy halo can surround the figure;
+  - the drawing's own cyan, violet and red lights are relit: dimmed, blooming or overheated;
+  - the visor can flare;
   - the whole figure moves with offsets, rotation, squash and stretch, screen shake and afterimages.
-  All forms are scaled to one body height, so changing form does not change the pet's size.
-- Every transformation follows the designer's pipeline:
-  1. vent plasma and clack the locks open;
-  2. pass through the sheet's own stages where it draws them (Phong Lôi to Tứ Thủ and back), or gather energy;
-  3. scan the new form in from the crest down behind a bright seam;
-  4. ignite with a shock ring, flame on the plume, a flash and a decaying screen shake.
-- Each transformation is its own sequence (`tf/<from>_<to>`, 31–38 frames). Phased states share them as their
-  start and end phases, so a form change costs no duplicate frames:
+  All forms are scaled to one body height.
+- Transform piece by piece, as in Transformers and Iron Man, following the designer's four phases:
+  1. **Unlock:** the locks clack open, plasma vents, and every plate opens out from the chest with energy light
+     in the seams.
+  2. **Articulation:** each plate of the new form flies in from the matching plate of the old one. The plates are
+     paired by position through an optimal assignment. On the way a plate arcs round a glowing core, spins, and
+     flips over: the old plate turns edge-on and the new one comes face-on. The legs go first and the head last,
+     with a spark as each lands. Plates the new form lacks fold into the core; extra ones (Tứ Thủ's sub-arms) grow
+     out of it.
+  3. **Armour snap:** the plates close onto the body and lock.
+  4. **Ignition:** a shock ring, flame on the plume, a flash and a decaying screen shake.
+  A quick version of the same morph is used for the form cycle and for snapping into Hỏa Dực when thrown.
+- Each transformation is its own sequence (`tf/<from>_<to>`, 43 frames). Phased states share them as their start
+  and end phases, so a form change costs no duplicate frames:
   - working is `tf/phong_tu` → claw combo → `tf/tu_phong`;
   - attention goes through Hắc Tháp;
   - flight moves go through Hỏa Dực;
   - the reaction states that need another form are phased with `loops: 1`.
-  Every other state starts and ends in Phong Lôi, so states chain without a jump.
+  Every other state starts and ends in Phong Lôi.
 - Cue mapping (86 sequences, 45 states):
 
 | Cue or feature | Phù Đồ |
@@ -72,13 +82,16 @@ They also gave a four-phase transformation pipeline to follow:
 
 ## Consequences
 
-- The pack is about 135 MB (1,275 files). That is the largest of the drawn pets, because the drawings are
-  detailed and the effects cover much of the canvas; it is still smaller than VPet (176 MB). It downloads on
-  demand, so only users who choose Phù Đồ pay for it.
+- The pack is about 206 MB (1,429 files), more than VPet (176 MB). The regraded, sharper drawings compress less
+  than the first soft cut, and the piece-by-piece transformations are long. It downloads on demand, so only users
+  who choose Phù Đồ pay for it.
 - The terms credit the design and artwork to WindyWin. They may be distributed with Agent Pet; other uses need
   the author's permission.
 - To change the motion, edit `draw_phudo.py` and render again. To re-cut the art (a new sheet, a new pose), add a
-  box to `extract.py` and run it; its tools (torch, rembg, opencv) are needed only for cutting.
+  box to `extract.py`, run it and `make_plates.py`. Their tools (torch, rembg, opencv, scikit-image) are needed
+  only for cutting.
+- The sheet is 1024 × 637 pixels, so each form was drawn about 240 pixels tall. Upscaling cannot recover detail
+  that is not there; a higher-resolution export of each form would make the pet sharper still.
 - The drawings are single views, so a form never turns round. Hỏa Dực is drawn facing left, so rightward flight
   mirrors it.
 
@@ -101,3 +114,14 @@ They also gave a four-phase transformation pipeline to follow:
   - throws, edge hiding and moves by hand on a desktop;
   - CI on Qt 6.5+, macOS and Windows;
   - the first download through the `pets` release.
+
+### Piece-by-piece transformations and regrade — 2026-10-10
+
+- The designer asked for crisper, more vivid art, and for transformations that assemble part by part like
+  Transformers or Iron Man.
+- The cut-outs were regraded and kept at 4x. Each form was split into armour plates, and the scan-line
+  transformations were replaced by the plate morph described above. The sheet's three stage drawings are no longer
+  used.
+- `verify_assets.py` reported `OK: ... phudo (86 sequences) ...`. In the scratch Qt 6.4.2 build, `pets` (with Phù
+  Đồ in `everyCuePlaysOnEveryPet`), `plugins` and `pet-scaffold` passed.
+- Re-rendering a transformation and re-running `make_plates.py` reproduced the committed files byte for byte.
