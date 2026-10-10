@@ -257,7 +257,9 @@ bool PetLibrary::activate(const QString &id, QString *error) {
                 folder = folders.insert(path, QSet<QString>(children.begin(), children.end()));
             }
             if (!folder->contains(frame.path.mid(slash + 1))) {
-                const auto what = "Missing frame " + frame.path.mid(root().size() + 1) + ". ";
+                auto relative = frame.path.mid(root().size());
+                if (relative.startsWith('/')) relative.remove(0, 1); // root() ends in a slash at "/" but not at other mounts.
+                const auto what = "Missing frame " + relative + ". ";
                 return stored ? damaged(what + "Download the pet again.") : rollBack(what + "Reinstall Agent Pet to restore it.");
             }
         }

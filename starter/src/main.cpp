@@ -74,7 +74,7 @@ int main(int argc, char **argv) {
     parser.setApplicationDescription("Agent Pet animation and desktop controls");
     parser.addHelpOption();
     parser.addVersionOption();
-    parser.addOption({"state", "Initial animation state (default: starting)", "state", "starting"});
+    parser.addOption({"state", "Initial animation state (default: the pet's own start animation)", "state"});
     parser.addOption({"pet", "Pet to show for this run, by id (default: the one chosen in Settings)", "id"});
     parser.addOption({"preview", "Open the developer animation preview"});
     parser.addOption({"settings", "Open desktop settings"});
@@ -118,7 +118,8 @@ int main(int argc, char **argv) {
         // Downloaded packs that no pet of this version uses any more go.
         if (persist) pet::PetLibrary::shared().prune();
         pet::PetWindow window(nullptr, {}, persist);
-        if (!window.player().select(parser.value("state"), true)) {
+        // Only an explicit --state: the window already plays the pet's own `start` cue, whose state a pet names itself.
+        if (parser.isSet("state") && !window.player().select(parser.value("state"), true)) {
             std::fprintf(stderr, "%s\n", qPrintable(window.player().error()));
             return 1;
         }
