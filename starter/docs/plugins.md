@@ -11,6 +11,10 @@ through the pet's existing cues (celebrations, snacks, reminders, fidgets and so
 or to the agent's own (a finished turn), and answer the pet's own moments, such as the danger startle or
 the hundredth turn.
 
+For a working browser integration, see the [Chrome download tracker](../../integrations/chrome-downloads/README.md).
+It includes a Chrome extension with a progress popup, a local native messaging bridge, and a VPet pack
+that reacts to download starts, completions and interruptions.
+
 ## Installing and turning on
 
 Each pack is a folder named by its id in the per-user plugins folder:
