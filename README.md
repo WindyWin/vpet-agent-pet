@@ -272,7 +272,8 @@ See the [code map](starter/docs/architecture.md#code-map) for source paths and d
 
 ### Roadmap mapped to the architecture
 
-Open work, reconciled with the merged code on 2026-10-08 (#62, #64, #67 and #43 phases 1–3 landed; issue state not re-checked on GitHub). Each issue owns its detailed
+Open work, reconciled with the merged code on 2026-10-08 (#62, #64, #67 and #43 phases 1–3 landed; issue state not re-checked on GitHub). The packs phases (#92–#100) are tracked in the epic
+[#91](https://github.com/WindyWin/vpet-agent-pet/issues/91). Each issue owns its detailed
 acceptance checklist; check a row here when that phase lands and update the chart
 when a planned layer becomes implemented.
 
@@ -299,6 +300,15 @@ flowchart LR
 | ☐ | Alerts / settings | [#34 — snooze / focus mode](https://github.com/WindyWin/vpet-agent-pet/issues/34) | Existing alert delivery |
 | ☐ | Alerts / attention | [#35 — escalating approval nudges](https://github.com/WindyWin/vpet-agent-pet/issues/35) | Existing attention tracking |
 | ☐ | Mood / interaction | [#37 — earned treats to feed the pet](https://github.com/WindyWin/vpet-agent-pet/issues/37) | Existing mood counters; coordinate reactions with #67 |
+| ☐ | Packs / ADR | [#92 Phase 0 — ADR 0041: pack format, storage, ids, trust, limits](https://github.com/WindyWin/vpet-agent-pet/issues/92) | — |
+| ☐ | PetLibrary | [#93 Phase 1 — load complete pets from a per-user folder](https://github.com/WindyWin/vpet-agent-pet/issues/93) | Phase 0 (#92) |
+| ☐ | Pack import | [#94 Phase 2 — import `.agentpet` files for pets and plugins (Settings, drag-and-drop, CLI), plus `pack.py`](https://github.com/WindyWin/vpet-agent-pet/issues/94) | Phase 1 (#93) |
+| ☐ | Pack tooling | [#95 Phase 3 — VPet workshop mod converter (Python), using VPet's catalog as the template](https://github.com/WindyWin/vpet-agent-pet/issues/95) | Phase 2 (#94) |
+| ☐ | Pet distribution | [#96 Phase 4 — move Fat Cat, Whale Girl, Kuro, Yun and Bocchi to a gallery repo; delete `PetDownloader` and the `pets` release](https://github.com/WindyWin/vpet-agent-pet/issues/96) | Phase 2 (#94) |
+| ☐ | Pack sources | [#97 Phase 5 — official and third-party sources, with Install from URL](https://github.com/WindyWin/vpet-agent-pet/issues/97) | Phase 2 (#94); Phase 4 (#96) for official content |
+| ☐ | Pack updates | [#98 Phase 6 — automatic pack updates, opt-in](https://github.com/WindyWin/vpet-agent-pet/issues/98) | Phase 5 (#97) |
+| ☐ | Pack import | [#99 Phase 7 — VPet mod import inside the app, plus detection of locally installed Steam workshop mods](https://github.com/WindyWin/vpet-agent-pet/issues/99) | Phase 3 (#95) |
+| ☐ | Releases / updates | [#100 Phase 8 — stop re-uploading identical release assets](https://github.com/WindyWin/vpet-agent-pet/issues/100) | — |
 
 ### Build and contribution guides
 
