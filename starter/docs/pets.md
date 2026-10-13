@@ -4,7 +4,7 @@ A pet is a folder under `assets/` with its own frames, catalog, preview and art 
 every folder that has a `pet.json`; no C++ or CMake changes are needed. Once two or more pets are
 known, Settings → Pet shows a **Character** row with a tile per pet, and the chosen pet appears the
 next time Agent Pet starts. VPet ships with the app; other pets, such as Fat Cat ([0036](adr/0036-fat-cat-pet.md), a worked example of a
-small pet on borrowed CC0 art), Kuro and Yun ([0037](adr/0037-drawn-pets.md), original art drawn by `scripts/draw_kuro.py` and `scripts/draw_yun.py`; Yun shows touch throws, edge hiding, flying moves and activity handovers in a pet of its own), download when chosen (see
+small pet on borrowed CC0 art), Whale Girl ([0039](adr/0039-whale-girl-pet.md), 16 detailed PNG animations on 600 × 600 canvases; its art is CC BY-NC-SA 4.0), Kuro and Yun ([0037](adr/0037-drawn-pets.md), original art drawn by `scripts/draw_kuro.py` and `scripts/draw_yun.py`; Yun shows touch throws, edge hiding, flying moves and activity handovers in a pet of its own), download when chosen (see
 [Bundled and on-demand pets](#bundled-and-on-demand-pets)). `agent-pet --pet <id>` runs another pet
 once without saving the choice. Only the running pet's artwork is loaded.
 To add animations to an existing pet without a rebuild, make a [plugin pack](plugins.md) instead.
@@ -119,7 +119,7 @@ A pet only says how each cue looks.
 | `long-turn`, `friday-evening`, `birthday` | how some finished turns are celebrated instead |
 | `may20`, `birthday`, `late-night` | special days and hours, among the idle fidgets |
 | `monday`, `lunch`, `leave-work`, `sleep` | the configured clock reminders; `lunch` falls back to `snack`, then `celebrate` when unmapped |
-| `eye-break`, `water`, `reminder-done` | wellness reminders, and answering one |
+| `eye-break`, `water`, `movement-break`, `reminder-done` | wellness reminders, and answering one |
 | `danger`, `konami` | a destructive command starts; the Konami code |
 | `plugin-event` | a plugin pack's [rule](plugins.md#eventsjson) reacted to an event. The rule names its own state, so a catalog never maps this cue |
 

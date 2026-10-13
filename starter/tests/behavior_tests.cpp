@@ -627,6 +627,19 @@ private slots:
         QCOMPARE(rig.lastCue(), QString("idle"));
     }
 
+    void withdrawnOneShotReturnsToActivity() {
+        Rig rig;
+        rig.runtime.submit(activity("working"));
+        QCOMPARE(rig.runtime.submit(oneShot("break", "exercise", Policy::Surprise)), Submission::Admitted);
+        const auto exercise = rig.lastInstance(); rig.play();
+        rig.runtime.withdraw("break", "exercise");
+        QCOMPARE(rig.history("break/exercise"), QString("admitted started interrupted"));
+        QCOMPARE(rig.lastCue(), QString("working")); QVERIFY(!rig.runtime.showing());
+        rig.runtime.report(exercise, Feedback::Completed); // Late presentation cannot revive the cancelled action.
+        QCOMPARE(rig.lastCue(), QString("working"));
+        rig.runtime.submit(quit()); rig.runtime.withdraw("lifecycle", "quit");
+        QVERIFY(rig.runtime.showing()); QCOMPARE(rig.lastCue(), QString("quit"));
+    }
     void withdrawnRestReturnsToActivity() {
         Rig rig;
         rig.runtime.submit(activity("idle"));

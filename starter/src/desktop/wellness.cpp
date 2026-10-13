@@ -9,6 +9,9 @@ bool Wellness::validEyeMinutes(int minutes) {
 bool Wellness::validWaterMinutes(int minutes) {
     return std::find(std::begin(waterChoices), std::end(waterChoices), minutes) != std::end(waterChoices);
 }
+bool Wellness::validMovementMinutes(int minutes) {
+    return std::find(std::begin(movementChoices), std::end(movementChoices), minutes) != std::end(movementChoices);
+}
 bool Wellness::quietAt(const QDateTime &local) {
     const int hour = local.time().hour();
     return hour >= quietFrom || hour < quietUntil;
@@ -17,6 +20,7 @@ QString Wellness::note(const QString &reminder) {
     //: %1 = seconds
     if (reminder == "eyes") return Pet::tr("Look at something far away for %1 seconds").arg(eyeRestSeconds);
     if (reminder == "water") return Pet::tr("Time for some water 💧");
+    if (reminder == "movement") return Pet::tr("Take a movement break with me for %1 seconds").arg(movementRestSeconds);
     return {};
 }
 void Wellness::activity(qint64 now, bool user) {
@@ -24,8 +28,8 @@ void Wellness::activity(qint64 now, bool user) {
     else if (lastUser_ < 0 || now - lastUser_ >= breakMs) return; // Nobody has been there for a while.
     if (last_ >= 0 && now < last_) return; // Out of order: already counted.
     const qint64 gap = last_ < 0 ? breakMs : now - last_;
-    if (gap >= breakMs) eyes_ = water_ = 0; // Back from a real break.
-    else { const qint64 counted = std::min(gap, graceMs); eyes_ += counted; water_ += counted; }
+    if (gap >= breakMs) eyes_ = water_ = movement_ = 0; // Back from a real break.
+    else { const qint64 counted = std::min(gap, graceMs); eyes_ += counted; water_ += counted; movement_ += counted; }
     last_ = now;
 }
 // The part of the gap since the last activity that already counts.
@@ -39,11 +43,13 @@ qint64 Wellness::counted(qint64 base, qint64 now) const {
 QString Wellness::due(qint64 now) const {
     if (eyeMinutes_ > 0 && eyesActiveMs(now) >= eyeMinutes_ * 60000LL) return "eyes";
     if (waterMinutes_ > 0 && waterActiveMs(now) >= waterMinutes_ * 60000LL) return "water";
+    if (movementMinutes_ > 0 && movementActiveMs(now) >= movementMinutes_ * 60000LL) return "movement";
     return {};
 }
 void Wellness::given(const QString &reminder, qint64 now) {
     // Starts over at `now`: the part of the current gap counted so far is taken back.
     if (reminder == "eyes") eyes_ = -pending(now);
     else if (reminder == "water") water_ = -pending(now);
+    else if (reminder == "movement") movement_ = -pending(now);
 }
 }

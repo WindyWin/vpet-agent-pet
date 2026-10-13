@@ -214,6 +214,10 @@ Submission Runtime::submit(const Intent &intent) {
 
 void Runtime::withdraw(const QString &source, const QString &key) {
     const auto matches = [&](const Intent &intent) { return intent.source == source && intent.key == key; };
+    if (showing_ && matches(showing_->intent) && showing_->intent.policy != Policy::Shutdown) {
+        end(Outcome::Interrupted);
+        return;
+    }
     if (rest_ && matches(rest_->intent)) {
         const auto old = std::move(*rest_);
         rest_.reset();

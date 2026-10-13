@@ -64,10 +64,10 @@ void SessionList::present(const QVector<SessionRow> &rows) {
     overflow_->setVisible(rows.size() > maxRows);
     adjustSize();
 }
-void SessionList::place(const QRect &pet, const QVector<QRect> &screens) {
+void SessionList::place(const QRect &pet, const QVector<QRect> &screens, const QVector<QRect> &avoid) {
     QRect screen = screens.value(0, pet);
     for (const auto &area : screens) if (area.contains(pet.center())) { screen = area; break; }
-    move(AlertBubble::placement(pet, size(), screen));
+    move(AlertBubble::placement(pet, size(), screen, avoid));
 }
 void SessionList::paintEvent(QPaintEvent *) {
     QPainter painter(this);

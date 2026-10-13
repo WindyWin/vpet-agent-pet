@@ -57,14 +57,22 @@ void AlertBubble::present(const AlertText &text, const QString &kind, int more) 
     adjustSize();
     update();
 }
-QPoint AlertBubble::placement(const QRect &pet, QSize bubble, const QRect &screen) {
+QPoint AlertBubble::placement(const QRect &pet, QSize bubble, const QRect &screen, const QVector<QRect> &avoid) {
     constexpr int gap = 8;
     const int top = pet.top() + pet.height() / 5, middle = pet.center().x() - bubble.width() / 2;
     const QPoint candidates[] = {{pet.right() + 1 + gap, top}, {pet.left() - gap - bubble.width(), top},
                                  {middle, pet.top() - gap - bubble.height()}, {middle, pet.bottom() + 1 + gap}};
+    const auto clear = [&](const QRect &area) {
+        for (const auto &other : avoid) if (area.intersects(other)) return false;
+        return true;
+    };
     QPoint position = candidates[0];
+    bool found = false;
     for (const auto &candidate : candidates)
-        if (screen.contains(QRect(candidate, bubble))) { position = candidate; break; }
+        if (screen.contains(QRect(candidate, bubble)) && clear(QRect(candidate, bubble))) { position = candidate; found = true; break; }
+    if (!found)
+        for (const auto &candidate : candidates)
+            if (screen.contains(QRect(candidate, bubble))) { position = candidate; break; }
     return {qBound(screen.left(), position.x(), qMax(screen.left(), screen.right() - bubble.width() + 1)),
             qBound(screen.top(), position.y(), qMax(screen.top(), screen.bottom() - bubble.height() + 1))};
 }
@@ -132,11 +140,12 @@ void NoteBubble::say(const QString &text, const QRect &pet, const QVector<QRect>
     setToolTip(details.isEmpty() ? QString() : tr("Click for more"));
     present(text, ms);
 }
-void NoteBubble::ask(const QString &text, const QRect &pet, const QVector<QRect> &screens, const QString &details, int ms) {
+void NoteBubble::ask(const QString &text, const QRect &pet, const QVector<QRect> &screens, const QString &details, int ms, const QString &action) {
     details_ = details; pet_ = pet; screens_ = screens;
     buttons_->show();
+    done_->setText(action.isEmpty() ? tr("Done") : action);
     setCursor(Qt::PointingHandCursor);
-    setToolTip(details.isEmpty() ? tr("Click to say it's done") : tr("Click for more"));
+    setToolTip(details.isEmpty() ? (action.isEmpty() ? tr("Click to say it's done") : tr("Click to start the break")) : tr("Click for more"));
     present(text, ms);
 }
 void NoteBubble::changeEvent(QEvent *event) {
@@ -148,13 +157,17 @@ void NoteBubble::changeEvent(QEvent *event) {
     }
     QWidget::changeEvent(event);
 }
+void NoteBubble::place(const QRect &pet, const QVector<QRect> &screens) {
+    pet_ = pet; screens_ = screens;
+    QRect screen = screens_.value(0, pet_);
+    for (const auto &area : screens_) if (area.contains(pet_.center())) { screen = area; break; }
+    move(AlertBubble::placement(pet_, size(), screen, avoid_ ? avoid_() : QVector<QRect>()));
+}
 void NoteBubble::present(const QString &text, int ms) {
     label_->setText(text);
     setAccessibleDescription(text);
     adjustSize();
-    QRect screen = screens_.value(0, pet_);
-    for (const auto &area : screens_) if (area.contains(pet_.center())) { screen = area; break; }
-    move(AlertBubble::placement(pet_, size(), screen));
+    place(pet_, screens_);
     show(); raise(); hide_.start(ms);
 }
 void NoteBubble::mouseReleaseEvent(QMouseEvent *) {

@@ -33,13 +33,18 @@ Monitor::Monitor(PetWindow &window, std::shared_ptr<hosts::FocusService> focus)
     connect(&bubble_, &AlertBubble::listRequested, this, &Monitor::toggleSessions);
     connect(&bubble_, &AlertBubble::dismissRequested, this, &Monitor::dismiss);
     connect(&list_, &SessionList::focusRequested, this, &Monitor::focusSession);
-    connect(&window_, &PetWindow::moved, this, [this] {
-        if (bubble_.isVisible()) bubble_.place(window_.figure(), window_.screenAreas());
-        if (list_.isVisible()) list_.place(window_.figure(), window_.screenAreas());
+    // A reminder keeps clear of the alert bubble and the session list, which share the pet's sides with it.
+    note_.setAvoid([this] {
+        QVector<QRect> taken;
+        for (const QWidget *widget : {static_cast<const QWidget *>(&bubble_), static_cast<const QWidget *>(&list_)})
+            if (widget->isVisible()) taken.append(widget->geometry());
+        return taken;
     });
+    connect(&window_, &PetWindow::moved, this, &Monitor::layoutBubbles);
     connect(&window_, &PetWindow::notificationsChanged, this, &Monitor::refreshAlerts);
     connect(&window_, &PetWindow::sessionsRequested, this, &Monitor::toggleSessions);
     connect(&window_, &PetWindow::recapRequested, this, &Monitor::showRecap);
+    connect(&window_, &PetWindow::movementBreakRequested, this, &Monitor::startMovementBreak);
     recapTimer_.setSingleShot(true); recapTimer_.setInterval(2000);
     connect(&recapTimer_, &QTimer::timeout, this, [this] { recapStore_.save(recap_); });
     connect(&window_, &PetWindow::quitRequested, this, &Monitor::stop);
@@ -55,11 +60,11 @@ QString Monitor::bedtimeNote() { return Pet::tr("It's getting late. Maybe finish
 static bool urgent(const QString &cue) { return cue == "attention" || cue == "exhausted" || cue == "error"; }
 // How long a due reminder may wait for calm before it is asked for again.
 static constexpr qint64 reminderWaitMs = 10 * 60 * 1000;
-static const char *const wellnessReminders[] = {"eyes", "water"};
+static const char *const wellnessReminders[] = {"eyes", "water", "movement"};
 static const char *const clockReminders[] = {"monday", "lunch", "leave-work", "sleep"};
 // These ask to be confirmed: Done, Later or Skip today, and come back when ignored. Monday blues and bedtime are only said.
 bool Monitor::confirmable(const QString &reminder) const {
-    return reminder == "eyes" || reminder == "water" || reminder == "lunch" || reminder == "leave-work";
+    return reminder == "eyes" || reminder == "water" || reminder == "movement" || reminder == "lunch" || reminder == "leave-work";
 }
 // Subagents fold into their parent, as in the running-sessions list.
 static int topLevelSessions(const Sessions &sessions) {
@@ -142,8 +147,8 @@ void Monitor::update(qint64 now) {
     sessions_.expire(now);
     // A reminder that faded, or was hidden, without an answer is asked again later; one that lost its bubble to
     // something else is only put off.
-    if ((!reminder_.isEmpty() || restLeft_ > 0) && window_.snooze().activeAt(now)) { // Snoozed meanwhile.
-        note_.hide(); rest_.stop(); restLeft_ = 0; released(false);
+    if ((!reminder_.isEmpty() || restLeft_ > 0) && quiet()) {
+        note_.hide(); stopRest(); released(false);
     }
     else if (!reminder_.isEmpty() && !note_.isVisible() && restLeft_ == 0) released(true);
     nudges_.settle(reminder_, now);
@@ -170,6 +175,9 @@ void Monitor::update(qint64 now) {
     withdrawReminders(now); // Before the context and the tick, which can start waiting work.
     syncBehavior(now);
     auto &runtime = window_.stage().runtime();
+    if (restKind_ == "movement" && (window_.player().held() || sessions_.unresolvedAttention() > 0 || urgent(sessions_.aggregate(now)))) {
+        note_.hide(); stopRest();
+    }
     runtime.tick();
     remind();
     remindWellness(now);
@@ -185,13 +193,13 @@ void Monitor::update(qint64 now) {
     if (submitted != Submission::Admitted || cue != "turn-finished") return;
     const auto celebration = window_.mood().celebrate(window_.eggs().celebration(lastTurnMs_));
     if (celebration.cue == "turn-finished") return; // No pool for any of them: the cue's own state shows.
-    // A snack already says "have a drink": once it plays, the water reminder need not repeat it.
-    const auto effects = celebration.cue == "snack" ? QStringList{"water"} : QStringList{};
+    // A productivity snack is only a reaction; it does not confirm a water reminder for the user.
     const auto celebrated = runtime.submit({"mood", "celebration", celebration.cue, Policy::Celebration, Lifetime::OneShot,
-                                            runtime.now() + EasterEggs::surpriseMs, effects, celebration.state, celebration.say});
+                                            runtime.now() + EasterEggs::surpriseMs, {}, celebration.state, celebration.say});
     if (celebrated == Submission::Rejected || celebrated == Submission::Duplicate) window_.mood().keep(celebration.cue);
 }
 void Monitor::say(const QString &text, const QString &details, int ms) {
+    stopRest();
     reminder_.clear(); // Whatever the note said before is gone.
     note_.say(text, window_.figure(), window_.screenAreas(), details, ms);
 }
@@ -213,6 +221,14 @@ void Monitor::syncBehavior(qint64 now) {
 void Monitor::outcome(const behavior::Intent &intent, behavior::Outcome outcome) {
     using behavior::Outcome;
     if (!active_) return;
+    if (intent.source == "break" && restKind_ == "movement") {
+        if (outcome == Outcome::Completed) {
+            // Presentation is finishing a state; the next exercise starts after it has returned to idle.
+            QTimer::singleShot(0, this, [this] { if (restKind_ == "movement" && restLeft_ > 0) exercise(); });
+        } else if (outcome == Outcome::Interrupted || outcome == Outcome::TimedOut) {
+            note_.hide(); stopRest();
+        }
+    }
     if (outcome == Outcome::Started && intent.effects.contains("water")) window_.wellness().given("water", now_);
     if (outcome == Outcome::Started && intent.source == "mood" && intent.cue == "birthday") window_.eggs().cheered();
     if (intent.source == "mood" && (outcome == Outcome::Dropped || outcome == Outcome::Expired)) window_.mood().keep(intent.cue);
@@ -222,7 +238,7 @@ void Monitor::outcome(const behavior::Intent &intent, behavior::Outcome outcome)
     if (intent.source == "wellness" || intent.source == "clock") {
         if (confirmable(intent.key)) { nudges_.shown(intent.key); ask(intent.key); return; }
         window_.eggs().reminded(intent.key);
-        say(EasterEggs::reminderNote(intent.key, window_.eggs().reminderSchedule()));
+        say(EasterEggs::reminderNote(intent.key, window_.eggs().now().time()));
     }
 }
 // A reminder that is no longer due (given, taken some other way, turned off, a break, quiet hours) stops waiting.
@@ -247,27 +263,28 @@ void Monitor::remindWellness(qint64 now) {
     }
     if (due.isEmpty() || (locked && locked()) || nudges_.held(due, now)) return;
     using namespace behavior;
-    runtime.submit({"wellness", due, due == "eyes" ? "eye-break" : "water", Policy::Reminder, Lifetime::OneShot,
+    runtime.submit({"wellness", due, due == "eyes" ? "eye-break" : due == "movement" ? "movement-break" : "water", Policy::Reminder, Lifetime::OneShot,
                     runtime.now() + reminderWaitMs});
 }
 // Shows a reminder as a question. The go-home reminder sums up the day, when there was agent work to sum up. The wording
 // is made here so that a language change can say it again.
 void Monitor::ask(const QString &reminder) {
-    const bool wellness = reminder == "eyes" || reminder == "water";
-    auto text = wellness ? Wellness::note(reminder) : EasterEggs::reminderNote(reminder, window_.eggs().reminderSchedule());
+    const bool wellness = reminder == "eyes" || reminder == "water" || reminder == "movement";
+    auto text = wellness ? Wellness::note(reminder) : EasterEggs::reminderNote(reminder, window_.eggs().now().time());
     QString details;
     const auto today = recap_.day(QDate::currentDate());
     if (reminder == "leave-work" && window_.recapEnabled() && today.turns) {
         text += "\n" + Recap::summary(today); details = Recap::breakdown(today);
     }
     reminder_ = reminder;
-    note_.ask(text, window_.figure(), window_.screenAreas(), details, int(Nudges::askMs));
+    note_.ask(text, window_.figure(), window_.screenAreas(), details, int(Nudges::askMs),
+              reminder == "movement" ? Pet::tr("Start break") : QString());
 }
 // A reminder is given when it was answered, skipped, or asked as often as it will be: its interval starts over, or the
 // clock reminder is done for today.
 void Monitor::give(const QString &reminder) {
     nudges_.forget(reminder);
-    if (reminder == "eyes" || reminder == "water") window_.wellness().given(reminder, now_);
+    if (reminder == "eyes" || reminder == "water" || reminder == "movement") window_.wellness().given(reminder, now_);
     else window_.eggs().reminded(reminder);
 }
 // The reminder on screen went away without an answer. Ignored ones come back, until they have been asked enough.
@@ -279,12 +296,14 @@ void Monitor::released(bool ignored) {
 // A click on the reminder, or Done, means it was done: a sip or a meal earns a happy reaction at once, an eye break
 // after its countdown.
 void Monitor::answered() {
-    if (restLeft_ > 0) { rest_.stop(); restLeft_ = 0; return; } // Clicking the countdown away ends it.
+    if (restLeft_ > 0) { note_.hide(); stopRest(); return; } // Clicking the countdown away ends it.
     const auto reminder = std::exchange(reminder_, QString());
     if (reminder.isEmpty() || !confirmable(reminder)) return;
     give(reminder);
+    if (reminder == "movement") { startMovementBreak(); return; }
     if (reminder != "eyes") window_.eggs().surprise("reminder-done", true);
     if (reminder != "eyes" || !active_) return;
+    restKind_ = "eyes";
     restLeft_ = Wellness::eyeRestSeconds + 1;
     rest();
     rest_.start();
@@ -299,20 +318,53 @@ void Monitor::skipped() {
 }
 void Monitor::dropReminder() {
     if (reminder_.isEmpty() && restLeft_ == 0) return; // The note may be saying something else.
-    note_.hide(); rest_.stop(); restLeft_ = 0;
+    note_.hide(); stopRest();
     released(false); // Not the user's doing: it is asked again later.
+}
+void Monitor::stopRest() {
+    rest_.stop(); restLeft_ = 0;
+    const auto kind = std::exchange(restKind_, QString());
+    if (kind == "movement") window_.stage().runtime().withdraw("break", "exercise");
+}
+void Monitor::startMovementBreak() {
+    using namespace behavior;
+    auto &runtime = window_.stage().runtime();
+    const Intent intent{"break", "exercise", "break-buddy", Policy::Surprise, Lifetime::OneShot};
+    if (!active_ || restLeft_ > 0 || quiet() || (locked && locked()) || !runtime.admits(intent)) return;
+    // Before any agent has connected, cancellation still needs an idle activity to return to.
+    if (runtime.activity().isEmpty()) runtime.submit({"session", "activity", "idle", Policy::Activity, Lifetime::Persistent});
+    note_.hide(); released(false);
+    give("movement");
+    restKind_ = "movement";
+    restLeft_ = Wellness::movementRestSeconds + 1;
+    rest();
+    exercise();
+    if (restLeft_ > 0) rest_.start();
+}
+void Monitor::exercise() {
+    using namespace behavior;
+    if (!active_ || restKind_ != "movement" || restLeft_ <= 0) return;
+    if (quiet() || window_.petHidden() || (locked && locked()) || window_.player().held()) {
+        note_.hide(); stopRest(); return;
+    }
+    const auto submitted = window_.stage().runtime().submit({"break", "exercise", "break-buddy", Policy::Surprise, Lifetime::OneShot});
+    if (submitted == Submission::Rejected) { note_.hide(); stopRest(); }
 }
 void Monitor::rest() {
     if (locked && locked()) { dropReminder(); return; }
-    if (!active_ || window_.petHidden() || --restLeft_ < 0) { rest_.stop(); restLeft_ = 0; return; }
+    if (!active_ || window_.petHidden() || --restLeft_ < 0) { stopRest(); return; }
     if (restLeft_ > 0) {
         //: A countdown; %1 = seconds left
-        note_.say(Pet::tr("Eyes on something far away… %1").arg(restLeft_), window_.figure(), window_.screenAreas(), {}, 1500);
+        const auto text = restKind_ == "movement" ? Pet::tr("Move or stretch with me… %1").arg(restLeft_)
+                                                   : Pet::tr("Eyes on something far away… %1").arg(restLeft_);
+        note_.say(text, window_.figure(), window_.screenAreas(), {}, 1500);
         return;
     }
-    rest_.stop();
+    const bool movement = restKind_ == "movement";
+    stopRest();
+    if (movement) window_.wellness().given("movement", now_);
     window_.eggs().surprise("reminder-done", true);
-    say(Pet::tr("Nice! Your eyes thank you."), {}, 4000);
+    say(movement ? Pet::tr("Nice! Thanks for moving with me.") : Pet::tr("Nice! Your eyes thank you."), {}, 4000);
 }
 void Monitor::showRecap() {
     if (!active_) return;
@@ -359,14 +411,24 @@ void Monitor::refreshAlerts() {
     bubble_.present(describe(*alert, visible), alert->kind, queue_.more());
     bubble_.place(window_.figure(), window_.screenAreas());
     if (!bubble_.isVisible()) bubble_.show();
+    layoutBubbles();
+}
+// Places what is showing beside the pet, most urgent first, each clear of the ones before it.
+void Monitor::layoutBubbles() {
+    const auto figure = window_.figure();
+    const auto screens = window_.screenAreas();
+    if (bubble_.isVisible()) bubble_.place(figure, screens);
+    if (list_.isVisible()) list_.place(figure, screens, bubble_.isVisible() ? QVector<QRect>{bubble_.geometry()} : QVector<QRect>());
+    if (note_.isVisible()) note_.place(figure, screens);
 }
 void Monitor::dismiss() { queue_.dismiss(sessions_); checkpointSessions(); refreshAlerts(); }
 void Monitor::toggleSessions() {
     if (!active_) return;
     if (list_.isVisible()) { list_.hide(); return; }
     list_.present(sessionRows(sessions_, QDateTime::currentMSecsSinceEpoch()));
-    list_.place(window_.figure(), window_.screenAreas());
+    list_.place(window_.figure(), window_.screenAreas(), bubble_.isVisible() ? QVector<QRect>{bubble_.geometry()} : QVector<QRect>());
     list_.show();
+    layoutBubbles();
 }
 // Tooltip shown when Open did not raise the session's window.
 static QString focusFailure(const Session &session, const hosts::FocusResult &result) {
@@ -404,7 +466,7 @@ void Monitor::focusCurrent() {
 }
 void Monitor::stop() {
     checkpointSessions();
-    active_ = false; timer_.stop(); rest_.stop(); restLeft_ = 0; receiver_.reset(); bubble_.hide(); note_.hide(); list_.hide();
+    active_ = false; timer_.stop(); stopRest(); receiver_.reset(); bubble_.hide(); note_.hide(); list_.hide();
     if (recapTimer_.isActive()) { recapTimer_.stop(); recapStore_.save(recap_); }
 }
 }

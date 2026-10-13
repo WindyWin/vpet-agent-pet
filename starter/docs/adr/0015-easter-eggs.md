@@ -65,7 +65,7 @@ on admission, once per local date per run. Clicking its note dismisses it with a
 `reminder-done` cheer. Complete Settings edits are committed on editingFinished
 or dialog close; malformed stored times preserve the original preferences file.
 Changing a time does not repeat a reminder already given that day. The go-home
-and sleep notes display their configured times. These settings do not change the
+and sleep notes (and lunch) say the current time rather than the configured one, so a reminder asked again later is still true. These settings do not change the
 late-night or Friday celebration windows or wellness quiet hours.
 
 The setting (`easter_eggs`, default on) and the birthday (`birthday`, omitted when

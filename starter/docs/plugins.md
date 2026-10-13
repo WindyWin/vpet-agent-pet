@@ -226,13 +226,15 @@ pet has no art for, and no pack answers, is skipped, as before.
 | --- | --- | --- | --- |
 | `danger` | surprise | a hook saw a destructive command start | `danger` |
 | `konami` | surprise | the Konami code, typed on the pet | `konami` |
-| `reminder-done` | surprise | the user answered a water or lunch reminder, or finished an eye break | `reminder-done` |
+| `reminder-done` | surprise | the user answered a water or lunch reminder, or finished an eye or movement break | `reminder-done` |
 | `celebrate` | celebration | a turn finished, with nothing more particular to celebrate | `celebrate` |
 | `snack`, `milestone` | celebration | a treat after a long productive stretch; every hundredth turn | `snack`, `milestone` |
 | `long-turn`, `friday-evening`, `birthday` | celebration | a turn of 15 minutes or more; from Friday 17:00; the first turn of the birthday | the cue of the same name |
 | `may20`, `birthday-greeting`, `late-night` | fidget | special days, and 01:00–05:00, among the idle fidgets | `may20`, `birthday`, `late-night` |
 | `monday`, `lunch`, `leave-work`, `sleep` | reminder | the configured clock reminders | the cue of the same name; `lunch` falls back to `snack`, then `celebrate` |
 | `eye-break`, `water` | reminder | the wellness reminders | `eye-break`, `water` |
+| `movement-break` | reminder | Break Buddy is due | `movement-break`, then `eye-break` |
+| `break-buddy` | surprise | a movement break starts, and while its countdown runs | `movement-break`, then `celebrate` |
 
 A rule for a trigger chooses only the art, and may add a remark where the class allows it. The trigger keeps
 everything else: its class decides how the runtime plays it (a surprise now or never, a celebration in a

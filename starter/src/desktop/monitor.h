@@ -40,6 +40,7 @@ public:
     Recap &recap() { return recap_; }
     // Says today's recap in the speech bubble; a click on it shows the per-project breakdown.
     void showRecap();
+    void startMovementBreak(); // Manual action or an accepted Break Buddy reminder.
     void dismiss();
     void toggleSessions();
     // Brings the session's terminal or editor forward; false when its window was not raised.
@@ -57,7 +58,7 @@ public:
     // The wellness reminder whose note is showing, until it is answered or another note replaces it.
     QString reminder() const { return reminder_; }
     Nudges &nudges() { return nudges_; } // Which reminders were asked, and when they ask again.
-    int restLeft() const { return restLeft_; } // Seconds left of an eye break the user took; 0 for none.
+    int restLeft() const { return restLeft_; } // Seconds left of an eye or movement break; 0 for none.
     void setRestTickMs(int ms) { rest_.setInterval(ms); } // One countdown second; tests shorten it.
 private:
     void refreshAlerts();
@@ -76,9 +77,12 @@ private:
     bool quiet() const { return window_.quiet(now_); }
     bool react(const QString &trigger, qint64 stamp, qint64 now);
     void rest();
+    void exercise();
+    void stopRest();
     void dropReminder(); // Hides a shown reminder or countdown without counting it as answered.
     void say(const QString &text, const QString &details = {}, int ms = NoteBubble::defaultMs);
     bool shown(const Alert &alert) const;
+    void layoutBubbles();
     PetWindow &window_;
     std::shared_ptr<hosts::FocusService> focus_;
     Sessions sessions_;
@@ -92,6 +96,7 @@ private:
     QTimer timer_, rest_, recapTimer_;
     Nudges nudges_;
     QString reminder_, sessionPath_;
+    QString restKind_; // "eyes" or "movement" while counting down.
     QPoint lastPointer_;
     int restLeft_ = 0;
     qint64 lastTurnMs_ = 0; // How long the latest finished turn ran, for a long-turn celebration.

@@ -213,6 +213,17 @@
       "IDEL/Bubbles/A",
       "IDEL/Bubbles/B",
       "IDEL/Bubbles/C"
+    ],
+    "reminder_eat": [
+      "Reminders/eat"
+    ],
+    "reminder_drink": [
+      "Reminders/drink"
+    ],
+    "break_exercise": [
+      "WORK/RopeSkipping/Nomal/A",
+      "WORK/RopeSkipping/Nomal/B/1",
+      "WORK/RopeSkipping/Nomal/C"
     ]
   },
   "sequences": [
@@ -6134,6 +6145,541 @@
       ],
       "duration_ms": 1000,
       "state": "fidget_bubbles"
+    },
+    {
+      "path": "WORK/RopeSkipping/Nomal/A",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/WORK/RopeSkipping/Nomal/A/B_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/RopeSkipping/Nomal/A/B_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/RopeSkipping/Nomal/A/B_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/RopeSkipping/Nomal/A/B_003_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/RopeSkipping/Nomal/A/B_004_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/RopeSkipping/Nomal/A/B_005_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 750,
+      "state": "break_exercise"
+    },
+    {
+      "path": "WORK/RopeSkipping/Nomal/B/1",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/WORK/RopeSkipping/Nomal/B/1/B_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/RopeSkipping/Nomal/B/1/B_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/RopeSkipping/Nomal/B/1/B_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/RopeSkipping/Nomal/B/1/B_003_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/RopeSkipping/Nomal/B/1/B_004_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/RopeSkipping/Nomal/B/1/B_005_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/RopeSkipping/Nomal/B/1/B_006_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/RopeSkipping/Nomal/B/1/B_007_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/RopeSkipping/Nomal/B/1/B_008_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/RopeSkipping/Nomal/B/1/B_009_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/RopeSkipping/Nomal/B/1/B_010_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/RopeSkipping/Nomal/B/1/B_011_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 1500,
+      "state": "break_exercise"
+    },
+    {
+      "path": "WORK/RopeSkipping/Nomal/C",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/WORK/RopeSkipping/Nomal/C/B_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/RopeSkipping/Nomal/C/B_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/RopeSkipping/Nomal/C/B_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/RopeSkipping/Nomal/C/B_003_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/RopeSkipping/Nomal/C/B_004_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/WORK/RopeSkipping/Nomal/C/B_005_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 750,
+      "state": "break_exercise"
+    },
+    {
+      "state": "reminder_eat",
+      "path": "Reminders/eat",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/Reminders/eat/_000_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/eat/_001_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/eat/_002_25.png",
+          "duration_ms": 25
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/eat/_003_25.png",
+          "duration_ms": 25
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/eat/_004_25.png",
+          "duration_ms": 25
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/eat/_005_25.png",
+          "duration_ms": 25
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/eat/_006_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/eat/_007_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/eat/_008_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/eat/_009_25.png",
+          "duration_ms": 25
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/eat/_010_25.png",
+          "duration_ms": 25
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/eat/_011_25.png",
+          "duration_ms": 25
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/eat/_012_25.png",
+          "duration_ms": 25
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/eat/_013_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/eat/_014_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/eat/_015_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/eat/_016_25.png",
+          "duration_ms": 25
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/eat/_017_25.png",
+          "duration_ms": 25
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/eat/_018_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/eat/_019_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/eat/_020_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/eat/_021_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/eat/_022_25.png",
+          "duration_ms": 25
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/eat/_023_25.png",
+          "duration_ms": 25
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/eat/_024_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/eat/_025_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/eat/_026_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/eat/_027_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/eat/_028_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/eat/_029_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/eat/_030_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/eat/_031_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/eat/_032_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/eat/_033_25.png",
+          "duration_ms": 25
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/eat/_034_25.png",
+          "duration_ms": 25
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/eat/_035_25.png",
+          "duration_ms": 25
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/eat/_036_25.png",
+          "duration_ms": 25
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/eat/_037_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/eat/_038_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/eat/_039_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/eat/_040_25.png",
+          "duration_ms": 25
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/eat/_041_25.png",
+          "duration_ms": 25
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/eat/_042_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/eat/_043_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/eat/_044_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/eat/_045_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/eat/_046_25.png",
+          "duration_ms": 25
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/eat/_047_25.png",
+          "duration_ms": 25
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/eat/_048_25.png",
+          "duration_ms": 25
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/eat/_049_75.png",
+          "duration_ms": 75
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/eat/_050_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/eat/_051_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/eat/_052_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/eat/_053_25.png",
+          "duration_ms": 25
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/eat/_054_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/eat/_055_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/eat/_056_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/eat/_057_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/eat/_058_25.png",
+          "duration_ms": 25
+        }
+      ],
+      "duration_ms": 2625
+    },
+    {
+      "state": "reminder_drink",
+      "path": "Reminders/drink",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/Reminders/drink/_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/drink/_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/drink/_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/drink/_003_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/drink/_004_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/drink/_005_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/drink/_006_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/drink/_007_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/drink/_008_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/drink/_009_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/drink/_010_25.png",
+          "duration_ms": 25
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/drink/_011_25.png",
+          "duration_ms": 25
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/drink/_012_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/drink/_013_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/drink/_014_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/drink/_015_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/drink/_016_25.png",
+          "duration_ms": 25
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/drink/_017_25.png",
+          "duration_ms": 25
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/drink/_018_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/drink/_019_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/drink/_020_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/drink/_021_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/drink/_022_25.png",
+          "duration_ms": 25
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/drink/_023_25.png",
+          "duration_ms": 25
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/drink/_024_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/drink/_025_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/drink/_026_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/drink/_027_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/drink/_028_25.png",
+          "duration_ms": 25
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/drink/_029_25.png",
+          "duration_ms": 25
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/drink/_030_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/drink/_031_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/drink/_032_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/drink/_033_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/drink/_034_25.png",
+          "duration_ms": 25
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/drink/_035_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/drink/_036_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/drink/_037_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/drink/_038_25.png",
+          "duration_ms": 25
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/drink/_039_25.png",
+          "duration_ms": 25
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/drink/_040_50.png",
+          "duration_ms": 50
+        },
+        {
+          "path": "assets/vpet/vup/Reminders/drink/_041_50.png",
+          "duration_ms": 50
+        }
+      ],
+      "duration_ms": 2500
     }
   ],
   "playback": {
@@ -6351,6 +6897,19 @@
       "mode": "phased",
       "loops": 1,
       "after": "idle"
+    },
+    "reminder_eat": {
+      "mode": "once",
+      "after": "idle"
+    },
+    "reminder_drink": {
+      "mode": "once",
+      "after": "idle"
+    },
+    "break_exercise": {
+      "mode": "phased",
+      "after": "idle",
+      "loops": 6
     }
   },
   "variants": {
@@ -6542,7 +7101,7 @@
     ],
     "lunch": [
       {
-        "state": "snack_hungry",
+        "state": "reminder_eat",
         "weight": 1
       }
     ],
@@ -6582,13 +7141,19 @@
     ],
     "water": [
       {
-        "state": "snack_thirsty",
+        "state": "reminder_drink",
         "weight": 1
       }
     ],
     "reminder-done": [
       {
         "state": "cheer_shy",
+        "weight": 1
+      }
+    ],
+    "movement-break": [
+      {
+        "state": "break_exercise",
         "weight": 1
       }
     ]

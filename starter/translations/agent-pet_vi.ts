@@ -25,7 +25,7 @@
     </message>
     <message>
         <source>Turn finished</source>
-        <translation>Đã hoàn thành lượt</translation>
+        <translation>Lượt đã hoàn thành</translation>
     </message>
     <message>
         <source>Needs approval</source>
@@ -37,7 +37,7 @@
     </message>
     <message>
         <source>Needs attention</source>
-        <translation>Cần chú ý</translation>
+        <translation>Cần bạn chú ý</translation>
     </message>
     <message>
         <source>Project path unavailable for this session</source>
@@ -88,7 +88,7 @@
     <name>Focus</name>
     <message>
         <source>Wayland focus requires KDE Plasma 6.</source>
-        <translation>Đưa cửa sổ lên trước trên Wayland cần KDE Plasma 6.</translation>
+        <translation>Cần KDE Plasma 6 để đưa cửa sổ lên trước trên Wayland.</translation>
     </message>
     <message>
         <source>Agent Pet cannot bring windows forward on macOS yet.</source>
@@ -99,7 +99,7 @@
     <name>Integrations</name>
     <message>
         <source>Expected provider claude or codex</source>
-        <translation>Nhà cung cấp phải là claude hoặc codex</translation>
+        <translation>Chỉ hỗ trợ claude hoặc codex</translation>
     </message>
     <message>
         <source>hooks must be an object; configuration unchanged</source>
@@ -147,7 +147,7 @@
     </message>
     <message>
         <source>Cannot read configuration or it exceeds 4 MiB</source>
-        <translation>Không đọc được cấu hình hoặc tệp lớn hơn 4 MiB</translation>
+        <translation>Không thể đọc tệp cấu hình hoặc tệp vượt quá 4 MiB</translation>
     </message>
     <message>
         <source>Malformed JSON configuration; unchanged</source>
@@ -175,7 +175,7 @@
     </message>
     <message>
         <source>Cannot open configuration for atomic save</source>
-        <translation>Không thể mở cấu hình để lưu an toàn</translation>
+        <translation>Không thể mở tệp cấu hình để lưu an toàn</translation>
     </message>
     <message>
         <source>Cannot save configuration</source>
@@ -191,7 +191,7 @@
     </message>
     <message>
         <source>Codex cannot run a program from this folder. Install Agent Pet in a folder without spaces or symbols.</source>
-        <translation>Codex không thể chạy chương trình từ thư mục này. Hãy cài Agent Pet vào một thư mục không có dấu cách hay ký hiệu.</translation>
+        <translation>Codex không thể chạy chương trình từ thư mục này. Hãy cài Agent Pet vào thư mục có đường dẫn không chứa dấu cách hay ký hiệu.</translation>
     </message>
 </context>
 <context>
@@ -202,28 +202,40 @@
     </message>
     <message>
         <source>It&apos;s %1. Time to step away, take a break, and enjoy some lunch! 🍱</source>
-        <translation>%1 rồi. Đến giờ rời màn hình, nghỉ ngơi và ăn trưa thôi! 🍱</translation>
+        <translation>%1 rồi bạn ơi. Mình nghỉ tay, rời màn hình và ăn trưa thôi! 🍱</translation>
     </message>
     <message>
         <source>It&apos;s %1. Time to wrap up and get ready to head home!</source>
-        <translation>Đã %1 rồi. Đến lúc thu xếp và chuẩn bị về nhà!</translation>
+        <translation>%1 rồi bạn ơi. Mình thu xếp công việc, chuẩn bị về nhà thôi!</translation>
     </message>
     <message>
         <source>It&apos;s %1. Time to put everything down and go to sleep!</source>
-        <translation>Đã %1 rồi. Đến lúc gác mọi việc lại và đi ngủ!</translation>
+        <translation>%1 rồi bạn ơi. Mình gác mọi việc lại và đi ngủ thôi!</translation>
     </message>
     <message>
         <source>It&apos;s getting late. Maybe finish up and get some sleep?</source>
-        <translation>Khuya rồi đó bạn. Làm nốt rồi đi ngủ nha?</translation>
+        <translation>Khuya rồi bạn ơi. Mình làm nốt rồi đi ngủ nha?</translation>
+    </message>
+    <message>
+        <source>Start break</source>
+        <translation>Bắt đầu nghỉ</translation>
+    </message>
+    <message>
+        <source>Move or stretch with me… %1</source>
+        <extracomment>A countdown; %1 = seconds left</extracomment>
+        <translation>Vận động hoặc giãn cơ cùng em nha… %1</translation>
     </message>
     <message>
         <source>Eyes on something far away… %1</source>
-        <extracomment>A countdown; %1 = seconds left</extracomment>
         <translation>Nhìn ra xa nào… %1</translation>
     </message>
     <message>
         <source>Nice! Your eyes thank you.</source>
-        <translation>Tốt lắm! Mắt bạn cảm ơn bạn đó.</translation>
+        <translation>Tuyệt! Mắt bạn được nghỉ ngơi rồi đó.</translation>
+    </message>
+    <message>
+        <source>Nice! Thanks for moving with me.</source>
+        <translation>Tuyệt! Cảm ơn bạn đã vận động cùng em nha.</translation>
     </message>
     <message>
         <source>Today&apos;s recap</source>
@@ -237,6 +249,10 @@
     <message>
         <source>Time for some water 💧</source>
         <translation>Uống chút nước nào bạn ơi 💧</translation>
+    </message>
+    <message>
+        <source>Take a movement break with me for %1 seconds</source>
+        <translation>Mình nghỉ tay, vận động cùng em %1 giây nha</translation>
     </message>
     <message>
         <source>1 turn</source>
@@ -337,15 +353,15 @@
     <name>Settings</name>
     <message>
         <source>Cannot read preferences; existing file preserved.</source>
-        <translation>Không đọc được tùy chọn; tệp hiện có được giữ nguyên.</translation>
+        <translation>Không thể đọc cài đặt; giữ nguyên tệp hiện có.</translation>
     </message>
     <message>
         <source>Invalid preferences; using defaults and preserving the file.</source>
-        <translation>Tùy chọn không hợp lệ; dùng giá trị mặc định và giữ nguyên tệp.</translation>
+        <translation>Cài đặt không hợp lệ; dùng giá trị mặc định và giữ nguyên tệp.</translation>
     </message>
     <message>
         <source>Cannot create preferences directory.</source>
-        <translation>Không thể tạo thư mục tùy chọn.</translation>
+        <translation>Không thể tạo thư mục lưu cài đặt.</translation>
     </message>
 </context>
 <context>
@@ -395,7 +411,7 @@
     </message>
     <message>
         <source>Cannot create package directory.</source>
-        <translation>Không thể tạo thư mục của gói.</translation>
+        <translation>Không thể tạo thư mục chứa gói.</translation>
     </message>
     <message>
         <source>Unpacked package is too large.</source>
@@ -459,19 +475,19 @@
     </message>
     <message>
         <source>Another update is already running.</source>
-        <translation>Một quá trình cập nhật khác đang chạy.</translation>
+        <translation>Một tiến trình cập nhật khác đang chạy.</translation>
     </message>
     <message>
         <source>Close the running pet before update recovery.</source>
-        <translation>Hãy đóng thú cưng đang chạy trước khi khôi phục bản cập nhật.</translation>
+        <translation>Hãy thoát Agent Pet trước khi khôi phục bản cập nhật.</translation>
     </message>
     <message>
         <source>The pet is still running. Update postponed.</source>
-        <translation>Thú cưng vẫn đang chạy. Đã hoãn cập nhật.</translation>
+        <translation>Agent Pet vẫn đang chạy. Đã hoãn cập nhật.</translation>
     </message>
     <message>
         <source>Close the running pet before installing an update.</source>
-        <translation>Hãy đóng thú cưng đang chạy trước khi cài bản cập nhật.</translation>
+        <translation>Hãy thoát Agent Pet trước khi cài bản cập nhật.</translation>
     </message>
     <message>
         <source>This is not a managed installation.</source>
@@ -479,11 +495,11 @@
     </message>
     <message>
         <source>Installation path does not match its receipt.</source>
-        <translation>Đường dẫn cài đặt không khớp với biên nhận của nó.</translation>
+        <translation>Đường dẫn cài đặt không khớp với thông tin đã ghi nhận.</translation>
     </message>
     <message>
         <source>Cannot stage the update beside the installation.</source>
-        <translation>Không thể chuẩn bị bản cập nhật bên cạnh bản cài đặt.</translation>
+        <translation>Không thể chuẩn bị bản cập nhật trong thư mục liền kề thư mục cài đặt.</translation>
     </message>
     <message>
         <source>Cannot save the download. Check free disk space.</source>
@@ -495,7 +511,7 @@
     </message>
     <message>
         <source>Windows update installation failed. Run the setup program manually; details are in %1.</source>
-        <translation>Cài đặt cập nhật Windows thất bại. Hãy chạy bộ cài thủ công; xem chi tiết tại %1.</translation>
+        <translation>Không thể cài bản cập nhật trên Windows. Hãy chạy bộ cài thủ công; xem chi tiết tại %1.</translation>
     </message>
     <message>
         <source>The downloaded app cannot run on this system.</source>
@@ -511,7 +527,7 @@
     </message>
     <message>
         <source>Update failed; recovery needs attention: %1</source>
-        <translation>Cập nhật thất bại; cần xử lý việc khôi phục: %1</translation>
+        <translation>Cập nhật thất bại; quá trình khôi phục cần được xử lý: %1</translation>
     </message>
     <message>
         <source>Update failed to start. The previous version was restored.</source>
@@ -527,7 +543,7 @@
     </message>
     <message>
         <source>No supported stable release was returned.</source>
-        <translation>Không nhận được bản phát hành ổn định nào được hỗ trợ.</translation>
+        <translation>Không tìm thấy bản phát hành ổn định nào được hỗ trợ.</translation>
     </message>
     <message>
         <source>This release has no compatible package for this system.</source>
@@ -589,15 +605,15 @@
     </message>
     <message>
         <source>This desktop session does not let Agent Pet raise windows.</source>
-        <translation>Môi trường desktop hiện tại không cho phép Agent Pet đưa cửa sổ lên trước.</translation>
+        <translation>Môi trường máy tính hiện tại không cho phép Agent Pet đưa cửa sổ lên trước.</translation>
     </message>
     <message>
         <source>Could not select this session&apos;s tab or pane. Check that its terminal is attached.</source>
-        <translation>Không chọn được tab hoặc pane của phiên này. Hãy kiểm tra terminal của phiên vẫn đang được kết nối.</translation>
+        <translation>Không thể chọn tab hoặc khung terminal của phiên này. Hãy kiểm tra xem terminal của phiên còn được kết nối hay không.</translation>
     </message>
     <message>
         <source>Could not focus this session&apos;s window. Check that its terminal is attached.</source>
-        <translation>Không đưa được cửa sổ của phiên này lên trước. Hãy kiểm tra terminal của phiên vẫn đang được kết nối.</translation>
+        <translation>Không thể đưa cửa sổ của phiên này lên trước. Hãy kiểm tra xem terminal của phiên còn được kết nối hay không.</translation>
     </message>
 </context>
 <context>
@@ -612,7 +628,7 @@
     </message>
     <message>
         <source>Later</source>
-        <translation>Lát nữa</translation>
+        <translation>Để sau</translation>
     </message>
     <message>
         <source>Skip today</source>
@@ -624,7 +640,7 @@
     </message>
     <message>
         <source>Don&apos;t remind me again until tomorrow</source>
-        <translation>Đừng nhắc lại đến ngày mai</translation>
+        <translation>Ngừng nhắc trong hôm nay</translation>
     </message>
     <message>
         <source>Click for more</source>
@@ -632,7 +648,11 @@
     </message>
     <message>
         <source>Click to say it&apos;s done</source>
-        <translation>Bấm để báo là đã xong</translation>
+        <translation>Nhấp để xác nhận đã xong</translation>
+    </message>
+    <message>
+        <source>Click to start the break</source>
+        <translation>Nhấp để bắt đầu nghỉ</translation>
     </message>
 </context>
 <context>
@@ -647,7 +667,7 @@
     </message>
     <message>
         <source>The download of %1 did not match its checksum. Try again later.</source>
-        <translation>Tệp tải về của %1 không khớp mã kiểm tra. Hãy thử lại sau.</translation>
+        <translation>Mã kiểm tra của tệp %1 đã tải về không khớp. Hãy thử lại sau.</translation>
     </message>
     <message>
         <source>Could not download %1. Check your connection and try again.</source>
@@ -658,7 +678,7 @@
     <name>pet::PetPicker</name>
     <message>
         <source>Pet character</source>
-        <translation>Nhân vật thú cưng</translation>
+        <translation>Nhân vật</translation>
     </message>
     <message>
         <source>by %1</source>
@@ -666,7 +686,7 @@
     </message>
     <message>
         <source>%1 will appear the next time Agent Pet starts.</source>
-        <translation>%1 sẽ xuất hiện vào lần khởi động Agent Pet tiếp theo.</translation>
+        <translation>%1 sẽ xuất hiện khi bạn khởi động lại Agent Pet.</translation>
     </message>
     <message>
         <source>Pet download progress</source>
@@ -701,9 +721,13 @@
         <translation>Đồng ý</translation>
     </message>
     <message>
+        <source>Take a movement break</source>
+        <translation>Nghỉ vận động</translation>
+    </message>
+    <message>
         <source>Click for running sessions · Hold still to pet · Drag to move, or throw · Push past a screen edge to hide
 Right-click for controls · Esc to quit</source>
-        <translation>Nhấp để xem các phiên đang chạy · Nhấn giữ chuột trái và giữ yên để vuốt ve · Kéo để di chuyển hoặc tung lên · Đẩy qua mép màn hình để trốn
+        <translation>Nhấp để xem các phiên đang chạy · Nhấn giữ chuột trái, giữ yên để vuốt ve · Kéo để di chuyển hoặc tung lên · Đẩy qua mép màn hình để ẩn
 Nhấp chuột phải để mở menu · Esc để thoát</translation>
     </message>
     <message>
@@ -744,7 +768,7 @@ Nhấp chuột phải để mở menu · Esc để thoát</translation>
     </message>
     <message>
         <source>Until this turn finishes</source>
-        <translation>Đến khi lượt này xong</translation>
+        <translation>Đến khi lượt này hoàn thành</translation>
     </message>
     <message>
         <source>Until tomorrow</source>
@@ -753,11 +777,11 @@ Nhấp chuột phải để mở menu · Esc để thoát</translation>
     <message>
         <source>Resume now (%1 min left)</source>
         <extracomment>%1 = minutes left of a snooze</extracomment>
-        <translation>Tiếp tục ngay (còn %1 phút)</translation>
+        <translation>Bật lại ngay (còn %1 phút)</translation>
     </message>
     <message>
         <source>Resume now</source>
-        <translation>Tiếp tục ngay</translation>
+        <translation>Bật lại ngay</translation>
     </message>
     <message>
         <source>Always on top</source>
@@ -781,11 +805,11 @@ Nhấp chuột phải để mở menu · Esc để thoát</translation>
     </message>
     <message>
         <source>Click-through for 15 seconds</source>
-        <translation>Cho nhấp xuyên qua trong 15 giây</translation>
+        <translation>Cho phép nhấp xuyên qua thú cưng trong 15 giây</translation>
     </message>
     <message>
         <source>Recover pet position and input</source>
-        <translation>Khôi phục vị trí và thao tác của thú cưng</translation>
+        <translation>Khôi phục vị trí và điều khiển thú cưng</translation>
     </message>
     <message>
         <source>Updates…</source>
@@ -793,7 +817,7 @@ Nhấp chuột phải để mở menu · Esc để thoát</translation>
     </message>
     <message>
         <source>About and artwork terms…</source>
-        <translation>Giới thiệu và điều khoản hình ảnh…</translation>
+        <translation>Giới thiệu và điều khoản sử dụng hình ảnh…</translation>
     </message>
     <message>
         <source>Quit</source>
@@ -821,11 +845,11 @@ Nhấp chuột phải để mở menu · Esc để thoát</translation>
     </message>
     <message>
         <source>1 needs attention</source>
-        <translation>1 phiên cần chú ý</translation>
+        <translation>1 phiên cần bạn chú ý</translation>
     </message>
     <message>
         <source>%1 need attention</source>
-        <translation>%1 phiên cần chú ý</translation>
+        <translation>%1 phiên cần bạn chú ý</translation>
     </message>
     <message>
         <source>1 tool error</source>
@@ -843,7 +867,7 @@ Nhấp chuột phải để mở menu · Esc để thoát</translation>
         <source>Artwork unavailable
 Right-click for controls</source>
         <translation>Không có hình ảnh
-Nhấp chuột phải để điều khiển</translation>
+Nhấp chuột phải để mở menu</translation>
     </message>
     <message>
         <source>Agent Pet settings</source>
@@ -891,15 +915,15 @@ Nhấp chuột phải để điều khiển</translation>
     </message>
     <message>
         <source>Only when a session needs me</source>
-        <translation>Chỉ khi có phiên cần bạn</translation>
+        <translation>Chỉ khi có phiên cần bạn phản hồi</translation>
     </message>
     <message>
         <source>When a session needs me or a tool fails</source>
-        <translation>Khi có phiên cần bạn hoặc công cụ gặp lỗi</translation>
+        <translation>Khi có phiên cần bạn phản hồi hoặc công cụ gặp lỗi</translation>
     </message>
     <message>
         <source>Also when a turn finishes</source>
-        <translation>Thêm cả khi một lượt hoàn thành</translation>
+        <translation>Cả khi một lượt hoàn thành</translation>
     </message>
     <message>
         <source>Show alert bubbles</source>
@@ -919,11 +943,11 @@ Nhấp chuột phải để điều khiển</translation>
     </message>
     <message>
         <source>Off (no fidgets or alternate idle loops)</source>
-        <translation>Tắt (không có động tác nhỏ hay đổi hoạt ảnh khi rảnh)</translation>
+        <translation>Tắt (không thêm động tác hay thay đổi hoạt ảnh khi rảnh)</translation>
     </message>
     <message>
         <source>Subtle (a fidget about once a minute)</source>
-        <translation>Nhẹ nhàng (khoảng mỗi phút một động tác nhỏ)</translation>
+        <translation>Nhẹ nhàng (khoảng một động tác nhỏ mỗi phút)</translation>
     </message>
     <message>
         <source>Lively (a fidget every 15–25 seconds)</source>
@@ -936,8 +960,8 @@ Nhấp chuột phải để điều khiển</translation>
     <message>
         <source>What the pet does on its own while no agent needs it: fidgets, alternate idle loops, wandering,
 and dozing off after about ten quiet minutes. Any agent activity ends it at once.</source>
-        <translation>Khi không có agent nào cần chú ý, thú cưng tự làm những động tác nhỏ, đổi hoạt ảnh khi rảnh, đi dạo
-và ngủ gật sau khoảng mười phút yên tĩnh. Các hành vi này dừng ngay khi agent có hoạt động.</translation>
+        <translation>Khi agent không cần chú ý, thú cưng thỉnh thoảng làm vài động tác nhỏ, thay đổi hoạt ảnh, đi dạo
+và ngủ gật sau khoảng mười phút yên tĩnh. Những hành vi này dừng ngay khi agent có hoạt động.</translation>
     </message>
     <message>
         <source>&amp;Idle animation</source>
@@ -945,11 +969,11 @@ và ngủ gật sau khoảng mười phút yên tĩnh. Các hành vi này dừng
     </message>
     <message>
         <source>Classic (one loop per activity, as before)</source>
-        <translation>Cổ điển (lặp một hoạt ảnh cho mỗi hoạt động, như trước)</translation>
+        <translation>Cổ điển (mỗi hoạt động lặp một hoạt ảnh, như trước)</translation>
     </message>
     <message>
         <source>Subtle (calm variations; stays at the desk for short thinking pauses)</source>
-        <translation>Nhẹ nhàng (động tác nhẹ; vẫn ngồi tại bàn khi suy nghĩ trong thời gian ngắn)</translation>
+        <translation>Nhẹ nhàng (động tác nhẹ; vẫn ngồi tại bàn khi chỉ suy nghĩ một lúc)</translation>
     </message>
     <message>
         <source>Playful (also pen spinning and small reactions)</source>
@@ -964,10 +988,10 @@ và ngủ gật sau khoảng mười phút yên tĩnh. Các hành vi này dừng
 staying at its desk through short thinking pauses, and (Playful) small reactions.
 Independent of Idle animation. Requests, errors and finished turns still show at once:
 it never delays alerts.</source>
-        <translation>Cách thú cưng suy nghĩ, đọc và làm việc khi agent đang bận: thỉnh thoảng đổi hoạt ảnh,
-vẫn ngồi tại bàn khi suy nghĩ trong thời gian ngắn, thêm phản ứng nhỏ ở chế độ Tinh nghịch.
-Thiết lập này độc lập với Hoạt ảnh khi rảnh. Yêu cầu, lỗi và lượt hoàn thành vẫn được hiển thị ngay,
-không làm chậm thông báo.</translation>
+        <translation>Cách thú cưng suy nghĩ, đọc và làm việc khi agent đang bận: thỉnh thoảng thay đổi hoạt ảnh,
+vẫn ngồi tại bàn nếu agent chỉ suy nghĩ một lúc và thêm vài phản ứng nhỏ ở chế độ Tinh nghịch.
+Thiết lập này độc lập với Hoạt ảnh khi rảnh. Yêu cầu, lỗi và lượt vừa hoàn thành vẫn hiện ngay;
+thông báo luôn được hiển thị kịp thời.</translation>
     </message>
     <message>
         <source>&amp;Active animation</source>
@@ -975,7 +999,7 @@ không làm chậm thông báo.</translation>
     </message>
     <message>
         <source>Walk, crawl and climb along the screen after a while</source>
-        <translation>Đi, bò và leo dọc màn hình sau một lúc</translation>
+        <translation>Đi bộ, bò và leo mép màn hình khi rảnh một lúc</translation>
     </message>
     <message>
         <source>Wandering</source>
@@ -1014,7 +1038,7 @@ Khi tắt Đi dạo, thú cưng ở yên nơi bạn đặt.</translation>
     <message>
         <source>Whether finished turns and tool errors change how the idle pet looks. The mood fades
 back to neutral over a few quiet minutes.</source>
-        <translation>Chọn xem lượt hoàn thành và lỗi công cụ có ảnh hưởng đến vẻ ngoài của thú cưng khi rảnh hay không.
+        <translation>Cho phép các lượt hoàn thành và lỗi công cụ thay đổi biểu cảm của thú cưng khi rảnh.
 Tâm trạng dần trở lại bình thường sau vài phút yên tĩnh.</translation>
     </message>
     <message>
@@ -1033,9 +1057,9 @@ Tâm trạng dần trở lại bình thường sau vài phút yên tĩnh.</trans
         <source>Hold the pet still on its head, cheek or body to pet it. Let go while dragging fast and it
 falls to the bottom of the screen. Push it past the left or right edge while it idles and it
 hides there until an agent needs it. Off, the pet is only dragged.</source>
-        <translation>Nhấn giữ chuột trái trên đầu, má hoặc thân thú cưng và giữ yên để vuốt ve. Thả ra khi đang kéo nhanh, thú cưng
-sẽ rơi xuống đáy màn hình. Đẩy qua mép trái hoặc phải khi đang rảnh, thú cưng sẽ
-trốn ở đó cho đến khi có agent cần chú ý. Khi tắt, bạn chỉ có thể kéo thú cưng để di chuyển.</translation>
+        <translation>Nhấn giữ chuột trái trên đầu, má hoặc thân thú cưng, giữ yên để vuốt ve. Nếu thả chuột khi đang kéo nhanh,
+thú cưng sẽ rơi xuống đáy màn hình. Khi rảnh, nếu bị đẩy qua mép trái hoặc phải, thú cưng sẽ
+trốn ở đó cho đến khi agent cần chú ý. Khi tắt, bạn chỉ có thể kéo thú cưng để di chuyển.</translation>
     </message>
     <message>
         <source>&amp;Touch</source>
@@ -1075,7 +1099,7 @@ và giật mình khi agent chạy lệnh nguy hiểm. Còn vài bất ngờ đ�
     </message>
     <message>
         <source>Monday reminder</source>
-        <translation>Nhắc nhở thứ Hai</translation>
+        <translation>Nhắc thứ Hai</translation>
     </message>
     <message>
         <source>Lunch reminder</source>
@@ -1083,11 +1107,11 @@ và giật mình khi agent chạy lệnh nguy hiểm. Còn vài bất ngờ đ�
     </message>
     <message>
         <source>Go-home reminder</source>
-        <translation>Nhắc nhở về nhà</translation>
+        <translation>Nhắc về nhà</translation>
     </message>
     <message>
         <source>Sleep reminder</source>
-        <translation>Nhắc nhở đi ngủ</translation>
+        <translation>Nhắc đi ngủ</translation>
     </message>
     <message>
         <source>Add today&apos;s recap to the &amp;go-home reminder</source>
@@ -1101,8 +1125,8 @@ và giật mình khi agent chạy lệnh nguy hiểm. Còn vài bất ngờ đ�
         <source>At the go-home reminder time on weekdays the pet sums up the day&apos;s agent work: finished turns, projects,
 errors, approvals that waited and the longest run. Needs easter eggs on. Today&apos;s recap
 in the menu shows it any time.</source>
-        <translation>Vào giờ nhắc về nhà các ngày trong tuần, thú cưng tổng kết hoạt động của agent trong ngày: lượt hoàn thành, dự án,
-lỗi, yêu cầu phê duyệt phải chờ và lượt dài nhất. Cần bật Điều bất ngờ để dùng tính năng này.
+        <translation>Vào giờ nhắc về nhà các ngày trong tuần, thú cưng tổng kết hoạt động của agent trong ngày: số lượt hoàn thành,
+dự án, lỗi, yêu cầu phê duyệt phải chờ và lượt dài nhất. Cần bật Điều bất ngờ để dùng tính năng này.
 Bạn có thể xem Tổng kết hôm nay trong menu bất cứ lúc nào.</translation>
     </message>
     <message>
@@ -1115,7 +1139,7 @@ Bạn có thể xem Tổng kết hôm nay trong menu bất cứ lúc nào.</tran
     </message>
     <message>
         <source>Preferences are saved automatically. Closing this window keeps monitoring; Quit stops it.</source>
-        <translation>Tùy chọn được lưu tự động. Đóng cửa sổ này, ứng dụng vẫn theo dõi các phiên; chọn Thoát để dừng ứng dụng.</translation>
+        <translation>Cài đặt được lưu tự động. Ứng dụng vẫn theo dõi các phiên khi bạn đóng cửa sổ này; chọn Thoát để dừng ứng dụng.</translation>
     </message>
     <message>
         <source>Close</source>
@@ -1131,15 +1155,15 @@ Bạn có thể xem Tổng kết hôm nay trong menu bất cứ lúc nào.</tran
     </message>
     <message>
         <source>While you are active (agent activity or moving the pointer), the pet now and then reminds you
-to rest your eyes and to drink some water. It waits while an alert or approval is waiting, while
-alerts are muted and from 22:00 to 06:00. Five minutes away counts as a break and starts both over.
+to rest your eyes, drink some water and take a movement break. It waits while an alert or approval is waiting, while
+alerts are muted and from 22:00 to 06:00. Five minutes away counts as a break and starts the timers over.
 A reminder has Done, Later (asks again in 10 minutes) and Skip today; one you ignore asks again after a while.
 Snooze (right-click menu) silences reminders and alerts for a while.</source>
-        <translation>Khi bạn đang hoạt động (agent hoạt động hoặc di chuyển con trỏ), thú cưng thỉnh thoảng nhắc bạn
-cho mắt nghỉ và uống nước. Nó chờ khi đang có cảnh báo hoặc phê duyệt, khi
-cảnh báo bị tắt và từ 22:00 đến 06:00. Rời đi năm phút được tính là nghỉ và bắt đầu lại cả hai.
-Lời nhắc có Xong, Lát nữa (nhắc lại sau 10 phút) và Bỏ qua hôm nay; nếu bạn bỏ mặc, nó sẽ nhắc lại sau một lúc.
-Tạm hoãn (trình đơn chuột phải) tắt lời nhắc và cảnh báo trong một lúc.</translation>
+        <translation>Khi bạn đang dùng máy tính (agent hoạt động hoặc bạn di chuyển con trỏ), thú cưng thỉnh thoảng nhắc bạn
+nghỉ mắt, uống nước và vận động. Lời nhắc được tạm dừng khi có thông báo hoặc yêu cầu phê duyệt đang chờ,
+khi bạn tắt thông báo và từ 22:00 đến 06:00. Rời máy 5 phút được tính là nghỉ; các bộ đếm sẽ bắt đầu lại từ đầu.
+Bạn có thể chọn Xong, Để sau (nhắc lại sau 10 phút) hoặc Bỏ qua hôm nay. Nếu chưa trả lời, thú cưng sẽ nhắc lại sau.
+Chọn Tạm hoãn trong menu chuột phải để tạm dừng cả lời nhắc lẫn thông báo.</translation>
     </message>
     <message>
         <source>Every %1 minutes</source>
@@ -1151,11 +1175,11 @@ Tạm hoãn (trình đơn chuột phải) tắt lời nhắc và cảnh báo tro
     </message>
     <message>
         <source>Eye break reminder</source>
-        <translation>Lời nhắc nghỉ mắt</translation>
+        <translation>Nhắc nghỉ mắt</translation>
     </message>
     <message>
         <source>The 20-20-20 rule: look at something about 20 feet (6 m) away for 20 seconds.</source>
-        <translation>Quy tắc 20-20-20: nhìn vật gì đó cách khoảng 6 m (20 feet) trong 20 giây.</translation>
+        <translation>Quy tắc 20-20-20: nhìn vào một vật cách khoảng 6 m (20 feet) trong 20 giây.</translation>
     </message>
     <message>
         <source>E&amp;ye break</source>
@@ -1163,11 +1187,25 @@ Tạm hoãn (trình đơn chuột phải) tắt lời nhắc và cảnh báo tro
     </message>
     <message>
         <source>Water reminder</source>
-        <translation>Lời nhắc uống nước</translation>
+        <translation>Nhắc uống nước</translation>
     </message>
     <message>
         <source>W&amp;ater</source>
         <translation>&amp;Uống nước</translation>
+    </message>
+    <message>
+        <source>Movement break reminder</source>
+        <translation>Nhắc nghỉ vận động</translation>
+    </message>
+    <message>
+        <source>Break Buddy: take a 60-second movement break while the pet exercises with you.
+You can also start one from the right-click menu. Click the countdown to end it early.</source>
+        <translation>Break Buddy: dành 60 giây nghỉ tay, vận động cùng thú cưng.
+Bạn cũng có thể bắt đầu từ menu chuột phải. Nhấp vào bộ đếm để kết thúc sớm.</translation>
+    </message>
+    <message>
+        <source>&amp;Movement break</source>
+        <translation>Nghỉ &amp;vận động</translation>
     </message>
     <message>
         <source>Startup</source>
@@ -1180,8 +1218,8 @@ Tạm hoãn (trình đơn chuột phải) tắt lời nhắc và cảnh báo tro
     <message>
         <source>When a connected agent starts a session and no pet is running, its hook launches the pet.
 Needs a graphical session; SSH and container sessions do not start it.</source>
-        <translation>Khi một agent đã kết nối bắt đầu phiên mà chưa có thú cưng nào chạy, hook của nó sẽ mở thú cưng.
-Cần một phiên đồ họa; phiên SSH và container không mở được.</translation>
+        <translation>Khi agent đã kết nối bắt đầu phiên mà Agent Pet chưa chạy, hook sẽ khởi động ứng dụng.
+Cần có môi trường đồ họa; các phiên SSH hoặc trong container không thể khởi động thú cưng.</translation>
     </message>
     <message>
         <source>Start Agent Pet at &amp;login</source>
@@ -1189,7 +1227,7 @@ Cần một phiên đồ họa; phiên SSH và container không mở được.</
     </message>
     <message>
         <source>Starts the pet whenever you log in to your desktop, even before an agent session.</source>
-        <translation>Mở thú cưng mỗi khi bạn đăng nhập vào desktop, kể cả trước khi có phiên agent.</translation>
+        <translation>Khởi động thú cưng mỗi khi bạn đăng nhập vào máy tính, kể cả khi chưa có phiên agent.</translation>
     </message>
     <message>
         <source>Cannot change start at login: %1</source>
@@ -1221,7 +1259,7 @@ Cần một phiên đồ họa; phiên SSH và container không mở được.</
     </message>
     <message>
         <source>Applies two minutes after the last session ends; a new session cancels it. A pet hidden this way returns with the next session.</source>
-        <translation>Áp dụng hai phút sau khi phiên cuối cùng kết thúc; nếu có phiên mới, thao tác sẽ bị hủy. Thú cưng được ẩn theo cách này sẽ hiện lại khi phiên tiếp theo bắt đầu.</translation>
+        <translation>Áp dụng sau khi phiên cuối cùng kết thúc được hai phút; nếu có phiên mới, thao tác sẽ bị hủy. Thú cưng được ẩn theo cách này sẽ hiện lại khi phiên tiếp theo bắt đầu.</translation>
     </message>
     <message>
         <source>Agent integrations</source>
@@ -1283,7 +1321,7 @@ Các cài đặt và hook khác được giữ nguyên. Hãy đăng ký từ th�
     </message>
     <message>
         <source>About Agent Pet — artwork and terms</source>
-        <translation>Giới thiệu Agent Pet — hình ảnh và điều khoản</translation>
+        <translation>Giới thiệu Agent Pet — hình ảnh và điều khoản sử dụng</translation>
     </message>
     <message>
         <source>&lt;b&gt;Agent Pet %1&lt;/b&gt; (revision %2, Qt %3)&lt;br&gt;Application code: Apache License 2.0.</source>
@@ -1291,19 +1329,19 @@ Các cài đặt và hook khác được giữ nguyên. Hãy đăng ký từ th�
     </message>
     <message>
         <source>Artwork: %1, under its own terms below.</source>
-        <translation>Hình ảnh: %1, theo điều khoản riêng bên dưới.</translation>
+        <translation>Hình ảnh: %1, tuân theo điều khoản riêng bên dưới.</translation>
     </message>
     <message>
         <source>Artwork: %1, via %2, under its own terms below.</source>
-        <translation>Hình ảnh: %1, qua %2, theo điều khoản riêng bên dưới.</translation>
+        <translation>Hình ảnh: %1, thông qua %2, tuân theo điều khoản riêng bên dưới.</translation>
     </message>
     <message>
         <source>Artwork terms and third-party notices</source>
-        <translation>Điều khoản hình ảnh và thông báo bên thứ ba</translation>
+        <translation>Điều khoản sử dụng hình ảnh và thông báo về bên thứ ba</translation>
     </message>
     <message>
         <source>Artwork terms unavailable.</source>
-        <translation>Không có điều khoản của hình ảnh.</translation>
+        <translation>Không có thông tin về điều khoản sử dụng hình ảnh.</translation>
     </message>
     <message>
         <source>Animation preview</source>
@@ -1327,11 +1365,11 @@ Các cài đặt và hook khác được giữ nguyên. Hãy đăng ký từ th�
     </message>
     <message>
         <source>Step one &amp;frame</source>
-        <translation>Tiến một &amp;khung hình</translation>
+        <translation>Chuyển sang &amp;khung hình tiếp theo</translation>
     </message>
     <message>
         <source>Transition history</source>
-        <translation>Lịch sử chuyển đổi</translation>
+        <translation>Lịch sử chuyển trạng thái</translation>
     </message>
     <message>
         <source>Plugins</source>
@@ -1349,7 +1387,7 @@ Các cài đặt và hook khác được giữ nguyên. Hãy đăng ký từ th�
     <name>pet::PluginList</name>
     <message>
         <source>Plugin packs add animations to a pet and new ways to play its reactions. Put each pack in its own folder in %1. Changes apply the next time Agent Pet starts.</source>
-        <translation>Gói plugin thêm hoạt ảnh cho thú cưng và cách mới để thể hiện phản ứng của nó. Đặt mỗi gói vào một thư mục riêng trong %1. Thay đổi có hiệu lực vào lần khởi động Agent Pet tiếp theo.</translation>
+        <translation>Gói plugin bổ sung hoạt ảnh và cách phản ứng mới cho thú cưng. Đặt mỗi gói vào một thư mục riêng trong %1. Thay đổi có hiệu lực khi bạn khởi động lại Agent Pet.</translation>
     </message>
     <message>
         <source>Plugin packs</source>
@@ -1369,7 +1407,7 @@ Các cài đặt và hook khác được giữ nguyên. Hãy đăng ký từ th�
     </message>
     <message>
         <source>Unloads the next time Agent Pet starts</source>
-        <translation>Ngừng nạp vào lần khởi động Agent Pet tiếp theo</translation>
+        <translation>Sẽ ngừng nạp khi khởi động lại Agent Pet</translation>
     </message>
     <message>
         <source>Off</source>
@@ -1385,11 +1423,11 @@ Các cài đặt và hook khác được giữ nguyên. Hãy đăng ký từ th�
     </message>
     <message>
         <source>For the pet %1: loads when it runs</source>
-        <translation>Dành cho thú cưng %1: được nạp khi dùng thú cưng này</translation>
+        <translation>Dành cho %1: được nạp khi bạn dùng thú cưng này</translation>
     </message>
     <message>
         <source>Loads the next time Agent Pet starts</source>
-        <translation>Nạp vào lần khởi động Agent Pet tiếp theo</translation>
+        <translation>Sẽ được nạp khi khởi động lại Agent Pet</translation>
     </message>
     <message>
         <source>by %1 · license: %2</source>
@@ -1408,7 +1446,7 @@ Các cài đặt và hook khác được giữ nguyên. Hãy đăng ký từ th�
     </message>
     <message>
         <source>No sessions yet. A session appears after its next hook event.</source>
-        <translation>Chưa có phiên nào. Mỗi phiên sẽ xuất hiện khi gửi sự kiện hook tiếp theo.</translation>
+        <translation>Chưa có phiên nào. Phiên sẽ xuất hiện khi nhận được sự kiện hook tiếp theo.</translation>
     </message>
     <message>
         <source>1 session</source>
@@ -1468,11 +1506,11 @@ Các cài đặt và hook khác được giữ nguyên. Hãy đăng ký từ th�
     </message>
     <message>
         <source>You’re up to date.</source>
-        <translation>Bạn đang dùng bản mới nhất.</translation>
+        <translation>Bạn đang dùng phiên bản mới nhất.</translation>
     </message>
     <message>
         <source>Version %1 is available. Use manual download; this release has no verification digest.</source>
-        <translation>Đã có phiên bản %1. Hãy tải thủ công; bản phát hành này không có mã kiểm tra.</translation>
+        <translation>Đã có phiên bản %1. Hãy tải thủ công vì bản phát hành này không có mã kiểm tra.</translation>
     </message>
     <message>
         <source>Cannot save the pending update.</source>
@@ -1519,7 +1557,7 @@ Các cài đặt và hook khác được giữ nguyên. Hãy đăng ký từ th�
     </message>
     <message>
         <source>Download stopped or failed. You can retry.</source>
-        <translation>Tải xuống bị dừng hoặc thất bại. Bạn có thể thử lại.</translation>
+        <translation>Quá trình tải đã dừng hoặc gặp lỗi. Bạn có thể thử lại.</translation>
     </message>
     <message>
         <source>Could not start the update installer.</source>
@@ -1559,7 +1597,7 @@ Các cài đặt và hook khác được giữ nguyên. Hãy đăng ký từ th�
     </message>
     <message>
         <source>This copy supports notifications and manual downloads. Install a release bundle to enable automatic updates.</source>
-        <translation>Bản này hỗ trợ thông báo và tải xuống thủ công. Hãy cài một gói phát hành để bật cập nhật tự động.</translation>
+        <translation>Phiên bản này hỗ trợ thông báo và tải thủ công. Hãy cài ứng dụng từ gói phát hành để bật cập nhật tự động.</translation>
     </message>
     <message>
         <source>Check now</source>
@@ -1587,7 +1625,7 @@ Các cài đặt và hook khác được giữ nguyên. Hãy đăng ký từ th�
     </message>
     <message>
         <source>Last checked: %1</source>
-        <translation>Kiểm tra lần cuối: %1</translation>
+        <translation>Lần kiểm tra gần nhất: %1</translation>
     </message>
     <message>
         <source>Not checked yet</source>

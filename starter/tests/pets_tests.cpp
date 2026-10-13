@@ -2,6 +2,7 @@
 #include "animation/pet_library.h"
 #include "animation/easter_eggs.h"
 #include "animation/player.h"
+#include "animation/stage.h"
 #include "desktop/pet_downloader.h"
 #include "desktop/pet_picker.h"
 #include "desktop/pet_window.h"
@@ -192,7 +193,7 @@ private slots:
     }
     void cuesComeFromTheirDataFile() {
         const auto &cues = pet::cues();
-        QCOMPARE(cues.size(), 34);
+        QCOMPARE(cues.size(), 35);
         QVERIFY(std::is_sorted(cues.begin(), cues.end(), [](const pet::Cue &a, const pet::Cue &b) { return a.name < b.name; }));
         auto shape = [](const QString &name) {
             const auto *cue = pet::findCue(name);
@@ -206,6 +207,7 @@ private slots:
         QCOMPARE(shape("drag"), QString("dragging:phased/idle"));
         QCOMPARE(shape("exhausted"), QString("out_of_quota:loop/idle"));
         QVERIFY(pet::findCue("lunch")->reaction);
+        QVERIFY(pet::findCue("movement-break")->reaction);
         QVERIFY(pet::findCue("celebrate")->reaction); QVERIFY(pet::findCue("danger")->reaction);
         QVERIFY(!pet::findCue("nobody")); QVERIFY(!pet::findCue("turn_finished")); // Cue names use hyphens.
         // Every session aggregate is a state cue of the same name.
@@ -457,6 +459,67 @@ private slots:
         QVERIFY2(player.valid(), qPrintable(player.error())); QVERIFY(!player.pixmap().isNull());
         QCOMPARE(pet::PetLibrary::shared().active(), QString("vpet"));
         QCOMPARE(pet::PetLibrary::shared().root(), QString(":/"));
+    }
+    void whaleGirlHoldsItsPoseAndPlaysErrorsOnce() {
+        QTemporaryDir store;
+        pet::PetLibrary library(PET_INDEX, "/whale-playback", store.path());
+        QString error;
+        QVERIFY2(library.activate("whale-girl", &error), qPrintable(error));
+        pet::Player player(nullptr, library.catalog());
+        player.setPaused(true);
+        qint64 now = 1000000;
+        pet::Stage stage(player, [&] { return now; });
+        auto activity = [&](const QString &cue) {
+            const auto *shape = pet::findCue(cue);
+            return stage.runtime().submit({"session", "activity", cue,
+                cue == "error" ? pet::behavior::Policy::Urgent : pet::behavior::Policy::Activity,
+                shape->mode == "once" ? pet::behavior::Lifetime::Moment : pet::behavior::Lifetime::Persistent});
+        };
+        auto finishSequence = [&] {
+            const int remaining = player.frameCount() - player.frameIndex();
+            for (int i = 0; i < remaining; ++i) {
+                now += player.frameDuration();
+                player.advance();
+            }
+        };
+        for (const auto *cue : {"thinking", "reading", "working", "attention", "nap"}) {
+            QVERIFY(player.play(cue, true));
+            finishSequence();
+            QCOMPARE(player.phase(), QString("loop"));
+            QCOMPARE(player.frameCount(), 1);
+            const auto pose = player.pixmap().cacheKey();
+            for (int pass = 0; pass < 10; ++pass) {
+                finishSequence();
+                QCOMPARE(player.phase(), QString("loop"));
+                QCOMPARE(player.pixmap().cacheKey(), pose); // No gesture restart or walking in place.
+            }
+            QVERIFY(player.play("idle"));
+            QCOMPARE(player.phase(), QString("end"));
+            finishSequence();
+            QCOMPARE(player.state(), QString("idle"));
+        }
+        activity("thinking");
+        finishSequence();
+        QSignalSpy completed(&player, &pet::Player::completed);
+        const auto started = now;
+        activity("error");
+        while (player.requested("error")) {
+            QCOMPARE(activity("error"), pet::behavior::Submission::Duplicate);
+            now += player.frameDuration();
+            player.advance();
+            stage.runtime().tick();
+        }
+        QVERIFY(now - started < 4000); // The complete crying gesture finishes before session expiry.
+        QCOMPARE(completed.size(), 1);
+        QCOMPARE(completed.first().first().toString(), player.stateFor("error"));
+        const auto state = player.state();
+        for (int i = 0; i < 5; ++i) {
+            activity("error");
+            stage.runtime().tick();
+            QCOMPARE(player.state(), state); // Repeated aggregate ticks cannot replay the error.
+        }
+        for (const auto &fidget : player.fidgets())
+            QVERIFY(fidget.state != "side" && fidget.state != "back" && fidget.state != "turn");
     }
     void packsComeFromTheInstallOrTheStore() {
         QTemporaryDir directory, store;

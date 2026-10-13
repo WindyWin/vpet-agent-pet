@@ -4,6 +4,7 @@
 #include <QPushButton>
 #include <QTimer>
 #include <QWidget>
+#include <functional>
 
 namespace pet {
 // One compact, single-line toast beside the pet: "● Needs approval  abc-web  +2  Open  ×".
@@ -15,8 +16,9 @@ public:
     explicit AlertBubble(QWidget *parent = nullptr);
     void present(const AlertText &text, const QString &kind, int more);
     void place(const QRect &pet, const QVector<QRect> &screens);
-    // Right of the pet, else left, else above; always clamped to the pet's screen.
-    static QPoint placement(const QRect &pet, QSize bubble, const QRect &screen);
+    // Right of the pet, else left, else above, else below: the first side that fits the screen and
+    // clears every `avoid` rect (other bubbles), else the first that fits; always clamped to the screen.
+    static QPoint placement(const QRect &pet, QSize bubble, const QRect &screen, const QVector<QRect> &avoid = {});
     QString title() const { return title_->text(); }
     QString label() const { return label_; }
     QString footer() const { return more_->isVisible() ? more_->text() : QString(); }
@@ -49,10 +51,13 @@ public:
     void say(const QString &text, const QRect &pet, const QVector<QRect> &screens, const QString &details = {},
              int ms = defaultMs);
     void ask(const QString &text, const QRect &pet, const QVector<QRect> &screens, const QString &details = {},
-             int ms = defaultMs);
+             int ms = defaultMs, const QString &action = {});
     QString text() const { return label_->text(); }
     bool asking() const { return !buttons_->isHidden(); }
     bool hasDetails() const { return !details_.isEmpty(); }
+    // Follows the pet: places it again where it is now, clear of what `avoid` names.
+    void place(const QRect &pet, const QVector<QRect> &screens);
+    void setAvoid(std::function<QVector<QRect>()> avoid) { avoid_ = std::move(avoid); }
 signals:
     void clicked(); // A click that hides it, before it hides; for a question, the answer "done".
     void later(); // The question was put off; it hid.
@@ -72,5 +77,6 @@ private:
     QString details_;
     QRect pet_;
     QVector<QRect> screens_;
+    std::function<QVector<QRect>()> avoid_;
 };
 }

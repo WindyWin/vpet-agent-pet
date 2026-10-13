@@ -248,7 +248,7 @@ private slots:
         for (const auto &region : touch.regions) touches.insert(region.state);
         QCOMPARE(touches.size(), 7);
         for (const auto &state : touches) QVERIFY2(player.isTouch(state), qPrintable(state));
-        QCOMPARE(player.states().size(), 15 + reactions.size() - 1 + player.fidgets().size() + touches.size());
+        QCOMPARE(player.states().size(), 18 + reactions.size() - 1 + player.fidgets().size() + touches.size());
         QVERIFY(!player.fidgets().isEmpty());
         // Walks in each mood, crawls and climbs up and down both edges: all fidgets that move the window.
         int moves = 0;
@@ -1739,7 +1739,7 @@ private slots:
         local = QDateTime(QDate(2026, 10, 5), QTime(16, 50)); QCOMPARE(eggs.reminder(), QString("leave-work"));
         local = QDateTime(QDate(2026, 10, 5), QTime(22, 0)); QCOMPARE(eggs.reminder(), QString("sleep")); QCOMPARE(eggs.reminder(), QString());
         local = local.addDays(1); QCOMPARE(eggs.reminder(), QString("sleep"));
-        for (const auto *name : {"monday", "leave-work", "sleep"}) QVERIFY(!pet::EasterEggs::reminderNote(name).isEmpty());
+        for (const auto *name : {"monday", "leave-work", "sleep"}) QVERIFY(!pet::EasterEggs::reminderNote(name, QTime(9, 0)).isEmpty());
         // The Konami code completes on its last key, also after a false start.
         const QList<int> code{Qt::Key_Up, Qt::Key_Up, Qt::Key_Down, Qt::Key_Down, Qt::Key_Left, Qt::Key_Right,
                               Qt::Key_Left, Qt::Key_Right, Qt::Key_B};
@@ -1967,13 +1967,13 @@ private slots:
             QTest::mouseClick(&monitor.note(), Qt::LeftButton); QVERIFY(!monitor.note().isVisible());
             // The go-home reminder sums up the day, unless that is turned off.
             local = QDateTime(QDate(2026, 10, 7), QTime(16, 50)); monitor.update(now + 1);
-            QCOMPARE(monitor.note().text(), pet::EasterEggs::reminderNote("leave-work") + "\n" + summary);
+            QCOMPARE(monitor.note().text(), pet::EasterEggs::reminderNote("leave-work", local.time()) + "\n" + summary);
             QVERIFY(monitor.note().hasDetails());
             window.setRecapEnabled(false); QVERIFY(window.savePreferences());
             emit monitor.note().clicked(); monitor.note().hide(); // Done; the next day's reminder is a new one.
             playOut(window.player()); playOut(window.player());
             local = QDateTime(QDate(2026, 10, 8), QTime(16, 50)); monitor.update(now + 2);
-            QCOMPARE(monitor.note().text(), pet::EasterEggs::reminderNote("leave-work")); QVERIFY(!monitor.note().hasDetails());
+            QCOMPARE(monitor.note().text(), pet::EasterEggs::reminderNote("leave-work", local.time())); QVERIFY(!monitor.note().hasDetails());
             monitor.stop(); // Writes the counters now rather than after the short delay.
         }
         QVERIFY(!pet::PreferencesStore(path).load().recap);
@@ -2018,10 +2018,10 @@ private slots:
         local.setTime(QTime(19, 29)); QVERIFY(restored.eggs().reminder().isEmpty());
         local = local.addSecs(60); QCOMPARE(restored.eggs().reminder(), QString("leave-work"));
         QVERIFY(restored.eggs().reminder().isEmpty());
-        QVERIFY(pet::EasterEggs::reminderNote("leave-work", schedule).contains("19:30"));
+        QVERIFY(pet::EasterEggs::reminderNote("leave-work", local.time()).contains("19:30"));
         local.setTime(QTime(23, 14)); QVERIFY(restored.eggs().reminder().isEmpty());
         local = local.addSecs(60); QCOMPARE(restored.eggs().reminder(), QString("sleep"));
-        QVERIFY(pet::EasterEggs::reminderNote("sleep", schedule).contains("23:15"));
+        QVERIFY(pet::EasterEggs::reminderNote("sleep", local.time()).contains("23:15"));
         local = QDateTime(QDate(2026, 10, 10), QTime(19, 30)); QVERIFY(restored.eggs().reminder().isEmpty());
         // Earlier preferences keep the established schedule; malformed clock values preserve the file.
         QFile file(path); QVERIFY(file.open(QIODevice::WriteOnly));
@@ -2074,7 +2074,10 @@ private slots:
         auto schedule = eggs.reminderSchedule(); schedule.lunch = QTime(12, 30); eggs.setReminderSchedule(schedule);
         local.setTime(QTime(12, 30)); QVERIFY(eggs.reminder().isEmpty()); // Editing never repeats today.
         local = local.addDays(1); QCOMPARE(eggs.reminder(), QString("lunch"));
-        QVERIFY(pet::EasterEggs::reminderNote("lunch", schedule).contains("12:30"));
+        // The note says the time it is, not the configured one: a reminder that comes back later is still true.
+        QVERIFY(pet::EasterEggs::reminderNote("lunch", local.time()).contains("12:30"));
+        QVERIFY(pet::EasterEggs::reminderNote("lunch", QTime(12, 47)).contains("12:47"));
+        QVERIFY(!pet::EasterEggs::reminderNote("lunch", QTime(12, 47)).contains("12:30"));
         schedule.lunch = QTime(23, 30);
         QVERIFY(pet::EasterEggs::remindersAt(QDateTime(local.date(), QTime(23, 59)), schedule).contains("lunch"));
         QVERIFY(!pet::EasterEggs::remindersAt(QDateTime(local.date().addDays(1), QTime(0, 0)), schedule).contains("lunch"));
@@ -2122,8 +2125,8 @@ private slots:
         emit monitor.bubble().dismissRequested(); tick(); QVERIFY(!monitor.note().isVisible());
         QCOMPARE(window.eggs().dueReminder(), QString("lunch"));
         QVERIFY(monitor.apply(event("session_end"), t)); tick();
-        QVERIFY(monitor.note().isVisible()); QCOMPARE(monitor.note().text(), pet::EasterEggs::reminderNote("lunch"));
-        QCOMPARE(player.requestedState(), QString("snack_hungry"));
+        QVERIFY(monitor.note().isVisible()); QCOMPARE(monitor.note().text(), pet::EasterEggs::reminderNote("lunch", local.time()));
+        QCOMPARE(player.requestedState(), QString("reminder_eat"));
         // It asks to be confirmed, and is only given once answered.
         QVERIFY(monitor.note().asking()); QCOMPARE(window.eggs().dueReminder(), QString("lunch"));
         QTest::mouseClick(&monitor.note(), Qt::LeftButton); QVERIFY(!monitor.note().isVisible());
@@ -2193,7 +2196,8 @@ private slots:
     }
     void wellnessTimers() {
         pet::Wellness wellness; const qint64 t0 = 1000000; const qint64 minute = 60000;
-        QCOMPARE(wellness.eyeMinutes(), 20); QCOMPARE(wellness.waterMinutes(), 60); // On by default.
+        QCOMPARE(wellness.eyeMinutes(), 20); QCOMPARE(wellness.waterMinutes(), 60); QCOMPARE(wellness.movementMinutes(), 60);
+        wellness.setMovementMinutes(0); // This test exercises the independent eyes and water timers.
         QCOMPARE(wellness.due(t0), QString()); // Nothing seen yet.
         // Activity every half minute counts in full; the first one only starts the stretch.
         qint64 t = t0;
@@ -2266,7 +2270,7 @@ private slots:
     void remindersAreConfirmedAndAskedAgain() {
         pet::PetWindow window(nullptr, {}, false); window.show();
         pet::Monitor monitor(window); auto &player = window.player(); player.setPaused(true);
-        window.ambient().setLevel(pet::AmbientLevel::Off);
+        window.ambient().setLevel(pet::AmbientLevel::Off); window.setMovementMinutes(0);
         QDateTime local(QDate(2026, 10, 7), QTime(14, 0)); window.eggs().setClock([&] { return local; });
         QPoint pointer; monitor.pointer = [&] { return pointer; };
         window.setEyeMinutes(0); window.setWaterMinutes(45);
@@ -2308,7 +2312,7 @@ private slots:
     void snoozeStopsTheEyeBreakCountdown() {
         pet::PetWindow window(nullptr, {}, false); window.show();
         pet::Monitor monitor(window); auto &player = window.player(); player.setPaused(true);
-        window.ambient().setLevel(pet::AmbientLevel::Off);
+        window.ambient().setLevel(pet::AmbientLevel::Off); window.setMovementMinutes(0);
         QDateTime local(QDate(2026, 10, 7), QTime(14, 0)); window.eggs().setClock([&] { return local; });
         QPoint pointer; monitor.pointer = [&] { return pointer; };
         window.setEyeMinutes(20); window.setWaterMinutes(0);
@@ -2324,7 +2328,7 @@ private slots:
     void snoozeSilencesEverythingButTheBadge() {
         pet::PetWindow window(nullptr, {}, false); window.show();
         pet::Monitor monitor(window); auto &player = window.player(); player.setPaused(true);
-        window.ambient().setLevel(pet::AmbientLevel::Off);
+        window.ambient().setLevel(pet::AmbientLevel::Off); window.setMovementMinutes(0);
         QDateTime local(QDate(2026, 10, 7), QTime(14, 0)); window.eggs().setClock([&] { return local; });
         QPoint pointer; monitor.pointer = [&] { return pointer; };
         window.setEyeMinutes(0); window.setWaterMinutes(45);
@@ -2376,7 +2380,7 @@ private slots:
         pet::PetWindow window(nullptr, directory.path() + "/preferences.json"); window.show();
         pet::Monitor monitor(window); auto &player = window.player(); player.setPaused(true);
         player.setRandom([](int) { return 0; }); window.ambient().setRandom([](int) { return 0; });
-        window.ambient().setLevel(pet::AmbientLevel::Off);
+        window.ambient().setLevel(pet::AmbientLevel::Off); window.setMovementMinutes(0);
         QDateTime local(QDate(2026, 10, 7), QTime(14, 0)); window.eggs().setClock([&] { return local; });
         QPoint pointer; monitor.pointer = [&] { return pointer; };
         monitor.setRestTickMs(10); // The twenty-second eye break, in a fifth of a second.
@@ -2416,7 +2420,7 @@ private slots:
         QVERIFY(monitor.apply(event("prompt"), t)); QVERIFY(monitor.apply(event("session_end"), t));
         monitor.update(t);
         QVERIFY(monitor.note().isVisible()); QCOMPARE(monitor.note().text(), pet::Wellness::note("water"));
-        QCOMPARE(player.requestedState(), QString("snack_thirsty"));
+        QCOMPARE(player.requestedState(), QString("reminder_drink"));
         emit monitor.note().clicked(); QCOMPARE(player.requestedState(), QString("cheer_shy")); QCOMPARE(monitor.restLeft(), 0);
         QCOMPARE(window.wellness().due(t), QString());
         // Ignored, it fades; nothing more until the next interval. Muted alerts hold it.
@@ -2464,18 +2468,116 @@ private slots:
         t += 30000; monitor.update(t); QVERIFY(!window.wellness().present(t));
         pointer += QPoint(1, 0); t += 30000; monitor.update(t); QVERIFY(window.wellness().present(t));
     }
+    void movementTimerIsIndependent() {
+        pet::Wellness wellness;
+        QCOMPARE(wellness.movementMinutes(), 60);
+        wellness.setEyeMinutes(0); wellness.setWaterMinutes(0); wellness.setMovementMinutes(30);
+        const qint64 start = 1000000, minute = 60000;
+        for (qint64 at = start; at <= start + 30 * minute; at += 30000) wellness.activity(at);
+        QCOMPARE(wellness.due(start + 30 * minute), QString("movement"));
+        wellness.given("water", start + 30 * minute);
+        QCOMPARE(wellness.due(start + 30 * minute), QString("movement"));
+        wellness.given("movement", start + 30 * minute);
+        QCOMPARE(wellness.movementActiveMs(start + 30 * minute), qint64(0));
+        wellness.setMovementMinutes(25); QCOMPARE(wellness.movementMinutes(), 30);
+        wellness.reset(); QVERIFY(wellness.due(start + 31 * minute).isEmpty());
+        QCOMPARE(pet::Wellness::note("movement"), QString("Take a movement break with me for 60 seconds"));
+    }
+    void breakBuddyReminderCanBeDelayedStartedAndSkipped() {
+        pet::PetWindow window(nullptr, {}, false); window.show();
+        pet::Monitor monitor(window); auto &player = window.player(); player.setPaused(true);
+        window.ambient().setLevel(pet::AmbientLevel::Off);
+        window.setEyeMinutes(0); window.setWaterMinutes(0); window.setMovementMinutes(30);
+        QDateTime local(QDate(2026, 10, 7), QTime(14, 0)); window.eggs().setClock([&] { return local; });
+        QPoint pointer; monitor.pointer = [&] { return pointer; };
+        qint64 t = QDateTime::currentMSecsSinceEpoch(); pointer = QPoint(1, 1); monitor.update(t);
+        auto work = [&](int minutes) {
+            const auto end = t + minutes * 60000LL;
+            while (t < end) { t += 30000; pointer += QPoint(1, 0); monitor.update(t); }
+        };
+        auto press = [&](const QString &label) {
+            for (auto *button : monitor.note().findChildren<QPushButton*>())
+                if (button->text() == label) { button->click(); return; }
+            QFAIL(qPrintable("No reminder action: " + label));
+        };
+        work(30); QCOMPARE(monitor.reminder(), QString("movement"));
+        QVERIFY(monitor.note().asking()); QCOMPARE(player.requestedState(), QString("break_exercise"));
+        press("Later"); playOut(player); monitor.update(t);
+        work(9); QVERIFY(!monitor.note().isVisible());
+        work(1); QCOMPARE(monitor.reminder(), QString("movement"));
+        monitor.setRestTickMs(100000);
+        press("Start break"); QCOMPARE(monitor.restLeft(), 60);
+        QCOMPARE(player.requestedState(), QString("break_exercise"));
+        QCOMPARE(window.wellness().movementActiveMs(t), qint64(0));
+        // A short animation repeats for the full countdown; it stays within the runtime's timeout.
+        playOut(player);
+        QTRY_COMPARE(player.requestedState(), QString("break_exercise"));
+        QCOMPARE(monitor.restLeft(), 60);
+        emit monitor.note().clicked(); QCOMPARE(monitor.restLeft(), 0);
+        QVERIFY(!monitor.note().isVisible()); QVERIFY(!window.stage().runtime().showing());
+        QCOMPARE(player.requestedState(), QString("idle")); // No agent session was needed to stop the exercise.
+        playOut(player); work(30); QCOMPARE(monitor.reminder(), QString("movement"));
+        press("Skip today"); playOut(player); work(90);
+        QVERIFY(!monitor.note().isVisible()); QCOMPARE(monitor.restLeft(), 0);
+        local = local.addDays(1); work(30); QCOMPARE(monitor.reminder(), QString("movement"));
+    }
+    void manualBreakBuddyCompletesAndYieldsToAttention() {
+        pet::PetWindow window(nullptr, {}, false); window.show();
+        pet::Monitor monitor(window); auto &player = window.player(); player.setPaused(true);
+        window.ambient().setLevel(pet::AmbientLevel::Off);
+        window.setEyeMinutes(0); window.setWaterMinutes(0); window.setMovementMinutes(0);
+        window.eggs().setEnabled(false); // Manual breaks also work with all automatic reminders off.
+        QPoint pointer(1, 1); monitor.pointer = [&] { return pointer; };
+        const qint64 t = QDateTime::currentMSecsSinceEpoch(); monitor.update(t);
+        monitor.setRestTickMs(1);
+        emit window.movementBreakRequested(); QCOMPARE(monitor.restLeft(), 60);
+        QTRY_COMPARE_WITH_TIMEOUT(monitor.restLeft(), 0, 2500);
+        QCOMPARE(monitor.note().text(), QString("Nice! Thanks for moving with me."));
+        QCOMPARE(player.requestedState(), QString("cheer_shy"));
+        playOut(player); monitor.note().hide(); monitor.setRestTickMs(100000);
+        emit window.movementBreakRequested(); QCOMPARE(monitor.restLeft(), 60);
+        QVERIFY(monitor.apply({"claude", "break", "1", "attention", {}, {}, "/work", {}, t, {}}, t));
+        QCOMPARE(monitor.restLeft(), 0); QCOMPARE(player.requestedState(), QString("needs_input"));
+        QVERIFY(!monitor.note().isVisible());
+        emit window.movementBreakRequested(); QCOMPARE(monitor.restLeft(), 0); // Pending approval keeps priority.
+    }
+    void breakBuddyStopsWhenLockedSnoozedOrHandled() {
+        pet::PetWindow window(nullptr, {}, false); window.show();
+        pet::Monitor monitor(window); auto &player = window.player(); player.setPaused(true);
+        window.ambient().setLevel(pet::AmbientLevel::Off);
+        window.setEyeMinutes(0); window.setWaterMinutes(0); window.setMovementMinutes(0);
+        window.eggs().setEnabled(false); monitor.setRestTickMs(100000);
+        bool locked = false; monitor.locked = [&] { return locked; };
+        const qint64 t = QDateTime::currentMSecsSinceEpoch(); monitor.update(t);
+        emit window.movementBreakRequested(); QCOMPARE(monitor.restLeft(), 60);
+        locked = true; monitor.update(t + 1);
+        QCOMPARE(monitor.restLeft(), 0); QVERIFY(!monitor.note().isVisible());
+        locked = false; playOut(player);
+        emit window.movementBreakRequested(); QCOMPARE(monitor.restLeft(), 60);
+        window.snooze().start(t, 60000); monitor.update(t + 2);
+        QCOMPARE(monitor.restLeft(), 0); QVERIFY(!monitor.note().isVisible());
+        window.snooze().resume(); playOut(player);
+        emit window.movementBreakRequested(); QCOMPARE(monitor.restLeft(), 60);
+        player.beginDrag(); monitor.update(t + 3);
+        QCOMPARE(monitor.restLeft(), 0); QVERIFY(!monitor.note().isVisible());
+        player.endDrag();
+    }
     void wellnessPreference() {
         QTemporaryDir directory; const auto path = directory.path() + "/preferences.json";
         {
             pet::PetWindow window(nullptr, path);
             window.showSettings(); auto *dialog = window.findChild<QDialog*>(); QVERIFY(dialog);
             auto *group = dialog->findChild<QGroupBox*>("reminders"); QVERIFY(group);
-            QComboBox *eyes = nullptr, *water = nullptr;
+            QComboBox *eyes = nullptr, *water = nullptr, *movement = nullptr;
             for (auto *combo : group->findChildren<QComboBox*>()) {
                 if (combo->accessibleName() == "Eye break reminder") eyes = combo;
                 if (combo->accessibleName() == "Water reminder") water = combo;
+                if (combo->accessibleName() == "Movement break reminder") movement = combo;
             }
-            QVERIFY(eyes && water);
+            QVERIFY(eyes && water && movement);
+            QCOMPARE(movement->currentData().toInt(), 60); QCOMPARE(movement->count(), 4);
+            movement->setCurrentIndex(movement->findData(30));
+            QCOMPARE(window.wellness().movementMinutes(), 30);
             QCOMPARE(eyes->currentData().toInt(), 20); QCOMPARE(water->currentData().toInt(), 60);
             QCOMPARE(eyes->count(), 4); QCOMPARE(water->count(), 4);
             eyes->setCurrentIndex(eyes->findData(45)); water->setCurrentIndex(water->findData(0));
@@ -2483,18 +2585,23 @@ private slots:
             QVERIFY(window.savePreferences()); dialog->close();
         }
         auto saved = pet::PreferencesStore(path).load(); QCOMPARE(saved.eyeMinutes, 45); QCOMPARE(saved.waterMinutes, 0);
+        QCOMPARE(saved.movementMinutes, 30);
         {
             pet::PetWindow restored(nullptr, path);
             QCOMPARE(restored.wellness().eyeMinutes(), 45); QCOMPARE(restored.wellness().waterMinutes(), 0);
             restored.setWaterMinutes(50); QCOMPARE(restored.wellness().waterMinutes(), 0); // Not a choice.
+            QCOMPARE(restored.wellness().movementMinutes(), 30);
+            restored.setMovementMinutes(25); QCOMPARE(restored.wellness().movementMinutes(), 30);
         }
         // Older files have neither key; an unknown interval falls back to the default; bad values are refused.
         QFile file(path); QVERIFY(file.open(QIODevice::WriteOnly));
         file.write(R"({"version":1,"size":200,"on_top":true,"eye_minutes":25})"); file.close();
         QCOMPARE(pet::PreferencesStore(path).load().waterMinutes, 60);
+        QCOMPARE(pet::PreferencesStore(path).load().movementMinutes, 60);
         { pet::PetWindow window(nullptr, path); QCOMPARE(window.wellness().eyeMinutes(), 20); }
         for (const auto *broken : {R"({"version":1,"size":200,"on_top":true,"eye_minutes":true})",
-                                   R"({"version":1,"size":200,"on_top":true,"water_minutes":-5})"}) {
+                                   R"({"version":1,"size":200,"on_top":true,"water_minutes":-5})",
+                                   R"({"version":1,"size":200,"on_top":true,"movement_minutes":true})"}) {
             QVERIFY(file.open(QIODevice::WriteOnly)); file.write(broken); file.close();
             pet::PreferencesStore invalid(path); QCOMPARE(invalid.load().eyeMinutes, 20); QVERIFY(!invalid.save(pet::Preferences{}));
         }
@@ -2560,6 +2667,30 @@ private slots:
         const QRect wide(0, 400, 1900, 240); // No side fits: above.
         QCOMPARE(pet::AlertBubble::placement(wide, bubble, screen).y(), 400 - 8 - 90);
         QVERIFY(inside(pet::AlertBubble::placement({-500, -500, 240, 240}, bubble, screen)));
+    }
+    void bubblePlacementKeepsClearOfOtherBubbles() {
+        const QRect screen(0, 0, 1920, 1080), pet(800, 400, 240, 240); const QSize bubble(300, 90);
+        const auto first = pet::AlertBubble::placement(pet, bubble, screen);
+        QCOMPARE(first, QPoint(1048, 448)); // Right of the pet.
+        const auto second = pet::AlertBubble::placement(pet, bubble, screen, {QRect(first, bubble)});
+        QVERIFY(!QRect(second, bubble).intersects(QRect(first, bubble))); QVERIFY(screen.contains(QRect(second, bubble)));
+        const auto third = pet::AlertBubble::placement(pet, bubble, screen, {QRect(first, bubble), QRect(second, bubble)});
+        QVERIFY(!QRect(third, bubble).intersects(QRect(first, bubble))); QVERIFY(!QRect(third, bubble).intersects(QRect(second, bubble)));
+        // With no clear side left, it still lands on screen rather than nowhere.
+        const QRect tiny(0, 0, 320, 200);
+        QVERIFY(tiny.contains(QRect(pet::AlertBubble::placement({10, 10, 100, 100}, bubble, tiny, {tiny}), bubble)));
+    }
+    void reminderFollowsThePetAndAvoidsTheAlert() {
+        QTemporaryDir directory;
+        pet::PetWindow window(nullptr, directory.path() + "/preferences.json"); window.show();
+        pet::Monitor monitor(window);
+        window.move(600, 300);
+        monitor.note().ask("Drink water", window.figure(), window.screenAreas());
+        const auto before = monitor.note().pos();
+        window.move(200, 150);
+        QVERIFY(monitor.note().pos() != before); // It went along with the pet instead of staying put.
+        QVERIFY(!monitor.note().geometry().intersects(window.figure()));
+        monitor.note().hide();
     }
     void focusOutcomesAndAlertPolicy() {
         using pet::platform::Outcome; using pet::platform::ActiveState;

@@ -16,7 +16,7 @@ It sits on your screen, thinks when your agent thinks, gets busy when it runs to
 - **Know at a glance** what every agent session is doing.
 - **Never miss a request**: a small note pops up when an agent waits for you, and one click takes you to the right terminal.
 - **A pet, not just a status light**: drag it, pet it, throw it, watch it wander and nap.
-- **Looks after you**: gentle reminders to rest your eyes, drink water and take a lunch break, and a recap of your day.
+- **Looks after you**: reminders to rest your eyes, drink water and eat lunch, a Break Buddy that exercises with you, and a recap of your day.
 - **Private**: it only learns *what kind* of thing is happening, never your prompts, code or commands.
 
 Works on **Linux** x86_64 (X11, or Wayland desktops with XWayland such as GNOME and KDE), **macOS 11+** (Apple silicon and Intel), and **Windows 10 version 1809+ / Windows 11** (x64).
@@ -145,7 +145,19 @@ Friday evenings, your birthday, late nights, very long tasks and every 100th fin
 
 ### Takes care of you
 
-Every 20 minutes of work it reminds you to look at something far away for 20 seconds (click the note and it counts down with you), and every hour it reminds you to drink some water. It waits until you're actually at the computer, stays quiet while an agent needs you, and leaves you alone at night.
+Every 20 minutes of active time it reminds you to look at something far away for 20 seconds; click the note and it counts down with you. Every hour, VPet drinks from a glass alongside the water reminder. At lunchtime (noon by default), it eats a sandwich with the meal reminder. Choose **Done**, **Later** (10 minutes), or **Skip today** to answer a reminder.
+
+**Break Buddy** offers a 60-second movement break every hour of active time. Choose **Start break** and VPet jumps rope while you move or stretch, with a countdown to keep you company. Start one anytime from right-click → **Take a movement break**, or click the countdown to end it early. Set its interval to **Off**, **30**, **60**, or **90 minutes** under **Settings → Reminders → Movement break**.
+
+Reminders wait until you're at the computer, stay quiet while an agent needs you, and skip the night. A movement break stops when an approval or error needs your attention, you lock the screen, snooze or mute notifications, hide the pet, or pick it up. Other pets use their own reaction art.
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/media/break-buddy.gif" width="200" alt="VPet jumping rope during a movement break"><br>Break Buddy</td>
+    <td align="center"><img src="docs/media/lunch.gif" width="200" alt="VPet eating a sandwich with the lunch reminder"><br>Lunch companion</td>
+    <td align="center"><img src="docs/media/drinking.gif" width="200" alt="VPet drinking from a glass with the water reminder"><br>Water companion</td>
+  </tr>
+</table>
 
 <table>
   <tr>
@@ -167,12 +179,12 @@ Right-click → **Today's recap** for a one-line summary like *"Today: 38 turns 
 
 ### Make it yours
 
-Right-click the pet (or its tray / menu bar icon) for everything: your sessions, today's recap, mute, always on top, Settings and Quit. In **Settings** you can:
+Right-click the pet (or its tray / menu bar icon) for everything: your sessions, today's recap, a movement break, mute, always on top, Settings and Quit. In **Settings** you can:
 
 - change its size, choose which notes pop up and pick its character (other pets download when chosen);
 - make it calmer or livelier (when idle and while working), and switch off wandering, moods, touch or surprises;
 - turn on [plugin packs](starter/docs/plugins.md) that add animations to your pet, and that can react when your scripts or CI send it [a custom event](starter/docs/events.md#custom-events);
-- set or turn off the eye and water reminders, configure lunch (default noon, eligible until 13:15), Monday, go-home and bedtime reminders, and enter your birthday;
+- set or turn off the eye, water and movement-break reminders, configure lunch (default noon, eligible until 13:15), Monday, go-home and bedtime reminders, and enter your birthday;
 - connect Claude Code and Codex with one click, and have it start with your agents or at login;
 - choose how updates are installed.
 

@@ -92,6 +92,7 @@ PetWindow::PetWindow(QWidget *parent, const QString &path, bool persist)
     eggs_.setReminderSchedule(preferences.reminderSchedule);
     eggs_.setEnabled(preferences.easterEggs); eggs_.setBirthday(preferences.birthday);
     wellness_.setEyeMinutes(preferences.eyeMinutes); wellness_.setWaterMinutes(preferences.waterMinutes);
+    wellness_.setMovementMinutes(preferences.movementMinutes);
     ambient_.setEasterEggs(&eggs_);
     ambient_.setStage(&stage_); eggs_.setStage(&stage_);
     connect(&player_, &Player::entered, this, &PetWindow::entered);
@@ -114,6 +115,12 @@ PetWindow::PetWindow(QWidget *parent, const QString &path, bool persist)
     menu_.addSeparator();
     sessionsAction_ = menu_.addAction(QString(), this, &PetWindow::sessionsRequested);
     recapAction_ = menu_.addAction(QString(), this, &PetWindow::recapRequested);
+    movementBreakAction_ = menu_.addAction(QString(), this, &PetWindow::movementBreakRequested);
+    connect(&menu_, &QMenu::aboutToShow, this, [this] {
+        using namespace behavior;
+        movementBreakAction_->setEnabled(!quiet(QDateTime::currentMSecsSinceEpoch())
+            && stage_.runtime().admits({"break", "exercise", "break-buddy", Policy::Surprise, Lifetime::OneShot}));
+    });
     muteAction_ = menu_.addAction(QString());
     muteAction_->setCheckable(true); muteAction_->setChecked(muted_);
     connect(muteAction_, &QAction::toggled, this, &PetWindow::setMuted);
@@ -223,6 +230,7 @@ void PetWindow::changeEvent(QEvent *event) {
     QWidget::changeEvent(event);
 }
 void PetWindow::retranslate() {
+    movementBreakAction_->setText(tr("Take a movement break"));
     setToolTip(tr("Click for running sessions · Hold still to pet · Drag to move, or throw · Push past a screen edge to hide\n"
                   "Right-click for controls · Esc to quit"));
     showAction_->setText(tr("Show pet"));
@@ -439,6 +447,11 @@ void PetWindow::setWaterMinutes(int minutes) {
     wellness_.setWaterMinutes(minutes);
     if (ready_) saveTimer_.start();
 }
+void PetWindow::setMovementMinutes(int minutes) {
+    if (minutes == wellness_.movementMinutes() || !Wellness::validMovementMinutes(minutes)) return;
+    wellness_.setMovementMinutes(minutes);
+    if (ready_) saveTimer_.start();
+}
 void PetWindow::showAfterFlagChange(QPoint position) {
     // Changing window flags hides the window; a hidden pet stays hidden until shown.
     if (!petHidden()) { show(); move(position); }
@@ -578,6 +591,7 @@ bool PetWindow::writePreferences(const std::function<void(Preferences &)> &chang
     preferences.ambient = ambientLevel(); preferences.activity = activityStyle(); preferences.mood = moodLevel(); preferences.turns = mood_.turns();
     preferences.touch = touchEnabled_; preferences.wander = wanderEnabled_; preferences.easterEggs = easterEggsEnabled(); preferences.birthday = birthday();
     preferences.eyeMinutes = wellness_.eyeMinutes(); preferences.waterMinutes = wellness_.waterMinutes();
+    preferences.movementMinutes = wellness_.movementMinutes();
     preferences.reminderSchedule = eggs_.reminderSchedule();
     preferences.recap = recapEnabled_;
     change(preferences);
@@ -955,8 +969,8 @@ void PetWindow::showSettings() {
 QWidget *PetWindow::reminderSettings(QWidget *parent) {
     auto *box = new QGroupBox(tr("Reminders"), parent); box->setObjectName("reminders");
     box->setToolTip(tr("While you are active (agent activity or moving the pointer), the pet now and then reminds you\n"
-                    "to rest your eyes and to drink some water. It waits while an alert or approval is waiting, while\n"
-                    "alerts are muted and from 22:00 to 06:00. Five minutes away counts as a break and starts both over.\n"
+                    "to rest your eyes, drink some water and take a movement break. It waits while an alert or approval is waiting, while\n"
+                    "alerts are muted and from 22:00 to 06:00. Five minutes away counts as a break and starts the timers over.\n"
                     "A reminder has Done, Later (asks again in 10 minutes) and Skip today; one you ignore asks again after a while.\n"
                     "Snooze (right-click menu) silences reminders and alerts for a while."));
     auto *layout = new QFormLayout(box);
@@ -973,6 +987,11 @@ QWidget *PetWindow::reminderSettings(QWidget *parent) {
     auto *water = choices(Wellness::waterChoices, wellness_.waterMinutes(), tr("Water reminder"));
     layout->addRow(tr("W&ater"), water);
     connect(water, &QComboBox::currentIndexChanged, this, [this, water] { setWaterMinutes(water->currentData().toInt()); });
+    auto *movement = choices(Wellness::movementChoices, wellness_.movementMinutes(), tr("Movement break reminder"));
+    movement->setToolTip(tr("Break Buddy: take a 60-second movement break while the pet exercises with you.\n"
+                           "You can also start one from the right-click menu. Click the countdown to end it early."));
+    layout->addRow(tr("&Movement break"), movement);
+    connect(movement, &QComboBox::currentIndexChanged, this, [this, movement] { setMovementMinutes(movement->currentData().toInt()); });
     return box;
 }
 QWidget *PetWindow::startupSettings(QWidget *parent) {

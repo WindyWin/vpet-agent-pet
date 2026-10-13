@@ -14,7 +14,7 @@ public:
     static constexpr int maxRows = 10;
     explicit SessionList(QWidget *parent = nullptr);
     void present(const QVector<SessionRow> &rows);
-    void place(const QRect &pet, const QVector<QRect> &screens);
+    void place(const QRect &pet, const QVector<QRect> &screens, const QVector<QRect> &avoid = {});
     int rowCount() const { return buttons_.size(); }
     QString rowText(int row) const { return buttons_.value(row) ? buttons_[row]->text() : QString(); }
     void activateRow(int row) { if (buttons_.value(row)) buttons_[row]->click(); }

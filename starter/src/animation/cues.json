@@ -2,6 +2,7 @@
   "schema_version": 1,
   "description": "What the app asks a pet to show (docs/pets.md). A state cue plays one state with the playback shape given here; its default state is used unless the pet's catalog maps the cue in its \"cues\" section. A reaction cue plays a state drawn from the pool the catalog maps it to, and nothing when it maps none.",
   "cues": {
+    "movement-break": { "kind": "reaction" },
     "idle": { "kind": "state", "state": "idle", "mode": "loop", "after": "idle", "fixed": true },
     "waiting": { "kind": "state", "state": "idle", "mode": "loop", "after": "idle" },
     "thinking": { "kind": "state", "state": "thinking", "mode": "phased", "after": "idle" },

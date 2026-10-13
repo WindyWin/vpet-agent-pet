@@ -6,9 +6,9 @@
   "source_commit": "6358445aa54587f9cd524264eaf17ef97bc826a8",
   "source_root": "VPet-Simulator.Windows/mod/0000_core/pet/vup",
   "bundled_catalog": "assets/vpet/animations.json",
-  "missing_sequence_count": 422,
-  "missing_frame_count": 4301,
-  "missing_size_bytes": 590955765,
+  "missing_sequence_count": 419,
+  "missing_frame_count": 4277,
+  "missing_size_bytes": 586836683,
   "sequences": [
     {
       "path": "Default/Happy/2",
@@ -3053,24 +3053,6 @@
       "timing_valid": true
     },
     {
-      "path": "WORK/RopeSkipping/Nomal/A",
-      "category": "WORK",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/WORK/RopeSkipping/Nomal/A",
-      "frame_count": 6,
-      "total_duration_ms": 750,
-      "size_bytes": 925385,
-      "timing_valid": true
-    },
-    {
-      "path": "WORK/RopeSkipping/Nomal/B/1",
-      "category": "WORK",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/WORK/RopeSkipping/Nomal/B/1",
-      "frame_count": 12,
-      "total_duration_ms": 1500,
-      "size_bytes": 2203441,
-      "timing_valid": true
-    },
-    {
       "path": "WORK/RopeSkipping/Nomal/B/2",
       "category": "WORK",
       "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/WORK/RopeSkipping/Nomal/B/2",
@@ -3086,15 +3068,6 @@
       "frame_count": 12,
       "total_duration_ms": 1500,
       "size_bytes": 2202518,
-      "timing_valid": true
-    },
-    {
-      "path": "WORK/RopeSkipping/Nomal/C",
-      "category": "WORK",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/WORK/RopeSkipping/Nomal/C",
-      "frame_count": 6,
-      "total_duration_ms": 750,
-      "size_bytes": 990256,
       "timing_valid": true
     },
     {

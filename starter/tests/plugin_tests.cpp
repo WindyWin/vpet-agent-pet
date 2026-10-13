@@ -851,7 +851,8 @@ private slots:
         pet::Player player(nullptr, pet::Catalog::build(source, &error));
         player.setRules(loaded.rules());
         const auto &rules = player.rules();
-        QCOMPARE(rules.size(), 2 + 5); // celebrate and lunch (through celebrate) of its own, then the pack's.
+        QCOMPARE(rules.size(), 3 + 5); // celebrate, lunch and Break Buddy (through celebrate), then the pack's.
+        QCOMPARE(rules.draw("break-buddy")->state, QString("cheer")); // An existing pet needs no new art.
         QCOMPARE(rules.draw("danger")->state, QString("wave.dance")); QCOMPARE(rules.draw("danger")->say, QString("Whoa!"));
         QCOMPARE(rules.pick("custom:deploy", 0)->state, QString("cheer"));
         QCOMPARE(rules.draw("may20")->state, QString("cheer"));

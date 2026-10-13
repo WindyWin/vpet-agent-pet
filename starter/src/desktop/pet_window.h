@@ -49,9 +49,10 @@ public:
     bool easterEggsEnabled() const { return eggs_.enabled(); }
     void setBirthday(const QString &monthDay); // "MM-dd" or empty; persisted.
     Wellness &wellness() { return wellness_; }
-    // Minutes of active time between eye-break and water reminders, from Wellness's choices; 0 is off. Persisted.
+    // Minutes of active time between wellness reminders, from Wellness's choices; 0 is off. Persisted.
     void setEyeMinutes(int minutes);
     void setWaterMinutes(int minutes);
+    void setMovementMinutes(int minutes);
     QString birthday() const { return eggs_.birthday(); }
     // Today's recap rides on the go-home reminder; persisted. The menu shows it either way.
     void setRecapEnabled(bool enabled);
@@ -151,6 +152,7 @@ signals:
     void presenceChanged(); // The pet was hidden or shown.
     void sessionsRequested(); // A click on the pet (press and release without moving it), or the menu.
     void recapRequested(); // "Today's recap" in the menu.
+    void movementBreakRequested();
 protected:
     bool event(QEvent *) override;
     void changeEvent(QEvent *) override;
@@ -204,6 +206,7 @@ private:
     QVector<QAction *> snoozeActions_; // One per Snooze::minuteChoices.
     QAction *updateAction_ = nullptr, *updatesItem_ = nullptr;
     QAction *sessionsAction_ = nullptr, *recapAction_ = nullptr, *settingsAction_ = nullptr, *previewAction_ = nullptr;
+    QAction *movementBreakAction_ = nullptr;
     QAction *recoverAction_ = nullptr, *aboutAction_ = nullptr, *quitAction_ = nullptr;
     QMenu *moreMenu_ = nullptr, *statesMenu_ = nullptr, *snoozeMenu_ = nullptr;
     QString language_ = "auto";

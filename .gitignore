@@ -5,3 +5,6 @@ target/
 __pycache__/
 *.pyc
 .DS_Store
+
+# Downloaded third-party artwork collected for local evaluation.
+pet-sources/

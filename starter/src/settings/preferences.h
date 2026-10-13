@@ -40,8 +40,8 @@ struct Preferences {
     bool wander = true; // Walks, crawls and climbs along the screen after a long idle spell.
     bool easterEggs = true; // Special days, late nights and a few rare surprises.
     QString birthday; // "MM-dd" for a birthday surprise, or empty.
-    // Wellness reminders: minutes of active time between eye breaks and between sips of water; 0 is off.
-    int eyeMinutes = 20, waterMinutes = 60;
+    // Wellness reminders: minutes of active time between eye breaks, water and movement breaks; 0 is off.
+    int eyeMinutes = 20, waterMinutes = 60, movementMinutes = 60;
     ReminderSchedule reminderSchedule; // Local clock times; reminders fire at most once a day.
     bool recap = true; // Adds today's recap to the go-home reminder.
     // Interface language: "auto" (the system's), "en" or "vi". An unknown value, perhaps from a newer

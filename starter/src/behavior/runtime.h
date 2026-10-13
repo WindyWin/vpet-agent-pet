@@ -120,8 +120,8 @@ public:
     explicit Runtime(std::function<qint64()> clock);
 
     Submission submit(const Intent &intent);
-    // Ends a persistent intent, or a one-shot that is still waiting. Its outcome is Interrupted when it was
-    // showing and Dropped when it was waiting; unknown identities are ignored.
+    // Ends a persistent intent or a one-shot, including one already showing. Its outcome is Interrupted when it was
+    // showing and Dropped when it was waiting; unknown identities and active shutdown are ignored.
     void withdraw(const QString &source, const QString &key);
     // Re-evaluates admission, so a waiting reminder can start once things calm down, and the latest activity
     // shows once the user lets go of the pet.

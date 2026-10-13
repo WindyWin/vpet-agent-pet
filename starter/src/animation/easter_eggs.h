@@ -68,8 +68,9 @@ public:
         if (schedule.lunch.isValid() && schedule.monday.isValid() && schedule.leaveWork.isValid() && schedule.sleep.isValid()) schedule_ = schedule;
     }
     ReminderSchedule reminderSchedule() const { return schedule_; }
-    // What the pet says for a reminder; empty for an unknown one.
-    static QString reminderNote(const QString &reminder, const ReminderSchedule &schedule = {});
+    // What the pet says for a reminder; empty for an unknown one. It names `now`, not the configured time: a
+    // reminder that is asked again later (or comes back after a snooze) says the time it is when it is shown.
+    static QString reminderNote(const QString &reminder, QTime now);
     // The first reminder that is due and not yet given today; empty for none, or when turned off. A reminder
     // is given once a day, or not at all if the pet was not running when it was due.
     QString dueReminder() const;

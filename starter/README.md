@@ -2,9 +2,9 @@
 
 A small starting repository for a desktop pet that reacts to Claude Code and Codex activity. The sprite files are bundled here, so development can proceed without a local VPet installation.
 
-The current asset pack contains **1,197 original PNG frames in 141 animation sequences (171.67 MiB)**. They cover idle (with two alternate loops, a few idle fidgets, and happy and droopy moods), thinking, reading, working, waiting for input, tool errors, several ways to celebrate a finished turn, sleeping, startup, closing, the original dragging animation, reactions to being petted, thrown and pushed against a screen edge, a few easter eggs, and walking, crawling and climbing. [animations.json](assets/vpet/animations.json) maps each state to its sequences, records frame durations, and lists the idle variants, fidgets, mood art, reaction cues, touch hit boxes and moves. [manifest.json](assets/vpet/manifest.json) records every file's size and SHA-256 hash.
+The current asset pack contains **1,322 PNG files in 146 animation sequences (193.79 MiB)**. They cover idle (with two alternate loops, a few idle fidgets, and happy and droopy moods), thinking, reading, working, waiting for input, tool errors, several ways to celebrate a finished turn, sleeping, startup, closing, the original dragging animation, reactions to being petted, thrown and pushed against a screen edge, a few easter eggs, walking, crawling and climbing, jump rope for Break Buddy, and eating and drinking with reminders. [animations.json](assets/vpet/animations.json) maps each state to its sequences, records frame durations, and lists the idle variants, fidgets, mood art, reaction cues, touch hit boxes and moves. [manifest.json](assets/vpet/manifest.json) records every file's size and SHA-256 hash.
 
-[available-animations.json](assets/vpet/available-animations.json) catalogs the **422 remaining sequences and 4,301 frames** from the original character pack. Each entry gives its upstream folder, category, frame count, size, and timing status. These are references for future work; their PNG files are not included here. To add one later, run `python3 scripts/add_sequences.py IDEL/yawning/Nomal …` against a copy of the upstream VPet tree (`--source`; the full archive next to this folder is the default). It copies the frames, updates the manifest and both catalogs, and leaves you to map the sequences in `animations.json`, which `scripts/verify_assets.py` then checks. Retain the artwork notices.
+[available-animations.json](assets/vpet/available-animations.json) catalogs the **419 remaining sequences and 4,277 frames** from the original character pack. Each entry gives its upstream folder, category, frame count, size, and timing status. These are references for future work; their PNG files are not included here. To add one later, run `python3 scripts/add_sequences.py IDEL/yawning/Nomal …` against a copy of the upstream VPet tree (`--source`; the full archive next to this folder is the default). It copies the frames, updates the manifest and both catalogs, and leaves you to map the sequences in `animations.json`, which `scripts/verify_assets.py` then checks. Retain the artwork notices.
 
 This folder is ready to become its own repository:
 
@@ -168,7 +168,7 @@ A few surprises, on by default. On May 20 the idle pet greets you with a heart, 
 on your birthday (Settings → **Birthday**, day and month only) it celebrates, both
 when it idles and on the day's first finished turn. Late at night it yawns more, and
 the first turn that finishes after 1 AM brings a gentle bedtime note. The pet also
-keeps time: at noon every day it invites you to take a lunch break with a snack
+keeps time: at noon every day it invites you to take a lunch break with an eating
 animation (eligible until 1:15 PM), on Monday morning it is tired and down about the week, at 4:45 PM on
 weekdays it blows bubbles and tells you to get ready to go home, and at 10 PM it
 tells you to go to sleep (each once a day, while it is running and visible; like the
@@ -187,21 +187,36 @@ Preview them from Preview state (`love_520`, `birthday`, `dance`, `startled`); s
 
 ## Wellness reminders
 
-While you work, the pet reminds you to rest your eyes and to drink some water. After
+While you work, the pet reminds you to rest your eyes, drink water, eat lunch and take a movement break. After
 20 minutes of activity it says "Look at something far away for 20 seconds" and
 closes its eyes for a stretch (the 20-20-20 rule); click the note and it counts the 20 seconds down, then
-cheers. After 60 minutes it gets thirsty and says "Time for some water 💧"; click to
-say you had some and it cheers. Each reminder (also lunch and go-home) is a question with
+cheers. After 60 minutes it drinks from a glass and says "Time for some water 💧"; click to
+say you had some and it cheers. At lunchtime VPet eats a sandwich alongside the meal reminder.
+Each reminder (also lunch and go-home) is a question with
 **Done**, **Later** (asks again in 10 minutes) and **Skip today** (until tomorrow).
 Ignored, it fades and is asked again after 10 minutes, up to three times, then left until the next
 interval. Activity means moving the pointer, sending a prompt, or agent
 events while you were around in the last five minutes: a few idle minutes pause the
-timers, and five minutes away (or a locked screen) counts as a break and starts both
+timers, and five minutes away (or a locked screen) counts as a break and starts the timers
 over. Reminders wait until you have moved the pointer in the last minute, and while
 an alert bubble shows, an agent waits on you or alerts are muted. They skip quiet hours (10 PM to 6 AM, which have the bedtime
 note). Settings → **Reminders** sets the eye break (off, 20, 30 or 45 minutes) and
-water (off, 45, 60 or 90 minutes); both are on by default. See
+water (off, 45, 60 or 90 minutes); both are on by default.
+
+**Break Buddy** also offers a 60-second movement break after an hour of active time.
+Choose **Start break**, and VPet jumps rope while a countdown encourages you to move or stretch.
+Use **Later** or **Skip today** to defer it, or right-click → **Take a movement break** to start one
+whenever you like. Click the countdown to end it early. An approval, error, lock, snooze, hiding or
+handling the pet ends the break without a completion cheer. Settings → **Reminders** → **Movement break**
+chooses off, 30, 60 or 90 minutes (default 60). Other pets use their own reaction art. See
+[Break Buddy and meal animations](docs/adr/0040-break-buddy-and-meal-reminders.md) and
 [the design record](docs/adr/0019-wellness-reminders.md).
+
+<p>
+  <img src="../docs/media/break-buddy.gif" width="160" alt="VPet jumping rope for Break Buddy">
+  <img src="../docs/media/lunch.gif" width="160" alt="VPet eating alongside the lunch reminder">
+  <img src="../docs/media/drinking.gif" width="160" alt="VPet drinking alongside the water reminder">
+</p>
 
 ### Snooze
 
@@ -241,7 +256,7 @@ Native Wayland placement and stacking support remain unverified.
 
 ## Pets
 
-VPet is the bundled pet. **Fat Cat** (an orange cat, CC0 art by shuaa of megupets), **Kuro** (a little ninja) and **Yun** (a xianxia cultivator who meditates, brews pills and flies on a sword) download when chosen in Settings; Kuro and Yun are original art drawn by scripts in `scripts/` and released under CC0. The app is built for more. A pet is a folder of frames, a catalog, a
+VPet is the bundled pet. **Fat Cat** (an orange cat, CC0 art by shuaa of megupets), **Kuro** (a little ninja), **Whale Girl** (a detailed blue whale-maid with 16 animated actions, CC BY-NC-SA 4.0 art) and **Yun** (a xianxia cultivator who meditates, brews pills and flies on a sword) download when chosen in Settings; Kuro and Yun are original art drawn by scripts in `scripts/` and released under CC0. The app is built for more. A pet is a folder of frames, a catalog, a
 preview and its own art terms under `assets/`, and a rebuild picks up every such folder with no code
 changes. Once two or more pets are installed, Settings → Pet → **Character** shows a tile per pet. The
 chosen pet appears the next time Agent Pet starts, and only its artwork is loaded. `--pet <id>` runs
@@ -250,7 +265,7 @@ instead. VPet ships with the app; other pets show their download size and downlo
 pack by pack against hashes the app already carries, with progress and Cancel in Settings. The app tells a pet what is happening through named cues (a session needs you, a turn finished,
 time for water), and each pet decides which of its animations answers each one. To make a pet, see
 [the pet guide](docs/pets.md) and the design records for [pet packs](docs/adr/0028-pet-packs.md),
-[cues](docs/adr/0029-cues.md) and [on-demand pets](docs/adr/0030-on-demand-pets.md), [Fat Cat](docs/adr/0036-fat-cat-pet.md), and [Kuro and Yun](docs/adr/0037-drawn-pets.md).
+[cues](docs/adr/0029-cues.md) and [on-demand pets](docs/adr/0030-on-demand-pets.md), [Fat Cat](docs/adr/0036-fat-cat-pet.md), [Kuro and Yun](docs/adr/0037-drawn-pets.md), and [Whale Girl](docs/adr/0039-whale-girl-pet.md).
 
 ## Plugin packs
 
@@ -510,7 +525,7 @@ automatic updates.
 
 ## Artwork and publishing
 
-Fat Cat's artwork is **Orange Fat Cat** by shuaa ([megupets](https://www.megupets.com)), released under [CC0 1.0](licenses/FAT-CAT-ARTWORK-TERMS.md). Kuro and Yun are original Agent Pet artwork, drawn by `scripts/draw_kuro.py` and `scripts/draw_yun.py` and released under CC0 1.0 ([Kuro](licenses/KURO-ARTWORK-TERMS.md), [Yun](licenses/YUN-ARTWORK-TERMS.md)). The rest of this section is about VPet's art.
+Fat Cat's artwork is **Orange Fat Cat** by shuaa ([megupets](https://www.megupets.com)), released under [CC0 1.0](licenses/FAT-CAT-ARTWORK-TERMS.md). Kuro and Yun are original Agent Pet artwork, drawn by `scripts/draw_kuro.py` and `scripts/draw_yun.py` and released under CC0 1.0 ([Kuro](licenses/KURO-ARTWORK-TERMS.md), [Yun](licenses/YUN-ARTWORK-TERMS.md)). Whale Girl uses [Multimodal-AI-Companion animation artwork](https://github.com/oyxdsg/Multimodal-AI-Companion-Assets), depicting **「溟月」 by 上善无形** with **ZipZipPipe**’s whale-maid design, under **CC BY-NC-SA 4.0** ([terms](licenses/WHALE-GIRL-ARTWORK-TERMS.md)). The rest of this section is about VPet's art.
 
 Artwork credit: **VUP-Simulator team**, via [LorisYounger/VPet](https://github.com/LorisYounger/VPet). See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and the [upstream artwork terms](licenses/VPET-ARTWORK-TERMS.md).
 
