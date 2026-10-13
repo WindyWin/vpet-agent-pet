@@ -533,14 +533,14 @@ private slots:
             QTRY_VERIFY(!monitor.note().isVisible()); // Worded in English: it goes.
             QCOMPARE(pet::i18n::installed(), pet::i18n::Language::Vietnamese);
             QTRY_VERIFY(menuHas("Cài đặt…"));
-            QCOMPARE(window.statusText(), "Agent Pet — 1 phiên · 1 phiên cần chú ý");
+            QCOMPARE(window.statusText(), "Agent Pet — 1 phiên · 1 phiên cần bạn chú ý");
             monitor.update(now); QCOMPARE(monitor.bubble().title(), "Cần phê duyệt");
             // Settings come back in Vietnamese, on the tab that was open.
             QTRY_VERIFY(dialogTitled("Cài đặt Agent Pet"));
             QCOMPARE(dialogTitled("Cài đặt Agent Pet")->findChild<QTabWidget *>()->currentIndex(), 1);
             auto *birthday = dialogTitled("Cài đặt Agent Pet")->findChild<QDateEdit *>();
             QVERIFY(birthday); QCOMPARE(birthday->text(), "1 tháng 1"); // Month names follow the pet, not the system.
-            QVERIFY(dialogTitled("Xem trước hoạt ảnh")); QVERIFY(dialogTitled("Giới thiệu Agent Pet — hình ảnh và điều khoản"));
+            QVERIFY(dialogTitled("Xem trước hoạt ảnh")); QVERIFY(dialogTitled("Giới thiệu Agent Pet — hình ảnh và điều khoản sử dụng"));
             window.setLanguage("en");
             QTRY_VERIFY(menuHas("Settings…"));
             monitor.update(now); QCOMPARE(monitor.bubble().title(), "Needs approval");
