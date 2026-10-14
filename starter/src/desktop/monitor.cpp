@@ -364,7 +364,7 @@ void Monitor::rest() {
     stopRest();
     if (movement) window_.wellness().given("movement", now_);
     window_.eggs().surprise("reminder-done", true);
-    say(movement ? Pet::tr("Nice! Thanks for moving with me.") : Pet::tr("Nice! Your eyes thank you."), {}, 4000);
+    say(movement ? Pet::tr("Nice! Thanks for moving with me.") : Pet::tr("Nice! Your eyes got a rest."), {}, 4000);
 }
 void Monitor::showRecap() {
     if (!active_) return;

@@ -53,7 +53,7 @@ if [ "$keep_integrations" = 0 ]; then
     # disable removes only handlers in Agent Pet's own command format; other
     # hooks and settings in the same files are preserved byte-for-byte when
     # nothing of ours is present.
-    for provider in claude codex; do
+    for provider in claude codex opencode antigravity; do
         if "$app" integration inspect --provider "$provider" 2>/dev/null | grep -q '"owned_handlers": [1-9]'; then
             "$app" integration disable --provider "$provider" >/dev/null
             echo "Removed Agent Pet hooks for $provider"

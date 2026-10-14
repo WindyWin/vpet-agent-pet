@@ -1,3 +1,4 @@
+#include "providers/registry.h"
 #include "updates/controller.h"
 #include "pet_window.h"
 #include "animation/pet_library.h"
@@ -1033,7 +1034,8 @@ QWidget *PetWindow::startupSettings(QWidget *parent) {
 QWidget *PetWindow::integrationSettings(QWidget *parent) {
     auto *box = new QGroupBox(tr("Agent integrations"), parent); box->setObjectName("integrations");
     auto *layout = new QFormLayout(box);
-    for (const QString provider : {"claude", "codex"}) {
+    for (const auto &entry : providers()) {
+        const auto provider = entry.id;
         auto *row = new QWidget(box); auto *rowLayout = new QHBoxLayout(row); rowLayout->setContentsMargins(0, 0, 0, 0);
         auto *status = new QLabel(row); status->setWordWrap(true); status->setTextInteractionFlags(Qt::TextSelectableByMouse);
         auto *toggle = new QPushButton(row);
@@ -1070,7 +1072,7 @@ QWidget *PetWindow::integrationSettings(QWidget *parent) {
                 warn(this, tr("Agent integrations"), error);
             refresh();
         });
-        layout->addRow(provider == "claude" ? "Claude Code" : "Codex", row);
+        layout->addRow(entry.name, row);
     }
     auto *coverage = new QLabel(tr("Covers sessions on this machine that send events after setup. Restart the client "
                                 "after enabling; silent, remote and container sessions are not discovered. "

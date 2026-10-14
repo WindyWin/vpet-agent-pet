@@ -1,4 +1,5 @@
 #include "adapters.h"
+#include "registry.h"
 #include "sessions/state.h"
 #include <QCryptographicHash>
 #include <QJsonArray>
@@ -10,12 +11,18 @@
 
 namespace pet {
 QStringList hookEvents(const QString &provider) {
-    QStringList events{"SessionStart", "UserPromptSubmit", "PreToolUse", "PostToolUse", "PermissionRequest", "Stop", "SessionEnd", "SubagentStart", "SubagentStop"};
-    if (provider == "claude") events << "PostToolUseFailure" << "Notification" << "StopFailure";
-    else if (provider == "codex") events << "Interrupt";
-    else return {};
-    return events;
+    const auto entry = findProvider(provider);
+    return entry ? entry->events : QStringList{};
 }
+QJsonObject normalizeHook(const QString &provider, const QJsonObject &input, qint64 now) {
+    const auto entry = findProvider(provider);
+    if (!entry) return {};
+    const auto out = entry->normalize(input, now);
+    Event checked; QString error;
+    if (!Event::parse(QJsonDocument(out).toJson(QJsonDocument::Compact), checked, error)) return {};
+    return out;
+}
+
 static QString commonKind(const QString &name) {
     if (name == "SessionStart") return "session_start";
     if (name == "UserPromptSubmit" || name == "SubagentStart") return "prompt";
@@ -90,7 +97,7 @@ bool destructiveCommand(const QString &command) {
     }
     return false;
 }
-QJsonObject normalizeHook(const QString &provider, const QJsonObject &in, qint64 now) {
+QJsonObject normalizeLegacyHook(const QString &provider, const QJsonObject &in, qint64 now) {
     const auto name = in.value("hook_event_name").toString();
     if (!hookEvents(provider).contains(name)) return {};
     const auto kind = provider == "claude" ? claudeKind(in) : codexKind(in);
@@ -143,8 +150,6 @@ QJsonObject normalizeHook(const QString &provider, const QJsonObject &in, qint64
         id = QString::fromLatin1(QCryptographicHash::hash(identity, QCryptographicHash::Sha256).toHex());
     }
     out["event_id"] = id;
-    Event checked; QString error;
-    if (!Event::parse(QJsonDocument(out).toJson(QJsonDocument::Compact), checked, error)) return {};
     return out;
 }
 }

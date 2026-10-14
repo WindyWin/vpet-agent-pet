@@ -166,6 +166,18 @@
         <translation>Kiểm tra /hooks. disableAllHooks hoặc chính sách quản lý có thể ngăn hook chạy. Agent Pet không thay đổi chính sách.</translation>
     </message>
     <message>
+        <source>Restart OpenCode to load the Agent Pet plugin. Local plugin callbacks only; live compatibility is experimental.</source>
+        <translation>Khởi động lại OpenCode để tải plugin Agent Pet. Chỉ nhận sự kiện từ plugin cục bộ; khả năng tương thích thực tế đang thử nghiệm.</translation>
+    </message>
+    <message>
+        <source>Restart Antigravity and inspect Customizations &gt; Hooks (CLI: /hooks). Live compatibility is experimental.</source>
+        <translation>Khởi động lại Antigravity và kiểm tra Customizations &gt; Hooks (CLI: /hooks). Khả năng tương thích thực tế đang thử nghiệm.</translation>
+    </message>
+    <message>
+        <source>Agent Pet hook namespace is disabled</source>
+        <translation>Nhóm hook Agent Pet đang bị tắt</translation>
+    </message>
+    <message>
         <source>disableAllHooks is set in this file</source>
         <translation>disableAllHooks đang được bật trong tệp này</translation>
     </message>
@@ -190,8 +202,8 @@
         <translation>Tùy chọn tích hợp không xác định</translation>
     </message>
     <message>
-        <source>Codex cannot run a program from this folder. Install Agent Pet in a folder without spaces or symbols.</source>
-        <translation>Codex không thể chạy chương trình từ thư mục này. Hãy cài Agent Pet vào thư mục có đường dẫn không chứa dấu cách hay ký hiệu.</translation>
+        <source>%1 cannot run a program from this folder. Install Agent Pet in a folder without spaces or symbols.</source>
+        <translation>%1 không thể chạy chương trình từ thư mục này. Hãy cài Agent Pet vào thư mục có đường dẫn không chứa dấu cách hay ký hiệu.</translation>
     </message>
 </context>
 <context>
@@ -230,8 +242,8 @@
         <translation>Nhìn ra xa nào… %1</translation>
     </message>
     <message>
-        <source>Nice! Your eyes thank you.</source>
-        <translation>Tuyệt! Mắt bạn được nghỉ ngơi rồi đó.</translation>
+        <source>Nice! Your eyes got a rest.</source>
+        <translation>Tốt lắm! Mắt bạn đã được nghỉ ngơi.</translation>
     </message>
     <message>
         <source>Nice! Thanks for moving with me.</source>

@@ -1,3 +1,4 @@
+#include "providers/registry.h"
 #include "local.h"
 #include "autostart.h"
 #include "providers/adapters.h"
@@ -25,19 +26,29 @@ int eventCommand(const QStringList &args) {
     const bool hook = args.value(1) == "hook";
     QString error;
     auto fail = [&] { if (!hook) std::fprintf(stderr, "%s\n", qPrintable(error)); return hook ? 0 : 1; };
-    QString provider, custom;
+    QString provider, custom, hookEvent;
     for (int i = 2; i < args.size(); ++i) {
         if (args[i] == "--provider" && i + 1 < args.size() && provider.isEmpty()) provider = args[++i];
+        else if (hook && args[i] == "--event" && i + 1 < args.size() && hookEvent.isEmpty()) hookEvent = args[++i];
         else if (!hook && args[i] == "--custom" && i + 1 < args.size() && custom.isEmpty()) custom = args[++i];
         else if (hook && args[i] == "--registration" && args.value(i + 1) == "agent-pet-v1") ++i;
-        else { error = "Usage: agent-pet hook --provider claude|codex, or agent-pet emit [--provider claude|codex|custom | --custom NAME]; hook reads provider JSON; emit reads normalized JSON"; return fail(); }
+        else { error = "Usage: agent-pet hook --provider PROVIDER [--event EVENT], or agent-pet emit [--provider PROVIDER | --custom NAME]; hook reads provider JSON; emit reads normalized JSON"; return fail(); }
     }
-    if ((hook && provider.isEmpty()) || (!provider.isEmpty() && provider != "claude" && provider != "codex" && (hook || provider != "custom"))
+    if ((hook && provider.isEmpty()) || (!provider.isEmpty() && !findProvider(provider) && (hook || provider != "custom"))
         || (!custom.isEmpty() && !provider.isEmpty() && provider != "custom")) {
         error = !custom.isEmpty() ? "--custom sends provider custom only"
-              : hook ? "Expected provider claude or codex" : "Expected provider claude, codex or custom";
+              : "Expected a registered agent provider (claude, codex, opencode, antigravity), or custom for emit";
         return fail();
     }
+    if (!hookEvent.isEmpty() && (provider != "antigravity" || !hookEvents(provider).contains(hookEvent))) return 0;
+    // Antigravity requires a JSON response. "allow" delegates to its normal permission policy;
+    // it is deliberately never "auto_approve". Emit the neutral response even if delivery fails.
+    struct Response {
+        QByteArray value;
+        ~Response() { if (!value.isEmpty()) std::fwrite(value.constData(), 1, value.size(), stdout); }
+    } response{provider == "antigravity" && hook
+        ? hookEvent == "PreToolUse" ? QByteArray("{\"decision\":\"allow\"}\n")
+        : hookEvent == "Stop" ? QByteArray("{\"decision\":\"stop\"}\n") : QByteArray("{}\n") : QByteArray()};
     const int inputLimit = hook ? 1024 * 1024 : 8192;
     QByteArray data;
     QJsonObject object;
@@ -52,6 +63,7 @@ int eventCommand(const QStringList &args) {
         object = doc.object();
     }
     if (hook) {
+        if (!hookEvent.isEmpty()) object["hook_event_name"] = hookEvent;
         object = normalizeHook(provider, object, QDateTime::currentMSecsSinceEpoch());
         if (object.isEmpty()) return 0;
         const auto processes = platform::createProcessServices();

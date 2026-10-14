@@ -63,6 +63,8 @@ Filename: "{app}\agent-pet.exe"; Description: "{cm:LaunchProgram,Agent Pet}"; Fl
 ; the login value are handled in [Code], limited to this installation.
 Filename: "{app}\agent-pet-cli.exe"; Parameters: "integration disable --provider claude"; Flags: runhidden; RunOnceId: "DisableClaude"
 Filename: "{app}\agent-pet-cli.exe"; Parameters: "integration disable --provider codex"; Flags: runhidden; RunOnceId: "DisableCodex"
+Filename: "{app}\agent-pet-cli.exe"; Parameters: "integration disable --provider opencode"; Flags: runhidden; RunOnceId: "DisableOpenCode"
+Filename: "{app}\agent-pet-cli.exe"; Parameters: "integration disable --provider antigravity"; Flags: runhidden; RunOnceId: "DisableAntigravity"
 
 [Code]
 // Runs one setup command for a selected task and reports a failure instead of hiding it.

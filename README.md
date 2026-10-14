@@ -4,6 +4,8 @@
 
 **A little desktop pet that keeps you company while Claude Code and Codex work.**
 
+Experimental OpenCode and Antigravity integrations are available in **Settings → Startup and agents**. See [setup and current coverage](starter/docs/integrations.md#opencode-and-antigravity-experimental).
+
 It sits on your screen, thinks when your agent thinks, gets busy when it runs tools, and waves at you when a session needs your approval, so you can look away from the terminal without missing anything.
 
 <p align="center">

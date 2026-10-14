@@ -1,0 +1,2 @@
+#pragma once
+namespace pet { inline constexpr char openCodePluginBody[] = R"PET_PLUGIN(@OPENCODE_PLUGIN@)PET_PLUGIN"; }

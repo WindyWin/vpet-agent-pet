@@ -12,7 +12,7 @@ One UTF-8 JSON object per Unix datagram, at most 8192 bytes:
 {"version":1,"provider":"claude","session_id":"example","event_id":"delivery-1","kind":"tool_start","timestamp_ms":1791072000000,"tool_id":"call-1","activity":"reading","project_path":"/projects/example","parent_id":"parent"}
 ```
 
-Required fields: `version` (integer 1), `provider` (`claude` or `codex`; `custom` for a
+Required fields: `version` (integer 1), `provider` (`claude`, `codex`, `opencode` or `antigravity`; `custom` for a
 [custom event](#custom-events)),
 `session_id`, `event_id`, `kind`, and positive integer Unix `timestamp_ms`.
 Optional fields: `tool_id`, `parent_id`, `project_path`, `activity`, `reason`,

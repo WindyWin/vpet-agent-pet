@@ -1,5 +1,6 @@
 #include "providers/adapters.h"
 #include "providers/integrations.h"
+#include "providers/registry.h"
 #include "sessions/state.h"
 #include "ipc/local.h"
 #include <QTest>
@@ -26,6 +27,58 @@ class ProviderTests : public QObject {
         return e;
     }
 private slots:
+    void additionalProviderEvents() {
+        QCOMPARE(pet::providers().size(), 4);
+        QVERIFY(!pet::findProvider("unknown"));
+        auto open = QJsonObject{{"type", "tool.execute.before"}, {"sessionID", "s"}, {"callID", "a"},
+                               {"tool", "read"}, {"directory", "/repo"}, {"output", "PRIVATE"}};
+        auto first = pet::normalizeHook("opencode", open, now);
+        QCOMPARE(first["activity"].toString(), QString("reading"));
+        QCOMPARE(first["event_id"], pet::normalizeHook("opencode", open, now + 1)["event_id"]);
+        QVERIFY(!QJsonDocument(first).toJson().contains("PRIVATE"));
+        pet::Sessions sessions;
+        QVERIFY(sessions.apply(event("opencode", open, now), now));
+        open["callID"] = "b"; open["tool"] = "bash";
+        QVERIFY(sessions.apply(event("opencode", open, now + 1), now + 1));
+        open["type"] = "tool.error";
+        QVERIFY(sessions.apply(event("opencode", open, now + 2), now + 2));
+        QCOMPARE(sessions.records().first().tools.size(), 1);
+        QVERIFY(sessions.records().first().tools.contains("a"));
+        open["type"] = "permission.asked";
+        QCOMPARE(pet::normalizeHook("opencode", open, now)["reason"].toString(), QString("approval"));
+        open["type"] = "question.asked";
+        QCOMPARE(pet::normalizeHook("opencode", open, now)["reason"].toString(), QString("input"));
+        open["type"] = "session.error"; open["aborted"] = true;
+        QCOMPARE(pet::normalizeHook("opencode", open, now)["kind"].toString(), QString("interrupt"));
+        open["type"] = "session.idle"; open["parentID"] = "parent";
+        QCOMPARE(pet::normalizeHook("opencode", open, now)["kind"].toString(), QString("session_end"));
+        open["type"] = "tool.execute.before"; open.remove("callID");
+        QVERIFY(pet::normalizeHook("opencode", open, now).isEmpty());
+
+        QJsonObject ag{{"hook_event_name", "PreToolUse"}, {"conversationId", "s"}, {"stepIdx", 0},
+            {"workspacePaths", QJsonArray{"/repo"}}, {"transcriptPath", "PRIVATE"},
+            {"toolCall", QJsonObject{{"name", "run_command"}, {"args", QJsonObject{{"CommandLine", "rm -rf PRIVATE"}}}}}};
+        first = pet::normalizeHook("antigravity", ag, now);
+        QCOMPARE(first["tool_id"].toString(), QString("0")); QVERIFY(first["risky"].toBool());
+        QVERIFY(!QJsonDocument(first).toJson().contains("PRIVATE"));
+        ag["hook_event_name"] = "PostToolUse"; ag["error"] = "PRIVATE failure";
+        auto last = pet::normalizeHook("antigravity", ag, now);
+        QCOMPARE(last["kind"].toString(), QString("error")); QCOMPARE(first["tool_id"], last["tool_id"]);
+        QVERIFY(first["event_id"] != last["event_id"]);
+        for (const auto &step : {QJsonValue(-1), QJsonValue(1.5), QJsonValue("1"), QJsonValue()}) {
+            ag["stepIdx"] = step; QVERIFY(pet::normalizeHook("antigravity", ag, now).isEmpty());
+        }
+        ag["hook_event_name"] = "Stop"; ag.remove("error"); ag["fullyIdle"] = false;
+        QVERIFY(pet::normalizeHook("antigravity", ag, now)["waiting"].toBool());
+        ag["terminationReason"] = "error";
+        QCOMPARE(pet::normalizeHook("antigravity", ag, now)["kind"].toString(), QString("turn_failed"));
+        ag["hook_event_name"] = "Unknown";
+        QVERIFY(pet::normalizeHook("antigravity", ag, now).isEmpty());
+        ag["hook_event_name"] = "PreInvocation"; ag["invocationNum"] = 0;
+        QCOMPARE(pet::normalizeHook("antigravity", ag, now)["kind"].toString(), QString("prompt"));
+        ag["invocationNum"] = 1;
+        QVERIFY(pet::normalizeHook("antigravity", ag, now).isEmpty());
+    }
     void backgroundWaitingStops() {
         auto input = payload("Stop");
         input["background_tasks"] = QJsonArray{QJsonObject{{"id", "PRIVATE"}, {"type", "shell"},
@@ -190,6 +243,82 @@ private slots:
         QVERIFY(apply(payload("PostToolUse", "patch"))); QCOMPARE(sessions.aggregate(stamp), "thinking");
     }
 #ifdef PET_TEST_NATIVE
+    void additionalProviderTransport() {
+#ifdef PET_TEST_POSIX
+        QTemporaryDir temp("/tmp/agent-pet-XXXXXX");
+#else
+        QTemporaryDir temp;
+#endif
+        QVERIFY(temp.isValid());
+        const auto previous = qgetenv("XDG_RUNTIME_DIR"); qputenv("XDG_RUNTIME_DIR", temp.path().toUtf8());
+        pet::Receiver receiver; QString error; QVERIFY2(receiver.start(error), qPrintable(error));
+        QVector<pet::Event> received;
+        receiver.received = [&](const pet::Event &e) { received.append(e); };
+        QProcess process;
+        process.start(APP_PATH, {"hook", "--provider", "opencode"});
+        QVERIFY(process.waitForStarted());
+        process.write(R"({"type":"tool.execute.before","sessionID":"s","callID":"c","tool":"read","output":"PRIVATE"})");
+        process.closeWriteChannel(); QVERIFY(process.waitForFinished(2000)); QCOMPARE(process.exitCode(), 0);
+        QVERIFY(process.readAllStandardOutput().isEmpty()); QVERIFY(process.readAllStandardError().isEmpty());
+        QTRY_COMPARE(received.size(), 1);
+        QCOMPARE(received.first().provider, QString("opencode")); QCOMPARE(received.first().activity, QString("reading"));
+        QJsonObject config; int owned;
+        QVERIFY(pet::mergeIntegration({}, "antigravity", APP_PATH, true, config, owned, error));
+        const auto command = config["agent-pet-v1"].toObject()["PreToolUse"].toArray().first().toObject()
+                                 ["hooks"].toArray().first().toObject()["command"].toString();
+#ifdef PET_TEST_WINDOWS
+        process.start("cmd.exe", {"/d", "/c", command});
+#else
+        process.start("/bin/sh", {"-c", command});
+#endif
+        QVERIFY(process.waitForStarted());
+        process.write(R"({"conversationId":"s","stepIdx":7,"toolCall":{"name":"view_file"}})");
+        process.closeWriteChannel(); QVERIFY(process.waitForFinished(2000)); QCOMPARE(process.exitCode(), 0);
+        QCOMPARE(process.readAllStandardOutput(), QByteArray("{\"decision\":\"allow\"}\n"));
+        QVERIFY(process.readAllStandardError().isEmpty());
+        QTRY_COMPARE(received.size(), 2);
+        QCOMPARE(received.last().provider, QString("antigravity")); QCOMPARE(received.last().tool, QString("7"));
+        qputenv("XDG_RUNTIME_DIR", previous);
+    }
+    void additionalProviderSetup() {
+        QTemporaryDir temp; QVERIFY(temp.isValid());
+        const QString executable = APP_PATH;
+        QJsonObject report; QString error;
+        QVERIFY(!pet::runIntegration("preview", "opencode", temp.filePath("relative.js"), "relative-pet", report, error));
+        for (const auto &provider : {QString("opencode"), QString("antigravity")}) {
+            const auto path = temp.filePath(provider + "/" + (provider == "opencode" ? "agent-pet.js" : "hooks.json"));
+            QVERIFY2(pet::runIntegration("disable", provider, path, executable, report, error), qPrintable(error));
+            QVERIFY(!QFileInfo::exists(QFileInfo(path).absolutePath()));
+            QVERIFY2(pet::runIntegration("preview", provider, path, executable, report, error), qPrintable(error));
+            QVERIFY(!QFileInfo::exists(path));
+            QVERIFY2(pet::runIntegration("enable", provider, path, executable, report, error), qPrintable(error));
+            QVERIFY(report["changed"].toBool());
+            QVERIFY(pet::runIntegration("enable", provider, path, executable, report, error));
+            QVERIFY(!report["changed"].toBool());
+            QVERIFY2(pet::runIntegration("inspect", provider, path, executable, report, error), qPrintable(error));
+            QCOMPARE(report["owned_handlers"].toInt(), report["expected_handlers"].toInt());
+            QFile file(path); QVERIFY(file.open(QIODevice::ReadOnly)); const auto enabled = file.readAll(); file.close();
+            QVERIFY(pet::runIntegration("disable", provider, path, executable, report, error));
+            QVERIFY(pet::runIntegration("disable", provider, path, executable, report, error));
+            QVERIFY2(pet::runIntegration("inspect", provider, path, executable, report, error), qPrintable(error));
+            QCOMPARE(report["owned_handlers"].toInt(), 0);
+            QVERIFY(file.open(QIODevice::WriteOnly)); file.write(provider == "opencode" ? enabled + "// User edit\n" : QByteArray("not json")); file.close();
+            QVERIFY(!pet::runIntegration("enable", provider, path, executable, report, error));
+            QVERIFY(!pet::runIntegration("disable", provider, path, executable, report, error));
+        }
+        const QJsonObject foreign{{"type", "command"}, {"command", "echo foreign"}};
+        const QJsonObject original{{"other-plugin", QJsonObject{{"Stop", QJsonArray{foreign}}}},
+            {"agent-pet-v1", QJsonObject{{"Stop", QJsonArray{foreign}}, {"enabled", false}}}};
+        QJsonObject enabled, disabled; int owned;
+        QVERIFY(pet::mergeIntegration(original, "antigravity", executable, true, enabled, owned, error));
+        QCOMPARE(enabled["other-plugin"], original["other-plugin"]);
+        QCOMPARE(enabled["agent-pet-v1"].toObject()["enabled"], QJsonValue(false));
+        QVERIFY(pet::mergeIntegration(enabled, "antigravity", executable, false, disabled, owned, error));
+        QCOMPARE(owned, 5); QCOMPARE(disabled, original);
+        const QJsonObject emptyForeign{{"agent-pet-v1", QJsonObject{}}, {"other-plugin", QJsonObject{}}};
+        QVERIFY(pet::mergeIntegration(emptyForeign, "antigravity", executable, false, disabled, owned, error));
+        QCOMPARE(disabled, emptyForeign);
+    }
     void configurationPreservation() {
         for (const auto &provider : {QString("claude"), QString("codex")}) {
 #ifdef PET_TEST_WINDOWS

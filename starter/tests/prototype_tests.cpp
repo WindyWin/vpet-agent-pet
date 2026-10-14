@@ -165,6 +165,8 @@ private slots:
         // Settings inspect integration files; keep them away from the real client configuration.
         qputenv("CLAUDE_CONFIG_DIR", QFile::encodeName(clients.path() + "/claude"));
         qputenv("CODEX_HOME", QFile::encodeName(clients.path() + "/codex"));
+        qputenv("OPENCODE_CONFIG_DIR", QFile::encodeName(clients.path() + "/opencode"));
+        qputenv("ANTIGRAVITY_CONFIG_DIR", QFile::encodeName(clients.path() + "/antigravity"));
         // An ordinary Wednesday afternoon, so no special day or hour changes what a test expects.
         pet::EasterEggs::defaultClock = [] { return QDateTime(QDate(2026, 10, 7), QTime(14, 0)); };
     }
@@ -2803,7 +2805,7 @@ private slots:
         auto *integrations = dialog->findChild<QGroupBox*>("integrations"); QVERIFY(integrations); // Setup and coverage.
         int notEnabled = 0;
         for (auto *label : integrations->findChildren<QLabel*>()) notEnabled += label->text().startsWith("Not enabled\n");
-        QCOMPARE(notEnabled, 2);
+        QCOMPARE(notEnabled, 4);
         auto boxes = dialog->findChildren<QCheckBox*>(); QVERIFY(boxes.size() >= 3);
         QVERIFY(!dialog->findChildren<QComboBox*>().isEmpty()); // Bubble level.
         dialog->close(); QCoreApplication::processEvents();

@@ -16,6 +16,14 @@ git init
 
 The asset verifier uses only Python's standard library and works from any current directory. M3 local events and session tracking are implemented alongside the M2 animation and desktop controls. M4 provider adapters and integration setup are implemented; live-client acceptance remains open. M5 alerts and minimal settings are implemented. M6 adds the release package, installer and CI. See [PLAN.md](PLAN.md) and the [architecture overview](docs/architecture.md) and [decision records](docs/adr/README.md).
 
+## Additional coding tools
+
+OpenCode and Antigravity integrations are available experimentally in **Settings →
+Startup and agents**. Enable the desired tool and restart it. The CLI also supports
+`integration preview|enable|inspect|disable --provider opencode|antigravity`.
+OpenCode uses a bundled plugin; Antigravity uses its native hooks. Live client
+acceptance is pending; see [setup, coverage and limitations](docs/integrations.md#opencode-and-antigravity-experimental).
+
 ## Waiting for background jobs
 
 When Claude ends a turn with background tasks still running, the pet uses its idle

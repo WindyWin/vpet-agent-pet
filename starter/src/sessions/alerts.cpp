@@ -1,3 +1,4 @@
+#include "providers/registry.h"
 #include "alerts.h"
 #include "i18n/contexts.h"
 #include <QDir>
@@ -6,7 +7,8 @@
 
 namespace pet {
 QString providerName(const QString &provider) {
-    return provider == "claude" ? "Claude Code" : provider == "codex" ? "Codex" : provider;
+    const auto entry = findProvider(provider);
+    return entry ? entry->name : provider;
 }
 QString shortSessionId(const QString &provider, const QString &id, const QVector<Alert> &context) {
     for (int length = std::min<int>(4, id.size()); length < id.size(); ++length) {

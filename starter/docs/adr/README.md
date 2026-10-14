@@ -47,6 +47,7 @@ the order the decisions were made. For a map of the code, start with the
 | [0038](0038-reminder-confirm-and-snooze.md) | Confirmable reminders, re-remind and Snooze | 2026-10-09 |
 | [0039](0039-whale-girl-pet.md) | Whale Girl, a pet from a PNG animation pack | 2026-10-10 |
 | [0040](0040-break-buddy-and-meal-reminders.md) | Break Buddy and animated meal reminders | 2026-10-13 |
+| [0041](0041-additional-agent-providers.md) | Provider registry, OpenCode and Antigravity | 2026-10-14 |
 
 ## Writing a record
 

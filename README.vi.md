@@ -4,6 +4,8 @@
 
 **Một thú cưng nhỏ trên màn hình, đồng hành cùng bạn khi Claude Code và Codex làm việc.**
 
+Tích hợp OpenCode và Antigravity đang ở giai đoạn thử nghiệm, có trong **Cài đặt → Khởi động và agent**. Xem [hướng dẫn và phạm vi hỗ trợ](starter/docs/integrations.md#opencode-and-antigravity-experimental).
+
 Thú cưng luôn ở bên bạn trên màn hình: suy nghĩ cùng agent, bận rộn khi agent chạy công cụ và vẫy tay khi cần bạn phê duyệt. Bạn có thể rời mắt khỏi terminal mà vẫn biết lúc nào cần quay lại.
 
 <p align="center">

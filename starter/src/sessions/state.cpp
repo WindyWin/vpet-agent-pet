@@ -1,3 +1,4 @@
+#include "providers/registry.h"
 #include "state.h"
 #include "event_name.h"
 #include <QJsonDocument>
@@ -100,7 +101,7 @@ bool Event::parse(const QByteArray &data, Event &e, QString &error, const hosts:
     const bool reasonValid = e.reason.isEmpty() ||
         (e.kind == "attention" && (e.reason == "approval" || e.reason == "input")) ||
         (e.kind == "turn_failed" && (e.reason == "limit" || e.reason == "billing"));
-    if ((e.provider != "claude" && e.provider != "codex" && !custom) || e.session.isEmpty() || e.id.isEmpty() || !kinds.contains(e.kind) ||
+    if ((!findProvider(e.provider) && !custom) || e.session.isEmpty() || e.id.isEmpty() || !kinds.contains(e.kind) ||
         ((e.kind == "tool_start" || e.kind == "tool_end") && e.tool.isEmpty()) ||
         (!e.activity.isEmpty() && e.activity != "reading" && e.activity != "working") ||
         !reasonValid || (e.kind == "turn_failed" && !e.tool.isEmpty()) ||

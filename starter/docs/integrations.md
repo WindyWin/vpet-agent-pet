@@ -1,8 +1,9 @@
 # Provider integrations (M4)
 
 The C++ hook adapters and integration manager ship in the same executable as the
-pet. They require no shell scripts, Python, Node, display server, transcript
-reader, or running client process discovery. Start the pet separately.
+pet. Claude/Codex and Antigravity hooks require no shell scripts, Python, Node,
+display server or transcript reader. OpenCode runs the bundled JavaScript bridge
+in its own plugin runtime. Start the pet separately, or enable its autostart preference.
 
 ## Setup
 
@@ -204,3 +205,69 @@ While waiting, input notifications are ignored; approvals still ask for attentio
 Codex has no background-task signal or idle notification hook and never sets this
 flag. Live Claude payload validation remains a pre-release check in
 [ADR 0026](adr/0026-background-waiting.md#validation).
+
+## OpenCode and Antigravity (experimental)
+
+Both appear in **Settings → Startup and agents**, with the same Enable/Disable
+controls. From the installed executable:
+
+```bash
+agent-pet integration preview --provider opencode
+agent-pet integration enable --provider opencode
+agent-pet integration inspect --provider opencode
+agent-pet integration disable --provider opencode
+```
+
+Replace `opencode` with `antigravity` for its hooks. Preview is read-only; enable
+and disable preserve foreign configuration. Restart the client after enabling.
+On Windows use `agent-pet-cli.exe` for these commands. No real client configuration
+is changed by the automated tests.
+
+| Provider | Default setup target | `--config PATH` means |
+| --- | --- | --- |
+| OpenCode | `~/.config/opencode/plugins/agent-pet.js` | The complete plugin file path |
+| Antigravity | `~/.gemini/config/hooks.json` | The hook JSON file path |
+
+OpenCode's target honors `OPENCODE_CONFIG_DIR`, then `XDG_CONFIG_HOME`. Agent Pet
+also accepts `ANTIGRAVITY_CONFIG_DIR` as a setup-path override; this is an Agent Pet
+option, not a claim that the Antigravity client reads that environment variable.
+For workspace-only setup, pass the client's workspace plugin/hooks path explicitly.
+
+The OpenCode plugin runs without extra dependencies and forwards only allowlisted
+metadata. It uses a bounded serial queue and an argument-array subprocess launch;
+missing executables or a closed pet do not reject client callbacks. Setup refuses
+to overwrite or delete an edited/foreign file at its target path. A single global
+or workspace installation is recommended: OpenCode can load both copies, causing
+duplicate notifications.
+
+| OpenCode callback | Pet behavior |
+| --- | --- |
+| Session created/updated | Refresh identity, parent metadata; can autostart |
+| Chat message | Thinking; new observed turn |
+| Tool before/after | Reading/working; correlate by call ID |
+| Tool part with error status | Error, removing the failed tool; no error text forwarded |
+| Permission asked (legacy SDK: updated) / question asked | Attention for approval/input |
+| Session error | Failed turn; typed MessageAbortedError becomes interruption |
+| Session idle | Finished, or child session end; suppressed after error until the next chat message |
+| Session deleted | Remove session |
+
+Antigravity's named hooks use `--event EVENT` because its payload has no hook name.
+The first workspace path supplies the project label. Tool identity is the step
+index scoped to the conversation. Invocation zero starts observed thinking;
+continuation invocations are ignored to preserve concurrent tool tracking. Tool
+errors use only the presence of the typed error field. Stop with `fullyIdle: false`
+waits for background work; an explicit termination error fails the turn.
+
+Antigravity callbacks return neutral JSON even when delivery fails: PreToolUse
+returns `{"decision":"allow"}` (delegates to the client's policy, never
+`auto_approve`), Stop returns `{"decision":"stop"}`, and other callbacks return
+`{}`. Claude, Codex and OpenCode callbacks remain silent. Antigravity's general
+permission prompts, session closure and child relationships are not inferred.
+
+Contract sources reviewed 2026-10-14: [OpenCode plugins](https://opencode.ai/docs/plugins/)
+and [Antigravity hooks](https://antigravity.google/docs/hooks). OpenCode CLI 1.19.0
+is installed on the development host; its local plugin declarations are 1.18.1.
+Antigravity is not installed. Automated synthetic and subprocess tests do not
+establish live compatibility or a minimum supported client version. Live turns,
+permissions, concurrent tools, interruption, reload, autostart and IDE focus still
+need acceptance on the actual clients and operating systems. See [ADR 0041](adr/0041-additional-agent-providers.md).

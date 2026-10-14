@@ -56,6 +56,7 @@ if result_file.exists() or (updates / "pending.json").exists() or (updates / "st
 with tempfile.TemporaryDirectory(prefix="agent pet check ") as temporary:
     root = Path(temporary)
     env = dict(os.environ, CLAUDE_CONFIG_DIR=str(root / "claude"), CODEX_HOME=str(root / "codex"),
+               OPENCODE_CONFIG_DIR=str(root / "opencode"), ANTIGRAVITY_CONFIG_DIR=str(root / "antigravity"),
                XDG_RUNTIME_DIR=str(root / "runtime"))  # Hooks send to a separate pipe, away from a running pet.
     prefix = root / "My Apps" / "AgentPet"
     cli = prefix / "agent-pet-cli.exe"

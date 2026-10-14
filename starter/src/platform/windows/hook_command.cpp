@@ -1,3 +1,4 @@
+#include "providers/registry.h"
 #include "platform/contracts/hook_command.h"
 #include "executables.h"
 #include "i18n/contexts.h"
@@ -26,7 +27,7 @@ QJsonObject hookHandler(const QString &executable, const QString &provider, QStr
         unquoted = length && length < MAX_PATH ? QString::fromWCharArray(shortPath, int(length)) : QString();
     }
     if (unquoted.isEmpty() || unquoted.contains(cmdSpecial())) {
-        error = Integrations::tr("Codex cannot run a program from this folder. Install Agent Pet in a folder without spaces or symbols.");
+        error = Integrations::tr("%1 cannot run a program from this folder. Install Agent Pet in a folder without spaces or symbols.").arg(findProvider(provider) ? findProvider(provider)->name : provider);
         return {};
     }
     return {{"type", "command"}, {"command", unquoted + " hook --provider " + provider + " --registration " + registration}};
@@ -34,9 +35,9 @@ QJsonObject hookHandler(const QString &executable, const QString &provider, QStr
 bool ownedHookHandler(const QJsonObject &handler, const QString &provider) {
     if (handler.value("type").toString() != "command" || !handler.value("command").isString()) return false;
     if (handler.contains("args")) return handler.value("args").toArray() == hookArguments(provider) && !handler.value("command").toString().isEmpty();
-    static const QRegularExpression command(R"(^[^\s"&|<>^%!(),;=]+ hook --provider (claude|codex) --registration agent-pet-v1$)");
+    static const QRegularExpression command(R"(^[^\s"&|<>^%!(),;=]+ hook --provider ([a-z][a-z0-9-]*) --registration agent-pet-v1$)");
     const auto match = command.match(handler.value("command").toString());
-    return match.hasMatch() && match.captured(1) == provider;
+    return findProvider(provider) && match.hasMatch() && match.captured(1) == provider;
 }
 QString hookExecutable(const QString &application) { return platform::consoleExecutable(application); }
 }

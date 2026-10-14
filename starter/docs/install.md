@@ -131,6 +131,16 @@ point at the installed executable, so they keep working across upgrades.
 Then restart the client and submit a new prompt. In Codex, review and trust the
 new definitions in `/hooks`. The pet reacts to sessions from that point on.
 
+## Connect OpenCode or Antigravity (experimental)
+
+Use the matching **Settings → Startup and agents** row, or
+`agent-pet integration enable --provider opencode` / `--provider antigravity`.
+Restart the client. OpenCode installs a managed JavaScript plugin; Antigravity
+adds native hook definitions. See [paths, preview/removal and coverage](integrations.md#opencode-and-antigravity-experimental).
+Linux and Windows uninstallers remove these default-path integrations too;
+workspace/custom-path installations must be disabled with the same `--config` path.
+Live compatibility remains experimental.
+
 ## Upgrade
 
 Extract the newer package and run its `./install.sh` with the same `--prefix` (or

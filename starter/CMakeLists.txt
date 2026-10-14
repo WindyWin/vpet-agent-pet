@@ -48,7 +48,7 @@ target_include_directories(pet_hosts PUBLIC src)
 target_link_libraries(pet_hosts PUBLIC pet_host_capture)
 qt_add_library(pet_core STATIC
     src/sessions/state.cpp src/sessions/alerts.cpp src/sessions/presence.cpp src/sessions/recap.cpp
-    src/settings/preferences.cpp src/providers/adapters.cpp)
+    src/settings/preferences.cpp src/providers/adapters.cpp src/providers/registry.cpp src/providers/extended_adapters.cpp)
 target_include_directories(pet_core PUBLIC src)
 target_link_libraries(pet_core PUBLIC Qt6::Core pet_host_capture)
 # Which of the pet's competing behaviors may show (docs/adr/0031-behavior-runtime.md); no timers, no Player.
@@ -134,8 +134,11 @@ else()
 endif()
 target_include_directories(pet_native PUBLIC src)
 # Headless code shared by the pet and its display-free commands (hook, integration, autostart).
+file(READ src/providers/opencode-plugin.js OPENCODE_PLUGIN)
+configure_file(src/providers/opencode_plugin.h.in "${CMAKE_CURRENT_BINARY_DIR}/generated/opencode_plugin.h" @ONLY)
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS src/providers/opencode-plugin.js)
 qt_add_library(pet_events STATIC src/ipc/local.cpp src/ipc/session_store.cpp src/ipc/autostart.cpp src/providers/integrations.cpp)
-target_include_directories(pet_events PUBLIC src)
+target_include_directories(pet_events PUBLIC src PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/generated")
 target_link_libraries(pet_events PUBLIC pet_core PRIVATE pet_platform)
 if(WIN32)
     # Verified setup programs install Windows upgrades.
@@ -200,6 +203,12 @@ if(BUILD_TESTING)
     target_link_libraries(provider-tests PRIVATE pet_core Qt6::Test)
     target_compile_definitions(provider-tests PRIVATE PROVIDER_FIXTURE_PATH="${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/providers.json")
     add_test(NAME providers COMMAND provider-tests)
+    find_program(PET_NODE_EXECUTABLE node)
+    if(PET_NODE_EXECUTABLE)
+        add_test(NAME opencode-plugin COMMAND "${PET_NODE_EXECUTABLE}"
+            "${CMAKE_CURRENT_SOURCE_DIR}/tests/opencode_plugin_test.mjs"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/providers/opencode-plugin.js")
+    endif()
     qt_add_executable(event-tests tests/event_tests.cpp)
     target_link_libraries(event-tests PRIVATE pet_core Qt6::Test)
     target_compile_definitions(event-tests PRIVATE FIXTURE_PATH="${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/concurrent.json")
