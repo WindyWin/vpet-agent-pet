@@ -274,7 +274,8 @@ private slots:
         QVERIFY(process.waitForStarted());
         process.write(R"({"conversationId":"s","stepIdx":7,"toolCall":{"name":"view_file"}})");
         process.closeWriteChannel(); QVERIFY(process.waitForFinished(2000)); QCOMPARE(process.exitCode(), 0);
-        QCOMPARE(process.readAllStandardOutput(), QByteArray("{\"decision\":\"allow\"}\n"));
+        QCOMPARE(QJsonDocument::fromJson(process.readAllStandardOutput()).object(),
+                 (QJsonObject{{"decision", "allow"}})); // Windows stdout uses CRLF.
         QVERIFY(process.readAllStandardError().isEmpty());
         QTRY_COMPARE(received.size(), 2);
         QCOMPARE(received.last().provider, QString("antigravity")); QCOMPARE(received.last().tool, QString("7"));
