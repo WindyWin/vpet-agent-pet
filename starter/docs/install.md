@@ -12,7 +12,9 @@ Linux unless it says otherwise.
 - x86_64 Linux with glibc 2.35 or newer (Ubuntu 22.04, Debian 12, Fedora 36,
   Arch and newer). Release builds run on Ubuntu 22.04 to set this baseline.
 - An X11 session, or a Wayland session with XWayland (the default on GNOME and
-  KDE). Native Wayland is not supported yet.
+  KDE). The release packages run through XWayland; native Wayland (layer-shell) is
+  available in builds against the system Qt, see
+  [the design record](adr/0043-native-wayland-layer-shell.md).
 - Claude Code and/or Codex CLI with hooks support for the integrations. See
   [integrations.md](integrations.md) for tested client versions.
 

@@ -53,7 +53,7 @@ The version comes only from `project(AgentPet VERSION …)` in `starter/CMakeLis
 One binary, `agent-pet`, has two personalities chosen in `src/main.cpp` before any `QApplication` exists:
 
 - **Headless subcommands** (`hook`, `emit`, `integration`, `autostart`, `--version`) use `QCoreApplication` and link only `pet_events`. On Windows the same `main.cpp` builds `agent-pet.exe` (GUI subsystem, the pet) and `agent-pet-cli.exe` (console, for hooks and commands); `hookExecutable()`/`petExecutable()` map between them. `hook` runs inside agent clients: it must always exit 0 with no stdout/stderr (Qt message output is suppressed), finish fast (150 ms stdin deadline, one nonblocking send), and never transmit prompt/tool content. The hook only sends a one-bit `risky` verdict for destructive commands.
-- **GUI pet**: takes the single-instance lock (the IPC `Receiver`), builds `PetWindow`, wires a `Monitor`, and starts the update `Controller`. On Linux it defaults to `xcb` when `DISPLAY` is set (XWayland); native Wayland is opt-in and unverified.
+- **GUI pet**: takes the single-instance lock (the IPC `Receiver`), builds `PetWindow`, wires a `Monitor`, and starts the update `Controller`. On Linux `bootstrapGui()` picks the backend: native Wayland with wlr-layer-shell surfaces for the pet and its bubbles when the compositor offers it and the build has LayerShellQt (`AGENT_PET_WAYLAND`; `overlay::place` and `platform::layerPlace`, ADR 0043), otherwise `xcb` (XWayland, whose live scale `PetWindow::syncDisplayScale` follows, ADR 0042). `AGENT_PET_PLATFORM=xcb` forces X11; release packages bundle only the xcb plugin.
 
 CMake libraries enforce this split:
 

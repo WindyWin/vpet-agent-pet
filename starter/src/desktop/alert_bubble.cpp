@@ -1,4 +1,5 @@
 #include "alert_bubble.h"
+#include "desktop/overlay.h"
 #include <QEvent>
 #include <QHBoxLayout>
 #include <QMouseEvent>
@@ -13,6 +14,7 @@ AlertBubble::AlertBubble(QWidget *parent) : QWidget(parent) {
     setAttribute(Qt::WA_TranslucentBackground);
     setAttribute(Qt::WA_ShowWithoutActivating);
     setAttribute(Qt::WA_MacAlwaysShowToolWindow);
+    overlay::prepare(this, true, false);
     setCursor(Qt::PointingHandCursor);
     auto *layout = new QHBoxLayout(this);
     layout->setContentsMargins(26, 6, 8, 6); layout->setSpacing(8);
@@ -79,7 +81,7 @@ QPoint AlertBubble::placement(const QRect &pet, QSize bubble, const QRect &scree
 void AlertBubble::place(const QRect &pet, const QVector<QRect> &screens) {
     QRect screen = screens.value(0, pet);
     for (const auto &area : screens) if (area.contains(pet.center())) { screen = area; break; }
-    move(placement(pet, size(), screen));
+    overlay::place(this, placement(pet, size(), screen));
 }
 void AlertBubble::mouseReleaseEvent(QMouseEvent *event) {
     if (event->button() == Qt::LeftButton && rect().contains(event->position().toPoint())) emit focusRequested();
@@ -99,6 +101,7 @@ NoteBubble::NoteBubble(QWidget *parent) : QWidget(parent) {
     setAttribute(Qt::WA_TranslucentBackground);
     setAttribute(Qt::WA_ShowWithoutActivating);
     setAttribute(Qt::WA_MacAlwaysShowToolWindow);
+    overlay::prepare(this, true, false);
     setAccessibleName(tr("Agent Pet note"));
     auto *layout = new QVBoxLayout(this);
     layout->setContentsMargins(16, 8, 16, 8); layout->setSpacing(4);
@@ -161,7 +164,7 @@ void NoteBubble::place(const QRect &pet, const QVector<QRect> &screens) {
     pet_ = pet; screens_ = screens;
     QRect screen = screens_.value(0, pet_);
     for (const auto &area : screens_) if (area.contains(pet_.center())) { screen = area; break; }
-    move(AlertBubble::placement(pet_, size(), screen, avoid_ ? avoid_() : QVector<QRect>()));
+    overlay::place(this, AlertBubble::placement(pet_, size(), screen, avoid_ ? avoid_() : QVector<QRect>()));
 }
 void NoteBubble::present(const QString &text, int ms) {
     label_->setText(text);

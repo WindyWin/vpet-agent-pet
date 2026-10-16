@@ -6,6 +6,7 @@
 #include "desktop/pet_picker.h"
 #include "desktop/plugin_list.h"
 #include "platform/contracts/native_window.h"
+#include "desktop/overlay.h"
 #include "ipc/autostart.h"
 #include "providers/integrations.h"
 #include "i18n/contexts.h"
@@ -82,6 +83,7 @@ PetWindow::PetWindow(QWidget *parent, const QString &path, bool persist)
     setAttribute(Qt::WA_TranslucentBackground);
     setAttribute(Qt::WA_MacAlwaysShowToolWindow); // macOS otherwise hides tool windows while another app is active.
     setAccessibleName("Agent Pet");
+    startScale_ = platform::nativeDisplayScale().value_or(0);
     setPetSize(preferences.size);
     muted_ = preferences.muted; sound_ = preferences.sound; bubbles_ = qBound(0, preferences.bubbles, 2);
     ambient_.setLevel(AmbientLevel(qBound(0, preferences.ambient, 2)));
@@ -194,13 +196,13 @@ PetWindow::PetWindow(QWidget *parent, const QString &path, bool persist)
     connect(&flightTimer_, &QTimer::timeout, this, [this] {
         if (!flight_) { flightTimer_.stop(); return; }
         const bool airborne = flight_->step(flightClock_.restart());
-        move(flight_->position());
+        relocate(flight_->position());
         if (!airborne) land();
     });
     walkTimer_.setInterval(33);
     connect(&walkTimer_, &QTimer::timeout, this, &PetWindow::walkStep);
     slide_.setDuration(280); slide_.setEasingCurve(QEasingCurve::OutCubic);
-    connect(&slide_, &QVariantAnimation::valueChanged, this, [this](const QVariant &value) { move(value.toPoint()); });
+    connect(&slide_, &QVariantAnimation::valueChanged, this, [this](const QVariant &value) { relocate(value.toPoint()); });
     connect(&slide_, &QVariantAnimation::finished, this, [this] {
         // Arrived: it hides there as a rest, which the runtime allows only while nothing else is going on.
         const auto &touch = player_.touch();
@@ -218,9 +220,14 @@ PetWindow::PetWindow(QWidget *parent, const QString &path, bool persist)
     new QShortcut(QKeySequence(Qt::Key_Menu), this, [this] { menu_.popup(mapToGlobal(rect().center())); });
     new QShortcut(QKeySequence("Ctrl+,"), this, [this] { showSettings(); });
     for (auto *screen : QApplication::screens()) watchScreen(screen);
-    connect(qApp, &QGuiApplication::screenAdded, this, [this](QScreen *screen) { watchScreen(screen); constrainPosition(); });
-    connect(qApp, &QGuiApplication::screenRemoved, this, [this] { QTimer::singleShot(0, this, &PetWindow::constrainPosition); });
-    move(preferences.hasPosition ? preferences.position : QPoint(-1000000, -1000000));
+    connect(qApp, &QGuiApplication::screenAdded, this, [this](QScreen *screen) {
+        watchScreen(screen); constrainPosition(); scheduleDisplayScaleSync();
+    });
+    connect(qApp, &QGuiApplication::screenRemoved, this, [this] {
+        QTimer::singleShot(0, this, &PetWindow::constrainPosition); scheduleDisplayScaleSync();
+    });
+    overlay::prepare(this, preferences.onTop, true); // After the size: a layer surface is created at the window's size.
+    relocate(preferences.hasPosition ? preferences.position : QPoint(-1000000, -1000000));
     constrainPosition();
     ready_ = true;
     stage_.runtime().submit({"lifecycle", "start", "start", behavior::Policy::Startup});
@@ -311,8 +318,21 @@ QPoint PetWindow::fromNative(QPoint native, QPoint screenOrigin, qreal ratio) {
     if (ratio <= 0) return native;
     return screenOrigin + (QPointF(native - screenOrigin) / ratio).toPoint();
 }
+void PetWindow::relocate(QPoint where) {
+    // Crossing to another screen recreates the surface; a drag carries on there, as the pointer is already over it.
+    overlay::place(this, where, true);
+    if (!platform::layerShellActive() || !windowHandle()) return;
+    if (frames_ != windowHandle()) { frames_ = windowHandle(); frames_->installEventFilter(this); }
+    awaitingFrame_ = true; frameClock_.start();
+    windowHandle()->requestUpdate();
+}
+bool PetWindow::eventFilter(QObject *watched, QEvent *event) {
+    if (event->type() == QEvent::UpdateRequest && watched == frames_) awaitingFrame_ = false;
+    return QWidget::eventFilter(watched, event);
+}
 void PetWindow::watchScreen(QScreen *screen) {
     connect(screen, &QScreen::availableGeometryChanged, this, [this] { constrainPosition(); });
+    connect(screen, &QScreen::geometryChanged, this, [this] { scheduleDisplayScaleSync(); });
 }
 void PetWindow::constrainPosition() {
     const auto &touch = player_.touch();
@@ -320,15 +340,37 @@ void PetWindow::constrainPosition() {
         ? touch::hidePosition(edge_, QRect(pos(), size()), screenAreas(),
                               edge_ == touch::Edge::Left ? touch.edgeLeftAt : touch.edgeRightAt, touch.scale)
         : Preferences::visiblePosition(pos(), size(), screenAreas());
-    if (pos() != adjusted) move(adjusted);
+    if (pos() != adjusted) relocate(adjusted);
     if (ready_) saveTimer_.start();
 }
 void PetWindow::setPetSize(int pixels) {
-    const int size = qBound(160, pixels, 320);
+    petSize_ = qBound(160, pixels, 320);
+    applySize();
+}
+void PetWindow::applySize() {
+    const int size = qRound(petSize_ * displayFactor_);
     setFixedSize(size, size);
     player_.setRenderSize(qRound(size * devicePixelRatioF()));
     if (ready_) constrainPosition();
     emit moved();
+}
+// Under XWayland the compositor scales X11 clients by its highest output scale, and that changes when a screen
+// comes or goes (a tablet as a second monitor). Qt reads the ratio once at start, so its logical pixels then
+// stand for more or fewer real ones and the pet visibly resizes. Follow the live value and size the window so
+// the pet keeps the size the user chose.
+void PetWindow::syncDisplayScale() {
+    if (quitting_ || startScale_ <= 0) return;
+    const auto now = platform::nativeDisplayScale();
+    if (!now) return;
+    const qreal factor = qBound(0.25, *now / startScale_, 4.0);
+    if (qAbs(factor - displayFactor_) < 0.005) return;
+    displayFactor_ = factor;
+    applySize();
+}
+void PetWindow::scheduleDisplayScaleSync() {
+    if (startScale_ <= 0) return;
+    // The compositor updates the root's resources a little after the screens change.
+    for (const int ms : {300, 1500}) QTimer::singleShot(ms, this, &PetWindow::syncDisplayScale);
 }
 void PetWindow::setClickThrough(bool enabled) {
     if (quitting_) return;
@@ -455,7 +497,7 @@ void PetWindow::setMovementMinutes(int minutes) {
 }
 void PetWindow::showAfterFlagChange(QPoint position) {
     // Changing window flags hides the window; a hidden pet stays hidden until shown.
-    if (!petHidden()) { show(); move(position); }
+    if (!petHidden()) { overlay::prepare(this, windowFlags() & Qt::WindowStaysOnTopHint, true); show(); relocate(position); }
 }
 void PetWindow::recover() {
     if (quitting_) return;
@@ -463,7 +505,7 @@ void PetWindow::recover() {
     applyPresence(presence_.setUserHidden(false));
     if (hiding() || walking()) player_.play("idle", true); // Out from behind the edge, or off a walk, to be placed in plain view.
     setClickThrough(false);
-    move(Preferences::visiblePosition({-1000000, -1000000}, size(), screenAreas()));
+    relocate(Preferences::visiblePosition({-1000000, -1000000}, size(), screenAreas()));
     show(); raise();
 }
 void PetWindow::setTrayAvailable(bool available) {
@@ -495,7 +537,7 @@ void PetWindow::applyPresence(Presence::Action action) {
         player_.setPaused(true); // Nobody sees it; sessions keep driving its state.
     } else {
         const auto position = pos();
-        show(); move(position); raise();
+        show(); relocate(position); raise();
         player_.setPaused(false);
         constrainPosition();
     }
@@ -586,7 +628,7 @@ bool PetWindow::writePreferences(const std::function<void(Preferences &)> &chang
     if (!persist_ || !ready_) return true;
     // Start from the file: `agent-pet autostart` may have changed the startup keys meanwhile.
     auto preferences = store_.load();
-    preferences.size = width(); preferences.position = pos(); preferences.hasPosition = true;
+    preferences.size = petSize_; preferences.position = pos(); preferences.hasPosition = true;
     preferences.onTop = windowFlags().testFlag(Qt::WindowStaysOnTopHint);
     preferences.muted = muted_; preferences.sound = sound_; preferences.bubbles = bubbles_;
     preferences.ambient = ambientLevel(); preferences.activity = activityStyle(); preferences.mood = moodLevel(); preferences.turns = mood_.turns();
@@ -663,13 +705,15 @@ void PetWindow::mousePressEvent(QMouseEvent *event) {
     // A pet hiding at an edge is only partly there; it can be dragged back out, not petted.
     pressTouch_ = touchEnabled_ && !hiding() ? player_.touchAt(event->position(), width()) : QString();
     dragOffset_ = event->globalPosition().toPoint() - pos();
-    fallbackDrag_ = !windowHandle()->startSystemMove();
+    // A layer surface cannot be moved by the compositor: the pet follows the pointer itself.
+    fallbackDrag_ = platform::layerShellActive() || !windowHandle()->startSystemMove();
     dragTimer_.start();
 }
 void PetWindow::mouseMoveEvent(QMouseEvent *event) {
     if (dragging_ && fallbackDrag_ && (event->buttons() & Qt::LeftButton)) {
+        if (awaitingFrame_ && frameClock_.isValid() && frameClock_.elapsed() < 50) return; // Its coordinates are for where the pet was.
         player_.beginDrag();
-        move(event->globalPosition().toPoint() - dragOffset_);
+        relocate(event->globalPosition().toPoint() - dragOffset_);
     }
 }
 void PetWindow::endDrag(bool released) {
@@ -720,9 +764,10 @@ void PetWindow::slideTo(QPoint target, touch::Edge hide) {
     slide_.start();
 }
 bool PetWindow::canWander(const Move &move) const {
-    // Native Wayland leaves window placement to the compositor, so the pet could not go anywhere.
+    // Native Wayland leaves window placement to the compositor, so the pet could not go anywhere,
+    // unless it is a layer-shell surface that places itself.
     if (!wanderEnabled_ || quitting_ || petHidden() || !isVisible() || hiding() || dragging_ || flight_ || sliding()
-        || QGuiApplication::platformName().startsWith("wayland"))
+        || (QGuiApplication::platformName().startsWith("wayland") && !platform::layerShellActive()))
         return false;
     if (!move.mood.isEmpty() && move.mood != player_.mood()) return false;
     const QRect window(nativePos(), size());
@@ -744,7 +789,7 @@ void PetWindow::walkStep() {
     if (!walkClock_.isValid()) { walkClock_.start(); walkPosition_ = pos(); return; }
     if (walkPosition_.toPoint() != pos()) walkPosition_ = pos(); // Moved by something else, such as a screen change.
     walkPosition_ += wander::step(*walk, width(), player_.moveScale(), walkClock_.restart());
-    move(walkPosition_.toPoint());
+    relocate(walkPosition_.toPoint());
     // Short of the screen edge, or of the top or bottom for a climb, it stops and plays its end.
     const QRect window(pos(), size());
     if (!wander::keeps(*walk, wander::distances(window, touch::areaFor(window, screenAreas()), player_.moveScale())))
@@ -814,7 +859,7 @@ void PetWindow::showSettings() {
     language->setCurrentIndex(qMax(0, language->findData(language_)));
     layout->addRow(tr("&Language"), language);
     connect(language, &QComboBox::currentIndexChanged, this, [this, language] { setLanguage(language->currentData().toString()); });
-    auto *size = new QSpinBox(dialog); size->setRange(160, 320); size->setSingleStep(20); size->setSuffix(" px"); size->setValue(width());
+    auto *size = new QSpinBox(dialog); size->setRange(160, 320); size->setSingleStep(20); size->setSuffix(" px"); size->setValue(petSize_);
     size->setAccessibleName(tr("Pet size")); layout->addRow(tr("&Size"), size);
     connect(size, &QSpinBox::valueChanged, this, &PetWindow::setPetSize);
     auto *top = new QCheckBox(tr("Always on &top"), dialog); top->setChecked(onTopAction_->isChecked()); layout->addRow(top);
