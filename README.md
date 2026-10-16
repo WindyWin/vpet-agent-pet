@@ -119,6 +119,8 @@ Just don't overdo it: throw it around too much, pet it nonstop or hold on to it 
 
 When nothing needs it, the pet yawns, looks around and every so often goes for a walk, crawls along the screen or climbs up its edge. It also has moods: a good run of finished work makes it happy, lots of errors make it droopy, and after a long busy stretch it gets hungry, a hint that you could use a break too.
 
+VPet randomly celebrates a finished turn with a wave, shining cheer, shy reaction, or one of two happy cat-paw gestures. The wave has twice the chance of each other reaction; special occasions and earned treats can bring a different celebration.
+
 <table>
   <tr>
     <td align="center"><img src="docs/media/walk-left.gif" width="240" alt="Walking"><br>Walking</td>
@@ -148,6 +150,8 @@ Friday evenings, your birthday, late nights, very long tasks and every 100th fin
 ### Takes care of you
 
 Every 20 minutes of active time it reminds you to look at something far away for 20 seconds; click the note and it counts down with you. Every hour, VPet drinks from a glass alongside the water reminder. At lunchtime (noon by default), it eats a sandwich with the meal reminder. Choose **Done**, **Later** (10 minutes), or **Skip today** to answer a reminder.
+
+Completing a reminder earns one of **six VPet happy reactions**, chosen at random: a shy smile, shining cheer, wave, dance, hearts, or a milestone celebration. Water, lunch and go-home reminders celebrate when you choose **Done**; eye and movement breaks celebrate when their countdown finishes. Each reaction returns to idle afterward, and the same reaction can appear twice in a row.
 
 **Break Buddy** offers a 60-second movement break every hour of active time. Choose **Start break** and VPet jumps rope while you move or stretch, with a countdown to keep you company. Start one anytime from right-click → **Take a movement break**, or click the countdown to end it early. Set its interval to **Off**, **30**, **60**, or **90 minutes** under **Settings → Reminders → Movement break**.
 

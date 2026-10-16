@@ -35,6 +35,10 @@ and no quiet mode (#34); [0015](0015-easter-eggs.md) left it out.
 
 ## Consequences
 
+- Completing a reminder draws with equal weight from VPet's `reminder-done` pool: shy, shining, turn-finished,
+  dance, hearts and milestone reactions. These six choices reuse existing artwork and return to idle after playing.
+  Consecutive completions may draw the same reaction. This expansion is limited to VPet.
+
 - Reminder timing changed: ignoring a reminder used to lose it for a whole interval, and now it comes back three
   times at ten-minute spacing before being given.
 - `Monitor` gained `Nudges` and the answer handlers; the runtime, `Wellness` and `EasterEggs` are unchanged.
@@ -55,3 +59,9 @@ and no quiet mode (#34); [0015](0015-easter-eggs.md) left it out.
   still show an approval, resuming shows the waiting alert, a timed snooze ends by itself and one "until this
   turn finishes" ends on `turn_finished`.
 - The lunch and recap tests now assert that a reminder asks, and is given only once answered.
+
+### Varied completion reactions — 2026-10-16
+
+- Expanded VPet's `reminder-done` pool using existing happy animations, all with finite playback returning to idle.
+- `python3 scripts/verify_assets.py` passed for all six local pet catalogs.
+- Rebuilt the artwork resource; CTest `pets` and `plugins` passed (2/2).

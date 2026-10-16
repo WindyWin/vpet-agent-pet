@@ -3,8 +3,8 @@
   "upstream": "https://github.com/LorisYounger/VPet",
   "source_commit": "6358445aa54587f9cd524264eaf17ef97bc826a8",
   "source_note": "Selected unmodified files from local checkout; per-file hashes identify copied bytes, including any local changes.",
-  "file_count": 1322,
-  "total_bytes": 203207998,
+  "file_count": 1359,
+  "total_bytes": 208480548,
   "files": [
     {
       "path": "assets/vpet/vup/Default/Nomal/1/_000_250.png",
@@ -6615,6 +6615,191 @@
       "path": "assets/vpet/vup/Reminders/drink/_041_50.png",
       "bytes": 185320,
       "sha256": "6ac23af1adc565b1f743b42f018c93748647cb5ccd297e4138987182f5538fa6"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Meow/Happy/2/\u5f00\u5fc3\u4e8c_000_125.png",
+      "bytes": 147298,
+      "sha256": "e6f3050e4a758fe112f279b56dea6f013bd648153b005fad41d69a8164a91562"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Meow/Happy/2/\u5f00\u5fc3\u4e8c_001_125.png",
+      "bytes": 147550,
+      "sha256": "d092790d31a6722c8a8938aef9dbfe29f0b553d745087f5feb462bba41f68cf8"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Meow/Happy/2/\u5f00\u5fc3\u4e8c_002_125.png",
+      "bytes": 147307,
+      "sha256": "aa3af1e00ad8dd9b58db0a68d30e32b3b966aa17a51aea1c46d8ab332c9a3f0f"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Meow/Happy/2/\u5f00\u5fc3\u4e8c_003_125.png",
+      "bytes": 141650,
+      "sha256": "dcac58ee7945ab7efe98f29564285c02abddd9788de28d62e55305952dc84193"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Meow/Happy/2/\u5f00\u5fc3\u4e8c_004_125.png",
+      "bytes": 137858,
+      "sha256": "41465f5fc523e5c2572d6d99eda2a8fd6e4aa2369310671be5c1540ae4ed9cd2"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Meow/Happy/2/\u5f00\u5fc3\u4e8c_005_125.png",
+      "bytes": 140971,
+      "sha256": "4f7bc3b69e5b9d1b97401f130f15a42a426d9827face9e5824c8d412fc745c7b"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Meow/Happy/2/\u5f00\u5fc3\u4e8c_006_500.png",
+      "bytes": 140046,
+      "sha256": "02123eac13212f21542da16838d2ab25210304b2391fca907a06e3fe2b84d3c9"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Meow/Happy/2/\u5f00\u5fc3\u4e8c_007_125.png",
+      "bytes": 137274,
+      "sha256": "dd1f0fbabe80a19ac633a5be0dc1c3797f1331d374f66e4840bd4d17103c9562"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Meow/Happy/2/\u5f00\u5fc3\u4e8c_008_125.png",
+      "bytes": 142222,
+      "sha256": "107bc37d5f1d3ffcf17c984a0f2cfdc9b9ab220fc861af8fb0d7ec59eb0e337d"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Meow/Happy/2/\u5f00\u5fc3\u4e8c_009_125.png",
+      "bytes": 137274,
+      "sha256": "dd1f0fbabe80a19ac633a5be0dc1c3797f1331d374f66e4840bd4d17103c9562"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Meow/Happy/2/\u5f00\u5fc3\u4e8c_010_125.png",
+      "bytes": 142222,
+      "sha256": "107bc37d5f1d3ffcf17c984a0f2cfdc9b9ab220fc861af8fb0d7ec59eb0e337d"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Meow/Happy/2/\u5f00\u5fc3\u4e8c_011_125.png",
+      "bytes": 139262,
+      "sha256": "69c4d589de773c8f006697468bd1bff976653fbe5b6ee174866b8197adc29fc3"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Meow/Happy/2/\u5f00\u5fc3\u4e8c_012_125.png",
+      "bytes": 142222,
+      "sha256": "107bc37d5f1d3ffcf17c984a0f2cfdc9b9ab220fc861af8fb0d7ec59eb0e337d"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Meow/Happy/2/\u5f00\u5fc3\u4e8c_013_125.png",
+      "bytes": 139262,
+      "sha256": "69c4d589de773c8f006697468bd1bff976653fbe5b6ee174866b8197adc29fc3"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Meow/Happy/2/\u5f00\u5fc3\u4e8c_014_125.png",
+      "bytes": 142222,
+      "sha256": "107bc37d5f1d3ffcf17c984a0f2cfdc9b9ab220fc861af8fb0d7ec59eb0e337d"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Meow/Happy/2/\u5f00\u5fc3\u4e8c_015_125.png",
+      "bytes": 141853,
+      "sha256": "dcc27e9f72d1a776cecedf75d979bdac5283212f6535090137edcfa787b23886"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Meow/Happy/2/\u5f00\u5fc3\u4e8c_016_125.png",
+      "bytes": 139480,
+      "sha256": "1c39b022f5bf2a4b1bd19fa2802ae180d982a62fe3d03787ba2f268fb0da8051"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Meow/Happy/2/\u5f00\u5fc3\u4e8c_017_125.png",
+      "bytes": 147307,
+      "sha256": "aa3af1e00ad8dd9b58db0a68d30e32b3b966aa17a51aea1c46d8ab332c9a3f0f"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Meow/Happy/2/\u5f00\u5fc3\u4e8c_018_125.png",
+      "bytes": 147550,
+      "sha256": "d092790d31a6722c8a8938aef9dbfe29f0b553d745087f5feb462bba41f68cf8"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Meow/Happy/2/\u5f00\u5fc3\u4e8c_019_125.png",
+      "bytes": 147298,
+      "sha256": "e6f3050e4a758fe112f279b56dea6f013bd648153b005fad41d69a8164a91562"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Meow/Happy/3/\u5f00\u5fc3\u4e09_000_125.png",
+      "bytes": 147298,
+      "sha256": "e6f3050e4a758fe112f279b56dea6f013bd648153b005fad41d69a8164a91562"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Meow/Happy/3/\u5f00\u5fc3\u4e09_001_125.png",
+      "bytes": 147550,
+      "sha256": "d092790d31a6722c8a8938aef9dbfe29f0b553d745087f5feb462bba41f68cf8"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Meow/Happy/3/\u5f00\u5fc3\u4e09_002_125.png",
+      "bytes": 147307,
+      "sha256": "aa3af1e00ad8dd9b58db0a68d30e32b3b966aa17a51aea1c46d8ab332c9a3f0f"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Meow/Happy/3/\u5f00\u5fc3\u4e09_003_125.png",
+      "bytes": 141650,
+      "sha256": "dcac58ee7945ab7efe98f29564285c02abddd9788de28d62e55305952dc84193"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Meow/Happy/3/\u5f00\u5fc3\u4e09_004_125.png",
+      "bytes": 137858,
+      "sha256": "41465f5fc523e5c2572d6d99eda2a8fd6e4aa2369310671be5c1540ae4ed9cd2"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Meow/Happy/3/\u5f00\u5fc3\u4e09_005_125.png",
+      "bytes": 140971,
+      "sha256": "4f7bc3b69e5b9d1b97401f130f15a42a426d9827face9e5824c8d412fc745c7b"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Meow/Happy/3/\u5f00\u5fc3\u4e09_006_500.png",
+      "bytes": 140046,
+      "sha256": "02123eac13212f21542da16838d2ab25210304b2391fca907a06e3fe2b84d3c9"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Meow/Happy/3/\u5f00\u5fc3\u4e09_007_125.png",
+      "bytes": 137274,
+      "sha256": "dd1f0fbabe80a19ac633a5be0dc1c3797f1331d374f66e4840bd4d17103c9562"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Meow/Happy/3/\u5f00\u5fc3\u4e09_008_125.png",
+      "bytes": 142222,
+      "sha256": "107bc37d5f1d3ffcf17c984a0f2cfdc9b9ab220fc861af8fb0d7ec59eb0e337d"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Meow/Happy/3/\u5f00\u5fc3\u4e09_009_125.png",
+      "bytes": 137274,
+      "sha256": "dd1f0fbabe80a19ac633a5be0dc1c3797f1331d374f66e4840bd4d17103c9562"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Meow/Happy/3/\u5f00\u5fc3\u4e09_010_500.png",
+      "bytes": 142222,
+      "sha256": "107bc37d5f1d3ffcf17c984a0f2cfdc9b9ab220fc861af8fb0d7ec59eb0e337d"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Meow/Happy/3/\u5f00\u5fc3\u4e09_011_125.png",
+      "bytes": 141853,
+      "sha256": "dcc27e9f72d1a776cecedf75d979bdac5283212f6535090137edcfa787b23886"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Meow/Happy/3/\u5f00\u5fc3\u4e09_012_125.png",
+      "bytes": 139262,
+      "sha256": "69c4d589de773c8f006697468bd1bff976653fbe5b6ee174866b8197adc29fc3"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Meow/Happy/3/\u5f00\u5fc3\u4e09_013_125.png",
+      "bytes": 139480,
+      "sha256": "1c39b022f5bf2a4b1bd19fa2802ae180d982a62fe3d03787ba2f268fb0da8051"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Meow/Happy/3/\u5f00\u5fc3\u4e09_014_125.png",
+      "bytes": 147307,
+      "sha256": "aa3af1e00ad8dd9b58db0a68d30e32b3b966aa17a51aea1c46d8ab332c9a3f0f"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Meow/Happy/3/\u5f00\u5fc3\u4e09_015_125.png",
+      "bytes": 147550,
+      "sha256": "d092790d31a6722c8a8938aef9dbfe29f0b553d745087f5feb462bba41f68cf8"
+    },
+    {
+      "path": "assets/vpet/vup/IDEL/Meow/Happy/3/\u5f00\u5fc3\u4e09_016_125.png",
+      "bytes": 147298,
+      "sha256": "e6f3050e4a758fe112f279b56dea6f013bd648153b005fad41d69a8164a91562"
     }
   ]
 }
