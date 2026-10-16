@@ -11,6 +11,10 @@ and [issue-linked roadmap](../../README.md#roadmap-mapped-to-the-architecture), 
 the planned pet library, cue mapping, behavior runtime and plugin boundaries.
 The code map below describes the current implementation.
 
+The planned `.agentpet` format, per-user storage, trust levels and compatibility
+contract are defined in [ADR 0041 — Packs](adr/0041-packs.md). Implementation
+follows the phases of #91; the code map below remains the current architecture.
+
 ## Code map
 
 | Area | Code | Decision |
