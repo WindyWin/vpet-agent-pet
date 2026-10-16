@@ -35,7 +35,8 @@ public:
     static QString defaultStore(); // "pets" in the per-user application data folder.
     static QString defaultPetFolder(); // "packs/pets" in the per-user data directory.
     QString petFolder() const { return localFolder_; }
-    QString terms(const QString &id) const; // Bounded plain text, from resources or a validated local pack.
+    QString terms(const QString &id) const; // Bounded plain text; validates local packs once.
+    QString terms(const PetInfo &pet) const; // Reads terms using metadata already validated by info().
     QString store() const { return store_; }
     QString blobPath(const QString &sha256) const { return store_ + "/" + sha256 + ".rcc"; }
     QString error() const { return error_; } // Why the index is unavailable; empty when it loaded.

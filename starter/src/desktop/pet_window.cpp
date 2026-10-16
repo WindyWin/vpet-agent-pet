@@ -1161,7 +1161,7 @@ void PetWindow::showAbout() {
         QFile file(path);
         return file.open(QIODevice::ReadOnly) ? QString::fromUtf8(file.readAll()) + "\n\n" : QString();
     };
-    auto artworkTerms = library.terms(library.active()) + "\n\n";
+    auto artworkTerms = library.terms(artwork) + "\n\n";
     if (artworkTerms.trimmed().isEmpty()) artworkTerms.clear();
     if (artworkTerms.isEmpty()) artworkTerms = tr("Artwork terms unavailable.") + "\n\n";
     terms->setPlainText(read(":/licenses/QT-NOTICE.txt") + read(":/NOTICE")
@@ -1176,7 +1176,7 @@ void PetWindow::showAbout() {
     petTerms->setCurrentIndex(petTerms->findData(library.active()));
     connect(petTerms, &QComboBox::currentIndexChanged, dialog, [petTerms, terms, &library, read](int) {
         const auto pet = library.info(petTerms->currentData().toString());
-        auto text = library.terms(pet.id);
+        auto text = library.terms(pet);
         if (text.isEmpty()) text = tr("Artwork terms unavailable.");
         terms->setPlainText(read(":/NOTICE") + read(":/THIRD_PARTY_NOTICES.md")
                            + pet.name + " — " + pet.author + "\n" + pet.license + "\n\n" + text + "\n\n" + read(":/LICENSE"));

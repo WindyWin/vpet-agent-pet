@@ -92,6 +92,9 @@ PetInfo PetLibrary::info(const QString &id) const {
 }
 QString PetLibrary::terms(const QString &id) const {
     const auto pet = info(id);
+    return pet.id.isEmpty() || !pet.error.isEmpty() ? QString() : terms(pet);
+}
+QString PetLibrary::terms(const PetInfo &pet) const {
     if (pet.id.isEmpty() || !pet.error.isEmpty()) return {};
     return QString::fromUtf8(contents(pet.folder.isEmpty() ? ":/licenses/" + pet.terms : pet.terms, 1024 * 1024));
 }

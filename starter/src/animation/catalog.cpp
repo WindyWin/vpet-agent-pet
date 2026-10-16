@@ -114,7 +114,8 @@ CatalogSource Catalog::read(const QString &root, const QString &pet, QString *er
                 || duration < 1 || duration > 60000)
                 return invalid("Invalid frame path or duration in " + id);
             frames.append({diskFolder.isEmpty() ? QDir(root).filePath(relative)
-                                               : QDir(diskFolder).filePath(relative.mid(folder.size() + 1)), duration});
+                                               : QDir(diskFolder).filePath(relative.mid(folder.size() + 1)), duration,
+                          diskFolder});
             total += duration;
             if (frames.size() > 1000) return invalid("Too many frames in " + id);
         }
