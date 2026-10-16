@@ -10,7 +10,7 @@
 #include <QVector>
 
 namespace pet {
-struct Frame { QString path; int durationMs; };
+struct Frame { QString path; int durationMs; QString root; };
 // One way to play a state: a sequence per phase. The catalog's own entry is the first choice;
 // "variants" add more, and one is drawn by weight each time the state is entered.
 struct Choice { QStringList sequences; int weight = 1; };
