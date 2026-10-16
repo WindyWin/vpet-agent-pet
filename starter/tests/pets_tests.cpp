@@ -12,6 +12,8 @@
 #include <QDateTime>
 #include <QDialog>
 #include <QDir>
+#include <QDirIterator>
+#include <functional>
 #include <QFile>
 #include <QFileInfo>
 #include <QJsonArray>
@@ -38,6 +40,15 @@
 #include <utility>
 
 namespace {
+void copyLocalPet(const QString &destination) {
+    const QString fixture = PET_SOURCE "/tests/fixtures/local-pets/local-cat";
+    QDirIterator it(fixture, QDir::Files, QDirIterator::Subdirectories);
+    while (it.hasNext()) {
+        const auto source = it.next();
+        const auto target = destination + "/local-cat/" + QDir(fixture).relativeFilePath(source);
+        QVERIFY(QDir().mkpath(QFileInfo(target).absolutePath())); QVERIFY(QFile::copy(source, target));
+    }
+}
 // A catalog for pet "test" in which every state cue's default state plays one idle frame with the cue's shape.
 QJsonObject contractCatalog() {
     const QJsonObject frame{{"path", "assets/test/idle/_000_100.png"}, {"duration_ms", 100}};
@@ -742,6 +753,177 @@ private slots:
         vpetTile->click(); QCOMPARE(chosen.size(), 2); // Downloaded now, it is chosen like any other.
         duoTile->click(); QCOMPARE(chosen.size(), 3); QCOMPARE(requested.size(), 1);
     }
+    void localPetDiscoveryPlaybackAndTerms() {
+        QTemporaryDir installed, store;
+        copyLocalPet(installed.path());
+        pet::PetLibrary library(PET_INDEX, "/local-play", store.path(), installed.path());
+        const auto info = library.info("local-cat");
+        QVERIFY2(info.error.isEmpty(), qPrintable(info.error));
+        QCOMPARE(info.name, QString("Local Cat")); QCOMPARE(info.license, QString("Apache-2.0"));
+        QVERIFY(!info.folder.isEmpty()); QCOMPARE(info.download, 0);
+        QVERIFY(library.terms("local-cat").contains("Agent Pet test artwork"));
+        const auto pets = library.pets();
+        QVERIFY(std::any_of(pets.begin(), pets.end(), [](const pet::PetInfo &p) { return p.id == "local-cat" && p.error.isEmpty(); }));
+        QString error;
+        QVERIFY2(library.activate("local-cat", &error), qPrintable(error));
+        pet::Player player(nullptr, library.catalog());
+        QVERIFY(player.select("idle", true)); QVERIFY(!player.pixmap().isNull());
+        QVERIFY(library.catalog().sequences.first().first().path.startsWith(installed.path()));
+        QVERIFY(library.missing("local-cat").isEmpty());
+        library.prune();
+        QVERIFY(QFile::exists(installed.filePath("local-cat/pack.json")));
+        pet::PetLibrary updated(PET_INDEX, "/local-updated", store.path(), installed.path());
+        QVERIFY2(updated.activate("local-cat", &error), qPrintable(error));
+    }
+    void pluginsExtendLocalPets() {
+        QTemporaryDir installed, store, plugins; copyLocalPet(installed.path());
+        const QString fixture = PET_SOURCE "/tests/fixtures/plugins/example";
+        QDirIterator it(fixture, QDir::Files, QDirIterator::Subdirectories);
+        while (it.hasNext()) {
+            const auto path = it.next(), target = plugins.filePath("example/" + QDir(fixture).relativeFilePath(path));
+            QVERIFY(QDir().mkpath(QFileInfo(target).absolutePath())); QVERIFY(QFile::copy(path, target));
+        }
+        const auto path = plugins.filePath("example/plugin.json");
+        auto metadata = QJsonDocument::fromJson(contents(path)).object(); metadata["pet"] = "local-cat";
+        QFile file(path); QVERIFY(file.open(QIODevice::WriteOnly)); file.write(QJsonDocument(metadata).toJson()); file.close();
+        pet::PetLibrary library(PET_INDEX, "/local-plugins", store.path(), installed.path());
+        library.setPlugins(plugins.path(), {"example"});
+        QString error; QVERIFY2(library.activate("local-cat", &error), qPrintable(error));
+        QVERIFY(library.catalog().animations.contains("example.heart"));
+        QCOMPARE(library.plugins().first().status, pet::PluginPack::Applied);
+    }
+    void localPetValidation_data() {
+        QTest::addColumn<QString>("fault"); QTest::addColumn<QString>("message");
+        QTest::newRow("manifest") << "manifest" << "checksum";
+        QTest::newRow("missing-frame") << "missing-frame" << "Missing PNG";
+        QTest::newRow("schema") << "schema" << "schema";
+        QTest::newRow("minimum") << "minimum" << "requires Agent Pet";
+        QTest::newRow("minimum-overflow") << "minimum-overflow" << "minAppVersion";
+        QTest::newRow("identity") << "identity" << "agree";
+        QTest::newRow("contract") << "contract" << "cue";
+        QTest::newRow("path") << "path" << "Invalid frame path";
+        QTest::newRow("terms") << "terms" << "terms";
+        QTest::newRow("code") << "code" << "Unsupported";
+        QTest::newRow("large-file") << "large-file" << "4 MiB";
+        QTest::newRow("large-side") << "large-side" << "2048";
+        QTest::newRow("large-preview") << "large-preview" << "512";
+        QTest::newRow("catalog-limit") << "catalog-limit" << "JSON size";
+        QTest::newRow("frame-limit") << "frame-limit" << "10000";
+        QTest::newRow("version") << "version" << "version";
+        QTest::newRow("unknown-field") << "unknown-field" << "metadata";
+    }
+    void localPetValidation() {
+        QFETCH(QString, fault); QFETCH(QString, message);
+        QTemporaryDir installed, store; copyLocalPet(installed.path());
+        const QDir folder(installed.filePath("local-cat"));
+        auto edit = [&](const QString &name, const std::function<void(QJsonObject &)> &change) {
+            auto o = QJsonDocument::fromJson(contents(folder.filePath(name))).object(); change(o);
+            QFile f(folder.filePath(name)); QVERIFY(f.open(QIODevice::WriteOnly)); f.write(QJsonDocument(o).toJson());
+        };
+        if (fault == "manifest") edit("manifest.json", [](QJsonObject &o) {
+            auto files = o["files"].toArray(); auto frame = files[0].toObject(); frame["sha256"] = QString(64, '0'); files[0] = frame; o["files"] = files;
+        });
+        if (fault == "missing-frame") QVERIFY(QFile::remove(folder.filePath("idle/_000_100.png")));
+        if (fault == "schema") edit("pack.json", [](QJsonObject &o) { o["schema"] = 99; });
+        if (fault == "minimum") edit("pack.json", [](QJsonObject &o) { o["minAppVersion"] = "999.0.0"; });
+        if (fault == "minimum-overflow") edit("pack.json", [](QJsonObject &o) { o["minAppVersion"] = "99999999999999999999999.0.0"; });
+        if (fault == "identity") edit("pet.json", [](QJsonObject &o) { o["name"] = "Different"; });
+        if (fault == "contract") edit("animations.json", [](QJsonObject &o) {
+            auto cues = o["cues"].toObject(); cues["thinking"] = "absent"; o["cues"] = cues;
+        });
+        if (fault == "path") edit("animations.json", [](QJsonObject &o) { o = withFrame(o, "assets/local-cat/../outside.png"); });
+        if (fault == "terms") QVERIFY(QFile::remove(folder.filePath("licenses/TERMS.txt")));
+        if (fault == "code") { QFile f(folder.filePath("run.js")); QVERIFY(f.open(QIODevice::WriteOnly)); f.write("code"); }
+        if (fault == "large-file") { QFile f(folder.filePath("idle/_000_100.png")); QVERIFY(f.open(QIODevice::ReadWrite)); QVERIFY(f.resize(4 * 1024 * 1024 + 1)); }
+        if (fault == "large-side" || fault == "large-preview") {
+            QImage image(fault == "large-side" ? 2049 : 513, 1, QImage::Format_ARGB32); image.fill(Qt::red);
+            QVERIFY(image.save(folder.filePath(fault == "large-side" ? "idle/extra.png" : "preview.png")));
+        }
+        if (fault == "catalog-limit") { QFile f(folder.filePath("animations.json")); QVERIFY(f.open(QIODevice::ReadWrite)); QVERIFY(f.resize(8 * 1024 * 1024 + 1)); }
+        if (fault == "frame-limit") edit("animations.json", [](QJsonObject &o) {
+            auto original = o["sequences"].toArray()[0].toObject(); QJsonArray frames;
+            for (int i = 0; i < 1000; ++i) frames.append(original["frames"].toArray()[0]);
+            original["frames"] = frames; original["duration_ms"] = 100000; QJsonArray sequences;
+            for (int i = 0; i < 11; ++i) { original["path"] = QString("seq%1").arg(i); sequences.append(original); }
+            o["sequences"] = sequences;
+        });
+        if (fault == "version") edit("pack.json", [](QJsonObject &o) { o["version"] = "1.0.0-01"; });
+        if (fault == "unknown-field") edit("pack.json", [](QJsonObject &o) { o["trusted"] = true; });
+        pet::PetLibrary library(PET_INDEX, "/local-invalid", store.path(), installed.path());
+        const auto info = library.info("local-cat");
+        QVERIFY2(info.error.contains(message), qPrintable(info.error)); QVERIFY(info.preview.isEmpty());
+        const auto pets = library.pets();
+        QVERIFY(std::any_of(pets.begin(), pets.end(), [](const pet::PetInfo &p) { return p.id == "local-cat" && !p.error.isEmpty(); }));
+        QString error; QVERIFY(!library.activate("local-cat", &error)); QVERIFY(error.contains(message));
+        QVERIFY(library.active().isEmpty()); QVERIFY(library.terms("local-cat").isEmpty());
+        QVERIFY2(library.activate("vpet", &error), qPrintable(error)); QCOMPARE(library.active(), QString("vpet"));
+    }
+    void localPetAcceptsFrameLimitAndCountsUnreferencedBytes() {
+        QTemporaryDir installed, store; copyLocalPet(installed.path());
+        const QDir folder(installed.filePath("local-cat"));
+        auto catalog = QJsonDocument::fromJson(contents(folder.filePath("animations.json"))).object();
+        auto sequence = catalog["sequences"].toArray()[0].toObject(); const auto original = sequence["frames"].toArray();
+        QJsonArray frames, sequences;
+        for (int i = 0; i < 1000; ++i) frames.append(original[i % 2]);
+        sequence["frames"] = frames; sequence["duration_ms"] = 100000;
+        for (int i = 0; i < 10; ++i) {
+            sequence["path"] = i == 0 ? QString("idle") : QString("extra%1").arg(i); sequences.append(sequence);
+        }
+        catalog["sequences"] = sequences;
+        QFile file(folder.filePath("animations.json")); QVERIFY(file.open(QIODevice::WriteOnly));
+        file.write(QJsonDocument(catalog).toJson()); file.close();
+        pet::PetLibrary library(PET_INDEX, "/local-limits", store.path(), installed.path());
+        QVERIFY2(library.info("local-cat").error.isEmpty(), qPrintable(library.info("local-cat").error));
+        // Sparse padding keeps this test small on disk. Unreferenced PNGs still count toward the budget.
+        const auto png = contents(folder.filePath("idle/_000_100.png"));
+        for (int i = 0; i < 128; ++i) {
+            QFile extra(folder.filePath(QString("idle/extra%1.png").arg(i))); QVERIFY(extra.open(QIODevice::WriteOnly));
+            extra.write(png); QVERIFY(extra.resize(4 * 1024 * 1024));
+        }
+        QVERIFY(library.info("local-cat").error.contains("512 MiB"));
+    }
+    void localPetGoneAndReservedId() {
+        QTemporaryDir installed, store; copyLocalPet(installed.path());
+        pet::PetLibrary library(PET_INDEX, "/local-gone", store.path(), installed.path());
+        QVERIFY(QDir(installed.filePath("local-cat")).removeRecursively());
+        QString error; QVERIFY(!library.activate("local-cat", &error)); QVERIFY(error.contains("Unknown pet"));
+        QVERIFY(library.activate("vpet", &error));
+        copyLocalPet(installed.path());
+        QVERIFY(QDir(installed.path()).rename("local-cat", "vpet"));
+        const auto pets = library.pets();
+        int rejected = 0;
+        for (const auto &pet : pets) if (pet.id == "vpet" && !pet.folder.isEmpty()) { QVERIFY(!pet.error.isEmpty()); ++rejected; }
+        QCOMPARE(rejected, 1); QVERIFY(library.info("vpet").folder.isEmpty());
+    }
+    void localPetLinksAndCaseCollisions() {
+        QTemporaryDir installed, store; copyLocalPet(installed.path());
+        const auto target = installed.filePath("local-cat/idle/_000_100.png");
+        const auto link = installed.filePath("local-cat/idle/link.png");
+        if (!QFile::link(target, link) || !QFileInfo(link).isSymLink()) QSKIP("Host does not support file symlinks.");
+        pet::PetLibrary library(PET_INDEX, "/local-links", store.path(), installed.path());
+        QVERIFY(library.info("local-cat").error.contains("Unsafe"));
+        QVERIFY(QFile::remove(link));
+        const auto upper = installed.filePath("local-cat/idle/UPPER.png");
+        QVERIFY(QFile::copy(target, upper));
+        if (!QFile::copy(target, installed.filePath("local-cat/idle/upper.png"))) QSKIP("Case-insensitive filesystem.");
+        QVERIFY(library.info("local-cat").error.contains("duplicate"));
+    }
+    void pickerRejectsInvalidLocalPets() {
+        pet::PetInfo valid{"vpet", "VPet", "Artist", {}, {}, {}};
+        pet::PetInfo invalid{"bad", "Bad pet", "Other artist", {}, {}, {}};
+        invalid.folder = "/packs/bad"; invalid.license = "CC0-1.0"; invalid.error = "Missing PNG frame";
+        QWidget page; pet::PetPicker picker({invalid, valid}, "bad", "vpet", &page);
+        QCOMPARE(picker.selected(), QString("vpet"));
+        QSignalSpy chosen(&picker, &pet::PetPicker::chosen);
+        for (auto *tile : picker.findChildren<QToolButton *>()) if (tile->property("pet") == "bad") {
+            QVERIFY(!tile->isEnabled()); QVERIFY(tile->text().contains("Local"));
+            QVERIFY(tile->toolTip().contains("CC0-1.0")); QVERIFY(tile->toolTip().contains("Missing PNG")); tile->click();
+        }
+        QCOMPARE(chosen.size(), 0);
+        QVERIFY(picker.findChild<QLabel *>()->text().contains("Missing PNG"));
+        picker.downloading("vpet", 1, 2); picker.downloaded("vpet", "Cancelled");
+        for (auto *tile : picker.findChildren<QToolButton *>()) if (tile->property("pet") == "bad") QVERIFY(!tile->isEnabled());
+    }
     void petPreference() {
         QTemporaryDir directory; const auto path = directory.path() + "/preferences.json";
         pet::PreferencesStore store(path); pet::Preferences preferences;
@@ -838,6 +1020,7 @@ private slots:
         QTemporaryDir directory;
         pet::PetWindow window(nullptr, directory.path() + "/preferences.json", false);
         window.showSettings();
+        QVERIFY(window.findChild<QPushButton *>("openPetsFolder"));
         // One bundled pet leaves nothing to choose; the picker-level cases cover that.
         QCOMPARE(window.findChild<pet::PetPicker *>() != nullptr, pet::PetLibrary::shared().pets().size() > 1);
     }

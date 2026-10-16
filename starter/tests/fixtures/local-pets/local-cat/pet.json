@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "id": "local-cat",
+  "name": "Local Cat",
+  "author": "Agent Pet tests",
+  "terms": "TERMS.txt",
+  "preview": "preview.png"
+}

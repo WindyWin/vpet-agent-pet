@@ -1,0 +1,254 @@
+# 0041. Packs: file format, storage and trust
+
+- Status: Accepted (design; implementation follows in phases 1–7)
+- Date: 2026-10-16
+- Scope: [#92](https://github.com/WindyWin/vpet-agent-pet/issues/92), phase 0 of
+  [#91](https://github.com/WindyWin/vpet-agent-pet/issues/91)
+
+## Context
+
+Pets currently enter the build through `assets/<id>/` and are distributed as Qt
+resources, either bundled or downloaded into `<data>/pets/<sha256>.rcc`.
+Plugins already load JSON and PNG files from a user folder. These separate paths
+couple pet releases to app releases, duplicate artwork in packages, and require
+this project to redistribute every pet it lists.
+
+Users need to import pets and plugins, convert locally installed workshop art,
+and optionally install or update packs from independent sources. This record
+sets the common contract before those features are implemented. The existing
+[pet](../pets.md) and [plugin](../plugins.md) guides describe current behavior.
+The transitions below replace parts of [0028](0028-pet-packs.md),
+[0030](0030-on-demand-pets.md) and [0033](0033-plugin-packs.md) only when their
+implementation phases land; those records remain historical evidence.
+
+Issue #92 reserved this filename before the unrelated
+[0041 provider record](0041-additional-agent-providers.md) merged. Both filenames
+are retained; links and index titles distinguish the two decisions.
+
+## Decision
+
+### Archive and metadata
+
+A `.agentpet` file is a ZIP archive with `pack.json` at its root, without an
+extra enclosing folder. Entries contain only JSON, PNG and UTF-8 licence/terms
+text (`.txt` or `.md`). Scripts, executables, libraries, Qt resource binaries,
+nested archives and executable workshop plugins are rejected, never executed.
+Use stored or deflated ZIP entries; encrypted archives are unsupported.
+
+`pack.json` is a UTF-8 JSON object with these fields. Unknown fields and wrong
+types are errors; future format extensions need an explicit compatibility decision.
+
+| Field | Contract |
+| --- | --- |
+| `kind` | Required string: `pet` or `plugin`. |
+| `id` | Required string, `[a-z0-9-]{1,32}`; portable filename rules from the pet guide also apply. |
+| `version` | Required SemVer 2.0 string, at most 32 characters. |
+| `schema` | Required positive integer: the animation catalog schema, currently `2`, not the metadata schema. |
+| `minAppVersion` | Required release version `major.minor.patch`, at most 32 characters; oldest compatible app. |
+| `name` | Required nonempty string, at most 64 characters. |
+| `author` | Required nonempty artwork credit, at most 128 characters. |
+| `license` | Required nonempty licence identifier or short label, at most 64 characters; not a claim of redistribution permission. |
+| `terms` | Required relative path to a nonempty UTF-8 terms file inside the archive. |
+| `source` | Optional nonempty provenance label, at most 256 characters, such as `vpet-mod`; never grants trust or authorizes downloads. |
+| `pet` | Required only for `plugin`: target pet id using the same id rules. Forbidden for `pet`. |
+
+For example, a pet manifest can be:
+
+```json
+{
+  "kind": "pet",
+  "id": "example-cat",
+  "version": "1.0.0",
+  "schema": 2,
+  "minAppVersion": "0.16.0",
+  "name": "Example Cat",
+  "author": "Example artist",
+  "license": "CC0-1.0",
+  "terms": "licenses/TERMS.txt"
+}
+```
+
+The version in this example illustrates syntax, not an assertion that 0.16.0
+supports importing packs. Authors must set the first app version supporting the
+features their pack actually uses.
+
+A pet archive contains the files from `assets/<id>/` at its root: `pet.json`,
+`animations.json`, `preview.png`, `manifest.json` and frame folders, plus
+`pack.json` and its terms file. Existing optional catalog inventory JSON may be
+retained. Preserve the frame layout and the catalog's logical
+`asset_root: assets/<id>`; the disk loader maps that logical root to the installed
+pack directory, never to an arbitrary host path. Every referenced frame must
+resolve inside that directory. Preview remains at most 512 × 512 pixels.
+
+A plugin archive contains today's `plugin.json`, `animations.json`, optional
+`events.json` and frame folders, plus `pack.json` and terms. Existing fragment,
+namespace, override, cue and event-rule restrictions still apply. `pack.json`
+is the installation identity; duplicated metadata in `pet.json` or `plugin.json`
+must agree, including plugin `min_app_version` when present. A pet's legacy
+`terms` filename resolves under the archive's `licenses/` folder and must identify
+the same file as `pack.json.terms`. This retains the current payload formats
+without two competing identities.
+
+### Storage, identity and replacement
+
+`<data>` is the existing per-user application data directory (see
+[installation](../install.md)). Installed pet packs live in
+`<data>/packs/pets/<id>/`; plugin packs use the existing
+`<data>/plugins/<id>/` directory. Both are separate from the legacy
+`<data>/pets/<sha256>.rcc` download store. Legacy manually installed plugins
+remain supported; importing over one is an explicit replacement.
+
+Identity is `(kind, id)`. Built-in pet ids are reserved: `vpet` cannot be installed
+or shadowed by a pet pack. A plugin may target `vpet`; its own id cannot use a
+reserved built-in id. Pet and plugin namespaces are separate. Reject ambiguous
+or duplicate archive paths, including case-folding collisions, on every OS.
+
+Installing an already installed identity replaces the whole pack after user
+confirmation, never merges files. Show old/new versions and provenance. A higher
+SemVer version is an update; equal or lower versions require explicit replacement
+or downgrade confirmation. Plugin fragment merging into a running pet is a
+separate operation and keeps its existing rules.
+
+Extract to a fresh staging directory on the same filesystem, validate completely,
+then commit the replacement with rollback on failure. Serialize installs and
+retain the old pack until commit succeeds. Never expose a partly extracted pack
+to discovery. Changes take effect on the next start; do not replace files under
+an active reader. Defer such a commit until restart. Invalid selected pets fall
+back to VPet with a visible reason; invalid plugins are skipped with a reason.
+Source URL, digest and update consent are app-owned installation records outside
+the payload. A pack cannot set or overwrite them.
+
+### Trust and consent
+
+All three origins pass exactly the same archive, metadata, compatibility,
+resource and runtime validation. Origin never relaxes a limit.
+
+| Origin | What installation shows |
+| --- | --- |
+| Local file (including converted workshop art) | Filename, declared author, version, licence and full terms; identify it as unverified local content and require acceptance. |
+| Official source | Official source identity, author, version, licence and full terms; require acceptance on first install. Official listing means the project reviewed redistribution permission, not exemption from validation. |
+| Third-party source | Source URL, declared author, version, licence and full terms; warn that the project has not reviewed this source or its redistribution rights, and require explicit acceptance. |
+
+Render metadata and terms as inert text. Local provenance labels do not make a
+pack official. Official status comes only from the app's configured official
+source; downloaded archives must match the source index's size and SHA-256.
+A digest establishes integrity against that index, not authorship. Third-party
+sources are added explicitly by the user. No pack can add a source or opt into
+updates. Automatic updates are opt-in per source/pack in phase 6, restricted to
+the recorded origin and increasing versions; changed terms or origin require
+fresh acceptance. Local packs have no automatic update origin by default.
+
+### Validation and limits
+
+Start from the current plugin frame limits and allow larger complete pets:
+
+| Resource (per pack) | Plugin | Pet |
+| --- | --- | --- |
+| Frame references across all sequences | 2,000 | 10,000 |
+| Individual PNG file | 4 MiB | 4 MiB |
+| PNG width or height | 2,048 px | 2,048 px |
+| All PNG bytes, including preview | 64 MiB | 512 MiB |
+| `animations.json` | 1 MiB | 8 MiB |
+| ZIP entry count, including directories | 4,096 | 20,000 |
+| Archive bytes and total extracted bytes (each bounded) | 80 MiB | 544 MiB |
+
+Additionally, cap `pack.json`, `pet.json`, `plugin.json` and `events.json` at
+64 KiB each, terms at 1 MiB total, and remaining JSON at 8 MiB total. Preserve
+the existing maximum of 32 installed/enabled plugins. Count actual streamed
+bytes, including unreferenced entries; do not trust ZIP size declarations.
+Reject excessive entry counts and expansion before committing. Inspect PNG
+headers before decoding and retain bounded/lazy frame caching rather than
+loading all accepted frames into memory.
+
+Reject absolute paths, drive/UNC paths, traversal, backslashes, symbolic/hard
+links, special files and names disallowed by the portable pet filename rules.
+Every entry and every catalog/terms reference must stay inside the staging
+root. Validate JSON, PNG content, manifest sizes/hashes, referenced files,
+catalog schema, cue contracts and plugin rules before installation. Runtime
+loading also checks compatibility and paths because user folders can change
+after import. No code loading or live reload is introduced.
+
+### Compatibility and distribution
+
+Require `pack.json.schema == animations.json.schema_version` and a schema the
+running app explicitly supports (currently exactly `2`). Metadata schemas remain
+`1` for `pet.json` and `plugin.json`; `events.json` keeps its own schema `1`.
+Reject newer or unsupported older catalogs with an actionable message; never
+silently reinterpret them. Compare `minAppVersion` numerically with the app's
+release version and reject packs requiring a newer release. Prerelease app
+builds do not satisfy the corresponding final release minimum.
+
+Authors upgrade old catalogs with `scripts/migrate_catalog.py` (currently schema
+1 → 2), revalidate, update `pack.json.schema` and `minAppVersion` as needed, bump
+the pack version and rebuild the archive. Import does not mutate an author's
+catalog to make it load.
+
+VPet is the only pet built into the final app. Phase 4 retires
+`AGENT_PET_BUNDLED_PETS`, the on-demand downloader and the legacy `.rcc` download
+store. Until then the current distribution remains operational. That phase must
+handle existing selections explicitly, fall back to VPet when necessary and
+remove only legacy download data, never the new installed pack folders.
+
+Official `.agentpet` files live in a separate gallery repository starting in
+phase 4, released independently of the app. The same repository hosts the
+official source `index.json` in phase 5. Third parties may host compatible
+indexes elsewhere. Workshop conversion reads already installed local files;
+it neither downloads from Steam nor grants redistribution permission. App
+release asset deduplication (#100) remains independent of this contract.
+
+## Consequences
+
+- Pet and plugin installation share a format and validation boundary; authors
+  can distribute data without rebuilding or releasing the application.
+- Full-pack replacement costs more disk space during staging, but avoids stale
+  frames surviving an update and makes failure rollback possible.
+- Larger pet limits accommodate existing artwork while bounding extraction;
+  they are ceilings, not permission to decode the whole pack into memory.
+- Terms travel with imported artwork. Local use does not imply permission to
+  publish the same artwork in the official gallery.
+- Phases 1–7 must implement the contract, UI consent and migration. This ADR does
+  not itself add importing, sources, conversion or automatic updates.
+
+## Validation
+
+### Design evidence — 2026-10-16
+
+- Reviewed #91/#92 against the pet and plugin guides, ADRs 0028/0030/0033, plugin
+  limits in `src/animation/plugins.h`, and `scripts/migrate_catalog.py`.
+- Measured the checked-in PNGs, including previews, at `c1e7660`: VPet has 1,323
+  PNGs / 193.84 MiB; Whale Girl has 1,663 / 250.15 MiB. Across all five pets the
+  largest PNG is below 0.44 MiB and the largest side is 1,000 px. Pet-sized byte
+  limits therefore cover current artwork with room to grow; plugin-sized byte
+  limits would exclude VPet and Whale Girl.
+- Documentation links, required sections and the example JSON are checked in
+  this phase. No runtime behavior changes or runtime test claims are made.
+- Implementation acceptance must cover both kinds and all origins; unsupported
+  schemas/app versions; reserved ids; replacement/downgrade consent; interrupted
+  extraction and rollback; traversal, links, duplicate names and ZIP expansion;
+  invalid/oversized PNGs and boundary limits; changed terms; next-start activation;
+  and VPet fallback. Phase 4 must also verify migration from the legacy store.
+
+### Phase 1 evidence — 2026-10-16
+
+- Implemented #93: `PetLibrary` discovers unpacked pets under `<data>/packs/pets`,
+  validates their metadata, file budgets, paths, PNG headers, manifest hashes and
+  core cue contract, and maps logical catalog paths to disk. Existing plugin
+  merging and lazy `QImageReader` playback also work with these pets.
+- Settings marks local pets, disables invalid choices with reasons, explains a
+  missing/invalid saved choice and opens the install folder. About can display
+  each valid installed pet's terms. Resource-index ids retain priority during
+  the transition; a conflicting local folder is listed as unusable.
+- Linux (EndeavourOS), Qt 6.11.2, GCC 16.2.1: Release build succeeded. All 17 CTest
+  suites passed across the sandbox run and an unsandboxed rerun of providers,
+  events, update-install and startup (the sandbox blocks their local sockets).
+  The final pets/plugins/i18n run passed after boundary checks were added.
+- The checked-in `local-cat` fixture covers discovery, playback, terms, plugin
+  extension, missing/invalid fallback, reserved ids, symlinks, case collisions,
+  checksums, compatibility, invalid cue contracts, per-file and aggregate PNG
+  limits, oversized catalogs/previews and the 10,000-frame boundary. Pruning
+  leaves installed pet folders intact, and a fresh library can activate them.
+- An isolated user-data smoke run with `--pet local-cat --smoke-test` completed
+  playback, input recovery and shutdown without falling back to VPet. The new
+  interface strings are translated into Vietnamese. Native macOS and Windows
+  execution remains to be verified in CI/manual acceptance; the loader uses Qt
+  filesystem/image APIs and platform-specific per-user paths.

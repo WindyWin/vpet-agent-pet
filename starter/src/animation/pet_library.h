@@ -6,9 +6,11 @@
 #include <QVector>
 
 namespace pet {
-// A pet in the index, from its pet.json. `preview` is a resource path to the Settings tile. `download` is how many
+// A pet in the index or a user folder. `preview` is a resource or disk path to the Settings tile. `download` is how many
 // bytes of its packs are neither installed nor downloaded yet (pets() fills it in; 0 for a pet ready to run).
-struct PetInfo { QString id, name, author, url, terms, preview; qint64 download = 0; };
+struct PetInfo { QString id, name, author, url, terms, preview; qint64 download = 0;
+    QString folder, license, version, error; // Nonempty folder: a local pack; error: listed but unusable.
+};
 // One sequence pack in a pet's hash tree (docs/pets.md): installed as <name>.rcc beside the index, or downloaded
 // as <sha256>.rcc into the store.
 struct PetPack { QString name, sequence, sha256; qint64 bytes = 0; };
@@ -23,17 +25,22 @@ class PetLibrary {
 public:
     static constexpr qint64 maxPackBytes = 64LL * 1024 * 1024; // A larger pack in a tree makes the tree invalid.
     // With no `index`, finds artwork.rcc beside the executable, in ../share/agent-pet or in ../Resources. With no
-    // `store`, uses defaultStore().
-    explicit PetLibrary(const QString &index = {}, const QString &mapRoot = "/", const QString &store = {});
+    // `store`, uses defaultStore(); with no `localFolder`, uses defaultPetFolder().
+    explicit PetLibrary(const QString &index = {}, const QString &mapRoot = "/", const QString &store = {},
+                        const QString &localFolder = {});
     ~PetLibrary(); // Unregisters the index and any packs.
     PetLibrary(const PetLibrary &) = delete;
     PetLibrary &operator=(const PetLibrary &) = delete;
     static PetLibrary &shared(); // The installed pets at ":/", kept until the process exits.
     static QString defaultStore(); // "pets" in the per-user application data folder.
+    static QString defaultPetFolder(); // "packs/pets" in the per-user data directory.
+    QString petFolder() const { return localFolder_; }
+    QString terms(const QString &id) const; // Bounded plain text; validates local packs once.
+    QString terms(const PetInfo &pet) const; // Reads terms using metadata already validated by info().
     QString store() const { return store_; }
     QString blobPath(const QString &sha256) const { return store_ + "/" + sha256 + ".rcc"; }
     QString error() const { return error_; } // Why the index is unavailable; empty when it loaded.
-    QVector<PetInfo> pets() const; // Pets with a valid pet.json, by id. Reads metadata only.
+    QVector<PetInfo> pets() const; // Indexed pets and validated local packs, including local failures with a reason.
     PetInfo info(const QString &id) const; // An empty `id` when there is no such valid pet.
     PetTree tree(const QString &id) const; // From the index; empty `root` when missing or invalid.
     // The packs still to download: neither installed nor in the store. Empty at once when the store's stamp
@@ -60,10 +67,11 @@ public:
     const Catalog &catalog() const { return catalog_; } // The active pet's; empty before activate().
     QString root() const { return ":" + mapRoot_; } // Pets are at <root>/assets/<id>/.
 private:
+    PetInfo resourceInfo(const QString &id) const;
     QString stamp(const QString &id) const;
     // Re-hashes the pet's packs in the store, removing any that do not match, and drops its stamp.
     void repair(const QString &id) const;
-    QString index_, mapRoot_, store_, error_, active_, pluginFolder_;
+    QString index_, mapRoot_, store_, error_, active_, pluginFolder_, localFolder_;
     QStringList enabledPlugins_;
     QVector<PluginPack> loadedPlugins_; // As activate() found them.
     Catalog catalog_;

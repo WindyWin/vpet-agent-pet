@@ -1,4 +1,5 @@
 #include "pet_library.h"
+#include "local_pet.h"
 #include "version.h"
 #include <QCoreApplication>
 #include <QCryptographicHash>
@@ -35,8 +36,9 @@ QByteArray contents(const QString &path, qint64 limit) {
     return file.open(QIODevice::ReadOnly) && file.size() <= limit ? file.readAll() : QByteArray();
 }
 }
-PetLibrary::PetLibrary(const QString &index, const QString &mapRoot, const QString &store)
-    : index_(index), mapRoot_(mapRoot), store_(store.isEmpty() ? defaultStore() : store) {
+PetLibrary::PetLibrary(const QString &index, const QString &mapRoot, const QString &store, const QString &localFolder)
+    : index_(index), mapRoot_(mapRoot), store_(store.isEmpty() ? defaultStore() : store),
+      localFolder_(localFolder.isEmpty() ? defaultPetFolder() : localFolder) {
     if (index_.isEmpty()) {
         const QDir executable(QCoreApplication::applicationDirPath());
         // Installed bundles keep it under share (Linux) or Resources (macOS application bundle); local builds
@@ -59,20 +61,44 @@ PetLibrary &PetLibrary::shared() {
 QString PetLibrary::defaultStore() {
     return QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/pets";
 }
+QString PetLibrary::defaultPetFolder() {
+    return QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/packs/pets";
+}
 QVector<PetInfo> PetLibrary::pets() const {
     QVector<PetInfo> found;
     for (const auto &id : QDir(QDir(root()).filePath("assets")).entryList(QDir::Dirs | QDir::NoDotAndDotDot, QDir::Name))
     {
-        if (auto pet = info(id); !pet.id.isEmpty()) {
+        if (auto pet = resourceInfo(id); !pet.id.isEmpty()) {
             for (const auto &pack : missing(id)) pet.download += pack.bytes;
             found.append(pet);
         }
         else if (QFile::exists(QDir(root()).filePath("assets/" + id + "/pet.json")))
             qWarning().noquote() << "Ignoring pet" << id << "with an invalid pet.json";
     }
+    for (const auto &id : QDir(localFolder_).entryList(QDir::Dirs | QDir::NoDotAndDotDot, QDir::Name)) {
+        auto pet = localPets::read(QDir(localFolder_).filePath(id));
+        if (!resourceInfo(id).id.isEmpty()) {
+            pet.error = "This id belongs to a pet in the app index; choose a different id.";
+            pet.preview.clear();
+        }
+        found.append(pet);
+    }
     return found;
 }
 PetInfo PetLibrary::info(const QString &id) const {
+    if (auto pet = resourceInfo(id); !pet.id.isEmpty()) return pet;
+    if (!validPetId(id) || !QFileInfo::exists(QDir(localFolder_).filePath(id))) return {};
+    return localPets::read(QDir(localFolder_).filePath(id));
+}
+QString PetLibrary::terms(const QString &id) const {
+    const auto pet = info(id);
+    return pet.id.isEmpty() || !pet.error.isEmpty() ? QString() : terms(pet);
+}
+QString PetLibrary::terms(const PetInfo &pet) const {
+    if (pet.id.isEmpty() || !pet.error.isEmpty()) return {};
+    return QString::fromUtf8(contents(pet.folder.isEmpty() ? ":/licenses/" + pet.terms : pet.terms, 1024 * 1024));
+}
+PetInfo PetLibrary::resourceInfo(const QString &id) const {
     if (!validPetId(id)) return {};
     const QDir folder(QDir(root()).filePath("assets/" + id));
     QFile file(folder.filePath("pet.json"));
@@ -197,10 +223,18 @@ bool PetLibrary::activate(const QString &id, QString *error) {
         return false;
     };
     if (!active_.isEmpty()) return fail("Another pet is already active: " + active_);
-    if (!error_.isEmpty()) return fail(error_);
-    if (info(id).id.isEmpty()) return fail("Unknown pet or invalid pet.json: " + id);
+    if (!validPetId(id)) return fail("Invalid pet identifier: " + id);
+    const bool local = resourceInfo(id).id.isEmpty() && QFileInfo::exists(QDir(localFolder_).filePath(id));
     QString reason;
-    auto source = Catalog::read(root(), id, &reason);
+    CatalogSource source;
+    if (local) {
+        const auto pet = localPets::read(QDir(localFolder_).filePath(id), &source);
+        if (!pet.error.isEmpty()) return fail(pet.error);
+    } else {
+        if (!error_.isEmpty()) return fail(error_);
+        if (resourceInfo(id).id.isEmpty()) return fail("Unknown pet or invalid pet.json: " + id);
+        source = Catalog::read(root(), id, &reason);
+    }
     if (!source.valid()) return fail(reason);
     auto catalog = Catalog::build(source, &reason);
     if (!catalog.valid()) return fail(reason);
@@ -216,55 +250,57 @@ bool PetLibrary::activate(const QString &id, QString *error) {
         repair(id);
         return false;
     };
-    // Without a pack list, the pet's frames are inside the index itself. Each pack is installed beside the index,
-    // or else downloaded into the store.
-    bool stored = false;
-    PetTree tree;
-    if (QFile::exists(QDir(root()).filePath("assets/" + id + "/packs.json"))) {
-        tree = this->tree(id);
-        if (tree.root.isEmpty()) return rollBack("Invalid pack list for " + id);
-        const QDir installed(QFileInfo(index_).absolutePath());
-        for (const auto &pack : std::as_const(tree.packs)) {
-            auto path = installed.filePath(pack.name + ".rcc");
-            const bool bundled = QFile::exists(path);
-            if (!bundled) { path = blobPath(pack.sha256); stored = true; }
-            if (!bundled && !QFile::exists(path)) {
-                QFile::remove(store_ + "/" + id + ".root"); // No longer complete: the picker offers the download again.
-                return rollBack(QString("Pet %1 is not downloaded: pack %2 is missing.").arg(id, pack.name));
+    if (!local) {
+        // Without a pack list, the pet's frames are inside the index itself. Each pack is installed beside the index,
+        // or else downloaded into the store.
+        bool stored = false;
+        PetTree tree;
+        if (QFile::exists(QDir(root()).filePath("assets/" + id + "/packs.json"))) {
+            tree = this->tree(id);
+            if (tree.root.isEmpty()) return rollBack("Invalid pack list for " + id);
+            const QDir installed(QFileInfo(index_).absolutePath());
+            for (const auto &pack : std::as_const(tree.packs)) {
+                auto path = installed.filePath(pack.name + ".rcc");
+                const bool bundled = QFile::exists(path);
+                if (!bundled) { path = blobPath(pack.sha256); stored = true; }
+                if (!bundled && !QFile::exists(path)) {
+                    QFile::remove(store_ + "/" + id + ".root"); // No longer complete: the picker offers the download again.
+                    return rollBack(QString("Pet %1 is not downloaded: pack %2 is missing.").arg(id, pack.name));
+                }
+                // The store is writable by anyone running as the user: a pack is trusted only once it matches its leaf.
+                if (!bundled && !intactBlob(path, pack))
+                    return damaged(QString("The downloaded pack %1 of %2 is damaged; download the pet again.").arg(pack.name, id));
+                if (!QResource::registerResource(path, mapRoot_)) {
+                    if (bundled) return rollBack("Cannot load the artwork pack " + pack.name + ".rcc. Reinstall Agent Pet to restore it.");
+                    return damaged(QString("The downloaded pack %1 of %2 is damaged; download the pet again.").arg(pack.name, id));
+                }
+                packs_.append(path);
             }
-            // The store is writable by anyone running as the user: a pack is trusted only once it matches its leaf.
-            if (!bundled && !intactBlob(path, pack))
-                return damaged(QString("The downloaded pack %1 of %2 is damaged; download the pet again.").arg(pack.name, id));
-            if (!QResource::registerResource(path, mapRoot_)) {
-                if (bundled) return rollBack("Cannot load the artwork pack " + pack.name + ".rcc. Reinstall Agent Pet to restore it.");
-                return damaged(QString("The downloaded pack %1 of %2 is damaged; download the pet again.").arg(pack.name, id));
-            }
-            packs_.append(path);
         }
+        // A damaged or mismatched pack registers but lacks frames, and a pack missing from the list leaves them
+        // unregistered: refuse the pet now rather than fail during play. Each lookup searches every registered
+        // file, so each frame folder is listed once and its frames are found in that list (about 2 ms for VPet;
+        // one lookup per frame cost 18 ms at every start).
+        QHash<QString, QSet<QString>> folders;
+        for (const auto &frames : std::as_const(catalog.sequences))
+            for (const auto &frame : frames) {
+                const auto slash = frame.path.lastIndexOf('/');
+                const auto path = frame.path.left(slash);
+                auto folder = folders.find(path);
+                if (folder == folders.end()) {
+                    const auto children = Folder(path).children();
+                    folder = folders.insert(path, QSet<QString>(children.begin(), children.end()));
+                }
+                if (!folder->contains(frame.path.mid(slash + 1))) {
+                    auto relative = frame.path.mid(root().size());
+                    if (relative.startsWith('/')) relative.remove(0, 1); // root() ends in a slash at "/" but not at other mounts.
+                    const auto what = "Missing frame " + relative + ". ";
+                    return stored ? damaged(what + "Download the pet again.") : rollBack(what + "Reinstall Agent Pet to restore it.");
+                }
+            }
+        // Downloaded packs are verified when stored, so finding them all complete is worth one stamp.
+        if (stored && stamp(id) != tree.root) markDownloaded(id, nullptr);
     }
-    // A damaged or mismatched pack registers but lacks frames, and a pack missing from the list leaves them
-    // unregistered: refuse the pet now rather than fail during play. Each lookup searches every registered
-    // file, so each frame folder is listed once and its frames are found in that list (about 2 ms for VPet;
-    // one lookup per frame cost 18 ms at every start).
-    QHash<QString, QSet<QString>> folders;
-    for (const auto &frames : std::as_const(catalog.sequences))
-        for (const auto &frame : frames) {
-            const auto slash = frame.path.lastIndexOf('/');
-            const auto path = frame.path.left(slash);
-            auto folder = folders.find(path);
-            if (folder == folders.end()) {
-                const auto children = Folder(path).children();
-                folder = folders.insert(path, QSet<QString>(children.begin(), children.end()));
-            }
-            if (!folder->contains(frame.path.mid(slash + 1))) {
-                auto relative = frame.path.mid(root().size());
-                if (relative.startsWith('/')) relative.remove(0, 1); // root() ends in a slash at "/" but not at other mounts.
-                const auto what = "Missing frame " + relative + ". ";
-                return stored ? damaged(what + "Download the pet again.") : rollBack(what + "Reinstall Agent Pet to restore it.");
-            }
-        }
-    // Downloaded packs are verified when stored, so finding them all complete is worth one stamp.
-    if (stored && stamp(id) != tree.root) markDownloaded(id, nullptr);
     // Packs check their own frames, which are files rather than resources.
     if (!pluginFolder_.isEmpty()) {
         loadedPlugins_ = plugins::scan(pluginFolder_, AGENT_PET_VERSION);

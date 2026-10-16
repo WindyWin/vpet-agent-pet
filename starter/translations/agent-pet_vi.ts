@@ -701,12 +701,32 @@
         <translation>%1 sẽ xuất hiện khi bạn khởi động lại Agent Pet.</translation>
     </message>
     <message>
+        <source>Pet %1 is unavailable: %2. Using %3 for this run.</source>
+        <translation>Không thể dùng thú cưng %1: %2. Dùng %3 trong lần chạy này.</translation>
+    </message>
+    <message>
+        <source>The pet is not installed.</source>
+        <translation>Thú cưng chưa được cài đặt.</translation>
+    </message>
+    <message>
         <source>Pet download progress</source>
         <translation>Tiến độ tải thú cưng</translation>
     </message>
     <message>
         <source>Cancel download</source>
         <translation>Hủy tải xuống</translation>
+    </message>
+    <message>
+        <source>Local</source>
+        <translation>Cục bộ</translation>
+    </message>
+    <message>
+        <source>Local · by %1 · %2</source>
+        <translation>Cục bộ · tác giả %1 · %2</translation>
+    </message>
+    <message>
+        <source>Cannot be used: %1</source>
+        <translation>Không thể sử dụng: %1</translation>
     </message>
     <message>
         <source>by %1 · %2 to download</source>
@@ -952,6 +972,10 @@ Nhấp chuột phải để mở menu</translation>
     <message>
         <source>&amp;Character</source>
         <translation>&amp;Nhân vật</translation>
+    </message>
+    <message>
+        <source>Open pets &amp;folder</source>
+        <translation>Mở &amp;thư mục thú cưng</translation>
     </message>
     <message>
         <source>Off (no fidgets or alternate idle loops)</source>
@@ -1356,6 +1380,10 @@ Các cài đặt và hook khác được giữ nguyên. Hãy đăng ký từ th�
         <translation>Không có thông tin về điều khoản sử dụng hình ảnh.</translation>
     </message>
     <message>
+        <source>Pet artwork terms</source>
+        <translation>Điều khoản hình ảnh thú cưng</translation>
+    </message>
+    <message>
         <source>Animation preview</source>
         <translation>Xem trước hoạt ảnh</translation>
     </message>
@@ -1415,7 +1443,7 @@ Các cài đặt và hook khác được giữ nguyên. Hãy đăng ký từ th�
     </message>
     <message>
         <source>Cannot be used: %1</source>
-        <translation>Không dùng được: %1</translation>
+        <translation>Không thể sử dụng: %1</translation>
     </message>
     <message>
         <source>Unloads the next time Agent Pet starts</source>

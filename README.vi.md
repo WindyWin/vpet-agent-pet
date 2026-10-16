@@ -307,3 +307,14 @@ Thư mục gốc còn giữ bộ hình ảnh VPet nguyên bản (khoảng 5.500 
 Hình ảnh nhân vật do **đội ngũ VUP-Simulator** thực hiện, từ [LorisYounger/VPet](https://github.com/LorisYounger/VPet). Hình ảnh tuân theo [điều khoản riêng](licenses/VPET-ARTWORK-TERMS.md); xem [thông báo về bên thứ ba](THIRD_PARTY_NOTICES.md).
 
 Mã nguồn riêng của Agent Pet được cấp phép theo [Apache-2.0](starter/LICENSE). Giấy phép đó không áp dụng cho hình ảnh nhân vật.
+
+## Cài thú cưng từ thư mục cục bộ
+
+Trong Cài đặt → Thú cưng, chọn **Mở thư mục thú cưng**, rồi chép một bộ thú cưng
+đầy đủ vào `packs/pets/<id>/`. Mở lại Cài đặt, chọn ô **Cục bộ** và khởi động lại;
+`--pet <id>` cũng dùng được với thú cưng cục bộ. Bộ không hợp lệ hiển thị lý do
+và không thể được chọn. Nếu bộ đã chọn bị xóa hoặc không còn hợp lệ, ứng dụng dùng
+VPet cho lần chạy đó và giữ lựa chọn đã lưu. Mục Giới thiệu cho phép đọc điều khoản
+hình ảnh của từng thú cưng đã cài. Cập nhật ứng dụng và dọn bộ nhớ tải xuống không
+xóa các thư mục này. Xem [hướng dẫn cài đặt](starter/docs/pets.md#installing-a-local-pet)
+để biết cấu trúc và giới hạn. Nhập tệp ZIP và duyệt nguồn sẽ được bổ sung ở các giai đoạn sau.

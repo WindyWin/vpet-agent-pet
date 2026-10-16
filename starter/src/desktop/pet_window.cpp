@@ -20,6 +20,9 @@
 #include <QDateEdit>
 #include <QTimeEdit>
 #include <QDialogButtonBox>
+#include <QDesktopServices>
+#include <QDir>
+#include <QUrl>
 #include <QFile>
 #include <QFileInfo>
 #include <QFormLayout>
@@ -879,7 +882,7 @@ void PetWindow::showSettings() {
     layout->addRow(reminders);
     layout = page(tr("Pet"));
     // Shown once there is a choice; the chosen pet appears on the next start.
-    if (const auto pets = PetLibrary::shared().pets(); pets.size() > 1) {
+    if (const auto pets = PetLibrary::shared().pets(); pets.size() > 1 || pet_ != PetLibrary::shared().active()) {
         auto *picker = new PetPicker(pets, pet_, PetLibrary::shared().active(), dialog);
         layout->addRow(tr("&Character"), picker);
         connect(picker, &PetPicker::chosen, this, &PetWindow::setPet);
@@ -891,6 +894,14 @@ void PetWindow::showSettings() {
         connect(&downloads, &PetDownloader::finished, picker, &PetPicker::downloaded);
         if (!downloads.pet().isEmpty()) picker->downloading(downloads.pet(), downloads.done(), downloads.total());
     }
+    auto *openPets = new QPushButton(tr("Open pets &folder"), dialog);
+    openPets->setObjectName("openPetsFolder");
+    layout->addRow(openPets);
+    connect(openPets, &QPushButton::clicked, this, [] {
+        const auto folder = PetLibrary::shared().petFolder();
+        QDir().mkpath(folder);
+        QDesktopServices::openUrl(QUrl::fromLocalFile(folder));
+    });
     auto *ambient = new QComboBox(dialog);
     ambient->addItems({tr("Off (no fidgets or alternate idle loops)"), tr("Subtle (a fidget about once a minute)"), tr("Lively (a fidget every 15–25 seconds)")});
     ambient->setCurrentIndex(ambientLevel()); ambient->setAccessibleName(tr("Idle animation"));
@@ -1148,10 +1159,25 @@ void PetWindow::showAbout() {
         QFile file(path);
         return file.open(QIODevice::ReadOnly) ? QString::fromUtf8(file.readAll()) + "\n\n" : QString();
     };
-    auto artworkTerms = artwork.terms.isEmpty() ? QString() : read(":/licenses/" + artwork.terms);
+    auto artworkTerms = library.terms(artwork) + "\n\n";
+    if (artworkTerms.trimmed().isEmpty()) artworkTerms.clear();
     if (artworkTerms.isEmpty()) artworkTerms = tr("Artwork terms unavailable.") + "\n\n";
     terms->setPlainText(read(":/NOTICE") + read(":/THIRD_PARTY_NOTICES.md") + artworkTerms + read(":/LICENSE"));
     layout->addWidget(terms);
+    auto *petTerms = new QComboBox(dialog);
+    petTerms->setObjectName("petTerms");
+    for (const auto &installed : library.pets())
+        if (installed.error.isEmpty()) petTerms->addItem(installed.name, installed.id);
+    petTerms->setAccessibleName(tr("Pet artwork terms"));
+    petTerms->setCurrentIndex(petTerms->findData(library.active()));
+    connect(petTerms, &QComboBox::currentIndexChanged, dialog, [petTerms, terms, &library, read](int) {
+        const auto pet = library.info(petTerms->currentData().toString());
+        auto text = library.terms(pet);
+        if (text.isEmpty()) text = tr("Artwork terms unavailable.");
+        terms->setPlainText(read(":/NOTICE") + read(":/THIRD_PARTY_NOTICES.md")
+                           + pet.name + " — " + pet.author + "\n" + pet.license + "\n\n" + text + "\n\n" + read(":/LICENSE"));
+    });
+    layout->addWidget(petTerms);
     auto *buttons = new QDialogButtonBox(QDialogButtonBox::Close, dialog);
     buttons->button(QDialogButtonBox::Close)->setText(tr("Close"));
     connect(buttons, &QDialogButtonBox::rejected, dialog, &QDialog::close); layout->addWidget(buttons); dialog->show();

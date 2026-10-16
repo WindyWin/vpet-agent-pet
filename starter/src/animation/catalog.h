@@ -10,7 +10,7 @@
 #include <QVector>
 
 namespace pet {
-struct Frame { QString path; int durationMs; };
+struct Frame { QString path; int durationMs; QString root; };
 // One way to play a state: a sequence per phase. The catalog's own entry is the first choice;
 // "variants" add more, and one is drawn by weight each time the state is entered.
 struct Choice { QStringList sequences; int weight = 1; };
@@ -102,7 +102,8 @@ struct Catalog {
     static Catalog load(const QString &root, const QString &pet, QString *error);
     // load() in two steps: read() checks the file, its schema and its sequences; build() checks everything else
     // against those sequences. Each is empty, with `error` set, when anything is invalid.
-    static CatalogSource read(const QString &root, const QString &pet, QString *error);
+    // A diskFolder maps the logical assets/<pet>/ prefix to an installed pack directory.
+    static CatalogSource read(const QString &root, const QString &pet, QString *error, const QString &diskFolder = {});
     static Catalog build(const CatalogSource &source, QString *error);
     bool valid() const { return !animations.isEmpty(); }
     // The state a state cue plays here (the catalog's mapping, else the cue's default); empty for any other name.
