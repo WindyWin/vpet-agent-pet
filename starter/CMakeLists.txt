@@ -20,6 +20,21 @@ if(NOT AGENT_PET_PORTABLE_CORE)
         find_package(Qt6 6.5 REQUIRED COMPONENTS DBus)
         find_package(LibArchive REQUIRED)
         find_package(X11 REQUIRED)
+        # Native Wayland through layer-shell (adr/0043); optional, and the pet falls back to XWayland without it.
+        option(AGENT_PET_WAYLAND "Use native Wayland on compositors with layer-shell (needs LayerShellQt and libwayland-client)" ON)
+        if(AGENT_PET_WAYLAND)
+            find_package(LayerShellQt 6.6 QUIET)
+            find_package(PkgConfig QUIET)
+            if(PkgConfig_FOUND)
+                pkg_check_modules(WAYLAND_CLIENT QUIET IMPORTED_TARGET wayland-client)
+            endif()
+            if(LayerShellQt_FOUND AND WAYLAND_CLIENT_FOUND)
+                set(AGENT_PET_HAVE_WAYLAND ON)
+                message(STATUS "Native Wayland (layer-shell) support: enabled")
+            else()
+                message(STATUS "Native Wayland (layer-shell) support: disabled (LayerShellQt or wayland-client not found)")
+            endif()
+        endif()
     endif()
 endif()
 qt_standard_project_setup()
@@ -84,7 +99,7 @@ qt_add_lupdate(pet_i18n TS_FILES ${pet_ts_files} SOURCES ${pet_translated_source
 qt_add_lrelease(pet_i18n TS_FILES ${pet_ts_files} QM_FILES_OUTPUT_VARIABLE pet_qm_files)
 qt_add_resources(pet_i18n pet_translations PREFIX "/i18n" BASE "${CMAKE_CURRENT_BINARY_DIR}" FILES ${pet_qm_files})
 qt_add_library(pet_ui STATIC
-    src/desktop/pet_window.cpp
+    src/desktop/pet_window.cpp src/desktop/overlay.cpp
     src/desktop/pet_picker.cpp src/desktop/pet_downloader.cpp src/desktop/plugin_list.cpp
     src/desktop/touch.cpp src/desktop/wander.cpp src/desktop/wellness.cpp src/desktop/snooze.cpp src/desktop/alert_bubble.cpp src/desktop/monitor.cpp
     src/desktop/session_list.cpp src/updates/controller.cpp)
@@ -115,6 +130,11 @@ target_link_libraries(pet_platform PUBLIC Qt6::Core)
 if(WIN32)
     target_link_libraries(pet_platform PRIVATE user32) # The hook reads the agent's console window.
 endif()
+if(AGENT_PET_HAVE_WAYLAND)
+    target_sources(pet_platform PRIVATE src/platform/linux/layer_shell_probe.cpp)
+    target_link_libraries(pet_platform PRIVATE PkgConfig::WAYLAND_CLIENT)
+    target_compile_definitions(pet_platform PRIVATE AGENT_PET_HAVE_WAYLAND)
+endif()
 # Native desktop services and their composition (platform/native.h). On Linux: X11 and KWin backends,
 # Konsole's D-Bus tab selection, pointer queries and the screen-lock watcher; only this target links
 # X11 and D-Bus. On macOS: Core Graphics pointer and screen-lock queries, no window backend yet.
@@ -129,8 +149,13 @@ else()
     qt_add_library(pet_native STATIC src/platform/linux/native.cpp
         src/platform/desktop/x11/connection.cpp src/platform/desktop/x11/pointer.cpp src/platform/desktop/x11/x11_desktop.cpp
         src/platform/desktop/kwin/kwin_desktop.cpp src/platform/desktop/screensaver/screen_lock.cpp
+        src/platform/desktop/layer/layer_window.cpp
         src/hosts/adapters/konsole_dbus.cpp)
     target_link_libraries(pet_native PUBLIC pet_hosts PRIVATE pet_platform Qt6::Gui Qt6::DBus X11::X11)
+    if(AGENT_PET_HAVE_WAYLAND)
+        target_link_libraries(pet_native PRIVATE LayerShellQt::Interface)
+        target_compile_definitions(pet_native PRIVATE AGENT_PET_HAVE_WAYLAND)
+    endif()
 endif()
 target_include_directories(pet_native PUBLIC src)
 # Headless code shared by the pet and its display-free commands (hook, integration, autostart).

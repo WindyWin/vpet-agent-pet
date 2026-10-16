@@ -199,7 +199,8 @@ While you work, the pet reminds you to rest your eyes, drink water, eat lunch an
 20 minutes of activity it says "Look at something far away for 20 seconds" and
 closes its eyes for a stretch (the 20-20-20 rule); click the note and it counts the 20 seconds down, then
 cheers. After 60 minutes it drinks from a glass and says "Time for some water 💧"; click to
-say you had some and it cheers. At lunchtime VPet eats a sandwich alongside the meal reminder.
+say you had some and it cheers. Completing a reminder picks randomly from each pet's happy reactions;
+eye and movement breaks celebrate after their countdown finishes. At lunchtime VPet eats a sandwich alongside the meal reminder.
 Each reminder (also lunch and go-home) is a question with
 **Done**, **Later** (asks again in 10 minutes) and **Skip today** (until tomorrow).
 Ignored, it fades and is asked again after 10 minutes, up to three times, then left until the next
@@ -253,14 +254,29 @@ trots instead, and a droopy one trudges. Once it reaches a left or right screen 
 may climb up or down it, clinging to the edge, then step back into view. Any agent
 activity, a drag or Recover position stops it where it is, and it never wanders off a
 screen. Settings → **Wander** turns it off, so the pet stays where you put it; idle
-animation Off keeps it still too. Native Wayland does not let an application move its
-own window, so there the pet stays put. Preview the moves from Preview state
+animation Off keeps it still too. Native Wayland without layer-shell does not let an
+application move its own window, so there the pet stays put. Preview the moves from Preview state
 (`walk_*`, `trot_*`, `trudge_*`, `crawl_*`, `climb_*`); see
 [the design record](docs/adr/0016-walking.md).
 
-The default uses X11/XWayland when DISPLAY is available. For a development-only
-native Wayland check: `QT_QPA_PLATFORM=wayland ./build/agent-pet`.
-Native Wayland placement and stacking support remain unverified.
+### Display server
+
+The pet picks its display backend at start:
+
+- On a Wayland compositor with wlr-layer-shell (KDE Plasma, Sway, Hyprland) it runs
+  natively. The pet and its bubbles are layer-shell surfaces, so the app places them
+  itself: dragging, throwing, edge hiding and walking all work, "Always on top" picks
+  the top or bottom layer, and the pet keeps its size when screens with other scales
+  come and go. Menus and dialogs are ordinary Wayland windows.
+- Otherwise (GNOME, X11, no LayerShellQt in the build) it uses X11, or XWayland on a
+  Wayland desktop. XWayland follows its live scale, so the pet keeps its size when a
+  screen with a higher scale appears.
+
+`AGENT_PET_PLATFORM=xcb` forces X11/XWayland. An explicit `QT_QPA_PLATFORM` is always
+respected; `QT_QPA_PLATFORM=wayland AGENT_PET_LAYER_SHELL=1` forces the layer-shell
+path. The release packages bundle only the X11 plugin, so they stay on X11/XWayland;
+native Wayland is for builds against the system Qt (see
+[the design record](docs/adr/0043-native-wayland-layer-shell.md)).
 
 ## Pets
 

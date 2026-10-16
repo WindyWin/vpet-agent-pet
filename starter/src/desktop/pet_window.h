@@ -79,7 +79,10 @@ public:
     // free, it has the room the move needs, and the display server lets the app place its window.
     bool canWander(const Move &move) const;
     bool walking() const { return !walk_.isEmpty(); } // A move is playing and carries the window along.
+    // The size the user chose, in screen pixels as they see them. The window itself is larger or smaller when
+    // XWayland has rescaled X11 clients since the app started (see syncDisplayScale).
     void setPetSize(int pixels);
+    int petSize() const { return petSize_; }
     void setClickThrough(bool enabled);
     bool clickThrough() const { return clickThrough_; }
     void recover();
@@ -155,6 +158,7 @@ signals:
     void movementBreakRequested();
 protected:
     bool event(QEvent *) override;
+    bool eventFilter(QObject *watched, QEvent *event) override;
     void changeEvent(QEvent *) override;
     void closeEvent(QCloseEvent *) override;
     void moveEvent(QMoveEvent *) override;
@@ -209,6 +213,20 @@ private:
     QAction *movementBreakAction_ = nullptr;
     QAction *recoverAction_ = nullptr, *aboutAction_ = nullptr, *quitAction_ = nullptr;
     QMenu *moreMenu_ = nullptr, *statesMenu_ = nullptr, *snoozeMenu_ = nullptr;
+    void applySize();
+    // Moves the window to global coordinates: QWidget::move, or a layer-shell margin under native Wayland.
+    void relocate(QPoint where);
+    // A layer surface moves when the compositor applies the new margin, and pointer events sent before that
+    // still carry coordinates for the old place. After a move, the pointer is not followed until a frame
+    // has come back.
+    bool awaitingFrame_ = false;
+    QElapsedTimer frameClock_; // Bounds the wait, should a compositor send no frame.
+    QPointer<QWindow> frames_;
+    void syncDisplayScale();
+    void scheduleDisplayScaleSync();
+    int petSize_ = 160;
+    qreal startScale_ = 0;      // XWayland's scale when Qt read it, i.e. what Qt's pixel ratio assumes; 0 where there is none.
+    qreal displayFactor_ = 1;   // XWayland's scale now over startScale_.
     QString language_ = "auto";
     QString pet_ = "vpet";
     QStringList plugins_;

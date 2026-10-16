@@ -82,4 +82,9 @@ std::optional<bool> nativeLeftButtonDown() {
     return (GetAsyncKeyState(button) & 0x8000) != 0;
 }
 std::optional<QPoint> nativeWindowOrigin(quintptr) { return std::nullopt; }
+std::optional<qreal> nativeDisplayScale() { return std::nullopt; }
+bool layerShellActive() { return false; }
+void layerAttach(QWindow *, bool, bool) {}
+void layerSetScreen(QWindow *, QScreen *) {}
+void layerPlace(QWindow *, QPoint) {}
 }
