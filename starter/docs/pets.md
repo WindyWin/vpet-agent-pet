@@ -9,6 +9,12 @@ small pet on borrowed CC0 art), Whale Girl ([0039](adr/0039-whale-girl-pet.md), 
 once without saving the choice. Only the running pet's artwork is loaded.
 To add animations to an existing pet without a rebuild, make a [plugin pack](plugins.md) instead.
 
+The future importable `.agentpet` format is defined in
+[ADR 0041 — Packs](adr/0041-packs.md), including metadata, limits, licensing and
+compatibility. Its phased rollout will leave VPet as the only built-in pet and
+move other pets to a separate gallery. The guide below describes the current
+build and on-demand workflow until those phases land.
+
 ## A minimal pet
 
 1. Put the art's terms in `licenses/`, for example `licenses/CAT-ARTWORK-TERMS.md`. Packaging, the
