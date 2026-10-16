@@ -127,6 +127,19 @@ Settings → Startup (or `agent-pet autostart enable [--when-idle keep|hide|quit
 lets a connected agent's session start launch the pet, and chooses whether it
 stays, hides or quits once no sessions remain; see [install guide](docs/install.md#autostart).
 
+## Local pet folders
+
+Settings → Pet → **Open pets folder** opens the per-user `packs/pets` directory.
+Copy a complete pet folder there, reopen Settings, choose its **Local** tile and
+restart. `--pet <id>` also runs a local pet. Invalid packs show their reason and
+cannot be chosen; a missing or invalid saved pet falls back to VPet without
+forgetting the choice. About lets you read each installed pet's artwork terms.
+These folders survive app updates and download-cache cleanup.
+
+See [Installing a local pet](docs/pets.md#installing-a-local-pet) for the layout,
+metadata, validation limits and a minimal fixture. ZIP import and source browsing
+are later phases; this release reads unpacked folders.
+
 ## Idle animation
 
 While nothing needs the pet it no longer repeats one loop forever. Settings → **Idle

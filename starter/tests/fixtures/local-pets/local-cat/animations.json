@@ -1,0 +1,87 @@
+{
+  "schema_version": 2,
+  "asset_root": "assets/local-cat",
+  "states": {
+    "idle": [
+      "idle"
+    ],
+    "busy": [
+      "idle",
+      "idle",
+      "idle"
+    ],
+    "hello": [
+      "idle"
+    ],
+    "oops": [
+      "idle"
+    ],
+    "bye": [
+      "idle"
+    ],
+    "held": [
+      "idle",
+      "idle",
+      "idle"
+    ]
+  },
+  "sequences": [
+    {
+      "state": "idle",
+      "path": "idle",
+      "frames": [
+        {
+          "path": "assets/local-cat/idle/_000_100.png",
+          "duration_ms": 100
+        },
+        {
+          "path": "assets/local-cat/idle/_001_100.png",
+          "duration_ms": 100
+        }
+      ],
+      "duration_ms": 200
+    }
+  ],
+  "playback": {
+    "idle": {
+      "mode": "loop",
+      "after": "idle"
+    },
+    "busy": {
+      "mode": "phased",
+      "after": "idle"
+    },
+    "hello": {
+      "mode": "once",
+      "after": "idle"
+    },
+    "oops": {
+      "mode": "once",
+      "after": "previous"
+    },
+    "bye": {
+      "mode": "once",
+      "after": "stop"
+    },
+    "held": {
+      "mode": "phased",
+      "after": "idle"
+    }
+  },
+  "cues": {
+    "thinking": "busy",
+    "reading": "busy",
+    "working": "busy",
+    "attention": "busy",
+    "exhausted": "idle",
+    "error": "oops",
+    "turn-finished": "hello",
+    "inactive": "busy",
+    "nap": "busy",
+    "start": "hello",
+    "quit": "bye",
+    "annoyed": "bye",
+    "quit-angry": "bye",
+    "drag": "held"
+  }
+}

@@ -76,15 +76,16 @@ Catalog Catalog::load(const QString &root, const QString &pet, QString *error) {
     const auto source = read(root, pet, error);
     return source.valid() ? build(source, error) : Catalog();
 }
-CatalogSource Catalog::read(const QString &root, const QString &pet, QString *error) {
+CatalogSource Catalog::read(const QString &root, const QString &pet, QString *error, const QString &diskFolder) {
     auto invalid = [error](const QString &reason) {
         if (error) *error = reason;
         return CatalogSource();
     };
     if (!validPetId(pet)) return invalid("Invalid pet identifier: " + pet);
     const QString folder = "assets/" + pet;
-    QFile file(QDir(root).filePath(folder + "/animations.json"));
-    if (!file.open(QIODevice::ReadOnly) || file.size() > 1024 * 1024)
+    QFile file(diskFolder.isEmpty() ? QDir(root).filePath(folder + "/animations.json")
+                                  : QDir(diskFolder).filePath("animations.json"));
+    if (!file.open(QIODevice::ReadOnly) || file.size() > (diskFolder.isEmpty() ? 1 : 8) * 1024 * 1024)
         return invalid("Animation catalog is missing or too large.");
     QJsonParseError parse;
     const auto document = QJsonDocument::fromJson(file.readAll(), &parse).object();
@@ -112,7 +113,8 @@ CatalogSource Catalog::read(const QString &root, const QString &pet, QString *er
             if (!safePath(relative) || !relative.startsWith(assetRoot + "/") || !relative.mid(folder.size() + 1).contains('/')
                 || duration < 1 || duration > 60000)
                 return invalid("Invalid frame path or duration in " + id);
-            frames.append({QDir(root).filePath(relative), duration});
+            frames.append({diskFolder.isEmpty() ? QDir(root).filePath(relative)
+                                               : QDir(diskFolder).filePath(relative.mid(folder.size() + 1)), duration});
             total += duration;
             if (frames.size() > 1000) return invalid("Too many frames in " + id);
         }

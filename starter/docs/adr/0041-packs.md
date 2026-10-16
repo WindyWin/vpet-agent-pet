@@ -227,3 +227,28 @@ release asset deduplication (#100) remains independent of this contract.
   extraction and rollback; traversal, links, duplicate names and ZIP expansion;
   invalid/oversized PNGs and boundary limits; changed terms; next-start activation;
   and VPet fallback. Phase 4 must also verify migration from the legacy store.
+
+### Phase 1 evidence — 2026-10-16
+
+- Implemented #93: `PetLibrary` discovers unpacked pets under `<data>/packs/pets`,
+  validates their metadata, file budgets, paths, PNG headers, manifest hashes and
+  core cue contract, and maps logical catalog paths to disk. Existing plugin
+  merging and lazy `QImageReader` playback also work with these pets.
+- Settings marks local pets, disables invalid choices with reasons, explains a
+  missing/invalid saved choice and opens the install folder. About can display
+  each valid installed pet's terms. Resource-index ids retain priority during
+  the transition; a conflicting local folder is listed as unusable.
+- Linux (EndeavourOS), Qt 6.11.2, GCC 16.2.1: Release build succeeded. All 17 CTest
+  suites passed across the sandbox run and an unsandboxed rerun of providers,
+  events, update-install and startup (the sandbox blocks their local sockets).
+  The final pets/plugins/i18n run passed after boundary checks were added.
+- The checked-in `local-cat` fixture covers discovery, playback, terms, plugin
+  extension, missing/invalid fallback, reserved ids, symlinks, case collisions,
+  checksums, compatibility, invalid cue contracts, per-file and aggregate PNG
+  limits, oversized catalogs/previews and the 10,000-frame boundary. Pruning
+  leaves installed pet folders intact, and a fresh library can activate them.
+- An isolated user-data smoke run with `--pet local-cat --smoke-test` completed
+  playback, input recovery and shutdown without falling back to VPet. The new
+  interface strings are translated into Vietnamese. Native macOS and Windows
+  execution remains to be verified in CI/manual acceptance; the loader uses Qt
+  filesystem/image APIs and platform-specific per-user paths.

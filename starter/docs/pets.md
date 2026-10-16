@@ -9,11 +9,53 @@ small pet on borrowed CC0 art), Whale Girl ([0039](adr/0039-whale-girl-pet.md), 
 once without saving the choice. Only the running pet's artwork is loaded.
 To add animations to an existing pet without a rebuild, make a [plugin pack](plugins.md) instead.
 
-The future importable `.agentpet` format is defined in
+The `.agentpet` format is defined in
 [ADR 0041 — Packs](adr/0041-packs.md), including metadata, limits, licensing and
 compatibility. Its phased rollout will leave VPet as the only built-in pet and
-move other pets to a separate gallery. The guide below describes the current
-build and on-demand workflow until those phases land.
+move other pets to a separate gallery. Unpacked pet folders can now load from disk; archive import and sources follow
+in later phases. The build and on-demand workflow remains available meanwhile.
+
+## Installing a local pet
+
+In Settings → Pet, choose **Open pets folder** and copy a complete unpacked pet
+folder into it. The folder name must match its `id`:
+
+| Platform | Folder |
+| --- | --- |
+| Linux | `~/.local/share/agent-pet/packs/pets/<id>/` (or under `$XDG_DATA_HOME`) |
+| macOS | `~/Library/Application Support/agent-pet/packs/pets/<id>/` |
+| Windows | `%APPDATA%\agent-pet\packs\pets\<id>\` |
+
+A local folder contains `pack.json`, `pet.json`, `animations.json`, `manifest.json`,
+`preview.png`, frame subfolders and `licenses/<terms>.txt` or `.md`. See
+[ADR 0041](adr/0041-packs.md#archive-and-metadata) for the manifest fields.
+`pack.json` has `kind: "pet"`, catalog `schema: 2`, a SemVer `version`, and a
+`minAppVersion` no newer than the running app. Its id, name and author must agree
+with `pet.json`; its `terms` path must be `licenses/` plus `pet.json.terms`.
+Use the checked-in [`local-cat` fixture](../tests/fixtures/local-pets/local-cat/pack.json)
+as a complete minimal example. The archive importer is not available yet.
+
+Keep catalog and manifest frame paths as `assets/<id>/<folder>/<frame>.png`.
+The loader maps that logical prefix to the installed folder. The manifest lists
+every referenced frame's byte size and SHA-256. It rejects missing or changed
+frames, escaping paths, links, executable files, incompatible metadata and
+broken state cues. Limits include 10,000 frame references, 4 MiB per PNG, 2,048
+pixels per side, 512 MiB of PNGs and an 8 MiB catalog; previews stay within
+512 × 512 pixels. Full limits are in the ADR.
+
+Reopen Settings after copying a folder. Character tiles mark these pets **Local**;
+the tooltip shows author, licence and any validation failure. Invalid pets remain
+listed but cannot be selected. Choose a valid pet and restart to play it, or run
+`agent-pet --pet <id>` once. About includes a pet selector to read each valid
+installed pet's artwork terms. Copying a folder does not verify its author or
+grant permission to redistribute its art.
+
+VPet's id is reserved. During the transition, ids already in the app's resource
+index also take priority: a conflicting local folder is listed as unusable.
+If a saved pet is removed or becomes invalid, VPet runs instead, the log and
+Settings explain why, and the saved choice is retained. Installed folders survive
+app updates and are never removed by cleanup of the legacy `pets/*.rcc` download
+cache. Edit or replace a local pet only while Agent Pet is stopped.
 
 ## A minimal pet
 
