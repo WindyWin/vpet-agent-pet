@@ -7,6 +7,27 @@
 #include <algorithm>
 
 namespace pet {
+// Tool names differ per provider and version; this maps the common ones to a class and sends only the
+// class on the wire. Case-insensitive, and anything unknown (MCP tools included) is "working".
+QString toolActivity(const QString &toolName) {
+    const auto name = toolName.toLower();
+    if (name.isEmpty()) return "working";
+    static const QSet<QString> editing{"edit", "write", "multiedit", "notebookedit", "apply_patch", "edit_file",
+                                       "write_file", "create_file", "replace", "str_replace_editor", "delete_file", "move_file"};
+    static const QSet<QString> executing{"bash", "bashoutput", "killshell", "run_command", "run_terminal_cmd",
+                                         "execute", "execute_command", "command", "terminal", "shell", "exec"};
+    static const QSet<QString> delegating{"task", "agent", "subagent", "delegate"};
+    static const QSet<QString> browsing{"webfetch", "websearch", "web_search", "read_url_content", "fetch_url", "open_url"};
+    static const QSet<QString> searching{"grep", "glob", "grep_search", "find_by_name", "search_files", "list_dir", "ls"};
+    static const QSet<QString> reading{"read", "read_file", "view_file", "notebookread", "cat"};
+    if (editing.contains(name)) return "editing";
+    if (executing.contains(name)) return "executing";
+    if (delegating.contains(name)) return "delegating";
+    if (browsing.contains(name)) return "browsing";
+    if (searching.contains(name)) return "searching";
+    if (reading.contains(name)) return "reading";
+    return "working";
+}
 // A versioned private checkpoint preserves in-flight tools, dismissed alerts and event deduplication.
 QByteArray Sessions::checkpoint() const {
     QByteArray data;
@@ -103,7 +124,7 @@ bool Event::parse(const QByteArray &data, Event &e, QString &error, const hosts:
         (e.kind == "turn_failed" && (e.reason == "limit" || e.reason == "billing"));
     if ((!findProvider(e.provider) && !custom) || e.session.isEmpty() || e.id.isEmpty() || !kinds.contains(e.kind) ||
         ((e.kind == "tool_start" || e.kind == "tool_end") && e.tool.isEmpty()) ||
-        (!e.activity.isEmpty() && e.activity != "reading" && e.activity != "working") ||
+        (!e.activity.isEmpty() && !activityClasses().contains(e.activity)) ||
         !reasonValid || (e.kind == "turn_failed" && !e.tool.isEmpty()) ||
         (o.contains("risky") && e.kind != "tool_start") ||
         (o.contains("waiting") && e.kind != "turn_finished")) {
@@ -114,7 +135,9 @@ bool Event::parse(const QByteArray &data, Event &e, QString &error, const hosts:
 }
 static QString key(const QString &provider, const QString &id) { return provider + QChar(0x1f) + id; }
 static QString toolState(const Session &s) {
-    return s.tools.values().contains("working") ? "working" : s.tools.isEmpty() ? "thinking" : "reading";
+    for (const auto &activity : activityClasses())
+        if (s.tools.values().contains(activity)) return activity;
+    return s.tools.isEmpty() ? "thinking" : "working";
 }
 template<class T> static void trimOldest(QMap<QString, T> &map, int limit) {
     while (map.size() > limit) {
@@ -170,7 +193,7 @@ bool Sessions::apply(const Event &e, qint64 now) {
         else if (s.state != "attention" && s.state != "exhausted" && s.state != "inactive" && s.state != "turn-finished" && s.state != "waiting" &&
                  (isNew || s.state != "idle")) {
             const auto next = toolState(s);
-            if (next == "thinking" && (s.state == "working" || s.state == "reading")) s.activityUntil = now + activityHoldMs;
+            if (next == "thinking" && busy(s.state)) s.activityUntil = now + activityHoldMs;
             else s.state = next;
         }
     }
@@ -233,7 +256,7 @@ void Sessions::expire(qint64 now) {
             it = sessions_.erase(it);
         } else {
             if (it->activityUntil && now >= it->activityUntil) {
-                if (it->tools.isEmpty() && (it->state == "working" || it->state == "reading")) it->state = "thinking";
+                if (it->tools.isEmpty() && busy(it->state)) it->state = "thinking";
                 it->activityUntil = 0;
             }
             if (it->reactionUntil && now >= it->reactionUntil) {
@@ -249,7 +272,9 @@ void Sessions::expire(qint64 now) {
     for (auto it = events_.begin(); it != events_.end();) if (now - it.value() >= expiryMs) it = events_.erase(it); else ++it;
 }
 QString Sessions::aggregate(qint64) const {
-    const QStringList priority{"attention", "exhausted", "error", "turn-finished", "working", "reading", "thinking", "waiting", "idle", "inactive"};
+    QStringList priority{"attention", "exhausted", "error", "turn-finished"};
+    priority += activityClasses();
+    priority << "thinking" << "waiting" << "idle" << "inactive";
     for (const auto &state : priority) for (const auto &s : sessions_) if (s.state == state) return state;
     return "idle";
 }

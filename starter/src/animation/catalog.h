@@ -63,7 +63,7 @@ struct ActivityArt {
 // What the app asks a pet to show, from src/animation/cues.json (embedded at build time), sorted by name. A state
 // cue plays one state with this playback: `state` unless the catalog maps the cue to another (never for a `fixed`
 // cue). A reaction cue plays a state drawn from the pool the catalog maps it to, and nothing without one.
-struct Cue { QString name; bool reaction = false; QString state, mode, after; bool fixed = false; };
+struct Cue { QString name; bool reaction = false; QString state, mode, after; bool fixed = false; QString fallback; };
 const QVector<Cue> &cues();
 const Cue *findCue(const QString &name); // Null for a name outside the vocabulary.
 // A pet's identifier, which is also its folder under assets/: [a-z0-9-]{1,32}.

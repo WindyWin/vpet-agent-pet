@@ -191,9 +191,9 @@ private slots:
             auto apply = [&](QJsonObject in) { const auto e = event(provider, in, ++stamp); return sessions.apply(e, stamp); };
             QVERIFY(apply(payload("PreToolUse", "a"))); // missed SessionStart
             auto work = payload("PreToolUse", "b"); work["tool_name"] = "Bash";
-            QVERIFY(apply(work)); QCOMPARE(sessions.aggregate(stamp), "working");
+            QVERIFY(apply(work)); QCOMPARE(sessions.aggregate(stamp), "executing");
             QVERIFY(!apply(work)); // duplicate delivery
-            QVERIFY(apply(payload("PostToolUse", "a"))); QCOMPARE(sessions.aggregate(stamp), "working");
+            QVERIFY(apply(payload("PostToolUse", "a"))); QCOMPARE(sessions.aggregate(stamp), "executing");
             auto failure = payload(provider == "claude" ? "PostToolUseFailure" : "PostToolUse", "b");
             failure["tool_response"] = QJsonObject{{"isError", true}};
             QVERIFY(apply(failure)); QCOMPARE(sessions.aggregate(stamp), "error");

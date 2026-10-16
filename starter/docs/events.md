@@ -17,8 +17,11 @@ Required fields: `version` (integer 1), `provider` (`claude`, `codex`, `opencode
 `session_id`, `event_id`, `kind`, and positive integer Unix `timestamp_ms`.
 Optional fields: `tool_id`, `parent_id`, `project_path`, `activity`, `reason`,
 `risky`, `waiting`, `name` (custom events only), and the host fields below.
-`tool_start` and `tool_end` require `tool_id`; activity is `reading` or `working`
-(default working). `reason` is allowed on `attention`, as `approval` or `input`
+`tool_start` and `tool_end` require `tool_id`; `activity` is the class of the
+tool that started: `executing`, `editing`, `delegating`, `browsing`, `searching`,
+`working` or `reading` (default `working`, which is also what an unknown or MCP
+tool sends). The wire carries only the class, never the tool name.
+`reason` is allowed on `attention`, as `approval` or `input`
 (without it alerts say "Needs attention"), and on `turn_failed`, as `limit` (the
 provider's usage or rate limit) or `billing` (out of credits). `turn_failed` never
 carries `tool_id`. `risky` is a boolean allowed only
@@ -34,7 +37,9 @@ a one-bit judgment made inside the hook.
 Kinds: `session_start`, `prompt`, `tool_start`, `tool_end`, `attention`, `error`,
 `turn_finished`, `turn_failed`, `interrupt`, `session_end`, and [`custom`](#custom-events). A finished turn indicates only that
 it stopped; it says nothing about success or test results. A failed turn ended on a
-provider error; with a `limit` or `billing` reason the provider is out of quota.
+provider error; with a `limit` or `billing` reason the provider is out of quota. A
+`prompt` opens a turn: the pet plays one getting-ready beat before settling into its
+activity states (a pet without art for it plays its arrival instead).
 
 Adapters must preserve stable provider session/tool/event IDs when supplied.
 Never invent a common session ID for unidentified callbacks: drop events without
@@ -140,10 +145,12 @@ messages; oversized datagrams and invalid envelopes are dropped.
 - Session keys are `(provider, session_id)`; children and identical IDs from
   different providers have independent state. Any non-end event can create a
   record after a missed start. Start on an existing record refreshes metadata.
-- Tool IDs are tracked independently. Working tools outrank reading tools;
-  finishing the last tool holds its activity for 4 s, then resumes thinking, so
-  short back-to-back tool calls show as one working stretch instead of a flicker
-  the animation never reaches. Prompt begins a new turn and clears old tools. Attention persists through alert dismissal and the completion of unrelated
+- Tool IDs are tracked independently. A turn's tools share one activity class,
+  the most active in flight: executing > editing > delegating > browsing >
+  searching > working > reading, so a turn running commands and reading files
+  shows as executing. Finishing the last tool holds its activity for 4 s, then
+  resumes thinking, so short back-to-back tool calls show as one work stretch
+  instead of a flicker the animation never reaches. Prompt begins a new turn and clears old tools. Attention persists through alert dismissal and the completion of unrelated
   tools. The tool awaiting an answer (the attention event's tool, or for Codex
   permission requests, which carry none, the tools already started) completing
   (or, when none had started, the first tool to complete) means it was approved: attention clears to the remaining activity. A rejection
@@ -179,8 +186,8 @@ Limits: 256 sessions, 128 simultaneous tools per session, 4096 recent event IDs,
 256 end/expiry tombstones, 64 pending alerts. New sessions/tools at capacity are
 dropped until space is available; oldest event IDs/tombstones are evicted.
 
-Aggregate animation priority is attention > exhausted > error > turn-finished > working >
-reading > thinking > waiting > idle > inactive. Exhausted plays `out_of_quota`, the pet sick in bed. No observed sessions means idle. The
+Aggregate animation priority is attention > exhausted > error > turn-finished > executing >
+editing > delegating > browsing > searching > working > reading > thinking > waiting > idle > inactive. Exhausted plays `out_of_quota`, the pet sick in bed. No observed sessions means idle. The
 aggregate feeds playback, including the state restored after dragging. Preview
 is most useful without an active event stream; monitoring takes precedence once
 fresh events have been observed.
@@ -217,7 +224,7 @@ itself remains until the session resolves it.
 
 `sessionRows()` builds the running-sessions list from session records:
 subagents fold into their parent (whose status shows the busiest child), and
-rows sort attention, exhausted, error, working, reading, thinking, waiting, finished, idle, stopped,
+rows sort attention, exhausted, error, executing, editing, delegating, browsing, searching, working, reading, thinking, waiting, finished, idle, stopped,
 then most recently seen first.
 
 ### Background waiting

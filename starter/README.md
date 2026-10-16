@@ -2,9 +2,9 @@
 
 A small starting repository for a desktop pet that reacts to Claude Code and Codex activity. The sprite files are bundled here, so development can proceed without a local VPet installation.
 
-The current asset pack contains **1,359 PNG files in 148 animation sequences (198.82 MiB)**. They cover idle (with two alternate loops, a few idle fidgets, and happy and droopy moods), thinking, reading, working, waiting for input, tool errors, several ways to celebrate a finished turn, sleeping, startup, closing, the original dragging animation, reactions to being petted, thrown and pushed against a screen edge, a few easter eggs, walking, crawling and climbing, jump rope for Break Buddy, and eating and drinking with reminders. [animations.json](assets/vpet/animations.json) maps each state to its sequences, records frame durations, and lists the idle variants, fidgets, mood art, reaction cues, touch hit boxes and moves. [manifest.json](assets/vpet/manifest.json) records every file's size and SHA-256 hash.
+The current asset pack contains **1,583 PNG files in 164 animation sequences (229.36 MiB)**. They cover idle (with two alternate loops, a few idle fidgets, and happy and droopy moods), thinking, reading, working, running commands, editing, delegating, browsing and searching, a getting-ready beat when a turn starts, waiting for input, tool errors, several ways to celebrate a finished turn, sleeping, startup, closing, the original dragging animation, reactions to being petted, thrown and pushed against a screen edge, a few easter eggs, walking, crawling and climbing, jump rope for Break Buddy, and eating and drinking with reminders. [animations.json](assets/vpet/animations.json) maps each state to its sequences, records frame durations, and lists the idle variants, fidgets, mood art, reaction cues, touch hit boxes and moves. [manifest.json](assets/vpet/manifest.json) records every file's size and SHA-256 hash.
 
-[available-animations.json](assets/vpet/available-animations.json) catalogs the **417 remaining sequences and 4,240 frames** from the original character pack. Each entry gives its upstream folder, category, frame count, size, and timing status. These are references for future work; their PNG files are not included here. To add one later, run `python3 scripts/add_sequences.py IDEL/yawning/Nomal …` against a copy of the upstream VPet tree (`--source`; the full archive next to this folder is the default). It copies the frames, updates the manifest and both catalogs, and leaves you to map the sequences in `animations.json`, which `scripts/verify_assets.py` then checks. Retain the artwork notices.
+[available-animations.json](assets/vpet/available-animations.json) catalogs the **401 remaining sequences and 4,016 frames** from the original character pack. Each entry gives its upstream folder, category, frame count, size, and timing status. These are references for future work; their PNG files are not included here. To add one later, run `python3 scripts/add_sequences.py IDEL/yawning/Nomal …` against a copy of the upstream VPet tree (`--source`; the full archive next to this folder is the default). It copies the frames, updates the manifest and both catalogs, and leaves you to map the sequences in `animations.json`, which `scripts/verify_assets.py` then checks. Retain the artwork notices.
 
 This folder is ready to become its own repository:
 
@@ -167,6 +167,19 @@ seconds, pen spinning, and now and then a small happy reaction when it gets to w
 It is independent of Idle animation. Requests, errors, finished turns, pausing and
 dragging always take over at once. See
 [the design record](docs/adr/0021-active-animation.md).
+
+The pet also shows *which* work is in flight: running commands, editing files,
+delegating a subagent, browsing the web and searching the tree each have their own
+state, drawn from the tool the agent started (unknown and MCP tools stay at the
+desk). A turn running several tools shows the most active one. See
+[the design record](docs/adr/0051-tool-aware-animations.md).
+
+Each turn opens with a short getting-ready beat before the work settles into its
+activity states, so the start of a new task reads differently from the middle. It
+is a one-shot moment: it never interrupts a session that needs you, and attention,
+an exhausted quota, an error, a destructive command or a finished turn still take
+its place. A pet that draws no art for it plays its arrival instead. See
+[the design record](docs/adr/0052-turn-choreography.md).
 
 ## Mood
 

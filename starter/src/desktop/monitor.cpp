@@ -111,11 +111,18 @@ bool Monitor::apply(const Event &event, qint64 now) {
     if (event.kind == "turn_finished" && !event.waiting) {
         const auto &records = sessions_.records();
         const bool running = std::any_of(records.begin(), records.end(), [](const Session &s) {
-            return s.state == "working" || s.state == "reading" || s.state == "thinking";
+            return busy(s.state) || s.state == "thinking";
         });
         if (!running) window_.snooze().turnFinished();
     }
     observed_ = true; update(now);
+    // A prompt opens a new turn: one getting-ready beat (a one-shot moment, not a state) before the work settles
+    // in. It is a Reminder-class moment, so a destructive command's surprise and a finished turn's celebration
+    // still take its place, and attention, exhausted and error, being urgent, preempt it; a session already
+    // needing the user, or a hidden, mute or spoken-for pet, keeps the beat away (docs/adr/0052-turn-choreography.md).
+    if (event.kind == "prompt")
+        window_.stage().runtime().submit(
+            {"lifecycle", "turn-start", "turn-start", behavior::Policy::Reminder, behavior::Lifetime::OneShot});
     // The hook saw a destructive command start: the pet jumps, then shows the work going on. The runtime keeps
     // it away while a session waits on the user, is out of quota or just failed, or the pet is hidden.
     if (event.kind == "tool_start" && event.risky) window_.eggs().surprise("danger");

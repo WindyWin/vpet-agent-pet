@@ -357,6 +357,24 @@ private slots:
         QVERIFY(state.apply(event("turn_finished", 20002), now + 20002));
         QCOMPARE(state.aggregate(now), "turn-finished");
     }
+    void toolActivities() {
+        pet::Sessions state;
+        auto tool = [&](QString kind, QString id, QString activity, int seq) {
+            auto e = event(kind, seq); e.tool = id; e.activity = activity; return e;
+        };
+        QVERIFY(state.apply(event("prompt", 1), now + 1)); QCOMPARE(state.aggregate(now + 1), "thinking");
+        QVERIFY(state.apply(tool("tool_start", "a", "reading", 2), now + 2)); QCOMPARE(state.aggregate(now + 2), "reading");
+        // Several tools of one turn show the most active one; the class order is the priority.
+        QVERIFY(state.apply(tool("tool_start", "b", "executing", 3), now + 3)); QCOMPARE(state.aggregate(now + 3), "executing");
+        QVERIFY(state.apply(tool("tool_start", "c", "searching", 4), now + 4)); QCOMPARE(state.aggregate(now + 4), "executing");
+        QVERIFY(state.apply(tool("tool_end", "b", {}, 5), now + 5)); QCOMPARE(state.aggregate(now + 5), "searching");
+        QVERIFY(state.apply(tool("tool_end", "c", {}, 6), now + 6)); QCOMPARE(state.aggregate(now + 6), "reading");
+        QVERIFY(state.apply(tool("tool_end", "a", {}, 7), now + 7)); QCOMPARE(state.aggregate(now + 7), "reading"); // Held briefly.
+        state.expire(now + 7 + pet::Sessions::activityHoldMs); QCOMPARE(state.aggregate(now), "thinking");
+        // An unnamed activity (an unknown or MCP tool) is a plain working tool.
+        QVERIFY(state.apply(tool("tool_start", "d", {}, 8), now + 8)); QCOMPARE(state.aggregate(now + 8), "working");
+        QVERIFY(state.apply(tool("tool_end", "d", {}, 9), now + 9)); QCOMPARE(state.aggregate(now + 9), "working");
+    }
     void orderingAndRecovery() {
         pet::Sessions state;
         QVERIFY(state.apply(event("prompt", 3), now + 3));

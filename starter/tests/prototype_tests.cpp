@@ -124,6 +124,7 @@ private slots:
         const qint64 now = QDateTime::currentMSecsSinceEpoch();
         pet::Event e{"claude", "background", "1", "prompt", {}, {}, "/project", {}, now};
         QVERIFY(monitor.apply(e, now));
+        playOut(window.player()); // The turn's getting-ready beat, then its activity.
         const int turns = window.mood().turns();
         e.id = "2"; e.kind = "turn_finished"; e.waiting = true; e.timestamp = now + 1;
         QVERIFY(monitor.apply(e, now + 1));
@@ -186,7 +187,8 @@ private slots:
     }
     void sessionStatesAreCues() {
         pet::Player player;
-        const QStringList states{"attention", "exhausted", "error", "turn-finished", "working", "reading", "thinking", "waiting", "idle", "inactive"};
+        const QStringList states{"attention", "exhausted", "error", "turn-finished", "executing", "editing", "delegating",
+                                 "browsing", "searching", "working", "reading", "thinking", "waiting", "idle", "inactive"};
         // VPet keeps the default mapping: background waiting looks idle, an exhausted quota has its own loop.
         QCOMPARE(player.stateFor("waiting"), QString("idle"));
         QCOMPARE(player.stateFor("exhausted"), QString("out_of_quota"));
@@ -256,7 +258,7 @@ private slots:
         for (const auto &region : touch.regions) touches.insert(region.state);
         QCOMPARE(touches.size(), 7);
         for (const auto &state : touches) QVERIFY2(player.isTouch(state), qPrintable(state));
-        QCOMPARE(player.states().size(), 18 + reactions.size() - 1 + player.fidgets().size() + touches.size());
+        QCOMPARE(player.states().size(), 24 + reactions.size() - 1 + player.fidgets().size() + touches.size());
         QVERIFY(!player.fidgets().isEmpty());
         // Walks in each mood, crawls and climbs up and down both edges: all fidgets that move the window.
         int moves = 0;
@@ -468,6 +470,8 @@ private slots:
             ++seq; return pet::Event{"claude", "s1", QString::number(seq), kind, {}, {}, "/work/abc-web", {}, now + seq, {}};
         };
         QVERIFY(monitor.apply(event("prompt"), now + seq));
+        draws.values = {0}; // The beat passes through idle, where the ambient may reach for a fidget; the turn denies it.
+        finishSequence(player); // The turn opens with its getting-ready beat; then thinking.
         QCOMPARE(player.requestedState(), QString("thinking"));
         draws.values = {0}; QVERIFY(monitor.apply(event("interrupt"), now + seq)); // The aggregate is idle again.
         playOut(player); QCOMPARE(player.state(), QString("idle"));
@@ -480,7 +484,9 @@ private slots:
         clock += 700000; finishSequence(player); QCOMPARE(player.state(), QString("sleeping"));
         monitor.update(now + seq + 2); QCOMPARE(player.state(), QString("sleeping"));
         QVERIFY(monitor.apply(event("prompt"), now + seq));
-        QCOMPARE(player.requestedState(), QString("thinking")); QCOMPARE(player.phase(), QString("end"));
+        QCOMPARE(player.requestedState(), QString("turn_start")); // The turn opens with its getting-ready beat.
+        draws.values = {0}; // The beat passes through idle, where the ambient may reach for a fidget; the turn denies it.
+        finishSequence(player); QCOMPARE(player.requestedState(), QString("thinking")); // Then the work settles in.
         QCOMPARE(draws.unexpected, 0);
     }
     void ambientPreference() {
@@ -1164,6 +1170,7 @@ private slots:
             ++seq; return pet::Event{"claude", session, QString::number(seq), kind, {}, {}, "/work/abc-web", {}, now + seq, {}};
         };
         QVERIFY(monitor.apply(event("prompt"), now + seq));
+        finishSequence(player); // The turn opens with its getting-ready beat, then thinking.
         draws.values = {2}; const auto finished = event("turn_finished");
         QVERIFY(monitor.apply(finished, now + seq));
         // Thinking plays its end first, then the drawn celebration.
@@ -1345,9 +1352,9 @@ private slots:
         QCOMPARE(window.pos(), QPoint(area.left() - qRound(219.0 * window.width() / 500), area.top() + 50));
         monitor.update(now + seq); QCOMPARE(player.requestedState(), QString("edge_left"));
         window.constrainPosition(); QCOMPARE(window.pos().x(), area.left() - qRound(219.0 * window.width() / 500));
-        // Session activity brings it out through its end, back into view.
-        QVERIFY(monitor.apply(event("prompt"), now + seq)); QCOMPARE(player.phase(), QString("end"));
-        QVERIFY(window.hiding()); finishSequence(player);
+        // A new turn's beat brings it out of hiding and into the work.
+        QVERIFY(monitor.apply(event("prompt"), now + seq)); QCOMPARE(player.requestedState(), QString("turn_start"));
+        finishSequence(player);
         QCOMPARE(player.state(), QString("thinking")); QVERIFY(!window.hiding()); QCOMPARE(window.pos().x(), area.left());
         playOut(player); QVERIFY(monitor.apply(event("interrupt"), now + seq)); playOut(player);
         // The right edge too; dragging it back out ends the hiding without fighting the drag.
@@ -1917,6 +1924,7 @@ private slots:
         // A turn that ran twenty minutes ends in a big celebration.
         const qint64 start = now - 20 * 60000;
         QVERIFY(monitor.apply(event("prompt", start), start));
+        finishSequence(player); // The turn opens with its getting-ready beat; the celebration comes at its end.
         draws.values = {2}; QVERIFY(monitor.apply(event("turn_finished", now), now));
         QCOMPARE(player.requestedState(), QString("dance"));
         playOut(player); playOut(player); QCOMPARE(player.state(), QString("idle"));
@@ -1949,6 +1957,32 @@ private slots:
             QTest::keyClick(&window, Qt::Key(key));
         QCOMPARE(player.state(), QString("dance")); monitor.update(now + 14); QCOMPARE(player.state(), QString("dance"));
         QCOMPARE(draws.unexpected, 0); QCOMPARE(eggDraws.unexpected, 0);
+    }
+    void monitorOpensEachTurnOnce() {
+        QTemporaryDir directory;
+        pet::PetWindow window(nullptr, directory.path() + "/preferences.json"); window.show();
+        pet::Monitor monitor(window); auto &player = window.player(); player.setPaused(true);
+        const qint64 now = QDateTime::currentMSecsSinceEpoch(); qint64 seq = 0;
+        auto event = [&](const QString &kind, const QString &session = "s1") {
+            ++seq; return pet::Event{"claude", session, QString::number(seq), kind, {}, {}, "/work/abc-web", {}, now + seq, {}};
+        };
+        // A prompt opens the turn with one getting-ready beat, then the work settles into its activity states.
+        QVERIFY(monitor.apply(event("prompt"), now + seq));
+        QCOMPARE(player.requestedState(), QString("turn_start"));
+        finishSequence(player); QCOMPARE(player.requestedState(), QString("thinking"));
+        // A session needing the user keeps the pet where it is: a new prompt does not interrupt attention.
+        QVERIFY(monitor.apply(event("attention", "s2"), now + seq));
+        QCOMPARE(player.requestedState(), QString("needs_input"));
+        QVERIFY(monitor.apply(event("prompt"), now + seq));
+        QCOMPARE(player.requestedState(), QString("needs_input"));
+        // The answer clears it, and the next prompt's beat comes through.
+        QVERIFY(monitor.apply(event("session_end", "s2"), now + seq));
+        QVERIFY(monitor.apply(event("prompt"), now + seq));
+        QCOMPARE(player.requestedState(), QString("turn_start"));
+        // A failure preempts the beat, as attention and an exhausted quota do.
+        auto fail = event("error"); fail.tool = "Bash"; fail.reason = "boom";
+        QVERIFY(monitor.apply(fail, now + seq));
+        QCOMPARE(player.requestedState(), QString("tool_error"));
     }
     void dailyRecap() {
         QTemporaryDir directory; const auto path = directory.path() + "/preferences.json";
