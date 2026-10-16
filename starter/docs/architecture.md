@@ -27,6 +27,7 @@ follows the phases of #91; the code map below remains the current architecture.
 | Preferences | `src/settings` | [0004](adr/0004-preferences-storage.md) |
 | Window, menus, recovery | `src/desktop` | [0008](adr/0008-window-behavior.md) |
 | Pets, playback and catalog | `src/animation` (`Catalog`, `PetLibrary`, `Player`), `assets/<id>/`, `cmake/pets.cmake`, [pets](pets.md) | [0003](adr/0003-catalog-driven-playback.md), [0014](adr/0014-artwork-resource-file.md), [0028](adr/0028-pet-packs.md) |
+| Local pet folders | `src/animation/local_pet.*`, `PetLibrary`, `Catalog::read`, Settings Character picker and About | [0041 — packs](adr/0041-packs.md), [manual installation](pets.md#installing-a-local-pet) |
 | Cues (event → animation mapping) | `src/animation/cues.json`, `Catalog::stateFor`, `Player::play`/`pool` | [0029](adr/0029-cues.md) |
 | Behavior runtime (which behavior may show) | `src/behavior/runtime.*`, `src/animation/stage.*`, producers in `Monitor`, `PetWindow`, `Ambient`, `EasterEggs` | [0031](adr/0031-behavior-runtime.md) |
 | Plugin packs (catalog fragments, Settings → Plugins) | `src/animation/plugins.*`, `PetLibrary::setPlugins`, `src/desktop/plugin_list.*`, [plugins](plugins.md) | [0033](adr/0033-plugin-packs.md) |

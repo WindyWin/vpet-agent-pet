@@ -32,7 +32,7 @@ private:
     QAbstractButton *tile(const QString &id) const;
     const PetInfo *find(const QString &id) const;
     QVector<PetInfo> pets_;
-    QString selected_, running_;
+    QString selected_, running_, unavailable_;
     QButtonGroup *group_;
     QLabel *note_;
     QProgressBar *progress_;
