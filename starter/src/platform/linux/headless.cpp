@@ -21,7 +21,10 @@ static bool nativeWaylandUsable() {
     const QDir bin = QFileInfo(QFileInfo("/proc/self/exe").symLinkTarget()).dir();
     const bool bundled = bin.exists("qt.conf");
     const QDir plugins(bundled ? bin.filePath("../plugins") : QLibraryInfo::path(QLibraryInfo::PluginsPath));
-    if (!plugins.exists("platforms/libqwayland.so")) return false;
+    // Qt 6.10 ships one plugin; earlier 6.x ship the generic and EGL ones. Each answers to QT_QPA_PLATFORM=wayland.
+    const bool plugin = plugins.exists("platforms/libqwayland.so") || plugins.exists("platforms/libqwayland-generic.so")
+                        || plugins.exists("platforms/libqwayland-egl.so");
+    if (!plugin) return false;
     return compositorHasLayerShell();
 }
 #endif
