@@ -199,8 +199,7 @@ While you work, the pet reminds you to rest your eyes, drink water, eat lunch an
 20 minutes of activity it says "Look at something far away for 20 seconds" and
 closes its eyes for a stretch (the 20-20-20 rule); click the note and it counts the 20 seconds down, then
 cheers. After 60 minutes it drinks from a glass and says "Time for some water 💧"; click to
-say you had some and it cheers. Completing a reminder picks randomly from VPet's six happy reactions;
-eye and movement breaks celebrate after their countdown finishes. At lunchtime VPet eats a sandwich alongside the meal reminder.
+say you had some and it cheers. At lunchtime VPet eats a sandwich alongside the meal reminder.
 Each reminder (also lunch and go-home) is a question with
 **Done**, **Later** (asks again in 10 minutes) and **Skip today** (until tomorrow).
 Ignored, it fades and is asked again after 10 minutes, up to three times, then left until the next
