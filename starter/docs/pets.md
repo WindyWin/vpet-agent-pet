@@ -285,3 +285,41 @@ Try a pet as on-demand locally by leaving it out of the bundled list:
 `cmake -S . -B build -DAGENT_PET_BUNDLED_PETS=vpet` keeps every pack in the build folder, where it still
 counts as installed, but `cmake --install` and the packages carry only VPet's. ADR
 [0030](adr/0030-on-demand-pets.md) records the design.
+
+## Convert a VPet workshop mod
+
+Phase 3 provides a converter for an already downloaded VPet-Simulator mod with
+`pet/<name>.lps` and its graph folder. Bring the mod and its artwork licence;
+conversion does not grant permission to redistribute it. No workshop code is
+loaded. Use Python 3 and install Pillow (`python -m pip install Pillow`) when
+idle frames exceed the 512-pixel preview limit.
+
+From `starter/`, with the phase 2 application built:
+
+```bash
+python scripts/convert_vpet_mod.py /path/to/mod -o my-pet.agentpet \
+  --id my-pet --author 'Original artist' --license 'LicenseRef-Custom' \
+  --terms /path/to/artwork-terms.txt --report my-pet-report.json \
+  --app build/agent-pet
+```
+
+On Windows use `--app build/agent-pet-cli.exe`. Author and licence labels may
+come from `author` / `license` fields in the pet definition; otherwise supply
+these options. The terms text is always explicit. If the mod contains several
+pets, pass the desired `pet/<name>.lps` instead of the mod directory. `--id`
+defaults to `converted-pet`; choose a distinct id for each pet you keep.
+
+The converter uses the app's VPet catalog as its mapping template. Matching
+folders supply their own frames; absent mood variants use `Nomal`, then missing
+sequences use the mod's `Default` idle. It never copies VPet artwork into the
+result. Frame names become portable names without changing ordering or timing.
+Only PNG art is copied from graph folders, and the supplied terms are embedded;
+DLLs, scripts and other mod content are ignored. Symlinks are rejected.
+
+The JSON report lists exact, normal-mood and idle mappings, cue coverage, unused
+PNG folders, tags and raise points. Touch rectangles use VPet's 500-unit coordinate
+system. Raise points are recorded only because Agent Pet has no corresponding
+catalog field. Movement requires matching art and currently uses the template's
+speeds and geometry; review these for characters with different proportions.
+Custom graph layouts may require hand-written catalog mappings. The generated
+pack passes `pack.py` and the app's full validator before the archive is written.

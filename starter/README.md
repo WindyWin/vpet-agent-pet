@@ -581,3 +581,9 @@ using the same dynamic C runtime as Qt. Portable core builds also require zlib.
 
 See [pet import and authoring](docs/pets.md#importing-and-removing-packs) for
 `.agentpet` packaging, headless commands and restart behavior.
+
+### Convert workshop pets
+
+`scripts/convert_vpet_mod.py` converts a local VPet-Simulator workshop pet to a
+validated `.agentpet` archive, with a report of artwork mappings and fallbacks.
+Bring the original artwork terms and credit; see [the conversion guide](docs/pets.md#convert-a-vpet-workshop-mod).
