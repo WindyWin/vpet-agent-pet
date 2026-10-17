@@ -48,7 +48,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends ninja-build patchelf bubblewrap \
-            desktop-file-utils libarchive-dev libssl-dev libgl-dev libegl-dev libx11-dev libxtst-dev \
+            desktop-file-utils zlib1g-dev libarchive-dev libssl-dev libgl-dev libegl-dev libx11-dev libxtst-dev \
             libxkbcommon-x11-0 libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 \
             libxcb-randr0 libxcb-render-util0 libxcb-shape0 libxcb-xinerama0 libxcb-xkb1
 
@@ -208,6 +208,11 @@ jobs:
           python -m pip install --disable-pip-version-check ninja
           if (-not (Test-Path "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe")) { choco install innosetup --no-progress -y }
 
+      - name: Install ZIP dependency
+        run: |
+          vcpkg install zlib:x64-windows-static-md
+          "CMAKE_TOOLCHAIN_FILE=$env:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" >> $env:GITHUB_ENV
+
       - name: Install Qt
         uses: jurplel/install-qt-action@v4
         with:
@@ -217,13 +222,13 @@ jobs:
 
       - name: Build and test portable core
         run: |
-          cmake -S . -B build-core -G Ninja -DAGENT_PET_PORTABLE_CORE=ON -DCMAKE_BUILD_TYPE=Release
+          cmake -S . -DVCPKG_TARGET_TRIPLET=x64-windows-static-md -B build-core -G Ninja -DAGENT_PET_PORTABLE_CORE=ON -DCMAKE_BUILD_TYPE=Release
           cmake --build build-core
           ctest --test-dir build-core --output-on-failure
 
       - name: Build
         run: |
-          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release "-DAGENT_PET_REVISION=$($env:GITHUB_SHA.Substring(0, 12))"
+          cmake -S . -DVCPKG_TARGET_TRIPLET=x64-windows-static-md -B build -G Ninja -DCMAKE_BUILD_TYPE=Release "-DAGENT_PET_REVISION=$($env:GITHUB_SHA.Substring(0, 12))"
           cmake --build build
 
       - name: Test

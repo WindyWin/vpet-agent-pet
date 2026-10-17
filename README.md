@@ -23,6 +23,15 @@ It sits on your screen, thinks when your agent thinks, gets busy when it runs to
 
 Works on **Linux** x86_64 (X11, or Wayland desktops with XWayland such as GNOME and KDE), **macOS 11+** (Apple silicon and Intel), and **Windows 10 version 1809+ / Windows 11** (x64).
 
+## Import your own pet or plugin
+
+Use **Settings → Pet / Plugins → Import…**, or drop a `.agentpet` file onto the pet
+or Settings. Review and accept its terms, then restart. You can also use
+`agent-pet import <file.agentpet>` or `agent-pet remove <pet|plugin> <id>` without a
+display. Settings includes removal; replacements retain the previous pack if validation
+fails. See [pet authoring](starter/docs/pets.md#importing-and-removing-packs) and
+[plugin packs](starter/docs/plugins.md#importing-a-agentpet-file).
+
 ## Get started
 
 Download the latest version from the [Releases page](https://github.com/WindyWin/vpet-agent-pet/releases/latest). Choose your operating system in the **Download / Tải xuống** table at the top of the release; each package includes the pet artwork.

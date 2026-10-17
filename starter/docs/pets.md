@@ -12,8 +12,49 @@ To add animations to an existing pet without a rebuild, make a [plugin pack](plu
 The `.agentpet` format is defined in
 [ADR 0041 — Packs](adr/0041-packs.md), including metadata, limits, licensing and
 compatibility. Its phased rollout will leave VPet as the only built-in pet and
-move other pets to a separate gallery. Unpacked pet folders can now load from disk; archive import and sources follow
-in later phases. The build and on-demand workflow remains available meanwhile.
+move other pets to a separate gallery. Local folders and `.agentpet` archives now load from disk; online sources follow in later phases. The build and on-demand workflow remains available meanwhile.
+
+## Importing and removing packs
+
+Choose **Settings → Pet → Import…**, or drop one `.agentpet` file onto the pet or
+Settings. Review its name, author, version, licence, source label and full terms,
+then choose **Accept terms and install**. Local content is unverified. A replacement
+shows the installed version and provenance, including equal versions and downgrades.
+Changes are queued until restart so a running pet keeps its frames. After restarting,
+select the installed character in Settings. **Remove installed pack…** queues removal;
+removing the selected pet switches to VPet.
+
+The headless commands show plain English output and require typing `yes`:
+
+```sh
+agent-pet import cat.agentpet
+agent-pet remove pet local-cat
+agent-pet remove plugin example
+```
+
+When no pet is running, the CLI commits immediately. Otherwise it queues the change
+for restart. A failed validation or replacement retains the previous pack. Pending
+changes are serialized per identity; restart before changing the same pack again.
+
+Archives must be ZIP32, stored or deflated, with `pack.json` at their root. The importer
+rejects traversal, absolute paths, links, special files, duplicate or case-colliding
+paths, encryption, ZIP64, and file types other than JSON, PNG and UTF-8 `.txt`/`.md`.
+It checks actual decoded bytes and CRCs, caps expansion at 200:1 per entry, checks PNG
+dimensions before decoding, and applies the [ADR limits](adr/0041-packs.md#validation-and-limits).
+
+To author a local pet and package it without rebuilding artwork resources:
+
+```sh
+python3 scripts/new_pet.py my-cat --local --name "My Cat" --author "Artist" \
+  --terms CAT-TERMS.txt --licenses ./licenses --idle ./frames --license CC0-1.0
+python3 scripts/pack.py ~/.local/share/agent-pet/packs/pets/my-cat \
+  -o my-cat.agentpet --app /path/to/agent-pet
+```
+
+`pack.py` uses the app's `validate-pack <folder>` command, then emits a deterministic
+stored ZIP with sorted paths, fixed timestamps and fixed permissions. Install or build
+Agent Pet first, or pass `--app`. The output must be outside the source folder. Update
+`pack.json.version` and `minAppVersion` when changing the pack or its requirements.
 
 ## Installing a local pet
 
@@ -33,7 +74,7 @@ A local folder contains `pack.json`, `pet.json`, `animations.json`, `manifest.js
 `minAppVersion` no newer than the running app. Its id, name and author must agree
 with `pet.json`; its `terms` path must be `licenses/` plus `pet.json.terms`.
 Use the checked-in [`local-cat` fixture](../tests/fixtures/local-pets/local-cat/pack.json)
-as a complete minimal example. The archive importer is not available yet.
+as a complete minimal example.
 
 Keep catalog and manifest frame paths as `assets/<id>/<folder>/<frame>.png`.
 The loader maps that logical prefix to the installed folder. The manifest lists
