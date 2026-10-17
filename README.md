@@ -336,3 +336,5 @@ This repository root also keeps the original VPet artwork archive (about 5,500 f
 Character artwork by the **VUP-Simulator team**, from [LorisYounger/VPet](https://github.com/LorisYounger/VPet). The artwork keeps its own [terms](licenses/VPET-ARTWORK-TERMS.md); see [third-party notices](THIRD_PARTY_NOTICES.md).
 
 Agent Pet's own code is licensed under [Apache-2.0](starter/LICENSE). That license doesn't cover the artwork.
+
+VPet is the only bundled pet. Install additional `.agentpet` packs from the [gallery](https://github.com/WindyWin/agent-pet-gallery/releases) through Settings → Pet → Import.

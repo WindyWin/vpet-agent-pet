@@ -135,9 +135,10 @@ int main(int argc, char **argv) {
         if (persist) pet::PetLibrary::shared().setPlugins({}, preferences.plugins);
         if (!pet::PetLibrary::shared().activate(chosen, &petError) && chosen != "vpet")
             qWarning().noquote() << QString("Pet \"%1\" is unavailable: %2; using vpet").arg(chosen, petError);
-        // Downloaded packs that no pet of this version uses any more go.
-        if (persist) pet::PetLibrary::shared().prune();
+        // Remove only the retired download cache; installed packs are separate.
+        if (persist) pet::PetLibrary::shared().removeLegacyDownloads();
         pet::PetWindow window(nullptr, {}, persist);
+        if (persist && !parser.isSet("pet")) window.migrateLegacyPet();
         // Only an explicit --state: the window already plays the pet's own `start` cue, whose state a pet names itself.
         if (parser.isSet("state") && !window.player().select(parser.value("state"), true)) {
             std::fprintf(stderr, "%s\n", qPrintable(window.player().error()));

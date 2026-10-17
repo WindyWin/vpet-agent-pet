@@ -23,7 +23,6 @@
 
 namespace pet {
 namespace updates { class Controller; }
-class PetDownloader;
 class PetWindow : public QWidget {
     Q_OBJECT
 public:
@@ -92,6 +91,7 @@ public:
     void setLanguage(const QString &language);
     QString language() const { return language_; }
     // The pet shown from the next start, by id; persisted. The running pet never changes.
+    void migrateLegacyPet();
     void setPet(const QString &id);
     QString pet() const { return pet_; }
     // The plugin packs loaded from the next start, by id; persisted. The running pet keeps what it loaded.
@@ -99,7 +99,6 @@ public:
     QStringList plugins() const { return plugins_; }
     // Downloads pets that are not bundled for Settings' picker; made on first use. It outlives the dialog, and a
     // completed download becomes the choice for the next start.
-    PetDownloader &petDownloader();
     void showSettings();
     void setUpdates(updates::Controller *controller);
     void showPreview();
@@ -190,7 +189,6 @@ private:
     QWidget *startupSettings(QWidget *parent);
     QWidget *reminderSettings(QWidget *parent);
     updates::Controller *updates_ = nullptr;
-    PetDownloader *downloader_ = nullptr;
     Player player_;
     Stage stage_;
     Ambient ambient_;
