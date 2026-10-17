@@ -15,6 +15,24 @@ For a working browser integration, see the [Chrome download tracker](../../integ
 It includes a Chrome extension with a progress popup, a local native messaging bridge, and a VPet pack
 that reacts to download starts, completions and interruptions.
 
+## Importing a .agentpet file
+
+Use **Settings → Plugins → Import…**, drop the file onto the pet or Settings, or run
+`agent-pet import example.agentpet`. Accept the displayed author, version, licence
+and terms. Install the target pet first so the importer can validate the fragment
+against its catalog. Restart, then enable the plugin in Settings; it loads on the
+following start. Replacements and removals also take effect at restart.
+**Remove installed pack…** or `agent-pet remove plugin example` removes a plugin.
+
+An archive includes the existing plugin files plus `pack.json` with `kind: "plugin"`,
+`id`, `name`, `author`, `version`, `license`, `pet`, `schema: 2`, `minAppVersion` and
+`terms` pointing to a nonempty UTF-8 `.txt` or `.md` file. Duplicated metadata must
+match `plugin.json`, including `min_app_version` if supplied. Package a folder with
+`python3 scripts/pack.py <folder> -o example.agentpet --app /path/to/agent-pet`.
+The tool uses the same validator as import. See [the pet guide](pets.md#importing-and-removing-packs)
+for consent, replacement, ZIP safety limits and deterministic authoring. Legacy
+manually installed plugin folders remain supported.
+
 ## Installing and turning on
 
 Each pack is a folder named by its id in the per-user plugins folder:

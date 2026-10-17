@@ -569,3 +569,21 @@ Artwork credit: **VUP-Simulator team**, via [LorisYounger/VPet](https://github.c
 The upstream terms require source attribution and a link for noncommercial use and require the authorization information to accompany distributions. They list extra conditions for commercial use, including contacting the rights holder. Git itself adds no license and does not change those terms. A public repository containing these sprites is a distribution, so keep the notices and this credit in the repository. If the app shows the sprites to users, carry the credit into its About screen and release package as well.
 
 Agent Pet's original application code is released under the [Apache License 2.0](LICENSE) (see also [NOTICE](NOTICE)). It does not cover the bundled artwork, the icon cropped from it, or anything under `licenses/`: the artwork keeps its separate upstream terms. The upstream VPet Apache-2.0 license copied in `licenses/` covers VPet's code only; neither it nor Agent Pet's license grants rights to the sprites.
+
+## ZIP import build dependency
+
+Pack import links zlib on every platform. Install `zlib1g-dev` on Debian/Ubuntu
+(`zlib` on Arch); macOS uses the SDK's zlib. With MSVC, install
+`vcpkg install zlib:x64-windows-static-md` and configure CMake with
+`-DCMAKE_TOOLCHAIN_FILE=<vcpkg>/scripts/buildsystems/vcpkg.cmake`
+`-DVCPKG_TARGET_TRIPLET=x64-windows-static-md`. This links zlib statically while
+using the same dynamic C runtime as Qt. Portable core builds also require zlib.
+
+See [pet import and authoring](docs/pets.md#importing-and-removing-packs) for
+`.agentpet` packaging, headless commands and restart behavior.
+
+### Convert workshop pets
+
+`scripts/convert_vpet_mod.py` converts a local VPet-Simulator workshop pet to a
+validated `.agentpet` archive, with a report of artwork mappings and fallbacks.
+Bring the original artwork terms and credit; see [the conversion guide](docs/pets.md#convert-a-vpet-workshop-mod).

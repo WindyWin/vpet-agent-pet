@@ -1,6 +1,7 @@
 #include "providers/registry.h"
 #include "updates/controller.h"
 #include "pet_window.h"
+#include "pack_controls.h"
 #include "animation/pet_library.h"
 #include "desktop/pet_downloader.h"
 #include "desktop/pet_picker.h"
@@ -79,6 +80,7 @@ static behavior::Intent edgeIntent(const QString &state) {
 PetWindow::PetWindow(QWidget *parent, const QString &path, bool persist)
     : QWidget(parent), player_(this), stage_(player_, [this] { return eggs_.now().toMSecsSinceEpoch(); }, this),
       ambient_(player_, this), activity_(player_, this), mood_(player_, this), eggs_(player_, this), store_(path), menu_(this), tray_(this), persist_(persist) {
+    setAcceptDrops(true); installEventFilter(this);
     const auto preferences = persist_ ? store_.load() : Preferences{};
     setWindowTitle("Agent Pet");
     setWindowFlags(Qt::Tool | Qt::FramelessWindowHint);
@@ -330,6 +332,7 @@ void PetWindow::relocate(QPoint where) {
     windowHandle()->requestUpdate();
 }
 bool PetWindow::eventFilter(QObject *watched, QEvent *event) {
+    if (auto *widget = qobject_cast<QWidget *>(watched); widget && packDrop(widget, event)) return true;
     if (event->type() == QEvent::UpdateRequest && watched == frames_) awaitingFrame_ = false;
     return QWidget::eventFilter(watched, event);
 }
@@ -845,6 +848,7 @@ void PetWindow::setUpdates(updates::Controller *controller) {
 void PetWindow::showSettings() {
     if (settingsDialog_) { settingsDialog_->show(); settingsDialog_->raise(); return; }
     auto *dialog = new QDialog(this); settingsDialog_ = dialog;
+    dialog->setAcceptDrops(true); dialog->installEventFilter(this);
     dialog->setAttribute(Qt::WA_DeleteOnClose); dialog->setWindowTitle(tr("Agent Pet settings"));
     // Three short tabs instead of one long form; status and Close/Quit stay below them.
     auto *outer = new QVBoxLayout(dialog);
@@ -894,6 +898,7 @@ void PetWindow::showSettings() {
         connect(&downloads, &PetDownloader::finished, picker, &PetPicker::downloaded);
         if (!downloads.pet().isEmpty()) picker->downloading(downloads.pet(), downloads.done(), downloads.total());
     }
+    layout->addRow(packControls(dialog, "pet", [this](const QString &id) { if (pet_ == id) setPet("vpet"); }));
     auto *openPets = new QPushButton(tr("Open pets &folder"), dialog);
     openPets->setObjectName("openPetsFolder");
     layout->addRow(openPets);
@@ -998,6 +1003,7 @@ void PetWindow::showSettings() {
     auto &library = PetLibrary::shared();
     auto *pluginList = new PluginList(library.plugins(), plugins_, library.active(), library.pluginFolder(), dialog);
     layout->addRow(pluginList);
+    layout->addRow(packControls(dialog, "plugin", [this](const QString &id) { auto ids = plugins_; ids.removeAll(id); setPlugins(ids); }));
     connect(pluginList, &PluginList::changed, this, &PetWindow::setPlugins);
     layout = page(tr("Startup and agents"));
     layout->addRow(startupSettings(dialog));

@@ -23,6 +23,16 @@ Thú cưng luôn ở bên bạn trên màn hình: suy nghĩ cùng agent, bận r
 
 Hỗ trợ **Linux** x86_64 (X11 hoặc desktop Wayland có XWayland như GNOME và KDE), **macOS 11+** (Apple silicon và Intel), và **Windows 10 phiên bản 1809 trở lên / Windows 11** (x64).
 
+## Nhập thú cưng hoặc plugin của bạn
+
+Trong **Cài đặt → Thú cưng / Plugin**, chọn **Nhập…** hoặc kéo tệp `.agentpet` vào
+thú cưng hay cửa sổ Cài đặt. Đọc và chấp nhận điều khoản, rồi khởi động lại ứng dụng.
+Có thể dùng `agent-pet import <file.agentpet>` hoặc
+`agent-pet remove <pet|plugin> <id>` mà không cần giao diện. Cài đặt cũng có nút gỡ
+gói; nếu kiểm tra gói thay thế thất bại, gói cũ được giữ nguyên. Xem
+[hướng dẫn tạo thú cưng](starter/docs/pets.md#importing-and-removing-packs) và
+[gói plugin](starter/docs/plugins.md#importing-a-agentpet-file).
+
 ## Bắt đầu
 
 Tải phiên bản mới nhất từ [trang Releases](https://github.com/WindyWin/vpet-agent-pet/releases/latest). Chọn hệ điều hành trong bảng **Download / Tải xuống** ở đầu trang phát hành; mỗi gói đều có sẵn hình ảnh thú cưng.

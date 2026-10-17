@@ -1,5 +1,8 @@
 #include "updates/controller.h"
 #include <QSaveFile>
+#include <QLockFile>
+#include <QDir>
+#include "packs/installer.h"
 #include <QSslSocket>
 #include <QRegularExpression>
 #include "animation/pet_library.h"
@@ -42,6 +45,18 @@ int main(int argc, char **argv) {
     if (argc == 2 && QString::fromLocal8Bit(argv[1]) == "--version") {
         std::printf("agent-pet %s (%s)\n", AGENT_PET_VERSION, AGENT_PET_REVISION);
         return 0;
+    }
+    if (argc > 1 && (QString::fromLocal8Bit(argv[1]) == "import" || QString::fromLocal8Bit(argv[1]) == "remove")) {
+        QCoreApplication app(argc, argv); app.setApplicationName("agent-pet");
+        return pet::packs::command(app.arguments());
+    }
+    if (argc > 1 && QString::fromLocal8Bit(argv[1]) == "validate-pack") {
+        QCoreApplication app(argc, argv); app.setApplicationName("agent-pet");
+        QJsonObject metadata; QString terms, error;
+        if (argc != 3 || !pet::packs::validate(QString::fromLocal8Bit(argv[2]), metadata, terms, error)) {
+            std::fprintf(stderr, "%s\n", qPrintable(error)); return 1;
+        }
+        std::puts("Pack is valid."); return 0;
     }
     if (argc > 1 && QString::fromLocal8Bit(argv[1]) == "integration") {
         QCoreApplication app(argc, argv);
@@ -103,6 +118,11 @@ int main(int argc, char **argv) {
             }
         }
         const bool persist = !parser.isSet("smoke-test") && !parser.isSet("no-persist");
+        QDir().mkpath(pet::packs::dataFolder());
+        QLockFile packRuntime(pet::packs::dataFolder() + "/pack-runtime.lock");
+        if (!packRuntime.tryLock()) { std::fprintf(stderr, "Another process is using installed packs.\n"); return 1; }
+        QString packError;
+        if (persist && !pet::packs::applyPending(packError)) qWarning().noquote() << packError;
         const auto preferences = persist ? pet::PreferencesStore().load() : pet::Preferences{};
         // Before any window exists, so everything is created in the chosen language. Headless commands
         // above never translate: the CLI stays English and `hook` stays silent.
