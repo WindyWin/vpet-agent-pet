@@ -620,3 +620,15 @@ x86_64 or macOS with Herdr 0.7.5 or newer. Linux uses the release package's
 installer; macOS copies the app bundle. The startup flow clears the pane identity,
 so it cannot provide Herdr **Open** navigation. See the
 [installation guide](docs/install.md#herdr-plugin) and [decision record](docs/adr/0045-herdr-plugin.md).
+
+## ZIP import build dependency
+
+Pack import links zlib on every platform. Install `zlib1g-dev` on Debian/Ubuntu
+(`zlib` on Arch); macOS uses the SDK's zlib. With MSVC, install
+`vcpkg install zlib:x64-windows-static-md` and configure CMake with
+`-DCMAKE_TOOLCHAIN_FILE=<vcpkg>/scripts/buildsystems/vcpkg.cmake`
+`-DVCPKG_TARGET_TRIPLET=x64-windows-static-md`. This links zlib statically while
+using the same dynamic C runtime as Qt. Portable core builds also require zlib.
+
+See [pet import and authoring](docs/pets.md#importing-and-removing-packs) for
+`.agentpet` packaging, headless commands and restart behavior.

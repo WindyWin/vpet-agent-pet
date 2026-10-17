@@ -207,6 +207,61 @@
     </message>
 </context>
 <context>
+    <name>PackControls</name>
+    <message>
+        <source>Pack installation</source>
+        <translation>Cài đặt gói</translation>
+    </message>
+    <message>
+        <source>Import pack</source>
+        <translation>Nhập gói</translation>
+    </message>
+    <message>
+        <source>Unverified local content: %1
+%2 by %3
+Version: %4
+Licence: %5
+Source: %6</source>
+        <translation>Nội dung cục bộ chưa được xác minh: %1
+%2 của %3
+Phiên bản: %4
+Giấy phép: %5
+Nguồn: %6</translation>
+    </message>
+    <message>
+        <source>Replace installed version %1 (%2) with %3. This also permits an equal version or a downgrade.</source>
+        <translation>Thay phiên bản đã cài %1 (%2) bằng %3. Thao tác này cũng cho phép cài lại cùng phiên bản hoặc hạ phiên bản.</translation>
+    </message>
+    <message>
+        <source>Accept terms and install</source>
+        <translation>Chấp nhận điều khoản và cài đặt</translation>
+    </message>
+    <message>
+        <source>Pack change queued. Restart Agent Pet to apply it.</source>
+        <translation>Thay đổi gói đã được xếp hàng. Khởi động lại Agent Pet để áp dụng.</translation>
+    </message>
+    <message>
+        <source>Import…</source>
+        <translation>Nhập…</translation>
+    </message>
+    <message>
+        <source>Agent Pet packs (*.agentpet)</source>
+        <translation>Gói Agent Pet (*.agentpet)</translation>
+    </message>
+    <message>
+        <source>Remove installed pack…</source>
+        <translation>Gỡ gói đã cài…</translation>
+    </message>
+    <message>
+        <source>Remove pack</source>
+        <translation>Gỡ gói</translation>
+    </message>
+    <message>
+        <source>Remove %1 on the next start? Removing the selected pet switches to VPet.</source>
+        <translation>Gỡ %1 ở lần khởi động tiếp theo? Gỡ thú cưng đang chọn sẽ chuyển sang VPet.</translation>
+    </message>
+</context>
+<context>
     <name>Pet</name>
     <message>
         <source>Monday again... I&apos;m so tired. Let&apos;s take it slow today.</source>
