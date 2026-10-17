@@ -1,0 +1,39 @@
+Qt runtime notice
+
+Agent Pet uses dynamically linked Qt libraries under the GNU Lesser General
+Public License version 3 (LGPLv3). Copyright The Qt Company Ltd. and other Qt
+contributors. LGPL-3.0.txt and GPL-3.0.txt accompany this notice. Qt and its
+third-party dependencies retain their own licenses; Agent Pet's Apache-2.0
+license does not replace them.
+
+You may modify and replace the Qt libraries, and reverse engineer Agent Pet for
+debugging your modifications to those libraries. Use a compatible Qt 6 build
+with the same architecture and compiler ABI. Stop Agent Pet and its updater,
+back up the installation, replace the libraries and plugins, then restart:
+
+Linux portable bundle: replace Qt shared libraries in lib/ and their plugins
+in plugins/. For system packages, use your distribution's Qt packages or rebuild
+Agent Pet against your modified Qt (see the source archive's README.md).
+
+Windows: replace Qt6*.dll beside agent-pet.exe and the matching plugins in the
+platforms/, imageformats/, styles/ and tls/ directories that are present.
+Keep the compiler runtime and your replacement Qt build ABI compatible.
+
+macOS: in Agent Pet.app (Finder: Show Package Contents), replace the Qt
+frameworks in Contents/Frameworks/ and matching plugins in Contents/PlugIns/.
+After modification, re-sign your local copy in Terminal:
+  codesign --force --deep --sign - --timestamp=none "/path/to/Agent Pet.app"
+Then launch your modified copy normally. Official bundles use ad hoc signing;
+no developer signing key is required to re-sign your local copy.
+
+Updates may replace your modified libraries. Keep a separate portable copy
+and decline updates if you want to retain them.
+
+Bundled releases include version-specific source download directions in
+runtime-licenses/qt/SOURCES.txt (on Linux under share/agent-pet/, on macOS
+under Contents/Resources/). Official releases also provide the Qt source
+archives as separate assets on the same GitHub release, at no charge:
+https://github.com/WindyWin/vpet-agent-pet/releases
+System Qt sources, including distribution patches, come from the corresponding
+distribution source packages. Publishers of custom bundles must provide the
+matching sources and update SOURCES.txt, including any patches and build scripts.

@@ -11,14 +11,11 @@ import subprocess
 import tempfile
 import time
 
+from qt_licenses import qt_notices
+
 ROOT = Path(__file__).resolve().parents[1]
 BUNDLE_ID = "io.github.windywin.agent-pet"
 MINIMUM_MACOS = "11.0"
-QT_NOTICE = """The bundled Qt {version} frameworks and plugins are used under the GNU Lesser
-General Public License v3 (https://www.gnu.org/licenses/lgpl-3.0.html), unmodified
-and dynamically linked; you may replace them in Contents/Frameworks and Contents/PlugIns.
-Corresponding source: https://download.qt.io/archive/qt/ (qtbase-everywhere-src-{version}).
-"""
 
 
 def run(*args, **kwargs):
@@ -43,17 +40,6 @@ def make_icon(source, destination):
             if size <= 128:
                 run("sips", "-z", str(size * 2), str(size * 2), str(source), "--out", str(iconset / f"icon_{size}x{size}@2x.png"))
         run("iconutil", "-c", "icns", str(iconset), "-o", str(destination))
-
-
-def qt_notices(qmake, destination):
-    """Qt from the online installer/aqt keeps its notices beside the install; otherwise state the terms."""
-    prefix = Path(run(qmake, "-query", "QT_INSTALL_PREFIX"))
-    for candidate in (prefix / "Licenses", *(parent / "Licenses" for parent in prefix.parents[:2])):
-        if candidate.is_dir():
-            shutil.copytree(candidate, destination)
-            return
-    destination.mkdir(parents=True)
-    (destination / "NOTICE.txt").write_text(QT_NOTICE.format(version=run(qmake, "-query", "QT_VERSION")))
 
 
 def macho_files(bundle):

@@ -224,6 +224,12 @@
       "WORK/RopeSkipping/Nomal/A",
       "WORK/RopeSkipping/Nomal/B/1",
       "WORK/RopeSkipping/Nomal/C"
+    ],
+    "cheer_paws_2": [
+      "IDEL/Meow/Happy/2"
+    ],
+    "cheer_paws_3": [
+      "IDEL/Meow/Happy/3"
     ]
   },
   "sequences": [
@@ -6680,6 +6686,168 @@
         }
       ],
       "duration_ms": 2500
+    },
+    {
+      "path": "IDEL/Meow/Happy/2",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/IDEL/Meow/Happy/2/\u5f00\u5fc3\u4e8c_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/Meow/Happy/2/\u5f00\u5fc3\u4e8c_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/Meow/Happy/2/\u5f00\u5fc3\u4e8c_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/Meow/Happy/2/\u5f00\u5fc3\u4e8c_003_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/Meow/Happy/2/\u5f00\u5fc3\u4e8c_004_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/Meow/Happy/2/\u5f00\u5fc3\u4e8c_005_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/Meow/Happy/2/\u5f00\u5fc3\u4e8c_006_500.png",
+          "duration_ms": 500
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/Meow/Happy/2/\u5f00\u5fc3\u4e8c_007_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/Meow/Happy/2/\u5f00\u5fc3\u4e8c_008_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/Meow/Happy/2/\u5f00\u5fc3\u4e8c_009_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/Meow/Happy/2/\u5f00\u5fc3\u4e8c_010_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/Meow/Happy/2/\u5f00\u5fc3\u4e8c_011_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/Meow/Happy/2/\u5f00\u5fc3\u4e8c_012_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/Meow/Happy/2/\u5f00\u5fc3\u4e8c_013_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/Meow/Happy/2/\u5f00\u5fc3\u4e8c_014_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/Meow/Happy/2/\u5f00\u5fc3\u4e8c_015_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/Meow/Happy/2/\u5f00\u5fc3\u4e8c_016_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/Meow/Happy/2/\u5f00\u5fc3\u4e8c_017_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/Meow/Happy/2/\u5f00\u5fc3\u4e8c_018_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/Meow/Happy/2/\u5f00\u5fc3\u4e8c_019_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 2875,
+      "state": "cheer_paws_2"
+    },
+    {
+      "path": "IDEL/Meow/Happy/3",
+      "frames": [
+        {
+          "path": "assets/vpet/vup/IDEL/Meow/Happy/3/\u5f00\u5fc3\u4e09_000_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/Meow/Happy/3/\u5f00\u5fc3\u4e09_001_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/Meow/Happy/3/\u5f00\u5fc3\u4e09_002_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/Meow/Happy/3/\u5f00\u5fc3\u4e09_003_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/Meow/Happy/3/\u5f00\u5fc3\u4e09_004_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/Meow/Happy/3/\u5f00\u5fc3\u4e09_005_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/Meow/Happy/3/\u5f00\u5fc3\u4e09_006_500.png",
+          "duration_ms": 500
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/Meow/Happy/3/\u5f00\u5fc3\u4e09_007_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/Meow/Happy/3/\u5f00\u5fc3\u4e09_008_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/Meow/Happy/3/\u5f00\u5fc3\u4e09_009_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/Meow/Happy/3/\u5f00\u5fc3\u4e09_010_500.png",
+          "duration_ms": 500
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/Meow/Happy/3/\u5f00\u5fc3\u4e09_011_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/Meow/Happy/3/\u5f00\u5fc3\u4e09_012_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/Meow/Happy/3/\u5f00\u5fc3\u4e09_013_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/Meow/Happy/3/\u5f00\u5fc3\u4e09_014_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/Meow/Happy/3/\u5f00\u5fc3\u4e09_015_125.png",
+          "duration_ms": 125
+        },
+        {
+          "path": "assets/vpet/vup/IDEL/Meow/Happy/3/\u5f00\u5fc3\u4e09_016_125.png",
+          "duration_ms": 125
+        }
+      ],
+      "duration_ms": 2875,
+      "state": "cheer_paws_3"
     }
   ],
   "playback": {
@@ -6910,6 +7078,14 @@
       "mode": "phased",
       "after": "idle",
       "loops": 6
+    },
+    "cheer_paws_2": {
+      "mode": "once",
+      "after": "idle"
+    },
+    "cheer_paws_3": {
+      "mode": "once",
+      "after": "idle"
     }
   },
   "variants": {
@@ -7037,6 +7213,14 @@
       {
         "state": "cheer_shy",
         "weight": 1
+      },
+      {
+        "state": "cheer_paws_2",
+        "weight": 1
+      },
+      {
+        "state": "cheer_paws_3",
+        "weight": 1
       }
     ],
     "snack": [
@@ -7148,6 +7332,26 @@
     "reminder-done": [
       {
         "state": "cheer_shy",
+        "weight": 1
+      },
+      {
+        "state": "cheer_shining",
+        "weight": 1
+      },
+      {
+        "state": "turn_finished",
+        "weight": 1
+      },
+      {
+        "state": "dance",
+        "weight": 1
+      },
+      {
+        "state": "love_520",
+        "weight": 1
+      },
+      {
+        "state": "milestone",
         "weight": 1
       }
     ],

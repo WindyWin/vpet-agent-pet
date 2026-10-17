@@ -119,6 +119,8 @@ Nhưng đừng quá tay: tung quá nhiều, vuốt ve liên tục hoặc giữ q
 
 Khi không có việc cần chú ý, thú cưng ngáp, nhìn quanh, thỉnh thoảng đi dạo, bò trên màn hình hoặc leo mép màn hình. Nó cũng có tâm trạng: nhiều lượt hoàn thành khiến nó vui, nhiều lỗi khiến nó buồn, còn làm việc liên tục quá lâu khiến nó đói — cũng là lời nhắc bạn nên nghỉ một chút.
 
+Khi một lượt hoàn thành, VPet chọn ngẫu nhiên cách ăn mừng: vẫy tay, reo vui lấp lánh, cười ngượng hoặc một trong hai động tác chân mèo vui vẻ. Vẫy tay có xác suất gấp đôi từng phản ứng còn lại; dịp đặc biệt và phần thưởng tích lũy có thể mang đến cách ăn mừng khác.
+
 <table>
   <tr>
     <td align="center"><img src="docs/media/walk-left.gif" width="240" alt="Đi bộ"><br>Đi bộ</td>
@@ -148,6 +150,8 @@ Tối thứ Sáu, sinh nhật bạn, đêm khuya, công việc kéo dài và m�
 ### Nhắc bạn chăm sóc bản thân
 
 Cứ sau 20 phút làm việc, thú cưng nhắc bạn nhìn ra xa trong 20 giây; nhấp vào lời nhắc để bắt đầu đếm ngược. Mỗi giờ, VPet nâng cốc uống nước để nhắc bạn uống cùng. Đến giờ ăn trưa (mặc định 12:00), nó ăn bánh mì và nhắc bạn nghỉ trưa. Bạn có thể chọn **Xong**, **Để sau** (nhắc lại sau 10 phút) hoặc **Bỏ qua hôm nay**.
+
+Hoàn thành lời nhắc, VPet sẽ chọn ngẫu nhiên một trong **sáu phản ứng vui vẻ**: cười ngượng, reo vui lấp lánh, vẫy tay, nhảy múa, thả tim hoặc ăn mừng cột mốc. Với lời nhắc uống nước, ăn trưa và về nhà, phản ứng xuất hiện khi bạn chọn **Xong**; với nghỉ mắt và nghỉ vận động, VPet ăn mừng khi đếm ngược kết thúc. Sau đó, VPet trở về trạng thái nghỉ; một phản ứng có thể xuất hiện hai lần liên tiếp.
 
 **Break Buddy** mời bạn dành 60 giây để vận động sau mỗi giờ làm việc. Chọn **Bắt đầu nghỉ** để VPet nhảy dây cùng bạn trong lúc bạn vận động hoặc giãn cơ; bộ đếm hiển thị thời gian còn lại. Bạn cũng có thể bắt đầu bất cứ lúc nào từ menu chuột phải → **Nghỉ vận động**, hoặc nhấp vào bộ đếm để kết thúc sớm. Vào **Cài đặt → Lời nhắc → Nghỉ vận động** để tắt lời nhắc hoặc chọn khoảng cách giữa các lần nhắc: **30**, **60** hoặc **90 phút**.
 

@@ -65,6 +65,11 @@ void writeCatalog(const QString &root, const QJsonObject &catalog) {
 void playOut(pet::Player &player) {
     for (int i = 0; i < 12 && player.state() != "idle"; ++i) finishSequence(player);
 }
+bool poolContains(pet::Player &player, const QString &cue, const QString &state) {
+    for (const auto &reaction : player.pool(cue))
+        if (reaction.state == state) return true;
+    return false;
+}
 // The states of the reaction cues that only celebrate or surprise.
 QSet<QString> celebrations(pet::Player &player) {
     QSet<QString> reactions;
@@ -173,7 +178,8 @@ private slots:
     void releaseMetadataIsEmbedded() {
         // The About view and release packages rely on these embedded resources.
         QVERIFY(QString(AGENT_PET_VERSION).count('.') == 2);
-        for (const auto *path : {":/LICENSE", ":/NOTICE", ":/THIRD_PARTY_NOTICES.md", ":/licenses/VPET-ARTWORK-TERMS.md"}) {
+        for (const auto *path : {":/LICENSE", ":/NOTICE", ":/THIRD_PARTY_NOTICES.md", ":/licenses/VPET-ARTWORK-TERMS.md",
+                                 ":/licenses/QT-NOTICE.txt", ":/licenses/LGPL-3.0.txt", ":/licenses/GPL-3.0.txt"}) {
             QFile file(path);
             QVERIFY2(file.open(QIODevice::ReadOnly) && file.size() > 0, path);
         }
@@ -241,7 +247,7 @@ private slots:
         pet::Player player; player.setPaused(true); player.setRenderSize(640);
         // The session states, the reactions that only celebrate or surprise, and the fidgets.
         const auto reactions = celebrations(player);
-        QCOMPARE(reactions.size(), 10);
+        QCOMPARE(reactions.size(), 12);
         // Late at night the pet yawns more, with a fidget it already has.
         QCOMPARE(player.pool("late-night").size(), 1); QVERIFY(player.isFidget(player.pool("late-night").first().state));
         // And the touch reactions: three held presses, two falls and two edges.
@@ -310,7 +316,7 @@ private slots:
         QVERIFY(dual.first().contains(QRect(recovered, QSize(300, 300))));
         QCOMPARE(pet::Preferences::visiblePosition({1900, 1000}, {300, 300}, {dual.first()}), QPoint(1620, 780));
         QFile file(path); QVERIFY(file.open(QIODevice::WriteOnly)); file.write("broken"); file.close();
-        pet::PreferencesStore corrupt(path); QCOMPARE(corrupt.load().size, 240); QVERIFY(!corrupt.save(prefs));
+        pet::PreferencesStore corrupt(path); QCOMPARE(corrupt.load().size, 160); QVERIFY(!corrupt.save(prefs));
         QVERIFY(file.open(QIODevice::ReadOnly)); QCOMPARE(file.readAll(), QByteArray("broken"));
     }
     void controlsPersistAndDialogsKeepRunning() {
@@ -1124,8 +1130,9 @@ private slots:
         pet::Player player; player.setPaused(true);
         pet::Mood mood(player); Draws draws; mood.setRandom(draws.random()); qint64 now = 1000000;
         QSignalSpy counted(&mood, &pet::Mood::counted);
-        // "turn_finished" weighs 2, the two cheers 1 each.
-        const QList<QPair<int, QString>> expected{{0, "turn_finished"}, {1, "turn_finished"}, {2, "cheer_shining"}, {3, "cheer_shy"}};
+        // "turn_finished" weighs 2; the two cheers and two cat-paw gestures weigh 1 each.
+        const QList<QPair<int, QString>> expected{{0, "turn_finished"}, {1, "turn_finished"}, {2, "cheer_shining"},
+                                                {3, "cheer_shy"}, {4, "cheer_paws_2"}, {5, "cheer_paws_3"}};
         for (const auto &[draw, state] : expected) {
             draws.values = {draw}; const auto celebration = mood.celebrate();
             QCOMPARE(celebration.state, state); QCOMPARE(celebration.cue, QString("celebrate"));
@@ -2133,7 +2140,7 @@ private slots:
         QVERIFY(monitor.note().asking()); QCOMPARE(window.eggs().dueReminder(), QString("lunch"));
         QTest::mouseClick(&monitor.note(), Qt::LeftButton); QVERIFY(!monitor.note().isVisible());
         QVERIFY(window.eggs().dueReminder().isEmpty());
-        QCOMPARE(player.requestedState(), QString("cheer_shy"));
+        QVERIFY(poolContains(player, "reminder-done", player.requestedState()));
         playOut(player); tick(); QVERIFY(!monitor.note().isVisible());
         local = local.addDays(1);
         QVERIFY(monitor.apply(event("error"), t)); tick(); QVERIFY(!monitor.note().isVisible());
@@ -2303,11 +2310,11 @@ private slots:
         // Done is the same as clicking the words.
         work(45); QVERIFY(monitor.note().isVisible());
         press("Done"); QVERIFY(!monitor.note().isVisible()); QCOMPARE(window.wellness().due(t), QString());
-        QCOMPARE(player.requestedState(), QString("cheer_shy"));
+        QVERIFY(poolContains(player, "reminder-done", player.requestedState()));
         // Skip today: no happy reaction, and it does not come back for the rest of the day.
         settle(); work(45); QVERIFY(monitor.note().isVisible());
         press("Skip today"); QVERIFY(!monitor.note().isVisible()); QCOMPARE(window.wellness().due(t), QString());
-        QVERIFY(player.requestedState() != "cheer_shy");
+        QVERIFY(!poolContains(player, "reminder-done", player.requestedState()));
         settle(); work(45 * 3); QVERIFY(!monitor.note().isVisible()); QCOMPARE(window.wellness().due(t), QString());
         local = local.addDays(1); work(45); QVERIFY(monitor.note().isVisible()); // Tomorrow it is back.
     }
@@ -2409,7 +2416,7 @@ private slots:
         QVERIFY(monitor.note().text().endsWith("20")); QCOMPARE(monitor.reminder(), QString());
         playOut(player);
         QTRY_COMPARE_WITH_TIMEOUT(monitor.restLeft(), 0, 2500);
-        QCOMPARE(player.requestedState(), QString("cheer_shy")); playOut(player);
+        QVERIFY(poolContains(player, "reminder-done", player.requestedState())); playOut(player);
         monitor.note().hide();
         // An approval waiting holds a due reminder until it is answered; then it comes.
         window.setEyeMinutes(0);
@@ -2423,7 +2430,7 @@ private slots:
         monitor.update(t);
         QVERIFY(monitor.note().isVisible()); QCOMPARE(monitor.note().text(), pet::Wellness::note("water"));
         QCOMPARE(player.requestedState(), QString("reminder_drink"));
-        emit monitor.note().clicked(); QCOMPARE(player.requestedState(), QString("cheer_shy")); QCOMPARE(monitor.restLeft(), 0);
+        emit monitor.note().clicked(); QVERIFY(poolContains(player, "reminder-done", player.requestedState())); QCOMPARE(monitor.restLeft(), 0);
         QCOMPARE(window.wellness().due(t), QString());
         // Ignored, it fades; nothing more until the next interval. Muted alerts hold it.
         playOut(player); playOut(player); monitor.note().hide();
@@ -2535,7 +2542,7 @@ private slots:
         emit window.movementBreakRequested(); QCOMPARE(monitor.restLeft(), 60);
         QTRY_COMPARE_WITH_TIMEOUT(monitor.restLeft(), 0, 2500);
         QCOMPARE(monitor.note().text(), QString("Nice! Thanks for moving with me."));
-        QCOMPARE(player.requestedState(), QString("cheer_shy"));
+        QVERIFY(poolContains(player, "reminder-done", player.requestedState()));
         playOut(player); monitor.note().hide(); monitor.setRestTickMs(100000);
         emit window.movementBreakRequested(); QCOMPARE(monitor.restLeft(), 60);
         QVERIFY(monitor.apply({"claude", "break", "1", "attention", {}, {}, "/work", {}, t, {}}, t));

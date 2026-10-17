@@ -6,9 +6,9 @@
   "source_commit": "6358445aa54587f9cd524264eaf17ef97bc826a8",
   "source_root": "VPet-Simulator.Windows/mod/0000_core/pet/vup",
   "bundled_catalog": "assets/vpet/animations.json",
-  "missing_sequence_count": 419,
-  "missing_frame_count": 4277,
-  "missing_size_bytes": 586836683,
+  "missing_sequence_count": 417,
+  "missing_frame_count": 4240,
+  "missing_size_bytes": 581564133,
   "sequences": [
     {
       "path": "Default/Happy/2",
@@ -242,24 +242,6 @@
       "frame_count": 20,
       "total_duration_ms": 2875,
       "size_bytes": 2843319,
-      "timing_valid": true
-    },
-    {
-      "path": "IDEL/Meow/Happy/2",
-      "category": "IDEL",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/IDEL/Meow/Happy/2",
-      "frame_count": 20,
-      "total_duration_ms": 2875,
-      "size_bytes": 2848128,
-      "timing_valid": true
-    },
-    {
-      "path": "IDEL/Meow/Happy/3",
-      "category": "IDEL",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/IDEL/Meow/Happy/3",
-      "frame_count": 17,
-      "total_duration_ms": 2875,
-      "size_bytes": 2424422,
       "timing_valid": true
     },
     {

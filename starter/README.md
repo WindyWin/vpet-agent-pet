@@ -2,9 +2,9 @@
 
 A small starting repository for a desktop pet that reacts to Claude Code and Codex activity. The sprite files are bundled here, so development can proceed without a local VPet installation.
 
-The current asset pack contains **1,322 PNG files in 146 animation sequences (193.79 MiB)**. They cover idle (with two alternate loops, a few idle fidgets, and happy and droopy moods), thinking, reading, working, waiting for input, tool errors, several ways to celebrate a finished turn, sleeping, startup, closing, the original dragging animation, reactions to being petted, thrown and pushed against a screen edge, a few easter eggs, walking, crawling and climbing, jump rope for Break Buddy, and eating and drinking with reminders. [animations.json](assets/vpet/animations.json) maps each state to its sequences, records frame durations, and lists the idle variants, fidgets, mood art, reaction cues, touch hit boxes and moves. [manifest.json](assets/vpet/manifest.json) records every file's size and SHA-256 hash.
+The current asset pack contains **1,359 PNG files in 148 animation sequences (198.82 MiB)**. They cover idle (with two alternate loops, a few idle fidgets, and happy and droopy moods), thinking, reading, working, waiting for input, tool errors, several ways to celebrate a finished turn, sleeping, startup, closing, the original dragging animation, reactions to being petted, thrown and pushed against a screen edge, a few easter eggs, walking, crawling and climbing, jump rope for Break Buddy, and eating and drinking with reminders. [animations.json](assets/vpet/animations.json) maps each state to its sequences, records frame durations, and lists the idle variants, fidgets, mood art, reaction cues, touch hit boxes and moves. [manifest.json](assets/vpet/manifest.json) records every file's size and SHA-256 hash.
 
-[available-animations.json](assets/vpet/available-animations.json) catalogs the **419 remaining sequences and 4,277 frames** from the original character pack. Each entry gives its upstream folder, category, frame count, size, and timing status. These are references for future work; their PNG files are not included here. To add one later, run `python3 scripts/add_sequences.py IDEL/yawning/Nomal …` against a copy of the upstream VPet tree (`--source`; the full archive next to this folder is the default). It copies the frames, updates the manifest and both catalogs, and leaves you to map the sequences in `animations.json`, which `scripts/verify_assets.py` then checks. Retain the artwork notices.
+[available-animations.json](assets/vpet/available-animations.json) catalogs the **417 remaining sequences and 4,240 frames** from the original character pack. Each entry gives its upstream folder, category, frame count, size, and timing status. These are references for future work; their PNG files are not included here. To add one later, run `python3 scripts/add_sequences.py IDEL/yawning/Nomal …` against a copy of the upstream VPet tree (`--source`; the full archive next to this folder is the default). It copies the frames, updates the manifest and both catalogs, and leaves you to map the sequences in `animations.json`, which `scripts/verify_assets.py` then checks. Retain the artwork notices.
 
 This folder is ready to become its own repository:
 
@@ -143,7 +143,7 @@ dragging always take over at once. See
 The pet also keeps a mood from what your agents do. A run of finished turns makes it
 happy, which shows in its idle loop and in some fidgets; repeated tool errors make it
 droopy. With no news it drifts back to neutral within a few minutes. A finished turn
-is celebrated in one of three ways. After a long productive stretch (twenty finished
+is celebrated in one of five ways: a wave, shining cheer, shy reaction, or one of two happy cat-paw gestures. After a long productive stretch (twenty finished
 turns without a half-hour break) its tummy rumbles or it looks thirsty, a hint to take
 a break, and every hundredth finished turn gets a bigger celebration. Settings →
 **Mood** chooses **Off** (always neutral), **Cheerful only** (never droopy) or **Full**
@@ -200,6 +200,12 @@ While you work, the pet reminds you to rest your eyes, drink water, eat lunch an
 closes its eyes for a stretch (the 20-20-20 rule); click the note and it counts the 20 seconds down, then
 cheers. After 60 minutes it drinks from a glass and says "Time for some water 💧"; click to
 say you had some and it cheers. At lunchtime VPet eats a sandwich alongside the meal reminder.
+
+Completing a reminder picks randomly, with equal chances, from **six VPet happy reactions**: a shy smile,
+shining cheer, wave, dance, hearts or milestone celebration. Water, lunch and go-home reminders celebrate
+when you choose **Done**; eye and movement breaks celebrate after their countdown finishes. The reaction
+returns to idle afterward. Random choices can repeat on consecutive completions.
+
 Each reminder (also lunch and go-home) is a question with
 **Done**, **Later** (asks again in 10 minutes) and **Skip today** (until tomorrow).
 Ignored, it fades and is asked again after 10 minutes, up to three times, then left until the next
@@ -548,6 +554,11 @@ automatic updates.
   branch/merge skips remain in place; the version tag builds the release.
 
 ## Artwork and publishing
+
+Qt is used under LGPLv3 with shared libraries. About includes its license texts
+and library replacement instructions; release bundles include exact source links,
+and official releases attach the matching Qt source archives. See
+[Qt release licensing](docs/qt-licensing.md) for packaging and custom Qt builds.
 
 Fat Cat's artwork is **Orange Fat Cat** by shuaa ([megupets](https://www.megupets.com)), released under [CC0 1.0](licenses/FAT-CAT-ARTWORK-TERMS.md). Kuro and Yun are original Agent Pet artwork, drawn by `scripts/draw_kuro.py` and `scripts/draw_yun.py` and released under CC0 1.0 ([Kuro](licenses/KURO-ARTWORK-TERMS.md), [Yun](licenses/YUN-ARTWORK-TERMS.md)). Whale Girl uses [Multimodal-AI-Companion animation artwork](https://github.com/oyxdsg/Multimodal-AI-Companion-Assets), depicting **「溟月」 by 上善无形** with **ZipZipPipe**’s whale-maid design, under **CC BY-NC-SA 4.0** ([terms](licenses/WHALE-GIRL-ARTWORK-TERMS.md)). The rest of this section is about VPet's art.
 
