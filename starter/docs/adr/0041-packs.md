@@ -260,3 +260,31 @@ The app validates local pack display metadata once during startup, before creati
 ### Review follow-up: bounded startup discovery (2026-10-18)
 
 Display snapshots now read only `pack.json` and `pet.json` (64 KiB each), check safe terms/preview paths and their file limits, and inspect the preview PNG header. They never enumerate frame directories, read catalogs/manifests, decode preview pixels or hash inactive artwork. Discovery visits at most 256 local folders; the pet guide records this display limit. Full validation remains mandatory when activating a pack. Regression coverage corrupts a frame before snapshot creation: display discovery still succeeds, activation rejects the corrupt artwork, and explicit metadata refresh detects a subsequently invalid pack.json.
+
+### Phase 3 conversion (2026-10-17)
+
+- `convert_vpet_mod.py` reads the data-only pet LPS records and PNG graph
+  folders. It retains the app VPet catalog's sequence identities, playback,
+  variants, moods, cue pools and activity transitions; each sequence resolves
+  to matching mod art, its `Nomal` equivalent, or that mod's default idle.
+  Frame ordering/timing comes from the existing `frames_of()` helper. Portable
+  output frame names handle upstream filenames containing Chinese characters.
+- Touch rectangles and side offsets come from the definition. Raise points and
+  tags are preserved in the report. Raise points are not runtime catalog fields.
+  Matching movement art uses the template geometry/speeds; fallback-only
+  movement is disabled. Arbitrary workshop movement programs are not imported.
+- The real root `assets/vpet/pet/vup` archive converted and passed the phase 2
+  application's validator and deterministic pack writer. Of 146 template
+  sequences, 139 matched directly and seven used idle: the five app-authored
+  `WORK/Desk/*` transitions and `Reminders/eat` / `Reminders/drink` are absent
+  upstream. The report counts 30 fully matched cues, five with fallbacks
+  (including activity transitions), and 419 unused graph folders. Preview
+  resizing was exercised with Pillow 13.0.0.
+- Regression tests cover the root graph mapping and frame durations, sparse-mod
+  mood/idle fallback, touch metadata, ignored code files, Unicode frame names,
+  terms requirements, path traversal, symlinks and deterministic packing. Both
+  sparse and full fixture outputs pass the native pack validator.
+- **Acceptance still pending:** two independent real workshop mods with their
+  licence text have not been supplied. The bundled VUP archive and generated
+  fixtures do not satisfy that requirement. Record their mapping gaps here
+  before closing #95; the converter's PR remains a draft meanwhile.
