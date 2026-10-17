@@ -1,0 +1,17 @@
+---
+import { petMedia } from '../media';
+import type { Messages } from '../i18n';
+interface Props { id?: string; class?: string; label: string; bubble: string; hint?: string; state?: string; copy: Messages['pet']; eager?: boolean; }
+const { id, class: className = '', label, bubble, hint, state = 'idle', copy, eager = false } = Astro.props;
+const media = petMedia[state];
+---
+<div id={id} class:list={['pet-scene', className]} role="group" data-pet-scene data-initial={state} data-copy={JSON.stringify(copy)} aria-label={label}>
+  <div class="scene-art" aria-hidden="true"><slot /></div>
+  <div class="pet-shadow" aria-hidden="true"></div>
+  <button class="pet-actor" type="button" aria-label={copy.label} data-pet>
+    <span class="pet-speech" aria-hidden="true" data-speech>{bubble}</span>
+    <span class="pet-body"><img src={media.still} data-pet-image data-still={media.still} width="300" height="300" alt="" loading={eager ? 'eager' : 'lazy'} decoding="async" draggable="false" /></span>
+  </button>
+  {hint && <p class="scene-hint"><span aria-hidden="true">↖</span> {hint}</p>}
+  <span class="sr-only" role="status" aria-live="polite" data-pet-live></span>
+</div>

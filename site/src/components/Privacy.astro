@@ -1,0 +1,11 @@
+---
+import Scene from './Scene.astro';
+import Icon from './Icon.astro';
+import type { Messages } from '../i18n';
+interface Props { t: Messages; }
+const { t } = Astro.props;
+---
+<section class="section privacy-section" id="privacy" aria-labelledby="privacy-title"><div class="container privacy-grid">
+  <div class="privacy-visual" data-reveal><div class="local-label"><Icon name="shield" size={18}/>{t.privacy.computer}</div><div class="local-signal"><span class="status-dot"></span>{t.privacy.connection}</div><Scene class="privacy-scene" label={t.privacy.scene} bubble={t.privacy.bubble} state="reading" copy={t.pet}><div class="privacy-orbit"></div><div class="privacy-lock"><Icon name="shield" size={52}/></div><div class="privacy-floor"></div></Scene><p class="privacy-status mono">{t.privacy.status}</p></div>
+  <div class="section-heading" data-reveal><p class="eyebrow">{t.privacy.eyebrow}</p><h2 id="privacy-title">{t.privacy.title}</h2><p class="lede">{t.privacy.text}</p><ul class="privacy-facts">{t.privacy.facts.map(fact => <li><Icon name="check" size={18}/><div><h3>{fact.title}</h3><p>{fact.text}</p></div></li>)}</ul></div>
+</div></section>

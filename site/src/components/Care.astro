@@ -1,0 +1,14 @@
+---
+import Scene from './Scene.astro';
+import Icon, { type Name } from './Icon.astro';
+import type { Messages } from '../i18n';
+interface Props { t: Messages; }
+const { t } = Astro.props;
+---
+<section class="section care-section" id="care" aria-labelledby="care-title">
+  <div class="container care-grid" data-care-demo data-done={t.care.done}>
+    <div><div class="section-heading" data-reveal><p class="eyebrow">{t.care.eyebrow}</p><h2 id="care-title">{t.care.title}</h2><p class="lede">{t.care.text}</p></div>
+    <div class="care-activities" data-reveal>{t.care.actions.map((action, index) => <button class="care-activity" type="button" data-break={action.key} data-duration={action.duration} data-bubble={action.bubble} aria-pressed="false"><span class:list={['care-icon', `care-icon-${index}`]}><Icon name={action.icon as Name} size={23} /></span><span><strong>{action.title}</strong><small>{action.text}</small><span class="activity-link">{action.label} <span aria-hidden="true">↗</span></span></span></button>)}</div></div>
+    <div class="care-visual" data-reveal><div class="care-scene-wrap"><div class="care-visual-label"><Icon name="sun" size={18} />{t.care.demo}</div><Scene class="care-scene" label={t.care.scene} state="break-buddy" bubble={t.care.bubble} copy={t.pet}><div class="care-arch"></div><div class="care-orb"></div><div class="care-ground"></div><span class="care-flower">✳</span><span class="water-glass"></span></Scene><div class="break-timer"><span data-break-count aria-hidden="true">♡</span><span class="sr-only" role="status" aria-live="polite" data-break-live></span><span data-break-label data-ready={t.care.ready} data-active={t.care.timer} data-paused={t.care.paused}>{t.care.ready}</span></div><p class="demo-note">{t.care.preview}</p></div></div>
+  </div>
+</section>

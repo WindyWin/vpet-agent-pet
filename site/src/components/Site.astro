@@ -1,0 +1,20 @@
+---
+import Base from '../layouts/Base.astro';
+import Nav from './Nav.astro';
+import Hero from './Hero.astro';
+import States from './States.astro';
+import Play from './Play.astro';
+import Care from './Care.astro';
+import Privacy from './Privacy.astro';
+import Install from './Install.astro';
+import Footer from './Footer.astro';
+import { messages, type Locale } from '../i18n';
+import { petMedia } from '../media';
+interface Props { locale: Locale; entry?: boolean; }
+const { locale, entry = false } = Astro.props;
+const t = messages[locale];
+---
+<Base locale={locale} entry={entry}><Nav locale={locale} t={t}/><main id="main"><Hero t={t}/><States t={t}/><Play t={t}/><Care t={t}/><Privacy t={t}/><Install t={t}/></main><Footer t={t}/><script type="application/json" id="pet-media" set:html={JSON.stringify(petMedia).replace(/</g, '\\u003c')} /></Base>
+<script>
+  import '../scripts/scenes';
+</script>

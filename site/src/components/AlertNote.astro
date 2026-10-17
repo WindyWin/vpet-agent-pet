@@ -1,0 +1,113 @@
+---
+import Icon from './Icon.astro';
+
+interface Props {
+  title?: string;
+  session?: string;
+  note?: string;
+  pending?: number;
+}
+
+// The alert note is the one component allowed the amber glow, and it is the
+// only place amber touches a border.
+const {
+  title = 'Needs approval',
+  session = 'abc-web · b72c',
+  note = 'Waiting for your confirmation',
+  pending = 1,
+} = Astro.props;
+---
+
+<div class="note">
+  <div class="note__head">
+    <span class="note__bell"><Icon name="bell" size={18} /></span>
+    <span class="note__title">{title}</span>
+  </div>
+  <p class="note__session mono">{session}</p>
+  <p class="note__hint">{note}</p>
+  <div class="note__foot">
+    <span class="note__pending">{pending} more waiting</span>
+    <span class="note__actions">
+      <span class="note__btn">Open</span>
+      <span class="note__x" aria-hidden="true"><Icon name="close" size={15} /></span>
+    </span>
+  </div>
+  <span class="note__tail" aria-hidden="true"></span>
+</div>
+
+<style>
+  .note {
+    position: relative;
+    width: 100%;
+    background: var(--surface-2);
+    border: 1px solid rgba(245, 158, 11, 0.42);
+    border-radius: var(--r-md);
+    padding: 14px 15px 12px;
+    box-shadow: var(--glow-amber);
+  }
+  .note__head {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+  }
+  .note__bell {
+    color: var(--amber);
+    display: inline-flex;
+  }
+  .note__title {
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: 0.98rem;
+  }
+  .note__session {
+    margin: 7px 0 0;
+    color: var(--fg-muted);
+    font-size: 0.78rem;
+  }
+  .note__hint {
+    margin: 2px 0 0;
+    color: var(--fg-muted);
+    font-size: 0.8rem;
+  }
+  .note__foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 12px;
+    padding-top: 11px;
+    border-top: 1px solid rgba(245, 158, 11, 0.18);
+  }
+  .note__pending {
+    font-size: 0.75rem;
+    color: var(--fg-muted);
+  }
+  .note__actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .note__btn {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--on-amber);
+    background: var(--amber);
+    border-radius: var(--r-sm);
+    padding: 5px 11px;
+  }
+  .note__x {
+    color: var(--fg-muted);
+    display: inline-flex;
+  }
+  .note__tail {
+    position: absolute;
+    right: 38px;
+    bottom: -7px;
+    width: 13px;
+    height: 13px;
+    background: var(--surface-2);
+    border-right: 1px solid rgba(245, 158, 11, 0.42);
+    border-bottom: 1px solid rgba(245, 158, 11, 0.42);
+    transform: rotate(45deg);
+  }
+</style>

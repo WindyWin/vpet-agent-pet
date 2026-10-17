@@ -1,0 +1,24 @@
+---
+import Scene from './Scene.astro';
+import Icon, { type Name } from './Icon.astro';
+import type { Messages } from '../i18n';
+interface Props { t: Messages; }
+const { t } = Astro.props;
+---
+<section class="section states-section" id="states" aria-labelledby="states-title">
+  <div class="container">
+    <div class="section-heading centered" data-reveal><p class="eyebrow">{t.states.eyebrow}</p><h2 id="states-title">{t.states.title}</h2><p class="lede">{t.states.text}</p></div>
+    <div class="states-layout" data-state-demo data-reveal>
+      <div class="state-controls" role="group" aria-label={t.states.label}>
+        {t.states.items.map((item, index) => <button class:list={['state-choice', { selected: index === 0 }]} type="button" aria-pressed={index === 0 ? 'true' : 'false'} data-state={item.key} data-bubble={item.bubble} data-log={item.log}><span class="state-icon"><Icon name={item.icon as Name} size={20} /></span><span><strong>{item.name}</strong><small>{item.text}</small></span><span class="state-choice-arrow" aria-hidden="true">↗</span></button>)}
+      </div>
+      <div class="state-stage">
+        <div class="scene-topline"><span class="pill"><span class="status-dot"></span>{t.states.session}</span><Icon name="spark" size={22} /></div>
+        <Scene class="states-scene" label={t.states.scene} state="thinking" bubble={t.states.items[0].bubble} copy={t.pet}><div class="state-halo"></div><div class="stage-pedestal"></div><span class="state-deco deco-a">✧</span><span class="state-deco deco-b">✦</span></Scene>
+        <div class="state-log mono" aria-live="polite"><span aria-hidden="true">❯</span> <span data-demo-log>{t.states.items[0].log}</span></div>
+        <p class="demo-note">{t.states.note}</p>
+      </div>
+    </div>
+    <div class="session-note" data-reveal><span class="stacked-sessions" aria-hidden="true"><i></i><i></i><i></i></span><div><h3>{t.states.priority}</h3><p>{t.states.priorityText}</p></div></div>
+  </div>
+</section>

@@ -1,0 +1,54 @@
+---
+import '../styles/global.css';
+import { og } from '../media';
+import { base, localeUrl, messages, type Locale } from '../i18n';
+interface Props { locale: Locale; entry?: boolean; }
+const { locale, entry = false } = Astro.props;
+const viUrl = localeUrl('vi');
+const t = messages[locale];
+const canonical = new URL(localeUrl(locale), Astro.site);
+---
+<!doctype html>
+<html lang={locale}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{t.meta.title}</title>
+    <meta name="description" content={t.meta.description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="alternate" hreflang="en" href={new URL(localeUrl('en'), Astro.site)} />
+    <link rel="alternate" hreflang="vi" href={new URL(localeUrl('vi'), Astro.site)} />
+    <link rel="alternate" hreflang="x-default" href={new URL(localeUrl('en'), Astro.site)} />
+    <link rel="icon" type="image/svg+xml" href={`${base}/favicon.svg`} />
+    <meta name="theme-color" content="#F7F5FC" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={t.meta.title} />
+    <meta property="og:description" content={t.meta.description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:locale" content={locale === 'vi' ? 'vi_VN' : 'en_US'} />
+    <meta property="og:image" content={new URL(og.src, Astro.site)} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;500;600;700;800&family=Nunito:wght@500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <script is:inline>
+      (function () {
+        var root = document.documentElement;
+        root.classList.add('js');
+        var saved = null;
+        try { saved = localStorage.getItem('agent-pet-motion'); } catch (e) {}
+        var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+        root.dataset.motion = (saved ? saved === 'paused' : reduce) ? 'paused' : 'running';
+      })();
+    </script>
+    {entry && <script is:inline define:vars={{ viUrl }}>
+      try { if (localStorage.getItem('agent-pet-locale') === 'vi') location.replace(viUrl + location.hash); } catch (e) {}
+    </script>}
+    <noscript><style>[data-platform-panel][hidden] { display: block !important; }</style></noscript>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">{t.nav.skip}</a>
+    <slot />
+  </body>
+</html>

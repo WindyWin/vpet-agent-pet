@@ -1,0 +1,51 @@
+name: Deploy site
+
+# The landing page lives in site/ and is deployed to GitHub Pages. Enable it
+# once under Settings -> Pages -> Source: GitHub Actions.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/**'
+      - 'docs/design/**'
+      - '.github/workflows/deploy-site.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Let a running deployment finish; queue at most one more.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          # Only the site and the one image it imports from outside itself; the
+          # repository also tracks a 1.2 GiB artwork archive the build never
+          # reads.
+          sparse-checkout: |
+            site
+            docs/design
+      - name: Build and upload
+        uses: withastro/action@v6
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v5

@@ -1,0 +1,16 @@
+---
+import Scene from './Scene.astro';
+import Icon, { type Name } from './Icon.astro';
+import type { Messages } from '../i18n';
+interface Props { t: Messages; }
+const { t } = Astro.props;
+const releases = 'https://github.com/WindyWin/vpet-agent-pet/releases/latest';
+---
+<section class="section install-section" id="install" aria-labelledby="install-title"><div class="container">
+  <div class="install-panel" data-install-demo data-wave={t.install.wave}>
+    <div class="section-heading centered" data-reveal><p class="eyebrow">{t.install.eyebrow}</p><h2 id="install-title">{t.install.title}</h2><p class="lede">{t.install.text}</p></div>
+    <div class="install-content" data-reveal><div class="download-dock"><Scene class="install-scene" label={t.install.scene} bubble={t.install.bubble} state="turn-finished" copy={t.pet}><div class="download-halo"></div><span class="download-star star-a">✦</span><span class="download-star star-b">✧</span><div class="download-platform"></div>{t.install.platforms.map((p, index) => <span class="dock-mark" style={`left:${[20, 50, 80][index]}%`}><Icon name={p.key as Name} size={18}/></span>)}</Scene><div class="platform-tabs" role="group" aria-label={t.install.choose}>{t.install.platforms.map((p, index) => <button class:list={['platform-tab', { selected: index === 0 }]} type="button" data-platform={index} aria-pressed={index === 0 ? 'true' : 'false'}><Icon name={p.key as Name} size={20}/>{p.name}</button>)}</div></div>
+    <div class="download-info">{t.install.platforms.map((p, index) => <div data-platform-panel={index} hidden={index !== 0}><span class="download-for"><Icon name={p.key as Name} size={24}/>{p.name}</span><p>{p.requirement}</p><a class="button download-button" href={releases}>{t.install.download} {p.name}<Icon name="download" size={18}/></a><p class="release-note">{t.install.release}</p><p class="platform-note">{p.note}</p></div>)}<a class="text-link" href="https://github.com/WindyWin/vpet-agent-pet/blob/main/starter/docs/install.md">{t.install.guide}<Icon name="external" size={14}/></a></div></div>
+    <ol class="install-steps">{t.install.steps.map((step, index) => <li><span>{index + 1}</span>{step}</li>)}</ol><p class="compatibility-note">{t.install.compatibility}</p>
+  </div>
+</div></section>

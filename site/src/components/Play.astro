@@ -1,0 +1,21 @@
+---
+import Scene from './Scene.astro';
+import Icon, { type Name } from './Icon.astro';
+import type { Messages } from '../i18n';
+interface Props { t: Messages; }
+const { t } = Astro.props;
+---
+<section class="section play-section" id="play" aria-labelledby="play-title">
+  <div class="container">
+    <div class="play-heading" data-reveal><div class="section-heading"><p class="eyebrow">{t.play.eyebrow}</p><h2 id="play-title">{t.play.title}</h2></div><p class="lede">{t.play.text}</p></div>
+    <div class="playground" data-play-demo data-reveal>
+      <div class="playground-toolbar"><span class="pill"><Icon name="heart" size={14} />{t.play.scene}</span><button class="reset-button" data-reset type="button"><Icon name="reset" size={16} />{t.play.reset}</button></div>
+      <Scene class="play-scene" label={t.play.scene} bubble={t.play.bubble} hint={t.play.hint} copy={t.pet}>
+        <div class="play-window"><span></span><span></span><span></span><span></span></div><div class="play-sun"></div><div class="play-cloud cloud-one"></div><div class="play-cloud cloud-two"></div><div class="play-shelf"></div><div class="play-floor"></div><div class="play-rug"></div><span class="room-plant"><i></i><i></i><i></i><b></b></span><div class="snack-jar"><span>♡</span></div><span class="wall-spark">✳</span>
+      </Scene>
+      <div class="play-actions" role="group" aria-label={t.play.scene}>{t.play.actions.map(action => <button class="action-button" type="button" data-pet-action={action.key} data-bubble={action.bubble}><Icon name={action.icon as Name} size={19} />{action.label}</button>)}</div>
+      <p class="play-instruction">{t.play.instruction}</p>
+    </div>
+    <p class="section-footnote">{t.play.foot}</p>
+  </div>
+</section>
