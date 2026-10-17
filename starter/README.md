@@ -293,7 +293,7 @@ native Wayland is for builds against the system Qt (see
 
 ## Pets
 
-VPet is the bundled pet. **Fat Cat** (an orange cat, CC0 art by shuaa of megupets), **Kuro** (a little ninja), **Whale Girl** (a detailed blue whale-maid with 16 animated actions, CC BY-NC-SA 4.0 art) and **Yun** (a xianxia cultivator who meditates, brews pills and flies on a sword) download when chosen in Settings; Kuro and Yun are original art drawn by scripts in `scripts/` and released under CC0. The app is built for more. A pet is a folder of frames, a catalog, a
+VPet is the only bundled pet. Additional pets are distributed as `.agentpet` packs in the [gallery](https://github.com/WindyWin/agent-pet-gallery/releases) and installed through Settings → Pet → Import. The app is built for more. A pet is a folder of frames, a catalog, a
 preview and its own art terms under `assets/`, and a rebuild picks up every such folder with no code
 changes. Once two or more pets are installed, Settings → Pet → **Character** shows a tile per pet. The
 chosen pet appears the next time Agent Pet starts, and only its artwork is loaded. `--pet <id>` runs
@@ -562,7 +562,7 @@ automatic updates.
 
 ## Artwork and publishing
 
-Fat Cat's artwork is **Orange Fat Cat** by shuaa ([megupets](https://www.megupets.com)), released under [CC0 1.0](licenses/FAT-CAT-ARTWORK-TERMS.md). Kuro and Yun are original Agent Pet artwork, drawn by `scripts/draw_kuro.py` and `scripts/draw_yun.py` and released under CC0 1.0 ([Kuro](licenses/KURO-ARTWORK-TERMS.md), [Yun](licenses/YUN-ARTWORK-TERMS.md)). Whale Girl uses [Multimodal-AI-Companion animation artwork](https://github.com/oyxdsg/Multimodal-AI-Companion-Assets), depicting **「溟月」 by 上善无形** with **ZipZipPipe**’s whale-maid design, under **CC BY-NC-SA 4.0** ([terms](licenses/WHALE-GIRL-ARTWORK-TERMS.md)). The rest of this section is about VPet's art.
+Additional pets and their individual artwork terms live in the [gallery](https://github.com/WindyWin/agent-pet-gallery). The rest of this section is about VPet's art.
 
 Artwork credit: **VUP-Simulator team**, via [LorisYounger/VPet](https://github.com/LorisYounger/VPet). See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and the [upstream artwork terms](licenses/VPET-ARTWORK-TERMS.md).
 

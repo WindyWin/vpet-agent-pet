@@ -3,7 +3,6 @@
 #include "pet_window.h"
 #include "pack_controls.h"
 #include "animation/pet_library.h"
-#include "desktop/pet_downloader.h"
 #include "desktop/pet_picker.h"
 #include "desktop/plugin_list.h"
 #include "platform/contracts/native_window.h"
@@ -609,6 +608,18 @@ void PetWindow::setWhenIdle(IdlePolicy policy) {
     presence_.setPolicy(policy);
     writePreferences([policy](Preferences &preferences) { preferences.whenIdle = policy; });
 }
+void PetWindow::migrateLegacyPet() {
+    if (!persist_ || PetLibrary::shared().active() != "vpet" || !PetLibrary::shared().retiredPet(pet_)) return;
+    setPet("vpet");
+    auto *notice = new QMessageBox(QMessageBox::Information, tr("Pets have moved to the gallery"),
+        tr("Agent Pet now includes only VPet. Additional pets are available as separate packs. "
+           "Import them from the <a href=\"https://github.com/WindyWin/agent-pet-gallery/releases\">pet gallery</a>. "
+           "VPet is selected for now."), QMessageBox::Ok, this);
+    notice->setTextFormat(Qt::RichText);
+    notice->setTextInteractionFlags(Qt::TextBrowserInteraction);
+    notice->setAttribute(Qt::WA_DeleteOnClose);
+    notice->open();
+}
 void PetWindow::setPet(const QString &id) {
     if (!Preferences::validPet(id)) return;
     pet_ = id;
@@ -619,15 +630,6 @@ void PetWindow::setPlugins(const QStringList &ids) {
     for (const auto &id : ids)
         if (Preferences::validPet(id) && !plugins_.contains(id) && plugins_.size() < Preferences::maxPlugins) plugins_.append(id);
     writePreferences([this](Preferences &preferences) { preferences.plugins = plugins_; });
-}
-PetDownloader &PetWindow::petDownloader() {
-    if (!downloader_) {
-        downloader_ = new PetDownloader(PetLibrary::shared(), nullptr, this);
-        connect(downloader_, &PetDownloader::finished, this, [this](const QString &id, const QString &error) {
-            if (error.isEmpty() && id != pet_) setPet(id);
-        });
-    }
-    return *downloader_;
 }
 bool PetWindow::savePreferences() { return writePreferences([](Preferences &) {}); }
 bool PetWindow::writePreferences(const std::function<void(Preferences &)> &change) {
@@ -890,13 +892,6 @@ void PetWindow::showSettings() {
         auto *picker = new PetPicker(pets, pet_, PetLibrary::shared().active(), dialog);
         layout->addRow(tr("&Character"), picker);
         connect(picker, &PetPicker::chosen, this, &PetWindow::setPet);
-        // Pets that are not bundled download first; the download outlives the dialog.
-        auto &downloads = petDownloader();
-        connect(picker, &PetPicker::downloadRequested, &downloads, &PetDownloader::start);
-        connect(picker, &PetPicker::cancelRequested, &downloads, &PetDownloader::cancel);
-        connect(&downloads, &PetDownloader::progressed, picker, &PetPicker::downloading);
-        connect(&downloads, &PetDownloader::finished, picker, &PetPicker::downloaded);
-        if (!downloads.pet().isEmpty()) picker->downloading(downloads.pet(), downloads.done(), downloads.total());
     }
     layout->addRow(packControls(dialog, "pet", [this](const QString &id) { if (pet_ == id) setPet("vpet"); }));
     auto *openPets = new QPushButton(tr("Open pets &folder"), dialog);
