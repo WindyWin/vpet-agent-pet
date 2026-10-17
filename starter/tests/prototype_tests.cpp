@@ -178,7 +178,8 @@ private slots:
     void releaseMetadataIsEmbedded() {
         // The About view and release packages rely on these embedded resources.
         QVERIFY(QString(AGENT_PET_VERSION).count('.') == 2);
-        for (const auto *path : {":/LICENSE", ":/NOTICE", ":/THIRD_PARTY_NOTICES.md", ":/licenses/VPET-ARTWORK-TERMS.md"}) {
+        for (const auto *path : {":/LICENSE", ":/NOTICE", ":/THIRD_PARTY_NOTICES.md", ":/licenses/VPET-ARTWORK-TERMS.md",
+                                 ":/licenses/QT-NOTICE.txt", ":/licenses/LGPL-3.0.txt", ":/licenses/GPL-3.0.txt"}) {
             QFile file(path);
             QVERIFY2(file.open(QIODevice::ReadOnly) && file.size() > 0, path);
         }
@@ -315,7 +316,7 @@ private slots:
         QVERIFY(dual.first().contains(QRect(recovered, QSize(300, 300))));
         QCOMPARE(pet::Preferences::visiblePosition({1900, 1000}, {300, 300}, {dual.first()}), QPoint(1620, 780));
         QFile file(path); QVERIFY(file.open(QIODevice::WriteOnly)); file.write("broken"); file.close();
-        pet::PreferencesStore corrupt(path); QCOMPARE(corrupt.load().size, 240); QVERIFY(!corrupt.save(prefs));
+        pet::PreferencesStore corrupt(path); QCOMPARE(corrupt.load().size, 160); QVERIFY(!corrupt.save(prefs));
         QVERIFY(file.open(QIODevice::ReadOnly)); QCOMPARE(file.readAll(), QByteArray("broken"));
     }
     void controlsPersistAndDialogsKeepRunning() {

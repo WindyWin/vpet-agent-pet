@@ -1340,6 +1340,10 @@ Các cài đặt và hook khác được giữ nguyên. Hãy đăng ký từ th�
         <translation>&lt;b&gt;Agent Pet %1&lt;/b&gt; (bản sửa đổi %2, Qt %3)&lt;br&gt;Mã ứng dụng: Apache License 2.0.</translation>
     </message>
     <message>
+        <source>Qt is used under LGPLv3. You may modify and replace its libraries; license texts and instructions are below.</source>
+        <translation>Qt được sử dụng theo giấy phép LGPLv3. Bạn có thể sửa đổi và thay thế các thư viện Qt; nội dung giấy phép và hướng dẫn ở bên dưới.</translation>
+    </message>
+    <message>
         <source>Artwork: %1, under its own terms below.</source>
         <translation>Hình ảnh: %1, tuân theo điều khoản riêng bên dưới.</translation>
     </message>

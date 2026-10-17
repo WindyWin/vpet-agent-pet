@@ -14,6 +14,10 @@ on:
 permissions:
   contents: read
 
+# One version for SDK installation and the corresponding source archives.
+env:
+  QT_VERSION: "6.5.3"
+
 # Superseded branch/PR runs are cancelled; tag runs always finish.
 # A skipped docs push must not cancel the preceding main build.
 concurrency:
@@ -55,7 +59,7 @@ jobs:
       - name: Install Qt
         uses: jurplel/install-qt-action@v4
         with:
-          version: "6.5.3"
+          version: ${{ env.QT_VERSION }}
           cache: true
 
       - name: Cache compiler output
@@ -143,7 +147,7 @@ jobs:
       - name: Install Qt
         uses: jurplel/install-qt-action@v4
         with:
-          version: "6.5.3"
+          version: ${{ env.QT_VERSION }}
           cache: true
 
       - name: Build and test portable core
@@ -211,7 +215,7 @@ jobs:
       - name: Install Qt
         uses: jurplel/install-qt-action@v4
         with:
-          version: "6.5.3"
+          version: ${{ env.QT_VERSION }}
           arch: win64_msvc2019_64
           cache: true
 
@@ -280,6 +284,9 @@ jobs:
         run: |
           version="${GITHUB_REF_NAME#v}"
           git archive --prefix="agent-pet-$version/" -o "agent-pet-$version-source.tar.gz" "$GITHUB_SHA:starter"
+      # Download failure or a checksum mismatch prevents publishing binaries without Qt source.
+      - name: Collect corresponding Qt source
+        run: python3 starter/scripts/qt_licenses.py --download-sources "$QT_VERSION" --output .
       - name: Generate download table
         shell: bash
         run: |
@@ -312,6 +319,7 @@ jobs:
           - [Windows portable ZIP]($download/$package-windows-x86_64.zip)
           - [macOS app ZIP]($download/$package-macos-universal.zip)
           - [Source archive (starter/)]($download/$package-source.tar.gz)
+          - Qt $QT_VERSION source: [QtBase]($download/qtbase-everywhere-src-$QT_VERSION.tar.xz), [QtSvg]($download/qtsvg-everywhere-src-$QT_VERSION.tar.xz), [QtImageFormats]($download/qtimageformats-everywhere-src-$QT_VERSION.tar.xz) · [SHA-256 checksums]($download/qt-source-SHA256SUMS.txt)
 
           </details>
 
@@ -346,6 +354,8 @@ jobs:
           generate_release_notes: true
           files: |
             *.tar.gz
+            *.tar.xz
+            qt-source-SHA256SUMS.txt
             *-components.json
             *.zip
             *.dmg

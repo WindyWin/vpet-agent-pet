@@ -1135,6 +1135,7 @@ void PetWindow::showAbout() {
     const auto artwork = library.info(library.active());
     QString credit = tr("<b>Agent Pet %1</b> (revision %2, Qt %3)<br>Application code: Apache License 2.0.")
                          .arg(QString(AGENT_PET_VERSION).toHtmlEscaped(), QString(AGENT_PET_REVISION).toHtmlEscaped(), qVersion());
+    credit += "<br>" + tr("Qt is used under LGPLv3. You may modify and replace its libraries; license texts and instructions are below.");
     if (!artwork.id.isEmpty() && artwork.url.isEmpty())
         credit += " " + tr("Artwork: %1, under its own terms below.").arg(artwork.author.toHtmlEscaped());
     else if (!artwork.id.isEmpty())
@@ -1150,7 +1151,9 @@ void PetWindow::showAbout() {
     };
     auto artworkTerms = artwork.terms.isEmpty() ? QString() : read(":/licenses/" + artwork.terms);
     if (artworkTerms.isEmpty()) artworkTerms = tr("Artwork terms unavailable.") + "\n\n";
-    terms->setPlainText(read(":/NOTICE") + read(":/THIRD_PARTY_NOTICES.md") + artworkTerms + read(":/LICENSE"));
+    terms->setPlainText(read(":/licenses/QT-NOTICE.txt") + read(":/NOTICE")
+                        + read(":/THIRD_PARTY_NOTICES.md") + artworkTerms + read(":/LICENSE")
+                        + read(":/licenses/LGPL-3.0.txt") + read(":/licenses/GPL-3.0.txt"));
     layout->addWidget(terms);
     auto *buttons = new QDialogButtonBox(QDialogButtonBox::Close, dialog);
     buttons->button(QDialogButtonBox::Close)->setText(tr("Close"));

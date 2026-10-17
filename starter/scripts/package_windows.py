@@ -9,7 +9,8 @@ import subprocess
 import sys
 import zipfile
 
-from package_macos import project_version, qt_notices, run
+from package_macos import project_version, run
+from qt_licenses import qt_notices
 
 ROOT = Path(__file__).resolve().parents[1]
 EXECUTABLES = ("agent-pet.exe", "agent-pet-cli.exe", "agent-pet-updater.exe")

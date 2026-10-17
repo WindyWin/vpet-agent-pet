@@ -14,7 +14,7 @@ struct ReminderSchedule {
     QTime monday = QTime(6, 0), leaveWork = QTime(16, 45), sleep = QTime(22, 0);
 };
 struct Preferences {
-    static constexpr int defaultSize = 240;
+    static constexpr int defaultSize = 160;
     static constexpr int recoveryMs = 15000;
     int size = defaultSize;
     QPoint position;

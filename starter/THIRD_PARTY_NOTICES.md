@@ -1,5 +1,17 @@
 # Third-party notices
 
+## Qt runtime
+
+Agent Pet uses Qt under LGPLv3. The full [LGPLv3](licenses/LGPL-3.0.txt),
+[GPLv3](licenses/GPL-3.0.txt), and [Qt notice and replacement instructions](licenses/QT-NOTICE.txt)
+are included in the application and packages. Bundled releases also include
+`runtime-licenses/qt/SOURCES.txt` with version-specific corresponding source
+download directions; official releases attach matching Qt source archives.
+Qt's own third-party components retain their respective terms. See
+[Qt release licensing](docs/qt-licensing.md) for publisher instructions.
+
+## VPet artwork
+
 The PNG animation files in `assets/vpet/vup/` come from the default VPet character in [LorisYounger/VPet](https://github.com/LorisYounger/VPet). The upstream README attributes their copyright to the **VUP-Simulator team**.
 
 The files are an unmodified selection from a local VPet checkout at commit `6358445aa54587f9cd524264eaf17ef97bc826a8`. The manifest records the exact copied bytes, including any local differences from that commit. Folder names and frame timings are preserved.

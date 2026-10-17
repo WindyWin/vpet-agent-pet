@@ -555,6 +555,11 @@ automatic updates.
 
 ## Artwork and publishing
 
+Qt is used under LGPLv3 with shared libraries. About includes its license texts
+and library replacement instructions; release bundles include exact source links,
+and official releases attach the matching Qt source archives. See
+[Qt release licensing](docs/qt-licensing.md) for packaging and custom Qt builds.
+
 Fat Cat's artwork is **Orange Fat Cat** by shuaa ([megupets](https://www.megupets.com)), released under [CC0 1.0](licenses/FAT-CAT-ARTWORK-TERMS.md). Kuro and Yun are original Agent Pet artwork, drawn by `scripts/draw_kuro.py` and `scripts/draw_yun.py` and released under CC0 1.0 ([Kuro](licenses/KURO-ARTWORK-TERMS.md), [Yun](licenses/YUN-ARTWORK-TERMS.md)). Whale Girl uses [Multimodal-AI-Companion animation artwork](https://github.com/oyxdsg/Multimodal-AI-Companion-Assets), depicting **「溟月」 by 上善无形** with **ZipZipPipe**’s whale-maid design, under **CC BY-NC-SA 4.0** ([terms](licenses/WHALE-GIRL-ARTWORK-TERMS.md)). The rest of this section is about VPet's art.
 
 Artwork credit: **VUP-Simulator team**, via [LorisYounger/VPet](https://github.com/LorisYounger/VPet). See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and the [upstream artwork terms](licenses/VPET-ARTWORK-TERMS.md).

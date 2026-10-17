@@ -16,17 +16,13 @@ import stat
 import subprocess
 import tarfile
 
+from qt_licenses import qt_notices
+
 ROOT = Path(__file__).resolve().parents[1]
 QMAKE = None
 # Host ABI / graphics drivers remain OS dependencies, not development runtimes.
 SYSTEM = re.compile(r"^(?:ld-linux.*|lib(?:c|m|dl|pthread|rt|resolv|util)\.so\..*)$")
 
-QT_NOTICE = """The bundled Qt {version} libraries and plugins are used under the GNU Lesser
-General Public License v3 (https://www.gnu.org/licenses/lgpl-3.0.html), unmodified
-and dynamically linked; you may replace them in lib/ and plugins/. Corresponding
-source: https://download.qt.io/archive/qt/ (qtbase-everywhere-src-{version}).
-Libraries listed as unowned in runtime-manifest.json came from this Qt installation.
-"""
 
 
 def run(*args):
@@ -56,7 +52,7 @@ def package_owner(path):
     return None
 
 
-def collect_notices(owners, qt_prefix, notices):
+def collect_notices(owners, notices):
     for package in sorted(set(owners.values()) - {None}):
         for source in (Path("/usr/share/licenses") / package, Path("/usr/share/doc") / package / "copyright"):
             if source.is_dir():
@@ -67,18 +63,10 @@ def collect_notices(owners, qt_prefix, notices):
     common = Path("/usr/share/licenses/common")
     if shutil.which("pacman") and common.is_dir():
         shutil.copytree(common, notices / "common", symlinks=False)
-    # Qt from the online installer/aqt is not package-owned; keep its own notices.
-    for candidate in [qt_prefix / "Licenses", *(parent / "Licenses" for parent in qt_prefix.parents[:2])]:
-        if candidate.is_dir():
-            shutil.copytree(candidate, notices / "qt")
-            break
-    else:
-        if None in owners.values():
-            (notices / "qt").mkdir(exist_ok=True)
-            text = QT_NOTICE.format(version=run(QMAKE, "-query", "QT_VERSION"))
-            if any(name.startswith("libicu") and owner is None for name, owner in owners.items()):
-                text += "The libicu* libraries are ICU, under the Unicode License (https://www.unicode.org/license.txt).\n"
-            (notices / "qt/NOTICE.txt").write_text(text)
+    qt_notices(QMAKE, notices / "qt")
+    if any(name.startswith("libicu") and owner is None for name, owner in owners.items()):
+        (notices / "qt/ICU-NOTICE.txt").write_text(
+            "The libicu* libraries are ICU, under the Unicode License (https://www.unicode.org/license.txt).\n")
 
 
 def write_components(output, version, architecture):
@@ -217,10 +205,9 @@ def main():
     # Preserve distro copyright/license notices for bundled libraries.
     notices = output / "share/agent-pet/runtime-licenses"
     notices.mkdir()
-    qt_prefix = Path(run(QMAKE, "-query", "QT_INSTALL_PREFIX"))
     owners = {name: package_owner(path) for name, path in sources.items()}
     owners["libqxcb.so"] = package_owner(str(qt_plugins / "platforms/libqxcb.so"))
-    collect_notices(owners, qt_prefix, notices)
+    collect_notices(owners, notices)
     manifest = {"format": "agent-pet linux release", "version": version,
                 "architecture": platform.machine(), "libraries": sorted(sources),
                 "host_libraries": sorted(system), "host_library_paths": system,
