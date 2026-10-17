@@ -70,3 +70,12 @@ in-place updater only runs on Linux, and package-manager installs under `/usr` c
 - `agent-pet --smoke-test` (offscreen) passed with startup cleanup enabled.
 - Open: the first real upload to the `pets` release (no on-demand pet shipped yet; [0036](0036-fat-cat-pet.md) adds the first), macOS and Windows CI
   runs, and a manual check against GitHub's redirect to its asset host.
+
+## Phase 4 follow-up (2026-10-17)
+
+Issue #96 retires indexed non-VPet artwork and on-demand RCC downloads. Only
+VPet retains the installed resource tree, with unchanged paths and pack names.
+Other pets are independently versioned `.agentpet` gallery packs loaded from
+user folders. Known legacy selections without a local replacement migrate once
+to VPet with a gallery notice; only recognized legacy download files are removed.
+The old remote `pets` release remains for older application versions.

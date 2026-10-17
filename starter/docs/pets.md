@@ -3,16 +3,15 @@
 A pet is a folder under `assets/` with its own frames, catalog, preview and art terms. A rebuild picks up
 every folder that has a `pet.json`; no C++ or CMake changes are needed. Once two or more pets are
 known, Settings → Pet shows a **Character** row with a tile per pet, and the chosen pet appears the
-next time Agent Pet starts. VPet ships with the app; other pets, such as Fat Cat ([0036](adr/0036-fat-cat-pet.md), a worked example of a
-small pet on borrowed CC0 art), Whale Girl ([0039](adr/0039-whale-girl-pet.md), 16 detailed PNG animations on 600 × 600 canvases; its art is CC BY-NC-SA 4.0), Kuro and Yun ([0037](adr/0037-drawn-pets.md), original art drawn by `scripts/draw_kuro.py` and `scripts/draw_yun.py`; Yun shows touch throws, edge hiding, flying moves and activity handovers in a pet of its own), download when chosen (see
-[Bundled and on-demand pets](#bundled-and-on-demand-pets)). `agent-pet --pet <id>` runs another pet
-once without saving the choice. Only the running pet's artwork is loaded.
+next time Agent Pet starts. VPet ships with the app; additional pets are imported
+from `.agentpet` archives in the [gallery](https://github.com/WindyWin/agent-pet-gallery/releases).
+`agent-pet --pet <id>` runs an installed pet once without saving the choice.
+Only the running pet's artwork is loaded.
 To add animations to an existing pet without a rebuild, make a [plugin pack](plugins.md) instead.
 
 The `.agentpet` format is defined in
 [ADR 0041 — Packs](adr/0041-packs.md), including metadata, limits, licensing and
-compatibility. Its phased rollout will leave VPet as the only built-in pet and
-move other pets to a separate gallery. Local folders and `.agentpet` archives now load from disk; online sources follow in later phases. The build and on-demand workflow remains available meanwhile.
+compatibility. VPet is the only built-in pet. Local folders and `.agentpet` archives load from disk; online source browsing follows in phase 5. Authoring sources for Fat Cat, Whale Girl, Kuro and Yun live in the gallery repository.
 
 ## Importing and removing packs
 
@@ -263,32 +262,27 @@ example `vup/Default/Nomal/1` for VPet.
 - `root` is the SHA-256 of `"agent-pet-pet-tree 1\ncatalog <catalog>\n"` followed by one
   `"<name> <sha256>\n"` line per pack, in the same order.
 
-Installed packs are found by name. Pets that are not bundled use the digests: see below. `ctest -R pets`
+VPet resource packs are installed beside the index and found by name. Local pets use validated PNG files. `ctest -R pets`
 recomputes every digest from the built files.
 
-## Bundled and on-demand pets
+## Gallery and migration
 
-Only the pets in `AGENT_PET_BUNDLED_PETS` (CMake, default `vpet`) install their packs. Every other pet is in
-the index with its preview and hash tree, and its packs download when a user chooses it in Settings; the
-tile shows the download size, and a progress bar with Cancel shows while it runs. The pet appears on the
-next start once every pack is in.
+The app builds and releases only VPet. Additional pets live in the
+[gallery repository](https://github.com/WindyWin/agent-pet-gallery), which builds
+standalone `.agentpet` archives with their artwork terms and an official source
+index. The old bundled-pet CMake option, downloader and `pets` release publisher
+have been removed. VPet's paths and resource pack names remain unchanged.
 
-- Downloads come from one long-lived GitHub release, tag `pets`, where each pack is named by its SHA-256
-  (`<sha256>.rcc`). The release workflow runs `scripts/pet_blobs.py`, which collects every pack that is
-  not bundled, and uploads only the ones that release does not have yet, so app releases never upload
-  unchanged pet art again.
-- The store is `pets/` in the per-user data folder (see [install](install.md)). A pack enters it only
-  after its size and SHA-256 match the leaf in the installed index; a mismatch is fetched once more,
-  then the download fails and nothing is kept. Redirects may only go to GitHub's asset hosts over HTTPS.
-- `<id>.root` in the store records the tree root last found complete, so after an app update an
-  unchanged pet costs one comparison, and a changed one downloads only the packs whose leaves changed.
-- A downloaded pack that is missing or damaged when the pet starts is removed, VPet runs instead, and the
-  picker offers the download again. Packs no pet in the index uses are removed at startup.
+After upgrading, a saved Fat Cat, Whale Girl, Kuro, Yun or Bocchi selection without
+a valid local replacement switches to VPet once and shows a notice linking to
+the gallery. A valid imported pack with the same id keeps the selection. Unknown
+custom ids retain their existing fallback behavior. `--pet`, `--no-persist` and
+smoke tests do not migrate the saved selection.
 
-Try a pet as on-demand locally by leaving it out of the bundled list:
-`cmake -S . -B build -DAGENT_PET_BUNDLED_PETS=vpet` keeps every pack in the build folder, where it still
-counts as installed, but `cmake --install` and the packages carry only VPet's. ADR
-[0030](adr/0030-on-demand-pets.md) records the design.
+Normal startup removes only old `<data>/pets/<sha256>.rcc` downloads, their partial
+files and `<id>.root` stamps. It leaves unknown files, symlinks, directories,
+`<data>/packs/pets` and plugin folders alone. The old GitHub `pets` release is
+left available to older app versions; new versions no longer publish to it.
 
 ## Convert a VPet workshop mod
 

@@ -3,7 +3,6 @@
 #include "animation/easter_eggs.h"
 #include "animation/player.h"
 #include "animation/stage.h"
-#include "desktop/pet_downloader.h"
 #include "desktop/pet_picker.h"
 #include "desktop/pet_window.h"
 #include "settings/preferences.h"
@@ -21,23 +20,18 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QLabel>
-#include <QNetworkAccessManager>
-#include <QNetworkReply>
-#include <QProgressBar>
+#include <QMessageBox>
 #include <QPushButton>
 #include <QPixmap>
 #include <QProcess>
 #include <QResource>
-#include <QScopeGuard>
 #include <QStandardPaths>
 #include <QSignalSpy>
 #include <QTemporaryDir>
 #include <QTest>
 #include <QTextBrowser>
-#include <QTimer>
 #include <QToolButton>
 #include <algorithm>
-#include <cstring>
 #include <utility>
 
 namespace {
@@ -123,75 +117,6 @@ QString treeMismatch(const QString &root, const QString &id, const QString &dire
     if (tree["root"].toString() != "sha256:" + sha256(text.toUtf8())) return id + ": root digest";
     return {};
 }
-// A copy of the fixture build in which duo is not bundled: the index and every pack but duo's.
-QStringList unbundledDuo(const QString &directory) {
-    const QDir built(QFileInfo(FIXTURE_INDEX).absolutePath());
-    QStringList duo;
-    for (const auto &pack : QJsonDocument::fromJson(contents(built.filePath("pets/duo/packs.json"))).object()["packs"].toArray())
-        duo.append(pack.toObject()["name"].toString() + ".rcc");
-    for (const auto &name : built.entryList({"*.rcc"}, QDir::Files))
-        if (!duo.contains(name)) QFile::copy(built.filePath(name), QDir(directory).filePath(name));
-    return duo;
-}
-// duo's packs as the `pets` release serves them: sha256 -> bytes.
-QHash<QString, QByteArray> duoBlobs() {
-    const QDir built(QFileInfo(FIXTURE_INDEX).absolutePath());
-    QHash<QString, QByteArray> blobs;
-    for (const auto &value : QJsonDocument::fromJson(contents(built.filePath("pets/duo/packs.json"))).object()["packs"].toArray()) {
-        const auto pack = value.toObject();
-        blobs.insert(pack["sha256"].toString(), contents(built.filePath(pack["name"].toString() + ".rcc")));
-    }
-    return blobs;
-}
-// Answers a request with `data`, or fails it, from the event loop.
-class Reply : public QNetworkReply {
-    QByteArray data_; qint64 offset_ = 0;
-public:
-    // With `redirect`, the answer is a redirect first: it goes on only once the downloader allows it, as with
-    // QNetworkRequest::UserVerifiedRedirectPolicy.
-    Reply(const QNetworkRequest &request, QByteArray data, bool fail, QObject *parent, QUrl redirect = {})
-        : QNetworkReply(parent), data_(std::move(data)) {
-        setRequest(request); setUrl(request.url()); open(QIODevice::ReadOnly);
-        QTimer::singleShot(0, this, [this, fail, redirect] {
-            if (isFinished()) return;
-            if (redirect.isValid()) {
-                bool allowed = false;
-                connect(this, &QNetworkReply::redirectAllowed, this, [&allowed] { allowed = true; });
-                emit redirected(redirect);
-                if (isFinished()) return; // Refused: the downloader aborted.
-                if (!allowed) { setError(QNetworkReply::InsecureRedirectError, "not allowed"); setFinished(true); emit finished(); return; }
-            }
-            if (fail) setError(QNetworkReply::ConnectionRefusedError, "offline");
-            else { setAttribute(QNetworkRequest::HttpStatusCodeAttribute, 200); emit readyRead(); }
-            if (!isFinished()) { setFinished(true); emit finished(); }
-        });
-    }
-    void abort() override { if (!isFinished()) { setError(OperationCanceledError, "cancelled"); setFinished(true); emit finished(); } }
-    qint64 bytesAvailable() const override { return data_.size() - offset_ + QNetworkReply::bytesAvailable(); }
-    qint64 readData(char *buffer, qint64 max) override {
-        const qint64 n = qMin(max, data_.size() - offset_);
-        if (!n) return -1;
-        std::memcpy(buffer, data_.constData() + offset_, n); offset_ += n; return n;
-    }
-};
-// The `pets` release: serves blobs by file name; `tampered` ones come back wrong that many times.
-class Release : public QNetworkAccessManager {
-public:
-    QHash<QString, QByteArray> blobs;
-    QHash<QString, int> tampered;
-    QStringList requests;
-    QUrl redirect;
-    bool offline = false;
-protected:
-    QNetworkReply *createRequest(Operation, const QNetworkRequest &request, QIODevice *) override {
-        const auto file = request.url().fileName();
-        requests.append(file);
-        const auto sha = file.chopped(4);
-        auto bytes = blobs.value(sha);
-        if (tampered.value(sha) > 0) { --tampered[sha]; bytes[0] = char(bytes[0] ^ 0x5a); }
-        return new Reply(request, bytes, offline, this, redirect);
-    }
-};
 }
 class PetsTests : public QObject {
     Q_OBJECT
@@ -454,6 +379,7 @@ private slots:
     }
     void bundledPetsMeetTheContract() {
         pet::PetLibrary library(PET_INDEX, "/bundled");
+        QCOMPARE(QDir(library.root() + "/assets").entryList(QDir::Dirs | QDir::NoDotAndDotDot), QStringList{"vpet"});
         const auto pets = library.pets();
         QVERIFY(std::any_of(pets.begin(), pets.end(), [](const pet::PetInfo &pet) { return pet.id == "vpet"; }));
         for (const auto &pet : pets) {
@@ -472,287 +398,71 @@ private slots:
         QCOMPARE(pet::PetLibrary::shared().active(), QString("vpet"));
         QCOMPARE(pet::PetLibrary::shared().root(), QString(":/"));
     }
-    void whaleGirlHoldsItsPoseAndPlaysErrorsOnce() {
-        QTemporaryDir store;
-        pet::PetLibrary library(PET_INDEX, "/whale-playback", store.path());
-        QString error;
-        QVERIFY2(library.activate("whale-girl", &error), qPrintable(error));
-        pet::Player player(nullptr, library.catalog());
-        player.setPaused(true);
-        qint64 now = 1000000;
-        pet::Stage stage(player, [&] { return now; });
-        auto activity = [&](const QString &cue) {
-            const auto *shape = pet::findCue(cue);
-            return stage.runtime().submit({"session", "activity", cue,
-                cue == "error" ? pet::behavior::Policy::Urgent : pet::behavior::Policy::Activity,
-                shape->mode == "once" ? pet::behavior::Lifetime::Moment : pet::behavior::Lifetime::Persistent});
-        };
-        auto finishSequence = [&] {
-            const int remaining = player.frameCount() - player.frameIndex();
-            for (int i = 0; i < remaining; ++i) {
-                now += player.frameDuration();
-                player.advance();
-            }
-        };
-        for (const auto *cue : {"thinking", "reading", "working", "attention", "nap"}) {
-            QVERIFY(player.play(cue, true));
-            finishSequence();
-            QCOMPARE(player.phase(), QString("loop"));
-            QCOMPARE(player.frameCount(), 1);
-            const auto pose = player.pixmap().cacheKey();
-            for (int pass = 0; pass < 10; ++pass) {
-                finishSequence();
-                QCOMPARE(player.phase(), QString("loop"));
-                QCOMPARE(player.pixmap().cacheKey(), pose); // No gesture restart or walking in place.
-            }
-            QVERIFY(player.play("idle"));
-            QCOMPARE(player.phase(), QString("end"));
-            finishSequence();
-            QCOMPARE(player.state(), QString("idle"));
+    void legacyCleanupPreservesInstalledPacksAndUnknownFiles() {
+        QTemporaryDir data;
+        const auto cache = data.path() + "/pets";
+        const auto local = data.path() + "/packs/pets";
+        copyLocalPet(local);
+        QVERIFY(QDir().mkpath(cache));
+        const QString blob = QString(64, 'a') + ".rcc";
+        for (const auto &name : QStringList{blob, blob + ".partial", "yun.root", "keep.txt", "unknown.rcc"}) {
+            QFile file(cache + "/" + name); QVERIFY(file.open(QIODevice::WriteOnly)); file.write("keep");
         }
-        activity("thinking");
-        finishSequence();
-        QSignalSpy completed(&player, &pet::Player::completed);
-        const auto started = now;
-        activity("error");
-        while (player.requested("error")) {
-            QCOMPARE(activity("error"), pet::behavior::Submission::Duplicate);
-            now += player.frameDuration();
-            player.advance();
-            stage.runtime().tick();
-        }
-        QVERIFY(now - started < 4000); // The complete crying gesture finishes before session expiry.
-        QCOMPARE(completed.size(), 1);
-        QCOMPARE(completed.first().first().toString(), player.stateFor("error"));
-        const auto state = player.state();
-        for (int i = 0; i < 5; ++i) {
-            activity("error");
-            stage.runtime().tick();
-            QCOMPARE(player.state(), state); // Repeated aggregate ticks cannot replay the error.
-        }
-        for (const auto &fidget : player.fidgets())
-            QVERIFY(fidget.state != "side" && fidget.state != "back" && fidget.state != "turn");
-    }
-    void packsComeFromTheInstallOrTheStore() {
-        QTemporaryDir directory, store;
-        const auto duo = unbundledDuo(directory.path());
-        pet::PetLibrary library(directory.filePath("artwork.rcc"), "/store", store.path());
-        QCOMPARE(library.store(), store.path());
-        const auto tree = library.tree("duo");
-        QCOMPARE(tree.packs.size(), 2); QCOMPARE(tree.root.size(), 64);
-        qint64 bytes = 0;
-        for (const auto &pack : tree.packs) bytes += pack.bytes;
-        // duo still needs both packs; the bundled pets need nothing.
-        QCOMPARE(library.missing("duo").size(), 2); QVERIFY(library.missing("mini").isEmpty());
-        QVERIFY(library.missing("nosuch").isEmpty());
-        for (const auto &pet : library.pets()) QCOMPARE(pet.download, pet.id == "duo" ? bytes : 0);
-        QString error;
-        QVERIFY(!library.activate("duo", &error)); QVERIFY2(error.contains("not downloaded"), qPrintable(error));
-        QVERIFY(!library.markDownloaded("duo", &error));
-        // Downloaded packs are named by content.
-        const auto blobs = duoBlobs();
-        for (auto it = blobs.begin(); it != blobs.end(); ++it) {
-            QFile file(library.blobPath(it.key())); QVERIFY(file.open(QIODevice::WriteOnly)); file.write(it.value());
-        }
-        QVERIFY(library.missing("duo").isEmpty());
-        QVERIFY2(library.activate("duo", &error), qPrintable(error));
-        QVERIFY(QFile::exists(":/store/assets/duo/wave/_000_50.png"));
-        // A complete activation stamps the root, so the next check is one comparison: it no longer looks at files.
-        QCOMPARE(contents(store.filePath("duo.root")).trimmed(), tree.root.toLatin1());
-        pet::PetLibrary later(directory.filePath("artwork.rcc"), "/later", store.path());
-        QFile::remove(later.blobPath(tree.packs.first().sha256));
-        QVERIFY(later.missing("duo").isEmpty());
-        // Activating finds the gap anyway, and the stamp goes, so the picker offers the download again.
-        QVERIFY(!later.activate("duo", &error));
-        QVERIFY(!QFile::exists(store.filePath("duo.root")));
-        QCOMPARE(later.missing("duo").size(), 1);
-        QVERIFY2(later.activate("mini", &error), qPrintable(error));
-        QCOMPARE(duo.size(), 2);
-    }
-    void damagedDownloadsAreRemoved() {
-        QTemporaryDir directory, store;
-        unbundledDuo(directory.path());
-        pet::PetLibrary library(directory.filePath("artwork.rcc"), "/damaged", store.path());
-        const auto blobs = duoBlobs();
-        // One pack holds the other's bytes: it would register, but is not what the index vouches for.
-        const auto tree = library.tree("duo");
-        const auto wave = std::find_if(tree.packs.begin(), tree.packs.end(), [](const pet::PetPack &pack) { return pack.sequence == "wave"; });
-        const auto idle = std::find_if(tree.packs.begin(), tree.packs.end(), [](const pet::PetPack &pack) { return pack.sequence == "idle"; });
-        for (const auto &[pack, bytes] : {std::pair{*wave, blobs.value(idle->sha256)}, std::pair{*idle, blobs.value(idle->sha256)}}) {
-            QFile file(library.blobPath(pack.sha256)); QVERIFY(file.open(QIODevice::WriteOnly)); file.write(bytes);
-        }
-        QString error;
-        QVERIFY(!library.activate("duo", &error));
-        QVERIFY2(error.contains("is damaged; download the pet again"), qPrintable(error)); // Its digest is not the leaf's.
-        QVERIFY(!QFile::exists(library.blobPath(wave->sha256))); // Removed: its digest did not match.
-        QVERIFY(QFile::exists(library.blobPath(idle->sha256))); // Kept: it did.
-        QCOMPARE(library.missing("duo").size(), 1);
-        QVERIFY(!QFile::exists(":/damaged/assets/duo/idle/_000_100.png"));
-    }
-    void pruneKeepsWhatThePetsNeed() {
-        QTemporaryDir directory, store;
-        unbundledDuo(directory.path());
-        pet::PetLibrary library(directory.filePath("artwork.rcc"), "/prune", store.path());
-        const auto needed = library.tree("duo").packs.first().sha256;
-        const QString unused(64, 'a');
-        for (const auto &name : {needed + ".rcc", unused + ".rcc", needed + ".rcc.Xy12Ab", QString("duo.root"),
-                                 QString("gone.root"), QString("notes.txt")}) {
-            QFile file(store.filePath(name)); QVERIFY(file.open(QIODevice::WriteOnly)); file.write("x");
-        }
-        QCOMPARE(library.prune(), 3);
-        QCOMPARE(QDir(store.path()).entryList(QDir::Files, QDir::Name), (QStringList{needed + ".rcc", "duo.root", "notes.txt"}));
-        // Without an index nothing is known to be needed, so nothing goes.
-        pet::PetLibrary missing("/nonexistent/artwork.rcc", "/prune-missing", store.path());
-        QCOMPARE(missing.prune(), 0);
-        QVERIFY(QFile::exists(store.filePath(needed + ".rcc")));
-    }
-    void downloaderFetchesOnlyMissingVerifiedPacks() {
-        QVERIFY(pet::PetDownloader::allowedRedirect(QUrl("https://release-assets.githubusercontent.com/x")));
-        QVERIFY(pet::PetDownloader::allowedRedirect(QUrl("https://objects.githubusercontent.com/x")));
-        QVERIFY(!pet::PetDownloader::allowedRedirect(QUrl("http://objects.githubusercontent.com/x")));
-        QVERIFY(!pet::PetDownloader::allowedRedirect(QUrl("https://example.com/x")));
-        QCOMPARE(pet::PetDownloader::blobUrl(QString(64, 'b')).toString(),
-                 "https://github.com/WindyWin/vpet-agent-pet/releases/download/pets/" + QString(64, 'b') + ".rcc");
-        QTemporaryDir directory, store;
-        unbundledDuo(directory.path());
-        pet::PetLibrary library(directory.filePath("artwork.rcc"), "/download", store.path());
-        Release release; release.blobs = duoBlobs();
-        pet::PetDownloader downloader(library, &release);
-        QSignalSpy progress(&downloader, &pet::PetDownloader::progressed), finished(&downloader, &pet::PetDownloader::finished);
-        // One pack was downloaded before: only the other is fetched.
-        const auto tree = library.tree("duo");
-        const auto &kept = tree.packs.first(), &fetched = tree.packs.last();
-        { QFile file(library.blobPath(kept.sha256)); QVERIFY(file.open(QIODevice::WriteOnly)); file.write(release.blobs.value(kept.sha256)); }
-        QVERIFY(downloader.start("duo"));
-        QCOMPARE(downloader.pet(), QString("duo")); QVERIFY(!downloader.start("mini")); // One at a time.
-        QVERIFY(finished.wait(5000));
-        QCOMPARE(finished.first().at(0).toString(), QString("duo")); QCOMPARE(finished.first().at(1).toString(), QString());
-        QCOMPARE(release.requests, QStringList{fetched.sha256 + ".rcc"});
-        QCOMPARE(progress.last().at(1).toLongLong(), fetched.bytes); QCOMPARE(progress.last().at(2).toLongLong(), fetched.bytes);
-        QVERIFY(downloader.pet().isEmpty());
-        QCOMPARE(contents(store.filePath("duo.root")).trimmed(), tree.root.toLatin1());
-        QString error; QVERIFY2(library.activate("duo", &error), qPrintable(error));
-        // A pet that needs nothing finishes at once.
-        release.requests.clear(); finished.clear();
-        QVERIFY(downloader.start("duo")); QVERIFY(finished.wait(5000));
-        QCOMPARE(finished.first().at(1).toString(), QString()); QVERIFY(release.requests.isEmpty());
-        QVERIFY(!downloader.start("nosuch"));
-    }
-    void downloaderRejectsTamperedAndFailedDownloads() {
-        QTemporaryDir directory, store;
-        unbundledDuo(directory.path());
-        pet::PetLibrary library(directory.filePath("artwork.rcc"), "/tampered", store.path());
-        Release release; release.blobs = duoBlobs();
-        pet::PetDownloader downloader(library, &release);
-        QSignalSpy finished(&downloader, &pet::PetDownloader::finished);
-        const auto tree = library.tree("duo");
-        auto stored = [&] {
-            QStringList names = QDir(store.path()).entryList(QDir::Files, QDir::Name);
-            return names;
-        };
-        // Wrong bytes once: fetched again, and the pet completes.
-        release.tampered.insert(tree.packs.first().sha256, 1);
-        QVERIFY(downloader.start("duo")); QVERIFY(finished.wait(5000));
-        QCOMPARE(finished.last().at(1).toString(), QString());
-        QCOMPARE(release.requests.size(), 3);
-        QCOMPARE(stored().size(), 3); // Two packs and the stamp.
-        for (const auto &name : stored()) QFile::remove(store.filePath(name));
-        // Wrong bytes twice: rejected, and nothing is stored.
-        release.requests.clear(); finished.clear();
-        release.tampered.insert(tree.packs.first().sha256, 2);
-        QVERIFY(downloader.start("duo")); QVERIFY(finished.wait(5000));
-        QCOMPARE(finished.last().at(1).toString(), QString("The download of Duo did not match its checksum. Try again later."));
-        QCOMPARE(release.requests.size(), 2); QVERIFY(stored().isEmpty());
-        // Offline: a clear message, nothing stored, and the pet still needs its packs.
-        finished.clear(); release.offline = true;
-        QVERIFY(downloader.start("duo")); QVERIFY(finished.wait(5000));
-        QCOMPARE(finished.last().at(1).toString(), QString("Could not download Duo. Check your connection and try again."));
-        QVERIFY(stored().isEmpty()); QCOMPARE(library.missing("duo").size(), 2);
-        // Cancelled.
-        finished.clear(); release.offline = false;
-        QVERIFY(downloader.start("duo")); downloader.cancel();
-        QCOMPARE(finished.size(), 1); QCOMPARE(finished.last().at(1).toString(), QString("Download cancelled."));
-        QVERIFY(downloader.pet().isEmpty());
-        QTest::qWait(50); // Nothing arrives after a cancel.
-        QCOMPARE(finished.size(), 1); QVERIFY(stored().isEmpty());
-    }
-    void downloaderFollowsOnlyGithubRedirects() {
-        QTemporaryDir directory, store;
-        unbundledDuo(directory.path());
-        pet::PetLibrary library(directory.filePath("artwork.rcc"), "/redirect", store.path());
-        Release release; release.blobs = duoBlobs();
-        pet::PetDownloader downloader(library, &release);
-        QSignalSpy finished(&downloader, &pet::PetDownloader::finished);
-        // GitHub answers with a redirect to its asset host: followed.
-        release.redirect = QUrl("https://release-assets.githubusercontent.com/github-production-release-asset/abc");
-        QVERIFY(downloader.start("duo")); QVERIFY(finished.wait(5000));
-        QCOMPARE(finished.last().at(1).toString(), QString());
-        QVERIFY(library.missing("duo").isEmpty());
-        for (const auto &name : QDir(store.path()).entryList(QDir::Files)) QFile::remove(store.filePath(name));
-        // Anywhere else, or without TLS, is refused and nothing is stored.
-        for (const auto *target : {"https://example.com/pack.rcc", "http://objects.githubusercontent.com/pack.rcc"}) {
-            finished.clear(); release.redirect = QUrl(target);
-            QVERIFY(downloader.start("duo")); QVERIFY(finished.wait(5000));
-            QVERIFY2(!finished.last().at(1).toString().isEmpty(), target);
-            QVERIFY(QDir(store.path()).entryList(QDir::Files).isEmpty());
+        pet::PetLibrary library(PET_INDEX, "/cleanup", cache, local);
+        QCOMPARE(library.removeLegacyDownloads(), 3);
+        QCOMPARE(library.removeLegacyDownloads(), 0);
+        QVERIFY(QFile::exists(cache + "/keep.txt"));
+        QVERIFY(QFile::exists(cache + "/unknown.rcc"));
+        QVERIFY(QFile::exists(local + "/local-cat/pack.json"));
+        QVERIFY(library.info("local-cat").error.isEmpty());
+        // A linked legacy directory is never traversed or cleaned.
+        const auto linked = data.path() + "/linked";
+        if (QFile::link(cache, linked) && QFileInfo(linked).isSymLink()) {
+            pet::PetLibrary other(PET_INDEX, "/cleanup-link", linked, local);
+            QCOMPARE(other.removeLegacyDownloads(), 0);
         }
     }
-    void storedPacksAreHashedAtActivation() {
-        QTemporaryDir directory, store;
-        unbundledDuo(directory.path());
-        pet::PetLibrary library(directory.filePath("artwork.rcc"), "/hashed", store.path());
-        const auto tree = library.tree("duo");
-        const auto blobs = duoBlobs();
-        for (auto it = blobs.begin(); it != blobs.end(); ++it) {
-            QFile file(library.blobPath(it.key())); QVERIFY(file.open(QIODevice::WriteOnly)); file.write(it.value());
+    void retiredPetWithLocalReplacementIsPreserved() {
+        QTemporaryDir data;
+        copyLocalPet(data.path());
+        QVERIFY(QDir(data.path()).rename("local-cat", "yun"));
+        for (const auto *name : {"pet.json", "pack.json", "animations.json", "manifest.json"}) {
+            const auto path = data.path() + "/yun/" + name;
+            auto bytes = contents(path); bytes.replace("local-cat", "yun");
+            QFile file(path); QVERIFY(file.open(QIODevice::WriteOnly)); file.write(bytes);
         }
-        // A pack with the same size and entries but other bytes: not the one the index vouches for.
-        QByteArray altered = blobs.value(tree.packs.first().sha256);
-        altered[altered.size() - 1] = char(altered[altered.size() - 1] ^ 0x01);
-        { QFile file(library.blobPath(tree.packs.first().sha256)); QVERIFY(file.open(QIODevice::WriteOnly)); file.write(altered); }
-        QVERIFY(library.markDownloaded("duo", nullptr));
-        QString error;
-        QVERIFY(!library.activate("duo", &error));
-        QVERIFY2(error.contains("damaged"), qPrintable(error));
-        QVERIFY(!QFile::exists(library.blobPath(tree.packs.first().sha256))); // Removed, with the stamp.
-        QVERIFY(!QFile::exists(store.filePath("duo.root")));
-        QVERIFY(QFile::exists(library.blobPath(tree.packs.last().sha256)));
-        QCOMPARE(library.missing("duo").size(), 1);
+        pet::PetLibrary library(PET_INDEX, "/replacement", {}, data.path());
+        QVERIFY2(library.info("yun").error.isEmpty(), qPrintable(library.info("yun").error));
+        QVERIFY(!library.retiredPet("yun"));
+        QVERIFY(library.retiredPet("fat-cat"));
+        QVERIFY(!library.retiredPet("local-cat"));
+        QVERIFY(!library.retiredPet("vpet"));
     }
-    void pickerDownloadsBeforeChoosing() {
-        const pet::PetInfo vpet{"vpet", "VUP", "VUP-Simulator team", {}, "VPET-ARTWORK-TERMS.md", {}};
-        const pet::PetInfo duo{"duo", "Duo", "Agent Pet tests", {}, "LICENSE", {}, 2048};
-        QWidget page;
-        pet::PetPicker picker({duo, vpet}, "vpet", "vpet", &page);
-        QToolButton *duoTile = nullptr, *vpetTile = nullptr;
-        for (auto *tile : picker.findChildren<QToolButton *>())
-            (tile->property("pet").toString() == "duo" ? duoTile : vpetTile) = tile;
-        QVERIFY(duoTile && vpetTile);
-        QCOMPARE(duoTile->text(), QString("⬇ Duo"));
-        QVERIFY(duoTile->toolTip().startsWith("by Agent Pet tests · ")); QVERIFY(duoTile->toolTip().endsWith(" to download"));
-        auto *progress = picker.findChild<QProgressBar *>(); auto *cancel = picker.findChild<QPushButton *>();
-        auto *note = picker.findChild<QLabel *>();
-        QVERIFY(progress && cancel && note); QVERIFY(!progress->isVisibleTo(&page)); QVERIFY(!cancel->isVisibleTo(&page));
-        QSignalSpy chosen(&picker, &pet::PetPicker::chosen), requested(&picker, &pet::PetPicker::downloadRequested),
-            cancelled(&picker, &pet::PetPicker::cancelRequested);
-        duoTile->click();
-        QCOMPARE(requested.size(), 1); QCOMPARE(requested.first().first().toString(), QString("duo"));
-        QCOMPARE(chosen.size(), 0); QVERIFY(vpetTile->isChecked()); QCOMPARE(picker.selected(), QString("vpet"));
-        picker.downloading("duo", 512, 2048);
-        QVERIFY(progress->isVisibleTo(&page)); QCOMPARE(progress->value(), 25); QVERIFY(cancel->isVisibleTo(&page));
-        QVERIFY(!duoTile->isEnabled()); QCOMPARE(note->text(), QString("Downloading Duo…"));
-        cancel->click(); QCOMPARE(cancelled.size(), 1);
-        picker.downloaded("duo", "Download cancelled.");
-        QVERIFY(!progress->isVisibleTo(&page)); QVERIFY(duoTile->isEnabled());
-        QCOMPARE(note->text(), QString("Download cancelled.")); QVERIFY(note->isVisibleTo(&page));
-        QCOMPARE(chosen.size(), 0); QCOMPARE(picker.selected(), QString("vpet"));
-        // A completed download makes it the choice for the next start.
-        picker.downloaded("duo", {});
-        QCOMPARE(chosen.size(), 1); QCOMPARE(chosen.first().first().toString(), QString("duo"));
-        QVERIFY(duoTile->isChecked()); QCOMPARE(duoTile->text(), QString("✓ Duo")); QCOMPARE(duoTile->toolTip(), QString("by Agent Pet tests"));
-        QCOMPARE(note->text(), QString("Duo will appear the next time Agent Pet starts."));
-        vpetTile->click(); QCOMPARE(chosen.size(), 2); // Downloaded now, it is chosen like any other.
-        duoTile->click(); QCOMPARE(chosen.size(), 3); QCOMPARE(requested.size(), 1);
+    void migrationSelectsVpetAndShowsGalleryOnce() {
+        QTemporaryDir directory;
+        const auto path = directory.path() + "/preferences.json";
+        pet::PreferencesStore store(path);
+        pet::Preferences saved; saved.pet = "bocchi";
+        QVERIFY(store.save(saved));
+        {
+            pet::PetWindow window(nullptr, path);
+            window.migrateLegacyPet();
+            QCOMPARE(window.pet(), QString("vpet"));
+            QCOMPARE(store.load().pet, QString("vpet"));
+            auto notices = window.findChildren<QMessageBox *>();
+            QCOMPARE(notices.size(), 1);
+            QVERIFY(notices.first()->text().contains("https://github.com/WindyWin/agent-pet-gallery/releases"));
+            window.migrateLegacyPet();
+            QCOMPARE(window.findChildren<QMessageBox *>().size(), 1);
+        }
+        pet::PetWindow again(nullptr, path);
+        again.migrateLegacyPet();
+        QVERIFY(again.findChildren<QMessageBox *>().isEmpty());
+        saved.pet = "yun"; QVERIFY(store.save(saved));
+        pet::PetWindow preview(nullptr, path, false);
+        preview.migrateLegacyPet();
+        QCOMPARE(store.load().pet, QString("yun"));
+        QVERIFY(preview.findChildren<QMessageBox *>().isEmpty());
     }
     void localPetDiscoveryPlaybackAndTerms() {
         QTemporaryDir installed, store;
@@ -761,7 +471,7 @@ private slots:
         const auto info = library.info("local-cat");
         QVERIFY2(info.error.isEmpty(), qPrintable(info.error));
         QCOMPARE(info.name, QString("Local Cat")); QCOMPARE(info.license, QString("Apache-2.0"));
-        QVERIFY(!info.folder.isEmpty()); QCOMPARE(info.download, 0);
+        QVERIFY(!info.folder.isEmpty());
         QVERIFY(library.terms("local-cat").contains("Agent Pet test artwork"));
         const auto pets = library.pets();
         QVERIFY(std::any_of(pets.begin(), pets.end(), [](const pet::PetInfo &p) { return p.id == "local-cat" && p.error.isEmpty(); }));
@@ -770,8 +480,7 @@ private slots:
         pet::Player player(nullptr, library.catalog());
         QVERIFY(player.select("idle", true)); QVERIFY(!player.pixmap().isNull());
         QVERIFY(library.catalog().sequences.first().first().path.startsWith(installed.path()));
-        QVERIFY(library.missing("local-cat").isEmpty());
-        library.prune();
+        library.removeLegacyDownloads();
         QVERIFY(QFile::exists(installed.filePath("local-cat/pack.json")));
         pet::PetLibrary updated(PET_INDEX, "/local-updated", store.path(), installed.path());
         QVERIFY2(updated.activate("local-cat", &error), qPrintable(error));
@@ -967,7 +676,6 @@ private slots:
         }
         QCOMPARE(chosen.size(), 0);
         QVERIFY(picker.findChild<QLabel *>()->text().contains("Missing PNG"));
-        picker.downloading("vpet", 1, 2); picker.downloaded("vpet", "Cancelled");
         for (auto *tile : picker.findChildren<QToolButton *>()) if (tile->property("pet") == "bad") QVERIFY(!tile->isEnabled());
     }
     void petPreference() {

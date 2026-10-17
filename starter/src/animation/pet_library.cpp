@@ -14,7 +14,6 @@
 #include <QJsonObject>
 #include <QRegularExpression>
 #include <QResource>
-#include <QSaveFile>
 #include <QSet>
 #include <QStandardPaths>
 #include <algorithm>
@@ -70,7 +69,6 @@ QVector<PetInfo> PetLibrary::pets() const {
     for (const auto &id : QDir(QDir(root()).filePath("assets")).entryList(QDir::Dirs | QDir::NoDotAndDotDot, QDir::Name))
     {
         if (auto pet = resourceInfo(id); !pet.id.isEmpty()) {
-            for (const auto &pack : missing(id)) pet.download += pack.bytes;
             found.append(pet);
         }
         else if (QFile::exists(QDir(root()).filePath("assets/" + id + "/pet.json")))
@@ -165,74 +163,20 @@ PetTree PetLibrary::tree(const QString &id) const {
     if (QCryptographicHash::hash(text, QCryptographicHash::Sha256).toHex() != tree.root.toLatin1()) return {};
     return tree;
 }
-QString PetLibrary::stamp(const QString &id) const {
-    return QString::fromLatin1(contents(store_ + "/" + id + ".root", 256)).trimmed();
+bool PetLibrary::retiredPet(const QString &id) const {
+    static const QSet<QString> retired{"fat-cat", "whale-girl", "kuro", "yun", "bocchi"};
+    if (!retired.contains(id)) return false;
+    const auto replacement = info(id);
+    return replacement.folder.isEmpty() || !replacement.error.isEmpty();
 }
-QVector<PetPack> PetLibrary::missing(const QString &id) const {
-    const auto tree = this->tree(id);
-    if (tree.root.isEmpty() || stamp(id) == tree.root) return {};
-    const QDir installed(QFileInfo(index_).absolutePath());
-    QVector<PetPack> needed;
-    for (const auto &pack : tree.packs)
-        if (!QFile::exists(installed.filePath(pack.name + ".rcc")) && !QFile::exists(blobPath(pack.sha256))) needed.append(pack);
-    return needed;
-}
-bool PetLibrary::markDownloaded(const QString &id, QString *error) {
-    auto fail = [error](const QString &reason) {
-        if (error) *error = reason;
-        return false;
-    };
-    const auto tree = this->tree(id);
-    if (tree.root.isEmpty()) return fail("Unknown pet or invalid pack list: " + id);
-    const QDir installed(QFileInfo(index_).absolutePath());
-    for (const auto &pack : tree.packs)
-        if (!QFile::exists(installed.filePath(pack.name + ".rcc")) && !QFile::exists(blobPath(pack.sha256)))
-            return fail("Pack " + pack.name + " of " + id + " is not downloaded");
-    QSaveFile file(store_ + "/" + id + ".root");
-    if (!QDir().mkpath(store_) || !file.open(QIODevice::WriteOnly) || file.write(tree.root.toLatin1() + "\n") < 0 || !file.commit())
-        return fail("Cannot write to " + store_);
-    return true;
-}
-// Whether the stored file for `pack` has the size and SHA-256 its leaf in the installed index promises.
-static bool intactBlob(const QString &path, const PetPack &pack) {
-    QFile file(path);
-    if (!file.open(QIODevice::ReadOnly) || file.size() != pack.bytes) return false;
-    QCryptographicHash hash(QCryptographicHash::Sha256);
-    return hash.addData(&file) && hash.result().toHex() == pack.sha256.toLatin1();
-}
-void PetLibrary::repair(const QString &id) const {
-    QFile::remove(store_ + "/" + id + ".root");
-    for (const auto &pack : tree(id).packs) {
-        const auto path = blobPath(pack.sha256);
-        // A file that cannot be opened right now is left alone: it may be fine, and downloading again may not be possible.
-        if (QFile(path).open(QIODevice::ReadOnly) && !intactBlob(path, pack)) {
-            qWarning().noquote() << "Removing damaged download" << path;
-            QFile::remove(path);
-        }
-    }
-}
-int PetLibrary::prune() const {
-    // Without the index nothing is known to be needed, so nothing is removed.
-    if (!error_.isEmpty()) return 0;
-    QSet<QString> needed, pets;
-    for (const auto &id : QDir(QDir(root()).filePath("assets")).entryList(QDir::Dirs | QDir::NoDotAndDotDot)) {
-        const auto tree = this->tree(id);
-        if (tree.root.isEmpty()) continue;
-        pets.insert(id);
-        for (const auto &pack : tree.packs) needed.insert(pack.sha256 + ".rcc");
-    }
-    if (pets.isEmpty()) return 0;
-    static const QRegularExpression blob(QRegularExpression::anchoredPattern("[0-9a-f]{64}\\.rcc"));
-    static const QRegularExpression partial(QRegularExpression::anchoredPattern("[0-9a-f]{64}\\.rcc\\..+"));
-    static const QRegularExpression stampFile(QRegularExpression::anchoredPattern("([a-z0-9-]{1,32})\\.root"));
+int PetLibrary::removeLegacyDownloads() const {
+    if (QFileInfo(store_).isSymLink()) return 0;
+    static const QRegularExpression legacy(QRegularExpression::anchoredPattern(
+        "(?:[0-9a-f]{64}\\.rcc(?:\\..+)?|[a-z0-9-]{1,32}\\.root)"));
+    QDir folder(store_);
     int removed = 0;
-    QDir store(store_);
-    for (const auto &name : store.entryList(QDir::Files | QDir::Hidden)) {
-        const auto stamped = stampFile.match(name);
-        const bool unused = (blob.match(name).hasMatch() && !needed.contains(name)) || partial.match(name).hasMatch()
-            || (stamped.hasMatch() && !pets.contains(stamped.captured(1)));
-        if (unused && store.remove(name)) ++removed;
-    }
+    for (const auto &file : folder.entryInfoList(QDir::Files | QDir::Hidden | QDir::NoSymLinks))
+        if (legacy.match(file.fileName()).hasMatch() && folder.remove(file.fileName())) ++removed;
     return removed;
 }
 bool PetLibrary::activate(const QString &id, QString *error) {
@@ -262,16 +206,8 @@ bool PetLibrary::activate(const QString &id, QString *error) {
         packs_.clear();
         return fail(why);
     };
-    // A damaged download is removed once nothing maps it (Windows cannot delete a mapped file), so it downloads again.
-    auto damaged = [&](const QString &why) {
-        rollBack(why);
-        repair(id);
-        return false;
-    };
     if (!local) {
-        // Without a pack list, the pet's frames are inside the index itself. Each pack is installed beside the index,
-        // or else downloaded into the store.
-        bool stored = false;
+        // Sequence resources are installed beside the index; local pets use plain PNGs.
         PetTree tree;
         if (QFile::exists(QDir(root()).filePath("assets/" + id + "/packs.json"))) {
             tree = this->tree(id);
@@ -279,19 +215,8 @@ bool PetLibrary::activate(const QString &id, QString *error) {
             const QDir installed(QFileInfo(index_).absolutePath());
             for (const auto &pack : std::as_const(tree.packs)) {
                 auto path = installed.filePath(pack.name + ".rcc");
-                const bool bundled = QFile::exists(path);
-                if (!bundled) { path = blobPath(pack.sha256); stored = true; }
-                if (!bundled && !QFile::exists(path)) {
-                    QFile::remove(store_ + "/" + id + ".root"); // No longer complete: the picker offers the download again.
-                    return rollBack(QString("Pet %1 is not downloaded: pack %2 is missing.").arg(id, pack.name));
-                }
-                // The store is writable by anyone running as the user: a pack is trusted only once it matches its leaf.
-                if (!bundled && !intactBlob(path, pack))
-                    return damaged(QString("The downloaded pack %1 of %2 is damaged; download the pet again.").arg(pack.name, id));
-                if (!QResource::registerResource(path, mapRoot_)) {
-                    if (bundled) return rollBack("Cannot load the artwork pack " + pack.name + ".rcc. Reinstall Agent Pet to restore it.");
-                    return damaged(QString("The downloaded pack %1 of %2 is damaged; download the pet again.").arg(pack.name, id));
-                }
+                if (!QResource::registerResource(path, mapRoot_))
+                    return rollBack("Cannot load the artwork pack " + pack.name + ".rcc. Reinstall Agent Pet to restore it.");
                 packs_.append(path);
             }
         }
@@ -313,11 +238,9 @@ bool PetLibrary::activate(const QString &id, QString *error) {
                     auto relative = frame.path.mid(root().size());
                     if (relative.startsWith('/')) relative.remove(0, 1); // root() ends in a slash at "/" but not at other mounts.
                     const auto what = "Missing frame " + relative + ". ";
-                    return stored ? damaged(what + "Download the pet again.") : rollBack(what + "Reinstall Agent Pet to restore it.");
+                    return rollBack(what + "Reinstall Agent Pet to restore it.");
                 }
             }
-        // Downloaded packs are verified when stored, so finding them all complete is worth one stamp.
-        if (stored && stamp(id) != tree.root) markDownloaded(id, nullptr);
     }
     // Packs check their own frames, which are files rather than resources.
     if (!pluginFolder_.isEmpty()) {

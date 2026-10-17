@@ -319,3 +319,32 @@ Display snapshots now read only `pack.json` and `pet.json` (64 KiB each), check 
   invalid release/prerelease/build identifiers, trailing whitespace, overlong
   versions, valid prerelease/build versions and the exact 32-character boundary.
   Invalid versions are rejected in both bundled and local modes.
+
+### Phase 4 gallery separation (2026-10-17)
+
+- The application source/build now contains only VPet. Fat Cat, Kuro, Yun and
+  Whale Girl sources, authoring helpers, terms and notices move to the separate
+  gallery. Each pack embeds its own terms. CC0 applies to the first three;
+  Whale Girl retains the recorded CC BY-NC-SA 4.0 attribution, noncommercial and
+  share-alike conditions. No Bocchi source or redistribution terms were present,
+  so it is excluded; the workshop conversion path remains available.
+- Removed the pet RCC downloader, selection/progress UI, bundled-pet option and
+  old `pets` release publishing steps. The remote historical release is retained
+  for existing versions. VPet's 141 resource pack names, catalog tree and leaf
+  digests compare equal with the phase 2 build.
+- A saved legacy choice without a valid local replacement is changed once to
+  VPet, with an English/Vietnamese notice linking to the gallery. Explicit
+  `--pet`, preview/no-persist runs and unknown custom identities keep their
+  existing behavior. Normal startup removes only recognizable legacy blob,
+  partial and stamp files; tests cover preserving installed packs, unknown files
+  and linked directories.
+- Gallery tooling builds four deterministic archives, imports each into a fresh
+  Linux data folder, and produces a version-1 `index.json` plus previews. Index
+  fields are `schema_version: 1`, `packs`, with HTTPS preview/download URLs,
+  byte counts, SHA-256, identity, descriptive metadata and compatibility fields.
+  This is the producer contract for phase 5. Gallery CI pins the VPet-only
+  validator revision because older indexed builds reserve these pet ids.
+- Linux Release build, asset verification, all 20 CTest suites, gallery source
+  validation, all four archive imports and isolated package smoke check passed.
+  Four CTest suites required local socket/process access outside the restricted
+  development sandbox. macOS/Windows verification follows in PR CI.

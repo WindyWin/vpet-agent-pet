@@ -721,25 +721,6 @@ Nguồn: %6</translation>
     </message>
 </context>
 <context>
-    <name>pet::PetDownloader</name>
-    <message>
-        <source>Cannot save %1. Check free disk space.</source>
-        <translation>Không thể lưu %1. Hãy kiểm tra dung lượng đĩa còn trống.</translation>
-    </message>
-    <message>
-        <source>Download cancelled.</source>
-        <translation>Đã hủy tải xuống.</translation>
-    </message>
-    <message>
-        <source>The download of %1 did not match its checksum. Try again later.</source>
-        <translation>Mã kiểm tra của tệp %1 đã tải về không khớp. Hãy thử lại sau.</translation>
-    </message>
-    <message>
-        <source>Could not download %1. Check your connection and try again.</source>
-        <translation>Không thể tải %1. Hãy kiểm tra kết nối mạng rồi thử lại.</translation>
-    </message>
-</context>
-<context>
     <name>pet::PetPicker</name>
     <message>
         <source>Pet character</source>
@@ -762,14 +743,6 @@ Nguồn: %6</translation>
         <translation>Thú cưng chưa được cài đặt.</translation>
     </message>
     <message>
-        <source>Pet download progress</source>
-        <translation>Tiến độ tải thú cưng</translation>
-    </message>
-    <message>
-        <source>Cancel download</source>
-        <translation>Hủy tải xuống</translation>
-    </message>
-    <message>
         <source>Local</source>
         <translation>Cục bộ</translation>
     </message>
@@ -782,21 +755,9 @@ Nguồn: %6</translation>
         <translation>Không thể sử dụng: %1</translation>
     </message>
     <message>
-        <source>by %1 · %2 to download</source>
-        <translation>của %1 · cần tải %2</translation>
-    </message>
-    <message>
-        <source>Downloading %1…</source>
-        <translation>Đang tải %1…</translation>
-    </message>
-    <message>
         <source>✓ %1</source>
         <extracomment>A pet tile&apos;s label; %1 = the pet&apos;s name. Marks the chosen pet.</extracomment>
         <translation>✓ %1</translation>
-    </message>
-    <message>
-        <source>⬇ %1</source>
-        <translation>⬇ %1</translation>
     </message>
 </context>
 <context>
@@ -947,6 +908,14 @@ Nhấp chuột phải để mở menu · Esc để thoát</translation>
     <message>
         <source>snoozed</source>
         <translation>đang tạm hoãn</translation>
+    </message>
+    <message>
+        <source>Pets have moved to the gallery</source>
+        <translation>Thú cưng đã chuyển sang thư viện riêng</translation>
+    </message>
+    <message>
+        <source>Agent Pet now includes only VPet. Additional pets are available as separate packs. Import them from the &lt;a href=&quot;https://github.com/WindyWin/agent-pet-gallery/releases&quot;&gt;pet gallery&lt;/a&gt;. VPet is selected for now.</source>
+        <translation>Agent Pet hiện chỉ tích hợp VPet. Các thú cưng khác được cung cấp dưới dạng gói riêng. Bạn có thể nhập gói từ &lt;a href=&quot;https://github.com/WindyWin/agent-pet-gallery/releases&quot;&gt;thư viện thú cưng&lt;/a&gt;. Hiện tại, VPet đã được chọn.</translation>
     </message>
     <message>
         <source>Artwork unavailable
