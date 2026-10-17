@@ -539,6 +539,14 @@ private slots:
         QTemporaryDir temp; QVERIFY(temp.isValid()); // Selects a separate pipe, away from a running pet.
 #endif
         const auto previous = qgetenv("XDG_RUNTIME_DIR"); qputenv("XDG_RUNTIME_DIR", temp.path().toUtf8());
+        // Windows CI runs several animation suites alongside this test. Process startup and
+        // native host discovery can exceed one second under that load; keep a bounded
+        // deadline without treating scheduler delays as a transport failure.
+#ifdef Q_OS_WIN
+        constexpr int commandTimeoutMs = 5000;
+#else
+        constexpr int commandTimeoutMs = 1000;
+#endif
         auto run = [&](QStringList args, QByteArray data, bool closeInput = true) {
             QProcess process; process.setProgram(APP_PATH); process.setArguments(args);
             auto environment = QProcessEnvironment::systemEnvironment();
@@ -546,10 +554,19 @@ private slots:
             environment.insert("QT_QPA_PLATFORM", "nonexistent");
             process.setProcessEnvironment(environment);
             QElapsedTimer timer; timer.start(); process.start();
-            if (!process.waitForStarted(1000)) return -99;
+            if (!process.waitForStarted(commandTimeoutMs)) {
+                qWarning() << "Command did not start:" << args << process.errorString();
+                return -99;
+            }
             process.write(data); if (closeInput) process.closeWriteChannel();
-            if (!process.waitForFinished(1000)) { process.kill(); process.waitForFinished(); return -98; }
-            if (!process.readAllStandardOutput().isEmpty() || timer.elapsed() >= 1000) return -97;
+            if (!process.waitForFinished(commandTimeoutMs)) {
+                qWarning() << "Command timed out:" << args << "after" << timer.elapsed() << "ms"
+                           << process.errorString();
+                process.kill(); process.waitForFinished();
+                qWarning() << "Command stderr:" << process.readAllStandardError();
+                return -98;
+            }
+            if (!process.readAllStandardOutput().isEmpty() || timer.elapsed() >= commandTimeoutMs) return -97;
             if (args[0] == "hook" && !process.readAllStandardError().isEmpty()) return -96;
             return process.exitCode();
         };
