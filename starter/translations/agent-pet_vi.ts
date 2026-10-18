@@ -253,6 +253,10 @@ Nguồn: %6</translation>
         <translation>Gói Agent Pet (*.agentpet)</translation>
     </message>
     <message>
+        <source>Import VPet mod…</source>
+        <translation>Nhập mod VPet…</translation>
+    </message>
+    <message>
         <source> — No source (manual updates only)</source>
         <translation> — Không có nguồn (chỉ cập nhật thủ công)</translation>
     </message>
@@ -724,6 +728,85 @@ Nguồn: %6</translation>
     <message>
         <source>Automatic installation is not available on Windows.</source>
         <translation>Cài đặt tự động không khả dụng trên Windows.</translation>
+    </message>
+</context>
+<context>
+    <name>VPetImport</name>
+    <message>
+        <source>Import VPet mod</source>
+        <translation>Nhập mod VPet</translation>
+    </message>
+    <message>
+        <source>Bring your own mod and its licence text. Only LPS metadata and PNG artwork are read; code plugins are ignored. Nothing is downloaded from Steam.</source>
+        <translation>Hãy cung cấp mod và văn bản giấy phép của mod. Ứng dụng chỉ đọc siêu dữ liệu LPS và ảnh PNG, bỏ qua plugin mã nguồn và không tải gì từ Steam.</translation>
+    </message>
+    <message>
+        <source>Mod folder, ZIP or pet definition</source>
+        <translation>Thư mục mod, ZIP hoặc tệp định nghĩa thú cưng</translation>
+    </message>
+    <message>
+        <source>Choose folder…</source>
+        <translation>Chọn thư mục…</translation>
+    </message>
+    <message>
+        <source>Choose ZIP or LPS…</source>
+        <translation>Chọn ZIP hoặc LPS…</translation>
+    </message>
+    <message>
+        <source>Choose mod folder</source>
+        <translation>Chọn thư mục mod</translation>
+    </message>
+    <message>
+        <source>Choose mod</source>
+        <translation>Chọn mod</translation>
+    </message>
+    <message>
+        <source>VPet mods (*.zip *.lps)</source>
+        <translation>Mod VPet (*.zip *.lps)</translation>
+    </message>
+    <message>
+        <source>Choose an installed Steam workshop item…</source>
+        <translation>Chọn một mục Steam Workshop đã cài…</translation>
+    </message>
+    <message>
+        <source>Installed workshop items</source>
+        <translation>Các mục Workshop đã cài</translation>
+    </message>
+    <message>
+        <source>Pet id</source>
+        <translation>Mã thú cưng</translation>
+    </message>
+    <message>
+        <source>Use mod metadata if available</source>
+        <translation>Dùng siêu dữ liệu của mod nếu có</translation>
+    </message>
+    <message>
+        <source>Author</source>
+        <translation>Tác giả</translation>
+    </message>
+    <message>
+        <source>Licence</source>
+        <translation>Giấy phép</translation>
+    </message>
+    <message>
+        <source>Choose licence text…</source>
+        <translation>Chọn văn bản giấy phép…</translation>
+    </message>
+    <message>
+        <source>Choose licence text</source>
+        <translation>Chọn văn bản giấy phép</translation>
+    </message>
+    <message>
+        <source>Text files (*.txt *.md);;All files (*)</source>
+        <translation>Tệp văn bản (*.txt *.md);;Tất cả tệp (*)</translation>
+    </message>
+    <message>
+        <source>Convert and review…</source>
+        <translation>Chuyển đổi và xem lại…</translation>
+    </message>
+    <message>
+        <source>Converting artwork… You can close this window to discard the result.</source>
+        <translation>Đang chuyển đổi ảnh… Bạn có thể đóng cửa sổ này để bỏ kết quả.</translation>
     </message>
 </context>
 <context>

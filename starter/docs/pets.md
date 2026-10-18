@@ -286,13 +286,44 @@ left available to older app versions; new versions no longer publish to it.
 
 ## Convert a VPet workshop mod
 
-Phase 3 provides a converter for an already downloaded VPet-Simulator mod with
-`pet/<name>.lps` and its graph folder. Bring the mod and its artwork licence;
-conversion does not grant permission to redistribute it. No workshop code is
-loaded. Use Python 3 and install Pillow (`python -m pip install Pillow`) when
-idle frames exceed the 512-pixel preview limit.
+In **Settings → Pet (Character) → Import VPet mod…**, choose a mod folder,
+ZIP, or `pet/<name>.lps`. The installed Steam workshop list finds local items
+for VPet-Simulator (app **1920960**) across Steam libraries. Discovery is
+read-only: it does not subscribe, download, or load workshop code. A workshop
+item can contain several pets or only code; select one pet definition when
+needed. On Linux/macOS, a copied mod folder works without Steam.
 
-From `starter/`, with the phase 2 application built:
+Provide a unique lowercase pet id and the original artwork licence text.
+Author and licence labels can come from the mod metadata. **Convert and
+review…** shows the conversion report, credit, licence and any replacement
+warning; installation requires **Accept terms and install**. Restart to apply
+it. Conversion runs in the background; closing its window discards the result.
+Bring your own mods and licences: conversion grants no redistribution rights.
+
+The native importer requires no Python:
+
+```bash
+agent-pet import --vpet-mod /path/to/mod.zip --id my-pet \
+  --author 'Original artist' --license 'LicenseRef-Custom' \
+  --terms /path/to/artwork-terms.txt --report my-pet-report.json
+```
+
+Use `agent-pet-cli.exe` on Windows. The command prints the report and terms and
+requires `yes` before installing (or queuing while the app runs). `--report` is
+optional and creates a new JSON file; it will not overwrite an existing file.
+ZIP input uses the same bounded ZIP32 checks as pack import, supports Unicode
+mod names, and extracts only `.lps` and `.png`. DLLs and other files stay out of
+the extracted input. Links, traversal paths, conflicting names, more than
+20,000 entries, PNGs over 4 MiB, and more than 512 MiB of PNG data are rejected.
+The artwork itself is read without modification except a resized preview when
+needed. Steam workshop items are found under each library's
+`steamapps/workshop/content/1920960/<item>/` using `libraryfolders.vdf`;
+Windows registry, Linux native/Flatpak, and macOS Steam roots are supported.
+
+The Python authoring converter remains available to create a redistributable
+`.agentpet` archive when the artwork licence permits it. Install Pillow
+(`python -m pip install Pillow`) if idle frames exceed the 512-pixel preview
+limit. From `starter/`, with the application built:
 
 ```bash
 python scripts/convert_vpet_mod.py /path/to/mod -o my-pet.agentpet \
@@ -320,4 +351,6 @@ system. Raise points are recorded only because Agent Pet has no corresponding
 catalog field. Movement requires matching art and currently uses the template's
 speeds and geometry; review these for characters with different proportions.
 Custom graph layouts may require hand-written catalog mappings. The generated
-pack passes `pack.py` and the app's full validator before the archive is written.
+pack passes the app's full validator before consent; the Python archive workflow
+also validates through `pack.py`. Shared generated fixtures compare native and
+Python catalogs, manifests, reports, frame bytes, ordering and durations.

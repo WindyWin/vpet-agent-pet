@@ -648,3 +648,9 @@ update and remove packs; review terms before every install. Downloads are checke
 against catalog sizes and SHA-256; failed refreshes retain an offline catalog.
 See [pack sources](docs/pack-sources.md) ([Tiếng Việt](docs/pack-sources.vi.md)) for
 direct URL installation, trust warnings and publishing your own source.
+
+VPet workshop mods can be imported without Python from **Settings → Pet → Import
+VPet mod…** or `agent-pet import --vpet-mod <folder-or-zip> --id my-pet --terms
+<licence.txt>` (`agent-pet-cli.exe` on Windows). Bring your own mod and licence;
+review the conversion report and accept its terms before installing. Local Steam
+workshop discovery never downloads content. See [the pet guide](docs/pets.md#convert-a-vpet-workshop-mod).

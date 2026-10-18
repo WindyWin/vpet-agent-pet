@@ -169,25 +169,42 @@ bool validate(const QString &folder, QJsonObject &meta, QString &terms, QString 
     if (selected[0].status != PluginPack::Applied) return fail(selected[0].error);
     return true;
 }
-std::unique_ptr<Candidate> inspect(const QString &archive, QString &error, const QString &data) {
+std::unique_ptr<Candidate> stage(QString &error, const QString &data) {
     const auto base = root(data); if (!prepare(base, error)) return {};
     auto c = std::make_unique<Candidate>(); c->staging = std::make_unique<QTemporaryDir>(base + "/pack-pending/inspect-XXXXXX");
     if (!c->staging->isValid()) { error = "Cannot create staging directory."; return {}; }
-    const auto unpacked = c->staging->path() + "/payload";
-    if (!QDir().mkpath(unpacked) || !extract(archive, unpacked, error)) return {};
+    c->folder = c->staging->path() + "/payload";
+    return c;
+}
+bool inspectStaged(Candidate &c, QString &error, const QString &data) {
+    const auto base = root(data), unpacked = c.folder;
     const auto meta = object(unpacked + "/pack.json"); const auto id = meta.value("id").toString(), kind = meta.value("kind").toString();
-    if (!identity(kind, id)) { error = "Invalid pack identity or reserved id."; return {}; }
-    if (kind == "plugin" && QFileInfo(archive).size() > 80 * MiB) { error = "Plugin archive exceeds 80 MiB."; return {}; }
-    c->folder = c->staging->path() + "/validated/" + id;
-    if (!QDir().mkpath(c->staging->path() + "/validated") || !QDir().rename(unpacked, c->folder) || !validate(c->folder, c->metadata, c->terms, error)) return {};
-    if (kind == "pet") { for (const auto &pet : PetLibrary::shared().pets()) if (pet.id == id && pet.folder.isEmpty()) { error = "This pet id belongs to the bundled artwork index."; return {}; } }
+    if (!identity(kind, id)) { error = "Invalid pack identity or reserved id."; return false; }
+    c.folder = c.staging->path() + "/validated/" + id;
+    if (!QDir().mkpath(c.staging->path() + "/validated") || !QDir().rename(unpacked, c.folder) || !validate(c.folder, c.metadata, c.terms, error)) return false;
+    if (kind == "pet") { for (const auto &pet : PetLibrary::shared().pets()) if (pet.id == id && pet.folder.isEmpty()) { error = "This pet id belongs to the bundled artwork index."; return false; } }
     const auto installed = parent(base, kind) + '/' + id;
-    if (QFileInfo::exists(installed)) { const auto old = object(installed + "/pack.json"); c->oldVersion = old.value("version").toString("unknown"); c->oldSource = old.value("source").toString("unverified local content"); if (c->oldVersion.isEmpty()) c->oldVersion = "unknown"; }
+    if (QFileInfo::exists(installed)) { const auto old = object(installed + "/pack.json"); c.oldVersion = old.value("version").toString("unknown"); c.oldSource = old.value("source").toString("unverified local content"); if (c.oldVersion.isEmpty()) c.oldVersion = "unknown"; }
     if (kind == "plugin" && !QFileInfo::exists(installed)
         && QDir(parent(base, kind)).entryList(QDir::Dirs | QDir::NoDotAndDotDot).size() >= plugins::maxPacks) {
-        error = "At most 32 plugins may be installed."; return {};
+        error = "At most 32 plugins may be installed."; return false;
     }
+    return true;
+}
+static std::unique_ptr<Candidate> inspectInput(const QString &archive, QString &error, const QString &data, const VPetOptions *options, QJsonObject *report) {
+    auto c = stage(error, data); if (!c) return {};
+    if (options) {
+        if (!convertVPetMod(archive, c->folder, *options, *report, error)) return {};
+    } else if (!QDir().mkpath(c->folder) || !extract(archive, c->folder, error)) return {};
+    if (object(c->folder + "/pack.json")["kind"] == "plugin" && QFileInfo(archive).size() > 80 * MiB) { error = "Plugin archive exceeds 80 MiB."; return {}; }
+    if (!inspectStaged(*c, error, data)) return {};
     return c;
+}
+std::unique_ptr<Candidate> inspect(const QString &archive, QString &error, const QString &data) {
+    return inspectInput(archive, error, data, nullptr, nullptr);
+}
+std::unique_ptr<Candidate> inspectVPetMod(const QString &input, const VPetOptions &options, QJsonObject &report, QString &error, const QString &data) {
+    return inspectInput(input, error, data, &options, &report);
 }
 bool install(Candidate &c, QString &error, const QString &data) {
     QJsonObject meta; QString terms;
@@ -271,10 +288,37 @@ bool applyPending(QString &error, const QString &data) {
 }
 int command(const QStringList &args) {
     QString error; bool ok = false;
-    if (args.value(1) == "import" && args.size() == 3) {
-        auto c = inspect(args[2], error); if (!c) { std::fprintf(stderr, "%s\n", qPrintable(error)); return 1; }
+    if (args.value(1) == "import" && args.size() >= 3) {
+        std::unique_ptr<Candidate> c;
+        QString source = args[2];
+        if (source == "--vpet-mod") {
+            VPetOptions options; QSet<QString> seen; QString reportFile;
+            if (args.size() < 4 || (args.size() - 4) % 2) { std::fprintf(stderr, "Expected --vpet-mod <path> [--id ID] [--author AUTHOR] [--license LICENCE] --terms FILE [--report FILE]\n"); return 2; }
+            source = args[3];
+            for (int i = 4; i < args.size(); i += 2) {
+                const auto key = args[i];
+                if (seen.contains(key)) { std::fprintf(stderr, "Duplicate option.\n"); return 2; } seen.insert(key);
+                if (key == "--id") options.id = args[i + 1];
+                else if (key == "--author") options.author = args[i + 1];
+                else if (key == "--license") options.license = args[i + 1];
+                else if (key == "--terms") options.terms = args[i + 1];
+                else if (key == "--report") reportFile = args[i + 1];
+                else { std::fprintf(stderr, "Unknown VPet import option.\n"); return 2; }
+            }
+            QJsonObject report; c = inspectVPetMod(source, options, report, error);
+            if (c) {
+                const auto bytes = QJsonDocument(report).toJson();
+                std::fwrite(bytes.constData(), 1, bytes.size(), stdout);
+                if (!reportFile.isEmpty()) {
+                    QFile file(reportFile); // Never overwrite mod content, terms, or an existing report.
+                    if (!file.open(QIODevice::WriteOnly | QIODevice::NewOnly) || file.write(bytes) != bytes.size() || !file.flush()) { std::fprintf(stderr, "Cannot create report file.\n"); return 1; }
+                }
+            }
+        } else if (args.size() == 3) c = inspect(source, error);
+        else { std::fprintf(stderr, "Unexpected import arguments.\n"); return 2; }
+         if (!c) { std::fprintf(stderr, "%s\n", qPrintable(error)); return 1; }
         const auto m = c->metadata;
-        std::printf("Unverified local content: %s\n%s by %s\nVersion: %s\nLicence: %s\nSource: %s\n%s\n", qPrintable(args[2]), qPrintable(m.value("name").toString()), qPrintable(m.value("author").toString()), qPrintable(m.value("version").toString()), qPrintable(m.value("license").toString()), qPrintable(m.value("source").toString()), qPrintable(c->terms));
+        std::printf("Unverified local content: %s\n%s by %s\nVersion: %s\nLicence: %s\nSource: %s\n%s\n", qPrintable(source), qPrintable(m.value("name").toString()), qPrintable(m.value("author").toString()), qPrintable(m.value("version").toString()), qPrintable(m.value("license").toString()), qPrintable(m.value("source").toString()), qPrintable(c->terms));
         if (!c->oldVersion.isEmpty()) std::printf("Replace installed version %s (%s), including equal versions or downgrades.\n", qPrintable(c->oldVersion), qPrintable(c->oldSource));
         std::printf("Accept these terms and install? Type yes: "); std::fflush(stdout);
         char answer[16]{}; if (!std::fgets(answer, sizeof answer, stdin) || QByteArray(answer).trimmed() != "yes") return 2;
@@ -283,7 +327,7 @@ int command(const QStringList &args) {
         std::printf("Remove %s %s? Type yes: ", qPrintable(args[2]), qPrintable(args[3])); std::fflush(stdout);
         char answer[16]{}; if (!std::fgets(answer, sizeof answer, stdin) || QByteArray(answer).trimmed() != "yes") return 2;
         ok = remove(args[2], args[3], error);
-    } else { std::fprintf(stderr, "Usage: agent-pet import <file.agentpet>\n       agent-pet remove <pet|plugin> <id>\n"); return 2; }
+    } else { std::fprintf(stderr, "Usage: agent-pet import <file.agentpet>\n       agent-pet import --vpet-mod <folder|zip|lps> [--id ID] [--author AUTHOR] [--license LICENCE] --terms FILE [--report FILE]\n       agent-pet remove <pet|plugin> <id>\n"); return 2; }
     if (ok) {
         QLockFile runtime(dataFolder() + "/pack-runtime.lock");
         if (runtime.tryLock()) { ok = applyPending(error); if (ok) std::puts("Pack change installed. It takes effect on the next start."); }

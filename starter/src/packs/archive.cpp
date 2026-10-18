@@ -1,4 +1,5 @@
 #include "archive.h"
+#include "vpet_mod.h"
 #include <QDir>
 #include <QMap>
 #include <QFile>
@@ -23,9 +24,9 @@ namespace {
 quint16 u16(const QByteArray &b, int n) { return qFromLittleEndian<quint16>(b.constData() + n); }
 quint32 u32(const QByteArray &b, int n) { return qFromLittleEndian<quint32>(b.constData() + n); }
 constexpr qint64 MiB = 1024 * 1024;
-struct Entry { QByteArray name; QString path; quint32 crc, packed, size, offset; quint16 method, flags; bool directory; };
+struct Entry { QByteArray name; QString path; quint32 crc, packed, size, offset; quint16 method, flags; bool directory, selected = true; };
 }
-bool extract(const QString &path, const QString &destination, QString &error) {
+bool extract(const QString &path, const QString &destination, QString &error, bool vpetMod) {
     auto fail = [&](const QString &why) { error = why; return false; };
     QFile zip(path);
     if (!zip.open(QIODevice::ReadOnly) || zip.size() > 544 * MiB || zip.size() < 22) return fail("Cannot read archive, or archive exceeds 544 MiB.");
@@ -49,13 +50,13 @@ bool extract(const QString &path, const QString &destination, QString &error) {
         Entry e; e.flags = u16(h, 8); e.method = u16(h, 10); e.crc = u32(h, 16);
         e.packed = u32(h, 20); e.size = u32(h, 24); e.offset = u32(h, 42);
         const auto nameSize = u16(h, 28), extraSize = u16(h, 30), commentSize = u16(h, 32);
-        if (!nameSize || nameSize > 241 || u16(h, 34) || (e.flags & ~quint16(0x808)) || (e.method != 0 && e.method != 8)) return fail("Unsupported ZIP encoding, encryption or compression.");
+        if (!nameSize || nameSize > (vpetMod ? 960 : 241) || u16(h, 34) || (e.flags & ~quint16(0x808)) || (e.method != 0 && e.method != 8)) return fail("Unsupported ZIP encoding, encryption or compression.");
         e.name = zip.read(nameSize);
         QStringDecoder decoder(QStringDecoder::Utf8); e.path = decoder(e.name);
         if (decoder.hasError() || e.name.size() != nameSize) return fail("Invalid ZIP filename.");
         e.directory = e.path.endsWith('/'); if (e.directory) e.path.chop(1);
         const auto mode = (u32(h, 38) >> 16) & 0170000;
-        if ((mode && mode != (e.directory ? 0040000 : 0100000)) || !portablePath(e.path)) return fail("Unsafe ZIP path or file type: " + e.path);
+        if ((mode && mode != (e.directory ? 0040000 : 0100000)) || !(vpetMod ? modPath(e.path) : portablePath(e.path))) return fail("Unsafe ZIP path or file type: " + e.path);
         auto spelling = e.path;
         while (!spelling.isEmpty()) {
             const auto folded = spelling.toCaseFolded();
@@ -71,6 +72,13 @@ bool extract(const QString &path, const QString &destination, QString &error) {
         while (parent.contains('/')) { parent = parent.left(parent.lastIndexOf('/')); if (files.contains(parent)) return fail("ZIP file/directory collision."); directories.insert(parent); }
         qint64 limit = 8 * MiB;
         if (e.directory) { if (e.size || e.packed) return fail("Nonempty ZIP directory."); }
+        else if (vpetMod) {
+            const auto suffix = QFileInfo(e.path).suffix().toLower();
+            e.selected = suffix == "png" || suffix == "lps";
+            if (suffix == "png") { limit = 4 * MiB; png += e.size; }
+            else if (suffix == "lps") { limit = MiB; json += e.size; }
+            else limit = 544 * MiB; // Ignore plugin payloads; never extract or execute them.
+        }
         else if (e.path.endsWith(".png")) { limit = 4 * MiB; png += e.size; }
         else if (e.path.endsWith(".txt") || e.path.endsWith(".md")) { limit = MiB; terms += e.size; }
         else if (e.path.endsWith(".json")) {
@@ -96,7 +104,8 @@ bool extract(const QString &path, const QString &destination, QString &error) {
         if (!(e.flags & 8) && (u32(h, 14) != e.crc || u32(h, 18) != e.packed || u32(h, 22) != e.size)) return fail("ZIP size/checksum mismatch.");
         if (!zip.seek(zip.pos() + u16(h, 28)) || zip.pos() + e.packed > central) return fail("Invalid ZIP payload.");
         const auto target = destination + '/' + e.path;
-        if (e.directory) { if (!QDir().mkpath(target)) return fail("Cannot create staging directory."); }
+        if (!e.selected) { if (!zip.seek(zip.pos() + e.packed)) return fail("Cannot skip mod payload."); }
+        else if (e.directory) { if (!QDir().mkpath(target)) return fail("Cannot create staging directory."); }
         else {
             if (!QDir().mkpath(QFileInfo(target).path())) return fail("Cannot create staging directory.");
             QFile out(target); if (!out.open(QIODevice::WriteOnly | QIODevice::NewOnly)) return fail("Cannot create staged file.");

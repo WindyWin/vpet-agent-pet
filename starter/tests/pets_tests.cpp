@@ -5,6 +5,11 @@
 #include "animation/stage.h"
 #include "desktop/pet_picker.h"
 #include "desktop/source_browser.h"
+#include "desktop/vpet_import.h"
+#include <QLineEdit>
+#include <QPlainTextEdit>
+#include <QThread>
+#include <QSignalSpy>
 #include "packs/sources.h"
 #include "packs/updater.h"
 #include <QCheckBox>
@@ -888,6 +893,44 @@ private slots:
             if (button->text() == "Install…" || button->text() == "Cancel download" || button->text() == "Remove source")
                 QVERIFY(!button->isEnabled());
         browser->reject(); QTRY_VERIFY(browser.isNull());
+    }
+    void vpetImportReviewsBeforeInstallation() {
+        QTemporaryDir source; QVERIFY(source.isValid());
+        QVERIFY(QDir().mkpath(source.path() + "/pet/cat/Default/Nomal/1"));
+        QFile definition(source.path() + "/pet/cat.lps"); QVERIFY(definition.open(QIODevice::WriteOnly));
+        definition.write("pet#cat:|path#cat:|author#Fixture artist:|license#CC0-1.0:|\n"); definition.close();
+        QVERIFY(QFile::copy(QString(PET_SOURCE) + "/tests/fixtures/local-pets/local-cat/idle/_000_100.png",
+                           source.path() + "/pet/cat/Default/Nomal/1/_000_100.png"));
+        QFile terms(source.path() + "/terms.txt"); QVERIFY(terms.open(QIODevice::WriteOnly)); terms.write("Fixture licence terms"); terms.close();
+        auto owner = std::make_unique<QWidget>(); pet::showVPetImport(owner.get());
+        auto *dialog = owner->findChild<QDialog *>(); QVERIFY(dialog);
+        dialog->findChild<QLineEdit *>("vpetModPath")->setText(source.path());
+        dialog->findChild<QLineEdit *>("vpetModTerms")->setText(terms.fileName());
+        QPushButton *convert = nullptr;
+        for (auto *button : dialog->findChildren<QPushButton *>()) if (button->text() == "Convert and review…") convert = button;
+        QVERIFY(convert); convert->click();
+        QTRY_VERIFY_WITH_TIMEOUT(dialog->findChild<QDialog *>() != nullptr, 10000);
+        QPointer<QDialog> consent = dialog->findChild<QDialog *>(); QCOMPARE(consent->windowTitle(), QString("Import pack"));
+        bool report = false, licence = false;
+        for (const auto *text : consent->findChildren<QPlainTextEdit *>()) {
+            report = report || text->toPlainText().contains("raise_points");
+            licence = licence || text->toPlainText().contains("Fixture licence terms");
+        }
+        QVERIFY(report); QVERIFY(licence);
+        owner.reset(); QVERIFY(consent.isNull()); // Closing while reviewing never installs.
+    }
+    void vpetImportCanCloseWhileConverting() {
+        QWidget owner;
+        pet::showVPetImport(&owner);
+        auto *dialog = owner.findChild<QDialog *>(); QVERIFY(dialog);
+        dialog->findChild<QLineEdit *>("vpetModPath")->setText("/nonexistent-mod");
+        QPushButton *convert = nullptr;
+        for (auto *button : dialog->findChildren<QPushButton *>()) if (button->text() == "Convert and review…") convert = button;
+        QVERIFY(convert); convert->click();
+        auto *worker = QCoreApplication::instance()->findChild<QThread *>("vpetConversion"); QVERIFY(worker);
+        QPointer<QThread> guard(worker); QPointer<QDialog> window(dialog);
+        dialog->close();
+        QTRY_VERIFY(window.isNull()); QTRY_VERIFY(guard.isNull());
     }
     void aboutCreditsTheRunningPet() {
         QTemporaryDir directory;

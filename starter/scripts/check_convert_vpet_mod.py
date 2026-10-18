@@ -1,17 +1,20 @@
 #!/usr/bin/env python3
 """Converter regression checks; tiny generated mods plus the bundled archive mapping."""
 import json
+import os
 from pathlib import Path
 import shutil
 import subprocess
 import sys
 import tempfile
 import unittest
+import zipfile
 
 from convert_vpet_mod import ROOT, TEMPLATE, convert, discover
 from add_sequences import frames_of
 
 APP = sys.argv.pop(1) if len(sys.argv) > 1 else None
+NATIVE = sys.argv.pop(1) if len(sys.argv) > 1 else None
 
 
 class ConverterTests(unittest.TestCase):
@@ -37,6 +40,29 @@ class ConverterTests(unittest.TestCase):
         shutil.copyfile(self.png, folder / 'A_000_125.png')
         shutil.copyfile(self.png, folder / 'A_001_250.png')
 
+    def compare_native(self, folder, report, source=None):
+        if not NATIVE:
+            return
+        native = self.base / 'native' / folder.name
+        report_path = self.base / 'native-report.json'
+        subprocess.run([NATIVE, str(source or self.mod), str(native), folder.name,
+                        str(self.terms), str(report_path)], check=True)
+        self.assertEqual(json.loads(report_path.read_text(encoding='utf-8')), report)
+        for name in ('animations.json', 'manifest.json', 'pet.json', 'pack.json'):
+            self.assertEqual(json.loads((native / name).read_text(encoding='utf-8')),
+                             json.loads((folder / name).read_text(encoding='utf-8')), name)
+        for file in folder.rglob('*'):
+            if file.is_file() and file.suffix != '.json':
+                self.assertEqual(file.read_bytes(), (native / file.relative_to(folder)).read_bytes())
+        shutil.rmtree(native)
+
+    def native_rejects(self, source=None):
+        if NATIVE:
+            result = subprocess.run([NATIVE, str(source or self.mod), str(self.base / 'rejected'),
+                                     'cat', str(self.terms), str(self.base / 'report.json')],
+                                    capture_output=True, text=True)
+            self.assertNotEqual(result.returncode, 0, result.stdout)
+
     def test_fallback_and_import_validation(self):
         self.add_frames('IDEL/yawning/Nomal')
         self.add_frames('Unused/Animation')
@@ -46,6 +72,7 @@ class ConverterTests(unittest.TestCase):
         (self.mod / 'pet/cat/Default/Nomal/1/ignored.dll').write_bytes(b'not code')
         folder = self.base / 'test-cat'
         report = convert(self.mod, folder, 'test-cat', terms=self.terms)
+        self.compare_native(folder, report)
         self.assertEqual(report['sequences']['IDEL/yawning/Happy']['kind'], 'normal')
         self.assertEqual(report['sequences']['Think/Nomal/A']['kind'], 'idle')
         self.assertIn('Unused/Animation', report['unused_folders'])
@@ -77,6 +104,7 @@ class ConverterTests(unittest.TestCase):
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(self.png, target)
         report = convert(self.mod, self.base / 'test-full', 'test-full', terms=self.terms)
+        self.compare_native(self.base / 'test-full', report)
         template = json.loads(TEMPLATE.read_text())
         result = json.loads((self.base / 'test-full/animations.json').read_text())
         for key in ('states', 'playback', 'variants', 'moods', 'cues', 'activity', 'moves'):
@@ -91,12 +119,72 @@ class ConverterTests(unittest.TestCase):
                 expected = [duration for _, duration, _ in frames_of(source / path)]
                 self.assertEqual([f['duration_ms'] for f in sequences[path]['frames']], expected, path)
 
+    @unittest.skipUnless(sys.platform.startswith('linux'), 'CLI data isolation uses XDG paths')
+    def test_cli_consent_and_report(self):
+        if not APP:
+            self.skipTest('Application unavailable')
+        data = self.base / 'data'
+        env = dict(os.environ, XDG_DATA_HOME=str(data), XDG_CONFIG_HOME=str(self.base / 'config'))
+        command = [APP, 'import', '--vpet-mod', str(self.mod), '--id', 'cli-cat',
+                   '--terms', str(self.terms)]
+        rejected = subprocess.run(command, input='no\n', text=True, capture_output=True, env=env)
+        self.assertEqual(rejected.returncode, 2, rejected.stderr)
+        installed = data / 'agent-pet/packs/pets/cli-cat'
+        self.assertFalse(installed.exists())
+        report = self.base / 'cli-report.json'
+        accepted = subprocess.run(command + ['--report', str(report)], input='yes\n',
+                                  text=True, capture_output=True, env=env)
+        self.assertEqual(accepted.returncode, 0, accepted.stderr)
+        self.assertTrue(installed.is_dir())
+        self.assertEqual(json.loads(report.read_text())['id'], 'cli-cat')
+        self.assertIn('Test fixture artwork terms.', accepted.stdout)
+        # A report must never overwrite the supplied licence or an existing file.
+        original = self.terms.read_bytes()
+        refused = subprocess.run(command + ['--report', str(self.terms)], input='yes\n',
+                                 text=True, capture_output=True, env=env)
+        self.assertNotEqual(refused.returncode, 0)
+        self.assertEqual(self.terms.read_bytes(), original)
+
+    def test_zip_and_duplicate_runs(self):
+        self.add_frames('IDEL/yawning/Nomal')
+        idle = self.mod / 'pet/cat/Default/Nomal/1'
+        shutil.copyfile(self.png, idle / 'B_000_400.png')
+        shutil.copyfile(self.png, idle / 'A_000_500.png')
+        shutil.copyfile(self.png, idle / '\U00010000_000_300.png')
+        shutil.copyfile(self.png, idle / '\ue000_000_200.png')
+        (idle / 'ignored.dll').write_bytes(b'not executable artwork')
+        folder = self.base / 'zip-cat'
+        report = convert(self.mod, folder, 'zip-cat', terms=self.terms)
+        archive = self.base / 'mod.zip'
+        with zipfile.ZipFile(archive, 'w', zipfile.ZIP_DEFLATED) as zip:
+            for path in self.mod.rglob('*'):
+                if path.is_file():
+                    zip.write(path, '猫mod/' + path.relative_to(self.mod).as_posix())
+        self.compare_native(folder, report, archive)
+
+    def test_zip_traversal(self):
+        archive = self.base / 'unsafe.zip'
+        with zipfile.ZipFile(archive, 'w') as zip:
+            zip.writestr('../escape.dll', b'ignored but unsafe')
+        self.native_rejects(archive)
+        self.assertFalse((self.base / 'escape.dll').exists())
+
+    def test_bad_utf8(self):
+        (self.mod / 'pet/cat.lps').write_bytes(b'pet#cat:|\xff')
+        self.native_rejects()
+
+    def test_zero_duration(self):
+        (self.mod / 'pet/cat/Default/Nomal/1/A_000_125.png').rename(
+            self.mod / 'pet/cat/Default/Nomal/1/A_000_0.png')
+        self.native_rejects()
+
     def test_missing_consent_metadata(self):
         with self.assertRaisesRegex(ValueError, 'terms'):
             convert(self.mod, self.base / 'pack', 'cat')
 
     def test_unsafe_graph_path(self):
         (self.mod / 'pet/cat.lps').write_text('pet#cat:|path#../outside:|')
+        self.native_rejects()
         with self.assertRaisesRegex(ValueError, 'Unsafe'):
             discover(self.mod)
 
@@ -106,6 +194,7 @@ class ConverterTests(unittest.TestCase):
             link.symlink_to(self.png)
         except OSError:
             self.skipTest('Symlinks unavailable')
+        self.native_rejects()
         with self.assertRaisesRegex(ValueError, 'Symlinks'):
             convert(self.mod, self.base / 'pack', 'cat', terms=self.terms)
 

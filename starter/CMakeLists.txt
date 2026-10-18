@@ -76,9 +76,11 @@ qt_add_library(pet_behavior STATIC src/behavior/runtime.cpp)
 target_include_directories(pet_behavior PUBLIC src)
 target_link_libraries(pet_behavior PUBLIC Qt6::Core)
 qt_add_library(pet_animation STATIC
-    src/packs/archive.cpp src/packs/installer.cpp
+    src/packs/archive.cpp src/packs/installer.cpp src/packs/vpet_mod.cpp src/packs/steam_workshop.cpp
     src/animation/catalog.cpp src/animation/pet_library.cpp src/animation/local_pet.cpp src/animation/player.cpp src/animation/ambient.cpp src/animation/activity.cpp
     src/animation/mood.cpp src/animation/easter_eggs.cpp src/animation/stage.cpp src/animation/plugins.cpp src/animation/event_rules.cpp)
+qt_add_resources(pet_animation vpet_conversion PREFIX "/vpet-conversion"
+    FILES assets/vpet/animations.json src/animation/cues.json)
 target_include_directories(pet_animation PUBLIC src PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/generated")
 target_link_libraries(pet_animation PUBLIC Qt6::Gui pet_behavior pet_core ZLIB::ZLIB)
 
@@ -106,7 +108,7 @@ qt_add_library(pet_sources STATIC src/packs/sources.cpp src/packs/updater.cpp)
 target_include_directories(pet_sources PUBLIC src PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/generated")
 target_link_libraries(pet_sources PUBLIC Qt6::Network pet_animation)
 qt_add_library(pet_ui STATIC
-    src/desktop/pet_window.cpp src/desktop/pack_controls.cpp src/desktop/source_browser.cpp src/desktop/overlay.cpp
+    src/desktop/pet_window.cpp src/desktop/pack_controls.cpp src/desktop/vpet_import.cpp src/desktop/source_browser.cpp src/desktop/overlay.cpp
     src/desktop/pet_picker.cpp src/desktop/plugin_list.cpp
     src/desktop/touch.cpp src/desktop/wander.cpp src/desktop/wellness.cpp src/desktop/snooze.cpp src/desktop/alert_bubble.cpp src/desktop/monitor.cpp
     src/desktop/session_list.cpp src/desktop/quota_panel.cpp src/quota/service.cpp src/updates/controller.cpp)
@@ -330,7 +332,12 @@ if(BUILD_TESTING)
         if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
             add_test(NAME pack-import COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/scripts/check_pack.py $<TARGET_FILE:agent-pet>)
         endif()
-        add_test(NAME vpet-converter COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/scripts/check_convert_vpet_mod.py $<TARGET_FILE:agent-pet>)
+        qt_add_executable(vpet-convert-fixture tests/vpet_convert_fixture.cpp)
+        target_link_libraries(vpet-convert-fixture PRIVATE pet_animation)
+        qt_add_executable(steam-workshop-tests tests/steam_workshop_tests.cpp)
+        target_link_libraries(steam-workshop-tests PRIVATE pet_animation Qt6::Test)
+        add_test(NAME steam-workshop COMMAND steam-workshop-tests)
+        add_test(NAME vpet-converter COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/scripts/check_convert_vpet_mod.py $<TARGET_FILE:${pet_cli_target}> $<TARGET_FILE:vpet-convert-fixture>)
         add_test(NAME pet-scaffold COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/scripts/check_new_pet.py)
     endif()
     if(NOT AGENT_PET_PORTABLE_CORE AND NOT APPLE AND NOT WIN32)

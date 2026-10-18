@@ -465,3 +465,39 @@ Both Settings tabs now delegate removal notifications to one handler, so the reu
   cases cover both revision states. Browser tests also check that background
   refresh preserves foreground status and settings errors remain visible. All six
   focused pack/source/import/pet/translation CTest suites passed.
+
+- `new_pet.py` rejects versions outside the pack validator's SemVer grammar or
+  32-character limit before creating any folders. Scaffold regressions cover
+  invalid release/prerelease/build identifiers, trailing whitespace, overlong
+  versions, valid prerelease/build versions and the exact 32-character boundary.
+  Invalid versions are rejected in both bundled and local modes.
+
+### Phase 7: native VPet import and local Steam discovery (2026-10-18)
+
+- Embed the existing VPet catalog and cue contract as conversion templates, without
+  duplicating bundled artwork. The C++ converter preserves the Python ordering,
+  normal/idle fallbacks, touch mapping, movement filtering and JSON report. Shared
+  generated fixtures compare output semantically and compare copied bytes, including
+  all source archive frame names when the root artwork archive is available.
+- GUI and CLI stage converted output in the existing pack transaction directory,
+  run full validation, then require licence consent. GUI conversion runs on a worker
+  with no widget access; closing the owner discards the result. Consent uses an owned
+  asynchronous dialog so window destruction cannot invalidate a stack dialog.
+- Extend the strict ZIP32 reader with an explicit mod mode. All entry paths, types,
+  local headers and expansion bounds are checked; only LPS and PNG payloads are
+  extracted. Unrelated plugin payloads are skipped, never loaded. Unicode source
+  names map to portable output names. Input and output limits bound conversion.
+- Steam discovery parses bounded Valve KeyValues files (modern and legacy library
+  forms), deduplicates canonical libraries, and visits local app 1920960 workshop
+  directories. It does not contact Steam. On this Linux host, the real
+  `~/.local/share/Steam/steamapps/libraryfolders.vdf` lists the default library and
+  `/run/media/wwindy/Game/SteamLibrary`, and `appmanifest_1920960.acf` confirms VPet
+  is installed. Neither library currently has a `workshop/content/1920960` directory.
+  Thus library format/path verification is real; installed workshop-item discovery
+  is covered by fixtures. Manual Windows workshop conversion and two independently
+  licensed real-mod acceptance runs remain unavailable locally, not claimed complete.
+- Validation: Linux Release build and all 24 CTest suites passed. After the final
+  Unicode ordering and dialog-lifetime changes, all nine affected converter,
+  Steam, import, transaction, source, update, pet, plugin and i18n suites passed
+  again. CLI tests verify refusal leaves no installed pet and reports cannot
+  overwrite licence text; GUI tests close during conversion and during consent.

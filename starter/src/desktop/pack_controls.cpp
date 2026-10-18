@@ -1,4 +1,7 @@
 #include "pack_controls.h"
+#include "vpet_import.h"
+#include <QJsonDocument>
+#include <QPointer>
 #include "source_browser.h"
 #include "packs/installer.h"
 #include "animation/pet_library.h"
@@ -21,31 +24,42 @@
 namespace pet {
 namespace {
 void message(QWidget *parent, const QString &text) {
-    QMessageBox box(QMessageBox::Information, QCoreApplication::translate("PackControls", "Pack installation"), text, QMessageBox::Ok, parent);
-    box.setTextFormat(Qt::PlainText); box.exec();
+    auto *box = new QMessageBox(QMessageBox::Information, QCoreApplication::translate("PackControls", "Pack installation"), text, QMessageBox::Ok, parent);
+    box->setAttribute(Qt::WA_DeleteOnClose); box->setTextFormat(Qt::PlainText); box->open();
 }
 }
 void importPack(QWidget *parent, const QString &path) {
     QString error; auto candidate = packs::inspect(path, error);
     if (!candidate) { message(parent, error); return; }
-    QDialog dialog(parent); dialog.setWindowTitle(QCoreApplication::translate("PackControls", "Import pack")); dialog.resize(560, 520);
-    auto *layout = new QVBoxLayout(&dialog); const auto m = candidate->metadata;
+    reviewPack(parent, path, std::move(candidate));
+}
+void reviewPack(QWidget *parent, const QString &path, std::unique_ptr<packs::Candidate> candidate, const QJsonObject &report) {
+    auto *dialog = new QDialog(parent); dialog->setAttribute(Qt::WA_DeleteOnClose); dialog->setWindowTitle(QCoreApplication::translate("PackControls", "Import pack")); dialog->resize(560, 520);
+    auto *layout = new QVBoxLayout(dialog); const auto m = candidate->metadata;
     auto *label = new QLabel(QCoreApplication::translate("PackControls", "Unverified local content: %1\n%2 by %3\nVersion: %4\nLicence: %5\nSource: %6")
-        .arg(path, m.value("name").toString(), m.value("author").toString(), m.value("version").toString(), m.value("license").toString(), m.value("source").toString()), &dialog);
+        .arg(path, m.value("name").toString(), m.value("author").toString(), m.value("version").toString(), m.value("license").toString(), m.value("source").toString()), dialog);
     label->setTextFormat(Qt::PlainText); label->setWordWrap(true); layout->addWidget(label);
     if (!candidate->oldVersion.isEmpty()) {
         auto *replace = new QLabel(QCoreApplication::translate("PackControls", "Replace installed version %1 (%2) with %3. This also permits an equal version or a downgrade.")
-            .arg(candidate->oldVersion, candidate->oldSource, m.value("version").toString()), &dialog);
+            .arg(candidate->oldVersion, candidate->oldSource, m.value("version").toString()), dialog);
         replace->setTextFormat(Qt::PlainText); replace->setWordWrap(true); layout->addWidget(replace);
     }
-    auto *terms = new QPlainTextEdit(candidate->terms, &dialog); terms->setReadOnly(true); layout->addWidget(terms);
-    auto *buttons = new QDialogButtonBox(QDialogButtonBox::Cancel, &dialog);
+    auto *terms = new QPlainTextEdit(candidate->terms, dialog); terms->setReadOnly(true); layout->addWidget(terms);
+    auto *buttons = new QDialogButtonBox(QDialogButtonBox::Cancel, dialog);
     auto *accept = buttons->addButton(QCoreApplication::translate("PackControls", "Accept terms and install"), QDialogButtonBox::AcceptRole);
-    QObject::connect(accept, &QPushButton::clicked, &dialog, &QDialog::accept);
-    QObject::connect(buttons, &QDialogButtonBox::rejected, &dialog, &QDialog::reject); layout->addWidget(buttons);
-    if (dialog.exec() != QDialog::Accepted) return;
-    if (!packs::install(*candidate, error)) message(parent, error);
-    else message(parent, QCoreApplication::translate("PackControls", "Pack change queued. Restart Agent Pet to apply it."));
+    QObject::connect(accept, &QPushButton::clicked, dialog, &QDialog::accept);
+    QObject::connect(buttons, &QDialogButtonBox::rejected, dialog, &QDialog::reject); layout->addWidget(buttons);
+    if (!report.isEmpty()) {
+        auto *conversion = new QPlainTextEdit(QString::fromUtf8(QJsonDocument(report).toJson()), dialog);
+        conversion->setReadOnly(true); layout->insertWidget(layout->count() - 1, conversion);
+    }
+    auto shared = std::shared_ptr<packs::Candidate>(std::move(candidate));
+    QObject::connect(dialog, &QDialog::accepted, dialog, [shared, owner = QPointer<QWidget>(parent)] {
+        QString error;
+        if (!packs::install(*shared, error)) { if (owner) message(owner, error); }
+        else if (owner) message(owner, QCoreApplication::translate("PackControls", "Pack change queued. Restart Agent Pet to apply it."));
+    });
+    dialog->open();
 }
 QWidget *packControls(QWidget *parent, const QString &kind, std::function<void(const QString &, const QString &)> removed) {
     auto *widget = new QWidget(parent); auto *layout = new QVBoxLayout(widget);
@@ -66,6 +80,13 @@ QWidget *packControls(QWidget *parent, const QString &kind, std::function<void(c
         const auto path = QFileDialog::getOpenFileName(widget, QCoreApplication::translate("PackControls", "Import pack"), {}, QCoreApplication::translate("PackControls", "Agent Pet packs (*.agentpet)"));
         if (!path.isEmpty()) importPack(widget, path);
     });
+    if (kind == "pet") {
+        auto *mod = new QPushButton(QCoreApplication::translate("PackControls", "Import VPet mod…"), widget); layout->addWidget(mod);
+        QObject::connect(mod, &QPushButton::clicked, widget, [widget] {
+            auto *settings = widget->window();
+            showVPetImport(settings->parentWidget() ? settings->parentWidget() : settings);
+        });
+    }
     auto *choices = new QComboBox(widget); choices->setSizeAdjustPolicy(QComboBox::AdjustToMinimumContentsLengthWithIcon);
     choices->setMinimumContentsLength(24); layout->addWidget(choices);
     auto &library = PetLibrary::shared();

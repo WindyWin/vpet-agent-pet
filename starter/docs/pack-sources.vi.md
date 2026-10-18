@@ -91,3 +91,31 @@ chuẩn bị từ nguồn bị xóa sẽ bị bỏ ở lần khởi động sau.
 khôi phục nguồn gốc hoặc quyền cũ; cần cài thủ công phiên bản mới hơn từ danh mục.
 Tắt cập nhật gói tự động dừng các lượt tải tiếp theo; bản cập nhật đã xác minh và
 chuẩn bị vẫn chờ lần khởi động sau.
+
+## Nhập mod VPet đã có trên máy
+
+Trong **Cài đặt → Thú cưng → Nhập mod VPet…**, chọn thư mục mod, tệp ZIP hoặc
+`pet/<tên>.lps`. Danh sách Steam Workshop tìm các mục VPet-Simulator (app
+1920960) đã cài trong các thư viện Steam. Ứng dụng chỉ đọc dữ liệu tại máy,
+không đăng ký, tải xuống hay chạy plugin mã nguồn. Có thể dùng thư mục mod
+được sao chép sang Linux/macOS mà không cần Steam.
+
+Cung cấp mã thú cưng riêng, tác giả và giấy phép nếu mod chưa khai báo, cùng
+tệp văn bản giấy phép gốc. Chọn **Chuyển đổi và xem lại…**, kiểm tra báo cáo,
+điều khoản và thông báo thay thế trước khi chấp nhận cài. Khởi động lại để áp
+dụng. Đóng cửa sổ chuyển đổi sẽ bỏ kết quả. Người dùng tự cung cấp mod và
+quyền sử dụng; chuyển đổi không cấp quyền phân phối lại tác phẩm.
+
+Không cần Python:
+
+```sh
+agent-pet import --vpet-mod /duong-dan/mod.zip --id my-pet \
+  --author 'Tác giả gốc' --license 'LicenseRef-Custom' \
+  --terms /duong-dan/giay-phep.txt --report my-pet-report.json
+```
+
+Trên Windows dùng `agent-pet-cli.exe`. Lệnh hiển thị báo cáo và điều khoản,
+yêu cầu nhập `yes` để cài. `--report` chỉ tạo tệp mới, không ghi đè tệp có sẵn.
+Chỉ siêu dữ liệu LPS và ảnh PNG được chuyển đổi; DLL và các tệp khác bị bỏ qua.
+Báo cáo ghi ánh xạ chính xác/dự phòng, cue, thư mục không dùng, tag và raise point.
+Chuyển động chỉ dùng khi có ảnh khớp; raise point chỉ được lưu trong báo cáo.
