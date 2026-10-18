@@ -24,23 +24,24 @@ Use **Add source…** with an HTTPS catalog URL. The warning explains that the s
 operator controls its contents and updates. Third-party sources are labelled in
 the source selector. A checksum proves agreement with that catalog, not authorship
 or redistribution permission. Metadata, descriptions and setup notes are plain text.
-Every installation, including updates and changes of source, requires consent.
+Manual installations and changes of source require consent. Automatic updates
+require separate per-source permission and unchanged terms (see below).
 
 **Install from URL…** accepts an HTTPS `.agentpet` link without a catalog. It warns
 that this download has no expected digest. The archive limits, compatibility checks
 and full terms confirmation still apply. Local file imports remain available.
 
 **Remove source** removes a third-party source from the list; it never uninstalls
-its packs. The built-in official source cannot be removed, but no refresh runs in
-the background. Selecting a pack fetches its PNG preview. Browsing a cached catalog
+its packs. The built-in official source cannot be removed. Background checks only
+contact sources of installed packs when automatic checks are enabled (see below). Selecting a pack fetches its PNG preview. Browsing a cached catalog
 works offline; previews may be unavailable. A failed refresh retains the last
 valid catalog. Packs missing from a newer catalog remain installed and can still be
 removed with Settings' existing **Remove installed pack…** control.
 
 Configuration and catalog caches live under `<data>/sources/`, in the same per-user
 application data location as local packs. A read-only or package-managed application
-install does not prevent installing packs. The browser offers manual updates;
-background updates and persisted automatic-update consent belong to phase 6.
+install does not prevent installing packs. The browser offers manual updates and
+per-source automatic updates; see “Updates for installed packs”.
 
 ## Publishing a source
 

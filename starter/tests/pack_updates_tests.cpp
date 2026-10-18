@@ -90,6 +90,36 @@ protected:
 class PackUpdatesTests : public QObject {
     Q_OBJECT
 private slots:
+    void failedSourceRemovalPreservesRevision_data() {
+        QTest::addColumn<bool>("existingRevision");
+        QTest::newRow("initial revision") << false;
+        QTest::newRow("recorded revision") << true;
+    }
+    void failedSourceRemovalPreservesRevision() {
+        QFETCH(bool, existingRevision);
+        QTemporaryDir data; QString error; QVERIFY2(seed(data.path(), error), qPrintable(error));
+        SourceStore store(data.path() + "/sources");
+        const auto revision = data.path() + "/sources/" + QString::fromLatin1(QCryptographicHash::hash(source.toUtf8(), QCryptographicHash::Sha256).toHex()) + ".revision";
+        if (existingRevision) {
+            QVERIFY(store.remove(source, error)); QVERIFY(store.add(source, error));
+            auto c = candidate(data.path(), error); QVERIFY(c);
+            c->origin = installationOrigin(*c, source, QString(64, 'a'), data.path());
+            QVERIFY(install(*c, error, data.path())); QVERIFY(applyPending(error, data.path()));
+        }
+        Updater updater(data.path()); QVERIFY(updater.setAutomatic(source, true, error));
+        const auto before = sourceRevision(source, data.path());
+        const auto sources = data.path() + "/sources/sources.json";
+        const auto permissions = QFile::permissions(sources);
+        QVERIFY(QFile::setPermissions(sources, QFileDevice::ReadOwner | QFileDevice::ReadUser));
+        const bool removed = store.remove(source, error);
+        QVERIFY(QFile::setPermissions(sources, permissions));
+        QVERIFY(!removed); QVERIFY(!error.isEmpty());
+        QCOMPARE(sourceRevision(source, data.path()), before);
+        QCOMPARE(QFileInfo::exists(revision), existingRevision);
+        QVERIFY(!packOrigin("pet", "local-cat", data.path()).isEmpty());
+        QVERIFY(updater.automatic(source));
+        QVERIFY(store.urls(error).contains(source));
+    }
     void originsAndRestartRecovery() {
         QTemporaryDir data; QString error; QVERIFY2(seed(data.path(), error), qPrintable(error));
         QCOMPARE(packOrigin("pet", "local-cat", data.path())["source"].toString(), source);

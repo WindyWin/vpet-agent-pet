@@ -458,3 +458,10 @@ Both Settings tabs now delegate removal notifications to one handler, so the reu
   persisted throttling, corrupt caches/settings, payload/origin crash recovery
   and rollback when the origin cannot be saved. Asset verification passed for
   all 148 VPet sequences; Vietnamese strings and usage docs are updated.
+
+- Review follow-up (2026-10-18): failed source removal now restores the prior
+  revision (or removes a newly created sidecar), preserving installed origins and
+  automatic-update permission when the source list cannot be saved. Regression
+  cases cover both revision states. Browser tests also check that background
+  refresh preserves foreground status and settings errors remain visible. All six
+  focused pack/source/import/pet/translation CTest suites passed.

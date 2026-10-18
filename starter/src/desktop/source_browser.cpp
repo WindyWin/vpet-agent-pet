@@ -59,7 +59,7 @@ SourceBrowser::SourceBrowser(QWidget *parent, const QString &sourceFolder) : QDi
         if (value && !confirm(tr("Automatic pack updates"), tr("Allow background updates from %1? Only packs installed from this source are eligible. Changed terms require manual acceptance. Updates apply on the next start.").arg(source), tr("Enable automatic updates"))) {
             automatic_->blockSignals(true); automatic_->setChecked(false); automatic_->blockSignals(false); return;
         }
-        QString error; if (!updater->setAutomatic(source, value, error)) { status_->setText(error); loadCatalog(); }
+        QString error; if (!updater->setAutomatic(source, value, error)) { loadCatalog(); status_->setText(error); }
     });
     list_ = new QListWidget(this); list_->setAccessibleName(tr("Available packs")); layout->addWidget(list_, 1);
     auto *info = new QHBoxLayout; preview_ = label(this); preview_->setFixedSize(128, 128); info->addWidget(preview_);
@@ -120,7 +120,12 @@ SourceBrowser::SourceBrowser(QWidget *parent, const QString &sourceFolder) : QDi
             background_->setText(updater->message());
             if (!working_) cancel_->setEnabled(updater->busy());
             automatic_->blockSignals(true); automatic_->setChecked(updater->automatic(sources_->currentData().toString())); automatic_->blockSignals(false);
-            if (!working_) { suppressPreview_ = true; const auto row = list_->currentRow(); loadCatalog(); list_->setCurrentRow(row); suppressPreview_ = false; }
+            if (!working_) {
+                const auto currentStatus = status_->text();
+                suppressPreview_ = true; const auto row = list_->currentRow();
+                loadCatalog(); list_->setCurrentRow(row); suppressPreview_ = false;
+                status_->setText(currentStatus);
+            }
         });
         connect(updater, &packs::Updater::progress, this, [this](qint64 bytes, qint64 total) {
             if (!working_) cancel_->setEnabled(true);

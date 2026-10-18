@@ -139,8 +139,24 @@ bool SourceStore::remove(const QString &url, QString &error) {
     QDir().mkpath(folder_); QLockFile lock(folder_ + "/sources.lock");
     if (!lock.tryLock()) { error = PackSources::tr("Another source change is in progress."); return false; }
     auto list = urls(error); if (!error.isEmpty()) return false;
-    if (!write(cachePath(url).chopped(5) + ".revision", QUuid::createUuid().toByteArray(QUuid::WithoutBraces), error)) return false;
-    list.removeAll(url); return save(list, error);
+    const auto revisionPath = cachePath(url).chopped(5) + ".revision";
+    QFile previous(revisionPath); const bool hadRevision = previous.exists();
+    QByteArray previousBytes;
+    if (hadRevision) {
+        if (!previous.open(QIODevice::ReadOnly) || previous.size() > 64) {
+            error = PackSources::tr("Cannot read pack sources."); return false;
+        }
+        previousBytes = previous.readAll(); previous.close();
+    }
+    if (!write(revisionPath, QUuid::createUuid().toByteArray(QUuid::WithoutBraces), error)) return false;
+    list.removeAll(url);
+    if (save(list, error)) return true;
+    // A failed removal must retain the source's prior origins and consent too.
+    // Keep save's error; if rollback also fails, the new revision fails closed.
+    QString rollbackError;
+    const bool restored = hadRevision ? write(revisionPath, previousBytes, rollbackError) : QFile::remove(revisionPath);
+    if (!restored) qWarning("Cannot restore pack source revision after failed source removal.");
+    return false;
 }
 QVector<Entry> SourceStore::cached(const QString &url, QString &error) const {
     error.clear(); QVector<Entry> entries; QFile file(cachePath(url)); if (!file.exists()) return entries;

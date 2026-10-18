@@ -20,21 +20,23 @@ trình duyệt hoặc cầu nối bên ngoài theo hướng dẫn; cài dữ li�
 Chọn **Thêm nguồn…**, nhập URL HTTPS của danh mục và đọc cảnh báo: người vận hành
 nguồn kiểm soát nội dung và cập nhật. Nguồn này được ghi rõ là bên thứ ba. Mã băm
 chỉ xác nhận tệp khớp danh mục, không chứng minh tác giả hoặc quyền phân phối.
-Mọi lần cài và cập nhật đều yêu cầu chấp nhận điều khoản.
+Cài đặt thủ công và đổi nguồn đều yêu cầu chấp nhận điều khoản. Cập nhật tự động
+cần quyền riêng theo từng nguồn và điều khoản không thay đổi (xem bên dưới).
 
 **Cài từ URL…** nhận liên kết HTTPS tới `.agentpet`. Tệp tải trực tiếp không có mã
 băm để đối chiếu với danh mục và được cảnh báo rõ. Giới hạn gói, kiểm tra tương thích
 và xác nhận điều khoản vẫn áp dụng. Nhập tệp cục bộ vẫn có sẵn.
 
 **Xóa nguồn** chỉ bỏ nguồn bên thứ ba khỏi danh sách, không xóa gói đã cài. Không thể
-xóa nguồn chính thức, nhưng ứng dụng không tự làm mới nền. Chọn gói sẽ tải ảnh xem
+xóa nguồn chính thức. Khi bật kiểm tra tự động, ứng dụng chỉ kiểm tra nền các nguồn
+của gói đã cài (xem bên dưới). Chọn gói sẽ tải ảnh xem
 trước. Danh mục hợp lệ gần nhất được lưu để duyệt ngoại tuyến; ảnh có thể không tải
 được. Làm mới thất bại không ghi đè danh mục đã lưu. Gói biến mất khỏi danh mục mới
 không bị xóa; vẫn có thể xóa bằng nút **Xóa gói đã cài…** trong Cài đặt.
 
 Nguồn và bộ nhớ đệm nằm trong `<data>/sources/` của người dùng. Có thể cài gói ngay
-cả khi ứng dụng nằm ở nơi chỉ đọc hoặc do trình quản lý gói cài đặt. Giai đoạn này
-chỉ cập nhật thủ công; cập nhật tự động và quyền cập nhật sẽ thuộc giai đoạn 6.
+cả khi ứng dụng nằm ở nơi chỉ đọc hoặc do trình quản lý gói cài đặt. Trình duyệt hỗ
+trợ cập nhật thủ công và tự động theo từng nguồn; xem “Cập nhật gói đã cài”.
 
 ## Xuất bản nguồn
 

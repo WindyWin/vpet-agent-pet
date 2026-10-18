@@ -6,6 +6,9 @@
 #include "desktop/pet_picker.h"
 #include "desktop/source_browser.h"
 #include "packs/sources.h"
+#include "packs/updater.h"
+#include <QCheckBox>
+#include <QLockFile>
 #include <QListWidget>
 #include <QPointer>
 #include "desktop/pet_window.h"
@@ -849,6 +852,23 @@ private slots:
         // completed() calls received() synchronously; deletion occurs inside consent.exec().
         emit downloads.first()->completed(archive);
         QVERIFY(sawTerms); QVERIFY(browser.isNull());
+    }
+    void sourceBrowserPreservesForegroundStatus() {
+        QTemporaryDir directory; QString error;
+        pet::packs::Updater updater(directory.path());
+        QVERIFY(updater.setAutomatic(pet::packs::officialSource(), true, error));
+        pet::SourceBrowser browser(nullptr, directory.path() + "/sources");
+        QLabel *status = nullptr;
+        for (auto *label : browser.findChildren<QLabel *>())
+            if (label->textInteractionFlags() == Qt::TextSelectableByMouse) status = label;
+        QVERIFY(status);
+        const QString queued = "Pack change queued. Restart Agent Pet to apply it.";
+        status->setText(queued); emit updater.changed(); QCOMPARE(status->text(), queued);
+        auto *automatic = browser.findChild<QCheckBox *>(); QVERIFY(automatic); QVERIFY(automatic->isChecked());
+        QLockFile lock(directory.path() + "/sources/updates.lock"); QVERIFY(lock.tryLock());
+        automatic->setChecked(false);
+        QCOMPARE(status->text(), QString("Another pack update settings change is in progress."));
+        QVERIFY(automatic->isChecked());
     }
     void sourceBrowserShowsCachedPacksWithoutRefreshing() {
         QTemporaryDir directory;
