@@ -17,16 +17,23 @@
 #include <cstdio>
 
 namespace pet {
-static QByteArray pluginSource(const QString &executable) {
+static QByteArray pluginSource(const QString &executable, const char *body) {
     const auto literal = QJsonDocument(QJsonArray{executable}).toJson(QJsonDocument::Compact);
-    return "const executable = " + literal.mid(1, literal.size() - 2) + ";\n" + openCodePluginBody;
+    return "const executable = " + literal.mid(1, literal.size() - 2) + ";\n" + body;
+}
+static QByteArray pluginSource(const QString &executable) {
+    return pluginSource(executable, openCodePluginBody);
 }
 static bool ownedPlugin(const QByteArray &source) {
     const QByteArray prefix = "const executable = ";
     const int end = source.indexOf(";\n");
     if (!source.startsWith(prefix) || end < prefix.size()) return false;
     const auto values = QJsonDocument::fromJson("[" + source.mid(prefix.size(), end - prefix.size()) + "]").array();
-    return values.size() == 1 && values.first().isString() && source == pluginSource(values.first().toString());
+    // Byte identity against every released template; user-modified files stay refused.
+    // The legacy body lets enable migrate V1-era installs after an upgrade.
+    return values.size() == 1 && values.first().isString()
+        && (source == pluginSource(values.first().toString())
+            || source == pluginSource(values.first().toString(), openCodePluginLegacyBody));
 }
 static bool ownedNamedHandler(QJsonObject handler, const QString &event) {
     const auto suffix = " --event " + event;

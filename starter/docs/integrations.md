@@ -238,17 +238,21 @@ metadata. It uses a bounded serial queue and an argument-array subprocess launch
 missing executables or a closed pet do not reject client callbacks. Setup refuses
 to overwrite or delete an edited/foreign file at its target path. A single global
 or workspace installation is recommended: OpenCode can load both copies, causing
-duplicate notifications.
+duplicate notifications. The same file serves OpenCode 1 through its hook object
+and OpenCode 2 through the `setup(ctx)` definition; the plugin recognizes the
+previous V1-only file on enable and migrates it in place. OpenCode 2 reconciles
+this plugin per active location and every instance receives the server-wide event
+stream, so identical public events are forwarded once by event id.
 
 | OpenCode callback | Pet behavior |
 | --- | --- |
-| Session created/updated | Refresh identity, parent metadata; can autostart |
-| Chat message | Thinking; new observed turn |
+| Session created (OpenCode 2; created/updated on OpenCode 1) | Refresh identity, parent metadata; can autostart |
+| Prompt (OpenCode 2) / chat message (OpenCode 1) | Thinking; new observed turn |
 | Tool before/after | Reading/working; correlate by call ID |
-| Tool part with error status | Error, removing the failed tool; no error text forwarded |
-| Permission asked (legacy SDK: updated) / question asked | Attention for approval/input |
-| Session error | Failed turn; typed MessageAbortedError becomes interruption |
-| Session idle | Finished, or child session end; suppressed after error until the next chat message |
+| Tool completion with failure (OpenCode 2 hook error; OpenCode 1 tool part error) | Error, removing the failed tool; no error text forwarded |
+| Permission asked (legacy SDK: updated) / question asked or OpenCode 2 form created | Attention for approval/input |
+| Execution failed/interrupted (OpenCode 2) or session error | Failed turn; OpenCode 1 typed MessageAbortedError becomes interruption |
+| Execution succeeded (OpenCode 2) or session idle | Finished, or child session end; suppressed after error until the next prompt |
 | Session deleted | Remove session |
 
 Antigravity's named hooks use `--event EVENT` because its payload has no hook name.
@@ -264,10 +268,13 @@ returns `{"decision":"allow"}` (delegates to the client's policy, never
 `{}`. Claude, Codex and OpenCode callbacks remain silent. Antigravity's general
 permission prompts, session closure and child relationships are not inferred.
 
-Contract sources reviewed 2026-10-14: [OpenCode plugins](https://opencode.ai/docs/plugins/)
-and [Antigravity hooks](https://antigravity.google/docs/hooks). OpenCode CLI 1.19.0
-is installed on the development host; its local plugin declarations are 1.18.1.
-Antigravity is not installed. Automated synthetic and subprocess tests do not
-establish live compatibility or a minimum supported client version. Live turns,
-permissions, concurrent tools, interruption, reload, autostart and IDE focus still
-need acceptance on the actual clients and operating systems. See [ADR 0041](adr/0041-additional-agent-providers.md).
+Contract sources reviewed 2026-10-18: [OpenCode 2 plugins](https://opencode.ai/v2/docs/build/plugins/),
+its [V1 plugin migration](https://opencode.ai/v2/docs/build/plugins/migrate-v1/), and
+[Antigravity hooks](https://antigravity.google/docs/hooks). OpenCode CLI 2.0.29 is
+installed on the development host; the event payloads and hook shapes were verified
+live there for the OpenCode 2 bridge (session created, execution ended, permission,
+tool hooks and prompt hook). Antigravity is not installed. Automated synthetic and
+subprocess tests do not establish live compatibility for Antigravity or a minimum
+supported client version. Live turns, permissions, concurrent tools, interruption,
+reload, autostart and IDE focus still need acceptance on the actual clients and
+operating systems. See [ADR 0041](adr/0041-additional-agent-providers.md).
