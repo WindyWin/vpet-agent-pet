@@ -1,0 +1,55 @@
+# Agent Pet Herdr Plugin
+# Provides a desktop companion pet that reacts to active Herdr agents in real time
+# and navigates directly back to the workspace -> tab -> split pane.
+
+id = "windywin.agent-pet"
+name = "Agent Pet"
+version = "0.17.1"
+min_herdr_version = "0.7.5"
+description = "Desktop companion pet that animates with live Herdr coding agents and brings you back to the right split pane."
+platforms = ["linux", "macos", "windows"]
+
+# Installation / build step run during `herdr plugin install`
+[[build]]
+command = ["sh", "scripts/install.sh"]
+platforms = ["linux", "macos"]
+
+[[build]]
+command = ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "scripts/install.ps1"]
+platforms = ["windows"]
+
+# Starts the background bridge and ensures the desktop GUI is running
+[[startup]]
+command = ["bin/herdr-agent-pet", "startup"]
+
+[[actions]]
+id = "start"
+title = "Agent Pet: start"
+command = ["bin/herdr-agent-pet", "start"]
+
+[[actions]]
+id = "stop"
+title = "Agent Pet: stop"
+command = ["bin/herdr-agent-pet", "stop"]
+
+[[actions]]
+id = "status"
+title = "Agent Pet: status"
+command = ["bin/herdr-agent-pet", "status"]
+
+[[actions]]
+id = "doctor"
+title = "Agent Pet: doctor"
+command = ["bin/herdr-agent-pet", "doctor"]
+
+[[panes]]
+id = "doctor"
+title = "Agent Pet Doctor"
+placement = "overlay"
+command = ["bin/herdr-agent-pet", "doctor-pane"]
+
+[[panes]]
+id = "logs"
+title = "Agent Pet Logs"
+placement = "overlay"
+command = ["bin/herdr-agent-pet", "logs-pane"]
