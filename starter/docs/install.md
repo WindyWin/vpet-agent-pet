@@ -153,13 +153,15 @@ with the Herdr server and installs or updates it from inside Herdr:
 herdr plugin install WindyWin/herdr-agent-pet
 ```
 
+The plugin supports Linux x86_64 and macOS and requires Herdr 0.7.5 or newer.
+
 The startup hook launches `agent-pet --autostarted` when the Herdr server starts,
 and the **Install or update Agent Pet** action opens a popup pane that downloads
 the latest release, checks the SHA-256 digest GitHub publishes for the asset, and
-runs this package's installer. Herdr's *Open* then brings you back to the tab and
-pane an agent runs in, because the hook captures `HERDR_WORKSPACE_ID`,
-`HERDR_TAB_ID`, `HERDR_PANE_ID` and `HERDR_SOCKET_PATH`. The plugin needs a
-graphical session, so it does nothing when Herdr runs over SSH or in a container.
+runs this package's installer. This plugin startup flow cannot provide Herdr
+*Open* navigation because it clears `HERDR_TAB_ID` and `HERDR_PANE_ID`, which the
+Herdr adapter needs to capture a navigation target. The plugin needs a graphical
+session, so it does nothing in SSH or container sessions without a display.
 
 ## Upgrade
 

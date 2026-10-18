@@ -225,7 +225,7 @@ Trên macOS và bản Windows portable, thú cưng thông báo khi có phiên b�
 - **Thú cưng không phản ứng?** Khởi động lại Claude Code hoặc Codex sau khi kết nối, rồi gửi prompt mới. Trong Codex, phê duyệt hook mới tại `/hooks`.
 - **Không thấy thú cưng?** Nhấp biểu tượng ở khay hệ thống, hoặc nhấp chuột phải → **Thêm → Khôi phục vị trí và điều khiển thú cưng** (More → Recover pet position and input).
 - **macOS:** chưa hỗ trợ đưa cửa sổ terminal lên trước và tự động cài cập nhật. **Mở** (Open) vẫn chuyển được khung terminal trong tmux và herdr.
-- **Dùng Herdr?** Plugin [herdr-agent-pet](https://github.com/WindyWin/herdr-agent-pet) khởi động thú cưng cùng máy chủ Herdr và cài đặt hoặc cập nhật ngay trong Herdr: `herdr plugin install WindyWin/herdr-agent-pet`.
+- **Dùng Herdr?** Plugin [herdr-agent-pet](https://github.com/WindyWin/herdr-agent-pet) khởi động thú cưng cùng máy chủ Herdr và cài đặt hoặc cập nhật ngay trong Herdr: `herdr plugin install WindyWin/herdr-agent-pet`. Plugin hỗ trợ Linux x86_64 và macOS, yêu cầu Herdr 0.7.5 trở lên.
 - **Windows:** **Mở** (Open) đưa cửa sổ Windows Terminal hoặc console cổ điển của agent lên trước; nếu không tìm được, ứng dụng tìm trình soạn thảo hoặc terminal theo cây tiến trình cha. Phiên bản được cài bằng bộ cài hỗ trợ tự động cập nhật; bản portable cần nâng cấp thủ công. Dùng `agent-pet-cli.exe` cho lệnh hook và thao tác cần xuất kết quả ra console.
 - **Linux trên Wayland:** thú cưng chạy qua XWayland, có sẵn mặc định trên GNOME và KDE. Chưa hỗ trợ Wayland thuần.
 
