@@ -40,6 +40,9 @@ public:
     QString store() const { return store_; }
     QString blobPath(const QString &sha256) const { return store_ + "/" + sha256 + ".rcc"; }
     QString error() const { return error_; } // Why the index is unavailable; empty when it loaded.
+    // Validate local display metadata before opening any windows. This snapshot is refreshed explicitly
+    // (normally at startup); activate() always validates disk contents independently.
+    void refreshDisplaySnapshot();
     QVector<PetInfo> pets() const; // Indexed pets and validated local packs, including local failures with a reason.
     PetInfo info(const QString &id) const; // An empty `id` when there is no such valid pet.
     PetTree tree(const QString &id) const; // From the index; empty `root` when missing or invalid.
@@ -67,6 +70,7 @@ public:
     const Catalog &catalog() const { return catalog_; } // The active pet's; empty before activate().
     QString root() const { return ":" + mapRoot_; } // Pets are at <root>/assets/<id>/.
 private:
+    QVector<PetInfo> readLocalPets() const;
     PetInfo resourceInfo(const QString &id) const;
     QString stamp(const QString &id) const;
     // Re-hashes the pet's packs in the store, removing any that do not match, and drops its stamp.
@@ -77,6 +81,8 @@ private:
     Catalog catalog_;
     EventRules rules_;
     QStringList packs_; // Registered pack files.
+    QVector<PetInfo> displaySnapshot_;
+    bool hasDisplaySnapshot_ = false;
     bool indexRegistered_ = false;
 };
 }

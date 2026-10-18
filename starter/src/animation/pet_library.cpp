@@ -75,6 +75,15 @@ QVector<PetInfo> PetLibrary::pets() const {
         else if (QFile::exists(QDir(root()).filePath("assets/" + id + "/pet.json")))
             qWarning().noquote() << "Ignoring pet" << id << "with an invalid pet.json";
     }
+    found += hasDisplaySnapshot_ ? displaySnapshot_ : readLocalPets();
+    return found;
+}
+void PetLibrary::refreshDisplaySnapshot() {
+    displaySnapshot_ = readLocalPets();
+    hasDisplaySnapshot_ = true;
+}
+QVector<PetInfo> PetLibrary::readLocalPets() const {
+    QVector<PetInfo> found;
     for (const auto &id : QDir(localFolder_).entryList(QDir::Dirs | QDir::NoDotAndDotDot, QDir::Name)) {
         auto pet = localPets::read(QDir(localFolder_).filePath(id));
         if (!resourceInfo(id).id.isEmpty()) {
@@ -87,6 +96,10 @@ QVector<PetInfo> PetLibrary::pets() const {
 }
 PetInfo PetLibrary::info(const QString &id) const {
     if (auto pet = resourceInfo(id); !pet.id.isEmpty()) return pet;
+    if (hasDisplaySnapshot_) {
+        for (const auto &pet : displaySnapshot_) if (pet.id == id) return pet;
+        return {};
+    }
     if (!validPetId(id) || !QFileInfo::exists(QDir(localFolder_).filePath(id))) return {};
     return localPets::read(QDir(localFolder_).filePath(id));
 }

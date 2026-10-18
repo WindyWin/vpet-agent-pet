@@ -9,6 +9,7 @@
 #include "settings/preferences.h"
 #include <QAction>
 #include <QCryptographicHash>
+#include <QComboBox>
 #include <QDateTime>
 #include <QDialog>
 #include <QDir>
@@ -775,6 +776,27 @@ private slots:
         pet::PetLibrary updated(PET_INDEX, "/local-updated", store.path(), installed.path());
         QVERIFY2(updated.activate("local-cat", &error), qPrintable(error));
     }
+    void localDisplaySnapshotDoesNotAuthorizeActivation() {
+        QTemporaryDir installed, store;
+        copyLocalPet(installed.path());
+        pet::PetLibrary library(PET_INDEX, "/local-snapshot", store.path(), installed.path());
+        library.refreshDisplaySnapshot();
+        QVERIFY(library.info("local-cat").error.isEmpty());
+        QFile frame(installed.filePath("local-cat/idle/_000_100.png"));
+        QVERIFY(frame.open(QIODevice::WriteOnly)); frame.write("changed"); frame.close();
+        // Display calls reuse the snapshot, but it never authorizes loading changed artwork.
+        for (int i = 0; i < 3; ++i) {
+            QVERIFY(library.info("local-cat").error.isEmpty());
+            const auto pets = library.pets();
+            QVERIFY(std::any_of(pets.begin(), pets.end(), [](const pet::PetInfo &pet) {
+                return pet.id == "local-cat" && pet.error.isEmpty();
+            }));
+        }
+        QString error;
+        QVERIFY(!library.activate("local-cat", &error)); QVERIFY(!error.isEmpty());
+        library.refreshDisplaySnapshot();
+        QVERIFY(!library.info("local-cat").error.isEmpty());
+    }
     void pluginsExtendLocalPets() {
         QTemporaryDir installed, store, plugins; copyLocalPet(installed.path());
         const QString fixture = PET_SOURCE "/tests/fixtures/plugins/example";
@@ -1042,6 +1064,15 @@ private slots:
         auto *terms = about->findChild<QTextBrowser *>();
         QVERIFY(terms); QVERIFY(terms->toPlainText().contains("Animation copyright notice"));
         QVERIFY(!terms->toPlainText().contains("Artwork terms unavailable."));
+        auto *selector = about->findChild<QComboBox *>("petTerms");
+        QVERIFY(selector);
+        QVERIFY(QMetaObject::invokeMethod(selector, "currentIndexChanged", Q_ARG(int, selector->currentIndex())));
+        for (const auto *path : {":/licenses/QT-NOTICE.txt", ":/NOTICE", ":/THIRD_PARTY_NOTICES.md",
+                                 ":/LICENSE", ":/licenses/LGPL-3.0.txt", ":/licenses/GPL-3.0.txt"}) {
+            QFile document(path); QVERIFY(document.open(QIODevice::ReadOnly));
+            const auto text = QString::fromUtf8(document.readAll()).replace("\r\n", "\n").trimmed();
+            QVERIFY(!text.isEmpty()); QVERIFY2(terms->toPlainText().contains(text), path);
+        }
     }
 };
 QTEST_MAIN(PetsTests)

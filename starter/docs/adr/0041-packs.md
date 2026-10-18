@@ -252,3 +252,7 @@ release asset deduplication (#100) remains independent of this contract.
   interface strings are translated into Vietnamese. Native macOS and Windows
   execution remains to be verified in CI/manual acceptance; the loader uses Qt
   filesystem/image APIs and platform-specific per-user paths.
+
+### Review follow-up: local display discovery (2026-10-18)
+
+The app validates local pack display metadata once during startup, before creating windows. Settings and About reuse that explicit snapshot, so opening either dialog does not scan and hash installed artwork again. Manually added or changed folders appear after restarting; an explicit refresh is available to library callers. This cache only supplies display metadata: activation always validates the current on-disk pack, and frame loading retains its bounded file and image checks. Regression coverage changes a frame after discovery and proves display reuse never authorizes activation, then verifies that refreshing reports the invalid pack. About pet selection also retains all application and Qt notices.

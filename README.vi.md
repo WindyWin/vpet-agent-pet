@@ -316,7 +316,8 @@ Mã nguồn riêng của Agent Pet được cấp phép theo [Apache-2.0](starte
 ## Cài thú cưng từ thư mục cục bộ
 
 Trong Cài đặt → Thú cưng, chọn **Mở thư mục thú cưng**, rồi chép một bộ thú cưng
-đầy đủ vào `packs/pets/<id>/`. Mở lại Cài đặt, chọn ô **Cục bộ** và khởi động lại;
+đầy đủ vào `packs/pets/<id>/`. Khởi động lại để làm mới danh sách thú cưng,
+rồi mở Cài đặt, chọn ô **Cục bộ** và khởi động lại;
 `--pet <id>` cũng dùng được với thú cưng cục bộ. Bộ không hợp lệ hiển thị lý do
 và không thể được chọn. Nếu bộ đã chọn bị xóa hoặc không còn hợp lệ, ứng dụng dùng
 VPet cho lần chạy đó và giữ lựa chọn đã lưu. Mục Giới thiệu cho phép đọc điều khoản

@@ -18,7 +18,9 @@ in later phases. The build and on-demand workflow remains available meanwhile.
 ## Installing a local pet
 
 In Settings → Pet, choose **Open pets folder** and copy a complete unpacked pet
-folder into it. The folder name must match its `id`:
+folder into it, then restart Agent Pet to refresh the installed-pet list. Settings and About
+reuse metadata validated at startup; starting a pet still validates its current files.
+The folder name must match its `id`:
 
 | Platform | Folder |
 | --- | --- |

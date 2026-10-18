@@ -1178,8 +1178,9 @@ void PetWindow::showAbout() {
         const auto pet = library.info(petTerms->currentData().toString());
         auto text = library.terms(pet);
         if (text.isEmpty()) text = tr("Artwork terms unavailable.");
-        terms->setPlainText(read(":/NOTICE") + read(":/THIRD_PARTY_NOTICES.md")
-                           + pet.name + " — " + pet.author + "\n" + pet.license + "\n\n" + text + "\n\n" + read(":/LICENSE"));
+        terms->setPlainText(read(":/licenses/QT-NOTICE.txt") + read(":/NOTICE") + read(":/THIRD_PARTY_NOTICES.md")
+                           + pet.name + " — " + pet.author + "\n" + pet.license + "\n\n" + text + "\n\n" + read(":/LICENSE")
+                           + read(":/licenses/LGPL-3.0.txt") + read(":/licenses/GPL-3.0.txt"));
     });
     layout->addWidget(petTerms);
     auto *buttons = new QDialogButtonBox(QDialogButtonBox::Close, dialog);
