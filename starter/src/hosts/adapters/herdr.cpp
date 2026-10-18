@@ -5,16 +5,28 @@
 namespace pet::hosts::herdr {
 bool decode(const QString &target, Target &out) {
     const auto parts = target.split('|');
-    if (parts.size() != 3 || !fullMatch("[A-Za-z0-9_:.-]{1,64}", parts[1]) ||
-        (!parts[0].isEmpty() && !fullMatch("[A-Za-z0-9_:.-]{1,64}", parts[0])) ||
-        (!parts[2].isEmpty() && !QDir::isAbsolutePath(parts[2]))) return false;
-    out = {parts[0], parts[1], parts[2]};
-    return true;
+    if (parts.size() == 4) {
+        if (!fullMatch("[A-Za-z0-9_:.-]{1,64}", parts[2]) ||
+            (!parts[0].isEmpty() && !fullMatch("[A-Za-z0-9_:.-]{1,64}", parts[0])) ||
+            (!parts[1].isEmpty() && !fullMatch("[A-Za-z0-9_:.-]{1,64}", parts[1])) ||
+            (!parts[3].isEmpty() && !QDir::isAbsolutePath(parts[3]))) return false;
+        out = {parts[0], parts[1], parts[2], parts[3]};
+        return true;
+    }
+    if (parts.size() == 3) {
+        if (!fullMatch("[A-Za-z0-9_:.-]{1,64}", parts[1]) ||
+            (!parts[0].isEmpty() && !fullMatch("[A-Za-z0-9_:.-]{1,64}", parts[0])) ||
+            (!parts[2].isEmpty() && !QDir::isAbsolutePath(parts[2]))) return false;
+        out = {QString(), parts[0], parts[1], parts[2]};
+        return true;
+    }
+    return false;
 }
 QVector<platform::Command> selectCommands(const Target &target) {
     QMap<QString, QString> env;
     if (!target.socket.isEmpty()) env["HERDR_SOCKET_PATH"] = target.socket;
     QVector<platform::Command> commands;
+    if (!target.workspace.isEmpty()) commands.append({"herdr", {"workspace", "focus", target.workspace}, env});
     if (!target.tab.isEmpty()) commands.append({"herdr", {"tab", "focus", target.tab}, env});
     commands.append({"herdr", {"agent", "focus", target.pane}, env});
     return commands;
@@ -52,7 +64,13 @@ Capture capture() {
     return {id, "herdr",
             [](const QProcessEnvironment &env, const QVector<qint64> &, QString &target) {
                 if (env.value("HERDR_PANE_ID").isEmpty()) return false;
-                target = env.value("HERDR_TAB_ID") + "|" + env.value("HERDR_PANE_ID") + "|" + env.value("HERDR_SOCKET_PATH");
+                auto workspace = env.value("HERDR_WORKSPACE_ID");
+                if (workspace.isEmpty()) {
+                    const auto tab = env.value("HERDR_TAB_ID");
+                    if (tab.contains(':')) workspace = tab.section(':', 0, 0);
+                }
+                target = workspace + "|" + env.value("HERDR_TAB_ID") + "|" +
+                         env.value("HERDR_PANE_ID") + "|" + env.value("HERDR_SOCKET_PATH");
                 return true;
             },
             [](const QString &target) { Target decoded; return decode(target, decoded); },

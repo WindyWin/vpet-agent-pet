@@ -397,7 +397,7 @@ their parent. Click a row to go to that session.
 
 "Go to session" uses identifiers the hook records from its environment: Konsole
 switches to the session's tab over D-Bus, tmux selects the pane, herdr runs
-`herdr tab focus` and `herdr agent focus`, and on X11/XWayland the window that
+`herdr workspace focus`, `herdr tab focus` and `herdr agent focus`, and on X11/XWayland the window that
 owns the agent's parent processes is activated (VS Code windows are told apart
 by the project name in their title). Detached Herdr sessions are matched to
 their attached terminal clients. On KDE Plasma 6, KWin scripting also raises

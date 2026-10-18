@@ -87,7 +87,7 @@ identifiers from the hook's environment and `/proc`, never titles or content:
 | `host` | `konsole`, `herdr`, `tmux`, `vscode` or `terminal` (innermost multiplexer wins) |
 | `host_pids` | Up to 16 ancestor process IDs, nearest first, comma-separated |
 | `host_window` | Decimal native window: `$WINDOWID` when the terminal exports it (X11), never for `vscode`; on Windows the agent's console window (HWND) |
-| `host_target` | Konsole `service\|/Windows/N\|/Sessions/M`; herdr `tab\|pane\|socket`; tmux `socket\|%pane` |
+| `host_target` | Konsole `service\|/Windows/N\|/Sessions/M`; herdr `workspace\|tab\|pane\|socket` (workspace and tab optional); tmux `socket\|%pane` |
 
 Programs started from a terminal inherit its variables: VS Code launched from a
 herdr pane gives its own terminals that pane's `HERDR_PANE_ID`. So herdr, tmux

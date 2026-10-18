@@ -65,8 +65,13 @@ public:
             if (agent.value("focused").toBool()) { focusedMatch = agent; ++focused; }
         }
         if (found > 1) { match = focusedMatch; found = focused; }
-        if (found != 1) return {};
-        HostContext located{id, host.pids, host.window, match.value("tab_id").toString() + "|" + match.value("pane_id").toString() + "|" + socket_};
+        QString workspace = match.value("workspace_id").toString();
+        if (workspace.isEmpty()) {
+            const auto tab = match.value("tab_id").toString();
+            if (tab.contains(':')) workspace = tab.section(':', 0, 0);
+        }
+        HostContext located{id, host.pids, host.window,
+            workspace + "|" + match.value("tab_id").toString() + "|" + match.value("pane_id").toString() + "|" + socket_};
         Target decoded;
         return decode(located.target, decoded) ? located : HostContext{};
     }

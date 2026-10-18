@@ -231,10 +231,10 @@ private slots:
         auto konsole = std::make_unique<Selector>("konsole"); konsole->log = &log;
         f.service.addActivation(std::move(konsole));
         f.service.addActivation(pet::hosts::herdr::activation(runner, processes));
-        const HostContext pane{"herdr", {700}, {}, "t_2|p_3|/run/h.sock"};
+        const HostContext pane{"herdr", {700}, {}, "w_1|t_2|p_3|/run/h.sock"};
         auto result = f.service.focus(pane, {});
-        // Tab and pane first; then each client of this socket in its Konsole tab, then the pane's own hints.
-        QCOMPARE(log, (QStringList{"herdr tab", "herdr agent",
+        // Workspace, tab and pane first; then each client of this socket in its Konsole tab, then the pane's own hints.
+        QCOMPARE(log, (QStringList{"herdr workspace", "herdr tab", "herdr agent",
                                    "konsole select org.kde.konsole-9|/Windows/1|/Sessions/41", "x11:41,4", "kwin:41,4",
                                    "x11:42,5", "kwin:42,5",
                                    "x11:700", "kwin:700"}));
@@ -244,6 +244,10 @@ private slots:
         log.clear(); f.second->outcome = Outcome::Confirmed;
         result = f.service.focus(pane, {});
         QVERIFY(result.raised()); QCOMPARE(log.last(), QString("kwin:41,4"));
+        // Legacy 3-part target without workspace still focuses tab and agent.
+        log.clear(); runner->commands.clear(); f.second->outcome = Outcome::Failed;
+        f.service.focus({"herdr", {700}, {}, "t_2|p_3|/run/h.sock"}, {});
+        QCOMPARE(log.mid(0, 2), (QStringList{"herdr tab", "herdr agent"}));
         // A target without a socket cannot identify its clients: only the pane's own hints.
         log.clear(); f.second->outcome = Outcome::Failed;
         f.service.focus({"herdr", {700}, {}, "|p_3|"}, {});
@@ -270,11 +274,12 @@ private slots:
                                       {"codex", "/work/api", "w1:p5", false}});
             Fixture f(Outcome::TargetNotFound, Outcome::Confirmed); setup(f, runner);
             QVERIFY(f.service.focus(daemon, "/work/web", "codex").raised());
-            QCOMPARE(runner->commands.size(), 3);
+            QCOMPARE(runner->commands.size(), 4);
             QCOMPARE(runner->commands[0].arguments, (QStringList{"agent", "list"}));
-            QCOMPARE(runner->commands[1].arguments, (QStringList{"tab", "focus", "w1:t1"}));
-            QCOMPARE(runner->commands[2].arguments, (QStringList{"agent", "focus", "w1:p8"}));
-            QCOMPARE(runner->commands[2].environment.value("HERDR_SOCKET_PATH"), QString("/run/h.sock"));
+            QCOMPARE(runner->commands[1].arguments, (QStringList{"workspace", "focus", "w1"}));
+            QCOMPARE(runner->commands[2].arguments, (QStringList{"tab", "focus", "w1:t1"}));
+            QCOMPARE(runner->commands[3].arguments, (QStringList{"agent", "focus", "w1:p8"}));
+            QCOMPARE(runner->commands[3].environment.value("HERDR_SOCKET_PATH"), QString("/run/h.sock"));
         }
         {   // Two candidates: the focused one wins; with none focused nothing is guessed.
             const auto runner = std::make_shared<Runner>();

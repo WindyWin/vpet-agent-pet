@@ -5,10 +5,10 @@
 
 namespace pet::hosts::herdr {
 constexpr auto id = "herdr";
-// Target "<tab id>|<pane id>|<API socket path>", from HERDR_*. Tab and socket may be empty.
-struct Target { QString tab, pane, socket; };
+// Target "<workspace id>|<tab id>|<pane id>|<API socket path>" or legacy "<tab id>|<pane id>|<API socket path>", from HERDR_*. Workspace, tab and socket may be empty.
+struct Target { QString workspace, tab, pane, socket; };
 bool decode(const QString &target, Target &out);
-// Tab focus moves attached clients; agent focus then picks the pane and marks it seen.
+// Workspace and tab focus move attached clients; agent focus then picks the pane and marks it seen.
 QVector<platform::Command> selectCommands(const Target &target);
 // API socket used by a local herdr UI invocation; empty for other commands and remotes.
 QString clientSocket(const QProcessEnvironment &environment, const QStringList &arguments);

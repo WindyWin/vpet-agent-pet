@@ -240,6 +240,13 @@ private slots:
         QCOMPARE(commands[0].arguments, (QStringList{"tab", "focus", "t_2"}));
         QCOMPARE(commands[1].arguments, (QStringList{"agent", "focus", "p_3"}));
         QCOMPARE(commands[1].environment.value("HERDR_SOCKET_PATH"), "/run/user/1/herdr.sock");
+        env.insert("HERDR_WORKSPACE_ID", "w_1");
+        host = capture(env, {}, {});
+        commands = selection("herdr", host["host_target"].toString());
+        QCOMPARE(commands.size(), 3);
+        QCOMPARE(commands[0].arguments, (QStringList{"workspace", "focus", "w_1"}));
+        QCOMPARE(commands[1].arguments, (QStringList{"tab", "focus", "t_2"}));
+        QCOMPARE(commands[2].arguments, (QStringList{"agent", "focus", "p_3"}));
         QProcessEnvironment code; code.insert("TERM_PROGRAM", "vscode");
         QCOMPARE(capture(code, {9}, {"code"})["host"].toString(), "vscode");
         // VS Code started from a herdr pane in Konsole hands that pane's variables to its own terminals.
@@ -293,7 +300,7 @@ private slots:
         env.insert("HERDR_PANE_ID", "p_1"); env.insert("TMUX", "/tmp/t,1,0"); env.insert("TMUX_PANE", "%1");
         env.insert("KONSOLE_DBUS_SERVICE", "org.kde.konsole-1"); env.insert("TERM_PROGRAM", "vscode");
         QCOMPARE(capture(env, {5})["host"].toString(), "herdr");
-        QCOMPARE(capture(env, {5})["host_target"].toString(), "|p_1|"); // Missing tab and socket stay empty.
+        QCOMPARE(capture(env, {5})["host_target"].toString(), "||p_1|"); // Missing workspace, tab and socket stay empty.
         env.remove("HERDR_PANE_ID"); QCOMPARE(capture(env, {5})["host"].toString(), "tmux");
         env.remove("TMUX_PANE"); QCOMPARE(capture(env, {5})["host"].toString(), "konsole");
         QCOMPARE(capture(env, {5})["host_target"].toString(), "org.kde.konsole-1||");
@@ -343,11 +350,17 @@ private slots:
         QCOMPARE(commands[0].arguments, (QStringList{"select-window", "-t", "%12"}));
         for (const auto *bad : {"", "%1", "relative/sock|%1", "/s|1", "/s|%1|x", "/s|%1234567"})
             QVERIFY2(selection("tmux", bad).isEmpty(), bad);
-        // herdr: an optional tab and socket, and a pane.
+        // herdr: an optional workspace, tab and socket, and a pane.
         commands = selection("herdr", "|p_1|");
         QCOMPARE(commands.size(), 1); QCOMPARE(commands[0].arguments, (QStringList{"agent", "focus", "p_1"}));
         QVERIFY(commands[0].environment.isEmpty());
-        for (const auto *bad : {"", "t|p", "t||/s", "t|p 1|/s", "t;x|p|/s", "t|p|relative"})
+        commands = selection("herdr", "w_1|t_2|p_1|");
+        QCOMPARE(commands.size(), 3);
+        QCOMPARE(commands[0].arguments, (QStringList{"workspace", "focus", "w_1"}));
+        QCOMPARE(commands[1].arguments, (QStringList{"tab", "focus", "t_2"}));
+        QCOMPARE(commands[2].arguments, (QStringList{"agent", "focus", "p_1"}));
+        for (const auto *bad : {"", "t|p", "t||/s", "t|p 1|/s", "t;x|p|/s", "t|p|relative",
+                                "w|t|p", "w|t||/s", "w|t|p 1|/s", "w;x|t|p|/s", "w|t|p|relative"})
             QVERIFY2(selection("herdr", bad).isEmpty(), bad);
         // Hosts without a selection command.
         for (const auto *host : {"konsole", "vscode", "terminal", "unknown"})

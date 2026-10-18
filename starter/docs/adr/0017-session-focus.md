@@ -53,7 +53,7 @@ boolean did.
 | --- | --- | --- | --- | --- |
 | Konsole | D-Bus `setCurrentSession` | Raises anyway | Its hints | Yes |
 | tmux | `select-window`, `select-pane` | Stops (also when `tmux` is missing) | Attached clients' ancestors, then its own process hints, as one request | Never: `Unknown` |
-| herdr | `herdr tab focus`, `herdr agent focus` | Stops | Each live UI client of the same API socket, after selecting the Konsole tab it runs in; then its own hints | Never: `Unknown` |
+| herdr | `herdr workspace focus`, `herdr tab focus`, `herdr agent focus` | Stops | Each live UI client of the same API socket, after selecting the Konsole tab it runs in; then its own hints | Never: `Unknown` |
 | VS Code, terminal | None | — | Its hints | Yes |
 
 **Hooks that run outside the terminal.** Codex runs hooks from a shared
