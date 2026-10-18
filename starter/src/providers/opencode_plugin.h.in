@@ -1,2 +1,9 @@
 #pragma once
-namespace pet { inline constexpr char openCodePluginBody[] = R"PET_PLUGIN(@OPENCODE_PLUGIN@)PET_PLUGIN"; }
+// OpenCode plugin bodies. openCodePluginBody is the current V2 bridge; it is
+// embedded for the integration writer. openCodePluginLegacyBody is the released
+// V1-only body (0.17.1); it exists only so integrations.cpp can recognize
+// previous installs and migrate them during enable instead of refusing them.
+namespace pet {
+inline constexpr char openCodePluginBody[] = R"PET_PLUGIN(@OPENCODE_PLUGIN@)PET_PLUGIN";
+inline constexpr char openCodePluginLegacyBody[] = R"PET_PLUGIN(@OPENCODE_LEGACY_PLUGIN@)PET_PLUGIN";
+}

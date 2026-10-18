@@ -32,13 +32,21 @@ documented neutral JSON response (`allow`, never `auto_approve`, for PreToolUse;
 `stop` for Stop; `{}` otherwise), including when the pet is unavailable. Existing
 providers retain silent callbacks.
 
+One generated OpenCode file serves both plugin APIs: OpenCode 1 (>= 1.18.29)
+loads the hook object from `server()`, OpenCode 2 loads `{ id, setup(ctx) }` and
+uses the prompt hook, the tool hooks and the public event subscription. The
+OpenCode 2 stream renames session results to execution events, moves the
+permission call ID to the source entry, reports questions as forms and delivers
+every public event to each reconciled plugin instance; the bridge keeps the
+OpenCode 1 vocabulary toward the pet and forwards each event ID once.
+
 ## Consequences
 
 Adding providers no longer requires changing protocol validation or settings rows.
 New setup formats can reuse the existing bounded reads, writer lock, external-edit
 check and atomic save. The JavaScript bridge has a separate optional Node test.
-An edited bridge is intentionally not overwritten; future bridge revisions need
-an explicit migration/ownership policy for previously generated versions.
+An edited bridge is intentionally not overwritten; upgrade migration is limited to
+byte-exact bodies of released versions, which `enable` replaces in place.
 
 Full feature parity is not claimed: Antigravity has no general permission-request,
 session-end or child identity callback in the inspected contract. The reset of
@@ -71,3 +79,31 @@ Linux, Qt 6.11.2: the full application built successfully and all 17 CTest suite
 passed, including the new OpenCode plugin test, provider subprocess/setup tests,
 and all four desktop prototype shards. Uninstall script syntax was checked;
 Windows installer execution remains pending.
+
+### OpenCode 2 contract review — 2026-10-18
+
+- [OpenCode 2 plugin documentation](https://opencode.ai/v2/docs/build/plugins/)
+  and its [V1 plugin migration](https://opencode.ai/v2/docs/build/plugins/migrate-v1/)
+  guide; locally installed OpenCode CLI 2.0.29.
+- Payload shapes and instance behavior were captured live on this host with
+  throwaway probe plugins before implementing: `session.created`/`session.deleted`
+  carry the location and an optional parent ID, `session.execution.succeeded`/
+  `failed`/`interrupted` replace `session.idle`/`session.error`, `permission.asked`
+  exposes the tool call ID at `source.id`, questions arrive as `form.created`,
+  failed tools come from the `execute.after` hook error, and one server reconciles
+  a global plugin once per active location while every instance receives the
+  server-wide stream (about six duplicate deliveries per event without event-ID
+  deduplication).
+- Live verification: the running 2.0.29 service reloaded the generated file with
+  no load failure, `opencode plugin list` reports the `agent-pet` ID, and real
+  sessions spawn `agent-pet hook --provider opencode --registration agent-pet-v1`
+  per forwarded event.
+- The OpenCode 1 path is covered by the automated synthetic test only; live
+  OpenCode 1 turns were not re-run, and this host checked Linux only.
+
+### Automated verification — 2026-10-18
+
+Linux, Qt 6 build: `pet_events` compiles, the `opencode-plugin` CTest suite
+passes, and the Node plugin test drives both the `setup(ctx)` and `server()`
+paths, including event ordering, redaction, child identity, interruption
+suppression, duplicate-event forwarding and dead-executable resilience.

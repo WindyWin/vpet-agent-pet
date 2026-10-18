@@ -164,8 +164,10 @@ endif()
 target_include_directories(pet_native PUBLIC src)
 # Headless code shared by the pet and its display-free commands (hook, integration, autostart).
 file(READ src/providers/opencode-plugin.js OPENCODE_PLUGIN)
+file(READ src/providers/opencode-plugin-legacy.js OPENCODE_LEGACY_PLUGIN)
 configure_file(src/providers/opencode_plugin.h.in "${CMAKE_CURRENT_BINARY_DIR}/generated/opencode_plugin.h" @ONLY)
-set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS src/providers/opencode-plugin.js)
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
+    src/providers/opencode-plugin.js src/providers/opencode-plugin-legacy.js)
 qt_add_library(pet_events STATIC src/ipc/local.cpp src/ipc/session_store.cpp src/ipc/autostart.cpp src/providers/integrations.cpp)
 target_include_directories(pet_events PUBLIC src PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/generated")
 target_link_libraries(pet_events PUBLIC pet_core PRIVATE pet_platform)
