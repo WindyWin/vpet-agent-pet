@@ -23,6 +23,9 @@ and terms. Install the target pet first so the importer can validate the fragmen
 against its catalog. Restart, then enable the plugin in Settings; it loads on the
 following start. Replacements and removals also take effect at restart.
 **Remove installed pack…** or `agent-pet remove plugin example` removes a plugin.
+Its saved selection is cleared only when removal commits. A failed removal
+retains the installed plugin and its selection; reinstalling after successful
+removal requires enabling it again.
 
 An archive includes the existing plugin files plus `pack.json` with `kind: "plugin"`,
 `id`, `name`, `author`, `version`, `license`, `pet`, `schema: 2`, `minAppVersion` and

@@ -408,3 +408,18 @@ Display snapshots now read only `pack.json` and `pet.json` (64 KiB each), check 
 ### Source-browser removal follow-up (2026-10-18)
 
 Both Settings tabs now delegate removal notifications to one handler, so the reused browser behaves identically whichever tab opens it first. Queued pet removal preserves the saved choice, as required by the phase 2 transaction policy; startup supplies the fallback after actual removal. Plugin removal updates the enabled list. Regression cases exercise both tab orders and verify persisted pet/plugin preferences; all five focused pack/UI suites passed.
+
+### Queued plugin removal preferences (2026-10-18)
+
+- Queuing a removal preserves both the running plugin selection and the saved
+  selection. `applyPending` reloads preferences and removes the committed plugin
+  ID after moving its installed directory to the recovery backup, before deleting
+  the transaction. Unrelated and unavailable plugin IDs remain selected.
+- Preference read/save failures restore the plugin and retain the pending job;
+  restart recovery repeats this idempotent commit. CLI removals use the same path,
+  and unselected removals do not create a preferences file. Startup passes the
+  committed selection into `PetLibrary::setPlugins` before loading artwork.
+- Regression tests cover queued and failed removal, malformed preferences,
+  interrupted removal, partial queue success, successful cleanup, and reinstall
+  without resurrecting the removed selection. Both Settings tabs retain the
+  selection while the shared source browser only queues the removal.

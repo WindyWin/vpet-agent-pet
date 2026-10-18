@@ -80,7 +80,7 @@ qt_add_library(pet_animation STATIC
     src/animation/catalog.cpp src/animation/pet_library.cpp src/animation/local_pet.cpp src/animation/player.cpp src/animation/ambient.cpp src/animation/activity.cpp
     src/animation/mood.cpp src/animation/easter_eggs.cpp src/animation/stage.cpp src/animation/plugins.cpp src/animation/event_rules.cpp)
 target_include_directories(pet_animation PUBLIC src PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/generated")
-target_link_libraries(pet_animation PUBLIC Qt6::Gui pet_behavior ZLIB::ZLIB)
+target_link_libraries(pet_animation PUBLIC Qt6::Gui pet_behavior pet_core ZLIB::ZLIB)
 
 if(NOT AGENT_PET_PORTABLE_CORE)
 # Every pet folder under assets/ (docs/pets.md): one stable pack per frame folder, so additions never repack

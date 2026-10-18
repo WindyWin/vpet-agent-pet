@@ -2,6 +2,7 @@
 #include "archive.h"
 #include "animation/local_pet.h"
 #include "version.h"
+#include "settings/preferences.h"
 #include <QDirIterator>
 #include <QFile>
 #include <QImageReader>
@@ -34,6 +35,14 @@ bool prepare(const QString &data, QString &error) {
         const auto path = data + suffix;
         if (!ordinary(path) || !QDir().mkpath(path)) { error = "Cannot create a safe pack storage directory: " + path; return false; }
     }
+    return true;
+}
+bool clearRemovedPluginSelection(const QString &data, const QString &id, QString &error) {
+    PreferencesStore store(data + "/preferences.json");
+    auto preferences = store.load();
+    if (!store.error().isEmpty()) { error = "Cannot read plugin selection: " + store.error(); return false; }
+    if (!preferences.plugins.removeAll(id)) return true;
+    if (!store.save(preferences)) { error = "Cannot save plugin selection: " + store.error(); return false; }
     return true;
 }
 bool queue(const QString &data, const QString &kind, const QString &id, const QString &folder, QString &error) {
@@ -187,6 +196,12 @@ bool applyPending(QString &error, const QString &data) {
         if (!op.value("remove").toBool() && !QDir().rename(payload, target)) {
             if (QFileInfo::exists(backup)) QDir().rename(backup, target);
             error = "Cannot install pack; previous pack retained."; return false;
+        }
+        if (op.value("remove").toBool() && kind == "plugin" && !clearRemovedPluginSelection(base, id, error)) {
+            // Selection and installed pack must agree if the preference commit fails.
+            // Keep the durable operation so startup can retry after the obstacle is fixed.
+            if (QFileInfo::exists(backup) && !QDir().rename(backup, target)) error += " Cannot restore previous pack.";
+            return false;
         }
         if (!QDir(job).removeRecursively()) { error = "Pack changed, but its transaction backup could not be cleaned up."; return false; }
     }

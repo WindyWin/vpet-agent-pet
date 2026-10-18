@@ -631,10 +631,10 @@ void PetWindow::setPlugins(const QStringList &ids) {
         if (Preferences::validPet(id) && !plugins_.contains(id) && plugins_.size() < Preferences::maxPlugins) plugins_.append(id);
     writePreferences([this](Preferences &preferences) { preferences.plugins = plugins_; });
 }
-void PetWindow::packRemoved(const QString &kind, const QString &id) {
-    // Removal is only queued: retain the saved pet choice if applying it fails.
-    // Startup falls back to VPet if the selected pack is actually removed.
-    if (kind == "plugin") { auto ids = plugins_; ids.removeAll(id); setPlugins(ids); }
+void PetWindow::packRemoved(const QString &, const QString &) {
+    // Removal is only queued. Keep the running and saved selections unchanged;
+    // applyPending clears a plugin selection only when committing its removal.
+    // Startup falls back to VPet if the selected pet pack is actually removed.
 }
 bool PetWindow::savePreferences() { return writePreferences([](Preferences &) {}); }
 bool PetWindow::writePreferences(const std::function<void(Preferences &)> &change) {

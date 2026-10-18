@@ -806,8 +806,8 @@ private slots:
         QCOMPARE(window.pet(), QString("mini"));
         QCOMPARE(pet::PreferencesStore(path).load().pet, QString("mini"));
         emit browser->packRemoved("plugin", "example");
-        QCOMPARE(window.plugins(), QStringList{"keep"});
-        QCOMPARE(pet::PreferencesStore(path).load().plugins, QStringList{"keep"});
+        QCOMPARE(window.plugins(), (QStringList{"example", "keep"}));
+        QCOMPARE(pet::PreferencesStore(path).load().plugins, (QStringList{"example", "keep"}));
     }
     void sourceBrowserSurvivesSettingsAndIsReused() {
         QTemporaryDir directory;
