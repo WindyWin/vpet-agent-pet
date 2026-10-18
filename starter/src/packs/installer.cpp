@@ -4,6 +4,8 @@
 #include "version.h"
 #include "settings/preferences.h"
 #include <QDirIterator>
+#include <QCryptographicHash>
+#include <QUrl>
 #include <QFile>
 #include <QImageReader>
 #include <QJsonDocument>
@@ -31,7 +33,7 @@ bool identity(const QString &kind, const QString &id) {
 bool ordinary(const QString &path) { const QFileInfo f(path); return !f.isSymLink() && !f.isJunction(); }
 bool prepare(const QString &data, QString &error) {
     // Refuse redirected managed directories; never traverse links while installing/removing.
-    for (const auto &suffix : {QString(), QString("/packs"), QString("/packs/pets"), QString("/plugins"), QString("/pack-pending")}) {
+    for (const auto &suffix : {QString(), QString("/packs"), QString("/packs/pets"), QString("/plugins"), QString("/pack-pending"), QString("/pack-origins")}) {
         const auto path = data + suffix;
         if (!ordinary(path) || !QDir().mkpath(path)) { error = "Cannot create a safe pack storage directory: " + path; return false; }
     }
@@ -45,7 +47,8 @@ bool clearRemovedPluginSelection(const QString &data, const QString &id, QString
     if (!store.save(preferences)) { error = "Cannot save plugin selection: " + store.error(); return false; }
     return true;
 }
-bool queue(const QString &data, const QString &kind, const QString &id, const QString &folder, QString &error) {
+bool queue(const QString &data, const QString &kind, const QString &id, const QString &folder, QString &error,
+           const QJsonObject &origin = {}, bool automatic = false) {
     if (!prepare(data, error)) return false;
     QLockFile lock(data + "/pack-install.lock");
     if (!lock.tryLock()) { error = "Another pack operation is in progress."; return false; }
@@ -57,11 +60,48 @@ bool queue(const QString &data, const QString &kind, const QString &id, const QS
     if (!temp.isValid()) { error = "Cannot stage pack operation."; return false; }
     if (!folder.isEmpty() && (!QDir().mkpath(temp.path() + "/payload") || !QDir().rename(folder, temp.path() + "/payload/" + id))) { error = "Cannot stage pack payload."; return false; }
     QSaveFile record(temp.path() + "/operation.json");
-    const auto bytes = QJsonDocument(QJsonObject{{"kind", kind}, {"id", id}, {"remove", folder.isEmpty()}}).toJson();
+    const auto bytes = QJsonDocument(QJsonObject{{"kind", kind}, {"id", id}, {"remove", folder.isEmpty()}, {"origin", origin}, {"automatic", automatic}}).toJson();
     if (!record.open(QIODevice::WriteOnly) || record.write(bytes) != bytes.size() || !record.commit()
         || !QDir().rename(temp.path(), pending)) { error = "Cannot save pack operation."; return false; }
     return true;
 }
+}
+namespace {
+QString originPath(const QString &base, const QString &kind, const QString &id) { return base + "/pack-origins/" + kind + '-' + id + ".json"; }
+bool saveOrigin(const QString &base, const QString &kind, const QString &id, QJsonObject origin, QString &error) {
+    const auto path = originPath(base, kind, id);
+    if (!ordinary(path)) { error = "Unsafe origin record."; return false; }
+    if (origin.isEmpty()) { if (!QFile::exists(path) || QFile::remove(path)) return true; }
+    else {
+        if (origin["revision"].toString() != sourceRevision(origin["source"].toString(), base)) origin = {};
+        QSaveFile file(path); const auto bytes = QJsonDocument(origin).toJson();
+        if (file.open(QIODevice::WriteOnly) && file.write(bytes) == bytes.size() && file.commit()) return true;
+    }
+    error = "Cannot save pack origin."; return false;
+}
+}
+QString sourceRevision(const QString &source, const QString &data) {
+    QFile f(root(data) + "/sources/" + QString::fromLatin1(QCryptographicHash::hash(source.toUtf8(), QCryptographicHash::Sha256).toHex()) + ".revision");
+    if (!f.exists()) return "initial";
+    if (!f.open(QIODevice::ReadOnly) || f.size() > 64) return {};
+    return QString::fromLatin1(f.readAll());
+}
+QJsonObject packOrigin(const QString &kind, const QString &id, const QString &data) {
+    if (!identity(kind, id)) return {};
+    const auto o = object(originPath(root(data), kind, id));
+    if (o["source"].toString().isEmpty() || o["revision"].toString().isEmpty()
+        || o["revision"].toString() != sourceRevision(o["source"].toString(), data)) return {};
+    const auto m = object(parent(root(data), kind) + '/' + id + "/pack.json");
+    if (m["version"] != o["version"]) return {};
+    return o;
+}
+QJsonObject installationOrigin(const Candidate &c, const QString &source, const QString &digest, const QString &data) {
+    const QUrl url(source);
+    if (url.scheme() != "https" || url.host().isEmpty() || !url.userInfo().isEmpty() || url.hasFragment()
+        || !QRegularExpression("^[0-9a-f]{64}$").match(digest).hasMatch()) return {};
+    return {{"source", source}, {"revision", sourceRevision(source, data)}, {"digest", digest},
+        {"version", c.metadata["version"]}, {"license", c.metadata["license"]}, {"author", c.metadata["author"]},
+        {"terms", QString::fromLatin1(QCryptographicHash::hash(c.terms.toUtf8(), QCryptographicHash::Sha256).toHex())}};
 }
 QString dataFolder() { return QStandardPaths::writableLocation(QStandardPaths::AppDataLocation); }
 bool validate(const QString &folder, QJsonObject &meta, QString &terms, QString &error) {
@@ -153,7 +193,10 @@ bool install(Candidate &c, QString &error, const QString &data) {
     QJsonObject meta; QString terms;
     if (!validate(c.folder, meta, terms, error)) return false;
     if (meta != c.metadata || terms != c.terms) { error = "Pack metadata or terms changed after confirmation."; return false; }
-    return queue(root(data), meta.value("kind").toString(), meta.value("id").toString(), c.folder, error);
+    if (!c.origin.isEmpty() && c.origin != installationOrigin(c, c.origin["source"].toString(), c.origin["digest"].toString(), data)) {
+        error = "Installation origin changed after confirmation."; return false;
+    }
+    return queue(root(data), meta.value("kind").toString(), meta.value("id").toString(), c.folder, error, c.origin, c.automatic);
 }
 bool remove(const QString &kind, const QString &id, QString &error, const QString &data) {
     if (!identity(kind, id)) { error = "Invalid pack identity or built-in pack."; return false; }
@@ -171,13 +214,27 @@ bool applyPending(QString &error, const QString &data) {
         const auto kind = op.value("kind").toString(), id = op.value("id").toString();
         if (!ordinary(job) || !identity(kind, id) || name != kind + '-' + id || !op.value("remove").isBool()) { error = "Invalid pending pack operation."; return false; }
         const auto target = parent(base, kind) + '/' + id, payload = job + "/payload/" + id, backup = job + "/previous";
+        const auto rollback = [&] {
+            if (!op["remove"].toBool() && QFileInfo::exists(target) && !QFileInfo::exists(payload)) {
+                if (!QDir().mkpath(QFileInfo(payload).path()) || !QDir().rename(target, payload)) return false;
+            }
+            return !QFileInfo::exists(backup) || QDir().rename(backup, target);
+        };
         if (!ordinary(target) || !ordinary(backup)) { error = "Unsafe installed pack path."; return false; }
         // Recovery after interruption between the two renames.
         if (QFileInfo::exists(backup) && !QFileInfo::exists(target)) {
             if (!QDir().rename(backup, target)) { error = "Cannot restore previous pack."; return false; }
         }
+        if (op["automatic"].toBool() && QFileInfo::exists(payload)
+            && (op["origin"].toObject()["revision"].toString() != sourceRevision(op["origin"].toObject()["source"].toString(), base))) {
+            QDir(job).removeRecursively(); continue; // Removed/re-added source revokes staged automatic work.
+        }
         if (!op.value("remove").toBool()) {
-            if (!QFileInfo::exists(payload) && QFileInfo::exists(target)) { QDir(job).removeRecursively(); continue; }
+            if (!QFileInfo::exists(payload) && QFileInfo::exists(target)) {
+                if (!saveOrigin(base, kind, id, op["origin"].toObject(), error)) return false;
+                if (op["remove"].toBool() && kind == "plugin" && !clearRemovedPluginSelection(base, id, error)) return false;
+                QDir(job).removeRecursively(); continue;
+            }
             QJsonObject meta; QString terms, reason;
             bool valid = validate(payload, meta, terms, reason);
             if (valid && meta.value("kind").toString() != kind) { reason = "Pending pack kind does not match its operation."; valid = false; }
@@ -197,10 +254,14 @@ bool applyPending(QString &error, const QString &data) {
             if (QFileInfo::exists(backup)) QDir().rename(backup, target);
             error = "Cannot install pack; previous pack retained."; return false;
         }
+        const auto priorOrigin = object(originPath(base, kind, id));
+        if (!saveOrigin(base, kind, id, op["remove"].toBool() ? QJsonObject{} : op["origin"].toObject(), error)) {
+            rollback(); return false;
+        }
         if (op.value("remove").toBool() && kind == "plugin" && !clearRemovedPluginSelection(base, id, error)) {
-            // Selection and installed pack must agree if the preference commit fails.
-            // Keep the durable operation so startup can retry after the obstacle is fixed.
-            if (QFileInfo::exists(backup) && !QDir().rename(backup, target)) error += " Cannot restore previous pack.";
+            QString originError;
+            if (!saveOrigin(base, kind, id, priorOrigin, originError)) error += " " + originError;
+            if (!rollback()) error += " Cannot restore previous pack.";
             return false;
         }
         if (!QDir(job).removeRecursively()) { error = "Pack changed, but its transaction backup could not be cleaned up."; return false; }

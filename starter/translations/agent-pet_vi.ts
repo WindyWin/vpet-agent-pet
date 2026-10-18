@@ -253,6 +253,14 @@ Nguồn: %6</translation>
         <translation>Gói Agent Pet (*.agentpet)</translation>
     </message>
     <message>
+        <source> — No source (manual updates only)</source>
+        <translation> — Không có nguồn (chỉ cập nhật thủ công)</translation>
+    </message>
+    <message>
+        <source> — Installed from a source</source>
+        <translation> — Đã cài từ một nguồn</translation>
+    </message>
+    <message>
         <source>Remove installed pack…</source>
         <translation>Gỡ gói đã cài…</translation>
     </message>
@@ -1840,6 +1848,30 @@ Các cài đặt và hook khác được giữ nguyên. Hãy đăng ký từ th�
         <translation>Thư viện chính thức</translation>
     </message>
     <message>
+        <source>Automatically update installed packs from this source</source>
+        <translation>Tự động cập nhật gói đã cài từ nguồn này</translation>
+    </message>
+    <message>
+        <source>Off by default. Verified updates with unchanged terms are staged for the next start. Automatic checks must also be enabled in Updates settings.</source>
+        <translation>Mặc định tắt. Bản cập nhật đã xác minh với điều khoản không đổi được chuẩn bị cho lần khởi động sau. Cần bật kiểm tra tự động trong phần Cập nhật.</translation>
+    </message>
+    <message>
+        <source>Automatic pack updates</source>
+        <translation>Tự động cập nhật gói</translation>
+    </message>
+    <message>
+        <source>Allow background updates from %1? Only packs installed from this source are eligible. Changed terms require manual acceptance. Updates apply on the next start.</source>
+        <translation>Cho phép cập nhật trong nền từ %1? Chỉ áp dụng cho gói đã cài từ nguồn này. Điều khoản thay đổi phải được chấp nhận thủ công. Bản cập nhật áp dụng ở lần khởi động sau.</translation>
+    </message>
+    <message>
+        <source>Enable automatic updates</source>
+        <translation>Bật cập nhật tự động</translation>
+    </message>
+    <message>
+        <source>Background pack download: %1 / %2 MiB</source>
+        <translation>Tải gói trong nền: %1 / %2 MiB</translation>
+    </message>
+    <message>
         <source>Third-party: %1</source>
         <translation>Bên thứ ba: %1</translation>
     </message>
@@ -1880,6 +1912,14 @@ Giấy phép: %3 · Yêu cầu Agent Pet %4 · Cấu trúc %5
     <message>
         <source>Compatible</source>
         <translation>Tương thích</translation>
+    </message>
+    <message>
+        <source>Installed source: %1</source>
+        <translation>Nguồn đã cài: %1</translation>
+    </message>
+    <message>
+        <source>No source — manual updates only</source>
+        <translation>Không có nguồn — chỉ cập nhật thủ công</translation>
     </message>
     <message>
         <source>Setup required: %1</source>
@@ -1974,8 +2014,63 @@ Tiện ích sẽ tắt trừ khi đã được bật trước đó. Tích hợp 
         <translation>Chấp nhận điều khoản và cài đặt</translation>
     </message>
     <message>
+        <source>Source is unavailable.</source>
+        <translation>Nguồn không khả dụng.</translation>
+    </message>
+    <message>
         <source>Installation cancelled. Installed packs are unchanged.</source>
         <translation>Đã hủy cài đặt. Các gói đã cài không thay đổi.</translation>
+    </message>
+</context>
+<context>
+    <name>pet::packs::Updater</name>
+    <message>
+        <source>Cannot save pack update settings.</source>
+        <translation>Không thể lưu cài đặt cập nhật gói.</translation>
+    </message>
+    <message>
+        <source>Source is unavailable.</source>
+        <translation>Nguồn không khả dụng.</translation>
+    </message>
+    <message>
+        <source>Another pack update settings change is in progress.</source>
+        <translation>Một thay đổi cài đặt cập nhật gói khác đang diễn ra.</translation>
+    </message>
+    <message>
+        <source>Cannot read pack update settings.</source>
+        <translation>Không thể đọc cài đặt cập nhật gói.</translation>
+    </message>
+    <message>
+        <source>Checking installed packs for updates…</source>
+        <translation>Đang kiểm tra bản cập nhật cho gói đã cài…</translation>
+    </message>
+    <message>
+        <source>Update available: %1 %2</source>
+        <translation>Có bản cập nhật: %1 %2</translation>
+    </message>
+    <message>
+        <source>Pack update staged. Restart Agent Pet to apply it.</source>
+        <translation>Đã chuẩn bị bản cập nhật gói. Khởi động lại Agent Pet để áp dụng.</translation>
+    </message>
+    <message>
+        <source>Automatic update consent is no longer valid.</source>
+        <translation>Quyền cập nhật tự động không còn hiệu lực.</translation>
+    </message>
+    <message>
+        <source>The installed pack or its origin changed.</source>
+        <translation>Gói đã cài hoặc nguồn gốc của gói đã thay đổi.</translation>
+    </message>
+    <message>
+        <source>Downloaded pack failed integrity verification.</source>
+        <translation>Gói đã tải không vượt qua kiểm tra tính toàn vẹn.</translation>
+    </message>
+    <message>
+        <source>Archive metadata does not match the catalog.</source>
+        <translation>Thông tin trong gói không khớp danh mục.</translation>
+    </message>
+    <message>
+        <source>Updated pack terms or origin require manual acceptance.</source>
+        <translation>Điều khoản hoặc nguồn gốc của gói cập nhật cần được chấp nhận thủ công.</translation>
     </message>
 </context>
 <context>

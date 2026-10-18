@@ -1,5 +1,7 @@
 #include "source_browser.h"
 #include "packs/installer.h"
+#include "packs/updater.h"
+#include <QCheckBox>
 #include "animation/pet_library.h"
 #include "version.h"
 #include <QComboBox>
@@ -48,6 +50,17 @@ SourceBrowser::SourceBrowser(QWidget *parent, const QString &sourceFolder) : QDi
     removeSource_ = new QPushButton(tr("Remove source"), this); row->addWidget(removeSource_);
     refresh_ = new QPushButton(tr("Refresh"), this); row->addWidget(refresh_); layout->addLayout(row);
     notice_ = label(this); notice_->setText(tr("Catalogs are cached for offline browsing. Refresh contacts the selected source; selecting a pack loads its preview. Third-party sources are unverified. Installing a plugin does not enable it or connect an external integration.")); layout->addWidget(notice_);
+    automatic_ = new QCheckBox(tr("Automatically update installed packs from this source"), this); layout->addWidget(automatic_);
+    automatic_->setToolTip(tr("Off by default. Verified updates with unchanged terms are staged for the next start. Automatic checks must also be enabled in Updates settings."));
+    background_ = label(this); layout->addWidget(background_);
+    connect(automatic_, &QCheckBox::toggled, this, [this](bool value) {
+        auto *updater = packs::Updater::active(); if (!updater) return;
+        const auto source = sources_->currentData().toString();
+        if (value && !confirm(tr("Automatic pack updates"), tr("Allow background updates from %1? Only packs installed from this source are eligible. Changed terms require manual acceptance. Updates apply on the next start.").arg(source), tr("Enable automatic updates"))) {
+            automatic_->blockSignals(true); automatic_->setChecked(false); automatic_->blockSignals(false); return;
+        }
+        QString error; if (!updater->setAutomatic(source, value, error)) { status_->setText(error); loadCatalog(); }
+    });
     list_ = new QListWidget(this); list_->setAccessibleName(tr("Available packs")); layout->addWidget(list_, 1);
     auto *info = new QHBoxLayout; preview_ = label(this); preview_->setFixedSize(128, 128); info->addWidget(preview_);
     details_ = new QPlainTextEdit(this); details_->setReadOnly(true); details_->setAccessibleName(tr("Pack details")); details_->setMaximumHeight(220); info->addWidget(details_, 1); layout->addLayout(info);
@@ -58,7 +71,9 @@ SourceBrowser::SourceBrowser(QWidget *parent, const QString &sourceFolder) : QDi
     status_ = label(this); status_->setTextInteractionFlags(Qt::TextSelectableByMouse); layout->addWidget(status_);
     auto *buttons = new QDialogButtonBox(this); cancel_ = buttons->addButton(tr("Cancel download"), QDialogButtonBox::ActionRole); cancel_->setEnabled(false);
     close_ = buttons->addButton(tr("Close"), QDialogButtonBox::RejectRole); connect(close_, &QPushButton::clicked, this, &QDialog::close); layout->addWidget(buttons);
-    connect(cancel_, &QPushButton::clicked, &transfer_, &packs::Download::cancel);
+    connect(cancel_, &QPushButton::clicked, this, [this] {
+        if (working_) transfer_.cancel(); else if (auto *u = packs::Updater::active()) u->cancel();
+    });
     connect(sources_, &QComboBox::currentIndexChanged, this, [this] { loadCatalog(); });
     connect(list_, &QListWidget::currentRowChanged, this, [this] { select(); });
     connect(refresh_, &QPushButton::clicked, this, &SourceBrowser::refresh);
@@ -74,7 +89,7 @@ SourceBrowser::SourceBrowser(QWidget *parent, const QString &sourceFolder) : QDi
     connect(removeSource_, &QPushButton::clicked, this, [this] {
         const auto url = sources_->currentData().toString();
         if (!confirm(tr("Remove source"), tr("Remove %1 from the source list? Installed packs will be kept.").arg(url), tr("Remove source"))) return;
-        QString error; if (!store_.remove(url, error)) status_->setText(error); else loadSources();
+        QString error; if (!store_.remove(url, error)) status_->setText(error); else { if (auto *u = packs::Updater::active()) u->policyChanged(); loadSources(); }
     });
     connect(remove_, &QPushButton::clicked, this, [this] {
         const auto i = list_->currentRow(); if (i < 0 || i >= entries_.size()) return;
@@ -99,11 +114,26 @@ SourceBrowser::SourceBrowser(QWidget *parent, const QString &sourceFolder) : QDi
         else preview_->setPixmap(QPixmap::fromImage(image).scaled(128, 128, Qt::KeepAspectRatio, Qt::SmoothTransformation));
     });
     connect(&previewTransfer_, &packs::Download::failed, this, [this] { preview_->setText(tr("Preview unavailable")); });
+    if (auto *updater = packs::Updater::active()) {
+        background_->setText(updater->message()); cancel_->setEnabled(updater->busy());
+        connect(updater, &packs::Updater::changed, this, [this, updater] {
+            background_->setText(updater->message());
+            if (!working_) cancel_->setEnabled(updater->busy());
+            automatic_->blockSignals(true); automatic_->setChecked(updater->automatic(sources_->currentData().toString())); automatic_->blockSignals(false);
+            if (!working_) { suppressPreview_ = true; const auto row = list_->currentRow(); loadCatalog(); list_->setCurrentRow(row); suppressPreview_ = false; }
+        });
+        connect(updater, &packs::Updater::progress, this, [this](qint64 bytes, qint64 total) {
+            if (!working_) cancel_->setEnabled(true);
+            background_->setText(tr("Background pack download: %1 / %2 MiB").arg(double(bytes) / (1024 * 1024), 0, 'f', 1).arg(double(total) / (1024 * 1024), 0, 'f', 1));
+        });
+    }
     loadSources();
 }
 void SourceBrowser::changeEvent(QEvent *event) {
     QDialog::changeEvent(event);
     if (event->type() != QEvent::LanguageChange) return;
+    automatic_->setText(tr("Automatically update installed packs from this source"));
+    automatic_->setToolTip(tr("Off by default. Verified updates with unchanged terms are staged for the next start. Automatic checks must also be enabled in Updates settings."));
     setWindowTitle(tr("Pack sources")); sources_->setAccessibleName(tr("Source"));
     add_->setText(tr("Add source…")); removeSource_->setText(tr("Remove source"));
     refresh_->setText(tr("Refresh")); list_->setAccessibleName(tr("Available packs"));
@@ -134,6 +164,9 @@ void SourceBrowser::loadSources(const QString &selected) {
     if (!error.isEmpty()) status_->setText(error);
 }
 void SourceBrowser::loadCatalog() {
+    automatic_->blockSignals(true);
+    auto *updater = packs::Updater::active(); automatic_->setEnabled(updater && !working_);
+    automatic_->setChecked(updater && updater->automatic(sources_->currentData().toString())); automatic_->blockSignals(false);
     QString error; entries_ = store_.cached(sources_->currentData().toString(), error);
     list_->clear();
     for (const auto &e : entries_) {
@@ -156,16 +189,18 @@ void SourceBrowser::select() {
     install_->setText(update ? tr("Update…") : tr("Install…"));
     install_->setEnabled(!working_ && !pending(e) && reason.isEmpty() && (m.isEmpty() || update));
     remove_->setEnabled(!working_ && !pending(e) && !m.isEmpty());
+    const auto origin = packs::packOrigin(e.metadata["kind"].toString(), e.metadata["id"].toString());
     details_->setPlainText(tr("%1 by %2\nLicence: %3 · Requires Agent Pet %4 · Schema %5\n%6\n%7")
         .arg(e.metadata["name"].toString(), e.metadata["author"].toString(), e.metadata["license"].toString(), e.metadata["minAppVersion"].toString())
         .arg(e.metadata["schema"].toInt()).arg(e.description, reason.isEmpty() ? tr("Compatible") : reason)
+        + (!m.isEmpty() ? '\n' + tr("Installed source: %1").arg(origin.isEmpty() ? tr("No source — manual updates only") : origin["source"].toString()) : QString())
         + (e.setup.isEmpty() ? QString() : '\n' + tr("Setup required: %1").arg(e.setup))
         + (e.metadata["kind"] == "plugin" ? '\n' + tr("Target pet: %1").arg(e.metadata["pet"].toString()) : QString()));
-    if (!working_) previewTransfer_.start(e.preview, 4 * 1024 * 1024);
+    if (!working_ && !suppressPreview_) previewTransfer_.start(e.preview, 4 * 1024 * 1024);
 }
 void SourceBrowser::busy(bool value) {
-    working_ = value; sources_->setEnabled(!value); list_->setEnabled(!value); add_->setEnabled(!value);
-    refresh_->setEnabled(!value); direct_->setEnabled(!value); cancel_->setEnabled(value);
+    working_ = value; automatic_->setEnabled(!value && packs::Updater::active()); sources_->setEnabled(!value); list_->setEnabled(!value); add_->setEnabled(!value);
+    refresh_->setEnabled(!value); direct_->setEnabled(!value); cancel_->setEnabled(value || (packs::Updater::active() && packs::Updater::active()->busy()));
     progress_->setVisible(value); select();
 }
 void SourceBrowser::refresh() {
@@ -178,7 +213,7 @@ void SourceBrowser::download() {
     if (!confirm(tr("Download pack"), tr("Download %1 (%2 MiB)?\nLicence: %3\nSource: %4\n%5\nYou will review the archive's terms before installing.")
         .arg(e.metadata["name"].toString()).arg(double(e.bytes) / (1024 * 1024), 0, 'f', 1)
         .arg(e.metadata["license"].toString(), sources_->currentData().toString(), sources_->currentData().toString() == packs::officialSource() ? tr("Official gallery") : tr("Unverified third-party source")), tr("Download"))) return;
-    source_ = sources_->currentData().toString();
+    source_ = sources_->currentData().toString(); revision_ = packs::sourceRevision(source_);
     mode_ = "pack"; busy(true); transfer_.start(e.download, packs::MaxDownload, e.bytes, e.digest);
 }
 void SourceBrowser::direct() {
@@ -212,6 +247,11 @@ void SourceBrowser::received(const QString &path) {
     if (!self) return;
     consent->deleteLater();
     if (result == QDialog::Accepted) {
+        if (mode_ == "pack") {
+            QString sourceError;
+            if (!store_.urls(sourceError).contains(source_) || !sourceError.isEmpty() || revision_ != packs::sourceRevision(source_)) { busy(false); status_->setText(tr("Source is unavailable.")); return; }
+            candidate->origin = packs::installationOrigin(*candidate, source_, downloading_.digest);
+        }
         if (packs::install(*candidate, error)) error = tr("Pack change queued. Restart Agent Pet to apply it.");
     } else error = tr("Installation cancelled. Installed packs are unchanged.");
     busy(false); loadCatalog(); status_->setText(error);

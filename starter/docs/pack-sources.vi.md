@@ -53,3 +53,39 @@ thông tin đăng nhập hoặc phần neo. Ảnh PNG tối đa 4 MiB và 512 ×
 xuống tối đa 544 MiB; quy trình nhập áp dụng thêm giới hạn riêng cho từng loại gói.
 Danh mục sai, trùng mã, thiếu mã băm hoặc chứa trường không hỗ trợ sẽ bị từ chối mà
 không ảnh hưởng dữ liệu đã cài. Xem tài liệu tiếng Anh để biết toàn bộ giới hạn.
+
+## Cập nhật gói đã cài
+
+Khi cài từ danh mục, ứng dụng lưu URL nguồn, phiên bản, SHA-256 của tệp và điều
+khoản đã chấp nhận bên ngoài nội dung gói. Gói nhập từ tệp hoặc URL trực tiếp
+**không có nguồn** và không được tự động cập nhật. Các gói được cài bằng phiên
+bản ứng dụng trước cũng không có nguồn; hãy cài rõ ràng một phiên bản mới hơn từ
+danh mục và chấp nhận điều khoản để thiết lập nguồn.
+
+Khi bật **Tự động kiểm tra mỗi ngày** trong phần Cập nhật, Agent Pet kiểm tra các
+nguồn của gói đã cài sau khi khởi động nếu đến hạn, rồi mỗi ngày. Thời điểm thử
+kiểm tra được lưu qua các lần khởi động. Tắt tùy chọn này cũng dừng kiểm tra và
+tải gói trong nền. Chế độ tải/cài bản cập nhật ứng dụng không cấp quyền cập nhật
+gói. Bạn vẫn có thể chủ động làm mới danh mục và cài thủ công. Khi ngoại tuyến
+hoặc kiểm tra thất bại, danh mục hợp lệ gần nhất và gói đang hoạt động được giữ lại.
+
+Trong **Nguồn gói**, chọn một nguồn và bật **Tự động cập nhật gói đã cài từ nguồn
+này**. Mặc định tùy chọn này tắt cho mọi nguồn, kể cả thư viện chính thức. Chỉ
+phiên bản mới hơn của gói đã cài từ chính nguồn đó mới đủ điều kiện. Các lượt tải
+chạy lần lượt, kiểm tra kích thước, SHA-256, nội dung và tính tương thích. Cửa sổ
+hiển thị tiến độ và cho phép hủy. Bản cập nhật hợp lệ được chuẩn bị để áp dụng
+ở lần khởi động sau, giữ lựa chọn thú cưng và trạng thái bật plugin. Tải lỗi hoặc
+bị hủy không làm mất phiên bản đang hoạt động. Giao dịch gói và bản ghi nguồn
+được khôi phục nếu ứng dụng bị gián đoạn.
+
+Nếu tác giả, giấy phép hoặc toàn bộ điều khoản hiển thị thay đổi, bạn phải chấp
+nhận thủ công. Bản cập nhật vẫn có trong danh mục nhưng không tự động áp dụng.
+Phiên bản yêu cầu ứng dụng mới hơn hoặc lược đồ chưa hỗ trợ cũng hiển thị lý do
+không tương thích và không được tải tự động. Gói biến mất khỏi danh mục không bị xóa.
+
+Xóa nguồn giữ lại gói đã cài nhưng thu hồi nguồn gốc và quyền tự động cập nhật.
+Gói hiển thị **Không có nguồn (chỉ cập nhật thủ công)**. Bản cập nhật tự động đã
+chuẩn bị từ nguồn bị xóa sẽ bị bỏ ở lần khởi động sau. Thêm lại cùng URL không
+khôi phục nguồn gốc hoặc quyền cũ; cần cài thủ công phiên bản mới hơn từ danh mục.
+Tắt cập nhật gói tự động dừng các lượt tải tiếp theo; bản cập nhật đã xác minh và
+chuẩn bị vẫn chờ lần khởi động sau.

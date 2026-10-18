@@ -90,3 +90,41 @@ Previews must be PNG, at most 4 MiB and 512 × 512 pixels. Archive downloads are
 at 544 MiB; the importer enforces the stricter per-kind extracted-data limits.
 HTTPS redirects are allowed up to five hops; credentials and insecure redirects are
 rejected. Idle requests time out after 30 seconds, with a ten-minute transfer limit.
+
+## Updates for installed packs
+
+Source installs now record the catalog URL, version, archive SHA-256 and accepted
+terms in app-owned storage outside the pack. Local imports and direct URL installs
+have **no source** and are never automatically updated. Existing installations
+from older app versions also have no source; explicitly installing a newer version
+from a catalog establishes its origin after you accept its terms.
+
+When **Check automatically once a day** is enabled in Updates settings, Agent Pet
+checks the sources of installed packs shortly after startup when due, then daily.
+The last attempt is saved across restarts. Disabling that setting stops background
+pack checks and downloads too. App-binary download/install modes do not grant
+permission to update packs. Explicit catalog refresh and manual installation remain
+available. Offline or failed checks retain the last valid catalog and working packs.
+
+In **Browse pack sources**, select a source and enable **Automatically update
+installed packs from this source** to opt in. This is off by default for every
+source, including the official gallery. Only newer versions of packs already
+installed from that exact source qualify. Downloads run sequentially with size,
+SHA-256, archive and compatibility validation; progress and cancellation are shown
+in the browser. Verified updates are staged and apply on the next start, preserving
+selected pets and enabled plugins. A failed or cancelled download leaves the
+working version intact. Interrupted staging and origin commits recover at startup.
+
+Changed author, licence or full displayed terms require manual acceptance. Such an
+update is available in the catalog but is not automatically staged. A version that
+requires a newer app or unsupported schema is also visible, with its compatibility
+reason, and is not downloaded automatically. A pack disappearing from a catalog
+never removes it.
+
+Removing a source keeps its installed packs and permanently revokes their origin
+and that source's automatic-update consent. They appear as **No source (manual
+updates only)**. Staged automatic changes from the removed source are discarded
+on the next start. Re-adding the same URL does not restore previous consent or
+origins; install a newer catalog version explicitly to establish the origin again.
+Disabling automatic pack updates stops further background downloads; updates that
+were already verified and staged remain pending for the next start.

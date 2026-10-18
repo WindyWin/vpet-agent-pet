@@ -1,4 +1,5 @@
 #include "sources.h"
+#include <QUuid>
 #include "i18n/contexts.h"
 #include <QCoreApplication>
 #include <QCryptographicHash>
@@ -138,6 +139,7 @@ bool SourceStore::remove(const QString &url, QString &error) {
     QDir().mkpath(folder_); QLockFile lock(folder_ + "/sources.lock");
     if (!lock.tryLock()) { error = PackSources::tr("Another source change is in progress."); return false; }
     auto list = urls(error); if (!error.isEmpty()) return false;
+    if (!write(cachePath(url).chopped(5) + ".revision", QUuid::createUuid().toByteArray(QUuid::WithoutBraces), error)) return false;
     list.removeAll(url); return save(list, error);
 }
 QVector<Entry> SourceStore::cached(const QString &url, QString &error) const {

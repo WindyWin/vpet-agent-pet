@@ -63,4 +63,9 @@ size/digest-verified temporary downloads. `desktop/source_browser` provides manu
 browse/refresh/install/update/remove and terms consent, then calls the existing
 `packs/installer` transaction pipeline. Preview decoding is bounded; catalog text
 is inert. Neither catalog refresh nor installation enables a plugin or integration.
+`packs/updater` schedules daily checks under the app updater's automatic-check
+policy. Separate per-source opt-ins allow verified updates with unchanged terms
+to enter the same restart transaction. App-owned origin records commit with each
+payload; source revocation revisions prevent re-added URLs from restoring old
+consent. Local and direct-URL imports remain without an update source.
 See [source publishing and usage](pack-sources.md).

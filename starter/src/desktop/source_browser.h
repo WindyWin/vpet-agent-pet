@@ -2,6 +2,7 @@
 #include <QDialog>
 #include "packs/sources.h"
 class QComboBox;
+class QCheckBox;
 class QListWidget;
 class QLabel;
 class QPushButton;
@@ -22,15 +23,17 @@ private:
     QNetworkAccessManager network_;
     packs::Download transfer_, previewTransfer_;
     QComboBox *sources_;
+    QCheckBox *automatic_;
+    QLabel *background_;
     QListWidget *list_;
     QPlainTextEdit *details_;
     QLabel *preview_, *status_, *notice_;
     QPushButton *refresh_, *add_, *removeSource_, *install_, *remove_, *direct_, *cancel_, *close_;
     QProgressBar *progress_;
     QVector<packs::Entry> entries_;
-    QString source_, mode_;
+    QString source_, mode_, revision_;
     packs::Entry downloading_;
-    bool working_ = false, closing_ = false;
+    bool working_ = false, closing_ = false, suppressPreview_ = false;
     void loadSources(const QString &selected = {});
     void loadCatalog();
     void select();

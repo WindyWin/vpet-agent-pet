@@ -423,3 +423,38 @@ Both Settings tabs now delegate removal notifications to one handler, so the reu
   interrupted removal, partial queue success, successful cleanup, and reinstall
   without resurrecting the removed selection. Both Settings tabs retain the
   selection while the shared source browser only queues the removal.
+
+### Phase 6 automatic source updates (2026-10-18)
+
+- App-owned `pack-origins/<kind>-<id>.json` stores source identity/revision,
+  installed version, archive digest and accepted author/licence/terms digest.
+  Pending operations carry the next origin alongside the staged payload. Startup
+  finalizes the origin before deleting the old payload backup; a crash after
+  payload replacement resumes that commit. Local replacements clear origins.
+- A separate pack updater checks only sources of installed, recorded origins.
+  It shares the existing app updater's automatic-check policy, persists daily
+  attempt throttling and uses bounded sequential HTTPS transfers. The binary
+  updater's automatic install mode does not authorize pack updates.
+- Automatic pack updates are separately opt-in per source and default off.
+  Only increasing SemVer versions from the recorded source, with unchanged
+  author/licence/full displayed terms, can be staged without another prompt.
+  Every archive passes digest, size, index agreement and importer validation.
+  Incompatible versions remain visible in cached Settings catalogs.
+- Removing a source rotates a persistent revocation revision before updating
+  its source list. This revokes installed origins, opt-ins and unapplied automatic
+  operations without deleting installed artwork. Re-adding a URL cannot revive
+  consent. Disabling an opt-in cancels its current download, while already
+  verified staged changes remain pending. Failed or malformed state fails closed.
+- Existing phase-5 installs have no trustworthy persisted origin and are not
+  inferred from matching catalog ids or versions. A new explicit catalog install
+  establishes origin; local/direct URL imports never do.
+- Optional session-list/bubble notifications are deferred; Settings provides
+  available/incompatible updates, origin labels, progress and cancellation.
+- Validation: Linux Release build and all 23 CTest suites passed (19 in the
+  sandbox, four native IPC/process suites rerun outside it). Final focused
+  source/update/transaction/import/pet/plugin/i18n suites passed after review.
+  Tests include opt-in and local-import isolation, SHA/size/terms failures,
+  incompatible catalogs, interrupted downloads, source removal/re-addition,
+  persisted throttling, corrupt caches/settings, payload/origin crash recovery
+  and rollback when the origin cannot be saved. Asset verification passed for
+  all 148 VPet sequences; Vietnamese strings and usage docs are updated.

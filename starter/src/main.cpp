@@ -1,4 +1,5 @@
 #include "updates/controller.h"
+#include "packs/updater.h"
 #include <QSaveFile>
 #include <QLockFile>
 #include <QDir>
@@ -154,6 +155,7 @@ int main(int argc, char **argv) {
         monitor.locked = pet::platform::createScreenLockQuery(&app); // The application outlives the monitor.
         if (receiver) monitor.listen(std::move(receiver));
         std::unique_ptr<pet::updates::Controller> updates;
+        std::unique_ptr<pet::packs::Updater> packUpdates;
         if (!parser.isSet("smoke-test") && !parser.isSet("no-persist")) {
             updates = std::make_unique<pet::updates::Controller>();
             monitor.restoreSessions(pet::updates::dataDirectory() + "/sessions.json");
@@ -161,6 +163,10 @@ int main(int argc, char **argv) {
             window.setUpdates(updates.get());
             QObject::connect(updates.get(), &pet::updates::Controller::restartRequested, &window, &pet::PetWindow::requestQuit);
             updates->start();
+            packUpdates = std::make_unique<pet::packs::Updater>(pet::packs::dataFolder());
+            packUpdates->checksEnabled = [&updates] { return updates->automaticChecksEnabled(); };
+            QObject::connect(updates.get(), &pet::updates::Controller::changed, packUpdates.get(), &pet::packs::Updater::policyChanged);
+            packUpdates->start();
         }
         window.show();
         const QString health = parser.value("update-health");

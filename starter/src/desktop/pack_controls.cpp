@@ -66,10 +66,16 @@ QWidget *packControls(QWidget *parent, const QString &kind, std::function<void(c
         const auto path = QFileDialog::getOpenFileName(widget, QCoreApplication::translate("PackControls", "Import pack"), {}, QCoreApplication::translate("PackControls", "Agent Pet packs (*.agentpet)"));
         if (!path.isEmpty()) importPack(widget, path);
     });
-    auto *choices = new QComboBox(widget); layout->addWidget(choices);
+    auto *choices = new QComboBox(widget); choices->setSizeAdjustPolicy(QComboBox::AdjustToMinimumContentsLengthWithIcon);
+    choices->setMinimumContentsLength(24); layout->addWidget(choices);
     auto &library = PetLibrary::shared();
-    if (kind == "pet") { for (const auto &p : library.pets()) if (!p.folder.isEmpty()) choices->addItem(p.name + " (" + p.id + ')', p.id); }
-    else { for (const auto &p : library.plugins()) choices->addItem(p.name + " (" + p.id + ')', p.id); }
+    const auto sourceLabel = [&](const QString &id) {
+        const auto origin = packs::packOrigin(kind, id);
+        return origin.isEmpty() ? QCoreApplication::translate("PackControls", " — No source (manual updates only)")
+            : QCoreApplication::translate("PackControls", " — Installed from a source");
+    };
+    if (kind == "pet") { for (const auto &p : library.pets()) if (!p.folder.isEmpty()) choices->addItem(p.name + " (" + p.id + ')' + sourceLabel(p.id), p.id); }
+    else { for (const auto &p : library.plugins()) choices->addItem(p.name + " (" + p.id + ')' + sourceLabel(p.id), p.id); }
     auto *remove = new QPushButton(QCoreApplication::translate("PackControls", "Remove installed pack…"), widget); remove->setEnabled(choices->count()); layout->addWidget(remove);
     QObject::connect(remove, &QPushButton::clicked, widget, [widget, choices, remove, kind, removed] {
         const auto id = choices->currentData().toString();
