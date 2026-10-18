@@ -19,7 +19,9 @@ in later phases. The build and on-demand workflow remains available meanwhile.
 
 In Settings → Pet, choose **Open pets folder** and copy a complete unpacked pet
 folder into it, then restart Agent Pet to refresh the installed-pet list. Settings and About
-reuse metadata validated at startup; starting a pet still validates its current files.
+reuse bounded identity metadata read at startup, without scanning inactive artwork. The display
+list includes up to 256 local folders; remove unused folders if that limit is reached. Starting a pet
+always validates its complete current contents.
 The folder name must match its `id`:
 
 | Platform | Folder |

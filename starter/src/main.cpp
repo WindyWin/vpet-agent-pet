@@ -118,8 +118,8 @@ int main(int argc, char **argv) {
             qWarning().noquote() << QString("Pet \"%1\" is unavailable: %2; using vpet").arg(chosen, petError);
         // Downloaded packs that no pet of this version uses any more go.
         if (persist) pet::PetLibrary::shared().prune();
-        // Hash local packs once before showing UI; settings/about reuse display metadata until restart.
-        // Activation still validates the current files independently of this display-only snapshot.
+        // Read only bounded display metadata here, never scan or hash inactive packs' artwork.
+        // Activation validates the selected pack independently of this display-only snapshot.
         pet::PetLibrary::shared().refreshDisplaySnapshot();
         pet::PetWindow window(nullptr, {}, persist);
         // Only an explicit --state: the window already plays the pet's own `start` cue, whose state a pet names itself.

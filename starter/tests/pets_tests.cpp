@@ -780,10 +780,11 @@ private slots:
         QTemporaryDir installed, store;
         copyLocalPet(installed.path());
         pet::PetLibrary library(PET_INDEX, "/local-snapshot", store.path(), installed.path());
-        library.refreshDisplaySnapshot();
-        QVERIFY(library.info("local-cat").error.isEmpty());
         QFile frame(installed.filePath("local-cat/idle/_000_100.png"));
         QVERIFY(frame.open(QIODevice::WriteOnly)); frame.write("changed"); frame.close();
+        // Discovery does not touch artwork, including already invalid frames.
+        library.refreshDisplaySnapshot();
+        QVERIFY(library.info("local-cat").error.isEmpty());
         // Display calls reuse the snapshot, but it never authorizes loading changed artwork.
         for (int i = 0; i < 3; ++i) {
             QVERIFY(library.info("local-cat").error.isEmpty());
@@ -794,8 +795,31 @@ private slots:
         }
         QString error;
         QVERIFY(!library.activate("local-cat", &error)); QVERIFY(!error.isEmpty());
+        QFile metadata(installed.filePath("local-cat/pack.json"));
+        QVERIFY(metadata.open(QIODevice::WriteOnly)); metadata.write("{}"); metadata.close();
+        QVERIFY(library.info("local-cat").error.isEmpty());
         library.refreshDisplaySnapshot();
         QVERIFY(!library.info("local-cat").error.isEmpty());
+    }
+    void localDisplayDiscoveryIsBounded() {
+        QTemporaryDir installed, store;
+        for (int i = 0; i < 257; ++i) QVERIFY(QDir().mkpath(installed.filePath("pack-" + QString::number(i))));
+        pet::PetLibrary library(PET_INDEX, "/local-display-limit", store.path(), installed.path());
+        library.refreshDisplaySnapshot();
+        const auto pets = library.pets();
+        QCOMPARE(std::count_if(pets.begin(), pets.end(), [](const pet::PetInfo &pet) { return !pet.folder.isEmpty(); }), 256);
+        // Metadata and preview paths are bounded independently of activation's full-artwork checks.
+        QTemporaryDir valid;
+        copyLocalPet(valid.path());
+        pet::PetLibrary metadata(PET_INDEX, "/local-display-size", store.path(), valid.path());
+        QFile preview(valid.filePath("local-cat/preview.png"));
+        QVERIFY(preview.open(QIODevice::WriteOnly)); QVERIFY(preview.resize(4 * 1024 * 1024 + 1)); preview.close();
+        metadata.refreshDisplaySnapshot();
+        QVERIFY(metadata.info("local-cat").error.contains("oversized"));
+        QFile pack(valid.filePath("local-cat/pack.json"));
+        QVERIFY(pack.open(QIODevice::WriteOnly)); QVERIFY(pack.resize(64 * 1024 + 1)); pack.close();
+        metadata.refreshDisplaySnapshot();
+        QVERIFY(metadata.info("local-cat").error.contains("metadata"));
     }
     void pluginsExtendLocalPets() {
         QTemporaryDir installed, store, plugins; copyLocalPet(installed.path());

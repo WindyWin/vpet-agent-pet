@@ -5,6 +5,7 @@
 #include <QCryptographicHash>
 #include <QDebug>
 #include <QDir>
+#include <QDirIterator>
 #include <QFile>
 #include <QFileInfo>
 #include <QHash>
@@ -79,19 +80,23 @@ QVector<PetInfo> PetLibrary::pets() const {
     return found;
 }
 void PetLibrary::refreshDisplaySnapshot() {
-    displaySnapshot_ = readLocalPets();
+    displaySnapshot_ = readLocalPets(true);
     hasDisplaySnapshot_ = true;
 }
-QVector<PetInfo> PetLibrary::readLocalPets() const {
+QVector<PetInfo> PetLibrary::readLocalPets(bool displayOnly) const {
     QVector<PetInfo> found;
-    for (const auto &id : QDir(localFolder_).entryList(QDir::Dirs | QDir::NoDotAndDotDot, QDir::Name)) {
-        auto pet = localPets::read(QDir(localFolder_).filePath(id));
+    QDirIterator entries(localFolder_, QDir::Dirs | QDir::NoDotAndDotDot);
+    while (entries.hasNext() && (!displayOnly || found.size() < 256)) {
+        const auto folder = entries.next();
+        const auto id = entries.fileName();
+        auto pet = displayOnly ? localPets::readDisplayMetadata(folder) : localPets::read(folder);
         if (!resourceInfo(id).id.isEmpty()) {
             pet.error = "This id belongs to a pet in the app index; choose a different id.";
             pet.preview.clear();
         }
         found.append(pet);
     }
+    std::sort(found.begin(), found.end(), [](const PetInfo &left, const PetInfo &right) { return left.id < right.id; });
     return found;
 }
 PetInfo PetLibrary::info(const QString &id) const {

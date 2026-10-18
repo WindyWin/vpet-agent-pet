@@ -35,15 +35,15 @@ public:
     static QString defaultStore(); // "pets" in the per-user application data folder.
     static QString defaultPetFolder(); // "packs/pets" in the per-user data directory.
     QString petFolder() const { return localFolder_; }
-    QString terms(const QString &id) const; // Bounded plain text; validates local packs once.
-    QString terms(const PetInfo &pet) const; // Reads terms using metadata already validated by info().
+    QString terms(const QString &id) const; // Bounded plain text; resolves info using the current display snapshot.
+    QString terms(const PetInfo &pet) const; // Reads bounded terms using previously checked display metadata.
     QString store() const { return store_; }
     QString blobPath(const QString &sha256) const { return store_ + "/" + sha256 + ".rcc"; }
     QString error() const { return error_; } // Why the index is unavailable; empty when it loaded.
-    // Validate local display metadata before opening any windows. This snapshot is refreshed explicitly
+    // Read bounded local display metadata before opening any windows (up to 256 folders). This snapshot is refreshed explicitly
     // (normally at startup); activate() always validates disk contents independently.
     void refreshDisplaySnapshot();
-    QVector<PetInfo> pets() const; // Indexed pets and validated local packs, including local failures with a reason.
+    QVector<PetInfo> pets() const; // Indexed pets and local display metadata; full validation belongs to activate().
     PetInfo info(const QString &id) const; // An empty `id` when there is no such valid pet.
     PetTree tree(const QString &id) const; // From the index; empty `root` when missing or invalid.
     // The packs still to download: neither installed nor in the store. Empty at once when the store's stamp
@@ -70,7 +70,7 @@ public:
     const Catalog &catalog() const { return catalog_; } // The active pet's; empty before activate().
     QString root() const { return ":" + mapRoot_; } // Pets are at <root>/assets/<id>/.
 private:
-    QVector<PetInfo> readLocalPets() const;
+    QVector<PetInfo> readLocalPets(bool displayOnly = false) const;
     PetInfo resourceInfo(const QString &id) const;
     QString stamp(const QString &id) const;
     // Re-hashes the pet's packs in the store, removing any that do not match, and drops its stamp.

@@ -36,7 +36,7 @@ bool keys(const QJsonObject &o, const QSet<QString> &allowed) {
     return true;
 }
 }
-PetInfo read(const QString &folder, CatalogSource *source) {
+static PetInfo readPack(const QString &folder, CatalogSource *source, bool displayOnly) {
     PetInfo pet;
     pet.id = QFileInfo(folder).fileName(); pet.name = pet.id; pet.folder = folder;
     auto fail = [&](const QString &reason) { pet.error = reason; pet.preview.clear(); return pet; };
@@ -44,48 +44,66 @@ PetInfo read(const QString &folder, CatalogSource *source) {
     if (pet.id == "vpet") return fail("The built-in pet id vpet is reserved.");
     if (QFileInfo(folder).isSymLink() || QFileInfo(folder).isJunction() || !QFileInfo(folder).isDir()) return fail("Pet folder must be a directory, not a link.");
     const QDir dir(folder);
+    // Display discovery only reads known bounded metadata files. Full activation checks every entry.
+    auto displayFile = [&](const QString &relative, qint64 limit) {
+        if (!portable(relative)) return false;
+        QString current = folder;
+        const auto parts = relative.split('/');
+        for (qsizetype i = 0; i < parts.size(); ++i) {
+            current = QDir(current).filePath(parts[i]);
+            const QFileInfo file(current);
+            if (file.isSymLink() || file.isJunction()) return false;
+            if (i + 1 < parts.size()) { if (!file.isDir()) return false; }
+            else if (!file.isFile() || file.size() <= 0 || file.size() > limit) return false;
+        }
+        return true;
+    };
+    if (displayOnly && (!displayFile("pack.json", 64 * 1024) || !displayFile("pet.json", 64 * 1024)))
+        return fail("Missing, unsafe or oversized pet metadata.");
     // Check every entry before reading metadata or following references, including unreferenced files.
     QSet<QString> paths, folded;
     qint64 bytes = 0, pngBytes = 0, jsonBytes = 0, termsBytes = 0;
     int entries = 0;
-    QDirIterator it(folder, QDir::AllEntries | QDir::Hidden | QDir::System | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
-    while (it.hasNext()) {
-        it.next(); const auto file = it.fileInfo();
-        const auto path = dir.relativeFilePath(file.absoluteFilePath());
-        if (++entries > maxEntries) return fail("More than 20000 entries in the pet folder.");
-        if (!portable(path) || file.isSymLink() || file.isJunction() || (!file.isDir() && !file.isFile())) return fail("Unsafe pack entry: " + path);
-        if (folded.contains(path.toCaseFolded())) return fail("Case-insensitive duplicate pack entry: " + path);
-        folded.insert(path.toCaseFolded());
-        if (file.isDir()) {
-            static const QRegularExpression directoryName(QRegularExpression::anchoredPattern("[A-Za-z0-9_-][A-Za-z0-9._-]*"));
-            if (!directoryName.match(file.fileName()).hasMatch()) return fail("Invalid frame folder name: " + path);
-            continue;
+    if (!displayOnly) {
+        QDirIterator it(folder, QDir::AllEntries | QDir::Hidden | QDir::System | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
+        while (it.hasNext()) {
+            it.next(); const auto file = it.fileInfo();
+            const auto path = dir.relativeFilePath(file.absoluteFilePath());
+            if (++entries > maxEntries) return fail("More than 20000 entries in the pet folder.");
+            if (!portable(path) || file.isSymLink() || file.isJunction() || (!file.isDir() && !file.isFile())) return fail("Unsafe pack entry: " + path);
+            if (folded.contains(path.toCaseFolded())) return fail("Case-insensitive duplicate pack entry: " + path);
+            folded.insert(path.toCaseFolded());
+            if (file.isDir()) {
+                static const QRegularExpression directoryName(QRegularExpression::anchoredPattern("[A-Za-z0-9_-][A-Za-z0-9._-]*"));
+                if (!directoryName.match(file.fileName()).hasMatch()) return fail("Invalid frame folder name: " + path);
+                continue;
+            }
+            paths.insert(path); bytes += file.size();
+            if (bytes > maxTotalBytes) return fail("Pet folder exceeds 544 MiB.");
+            const auto suffix = file.suffix();
+            if (suffix == "png") {
+                if (file.size() > plugins::maxFrameBytes) return fail("PNG larger than 4 MiB: " + path);
+                pngBytes += file.size();
+                if (pngBytes > maxPngBytes) return fail("Pet PNGs exceed 512 MiB.");
+                QImageReader reader(file.absoluteFilePath());
+                const auto size = reader.size();
+                if (reader.format() != "png" || !size.isValid() || size.isEmpty()
+                    || size.width() > 2048 || size.height() > 2048) return fail("Invalid PNG or dimensions above 2048 pixels: " + path);
+            } else if (suffix == "json") {
+                qint64 limit = 8LL * 1024 * 1024;
+                if (QStringList{"pack.json", "pet.json", "plugin.json", "events.json"}.contains(path)) limit = 64 * 1024;
+                else if (path != "animations.json") jsonBytes += file.size();
+                if (file.size() > limit || jsonBytes > 8 * 1024 * 1024) return fail("JSON size limit exceeded: " + path);
+                if (object(file.absoluteFilePath(), limit).isEmpty()) return fail("Invalid JSON object: " + path);
+            } else if (suffix == "txt" || suffix == "md") {
+                termsBytes += file.size();
+                if (termsBytes > 1024 * 1024) return fail("Terms exceed 1 MiB.");
+                QFile contents(file.absoluteFilePath());
+                if (!contents.open(QIODevice::ReadOnly)) return fail("Cannot read terms: " + path);
+                QStringDecoder decoder(QStringDecoder::Utf8); const QString decoded = decoder(contents.readAll());
+                if (decoder.hasError()) return fail("Terms must be UTF-8: " + path);
+            } else return fail("Unsupported pack file: " + path);
         }
-        paths.insert(path); bytes += file.size();
-        if (bytes > maxTotalBytes) return fail("Pet folder exceeds 544 MiB.");
-        const auto suffix = file.suffix();
-        if (suffix == "png") {
-            if (file.size() > plugins::maxFrameBytes) return fail("PNG larger than 4 MiB: " + path);
-            pngBytes += file.size();
-            if (pngBytes > maxPngBytes) return fail("Pet PNGs exceed 512 MiB.");
-            QImageReader reader(file.absoluteFilePath());
-            const auto size = reader.size();
-            if (reader.format() != "png" || !size.isValid() || size.isEmpty()
-                || size.width() > 2048 || size.height() > 2048) return fail("Invalid PNG or dimensions above 2048 pixels: " + path);
-        } else if (suffix == "json") {
-            qint64 limit = 8LL * 1024 * 1024;
-            if (QStringList{"pack.json", "pet.json", "plugin.json", "events.json"}.contains(path)) limit = 64 * 1024;
-            else if (path != "animations.json") jsonBytes += file.size();
-            if (file.size() > limit || jsonBytes > 8 * 1024 * 1024) return fail("JSON size limit exceeded: " + path);
-            if (object(file.absoluteFilePath(), limit).isEmpty()) return fail("Invalid JSON object: " + path);
-        } else if (suffix == "txt" || suffix == "md") {
-            termsBytes += file.size();
-            if (termsBytes > 1024 * 1024) return fail("Terms exceed 1 MiB.");
-            QFile contents(file.absoluteFilePath());
-            if (!contents.open(QIODevice::ReadOnly)) return fail("Cannot read terms: " + path);
-            QStringDecoder decoder(QStringDecoder::Utf8); const QString decoded = decoder(contents.readAll());
-            if (decoder.hasError()) return fail("Terms must be UTF-8: " + path);
-        } else return fail("Unsupported pack file: " + path);
     }
     const auto pack = object(dir.filePath("pack.json"), 64 * 1024);
     if (!keys(pack, {"kind", "id", "version", "schema", "minAppVersion", "name", "author", "license", "terms", "source"})
@@ -107,6 +125,11 @@ PetInfo read(const QString &folder, CatalogSource *source) {
         return fail("Pack requires Agent Pet " + minimum + " or newer.");
     if (pack.value("schema").toDouble(-1) != catalogSchema) return fail("Unsupported pack catalog schema; use scripts/migrate_catalog.py for older catalogs.");
     const auto terms = pack.value("terms").toString();
+    if (displayOnly) {
+        if (!displayFile(terms, 1024 * 1024) || !displayFile("preview.png", plugins::maxFrameBytes))
+            return fail("Missing, unsafe or oversized preview or terms.");
+        paths.insert(terms); paths.insert("preview.png");
+    }
     if (!portable(terms) || !paths.contains(terms) || !(terms.endsWith(".txt") || terms.endsWith(".md"))
         || QFileInfo(dir.filePath(terms)).size() == 0) return fail("Missing or invalid pack terms.");
     const auto metadata = object(dir.filePath("pet.json"), 64 * 1024);
@@ -121,8 +144,11 @@ PetInfo read(const QString &folder, CatalogSource *source) {
     pet.url = metadata.value("url").toString(); pet.terms = dir.filePath(terms);
     if (metadata.value("preview").toString() != "preview.png" || !paths.contains("preview.png")) return fail("Missing preview.png.");
     pet.preview = dir.filePath("preview.png");
-    const auto previewSize = QImageReader(pet.preview).size();
-    if (previewSize.width() > 512 || previewSize.height() > 512) return fail("Preview exceeds 512 pixels.");
+    QImageReader preview(pet.preview);
+    const auto previewSize = preview.size();
+    if (preview.format() != "png" || !previewSize.isValid() || previewSize.isEmpty()
+        || previewSize.width() > 512 || previewSize.height() > 512) return fail("Preview is invalid or exceeds 512 pixels.");
+    if (displayOnly) return pet;
     QString reason;
     auto catalogSource = Catalog::read({}, pet.id, &reason, folder);
     if (!catalogSource.valid()) return fail(reason);
@@ -156,4 +182,6 @@ PetInfo read(const QString &folder, CatalogSource *source) {
     if (source) *source = catalogSource;
     return pet;
 }
+PetInfo read(const QString &folder, CatalogSource *source) { return readPack(folder, source, false); }
+PetInfo readDisplayMetadata(const QString &folder) { return readPack(folder, nullptr, true); }
 }
