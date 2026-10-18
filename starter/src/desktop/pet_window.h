@@ -169,6 +169,7 @@ protected:
     void mouseReleaseEvent(QMouseEvent *) override;
     void keyPressEvent(QKeyEvent *) override;
 private:
+    void packRemoved(const QString &kind, const QString &id);
     void beginQuit(const QString &remark = {});
     void endDrag(bool released = false);
     void land();

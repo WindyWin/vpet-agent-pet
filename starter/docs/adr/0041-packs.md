@@ -382,3 +382,29 @@ Display snapshots now read only `pack.json` and `pet.json` (64 KiB each), check 
   browser reuse, and destruction during terms consent. All five focused
   source/import/transaction/pet/translation CTest suites passed outside the sandbox
   (the consent test stages through Qt's test-mode AppData location).
+
+### Phase 2 review corrections (2026-10-18)
+
+- Drop handling now accepts the event before queuing archive inspection and
+  consent dialogs, allowing native drag sources to finish promptly. Queuing pet
+  removal preserves the saved pet ID; startup retains the documented fallback.
+- ZIP extraction treats an exhausted-input `Z_BUF_ERROR` as a request for the
+  next input chunk, while still requiring the final stream marker and checksum.
+  The importer regression uses a 64 KiB input/output boundary and separately
+  rejects the same stream without its final block.
+- Invalid pending payloads and plugin-limit rejections are discarded after
+  restoring any interrupted replacement. Failures are reported together after
+  unrelated jobs have run. Filesystem/recovery failures remain retryable.
+  Transaction tests verify preservation of the restored pack, application of a
+  later removal, and successful retries without manually deleting a failed job.
+### Review follow-up: local display discovery (2026-10-18)
+
+The app validates local pack display metadata once during startup, before creating windows. Settings and About reuse that explicit snapshot, so opening either dialog does not scan and hash installed artwork again. Manually added or changed folders appear after restarting; an explicit refresh is available to library callers. This cache only supplies display metadata: activation always validates the current on-disk pack, and frame loading retains its bounded file and image checks. Regression coverage changes a frame after discovery and proves display reuse never authorizes activation, then verifies that refreshing reports the invalid pack. About pet selection also retains all application and Qt notices.
+
+### Review follow-up: bounded startup discovery (2026-10-18)
+
+Display snapshots now read only `pack.json` and `pet.json` (64 KiB each), check safe terms/preview paths and their file limits, and inspect the preview PNG header. They never enumerate frame directories, read catalogs/manifests, decode preview pixels or hash inactive artwork. Discovery visits at most 256 local folders; the pet guide records this display limit. Full validation remains mandatory when activating a pack. Regression coverage corrupts a frame before snapshot creation: display discovery still succeeds, activation rejects the corrupt artwork, and explicit metadata refresh detects a subsequently invalid pack.json.
+
+### Source-browser removal follow-up (2026-10-18)
+
+Both Settings tabs now delegate removal notifications to one handler, so the reused browser behaves identically whichever tab opens it first. Queued pet removal preserves the saved choice, as required by the phase 2 transaction policy; startup supplies the fallback after actual removal. Plugin removal updates the enabled list. Regression cases exercise both tab orders and verify persisted pet/plugin preferences; all five focused pack/UI suites passed.

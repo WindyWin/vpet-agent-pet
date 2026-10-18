@@ -631,6 +631,11 @@ void PetWindow::setPlugins(const QStringList &ids) {
         if (Preferences::validPet(id) && !plugins_.contains(id) && plugins_.size() < Preferences::maxPlugins) plugins_.append(id);
     writePreferences([this](Preferences &preferences) { preferences.plugins = plugins_; });
 }
+void PetWindow::packRemoved(const QString &kind, const QString &id) {
+    // Removal is only queued: retain the saved pet choice if applying it fails.
+    // Startup falls back to VPet if the selected pack is actually removed.
+    if (kind == "plugin") { auto ids = plugins_; ids.removeAll(id); setPlugins(ids); }
+}
 bool PetWindow::savePreferences() { return writePreferences([](Preferences &) {}); }
 bool PetWindow::writePreferences(const std::function<void(Preferences &)> &change) {
     if (!persist_ || !ready_) return true;
@@ -897,6 +902,7 @@ void PetWindow::showSettings() {
     layout->addRow(packControls(dialog, "pet", [this](const QString &kind, const QString &id) {
         if (kind == "pet") { if (pet_ == id) setPet("vpet"); }
         else { auto ids = plugins_; ids.removeAll(id); setPlugins(ids); }
+        packRemoved(kind, id);
     }));
     auto *openPets = new QPushButton(tr("Open pets &folder"), dialog);
     openPets->setObjectName("openPetsFolder");
@@ -1003,8 +1009,7 @@ void PetWindow::showSettings() {
     auto *pluginList = new PluginList(library.plugins(), plugins_, library.active(), library.pluginFolder(), dialog);
     layout->addRow(pluginList);
     layout->addRow(packControls(dialog, "plugin", [this](const QString &kind, const QString &id) {
-        if (kind == "pet") { if (pet_ == id) setPet("vpet"); }
-        else { auto ids = plugins_; ids.removeAll(id); setPlugins(ids); }
+        packRemoved(kind, id);
     }));
     connect(pluginList, &PluginList::changed, this, &PetWindow::setPlugins);
     layout = page(tr("Startup and agents"));

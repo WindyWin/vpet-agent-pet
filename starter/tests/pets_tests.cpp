@@ -783,6 +783,32 @@ private slots:
         // One bundled pet leaves nothing to choose; the picker-level cases cover that.
         QCOMPARE(window.findChild<pet::PetPicker *>() != nullptr, pet::PetLibrary::shared().pets().size() > 1);
     }
+    void sourceBrowserRemovalDoesNotDependOnOpeningTab_data() {
+        QTest::addColumn<int>("firstTab");
+        QTest::newRow("pet-first") << 0;
+        QTest::newRow("plugin-first") << 1;
+    }
+    void sourceBrowserRemovalDoesNotDependOnOpeningTab() {
+        QFETCH(int, firstTab);
+        QTemporaryDir directory; const auto path = directory.path() + "/preferences.json";
+        pet::PetWindow window(nullptr, path);
+        window.setPet("mini"); window.setPlugins({"example", "keep"});
+        window.showSettings();
+        QList<QPushButton *> browse;
+        for (auto *button : window.findChildren<QPushButton *>())
+            if (button->text() == "Browse pack sources…") browse.append(button);
+        QCOMPARE(browse.size(), 2);
+        browse[firstTab]->click();
+        auto *browser = window.findChild<pet::SourceBrowser *>(); QVERIFY(browser);
+        browse[1 - firstTab]->click();
+        QCOMPARE(window.findChildren<pet::SourceBrowser *>().size(), 1);
+        emit browser->packRemoved("pet", "mini");
+        QCOMPARE(window.pet(), QString("mini"));
+        QCOMPARE(pet::PreferencesStore(path).load().pet, QString("mini"));
+        emit browser->packRemoved("plugin", "example");
+        QCOMPARE(window.plugins(), QStringList{"keep"});
+        QCOMPARE(pet::PreferencesStore(path).load().plugins, QStringList{"keep"});
+    }
     void sourceBrowserSurvivesSettingsAndIsReused() {
         QTemporaryDir directory;
         pet::PetWindow window(nullptr, directory.path() + "/preferences.json", false);
