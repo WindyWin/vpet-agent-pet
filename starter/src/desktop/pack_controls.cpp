@@ -15,6 +15,7 @@
 #include <QPushButton>
 #include <QVBoxLayout>
 #include <QUrl>
+#include <QTimer>
 
 namespace pet {
 namespace {
@@ -74,7 +75,10 @@ bool packDrop(QWidget *parent, QEvent *event) {
     const auto urls = drop->mimeData()->urls();
     if (urls.size() != 1 || !urls[0].isLocalFile() || !urls[0].toLocalFile().endsWith(".agentpet", Qt::CaseInsensitive)) return false;
     drop->acceptProposedAction();
-    if (event->type() == QEvent::Drop) importPack(parent, urls[0].toLocalFile());
+    if (event->type() == QEvent::Drop) {
+        const auto path = urls[0].toLocalFile();
+        QTimer::singleShot(0, parent, [parent, path] { importPack(parent, path); });
+    }
     return true;
 }
 }

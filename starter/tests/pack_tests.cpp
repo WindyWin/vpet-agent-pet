@@ -19,6 +19,35 @@ bool copyTree(const QString &source, const QString &target) {
 class PackTests : public QObject {
     Q_OBJECT
 private slots:
+    void rejectedJobDoesNotBlockLaterChanges() {
+        QTemporaryDir data; QVERIFY(data.isValid()); QString error;
+        const auto fixture = QString(PET_SOURCE) + "/tests/fixtures/local-pets/local-cat";
+        const auto target = data.path() + "/packs/pets/local-cat";
+        QVERIFY(copyTree(fixture, target));
+        packs::Candidate c; c.staging = std::make_unique<QTemporaryDir>(data.path() + "/stage-XXXXXX");
+        c.folder = c.staging->path() + "/local-cat";
+        QVERIFY(copyTree(fixture, c.folder));
+        QVERIFY(packs::validate(c.folder, c.metadata, c.terms, error));
+        QVERIFY(packs::install(c, error, data.path()));
+        const auto job = data.path() + "/pack-pending/pet-local-cat";
+        QFile manifest(job + "/payload/local-cat/manifest.json");
+        QVERIFY(manifest.open(QIODevice::WriteOnly)); manifest.write("{}"); manifest.close();
+        // Recovery must restore the old version before discarding the invalid payload.
+        QVERIFY(QDir().rename(target, job + "/previous"));
+        const auto later = data.path() + "/packs/pets/z-later";
+        QVERIFY(QDir().mkpath(later));
+        QVERIFY(packs::remove("pet", "z-later", error, data.path()));
+        QVERIFY(!packs::applyPending(error, data.path()));
+        QVERIFY2(error.contains("pet-local-cat:"), qPrintable(error));
+        QVERIFY(!QFileInfo::exists(job));
+        QVERIFY(!QFileInfo::exists(later));
+        QJsonObject metadata; QString terms;
+        QVERIFY(packs::validate(target, metadata, terms, error));
+        QVERIFY(packs::applyPending(error, data.path()));
+        QVERIFY(error.isEmpty());
+        QVERIFY(packs::remove("pet", "local-cat", error, data.path()));
+        QVERIFY(packs::applyPending(error, data.path()));
+    }
     void pendingReplacementAndRecovery() {
         QTemporaryDir data; QVERIFY(data.isValid()); QString error;
         const auto target = data.path() + "/packs/pets/local-cat";
@@ -37,7 +66,8 @@ private slots:
         QVERIFY(!packs::applyPending(error, data.path()));
         QJsonObject metadata; QString terms;
         QVERIFY2(packs::validate(target, metadata, terms, error), qPrintable(error));
-        QVERIFY(QDir(job).removeRecursively());
+        QVERIFY(!QFileInfo::exists(job));
+        QVERIFY(packs::applyPending(error, data.path())); // rejection cannot wedge later starts
         c = stage(); QVERIFY(c != nullptr); QVERIFY(packs::install(*c, error, data.path()));
         // Simulate a crash after retaining the old directory but before committing the new one.
         QVERIFY(QDir().rename(target, job + "/previous"));

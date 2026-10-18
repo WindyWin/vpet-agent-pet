@@ -138,8 +138,9 @@ forgetting the choice. About lets you read each installed pet's artwork terms.
 These folders survive app updates and download-cache cleanup.
 
 See [Installing a local pet](docs/pets.md#installing-a-local-pet) for the layout,
-metadata, validation limits and a minimal fixture. ZIP import and source browsing
-are later phases; this release reads unpacked folders.
+metadata, validation limits and a minimal fixture. To install a packed pet, see
+[importing and removing packs](docs/pets.md#importing-and-removing-packs); source
+browsing follows in a later phase.
 
 ## Idle animation
 

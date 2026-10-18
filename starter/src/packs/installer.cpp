@@ -155,6 +155,7 @@ bool applyPending(QString &error, const QString &data) {
     const auto base = root(data); if (!prepare(base, error)) return false;
     QLockFile lock(base + "/pack-install.lock"); if (!lock.tryLock()) { error = "Another pack operation is in progress."; return false; }
     const QDir pending(base + "/pack-pending");
+    QStringList failures;
     for (const auto &name : pending.entryList(QDir::Dirs | QDir::NoDotAndDotDot, QDir::Name)) {
         if (!name.startsWith("pet-") && !name.startsWith("plugin-")) continue;
         const auto job = pending.filePath(name); const auto op = object(job + "/operation.json");
@@ -168,9 +169,19 @@ bool applyPending(QString &error, const QString &data) {
         }
         if (!op.value("remove").toBool()) {
             if (!QFileInfo::exists(payload) && QFileInfo::exists(target)) { QDir(job).removeRecursively(); continue; }
-            QJsonObject meta; QString terms;
-            if (!validate(payload, meta, terms, error) || meta.value("kind").toString() != kind) return false;
-            if (kind == "plugin" && !QFileInfo::exists(target) && QDir(parent(base, kind)).entryList(QDir::Dirs | QDir::NoDotAndDotDot).size() >= plugins::maxPacks) { error = "At most 32 plugins may be installed."; return false; }
+            QJsonObject meta; QString terms, reason;
+            bool valid = validate(payload, meta, terms, reason);
+            if (valid && meta.value("kind").toString() != kind) { reason = "Pending pack kind does not match its operation."; valid = false; }
+            if (valid && kind == "plugin" && !QFileInfo::exists(target) && QDir(parent(base, kind)).entryList(QDir::Dirs | QDir::NoDotAndDotDot).size() >= plugins::maxPacks) {
+                reason = "At most 32 plugins may be installed."; valid = false;
+            }
+            if (!valid) {
+                // Validation failures cannot improve by retrying this payload. The restored
+                // installed pack is intact; discard the rejected job and process later jobs.
+                failures << name + ": " + reason;
+                if (!QDir(job).removeRecursively()) failures << name + ": Cannot discard rejected pack operation.";
+                continue;
+            }
         }
         if (QFileInfo::exists(target) && !QDir().rename(target, backup)) { error = "Cannot retain previous pack."; return false; }
         if (!op.value("remove").toBool() && !QDir().rename(payload, target)) {
@@ -179,7 +190,8 @@ bool applyPending(QString &error, const QString &data) {
         }
         if (!QDir(job).removeRecursively()) { error = "Pack changed, but its transaction backup could not be cleaned up."; return false; }
     }
-    return true;
+    error = failures.join('\n');
+    return failures.isEmpty();
 }
 int command(const QStringList &args) {
     QString error; bool ok = false;

@@ -113,6 +113,7 @@ bool extract(const QString &path, const QString &destination, QString &error) {
                     if (e.method == 8) {
                         stream.next_out = reinterpret_cast<Bytef *>(buffer); stream.avail_out = sizeof buffer;
                         result = inflate(&stream, Z_NO_FLUSH); size = sizeof buffer - stream.avail_out;
+                        if (result == Z_BUF_ERROR && stream.avail_in == 0) break; // Continue with the next input chunk.
                         if (result != Z_OK && result != Z_STREAM_END) { good = false; break; }
                     } else { size = input.size(); std::copy(input.begin(), input.end(), buffer); stream.avail_in = 0; }
                     written += size;

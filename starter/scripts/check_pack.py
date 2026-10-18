@@ -5,6 +5,8 @@ import os
 from pathlib import Path
 import shutil
 import stat
+import struct
+import zlib
 import subprocess
 import sys
 import tempfile
@@ -86,6 +88,45 @@ with tempfile.TemporaryDirectory() as temporary:
             if path.is_file():
                 output.write(path, path.relative_to(source))
     run('import', work / 'deflated.agentpet')
+    # The first compressed read consumes exactly 64 KiB and produces exactly
+    # 64 KiB without ending the stream. A second inflate call needs more input
+    # (Z_BUF_ERROR), rather than indicating corruption.
+    compressor = zlib.compressobj(wbits=-15)
+    prefix = compressor.compress(b'A' * 15) + compressor.flush(zlib.Z_SYNC_FLUSH)
+    assert len(prefix) == 10
+    block = b'B' * 65521
+    compressed = prefix + struct.pack('<BHH', 0, len(block), 65535 - len(block)) + block
+    assert len(compressed) == 65536
+    final_block = b'\x01\x00\x00\xff\xff'
+    contents = b'A' * 15 + block
+    assert zlib.decompress(compressed + final_block, -15) == contents
+
+    def boundary_archive(path, ending):
+        entries = [(item.relative_to(source).as_posix(), item.read_bytes(), None)
+                   for item in source.rglob('*') if item.is_file()]
+        entries.append(('boundary.txt', contents, compressed + ending))
+        records, directory = bytearray(), bytearray()
+        for name, data, packed in entries:
+            name = name.encode('utf-8')
+            method = 8 if packed is not None else 0
+            if packed is None:
+                packed = data
+            crc = zlib.crc32(data)
+            offset = len(records)
+            records += struct.pack('<IHHHHHIIIHH', 0x04034b50, 20, 0, method, 0, 0,
+                                   crc, len(packed), len(data), len(name), 0) + name + packed
+            directory += struct.pack('<IHHHHHHIIIHHHHHII', 0x02014b50, 20, 20, 0, method, 0, 0,
+                                     crc, len(packed), len(data), len(name), 0, 0, 0, 0, 0, offset) + name
+        count = len(entries)
+        path.write_bytes(records + directory + struct.pack('<IHHHHIIH', 0x06054b50, 0, 0,
+                                                          count, count, len(directory), len(records), 0))
+
+    boundary_archive(work / 'boundary.agentpet', final_block)
+    run('import', work / 'boundary.agentpet')
+    assert (installed / 'boundary.txt').read_bytes() == contents
+    boundary_archive(work / 'truncated.agentpet', b'')
+    run('import', work / 'truncated.agentpet', success=False)
+    assert (installed / 'boundary.txt').read_bytes() == contents
     plugin = work / 'example'
     shutil.copytree(ROOT / 'tests/fixtures/plugins/example', plugin)
     metadata = json.loads((plugin / 'plugin.json').read_text())

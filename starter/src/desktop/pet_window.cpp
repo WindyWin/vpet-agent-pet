@@ -899,7 +899,7 @@ void PetWindow::showSettings() {
         connect(&downloads, &PetDownloader::finished, picker, &PetPicker::downloaded);
         if (!downloads.pet().isEmpty()) picker->downloading(downloads.pet(), downloads.done(), downloads.total());
     }
-    layout->addRow(packControls(dialog, "pet", [this](const QString &id) { if (pet_ == id) setPet("vpet"); }));
+    layout->addRow(packControls(dialog, "pet", [](const QString &) {}));
     auto *openPets = new QPushButton(tr("Open pets &folder"), dialog);
     openPets->setObjectName("openPetsFolder");
     layout->addRow(openPets);

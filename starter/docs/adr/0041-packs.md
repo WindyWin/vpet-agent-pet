@@ -288,3 +288,18 @@ Display snapshots now read only `pack.json` and `pet.json` (64 KiB each), check 
   licence text have not been supplied. The bundled VUP archive and generated
   fixtures do not satisfy that requirement. Record their mapping gaps here
   before closing #95; the converter's PR remains a draft meanwhile.
+
+### Phase 2 review corrections (2026-10-18)
+
+- Drop handling now accepts the event before queuing archive inspection and
+  consent dialogs, allowing native drag sources to finish promptly. Queuing pet
+  removal preserves the saved pet ID; startup retains the documented fallback.
+- ZIP extraction treats an exhausted-input `Z_BUF_ERROR` as a request for the
+  next input chunk, while still requiring the final stream marker and checksum.
+  The importer regression uses a 64 KiB input/output boundary and separately
+  rejects the same stream without its final block.
+- Invalid pending payloads and plugin-limit rejections are discarded after
+  restoring any interrupted replacement. Failures are reported together after
+  unrelated jobs have run. Filesystem/recovery failures remain retryable.
+  Transaction tests verify preservation of the restored pack, application of a
+  later removal, and successful retries without manually deleting a failed job.
