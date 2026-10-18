@@ -4,6 +4,10 @@
 #include "animation/player.h"
 #include "animation/stage.h"
 #include "desktop/pet_picker.h"
+#include "desktop/source_browser.h"
+#include "packs/sources.h"
+#include <QListWidget>
+#include <QPointer>
 #include "desktop/pet_window.h"
 #include "settings/preferences.h"
 #include <QAction>
@@ -777,6 +781,25 @@ private slots:
         QVERIFY(window.findChild<QPushButton *>("openPetsFolder"));
         // One bundled pet leaves nothing to choose; the picker-level cases cover that.
         QCOMPARE(window.findChild<pet::PetPicker *>() != nullptr, pet::PetLibrary::shared().pets().size() > 1);
+    }
+    void sourceBrowserShowsCachedPacksWithoutRefreshing() {
+        QTemporaryDir directory;
+        pet::packs::SourceStore store(directory.path()); QString error;
+        const QJsonObject entry{{"kind", "pet"}, {"id", "example-cat"}, {"version", "1.0.0"},
+            {"name", "Example cat"}, {"author", "Artist"}, {"license", "CC0-1.0"}, {"schema", 2},
+            {"minAppVersion", "0.17.0"}, {"description", "Example"},
+            {"download", "https://example.invalid/cat.agentpet"}, {"preview", "https://example.invalid/cat.png"},
+            {"bytes", 100}, {"sha256", QString(64, 'a')}};
+        QVERIFY(store.cache(pet::packs::officialSource(), QJsonDocument(QJsonObject{
+            {"schema_version", 1}, {"packs", QJsonArray{entry}}}).toJson(), error));
+        QPointer<pet::SourceBrowser> browser = new pet::SourceBrowser(nullptr, directory.path());
+        browser->show();
+        auto *list = browser->findChild<QListWidget *>(); QVERIFY(list); QCOMPARE(list->count(), 1);
+        QVERIFY(list->item(0)->text().contains("Example cat")); QCOMPARE(list->currentRow(), -1);
+        for (auto *button : browser->findChildren<QPushButton *>())
+            if (button->text() == "Install…" || button->text() == "Cancel download" || button->text() == "Remove source")
+                QVERIFY(!button->isEnabled());
+        browser->reject(); QTRY_VERIFY(browser.isNull());
     }
     void aboutCreditsTheRunningPet() {
         QTemporaryDir directory;

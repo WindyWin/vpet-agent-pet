@@ -348,3 +348,29 @@ Display snapshots now read only `pack.json` and `pet.json` (64 KiB each), check 
   validation, all four archive imports and isolated package smoke check passed.
   Four CTest suites required local socket/process access outside the restricted
   development sandbox. macOS/Windows verification follows in PR CI.
+
+### Phase 5 sources (2026-10-18)
+
+- Settings has an official gallery source by default and explicitly added HTTPS
+  third-party catalogs. A bounded, validated version-1 index is cached atomically;
+  malformed or failed refreshes retain the last good catalog. Removing a source
+  or an entry never removes installed packs.
+- Each download streams to a temporary file with a hard byte bound, exact catalog
+  size and SHA-256 checks, HTTPS-only redirects and timeouts. Archive identity and
+  metadata must match the listing before full terms consent and the existing
+  transactional importer. Direct links explicitly disclose their lack of a digest.
+- Installs and updates are manual and require terms acceptance each time. Plugins
+  retain their enabled state; new plugins are not enabled. Source-origin records
+  and persistent automatic-update consent will be implemented with phase 6;
+  catalog presence is not consent to automatic updates.
+- English/Vietnamese publishing and usage guides are in `pack-sources.md` and
+  `pack-sources.vi.md`. Transport tests use an injected network manager to cover
+  checksums, short/oversized bodies, headers, unsafe redirects, cancellation and
+  retry without an external server. Parser/store tests cover compatibility,
+  duplicate/invalid entries and last-good offline cache retention.
+- Validation: Linux Release build and all 22 CTest suites passed (the four local
+  socket/process suites outside the sandbox). Focused source/import/pet/plugin/
+  translation suites passed again after UI changes. Asset validation preserved
+  main's 148 VPet sequences. A live HTTPS smoke check fetched the official four-pack
+  catalog, verified Fat Cat 1.0.0's exact size and SHA-256, matched its metadata,
+  and imported/applied it in isolated temporary per-user storage.

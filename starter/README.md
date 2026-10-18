@@ -639,3 +639,12 @@ See [pet import and authoring](docs/pets.md#importing-and-removing-packs) for
 `scripts/convert_vpet_mod.py` converts a local VPet-Simulator workshop pet to a
 validated `.agentpet` archive, with a report of artwork mappings and fallbacks.
 Bring the original artwork terms and credit; see [the conversion guide](docs/pets.md#convert-a-vpet-workshop-mod).
+
+### Browse pack sources
+
+Settings → Pet or Plugins → **Browse pack sources…** discovers packs from the official
+gallery or explicitly added third-party HTTPS catalogs. Refresh, preview, install,
+update and remove packs; review terms before every install. Downloads are checked
+against catalog sizes and SHA-256; failed refreshes retain an offline catalog.
+See [pack sources](docs/pack-sources.md) ([Tiếng Việt](docs/pack-sources.vi.md)) for
+direct URL installation, trust warnings and publishing your own source.

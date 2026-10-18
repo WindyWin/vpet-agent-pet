@@ -102,13 +102,16 @@ list(SORT pet_translated_sources)
 qt_add_lupdate(pet_i18n TS_FILES ${pet_ts_files} SOURCES ${pet_translated_sources} OPTIONS -locations none -no-ui-lines -no-obsolete)
 qt_add_lrelease(pet_i18n TS_FILES ${pet_ts_files} QM_FILES_OUTPUT_VARIABLE pet_qm_files)
 qt_add_resources(pet_i18n pet_translations PREFIX "/i18n" BASE "${CMAKE_CURRENT_BINARY_DIR}" FILES ${pet_qm_files})
+qt_add_library(pet_sources STATIC src/packs/sources.cpp)
+target_include_directories(pet_sources PUBLIC src)
+target_link_libraries(pet_sources PUBLIC Qt6::Network)
 qt_add_library(pet_ui STATIC
-    src/desktop/pet_window.cpp src/desktop/pack_controls.cpp src/desktop/overlay.cpp
+    src/desktop/pet_window.cpp src/desktop/pack_controls.cpp src/desktop/source_browser.cpp src/desktop/overlay.cpp
     src/desktop/pet_picker.cpp src/desktop/plugin_list.cpp
     src/desktop/touch.cpp src/desktop/wander.cpp src/desktop/wellness.cpp src/desktop/snooze.cpp src/desktop/alert_bubble.cpp src/desktop/monitor.cpp
     src/desktop/session_list.cpp src/desktop/quota_panel.cpp src/quota/service.cpp src/updates/controller.cpp)
 target_include_directories(pet_ui PUBLIC src "${CMAKE_CURRENT_BINARY_DIR}/generated")
-target_link_libraries(pet_ui PUBLIC Qt6::Widgets pet_animation pet_events pet_updates pet_i18n Qt6::Network PRIVATE pet_native)
+target_link_libraries(pet_ui PUBLIC Qt6::Widgets pet_sources pet_animation pet_events pet_updates pet_i18n Qt6::Network PRIVATE pet_native)
 qt_add_resources(pet_ui pet_assets PREFIX "/" FILES ${pet_notices})
 add_dependencies(pet_ui pet_artwork)
 # Headless platform services shared by the hook and the pet: POSIX event transport, hook input,
@@ -295,6 +298,9 @@ if(BUILD_TESTING)
         add_test(NAME i18n COMMAND i18n-tests)
         # Pet packs: the catalog and its core state contract, the pet library over fixture pets, choosing a pet.
         add_pets(pet_test_artwork SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/pets" OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/test-pets")
+        qt_add_executable(sources-tests tests/sources_tests.cpp)
+        target_link_libraries(sources-tests PRIVATE pet_sources Qt6::Test)
+        add_test(NAME pack-sources COMMAND sources-tests)
         qt_add_executable(pack-tests tests/pack_tests.cpp)
         target_link_libraries(pack-tests PRIVATE pet_animation Qt6::Test)
         target_compile_definitions(pack-tests PRIVATE PET_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}")

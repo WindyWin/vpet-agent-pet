@@ -343,3 +343,5 @@ Character artwork by the **VUP-Simulator team**, from [LorisYounger/VPet](https:
 Agent Pet's own code is licensed under [Apache-2.0](starter/LICENSE). That license doesn't cover the artwork.
 
 VPet is the only bundled pet. Install additional `.agentpet` packs from the [gallery](https://github.com/WindyWin/agent-pet-gallery/releases) through Settings → Pet → Import.
+
+Pack catalogs: [browse, install and publish sources](starter/docs/pack-sources.md).

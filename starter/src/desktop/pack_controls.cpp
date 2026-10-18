@@ -1,4 +1,5 @@
 #include "pack_controls.h"
+#include "source_browser.h"
 #include "packs/installer.h"
 #include "animation/pet_library.h"
 #include <QComboBox>
@@ -46,8 +47,14 @@ void importPack(QWidget *parent, const QString &path) {
     if (!packs::install(*candidate, error)) message(parent, error);
     else message(parent, QCoreApplication::translate("PackControls", "Pack change queued. Restart Agent Pet to apply it."));
 }
-QWidget *packControls(QWidget *parent, const QString &kind, std::function<void(const QString &)> removed) {
+QWidget *packControls(QWidget *parent, const QString &kind, std::function<void(const QString &, const QString &)> removed) {
     auto *widget = new QWidget(parent); auto *layout = new QVBoxLayout(widget);
+    auto *browse = new QPushButton(QCoreApplication::translate("PackControls", "Browse pack sources…"), widget); layout->addWidget(browse);
+    QObject::connect(browse, &QPushButton::clicked, widget, [widget, removed] {
+        auto *browser = new SourceBrowser(widget);
+        QObject::connect(browser, &SourceBrowser::packRemoved, widget, removed);
+        browser->show();
+    });
     auto *button = new QPushButton(QCoreApplication::translate("PackControls", "Import…"), widget); layout->addWidget(button);
     QObject::connect(button, &QPushButton::clicked, widget, [widget] {
         const auto path = QFileDialog::getOpenFileName(widget, QCoreApplication::translate("PackControls", "Import pack"), {}, QCoreApplication::translate("PackControls", "Agent Pet packs (*.agentpet)"));
@@ -64,7 +71,7 @@ QWidget *packControls(QWidget *parent, const QString &kind, std::function<void(c
         confirm.setTextFormat(Qt::PlainText); confirm.setDefaultButton(QMessageBox::Cancel);
         if (confirm.exec() != QMessageBox::Yes) return;
         QString error; if (!packs::remove(kind, id, error)) { message(widget, error); return; }
-        removed(id); choices->removeItem(choices->currentIndex()); remove->setEnabled(choices->count());
+        removed(kind, id); choices->removeItem(choices->currentIndex()); remove->setEnabled(choices->count());
         message(widget, QCoreApplication::translate("PackControls", "Pack change queued. Restart Agent Pet to apply it."));
     });
     return widget;

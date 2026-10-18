@@ -894,7 +894,10 @@ void PetWindow::showSettings() {
         layout->addRow(tr("&Character"), picker);
         connect(picker, &PetPicker::chosen, this, &PetWindow::setPet);
     }
-    layout->addRow(packControls(dialog, "pet", [](const QString &) {}));
+    layout->addRow(packControls(dialog, "pet", [this](const QString &kind, const QString &id) {
+        if (kind == "pet") { if (pet_ == id) setPet("vpet"); }
+        else { auto ids = plugins_; ids.removeAll(id); setPlugins(ids); }
+    }));
     auto *openPets = new QPushButton(tr("Open pets &folder"), dialog);
     openPets->setObjectName("openPetsFolder");
     layout->addRow(openPets);
@@ -999,7 +1002,10 @@ void PetWindow::showSettings() {
     auto &library = PetLibrary::shared();
     auto *pluginList = new PluginList(library.plugins(), plugins_, library.active(), library.pluginFolder(), dialog);
     layout->addRow(pluginList);
-    layout->addRow(packControls(dialog, "plugin", [this](const QString &id) { auto ids = plugins_; ids.removeAll(id); setPlugins(ids); }));
+    layout->addRow(packControls(dialog, "plugin", [this](const QString &kind, const QString &id) {
+        if (kind == "pet") { if (pet_ == id) setPet("vpet"); }
+        else { auto ids = plugins_; ids.removeAll(id); setPlugins(ids); }
+    }));
     connect(pluginList, &PluginList::changed, this, &PetWindow::setPlugins);
     layout = page(tr("Startup and agents"));
     layout->addRow(startupSettings(dialog));

@@ -1,0 +1,44 @@
+#pragma once
+#include <QDialog>
+#include "packs/sources.h"
+class QComboBox;
+class QListWidget;
+class QLabel;
+class QPushButton;
+class QProgressBar;
+class QPlainTextEdit;
+namespace pet {
+class SourceBrowser : public QDialog {
+    Q_OBJECT
+public:
+    explicit SourceBrowser(QWidget *parent = nullptr, const QString &sourceFolder = {});
+    void reject() override;
+protected:
+    void changeEvent(QEvent *event) override;
+signals:
+    void packRemoved(const QString &kind, const QString &id);
+private:
+    packs::SourceStore store_;
+    QNetworkAccessManager network_;
+    packs::Download transfer_, previewTransfer_;
+    QComboBox *sources_;
+    QListWidget *list_;
+    QPlainTextEdit *details_;
+    QLabel *preview_, *status_, *notice_;
+    QPushButton *refresh_, *add_, *removeSource_, *install_, *remove_, *direct_, *cancel_, *close_;
+    QProgressBar *progress_;
+    QVector<packs::Entry> entries_;
+    QString source_, mode_;
+    packs::Entry downloading_;
+    bool working_ = false, closing_ = false;
+    void loadSources(const QString &selected = {});
+    void loadCatalog();
+    void select();
+    void busy(bool value);
+    void refresh();
+    void download();
+    void direct();
+    void received(const QString &path);
+    bool confirm(const QString &title, const QString &text, const QString &action);
+};
+}

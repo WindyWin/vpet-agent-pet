@@ -241,6 +241,10 @@ Nguồn: %6</translation>
         <translation>Thay đổi gói đã được xếp hàng. Khởi động lại Agent Pet để áp dụng.</translation>
     </message>
     <message>
+        <source>Browse pack sources…</source>
+        <translation>Duyệt nguồn gói…</translation>
+    </message>
+    <message>
         <source>Import…</source>
         <translation>Nhập…</translation>
     </message>
@@ -259,6 +263,89 @@ Nguồn: %6</translation>
     <message>
         <source>Remove %1 on the next start? Removing the selected pet switches to VPet.</source>
         <translation>Gỡ %1 ở lần khởi động tiếp theo? Gỡ thú cưng đang chọn sẽ chuyển sang VPet.</translation>
+    </message>
+</context>
+<context>
+    <name>PackSources</name>
+    <message>
+        <source>Cannot save pack sources or catalog cache.</source>
+        <translation>Không thể lưu nguồn gói hoặc bộ nhớ đệm danh mục.</translation>
+    </message>
+    <message>
+        <source>Malformed or unsupported pack catalog.</source>
+        <translation>Danh mục gói không hợp lệ hoặc chưa được hỗ trợ.</translation>
+    </message>
+    <message>
+        <source>Unsupported catalog schema.</source>
+        <translation>Phiên bản cấu trúc danh mục chưa được hỗ trợ.</translation>
+    </message>
+    <message>
+        <source>Requires Agent Pet %1 or newer.</source>
+        <translation>Yêu cầu Agent Pet %1 trở lên.</translation>
+    </message>
+    <message>
+        <source>Install the target pet first: %1</source>
+        <translation>Hãy cài thú cưng đích trước: %1</translation>
+    </message>
+    <message>
+        <source>Cannot read pack sources.</source>
+        <translation>Không thể đọc nguồn gói.</translation>
+    </message>
+    <message>
+        <source>Enter an HTTPS URL without credentials or a fragment.</source>
+        <translation>Nhập URL HTTPS không chứa thông tin đăng nhập hoặc phần neo.</translation>
+    </message>
+    <message>
+        <source>Another source change is in progress.</source>
+        <translation>Một thay đổi nguồn khác đang được xử lý.</translation>
+    </message>
+    <message>
+        <source>At most 32 sources are supported.</source>
+        <translation>Hỗ trợ tối đa 32 nguồn.</translation>
+    </message>
+    <message>
+        <source>The official source cannot be removed.</source>
+        <translation>Không thể xóa nguồn chính thức.</translation>
+    </message>
+    <message>
+        <source>Cannot read cached catalog.</source>
+        <translation>Không thể đọc danh mục đã lưu.</translation>
+    </message>
+    <message>
+        <source>Download timed out.</source>
+        <translation>Tải xuống đã hết thời gian chờ.</translation>
+    </message>
+    <message>
+        <source>Download cancelled. Installed packs are unchanged.</source>
+        <translation>Đã hủy tải xuống. Các gói đã cài không thay đổi.</translation>
+    </message>
+    <message>
+        <source>Invalid download URL, size or digest.</source>
+        <translation>URL tải xuống, dung lượng hoặc mã băm không hợp lệ.</translation>
+    </message>
+    <message>
+        <source>Cannot create a temporary download.</source>
+        <translation>Không thể tạo tệp tải xuống tạm thời.</translation>
+    </message>
+    <message>
+        <source>Download redirected to an unsafe URL.</source>
+        <translation>Tải xuống chuyển hướng đến URL không an toàn.</translation>
+    </message>
+    <message>
+        <source>Download size does not match the catalog or exceeds the limit.</source>
+        <translation>Dung lượng tải xuống không khớp danh mục hoặc vượt giới hạn.</translation>
+    </message>
+    <message>
+        <source>Download failed: %1</source>
+        <translation>Tải xuống thất bại: %1</translation>
+    </message>
+    <message>
+        <source>Download SHA-256 does not match the catalog.</source>
+        <translation>Mã SHA-256 của tệp tải xuống không khớp danh mục.</translation>
+    </message>
+    <message>
+        <source>Cannot save downloaded data.</source>
+        <translation>Không thể lưu dữ liệu tải xuống.</translation>
     </message>
 </context>
 <context>
@@ -1640,6 +1727,255 @@ Các cài đặt và hook khác được giữ nguyên. Hãy đăng ký từ th�
     <message>
         <source>and %1 more</source>
         <translation>và %1 phiên khác</translation>
+    </message>
+</context>
+<context>
+    <name>pet::SourceBrowser</name>
+    <message>
+        <source>Pack sources</source>
+        <translation>Nguồn gói</translation>
+    </message>
+    <message>
+        <source>Source</source>
+        <translation>Nguồn</translation>
+    </message>
+    <message>
+        <source>Add source…</source>
+        <translation>Thêm nguồn…</translation>
+    </message>
+    <message>
+        <source>Remove source</source>
+        <translation>Xóa nguồn</translation>
+    </message>
+    <message>
+        <source>Refresh</source>
+        <translation>Làm mới</translation>
+    </message>
+    <message>
+        <source>Catalogs are cached for offline browsing. Refresh contacts the selected source; selecting a pack loads its preview. Third-party sources are unverified. Installing a plugin does not enable it or connect an external integration.</source>
+        <translation>Danh mục được lưu để duyệt khi ngoại tuyến. Làm mới sẽ kết nối với nguồn đã chọn; chọn gói sẽ tải ảnh xem trước. Nguồn bên thứ ba chưa được xác minh. Cài tiện ích không tự bật tiện ích hoặc kết nối tích hợp bên ngoài.</translation>
+    </message>
+    <message>
+        <source>Available packs</source>
+        <translation>Các gói hiện có</translation>
+    </message>
+    <message>
+        <source>Pack details</source>
+        <translation>Chi tiết gói</translation>
+    </message>
+    <message>
+        <source>Install…</source>
+        <translation>Cài đặt…</translation>
+    </message>
+    <message>
+        <source>Remove pack…</source>
+        <translation>Xóa gói…</translation>
+    </message>
+    <message>
+        <source>Install from URL…</source>
+        <translation>Cài từ URL…</translation>
+    </message>
+    <message>
+        <source>Cancel download</source>
+        <translation>Hủy tải xuống</translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation>Đóng</translation>
+    </message>
+    <message>
+        <source>Add source</source>
+        <translation>Thêm nguồn</translation>
+    </message>
+    <message>
+        <source>HTTPS catalog URL:</source>
+        <translation>URL HTTPS của danh mục:</translation>
+    </message>
+    <message>
+        <source>Third-party source</source>
+        <translation>Nguồn bên thứ ba</translation>
+    </message>
+    <message>
+        <source>This source is not verified by Agent Pet. Its operator controls its catalog, downloads and updates. Only add sources you trust.
+
+%1</source>
+        <translation>Nguồn này chưa được Agent Pet xác minh. Người vận hành kiểm soát danh mục, tệp tải xuống và bản cập nhật. Chỉ thêm nguồn bạn tin tưởng.
+
+%1</translation>
+    </message>
+    <message>
+        <source>Remove %1 from the source list? Installed packs will be kept.</source>
+        <translation>Xóa %1 khỏi danh sách nguồn? Các gói đã cài sẽ được giữ lại.</translation>
+    </message>
+    <message>
+        <source>Remove pack</source>
+        <translation>Xóa gói</translation>
+    </message>
+    <message>
+        <source>Remove %1 on the next start? Removing the selected pet switches to VPet.</source>
+        <translation>Xóa %1 vào lần khởi động tiếp theo? Xóa thú cưng đang chọn sẽ chuyển về VPet.</translation>
+    </message>
+    <message>
+        <source>Pack change queued. Restart Agent Pet to apply it.</source>
+        <translation>Đã ghi nhận thay đổi gói. Khởi động lại Agent Pet để áp dụng.</translation>
+    </message>
+    <message>
+        <source>Cached catalogs and installed packs are unchanged.</source>
+        <translation>Danh mục đã lưu và các gói đã cài không thay đổi.</translation>
+    </message>
+    <message>
+        <source>Downloaded %1 MiB</source>
+        <translation>Đã tải %1 MiB</translation>
+    </message>
+    <message>
+        <source>Preview unavailable</source>
+        <translation>Không có ảnh xem trước</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>Hủy</translation>
+    </message>
+    <message>
+        <source>Official gallery</source>
+        <translation>Thư viện chính thức</translation>
+    </message>
+    <message>
+        <source>Third-party: %1</source>
+        <translation>Bên thứ ba: %1</translation>
+    </message>
+    <message>
+        <source>Not installed</source>
+        <translation>Chưa cài</translation>
+    </message>
+    <message>
+        <source>Update available</source>
+        <translation>Có bản cập nhật</translation>
+    </message>
+    <message>
+        <source>Installed</source>
+        <translation>Đã cài</translation>
+    </message>
+    <message>
+        <source>Restart required</source>
+        <translation>Cần khởi động lại</translation>
+    </message>
+    <message>
+        <source>Showing the last valid catalog. Refresh to check for new packs.</source>
+        <translation>Đang hiển thị danh mục hợp lệ gần nhất. Làm mới để kiểm tra gói mới.</translation>
+    </message>
+    <message>
+        <source>Update…</source>
+        <translation>Cập nhật…</translation>
+    </message>
+    <message>
+        <source>%1 by %2
+Licence: %3 · Requires Agent Pet %4 · Schema %5
+%6
+%7</source>
+        <translation>%1 của %2
+Giấy phép: %3 · Yêu cầu Agent Pet %4 · Cấu trúc %5
+%6
+%7</translation>
+    </message>
+    <message>
+        <source>Compatible</source>
+        <translation>Tương thích</translation>
+    </message>
+    <message>
+        <source>Setup required: %1</source>
+        <translation>Cần thiết lập: %1</translation>
+    </message>
+    <message>
+        <source>Target pet: %1</source>
+        <translation>Thú cưng đích: %1</translation>
+    </message>
+    <message>
+        <source>Download pack</source>
+        <translation>Tải gói</translation>
+    </message>
+    <message>
+        <source>Download %1 (%2 MiB)?
+Licence: %3
+Source: %4
+%5
+You will review the archive&apos;s terms before installing.</source>
+        <translation>Tải %1 (%2 MiB)?
+Giấy phép: %3
+Nguồn: %4
+%5
+Bạn sẽ xem điều khoản của gói trước khi cài đặt.</translation>
+    </message>
+    <message>
+        <source>Unverified third-party source</source>
+        <translation>Nguồn bên thứ ba chưa được xác minh</translation>
+    </message>
+    <message>
+        <source>Download</source>
+        <translation>Tải xuống</translation>
+    </message>
+    <message>
+        <source>Install from URL</source>
+        <translation>Cài từ URL</translation>
+    </message>
+    <message>
+        <source>HTTPS .agentpet URL:</source>
+        <translation>URL HTTPS của tệp .agentpet:</translation>
+    </message>
+    <message>
+        <source>Unpinned third-party download</source>
+        <translation>Tệp bên thứ ba chưa có mã băm đối chiếu</translation>
+    </message>
+    <message>
+        <source>This direct download has no catalog digest. Its origin and contents are unverified; HTTPS alone does not establish trust.
+
+%1
+
+You will review the pack and its terms before installing.</source>
+        <translation>Tệp tải trực tiếp này không có mã băm trong danh mục. Nguồn gốc và nội dung chưa được xác minh; chỉ có HTTPS không đủ đảm bảo độ tin cậy.
+
+%1
+
+Bạn sẽ xem gói và điều khoản trước khi cài đặt.</translation>
+    </message>
+    <message>
+        <source>Cannot read downloaded catalog.</source>
+        <translation>Không thể đọc danh mục đã tải.</translation>
+    </message>
+    <message>
+        <source>Validating pack…</source>
+        <translation>Đang kiểm tra gói…</translation>
+    </message>
+    <message>
+        <source>Archive metadata does not match the catalog.</source>
+        <translation>Thông tin trong gói không khớp danh mục.</translation>
+    </message>
+    <message>
+        <source>Review pack terms</source>
+        <translation>Xem điều khoản gói</translation>
+    </message>
+    <message>
+        <source>%1 by %2
+Version: %3 · Licence: %4
+Compatible with this app.
+Installed version: %5
+Plugins remain disabled unless already enabled. External integrations require separate setup.</source>
+        <translation>%1 của %2
+Phiên bản: %3 · Giấy phép: %4
+Tương thích với ứng dụng này.
+Phiên bản đã cài: %5
+Tiện ích sẽ tắt trừ khi đã được bật trước đó. Tích hợp bên ngoài cần thiết lập riêng.</translation>
+    </message>
+    <message>
+        <source>Source: %1</source>
+        <translation>Nguồn: %1</translation>
+    </message>
+    <message>
+        <source>Accept terms and install</source>
+        <translation>Chấp nhận điều khoản và cài đặt</translation>
+    </message>
+    <message>
+        <source>Installation cancelled. Installed packs are unchanged.</source>
+        <translation>Đã hủy cài đặt. Các gói đã cài không thay đổi.</translation>
     </message>
 </context>
 <context>

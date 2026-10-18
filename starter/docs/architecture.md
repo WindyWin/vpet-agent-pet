@@ -56,3 +56,11 @@ components. `release_blobs.py` publishes immutable runtime/artwork archives to
 the non-latest `release-blobs` prerelease and plans retention with a dry-run default.
 Full Linux packages remain the fallback for older readers. See ADR 0010 and 0014
 for the compatibility and retention policy.
+
+Pack discovery uses `packs/sources` (`pet_sources`, Qt Network): strict versioned
+HTTPS catalogs, per-user source configuration and last-good caches, and bounded
+size/digest-verified temporary downloads. `desktop/source_browser` provides manual
+browse/refresh/install/update/remove and terms consent, then calls the existing
+`packs/installer` transaction pipeline. Preview decoding is bounded; catalog text
+is inert. Neither catalog refresh nor installation enables a plugin or integration.
+See [source publishing and usage](pack-sources.md).

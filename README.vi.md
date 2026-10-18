@@ -337,3 +337,5 @@ xóa các thư mục này. Xem [hướng dẫn cài đặt](starter/docs/pets.md
 để biết cấu trúc và giới hạn. Nhập tệp ZIP và duyệt nguồn sẽ được bổ sung ở các giai đoạn sau.
 
 Ứng dụng chỉ tích hợp VPet. Tải gói `.agentpet` từ [thư viện thú cưng](https://github.com/WindyWin/agent-pet-gallery/releases), rồi nhập gói trong Cài đặt → Thú cưng.
+
+Danh mục gói: [duyệt, cài đặt và xuất bản nguồn](starter/docs/pack-sources.vi.md).
