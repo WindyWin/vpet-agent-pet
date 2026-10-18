@@ -130,9 +130,10 @@ stays, hides or quits once no sessions remain; see [install guide](docs/install.
 ## Local pet folders
 
 Settings → Pet → **Open pets folder** opens the per-user `packs/pets` directory.
-Copy a complete pet folder there, reopen Settings, choose its **Local** tile and
-restart. `--pet <id>` also runs a local pet. Invalid packs show their reason and
-cannot be chosen; a missing or invalid saved pet falls back to VPet without
+Copy a complete pet folder there and restart Agent Pet to refresh the list. Open
+Settings, choose its **Local** tile and restart again to play it. `--pet <id>` also
+runs a local pet. Invalid display metadata shows its reason and prevents selection;
+activation validates all artwork. A missing or invalid saved pet falls back to VPet without
 forgetting the choice. About lets you read each installed pet's artwork terms.
 These folders survive app updates and download-cache cleanup.
 

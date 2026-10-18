@@ -318,8 +318,9 @@ Mã nguồn riêng của Agent Pet được cấp phép theo [Apache-2.0](starte
 Trong Cài đặt → Thú cưng, chọn **Mở thư mục thú cưng**, rồi chép một bộ thú cưng
 đầy đủ vào `packs/pets/<id>/`. Khởi động lại để làm mới danh sách thú cưng,
 rồi mở Cài đặt, chọn ô **Cục bộ** và khởi động lại;
-`--pet <id>` cũng dùng được với thú cưng cục bộ. Bộ không hợp lệ hiển thị lý do
-và không thể được chọn. Nếu bộ đã chọn bị xóa hoặc không còn hợp lệ, ứng dụng dùng
+`--pet <id>` cũng dùng được với thú cưng cục bộ. Siêu dữ liệu hiển thị không hợp lệ
+sẽ có lý do và không thể được chọn; toàn bộ hình ảnh được kiểm tra khi khởi chạy
+thú cưng. Nếu bộ đã chọn bị xóa hoặc không còn hợp lệ, ứng dụng dùng
 VPet cho lần chạy đó và giữ lựa chọn đã lưu. Mục Giới thiệu cho phép đọc điều khoản
 hình ảnh của từng thú cưng đã cài. Cập nhật ứng dụng và dọn bộ nhớ tải xuống không
 xóa các thư mục này. Xem [hướng dẫn cài đặt](starter/docs/pets.md#installing-a-local-pet)

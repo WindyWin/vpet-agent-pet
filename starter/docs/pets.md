@@ -47,12 +47,12 @@ broken state cues. Limits include 10,000 frame references, 4 MiB per PNG, 2,048
 pixels per side, 512 MiB of PNGs and an 8 MiB catalog; previews stay within
 512 × 512 pixels. Full limits are in the ADR.
 
-Reopen Settings after copying a folder. Character tiles mark these pets **Local**;
-the tooltip shows author, licence and any validation failure. Invalid pets remain
-listed but cannot be selected. Choose a valid pet and restart to play it, or run
-`agent-pet --pet <id>` once. About includes a pet selector to read each valid
-installed pet's artwork terms. Copying a folder does not verify its author or
-grant permission to redistribute its art.
+Restart Agent Pet after copying a folder, then open Settings. Character tiles mark these pets **Local**;
+the tooltip shows author, licence and any display-metadata failure. Pets with invalid
+metadata remain listed but cannot be selected. Choose a pet and restart to play it, or run
+`agent-pet --pet <id>` once; activation fully validates its artwork before loading it.
+About includes a pet selector to read the artwork terms of installed pets with valid
+metadata. Copying a folder does not verify its author or grant permission to redistribute its art.
 
 VPet's id is reserved. During the transition, ids already in the app's resource
 index also take priority: a conflicting local folder is listed as unusable.
