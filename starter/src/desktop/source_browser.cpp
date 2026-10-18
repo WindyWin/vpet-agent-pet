@@ -15,6 +15,7 @@
 #include <QListWidget>
 #include <QMessageBox>
 #include <QPlainTextEdit>
+#include <QPointer>
 #include <QProgressBar>
 #include <QPushButton>
 #include <QVBoxLayout>
@@ -199,14 +200,18 @@ void SourceBrowser::received(const QString &path) {
     if (candidate && mode_ == "pack" && !packs::matches(downloading_, candidate->metadata)) { candidate.reset(); error = tr("Archive metadata does not match the catalog."); }
     if (!candidate) { busy(false); status_->setText(error); return; }
     const auto m = candidate->metadata;
-    QDialog consent(this); consent.setWindowTitle(tr("Review pack terms")); consent.resize(580, 520);
-    auto *layout = new QVBoxLayout(&consent); auto *summary = label(&consent);
+    auto *consent = new QDialog(this); consent->setWindowTitle(tr("Review pack terms")); consent->resize(580, 520);
+    auto *layout = new QVBoxLayout(consent); auto *summary = label(consent);
     summary->setText(tr("%1 by %2\nVersion: %3 · Licence: %4\nCompatible with this app.\nInstalled version: %5\nPlugins remain disabled unless already enabled. External integrations require separate setup.")
         .arg(m["name"].toString(), m["author"].toString(), m["version"].toString(), m["license"].toString(), candidate->oldVersion.isEmpty() ? tr("Not installed") : candidate->oldVersion) + '\n' + tr("Source: %1").arg(source_)); layout->addWidget(summary);
-    auto *terms = new QPlainTextEdit(candidate->terms, &consent); terms->setReadOnly(true); layout->addWidget(terms);
-    auto *buttons = new QDialogButtonBox(&consent); auto *accept = buttons->addButton(tr("Accept terms and install"), QDialogButtonBox::AcceptRole);
-    auto *cancel = buttons->addButton(tr("Cancel"), QDialogButtonBox::RejectRole); connect(accept, &QPushButton::clicked, &consent, &QDialog::accept); connect(cancel, &QPushButton::clicked, &consent, &QDialog::reject); layout->addWidget(buttons);
-    if (consent.exec() == QDialog::Accepted) {
+    auto *terms = new QPlainTextEdit(candidate->terms, consent); terms->setReadOnly(true); layout->addWidget(terms);
+    auto *buttons = new QDialogButtonBox(consent); auto *accept = buttons->addButton(tr("Accept terms and install"), QDialogButtonBox::AcceptRole);
+    auto *cancel = buttons->addButton(tr("Cancel"), QDialogButtonBox::RejectRole); connect(accept, &QPushButton::clicked, consent, &QDialog::accept); connect(cancel, &QPushButton::clicked, consent, &QDialog::reject); layout->addWidget(buttons);
+    QPointer<SourceBrowser> self(this);
+    const auto result = consent->exec();
+    if (!self) return;
+    consent->deleteLater();
+    if (result == QDialog::Accepted) {
         if (packs::install(*candidate, error)) error = tr("Pack change queued. Restart Agent Pet to apply it.");
     } else error = tr("Installation cancelled. Installed packs are unchanged.");
     busy(false); loadCatalog(); status_->setText(error);

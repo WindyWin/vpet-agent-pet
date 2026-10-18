@@ -51,9 +51,15 @@ QWidget *packControls(QWidget *parent, const QString &kind, std::function<void(c
     auto *widget = new QWidget(parent); auto *layout = new QVBoxLayout(widget);
     auto *browse = new QPushButton(QCoreApplication::translate("PackControls", "Browse pack sources…"), widget); layout->addWidget(browse);
     QObject::connect(browse, &QPushButton::clicked, widget, [widget, removed] {
-        auto *browser = new SourceBrowser(widget);
-        QObject::connect(browser, &SourceBrowser::packRemoved, widget, removed);
-        browser->show();
+        // The pet owns this separate window so rebuilding Settings cannot cancel it.
+        auto *settings = widget->window();
+        auto *owner = settings->parentWidget() ? settings->parentWidget() : settings;
+        auto *browser = owner->findChild<SourceBrowser *>(QString(), Qt::FindDirectChildrenOnly);
+        if (!browser) {
+            browser = new SourceBrowser(owner);
+            QObject::connect(browser, &SourceBrowser::packRemoved, owner, removed);
+        }
+        browser->show(); browser->raise(); browser->activateWindow();
     });
     auto *button = new QPushButton(QCoreApplication::translate("PackControls", "Import…"), widget); layout->addWidget(button);
     QObject::connect(button, &QPushButton::clicked, widget, [widget] {

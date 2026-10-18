@@ -374,3 +374,11 @@ Display snapshots now read only `pack.json` and `pet.json` (64 KiB each), check 
   main's 148 VPet sequences. A live HTTPS smoke check fetched the official four-pack
   catalog, verified Fat Cat 1.0.0's exact size and SHA-256, matched its metadata,
   and imported/applied it in isolated temporary per-user storage.
+
+- Review follow-up (2026-10-18): the pet window now owns and reuses the source
+  browser, so closing or rebuilding Settings preserves ongoing work and removal
+  callbacks. Terms consent uses a parent-owned heap dialog and guards the browser
+  after the nested event loop. Regression tests cover Settings closure/reopening,
+  browser reuse, and destruction during terms consent. All five focused
+  source/import/transaction/pet/translation CTest suites passed outside the sandbox
+  (the consent test stages through Qt's test-mode AppData location).

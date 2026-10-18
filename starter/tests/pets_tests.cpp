@@ -35,6 +35,7 @@
 #include <QTest>
 #include <QTextBrowser>
 #include <QToolButton>
+#include <QTimer>
 #include <algorithm>
 #include <utility>
 
@@ -781,6 +782,47 @@ private slots:
         QVERIFY(window.findChild<QPushButton *>("openPetsFolder"));
         // One bundled pet leaves nothing to choose; the picker-level cases cover that.
         QCOMPARE(window.findChild<pet::PetPicker *>() != nullptr, pet::PetLibrary::shared().pets().size() > 1);
+    }
+    void sourceBrowserSurvivesSettingsAndIsReused() {
+        QTemporaryDir directory;
+        pet::PetWindow window(nullptr, directory.path() + "/preferences.json", false);
+        auto browse = [&] {
+            for (auto *button : window.findChildren<QPushButton *>())
+                if (button->text() == "Browse pack sources…") { button->click(); return true; }
+            return false;
+        };
+        window.showSettings(); QVERIFY(browse());
+        QPointer<pet::SourceBrowser> browser = window.findChild<pet::SourceBrowser *>();
+        QVERIFY(browser); QCOMPARE(browser->parentWidget(), &window);
+        QVERIFY(browse()); QCOMPARE(window.findChildren<pet::SourceBrowser *>().size(), 1);
+        QPointer<QDialog> settings;
+        for (auto *dialog : window.findChildren<QDialog *>(QString(), Qt::FindDirectChildrenOnly))
+            if (dialog != browser.data()) settings = dialog;
+        QVERIFY(settings); settings->close(); QTRY_VERIFY(settings.isNull());
+        QVERIFY(browser); QVERIFY(browser->isVisible());
+        window.showSettings(); QVERIFY(browse());
+        QCOMPARE(window.findChildren<pet::SourceBrowser *>().size(), 1);
+        browser->reject(); QTRY_VERIFY(browser.isNull());
+    }
+    void sourceBrowserCanBeDestroyedDuringTermsConsent() {
+        QTemporaryDir directory;
+        const auto archive = directory.path() + "/cat.agentpet";
+        QProcess zip;
+        zip.start(QString(PYTHON), {"-c", "import pathlib,sys,zipfile\np=pathlib.Path(sys.argv[1])\nwith zipfile.ZipFile(sys.argv[2],'w') as z:\n for f in sorted(p.rglob('*')):\n  if f.is_file(): z.write(f,f.relative_to(p).as_posix())",
+            QString(PET_SOURCE) + "/tests/fixtures/local-pets/local-cat", archive});
+        QVERIFY(zip.waitForFinished()); QCOMPARE(zip.exitCode(), 0);
+        QPointer<pet::SourceBrowser> browser = new pet::SourceBrowser(nullptr, directory.path() + "/sources");
+        const auto downloads = browser->findChildren<pet::packs::Download *>(); QVERIFY(!downloads.isEmpty());
+        QTimer destroy; destroy.setSingleShot(true); bool sawTerms = false;
+        connect(&destroy, &QTimer::timeout, this, [&] {
+            for (auto *dialog : browser->findChildren<QDialog *>())
+                sawTerms = sawTerms || dialog->windowTitle() == "Review pack terms";
+            delete browser.data();
+        });
+        destroy.start(0);
+        // completed() calls received() synchronously; deletion occurs inside consent.exec().
+        emit downloads.first()->completed(archive);
+        QVERIFY(sawTerms); QVERIFY(browser.isNull());
     }
     void sourceBrowserShowsCachedPacksWithoutRefreshing() {
         QTemporaryDir directory;

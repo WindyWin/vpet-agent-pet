@@ -334,7 +334,7 @@ thú cưng. Nếu bộ đã chọn bị xóa hoặc không còn hợp lệ, ứn
 VPet cho lần chạy đó và giữ lựa chọn đã lưu. Mục Giới thiệu cho phép đọc điều khoản
 hình ảnh của từng thú cưng đã cài. Cập nhật ứng dụng và dọn bộ nhớ tải xuống không
 xóa các thư mục này. Xem [hướng dẫn cài đặt](starter/docs/pets.md#installing-a-local-pet)
-để biết cấu trúc và giới hạn. Nhập tệp ZIP và duyệt nguồn sẽ được bổ sung ở các giai đoạn sau.
+để biết cấu trúc và giới hạn. Nhập tệp ZIP sẽ được bổ sung ở giai đoạn sau; duyệt nguồn đã có sẵn trong Cài đặt.
 
 Ứng dụng chỉ tích hợp VPet. Tải gói `.agentpet` từ [thư viện thú cưng](https://github.com/WindyWin/agent-pet-gallery/releases), rồi nhập gói trong Cài đặt → Thú cưng.
 
