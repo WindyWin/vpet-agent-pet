@@ -58,6 +58,24 @@ def main():
         common = ['--assets', assets, '--licenses', licenses]
         cat = ['--name', 'Cat', '--author', 'Tester', '--terms', 'CAT-TERMS.md']
 
+        # Version validation happens before scaffolding, including in --local mode.
+        invalid_versions = ['', '1.2', 'v1.2.3', '01.2.3', '1.02.3', '1.2.03',
+                            '1.2.3-01', '1.2.3-alpha..1', '1.2.3+', '1.2.3-',
+                            '1.2.3+build..1', '1.2.3\n', '1.2.3+' + 'a' * 27]
+        for index, version in enumerate(invalid_versions):
+            pet_id = f'invalid-version-{index}'
+            for mode in ([], ['--local']):
+                message = run('new_pet.py', pet_id, *cat, '--idle', art / 'idle', *common,
+                              '--version', version, *mode, ok=False)
+                expect('--version must be SemVer' in message, f'Invalid version {version!r}')
+                expect(not (assets / pet_id).exists(), 'Invalid version left a scaffold folder')
+        valid_versions = ['0.0.0', '1.2.3-alpha.0', '1.2.3-01a+build.00', '1.2.3+' + 'a' * 26]
+        for index, version in enumerate(valid_versions):
+            pet_id = f'valid-version-{index}'
+            run('new_pet.py', pet_id, *cat, '--idle', art / 'idle', *common, '--version', version)
+            expect((assets / pet_id / 'pet.json').is_file(), f'Valid version {version!r} refused')
+            shutil.rmtree(assets / pet_id)
+
         run('new_pet.py', 'cat', *cat, '--idle', art / 'idle', *common)
         run('verify_assets.py', *common)
         catalog = json.loads((assets / 'cat/animations.json').read_text())

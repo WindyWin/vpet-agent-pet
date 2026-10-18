@@ -35,6 +35,11 @@ SHAPES = {('loop', 'idle'): 'idle', ('phased', 'idle'): 'busy', ('once', 'idle')
           ('once', 'stop'): 'bye'}
 OWN = {'drag': 'held'}
 FILE_NAME = re.compile(r'[A-Za-z0-9_-][A-Za-z0-9._-]*')
+# Keep in step with packs/installer.cpp: SemVer, including numeric prerelease rules.
+SEMVER = re.compile(r'(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)'
+                    r'(?:-(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)'
+                    r'(?:\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*)?'
+                    r'(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?')
 
 
 def write_json(path, document):
@@ -56,6 +61,8 @@ def main():
     parser.add_argument('--license', default='LicenseRef-Custom', help='licence label for local packs')
     parser.add_argument('--version', default='1.0.0', help='local pack SemVer')
     args = parser.parse_args()
+    if len(args.version) > 32 or not SEMVER.fullmatch(args.version):
+        parser.error('--version must be SemVer with at most 32 characters')
     if args.local:
         if Path(args.terms).suffix not in ('.txt', '.md'):
             parser.error('Local pack terms must use .txt or .md')
