@@ -225,6 +225,7 @@ On macOS and portable Windows copies, the pet announces new releases for manual 
 - **Not reacting?** Restart Claude Code or Codex after connecting, then send a new prompt. In Codex, approve the new hooks in `/hooks`.
 - **Lost the pet?** Click the tray icon, or right-click it → **More → Recover pet position and input**.
 - **macOS:** jumping to a terminal window and automatic updates aren't available yet. **Open** still switches tmux and herdr panes.
+- **Using Herdr?** Its plugin [herdr-agent-pet](https://github.com/WindyWin/herdr-agent-pet) starts the pet with the Herdr server and installs or updates it from inside Herdr: `herdr plugin install WindyWin/herdr-agent-pet`.
 - **Windows:** **Open** brings the agent's Windows Terminal or classic console window to the front, with an editor/terminal fallback based on process ancestry. Setup installations support automatic updates; portable copies require manual upgrades. For hook commands and console output, use `agent-pet-cli.exe`.
 - **Linux on Wayland:** the pet runs through XWayland, which GNOME and KDE provide by default. Pure Wayland isn't supported yet.
 

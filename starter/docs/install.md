@@ -143,6 +143,24 @@ Linux and Windows uninstallers remove these default-path integrations too;
 workspace/custom-path installations must be disabled with the same `--config` path.
 Live compatibility remains experimental.
 
+## Herdr plugin
+
+[Herdr](https://herdr.dev) runs coding agents in terminals it owns. Its plugin
+[herdr-agent-pet](https://github.com/WindyWin/herdr-agent-pet) starts Agent Pet
+with the Herdr server and installs or updates it from inside Herdr:
+
+```bash
+herdr plugin install WindyWin/herdr-agent-pet
+```
+
+The startup hook launches `agent-pet --autostarted` when the Herdr server starts,
+and the **Install or update Agent Pet** action opens a popup pane that downloads
+the latest release, checks the SHA-256 digest GitHub publishes for the asset, and
+runs this package's installer. Herdr's *Open* then brings you back to the tab and
+pane an agent runs in, because the hook captures `HERDR_WORKSPACE_ID`,
+`HERDR_TAB_ID`, `HERDR_PANE_ID` and `HERDR_SOCKET_PATH`. The plugin needs a
+graphical session, so it does nothing when Herdr runs over SSH or in a container.
+
 ## Upgrade
 
 Extract the newer package and run its `./install.sh` with the same `--prefix` (or
