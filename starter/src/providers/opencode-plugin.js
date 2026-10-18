@@ -41,6 +41,12 @@ const observeMessage = (sessionID, messageID, directory) => {
   send("chat.message", sessionID, { eventID: messageID }, directory);
 };
 
+// Every failure lands in one bounded set; the oldest entry goes first.
+const markFailed = (sessionID) => {
+  if (failed.size >= 1024) failed.delete(failed.values().next().value);
+  failed.add(sessionID);
+};
+
 // One dispatch for both public event shapes: OpenCode 2 wraps payload fields in
 // `data` and covers session lifecycle/errors with the execution events; OpenCode 1
 // uses `properties` plus session.created/updated/idle/error and question.asked.
@@ -65,8 +71,7 @@ const dispatch = (event, fallbackDirectory) => {
     send(event.type, sessionID, { eventID: event.id }, directory);
     parents.delete(sessionID); failed.delete(sessionID);
   } else if (event.type === "session.error") {
-    if (failed.size >= 1024) failed.delete(failed.values().next().value);
-    failed.add(sessionID);
+    markFailed(sessionID);
     send(event.type, sessionID, { aborted: p.error?.name === "MessageAbortedError", eventID: event.id }, directory);
   } else if (event.type === "session.idle") {
     // An idle notification after an error/abort must not announce successful completion.
@@ -74,10 +79,10 @@ const dispatch = (event, fallbackDirectory) => {
   } else if (event.type === "session.execution.succeeded") {
     if (!failed.has(sessionID)) send("session.idle", sessionID, { eventID: event.id }, directory);
   } else if (event.type === "session.execution.failed") {
-    failed.add(sessionID);
+    markFailed(sessionID);
     send("session.error", sessionID, { aborted: false, eventID: event.id }, directory);
   } else if (event.type === "session.execution.interrupted") {
-    failed.add(sessionID);
+    markFailed(sessionID);
     send("session.error", sessionID, { aborted: true, eventID: event.id }, directory);
   } else if (event.type === "permission.asked" || event.type === "permission.updated") {
     // The legacy SDK calls permission requests "updated" and keeps callID at the top
