@@ -354,9 +354,8 @@ void Monitor::rest() {
     if (locked && locked()) { dropReminder(); return; }
     if (!active_ || window_.petHidden() || --restLeft_ < 0) { stopRest(); return; }
     if (restLeft_ > 0) {
-        //: A countdown; %1 = seconds left
-        const auto text = restKind_ == "movement" ? Pet::tr("Move or stretch with me… %1").arg(restLeft_)
-                                                   : Pet::tr("Eyes on something far away… %1").arg(restLeft_);
+        const auto text = restKind_ == "movement" ? Pet::tr("Move or stretch with me…")
+                                                   : Pet::tr("Eyes on something far away…");
         note_.say(text, window_.figure(), window_.screenAreas(), {}, 1500);
         return;
     }

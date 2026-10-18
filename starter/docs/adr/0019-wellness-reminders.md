@@ -17,10 +17,11 @@ active time with time passed in, and `Monitor` drives it:
   the 250 ms update (`Monitor::pointer`, `QCursor::pos` by default, replaced in tests)
   calls `Wellness::activity(now)`. A gap between activities counts up to one minute,
   so reading or thinking still counts while a longer pause holds the timers; a gap of
-  five minutes or more is a real break and resets both. Only pointer moves and
+  ten minutes or more is a real break and resets both. Only pointer moves and
   `prompt` events are the user's own; other agent events count only while the user was
-  seen within five minutes, so an agent working for an absent user pauses and then
-  resets the timers. While the screen is locked nothing counts, no reminder shows, one on screen (or its eye-break countdown) goes away without a cheer, and
+  seen within five minutes (`absentMs`), so an agent working for an absent user pauses and then
+  resets the timers. The user counts as present for a reminder when seen within a minute, or when an agent
+  event arrives for a user seen within five minutes, since typing in a terminal moves no pointer. While the screen is locked nothing counts, no reminder shows, one on screen (or its eye-break timer) goes away without a cheer, and
   both timers start over until the user is seen again (`Wellness::reset`):
   `platform::ScreenLock` (`pet_native`, `src/platform/desktop/screensaver/`) follows
   the `ActiveChanged` signal of `org.freedesktop.ScreenSaver` and
@@ -41,7 +42,7 @@ active time with time passed in, and `Monitor` drives it:
   which plays even when easter eggs are off, and says the note in the `NoteBubble`.
   Showing counts as given: ignored, it fades and the timer starts over. The bubble's
   new `clicked` signal answers it: water plays `reminder_done` at once; an eye break
-  first counts 20 seconds down in the note (clicking again ends it), then plays
+  first waits 20 seconds with a static note, no ticking number (clicking again ends it), then plays
   `reminder_done` with a short note.
 - **Snacks.** A finished turn celebrated with a state from the `snack` pool already
   shows the thirsty or hungry art, so it counts as the water reminder and restarts that
@@ -50,7 +51,7 @@ active time with time passed in, and `Monitor` drives it:
 | Pool | State | Art |
 | --- | --- | --- |
 | `eye_break` | `fidget_yawn` | `IDEL/yawning`: eyes closed, a long stretch |
-| `water` | `snack_thirsty` | `Switch/Thirsty`, shared with the snack |
+| `water` | `reminder_drink` | `Reminders/drink`: a glass held and sipped, shared with the snack |
 | `reminder_done` | `cheer_shy` | `Say/Shy` |
 
 The yawn stands in for an eye rub. The archive's `Drink` set is a layered food animation (cup drawn between a back and a
@@ -69,9 +70,9 @@ front layer), which the player does not compose, so no new art was imported.
 
 Validation in a cloud Ubuntu 24.04 container with Qt 6.4.2 (the 6.5 requirement was
 lowered only locally): all CTest suites passed. New tests cover active-time counting
-(grace, pause, five-minute reset, out-of-order activity), due order and `given`,
+(grace, pause, ten-minute reset, out-of-order activity), due order and `given`,
 interval choices and quiet-hour boundaries; the monitor showing the eye break after 20
-minutes of pointer movement with its countdown and cheer, the water reminder held by
+minutes of pointer movement with its note and cheer, the water reminder held by
 a waiting approval until it is answered, the click reaction, muted alerts holding it,
 quiet hours dropping it and a break resetting it; and the settings group with
 persistence, legacy files and malformed values. Still open: how the cadence feels on

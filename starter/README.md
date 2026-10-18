@@ -196,14 +196,14 @@ Preview them from Preview state (`love_520`, `birthday`, `dance`, `startled`); s
 ## Wellness reminders
 
 While you work, the pet reminds you to rest your eyes, drink water, eat lunch and take a movement break. After
-20 minutes of activity it says "Look at something far away for 20 seconds" and
-closes its eyes for a stretch (the 20-20-20 rule); click the note and it counts the 20 seconds down, then
+20 minutes of activity it says "Look at something far away" and
+closes its eyes for a stretch (the 20-20-20 rule); click the note and the pet waits out the 20 seconds, then
 cheers. After 60 minutes it drinks from a glass and says "Time for some water 💧"; click to
 say you had some and it cheers. At lunchtime VPet eats a sandwich alongside the meal reminder.
 
 Completing a reminder picks randomly, with equal chances, from **six VPet happy reactions**: a shy smile,
 shining cheer, wave, dance, hearts or milestone celebration. Water, lunch and go-home reminders celebrate
-when you choose **Done**; eye and movement breaks celebrate after their countdown finishes. The reaction
+when you choose **Done**; eye and movement breaks celebrate after their timer finishes. The reaction
 returns to idle afterward. Random choices can repeat on consecutive completions.
 
 Each reminder (also lunch and go-home) is a question with
@@ -211,16 +211,17 @@ Each reminder (also lunch and go-home) is a question with
 Ignored, it fades and is asked again after 10 minutes, up to three times, then left until the next
 interval. Activity means moving the pointer, sending a prompt, or agent
 events while you were around in the last five minutes: a few idle minutes pause the
-timers, and five minutes away (or a locked screen) counts as a break and starts the timers
-over. Reminders wait until you have moved the pointer in the last minute, and while
+timers, and ten minutes away (or a locked screen) counts as a break and starts the timers
+over. Reminders wait until you have moved the pointer in the last minute, or an agent is working for you
+within five minutes of your last input, and while
 an alert bubble shows, an agent waits on you or alerts are muted. They skip quiet hours (10 PM to 6 AM, which have the bedtime
 note). Settings → **Reminders** sets the eye break (off, 20, 30 or 45 minutes) and
 water (off, 45, 60 or 90 minutes); both are on by default.
 
 **Break Buddy** also offers a 60-second movement break after an hour of active time.
-Choose **Start break**, and VPet jumps rope while a countdown encourages you to move or stretch.
+Choose **Start break**, and VPet jumps rope while a note encourages you to move or stretch.
 Use **Later** or **Skip today** to defer it, or right-click → **Take a movement break** to start one
-whenever you like. Click the countdown to end it early. An approval, error, lock, snooze, hiding or
+whenever you like. Click the note to end it early. An approval, error, lock, snooze, hiding or
 handling the pet ends the break without a completion cheer. Settings → **Reminders** → **Movement break**
 chooses off, 30, 60 or 90 minutes (default 60). Other pets use their own reaction art. See
 [Break Buddy and meal animations](docs/adr/0040-break-buddy-and-meal-reminders.md) and

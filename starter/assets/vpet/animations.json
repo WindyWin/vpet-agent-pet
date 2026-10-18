@@ -7225,11 +7225,11 @@
     ],
     "snack": [
       {
-        "state": "snack_hungry",
+        "state": "reminder_eat",
         "weight": 1
       },
       {
-        "state": "snack_thirsty",
+        "state": "reminder_drink",
         "weight": 1
       }
     ],
