@@ -62,3 +62,10 @@ content-free by design, so message text must not travel through it. The full des
   and then settled requests (`fitSnapshot`). The Codex bridge rejects an answer it could not write instead of
   leaving it unknown forever. The bridges' retry loops no longer pile up abort listeners. The OpenCode bridge ignores
   a terminal's out-of-date view lookup. The Vietnamese conversation strings are translated.
+- 2026-10-19: main CI run `39259848867` exposed a readiness race on Windows. Startup discovery could fetch the
+  active set before a session started, then overwrite its newer execution event while finishing discovery.
+  Execution changes now carry a revision; discovery only applies its HTTP snapshot when no newer execution
+  change has arrived, and applies that state through the session's serial queue. Admitted follow-ups also
+  advance the revision. Two deterministic tests delay the active-set response until after a start or finish
+  event; both failed before the fix and pass afterward. All 39 Node OpenCode bridge tests and the real C++
+  interaction-bridge integration suite passed locally with Qt 6.5.3.

@@ -142,6 +142,11 @@ export function createBridge({ api, send, log = () => {}, tail = TAIL, scanPages
   const ensuring = new Map();
   let linked = false;
   let linkGeneration = generation();
+  let executionRevision = 0;
+  const setRunning = (c, running, revision = ++executionRevision) => {
+    c.running = running;
+    c.executionRevision = revision;
+  };
   // Which terminals show which session (see opencode-presence.mjs). A session a terminal has shown and none
   // shows any more is over: OpenCode's service keeps it, and says nothing when its terminal closes.
   const viewers = new Map();  // viewer id → root session ID it shows, or null
@@ -182,7 +187,7 @@ export function createBridge({ api, send, log = () => {}, tail = TAIL, scanPages
         if (!info?.id) return null;
         const c = {
           id: sessionID, epoch: String(info.time?.created ?? "1") + (epochs.has(sessionID) ? `.${epochs.get(sessionID)}` : ""), title: basename(info.location?.directory) || info.title || sessionID,
-          parentID: info.parentID, running: false, registered: false, ended: false,
+          parentID: info.parentID, running: false, executionRevision: 0, registered: false, ended: false,
           known: new Map(), last: 0, window: [], forms: new Map(), resolved: new Map(), outcomes: new Map(),
         };
         await scan(c);
@@ -351,7 +356,7 @@ export function createBridge({ api, send, log = () => {}, tail = TAIL, scanPages
     let running;
     try { running = Boolean((await api.active())?.data?.[c.id]); } catch { running = c.running; }
     if (running) {
-      c.running = true;
+      setRunning(c, true);
       emit({ type: "ready", conversation: keyOf(c), ready: false });
       return result(c, frame.command_id, "rejected", "not_ready", true);
     }
@@ -364,7 +369,7 @@ export function createBridge({ api, send, log = () => {}, tail = TAIL, scanPages
       return result(c, frame.command_id, "unknown", "bridge_unreachable");
     }
     if (response.status >= 200 && response.status < 300) {
-      c.running = true; // Admitted; the turn starts now.
+      setRunning(c, true); // Admitted; the turn starts now.
       return result(c, frame.command_id, "accepted", undefined, true, response.body?.data?.id);
     }
     if (response.status === 404) return result(c, frame.command_id, "rejected", "unknown_conversation", false);
@@ -405,6 +410,7 @@ export function createBridge({ api, send, log = () => {}, tail = TAIL, scanPages
     const relevant = type === "form.created" || type === "form.replied" || type === "form.cancelled" || type === "session.text.ended"
       || type === "session.inbox.enqueued" || type.startsWith("session.execution.");
     if (!relevant) return;
+    const eventRevision = type.startsWith("session.execution.") ? ++executionRevision : 0;
     await serial(sessionID, async () => {
       const c = await ensure(sessionID);
       if (!c) return;
@@ -422,10 +428,10 @@ export function createBridge({ api, send, log = () => {}, tail = TAIL, scanPages
       } else if (type === "form.replied") settleForm(c, data.id, "answered");
       else if (type === "form.cancelled") settleForm(c, data.id ?? data.formID, "cancelled");
       else if (type === "session.execution.started") {
-        c.running = true;
+        setRunning(c, true, eventRevision);
         if (c.registered) emit({ type: "ready", conversation: keyOf(c), ready: false }); else await announce();
       } else if (type.startsWith("session.execution.")) { // succeeded, failed or interrupted
-        c.running = false;
+        setRunning(c, false, eventRevision);
         await refreshMessages(c);
         if (c.registered) emit({ type: "ready", conversation: keyOf(c), ready: true }); else await announce();
       } else if (c.registered) await refreshMessages(c);
@@ -483,11 +489,12 @@ export function createBridge({ api, send, log = () => {}, tail = TAIL, scanPages
 
   // Everything OpenCode shows as running or waiting on a question is worth tracking from the start.
   const discover = async () => {
+    const activeRevision = executionRevision;
     const active = (await api.active())?.data ?? {};
     for (const [id, state] of Object.entries(active)) {
       if (dormant.has(id)) continue;
       const c = await ensure(id).catch((e) => { log(`discover ${id}: ${e.message}`); return null; });
-      if (c) c.running = state?.type === "running" || c.running;
+      if (c && c.executionRevision <= activeRevision) c.running = state?.type === "running" || c.running;
     }
     // Sessions that predate the bridge: any with an open question, and the few touched recently, so a
     // follow-up to a turn that just finished is possible after a restart. Older ones appear on activity.
@@ -504,8 +511,12 @@ export function createBridge({ api, send, log = () => {}, tail = TAIL, scanPages
       await serial(s.id, async () => { const c = await ensure(s.id).catch(() => null); if (c) await syncForms(c, false); });
     }
     for (const c of conversations.values()) {
-      c.running = Boolean(active[c.id]);
-      await serial(c.id, () => syncForms(c, false));
+      await serial(c.id, async () => {
+        // The HTTP snapshot predates execution events received while discovery
+        // was in flight. Never replace their newer readiness with that snapshot.
+        if (c.executionRevision <= activeRevision) c.running = Boolean(active[c.id]);
+        await syncForms(c, false);
+      });
     }
     announceAll();
   };

@@ -565,4 +565,6 @@ tests now explicitly select notification-only mode so automatic downloads do
 not race their own download calls. Linux Release validation against CI's Qt
 6.5.3 passed all 34 suites, with the updater suite rerun after correcting its
 manual-mode setup. The workflow grouping check covers all 34 suites exactly
-once; hosted macOS validation is still required for the lifetime fix.
+once. Hosted run `39259848867` passed the complete macOS and Linux jobs,
+including native conversion, the worker check and packaging. Its Windows job
+exposed the OpenCode discovery race recorded in ADR 0047.

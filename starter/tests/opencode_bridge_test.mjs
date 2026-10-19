@@ -8,7 +8,7 @@ import os from "node:os";
 import path from "node:path";
 import { after, afterEach, beforeEach, describe, test } from "node:test";
 import { FakeOpenCode } from "./fake_opencode.mjs";
-import { FrameDecoder, encodeFrame, fitSnapshot, fitText, openCodeApi, requestFromForm, run, visibleMessages } from "../src/providers/opencode-bridge.mjs";
+import { createBridge, FrameDecoder, encodeFrame, fitSnapshot, fitText, openCodeApi, requestFromForm, run, visibleMessages } from "../src/providers/opencode-bridge.mjs";
 import { installTui, uninstallTui } from "../src/providers/opencode-presence.mjs";
 
 const until = async (predicate, what, ms = 3000) => {
@@ -163,6 +163,38 @@ describe("mapping", () => {
 });
 
 describe("registration and snapshots", () => {
+  for (const [event, active, ready] of [
+    ["session.execution.started", {}, false],
+    ["session.execution.succeeded", { ses_late: { type: "running" } }, true],
+  ]) {
+    test(`a stale discovery response cannot overwrite ${event}`, async () => {
+      let releaseActive, activeRequested;
+      const requested = new Promise((resolve) => { activeRequested = resolve; });
+      const pendingActive = new Promise((resolve) => { releaseActive = resolve; });
+      const frames = [];
+      const info = { id: "ses_late", location: { directory: "/work/api-web" }, time: { created: 1, updated: 1 } };
+      const bridge = createBridge({
+        api: {
+          active: () => { activeRequested(); return pendingActive; },
+          session: async () => ({ data: info }),
+          sessions: async () => ({ data: [info] }),
+          messages: async () => ({ data: [] }),
+          forms: async () => ({ data: [] }),
+        },
+        send: (frame) => { frames.push(frame); return true; },
+        now: () => 1,
+      });
+      bridge.hello();
+      const discovery = bridge.discover();
+      await requested;
+      await bridge.handleEvent({ type: event, data: { sessionID: info.id } });
+      releaseActive({ data: active });
+      await discovery;
+      await bridge.handleFrame({ type: "resync", conversation: { provider: "opencode", session_id: info.id, conversation_epoch: "1" } });
+      assert.equal(frames.filter((frame) => frame.type === "snapshot").at(-1)?.ready, ready);
+    });
+  }
+
   test("hello lists tracked sessions; the snapshot numbers messages and carries the open question", async () => {
     const s = oc.session("/home/me/api-web");
     oc.addUser(s, "fix the handler");
