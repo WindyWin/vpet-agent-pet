@@ -149,11 +149,11 @@ Friday evenings, your birthday, late nights, very long tasks and every 100th fin
 
 ### Takes care of you
 
-Every 20 minutes of active time it reminds you to look at something far away for 20 seconds; click the note and it counts down with you. Every hour, VPet drinks from a glass alongside the water reminder. At lunchtime (noon by default), it eats a sandwich with the meal reminder. Choose **Done**, **Later** (10 minutes), or **Skip today** to answer a reminder.
+Every 20 minutes of active time it reminds you to look at something far away; click the note and it gives you 20 quiet seconds. Every hour, VPet drinks from a glass alongside the water reminder. At lunchtime (noon by default), it eats a sandwich with the meal reminder. Choose **Done**, **Later** (10 minutes), or **Skip today** to answer a reminder.
 
-Completing a reminder earns one of **six VPet happy reactions**, chosen at random: a shy smile, shining cheer, wave, dance, hearts, or a milestone celebration. Water, lunch and go-home reminders celebrate when you choose **Done**; eye and movement breaks celebrate when their countdown finishes. Each reaction returns to idle afterward, and the same reaction can appear twice in a row.
+Completing a reminder earns one of **six VPet happy reactions**, chosen at random: a shy smile, shining cheer, wave, dance, hearts, or a milestone celebration. Water, lunch and go-home reminders celebrate when you choose **Done**; eye and movement breaks celebrate when their timer finishes. Each reaction returns to idle afterward, and the same reaction can appear twice in a row.
 
-**Break Buddy** offers a 60-second movement break every hour of active time. Choose **Start break** and VPet jumps rope while you move or stretch, with a countdown to keep you company. Start one anytime from right-click → **Take a movement break**, or click the countdown to end it early. Set its interval to **Off**, **30**, **60**, or **90 minutes** under **Settings → Reminders → Movement break**.
+**Break Buddy** offers a 60-second movement break every hour of active time. Choose **Start break** and VPet jumps rope while you move or stretch, with a gentle note and no ticking numbers. Start one anytime from right-click → **Take a movement break**, or click the note to end it early. Set its interval to **Off**, **30**, **60**, or **90 minutes** under **Settings → Reminders → Movement break**.
 
 Reminders wait until you're at the computer, stay quiet while an agent needs you, and skip the night. A movement break stops when an approval or error needs your attention, you lock the screen, snooze or mute notifications, hide the pet, or pick it up. Other pets use their own reaction art.
 
@@ -225,6 +225,7 @@ On macOS and portable Windows copies, the pet announces new releases for manual 
 - **Not reacting?** Restart Claude Code or Codex after connecting, then send a new prompt. In Codex, approve the new hooks in `/hooks`.
 - **Lost the pet?** Click the tray icon, or right-click it → **More → Recover pet position and input**.
 - **macOS:** jumping to a terminal window and automatic updates aren't available yet. **Open** still switches tmux and herdr panes.
+- **Using Herdr?** Its plugin [herdr-agent-pet](https://github.com/WindyWin/herdr-agent-pet) starts the pet with the Herdr server and installs or updates it from inside Herdr: `herdr plugin install WindyWin/herdr-agent-pet`. The plugin supports Linux x86_64 and macOS and requires Herdr 0.7.5 or newer. See the [Herdr plugin guide](starter/docs/install.md#herdr-plugin): this startup flow cannot provide Herdr **Open** navigation.
 - **Windows:** **Open** brings the agent's Windows Terminal or classic console window to the front, with an editor/terminal fallback based on process ancestry. Setup installations support automatic updates; portable copies require manual upgrades. For hook commands and console output, use `agent-pet-cli.exe`.
 - **Linux on Wayland:** the pet runs through XWayland, which GNOME and KDE provide by default. Pure Wayland isn't supported yet.
 

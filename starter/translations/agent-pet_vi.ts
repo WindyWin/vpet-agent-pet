@@ -233,13 +233,12 @@
         <translation>Bắt đầu nghỉ</translation>
     </message>
     <message>
-        <source>Move or stretch with me… %1</source>
-        <extracomment>A countdown; %1 = seconds left</extracomment>
-        <translation>Vận động hoặc giãn cơ cùng em nha… %1</translation>
+        <source>Move or stretch with me…</source>
+        <translation>Vận động hoặc giãn cơ cùng em nha…</translation>
     </message>
     <message>
-        <source>Eyes on something far away… %1</source>
-        <translation>Nhìn ra xa nào… %1</translation>
+        <source>Eyes on something far away…</source>
+        <translation>Nhìn ra xa nào…</translation>
     </message>
     <message>
         <source>Nice! Your eyes got a rest.</source>
@@ -254,17 +253,16 @@
         <translation>Tổng kết hôm nay</translation>
     </message>
     <message>
-        <source>Look at something far away for %1 seconds</source>
-        <extracomment>%1 = seconds</extracomment>
-        <translation>Bạn nhìn ra xa trong %1 giây nha</translation>
+        <source>Look at something far away</source>
+        <translation>Bạn nhìn ra xa nha</translation>
     </message>
     <message>
         <source>Time for some water 💧</source>
         <translation>Uống chút nước nào bạn ơi 💧</translation>
     </message>
     <message>
-        <source>Take a movement break with me for %1 seconds</source>
-        <translation>Mình nghỉ tay, vận động cùng em %1 giây nha</translation>
+        <source>Take a movement break with me</source>
+        <translation>Mình nghỉ tay, vận động cùng em nha</translation>
     </message>
     <message>
         <source>1 turn</source>

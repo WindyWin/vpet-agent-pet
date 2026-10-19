@@ -17,10 +17,11 @@ active time with time passed in, and `Monitor` drives it:
   the 250 ms update (`Monitor::pointer`, `QCursor::pos` by default, replaced in tests)
   calls `Wellness::activity(now)`. A gap between activities counts up to one minute,
   so reading or thinking still counts while a longer pause holds the timers; a gap of
-  five minutes or more is a real break and resets both. Only pointer moves and
+  ten minutes or more is a real break and resets both. Only pointer moves and
   `prompt` events are the user's own; other agent events count only while the user was
-  seen within five minutes, so an agent working for an absent user pauses and then
-  resets the timers. While the screen is locked nothing counts, no reminder shows, one on screen (or its eye-break countdown) goes away without a cheer, and
+  seen within five minutes (`absentMs`), so an agent working for an absent user pauses and then
+  resets the timers. The user counts as present for a reminder when seen within a minute, or when an agent
+  event arrives for a user seen within five minutes, since typing in a terminal moves no pointer. While the screen is locked nothing counts, no reminder shows, one on screen (or its eye-break timer) goes away without a cheer, and
   both timers start over until the user is seen again (`Wellness::reset`):
   `platform::ScreenLock` (`pet_native`, `src/platform/desktop/screensaver/`) follows
   the `ActiveChanged` signal of `org.freedesktop.ScreenSaver` and
@@ -41,7 +42,7 @@ active time with time passed in, and `Monitor` drives it:
   which plays even when easter eggs are off, and says the note in the `NoteBubble`.
   Showing counts as given: ignored, it fades and the timer starts over. The bubble's
   new `clicked` signal answers it: water plays `reminder_done` at once; an eye break
-  first counts 20 seconds down in the note (clicking again ends it), then plays
+  first waits 20 seconds with a static note, no ticking number (clicking again ends it), then plays
   `reminder_done` with a short note.
 - **Snacks.** A finished turn celebrated with a state from the `snack` pool already
   shows the thirsty or hungry art, so it counts as the water reminder and restarts that
@@ -50,7 +51,7 @@ active time with time passed in, and `Monitor` drives it:
 | Pool | State | Art |
 | --- | --- | --- |
 | `eye_break` | `fidget_yawn` | `IDEL/yawning`: eyes closed, a long stretch |
-| `water` | `snack_thirsty` | `Switch/Thirsty`, shared with the snack |
+| `water` | `reminder_drink` | `Reminders/drink`: a glass held and sipped, shared with the snack |
 | `reminder_done` | `cheer_shy` | `Say/Shy` |
 
 The yawn stands in for an eye rub. The archive's `Drink` set is a layered food animation (cup drawn between a back and a
@@ -76,3 +77,14 @@ a waiting approval until it is answered, the click reaction, muted alerts holdin
 quiet hours dropping it and a break resetting it; and the settings group with
 persistence, legacy files and malformed values. Still open: how the cadence feels on
 a real desktop, and CI on Qt 6.5.3.
+
+### Quieter reminders and presence evidence — 2026-10-19
+
+PR #123 reports all 18 offscreen CTest suites passing for static eye/movement
+notes, a ten-minute absence reset (shorter gaps pause timers), and accepted agent
+activity counting as presence while the user was seen within five minutes.
+The eye-break note no longer displays a ticking countdown; its timer, completion
+cheer and early dismissal remain. Linux, macOS and Windows CI tests passed on
+2026-10-18 with Qt 6.5.3. On 2026-10-19, `scripts/verify_assets.py` also passed
+for all five bundled pets. The cadence and behavior on a real desktop remain
+untested for this change.

@@ -51,6 +51,7 @@ the order the decisions were made. For a map of the code, start with the
 | [0042](0042-xwayland-scale-follow.md) | Keep the pet's size when XWayland's scale changes | 2026-10-16 |
 | [0043](0043-native-wayland-layer-shell.md) | Native Wayland through layer-shell | 2026-10-16 |
 | [0044](0044-qt-release-licensing.md) | Qt notices and corresponding source in releases | 2026-10-16 |
+| [0045](0045-herdr-plugin.md) | Herdr plugin startup, installation and Open navigation limits | 2026-10-19 |
 
 ## Writing a record
 

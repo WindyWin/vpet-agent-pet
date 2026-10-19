@@ -16,19 +16,19 @@ the existing meal and water reminders, rather than a separate feeding economy.
   lock, quiet-hours, Later, re-remind, Skip today and snooze rules as other reminders.
   Eye reminders have priority, then water, then movement.
 - The movement question offers **Start break**, **Later** and **Skip today**.
-  Starting it shows a 60-second countdown. **Take a movement break** in the pet/tray
-  menu starts the same countdown even when automatic movement reminders are off.
+  Starting it shows a 60-second break with a static note. **Take a movement break** in the pet/tray
+  menu starts the same break even when automatic movement reminders are off.
   VPet jumps rope alongside it; users can move or stretch as they choose.
 - `movement-break` is an optional reaction cue and a reminder trigger, falling back
   to `eye-break`. `break-buddy` is a surprise trigger drawing from `movement-break`,
-  then `celebrate` for other pets. During a countdown, completed exercise reactions
+  then `celebrate` for other pets. During a break, completed exercise reactions
   request another turn through the runtime. Each reaction stays below its existing
-  15-second timeout; the countdown owns the full break duration.
-- Clicking the countdown, a lock, mute/snooze, hiding, dragging, an urgent session,
+  15-second timeout; the break timer owns the full duration; its note shows no ticking number.
+- Clicking the note, a lock, mute/snooze, hiding, dragging, an urgent session,
   another note or shutdown ends it without cheering. Completed breaks cheer and
   restart the movement timer. A cancelled break is not replayed.
 - Extend `Runtime::withdraw` to interrupt a showing one-shot and return to the
-  current session activity. It still cannot cancel shutdown. Clearing countdown
+  current session activity. It still cannot cancel shutdown. Clearing break
   state before withdrawal prevents cancellation outcomes from restarting it.
 - Map VPet's `lunch` and `water` cues to composed eating/drinking sequences. Preserve
   the existing Done/Later/Skip today flow and configurable lunch/water timing.
@@ -51,7 +51,7 @@ drawings in the script use the application's Apache-2.0 license.
 
 ## Consequences
 
-- Settings gain `movement_minutes`; older files default to 60. Timers and countdowns
+- Settings gain `movement_minutes`; older files default to 60. Timers
   remain in memory, and other pets remain compatible through optional cue fallbacks.
 - VPet now has 146 sequences and 1,322 unique PNG files (193.79 MiB).
   419 original sequences and 4,277 frames remain unbundled.
