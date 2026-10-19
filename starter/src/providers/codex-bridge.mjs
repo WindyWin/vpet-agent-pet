@@ -304,6 +304,10 @@ export function createBridge({ send, log = () => {}, tail = TAIL, maxTracked = M
   const conversations = new Map(); // threadId → state
   const chains = new Map();
   const ensuring = new Map();
+  // Threads the pet let go of (released by the user, or reported ended), with their last status type. Only a new
+  // turn brings one back, as a new epoch: an ended conversation's identity is never reused.
+  const dormant = new Map();
+  const revived = new Map(); // threadId → epoch suffix of a revived thread
   let rpc = null;
   let rpcEpoch = 0; // Counts Codex connections: a question's RPC ID and a sent command belong to one.
   let linked = false;
@@ -340,7 +344,7 @@ export function createBridge({ send, log = () => {}, tail = TAIL, maxTracked = M
   // ---- Threads ---------------------------------------------------------------------------------------
 
   const newConversation = (thread) => ({
-    id: thread.id, epoch: String(thread.createdAt ?? "1"), title: basename(thread.cwd) || thread.name || thread.id,
+    id: thread.id, epoch: String(thread.createdAt ?? "1") + (revived.has(thread.id) ? `.${revived.get(thread.id)}` : ""), title: basename(thread.cwd) || thread.name || thread.id,
     sub: isSubAgent(thread), status: statusOf(thread.status).type, waiting: statusOf(thread.status).waiting,
     registered: false, opening: false, ended: false, synced: false, attached: 0, lastReady: undefined,
     known: new Map(), last: 0, window: [], requests: new Map(), resolved: new Map(), commands: new Map(),
@@ -361,6 +365,7 @@ export function createBridge({ send, log = () => {}, tail = TAIL, maxTracked = M
   const ensure = (threadId) => {
     const known = conversations.get(threadId);
     if (known) return Promise.resolve(known);
+    if (dormant.has(threadId)) return Promise.resolve(null);
     if (!ensuring.has(threadId)) ensuring.set(threadId, (async () => {
       const thread = await readThread(threadId, false);
       return thread?.id ? adopt(thread) : null;
@@ -505,6 +510,25 @@ export function createBridge({ send, log = () => {}, tail = TAIL, maxTracked = M
     conversations.delete(c.id);
   };
 
+  // The pet no longer wants it: stop tracking without announcing anything (the pet already ended it). The
+  // daemon keeps any pending question for the terminal.
+  const retire = (c) => {
+    c.ended = true;
+    for (const e of c.requests.values()) for (const wake of e.waiters.splice(0)) wake(false);
+    conversations.delete(c.id);
+    dormant.set(c.id, c.status);
+  };
+
+  // A dormant thread's status changed: a new turn (not active → active) brings it back under a new epoch.
+  const wakes = (threadId, type) => {
+    const before = dormant.get(threadId);
+    dormant.set(threadId, type);
+    if (type !== "active" || before === "active") return false;
+    dormant.delete(threadId);
+    revived.set(threadId, Date.now());
+    return true;
+  };
+
   // ---- Notifications and server requests ----------------------------------------------------------------
 
   const handleNotification = async (method, params) => {
@@ -512,6 +536,10 @@ export function createBridge({ send, log = () => {}, tail = TAIL, maxTracked = M
     const threadId = params?.threadId ?? params?.thread?.id;
     if (typeof threadId !== "string") return;
     const tracked = () => conversations.get(threadId);
+    if (dormant.has(threadId) && !(method === "thread/status/changed" && wakes(threadId, statusOf(params.status).type))) {
+      if (method === "thread/archived" || method === "thread/deleted") dormant.delete(threadId);
+      return;
+    }
     if (method === "thread/archived" || method === "thread/deleted") {
       const c = tracked();
       if (c) await serial(threadId, async () => endConversation(c));
@@ -715,7 +743,13 @@ export function createBridge({ send, log = () => {}, tail = TAIL, maxTracked = M
       if (c) await serial(c.id, () => sendSnapshot(c));
     } else if (frame?.type === "command") {
       await execute(frame);
+    } else if (frame?.type === "release") {
+      const c = conversations.get(frame.conversation?.session_id);
+      if (c && c.epoch === frame.conversation?.conversation_epoch) await serial(c.id, async () => retire(c));
     } else if (frame?.type === "error") {
+      // The service holds this identity as ended (an earlier release, before a restart): let it go.
+      const c = frame.code === "conversation_ended" ? conversations.get(frame.conversation?.session_id) : undefined;
+      if (c && c.epoch === frame.conversation?.conversation_epoch) await serial(c.id, async () => retire(c));
       // Never log content: the code and message the service chose are all there is.
       log(`service error ${frame.code}: ${frame.message}${frame.request_id ? ` (request ${frame.request_id})` : ""}`);
     }
@@ -744,12 +778,15 @@ export function createBridge({ send, log = () => {}, tail = TAIL, maxTracked = M
       try { const t = await readThread(id, false); if (t?.id) threads.push(t); } catch (error) { if (error.code === "closed") throw error; }
     }
     const loaded = new Set(threads.map((t) => t.id));
+    for (const id of dormant.keys()) if (!loaded.has(id)) dormant.set(id, "notLoaded");
+    for (const t of threads) if (dormant.has(t.id)) wakes(t.id, statusOf(t.status).type);
     for (const c of conversations.values()) {
       if (loaded.has(c.id)) continue;
       await serial(c.id, async () => { setStatus(c, { type: "notLoaded" }); settleAll(c); });
     }
-    const wanted = threads.filter((t) => !conversations.has(t.id) && (statusOf(t.status).waiting || (!isSubAgent(t) && statusOf(t.status).type === "active")));
-    const rest = threads.filter((t) => !conversations.has(t.id) && !wanted.includes(t) && !isSubAgent(t))
+    const fresh = threads.filter((t) => !conversations.has(t.id) && !dormant.has(t.id));
+    const wanted = fresh.filter((t) => (statusOf(t.status).waiting || (!isSubAgent(t) && statusOf(t.status).type === "active")));
+    const rest = fresh.filter((t) => !wanted.includes(t) && !isSubAgent(t))
       .sort((a, b) => (b.updatedAt ?? 0) - (a.updatedAt ?? 0)).slice(0, Math.max(0, maxTracked - wanted.length));
     for (const thread of threads) {
       if (!conversations.has(thread.id) && !wanted.includes(thread) && !rest.includes(thread)) continue;

@@ -63,7 +63,8 @@ public:
     struct Config { QString sessionId, title; qint64 pid = 0, startedAt = 0; };
 
     explicit Host(const Config &config) : config_(config) {
-        key_ = {"claude", config.sessionId, QString::number(config.pid) + "." + QString::number(config.startedAt)};
+        base_ = QString::number(config.pid) + "." + QString::number(config.startedAt);
+        key_ = {"claude", config.sessionId, base_};
         nonce_ = QUuid::createUuid().toString(QUuid::Id128).left(8);
         sequence_ = QDateTime::currentMSecsSinceEpoch(); // Past anything an earlier host sent, so a restart shows as a gap.
         connect(&poll_, &QTimer::timeout, this, [this] { checkClaude(); });
@@ -120,7 +121,7 @@ private:
     void onPetConnected() {
         decoder_ = FrameDecoder();
         QJsonObject hello{{"type", "hello"}, {"provider", "claude"}, {"generation", QUuid::createUuid().toString(QUuid::WithoutBraces)},
-                          {"conversations", QJsonArray{entry()}}};
+                          {"conversations", released_ ? QJsonArray{} : QJsonArray{entry()}}};
         sendFrame(hello);
     }
     void onPetLost() {
@@ -139,22 +140,29 @@ private:
     }
     void onFrame(const QJsonObject &frame) {
         const auto type = frame.value("type").toString();
+        const auto ours = [this](const QJsonValue &value) {
+            ConversationKey k;
+            QString error;
+            return value.isObject() && ConversationKey::fromJson(value.toObject(), k, error) && k == key_;
+        };
         if (type == "welcome") {
-            bool refused = false;
-            for (const auto &value : frame.value("refused").toArray()) {
-                ConversationKey k;
-                QString error;
-                if (ConversationKey::fromJson(value.toObject(), k, error) && k == key_) refused = true;
-            }
-            registered_ = !refused;
-            if (registered_) away_.stop();
-            for (const auto &value : frame.value("resync").toArray()) {
-                ConversationKey k;
-                QString error;
-                if (ConversationKey::fromJson(value.toObject(), k, error) && k == key_) sendSnapshot();
-            }
+            away_.stop(); // The pet is there, whether or not it takes this conversation.
+            if (released_) return;
+            registered_ = true;
+            // Refused: the service holds this identity as ended (released before this host started). Let it go.
+            for (const auto &value : frame.value("refused").toArray())
+                if (ours(value)) { releaseConversation(); return; }
+            for (const auto &value : frame.value("resync").toArray())
+                if (ours(value)) sendSnapshot();
         } else if (type == "resync") {
+            // Also the answer to a conversation_open after a revival.
+            if (released_ || !ours(frame.value("conversation"))) return;
+            registered_ = true;
             sendSnapshot();
+        } else if (type == "release") {
+            if (ours(frame.value("conversation"))) releaseConversation();
+        } else if (type == "error") {
+            if (frame.value("code").toString() == reason::ended && ours(frame.value("conversation"))) releaseConversation();
         } else if (type == "command") {
             Command command;
             QString error;
@@ -180,6 +188,26 @@ private:
     }
 
     // ---- Conversation state ---------------------------------------------------------------------------------------
+
+    // The pet let this conversation go (the user removed it): it is ended there, so nothing more is sent under this
+    // identity. The host stays, so hooks do not start another one, and a new prompt brings it back as a new epoch.
+    void releaseConversation() {
+        if (released_) return;
+        released_ = true;
+        registered_ = false;
+        for (const auto &id : pendingAsks_.keys()) giveUp(id, RequestState::Cancelled, false); // The terminal takes them back.
+        messages_.clear();
+        resolved_.clear();
+        announcedReady_ = false;
+    }
+    void revive() {
+        released_ = false;
+        messages_.clear(); // What was said while let go stays out of the new conversation.
+        resolved_.clear();
+        key_.epoch = base_ + "." + QString::number(QDateTime::currentMSecsSinceEpoch());
+        sendFrame({{"type", "conversation_open"}, {"conversation", key_.toJson()}, {"title", entry().value("title")},
+                   {"ready", false}, {"capabilities", entry().value("capabilities")}});
+    }
 
     // Ready means a follow-up can be delivered now: the turn ended and a waiting hook is armed to wake the session.
     bool ready() const { return registered_ && idle_ && waiter_ && !wake_ && pendingAsks_.isEmpty(); }
@@ -369,7 +397,7 @@ private:
     void onPeerMessage(Peer &peer, const QJsonObject &message) {
         const auto op = message.contains("ack") ? QString("ack") : message.value("op").toString();
         if (op == "attach") {
-            if (message.value("session_id").toString() != config_.sessionId || message.value("epoch").toString() != key_.epoch) {
+            if (message.value("session_id").toString() != config_.sessionId || message.value("epoch").toString() != base_) {
                 // Another Claude process uses this session ID now (a resume): this host is finished.
                 writeLine(peer.socket, {{"error", "epoch"}});
                 QTimer::singleShot(100, this, [] { QCoreApplication::exit(0); });
@@ -383,6 +411,7 @@ private:
         if (op == "prompt") {
             promptSeen_ = true;
             idle_ = false;
+            if (released_ && !message.value("text").toString().trimmed().isEmpty()) revive(); // Only a new prompt brings it back.
             addMessage(Role::User, message.value("text").toString(), "u");
             writeLine(peer.socket, {{"ok", true}});
             publishReady();
@@ -465,6 +494,7 @@ private:
     };
 
     Config config_;
+    QString base_; // The Claude process (<pid>.<startedAt>): what hooks attach by, and the epoch until a revival.
     ConversationKey key_;
     QString nonce_;
     qint64 sequence_ = 0;
@@ -475,7 +505,7 @@ private:
     QLocalSocket pet_;
     FrameDecoder decoder_;
     QTimer poll_, reconnect_, away_;
-    bool registered_ = false, announcedReady_ = false, idle_ = false, promptSeen_ = false;
+    bool registered_ = false, announcedReady_ = false, idle_ = false, promptSeen_ = false, released_ = false;
     QVector<Message> messages_;
     QVector<InputRequest> resolved_;
     QHash<QString, PendingAsk> pendingAsks_;

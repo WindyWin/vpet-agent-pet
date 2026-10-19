@@ -353,6 +353,67 @@ describe("live events", () => {
   });
 });
 
+describe("releasing", () => {
+  const opens = (t) => pet.of("conversation_open").filter((o) => o.conversation.session_id === t.id);
+
+  test("a release stops tracking until a new turn, which returns under a new epoch", async () => {
+    const t = daemon.thread();
+    daemon.addTurn(t, "first", "one");
+    daemon.addTurn(t, "working", undefined, { status: "inProgress" });
+    t.status = { type: "active", activeFlags: [] };
+    await start();
+    const snapshot = await until(() => snapshotOf(t), "snapshot");
+    pet.send({ type: "release", conversation: snapshot.conversation });
+    await settleDown();
+    const frames = pet.frames.length;
+    const opened = opens(t).length;
+    daemon.ask(t); // A question and the end of the turn under way do not bring it back.
+    daemon.finish(t);
+    await settleDown();
+    assert.equal(pet.frames.length, frames);
+    assert.equal(daemon.of("thread/resume").length, 0);
+    daemon.addTurn(t, "again", undefined, { status: "inProgress" });
+    daemon.setStatus(t, { type: "active", activeFlags: [] });
+    const open = await until(() => opens(t).length > opened && opens(t).at(-1), "reopened");
+    assert.equal(open.conversation.session_id, t.id);
+    assert.notEqual(open.conversation.conversation_epoch, snapshot.conversation.conversation_epoch);
+    assert.ok(open.conversation.conversation_epoch.startsWith(`${t.createdAt}.`));
+    const again = await until(() => pet.of("snapshot").find((s) => s.conversation.conversation_epoch === open.conversation.conversation_epoch), "new snapshot");
+    assert.ok(again.messages.some((m) => m.text === "again"));
+    assert.equal(pet.of("conversation_ended").length, 0); // The pet ended the old one itself.
+  });
+
+  test("a conversation_ended error lets the conversation go, and reconnecting the daemon does not bring it back", async () => {
+    const t = daemon.thread();
+    daemon.addTurn(t, "first", "one");
+    await start();
+    const snapshot = await until(() => snapshotOf(t), "snapshot");
+    pet.send({ type: "error", code: "conversation_ended", message: "conversation has ended", conversation: snapshot.conversation });
+    await settleDown();
+    const opened = opens(t).length;
+    daemon.dropAll();
+    await until(() => daemon.of("initialize").length >= 2, "daemon reconnect");
+    await settleDown(300);
+    daemon.setStatus(t, { type: "idle" });
+    await settleDown();
+    assert.equal(opens(t).length, opened);
+    assert.equal(pet.of("snapshot").filter((s) => s.conversation.session_id === t.id).length, 1);
+    assert.equal(pet.of("conversation_ended").length, 0);
+  });
+
+  test("a release for another epoch is ignored", async () => {
+    const t = daemon.thread();
+    daemon.addTurn(t, "first", "one");
+    await start();
+    const snapshot = await until(() => snapshotOf(t), "snapshot");
+    pet.send({ type: "release", conversation: { ...snapshot.conversation, conversation_epoch: "0" } });
+    await settleDown();
+    daemon.addTurn(t, "second", undefined, { status: "inProgress" });
+    daemon.setStatus(t, { type: "active", activeFlags: [] });
+    await until(() => pet.of("message").find((m) => m.message.text === "second"), "still tracked");
+  });
+});
+
 describe("questions", () => {
   // A long answer wait: confirmation must come from the daemon's resolution, not from the fallback read.
   const withQuestion = async (options = {}, bridgeOptions = { answerWaitMs: 10000 }) => {

@@ -118,3 +118,10 @@ standing in for the pet's service on a private endpoint (the user's pet and sett
 Not verified: macOS; Windows (refused); the 24 hour hook timeout actually elapsing; a host that outlives a pet restart
 over a real pet (the harness did not restart); behavior with a terminal user typing during a wait; Claude Code versions
 other than 2.1.303.
+
+### Release from the pet — 2026-10-19
+
+The session host honors `release`, a `conversation_ended` error and a refused registration: it hands an open question
+back to the terminal and stays dormant, and a new prompt reopens the session under the epoch
+`<pid>.<startedAt>.<time>`, while hooks still attach by the process identity.
+`aReleasedConversationReturnsOnlyWithANewPromptUnderANewEpoch` runs it with the real hooks and service. Not run live.

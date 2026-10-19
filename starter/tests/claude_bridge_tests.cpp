@@ -516,6 +516,66 @@ private slots:
         for (const auto &p : processes_) if (!finished(p)) p->kill();
     }
 
+    // The user removes the conversation from the pet: the host lets it go (an open question returns to the terminal),
+    // sends nothing more under that identity, and a new prompt brings it back as a new epoch of the same session.
+    void aReleasedConversationReturnsOnlyWithANewPromptUnderANewEpoch() {
+        Service service;
+        Host host(service, platform::createInteractionTransport("claude-e2e"));
+        QString error;
+        QVERIFY2(host.start(error), qPrintable(error));
+        const qint64 pid = QCoreApplication::applicationPid();
+        const ConversationKey k{"claude", "sess-3", QString::number(pid) + ".1700000000000"};
+        writeSession(pid, "idle", "sess-3");
+        const auto of = [](QJsonObject input) { input["session_id"] = "sess-3"; return input; };
+        const auto sessions = [&] {
+            QList<ConversationKey> out;
+            for (const auto &key : service.keys()) if (key.sessionId == "sess-3") out << key;
+            return out;
+        };
+
+        auto start = hook("SessionStart", of(base("SessionStart")));
+        QTRY_VERIFY_WITH_TIMEOUT(service.find(k) && service.find(k)->ready, 10000);
+        auto question = questionInput("toolu_r");
+        question["session_id"] = "sess-3";
+        auto ask = hook("PreToolUse", question, 60);
+        QTRY_VERIFY_WITH_TIMEOUT(service.find(k)->requests.contains("toolu_r"), 10000);
+
+        QVERIFY(service.release(k));
+        QTRY_VERIFY_WITH_TIMEOUT(finished(ask), 5000); // Not answered: nothing printed, the terminal dialog opens.
+        QCOMPARE(ask->exitCode(), 0);
+        QVERIFY(ask->readAllStandardOutput().isEmpty());
+        QCOMPARE(service.find(k)->link, Conversation::Link::Ended);
+
+        // A reply and a question in the turn under way bring nothing back.
+        auto input = of(base("Stop"));
+        input["last_assistant_message"] = "done";
+        auto stop = hook("Stop", input);
+        auto again = hook("PreToolUse", question, 5);
+        QTRY_VERIFY_WITH_TIMEOUT(finished(again), 10000);
+        QVERIFY(again->readAllStandardOutput().isEmpty());
+        QTest::qWait(300);
+        QCOMPARE(sessions().size(), 1);
+        QVERIFY(service.find(k)->messages.isEmpty());
+
+        // A new prompt does, under a new epoch, with that prompt as its first message.
+        input = of(base("UserPromptSubmit"));
+        input["prompt"] = "back again";
+        auto prompt = hook("UserPromptSubmit", input);
+        QTRY_VERIFY_WITH_TIMEOUT(sessions().size() == 2, 10000);
+        const auto revived = sessions().first();
+        QVERIFY(revived.epoch.startsWith(k.epoch + "."));
+        const auto *c = service.find(revived);
+        QTRY_VERIFY_WITH_TIMEOUT(c->link == Conversation::Link::Connected && c->messages.size() == 1, 5000);
+        QCOMPARE(c->messages[0].text, QString("back again"));
+        QCOMPARE(service.find(k)->link, Conversation::Link::Ended);
+
+        auto end = hook("SessionEnd", of(base("SessionEnd")));
+        QTRY_COMPARE_WITH_TIMEOUT(service.find(revived)->link, Conversation::Link::Ended, 5000);
+        QTRY_VERIFY_WITH_TIMEOUT(!QFile::exists(detail::relayEndpoint("sess-3")), 5000);
+        QFile::remove(config_.path() + "/sessions/" + QString::number(pid) + ".json");
+        for (const auto &p : processes_) if (!finished(p)) p->kill();
+    }
+
     // The host belongs to the Claude process: when it is gone, the conversation ends without any hook saying so.
     void theHostEndsTheConversationWhenClaudeCodeIsGone() {
         Service service;

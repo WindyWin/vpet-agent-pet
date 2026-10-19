@@ -52,3 +52,7 @@ recorded but not deduplicated.
   the daemon reconnected the bridge with one logged line. That run preceded the fix above; the fixed build was
   re-run only against fakes because the account's model quota was exhausted (threads ended in `systemError`).
   Against the user's own daemon only `initialize`, `thread/loaded/list` and `thread/read` without turns were used.
+- 2026-10-19: the bridge honors the service's `release` frame and its `conversation_ended` error: the thread is no
+  longer tracked (discovery and reconnects skip it) until a new turn, which returns it under a new epoch. The
+  bridges had matched the error code `ended`; the service sends `conversation_ended`, fixed here and in the OpenCode
+  bridge. `codex_bridge_test.mjs` covers release, the error, a release for another epoch, and a daemon reconnect.

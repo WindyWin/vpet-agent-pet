@@ -211,7 +211,9 @@ with `capabilities.experimentalApi` (questions need it), then `initialized`.
 first, then the most recently updated, plus any that report activity later (`thread/started`, status changes).
 Saved threads (`notLoaded`) are never read or resumed, because resuming loads them into the daemon. Sub-agent threads
 (a parent thread or sub-agent source) appear only when they ask a question. An archived or deleted thread ends its
-conversation; an unloaded one only stops being ready.
+conversation; an unloaded one only stops being ready. A thread the pet releases (or reports as
+`conversation_ended`) is no longer tracked, its questions stay with the terminal, and only a new turn (the thread
+going from not active to active) brings it back, under the epoch `<createdAt>.<time>`.
 
 **Questions.** Codex sends a question only to the connection that started the turn. When a tracked thread reports
 `waitingOnUserInput`, the bridge calls `thread/resume` on it, which attaches this connection and replays the pending
@@ -279,3 +281,6 @@ Know before enabling:
   each `Stop`). It arrives as "Stop hook feedback", labelled as the user's message, not as a typed prompt.
 - Claude Code acknowledges nothing: `accepted` means the hook wrote it; no confirmation is `unknown` and never retried.
 - Messages and questions go to the local pet only; `hide_message_previews` applies in the pet as for any bridge.
+- Removing the conversation from the pet (`release`, or a `conversation_ended` refusal after a host restart) hands an
+  open question back to the terminal; the host stays, sends nothing, and the next prompt brings the session back
+  under the epoch `<pid>.<startedAt>.<time>`, starting from that prompt.
