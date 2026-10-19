@@ -514,3 +514,21 @@ write/upload CTest diagnostics on completed runners. This bounds concurrent
 artwork decoding and makes a future stalled test diagnosable; the next hosted
 run is required to establish its result. Added the VPet conversion, Steam
 library discovery and desktop import modules to the architecture code map.
+
+### Deferred removal CI regression — 2026-10-19
+
+Main run `39202882959` failed the existing source-browser removal regression
+on Linux and Windows. The Pet settings tab still cleared pet/plugin preferences
+immediately, while the Plugins tab used the deferred-removal handler. Because
+the shared browser retains the callback from the tab that creates it, behavior
+depended on which browse button was opened first. Both tabs now use the same
+handler, preserving selections until the pending removal is applied at startup.
+The existing data-driven test reproduced the failure locally before the fix
+and both rows passed afterward. The Linux Release build and all 26 CTest
+suites passed: 21 in the sandbox, with providers, events, pets, update-install
+and startup rerun outside it for native IPC and Qt test-data access.
+
+The same run's macOS check reports that the hosted runner lost communication
+with GitHub during testing; it has no downloadable test log. That infrastructure
+failure does not establish a separate code defect. A fresh three-platform run
+is needed to validate the repaired main commit.

@@ -900,8 +900,6 @@ void PetWindow::showSettings() {
         connect(picker, &PetPicker::chosen, this, &PetWindow::setPet);
     }
     layout->addRow(packControls(dialog, "pet", [this](const QString &kind, const QString &id) {
-        if (kind == "pet") { if (pet_ == id) setPet("vpet"); }
-        else { auto ids = plugins_; ids.removeAll(id); setPlugins(ids); }
         packRemoved(kind, id);
     }));
     auto *openPets = new QPushButton(tr("Open pets &folder"), dialog);
