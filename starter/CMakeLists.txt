@@ -288,6 +288,16 @@ if(BUILD_TESTING)
                 DRIVER_PATH="${CMAKE_CURRENT_SOURCE_DIR}/tests/bridge_e2e_driver.mjs")
             add_test(NAME interaction-bridge COMMAND interaction-bridge-tests)
         endif()
+        if(PET_NODE_EXECUTABLE AND NOT WIN32)
+            # The Codex interaction bridge (a unix-socket WebSocket to the app-server daemon): against a fake daemon, then the real service.
+            add_test(NAME codex-bridge COMMAND "${PET_NODE_EXECUTABLE}" --test
+                "${CMAKE_CURRENT_SOURCE_DIR}/tests/codex_bridge_test.mjs")
+            qt_add_executable(interaction-codex-bridge-tests tests/interaction_codex_bridge_tests.cpp)
+            target_link_libraries(interaction-codex-bridge-tests PRIVATE pet_interaction_stream Qt6::Test)
+            target_compile_definitions(interaction-codex-bridge-tests PRIVATE NODE_PATH="${PET_NODE_EXECUTABLE}"
+                DRIVER_PATH="${CMAKE_CURRENT_SOURCE_DIR}/tests/codex_bridge_e2e_driver.mjs")
+            add_test(NAME interaction-codex-bridge COMMAND interaction-codex-bridge-tests)
+        endif()
         if(WIN32)
             qt_add_executable(session-process-fixture tests/session_process_fixture.cpp)
             target_link_libraries(session-process-fixture PRIVATE Qt6::Core)

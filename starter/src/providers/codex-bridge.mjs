@@ -537,14 +537,12 @@ export function createBridge({ send, log = () => {}, tail = TAIL, maxTracked = M
       const c = tracked();
       if (c && (params.item?.type === "userMessage" || params.item?.type === "agentMessage")) scheduleRefresh(c);
     } else if (method === "serverRequest/resolved") {
+      // Not queued behind the thread's other work: an answer in flight is waiting for exactly this.
       const c = tracked();
-      if (!c) return;
-      await serial(threadId, async () => {
-        const entry = pendingRequests(c).find((e) => e.rpcId === params.requestId && e.rpcEpoch === rpcEpoch);
-        if (!entry) return;
-        settle(c, entry, c.turnStatus === "interrupted" || c.turnStatus === "failed" ? "cancelled" : "answered");
-        lateResult(c, entry);
-      });
+      const entry = c && pendingRequests(c).find((e) => e.rpcId === params.requestId && e.rpcEpoch === rpcEpoch);
+      if (!entry) return;
+      settle(c, entry, c.turnStatus === "interrupted" || c.turnStatus === "failed" ? "cancelled" : "answered");
+      lateResult(c, entry);
     }
     // Everything else (deltas, token usage, plans, diffs, …) is ignored; unknown methods are tolerated.
   };

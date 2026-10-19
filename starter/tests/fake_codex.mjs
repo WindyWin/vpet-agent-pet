@@ -196,7 +196,6 @@ export class FakeCodex {
       this.responses.push({ id: m.id, meta: meta?.itemId, result: m.result });
       if (this.swallowAnswers) return; // Received but never acted on.
       if (!meta || meta.itemId === "approval") return;
-      client.requests.delete(m.id);
       const params = meta.thread.pending.find((p) => p.itemId === meta.itemId);
       if (params) this.#resolve(meta.thread, params, m.result);
       return;

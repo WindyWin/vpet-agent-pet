@@ -354,10 +354,11 @@ describe("live events", () => {
 });
 
 describe("questions", () => {
-  const withQuestion = async (options = {}) => {
+  // A long answer wait: confirmation must come from the daemon's resolution, not from the fallback read.
+  const withQuestion = async (options = {}, bridgeOptions = { answerWaitMs: 10000 }) => {
     const t = daemon.thread();
     daemon.addTurn(t, "go", "starting");
-    await start();
+    await start({ bridgeOptions });
     await until(() => snapshotOf(t), "snapshot");
     daemon.addTurn(t, "next", undefined, { status: "inProgress" });
     const q = daemon.ask(t, options);
@@ -430,7 +431,7 @@ describe("questions", () => {
   });
 
   test("an answer the daemon never confirms is unknown, and a later resolution settles it as accepted", async () => {
-    const { t, q, key } = await withQuestion();
+    const { t, q, key } = await withQuestion({}, { answerWaitMs: 150 });
     daemon.swallowAnswers = true;
     pet.send(answer("c1", key, q.itemId, "Yes"));
     const unknown = await until(() => resultOf("c1"), "unknown");
