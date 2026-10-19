@@ -1,9 +1,14 @@
 // The desktop side of agent conversations: the collapsed preview, the expanded panel and the coordinator that
 // decides what to show. Everything runs against the real service with a scriptable fake bridge, offscreen.
 #include "desktop/conversations.h"
+#include "desktop/conversation_text.h"
 #include "desktop/pet_window.h"
 #include "fake_bridge.h"
 #include <QApplication>
+#include <QMenu>
+#include <QRadioButton>
+#include <QStyle>
+#include <QStyleOptionButton>
 #include <QSignalSpy>
 #include <QTest>
 
@@ -283,16 +288,74 @@ private slots:
         QVERIFY(!panel.folded(0));
     }
 
-    void messageTextIsNeverMarkup() {
+    void messagesAreMarkdownButNeverRawHtmlOrImages() {
         Rig rig;
-        rig.bridge.message(rig.a, 1, "m1", "<b>bold</b> <img src='http://example.invalid/x.png'>");
+        rig.bridge.message(rig.a, 1, "m1", "**bold** and `code`\n\n- one\n- two\n\n<b>raw</b> ![chart](http://example.invalid/x.png) [site](http://example.invalid/)", "agent");
         ConversationPanel panel(rig.service);
         panel.open(rig.a);
-        const auto labels = panel.findChildren<QLabel *>();
-        bool found = false;
-        for (auto *label : labels)
-            if (label->text().contains("<b>bold</b>")) { found = true; QCOMPARE(label->textFormat(), Qt::PlainText); }
-        QVERIFY(found);
+        QLabel *label = nullptr;
+        for (auto *l : panel.findChildren<QLabel *>())
+            if (l->text().contains("bold")) label = l;
+        QVERIFY(label);
+        QCOMPARE(label->textFormat(), Qt::RichText);
+        QVERIFY(label->text().contains("font-weight")); // Formatted, not shown with its asterisks.
+        QVERIFY(!label->text().contains("**"));
+        QVERIFY(label->text().contains("&lt;b&gt;raw")); // Raw HTML is text.
+        QVERIFY(!label->text().contains("<img"));       // An image is never loaded.
+        QVERIFY(label->text().contains("http://example.invalid/x.png"));
+        QVERIFY(!label->openExternalLinks());
+    }
+
+    void markdownIsPlainWordsInPreviewsAndTheList() {
+        QCOMPARE(conversation::firstLine("## Plan\nmore"), QString("Plan"));
+        QCOMPARE(conversation::firstLine("**Done** with `x`"), QString("Done with x"));
+        QCOMPARE(conversation::firstLine("```cpp\nint x;\n```"), QString("int x;"));
+        QCOMPARE(conversation::firstLine("\n\n  - first item\n- second"), QString("first item"));
+        QCOMPARE(conversation::firstLine("Add tests before continuing?"), QString("Add tests before continuing?"));
+    }
+
+    void anEndedOrQuietSessionLeavesTheList() {
+        Rig rig;
+        PetWindow window(nullptr, {}, false);
+        ConversationHub hub(window, rig.service);
+        rig.bridge.open(rig.b);
+        rig.bridge.message(rig.a, 1, "m1", "hello", "agent");
+        rig.bridge.message(rig.b, 1, "m2", "hi", "agent");
+        hub.list().present(rig.service);
+        QCOMPARE(hub.list().rowCount(), 2);
+        rig.bridge.ended(rig.b);
+        hub.list().present(rig.service);
+        QCOMPARE(hub.list().rowCount(), 1);
+        // Quiet for long, nothing waiting: taken to be closed. Active again: back.
+        auto &c = rig.conv(rig.a);
+        QVERIFY(conversation::listed(c, c.lastActivity + 1000));
+        rig.bridge.message(rig.a, 2, "m3", "x", "user");
+        QVERIFY(conversation::listed(rig.conv(rig.a), rig.conv(rig.a).lastActivity));
+        rig.service.markRead(rig.a, "m1");
+        rig.service.markRead(rig.a, "m3");
+        auto copy = rig.conv(rig.a);
+        copy.ready = true;
+        QVERIFY(!conversation::listed(copy, copy.lastActivity + conversation::idleListMs + 1));
+        rig.bridge.disconnect();
+        QVERIFY(!conversation::listed(rig.conv(rig.a), rig.conv(rig.a).lastActivity));
+    }
+
+    void anOpenPanelClosesWhenItsSessionEnds() {
+        Rig rig;
+        PetWindow window(nullptr, {}, false);
+        ConversationHub hub(window, rig.service);
+        rig.bridge.message(rig.a, 1, "m1", "hi", "agent");
+        hub.open(rig.a);
+        hub.panel().show();
+        QVERIFY(hub.panel().isVisible());
+        rig.bridge.ended(rig.a);
+        QVERIFY(!hub.panel().isVisible());
+        // With a draft typed it stays, so nothing written is lost.
+        rig.bridge.open(rig.b);
+        hub.open(rig.b);
+        hub.panel().typeText("keep me");
+        rig.bridge.ended(rig.b);
+        QVERIFY(hub.panel().isVisible());
     }
 
     void messagesAreReadOnlyOnceVisible() {
@@ -452,7 +515,7 @@ private slots:
         ConversationHub hub(window, rig.service);
         hub.hovering = [] { return false; };
         rig.bridge.message(rig.a, 1, "m0", "Fix the handler in api-web");
-        rig.bridge.message(rig.a, 2, "m1", "I updated the handler.\nIt now validates the payload and returns 400 on bad input.\n\n    if (!valid(body)) return error(400);\n\nThe remaining step is the tests.\nI will add focused cases for the new branch.\nThen run the suite.\nThen report back.", "agent");
+        rig.bridge.message(rig.a, 2, "m1", "## Handler updated\n\nI changed **api-web** so it *validates* the payload:\n\n```cpp\nif (!valid(body)) return error(400);\n```\n\n- add focused tests\n- run `ctest`\n\nSee [the notes](http://example.invalid/notes) for more.", "agent");
         rig.bridge.request(rig.a, "q1", 1, "Add tests before continuing?", {"Add focused tests", "Continue without tests"}, true);
         hub.preview().adjustSize();
         hub.preview().grab().save(dir + "/1-collapsed-question.png");
@@ -461,6 +524,7 @@ private slots:
         QTest::qWait(100);
         hub.panel().grab().save(dir + "/2-expanded-question.png");
         hub.panel().chooseOption(0);
+        hub.panel().grab().save(dir + "/2b-option-chosen.png");
         hub.panel().send();
         hub.panel().grab().save(dir + "/3-sending.png");
         rig.bridge.accept(rig.bridge.commands[0]);
@@ -473,6 +537,114 @@ private slots:
         rig.bridge.disconnect();
         QTest::qWait(50);
         hub.panel().grab().save(dir + "/6-disconnected.png");
+    }
+
+    void theMenuOffersConversationsOnlyWhileTheServiceRuns() {
+        Rig rig;
+        PetWindow window(nullptr, {}, false);
+        const auto visible = [&] {
+            for (auto *menu : window.findChildren<QMenu *>())
+                for (auto *action : menu->actions())
+                    if (action->text() == "Agent conversations…") return action->isVisible();
+            return false;
+        };
+        QVERIFY(!visible());
+        {
+            ConversationHub hub(window, rig.service);
+            QVERIFY(visible());
+        }
+    }
+
+    void thePreviewOpensTheHostWithoutOpeningThePanel() {
+        Rig rig;
+        PetWindow window(nullptr, {}, false);
+        ConversationHub hub(window, rig.service);
+        ConversationKey asked;
+        hub.focusHost = [&](const ConversationKey &k) { asked = k; return true; };
+        rig.bridge.request(rig.a, "q1", 1, "Add tests?", {"Yes", "No"}, false);
+        QVERIFY(hub.preview().isVisible());
+        hub.preview().openHost();
+        QCOMPARE(asked, rig.a);
+        QVERIFY(!hub.panel().isVisible());
+    }
+
+    void thePanelIsABubbleAndAChoiceLooksDifferentFromTheRest() {
+        Rig rig;
+        PetWindow window(nullptr, {}, false);
+        ConversationHub hub(window, rig.service);
+        QVERIFY(hub.panel().windowFlags().testFlag(Qt::FramelessWindowHint));
+        QVERIFY(hub.panel().testAttribute(Qt::WA_TranslucentBackground));
+        rig.bridge.request(rig.a, "q1", 1, "Pick one", {"One", "Two"}, true);
+        hub.open(rig.a);
+        QTest::qWait(50);
+        const auto indicator = [&](int index) {
+            auto *button = hub.panel().findChildren<QRadioButton *>().value(index);
+            QStyleOptionButton option;
+            option.initFrom(button);
+            const auto area = button->style()->subElementRect(QStyle::SE_RadioButtonIndicator, &option, button);
+            return button->grab().toImage().pixelColor(area.center());
+        };
+        hub.panel().chooseOption(1);
+        QTest::qWait(50);
+        QVERIFY(indicator(0) != indicator(1));
+    }
+
+    void aFailedOpenOffersToDetachAndOnlyAYesLetsGo() {
+        Rig rig;
+        PetWindow window(nullptr, {}, false);
+        ConversationHub hub(window, rig.service);
+        rig.bridge.message(rig.a, 1, "m1", "hi", "agent");
+        int asked = 0;
+        bool answer = false;
+        hub.confirmDetach = [&](const ConversationKey &) { ++asked; return answer; };
+        bool raised = true;
+        hub.focusHost = [&](const ConversationKey &) { return raised; };
+
+        hub.open(rig.a);
+        const auto openHost = [&] { for (auto *b : hub.panel().findChildren<QPushButton *>()) if (b->text() == "Open") b->click(); };
+        openHost();
+        QCOMPARE(asked, 0); // It worked: nothing to ask.
+
+        raised = false;
+        openHost(); // Failed, and the answer is no.
+        QCOMPARE(asked, 1);
+        QCOMPARE(rig.conv(rig.a).link, Conversation::Link::Connected);
+        for (const auto &f : rig.bridge.inbox) QVERIFY(f.value("type") != "release");
+
+        answer = true;
+        openHost(); // Failed, and the answer is yes: the bridge is told and the conversation ends.
+        QCOMPARE(asked, 2);
+        QCOMPARE(rig.conv(rig.a).link, Conversation::Link::Ended);
+        QVERIFY(std::any_of(rig.bridge.inbox.begin(), rig.bridge.inbox.end(), [&](const QJsonObject &f) {
+            return f.value("type") == "release" && f.value("conversation").toObject() == rig.a.toJson(); }));
+        QVERIFY(!hub.panel().isVisible()); // Nothing was typed, so the panel went with it.
+        hub.list().present(rig.service);
+        QCOMPARE(hub.list().rowCount(), 0);
+    }
+
+    void aFailedOpenFromThePreviewOffersToDetachToo() {
+        Rig rig;
+        PetWindow window(nullptr, {}, false);
+        ConversationHub hub(window, rig.service);
+        int asked = 0;
+        hub.confirmDetach = [&](const ConversationKey &) { ++asked; return true; };
+        hub.focusHost = [](const ConversationKey &) { return false; };
+        rig.bridge.request(rig.a, "q1", 1, "Add tests?", {"Yes", "No"}, false);
+        QVERIFY(hub.preview().isVisible());
+        hub.preview().openHost();
+        QCOMPARE(asked, 1);
+        QCOMPARE(rig.conv(rig.a).link, Conversation::Link::Ended);
+        QVERIFY(!hub.preview().isVisible());
+    }
+
+    void releasingAnEndedOrUnknownConversationDoesNothing() {
+        Rig rig;
+        QVERIFY(!rig.service.release(rig.b));
+        QVERIFY(rig.service.release(rig.a));
+        QVERIFY(!rig.service.release(rig.a));
+        int releases = 0;
+        for (const auto &f : rig.bridge.inbox) releases += f.value("type") == "release";
+        QCOMPARE(releases, 1);
     }
 
     void openingTheHostUsesTheConversationsOwnSession() {

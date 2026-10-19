@@ -3,6 +3,7 @@
 #include "i18n/contexts.h"
 #include "pet_window.h"
 #include <QDateTime>
+#include <QMessageBox>
 
 namespace pet {
 using namespace interactions;
@@ -17,6 +18,10 @@ ConversationHub::ConversationHub(PetWindow &window, Service &service, QObject *p
         Pick pick; int more = 0;
         if (this->pick(pick, more)) open(pick.key);
     });
+    connect(&preview_, &ConversationPreview::openRequested, this, [this] {
+        Pick pick; int more = 0;
+        if (this->pick(pick, more)) openHost(pick.key);
+    });
     connect(&preview_, &ConversationPreview::hideRequested, this, [this] {
         // Hiding only puts this preview away: the question stays pending and the message stays unread.
         if (!shown_.isEmpty()) hidden_.insert(shown_);
@@ -25,16 +30,14 @@ ConversationHub::ConversationHub(PetWindow &window, Service &service, QObject *p
     connect(&preview_, &ConversationPreview::listRequested, this, &ConversationHub::toggleList);
     connect(&list_, &ConversationList::conversationRequested, this, &ConversationHub::open);
     connect(&panel_, &ConversationPanel::collapsed, this, [this] { window_.setWanderHold(false); refresh(); });
-    connect(&panel_, &ConversationPanel::openRequested, this, [this](const ConversationKey &key) {
-        if (focusHost) focusHost(key);
-    });
+    connect(&panel_, &ConversationPanel::openRequested, this, [this](const ConversationKey &key) { openHost(key); });
     connect(&window_, &PetWindow::moved, this, &ConversationHub::layout);
     connect(&window_, &PetWindow::presenceChanged, this, &ConversationHub::refresh);
     connect(&window_, &PetWindow::conversationsRequested, this, &ConversationHub::toggleList);
     connect(&window_, &PetWindow::quitRequested, this, &ConversationHub::stop);
     window_.setConversationsAvailable(true);
 }
-ConversationHub::~ConversationHub() { service_.unsubscribe(observer_); }
+ConversationHub::~ConversationHub() { service_.unsubscribe(observer_); window_.setConversationsAvailable(false); }
 
 void ConversationHub::stop() {
     stopped_ = true; fade_.stop();
@@ -87,6 +90,11 @@ bool ConversationHub::pick(Pick &out, int &more) const {
 void ConversationHub::refresh() {
     if (stopped_ || refreshing_) return;
     refreshing_ = true;
+    // A session that ended while its panel was open closes it, unless something typed there would be lost.
+    if (panel_.isVisible()) {
+        const auto *shown = service_.find(panel_.current());
+        if ((!shown || shown->link == Conversation::Link::Ended) && panel_.composerText().trimmed().isEmpty()) panel_.collapse();
+    }
     window_.setWanderHold(panel_.isVisible());
     if (list_.isVisible()) list_.present(service_);
     Pick pick; int more = 0;
@@ -116,6 +124,28 @@ void ConversationHub::refresh() {
     layout();
     if (!preview_.isVisible()) preview_.show();
     refreshing_ = false;
+}
+
+// "Open" raises the agent's own window. When that cannot be done the window is probably gone, so the user is
+// asked whether the pet should stop showing the conversation; nothing is let go without a yes.
+void ConversationHub::openHost(const ConversationKey &key) {
+    if (!focusHost || focusHost(key)) return;
+    if (!service_.find(key) || !askToDetach(key)) return;
+    service_.release(key);
+    refresh();
+}
+
+bool ConversationHub::askToDetach(const ConversationKey &key) {
+    if (confirmDetach) return confirmDetach(key);
+    const auto *c = service_.find(key);
+    QMessageBox box(QMessageBox::Question, ::Conversations::tr("Could not open the agent"),
+                    ::Conversations::tr("Agent Pet could not find the window of %1.").arg(c ? conversation::heading(*c) : QString()));
+    box.setInformativeText(::Conversations::tr("Stop showing this conversation in the pet? The agent is not affected, and the conversation returns when you use the agent again."));
+    auto *remove = box.addButton(::Conversations::tr("Remove from the pet"), QMessageBox::AcceptRole);
+    box.addButton(::Conversations::tr("Keep"), QMessageBox::RejectRole);
+    box.setWindowFlag(Qt::WindowStaysOnTopHint);
+    box.exec();
+    return box.clickedButton() == remove;
 }
 
 void ConversationHub::fadeFired() {

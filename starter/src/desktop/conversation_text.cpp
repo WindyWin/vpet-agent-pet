@@ -1,6 +1,10 @@
 #include "conversation_text.h"
 #include "i18n/contexts.h"
 #include "providers/registry.h"
+#include <QTextBlock>
+#include <QTextCursor>
+#include <QTextDocument>
+#include <QTextImageFormat>
 
 namespace pet::conversation {
 using namespace interactions;
@@ -31,10 +35,42 @@ QString status(const Conversation &c) {
     if (!c.ready) return connected + " · " + ::Conversations::tr("Working…");
     return connected + " · " + ::Conversations::tr("Ready for a follow-up");
 }
+static const QTextDocument::MarkdownFeatures markdownFlags(QTextDocument::MarkdownFeatures(QTextDocument::MarkdownDialectGitHub) | QTextDocument::MarkdownNoHTML);
+
 QString firstLine(const QString &text) {
-    for (const auto &line : text.split('\n'))
-        if (!line.trimmed().isEmpty()) return line.trimmed();
+    for (const auto &line : text.split('\n')) {
+        if (line.trimmed().isEmpty()) continue;
+        QTextDocument doc;
+        doc.setMarkdown(line, markdownFlags);
+        // Images become U+FFFC in the plain text; a line of nothing but marks (a code fence) is skipped.
+        const QString plain = doc.toPlainText().remove(QChar::ObjectReplacementCharacter).simplified();
+        if (!plain.isEmpty()) return plain;
+    }
     return {};
+}
+QString markdownHtml(const QString &markdown) {
+    QTextDocument doc;
+    doc.setDocumentMargin(0);
+    doc.setMarkdown(markdown, markdownFlags);
+    // Nothing is fetched or drawn from an address the agent names: an image shows as its address.
+    QVector<QPair<int, int>> images;
+    for (auto block = doc.begin(); block.isValid(); block = block.next())
+        for (auto it = block.begin(); !it.atEnd(); ++it)
+            if (it.fragment().isValid() && it.fragment().charFormat().isImageFormat())
+                images.append({it.fragment().position(), it.fragment().length()});
+    for (int i = images.size() - 1; i >= 0; --i) {
+        QTextCursor cursor(&doc);
+        cursor.setPosition(images[i].first);
+        cursor.setPosition(images[i].first + images[i].second, QTextCursor::KeepAnchor);
+        const QString address = cursor.charFormat().toImageFormat().name();
+        cursor.insertText(address.left(200), QTextCharFormat());
+    }
+    return doc.toHtml();
+}
+bool listed(const Conversation &c, qint64 now, qint64 idleMs) {
+    if (c.link != Conversation::Link::Connected) return false;
+    if (c.needsAttention() || c.unreadCount() > 0 || !c.ready || c.protectedFromEviction()) return true;
+    return now - c.lastActivity <= idleMs;
 }
 QString reasonText(const QString &reason) {
     namespace r = interactions::reason;
