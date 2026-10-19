@@ -135,6 +135,20 @@ describe("mapping", () => {
     assert.deepEqual(frame.requests.map((r) => r.request_id), ["old", "q"]); // Messages go before requests do.
     const small = { type: "snapshot", watermark: 1, first_sequence: 1, requests: [], messages: messages.slice(0, 1) };
     assert.deepEqual(fitSnapshot(structuredClone(small)), small);
+    // Past the messages, settled requests go before pending ones, and the frame always fits.
+    const big = (id, state) => ({ ...pending, request_id: id, state, question: "q".repeat(18000) });
+    const crowded = fitSnapshot({ type: "snapshot", watermark: 0, first_sequence: 0, messages: [],
+      requests: [big("p1", "pending"), big("s1", "answered"), big("p2", "pending"), big("p3", "pending"), big("p4", "pending")] });
+    assert.ok(Buffer.byteLength(JSON.stringify({ version: 1, ...crowded })) <= 60 * 1024);
+    assert.deepEqual(crowded.requests.map((r) => r.request_id), ["p2", "p3", "p4"]);
+  });
+
+  test("a question too large for the pet stays with OpenCode", () => {
+    const form = (description, options = []) => ({ id: "f", metadata: { kind: "question" }, fields: [{ type: "string", key: "k", description, options }] });
+    assert.ok(requestFromForm(form("Pick")));
+    assert.equal(requestFromForm(form("q".repeat(17 * 1024))), null);
+    assert.equal(requestFromForm(form("Pick", Array.from({ length: 21 }, (_, i) => ({ value: `v${i}` })))), null);
+    assert.equal(requestFromForm(form("Pick", [{ value: "v", label: "l".repeat(257) }])), null);
   });
 
   test("framing round-trips and rejects hostile sizes", () => {

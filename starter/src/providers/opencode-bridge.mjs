@@ -54,23 +54,32 @@ export class FrameDecoder {
 
 const byteLength = (text) => Buffer.byteLength(text);
 
-// A message is display text: when it will not fit it is shortened with a marker, never sent whole into
-// a frame the service would drop. (Questions are different: they are never shortened.)
-// A snapshot is one frame. Each message fits on its own, but a full tail does not: the oldest messages go
-// first (first_sequence follows, so the pet sees the gap), then settled requests. Pending questions stay.
+// A question is never shortened, so one the pet could not take whole stays in the terminal: within the service's
+// limits (16 KiB question, 20 options of 256 characters) and small enough to share a snapshot frame with others.
+const MAX_REQUEST_BYTES = 20 * 1024;
+export const requestFits = (request) =>
+  byteLength(request.question) <= MAX_TEXT_BYTES && request.options.length <= 20
+  && request.options.every((o) => o.id.length <= 256 && o.label.length <= 256)
+  && byteLength(JSON.stringify(request)) <= MAX_REQUEST_BYTES;
+
+// A snapshot is one frame. Each message and request fits on its own, but a full tail does not: the oldest
+// messages go first (first_sequence follows, so the pet sees the gap), then settled requests, and only past
+// that the oldest pending ones (the pet then shows them as closed; they stay answerable in the terminal).
 export const fitSnapshot = (frame) => {
   const fits = () => byteLength(JSON.stringify({ version: 1, ...frame })) <= SAFE_FRAME;
   while (!fits() && frame.messages.length) {
     frame.messages.shift();
     frame.first_sequence = frame.messages[0]?.sequence ?? frame.watermark + 1;
   }
-  while (!fits()) {
+  while (!fits() && frame.requests.length) {
     const settled = frame.requests.findIndex((r) => r.state !== "pending");
-    if (settled < 0) break;
-    frame.requests.splice(settled, 1);
+    frame.requests.splice(settled < 0 ? 0 : settled, 1);
   }
   return frame;
 };
+
+// A message is display text: when it will not fit it is shortened with a marker, never sent whole into
+// a frame the service would drop. (Questions are different: they are never shortened.)
 
 export const fitText = (text, extra = 400) => {
   let out = text;
@@ -114,10 +123,8 @@ export const requestFromForm = (form) => {
   const custom = field.custom === true || options.length === 0;
   const question = field.description || field.title || form.title;
   if (!question) return null;
-  return {
-    fieldKey: field.key,
-    request: { request_id: form.id, revision: 1, question, options, custom_answer: custom, state: "pending" },
-  };
+  const request = { request_id: form.id, revision: 1, question, options, custom_answer: custom, state: "pending" };
+  return requestFits(request) ? { fieldKey: field.key, request } : null;
 };
 
 const basename = (directory) => (directory ? path.basename(directory.replace(/[\\/]+$/, "")) || directory : "");
@@ -294,7 +301,7 @@ export function createBridge({ api, send, log = () => {}, tail = TAIL, scanPages
     await refreshMessages(c);
     await syncForms(c, false);
     c.registered = true;
-    emit(fitSnapshot(snapshotFrame(c)));
+    if (!emit(fitSnapshot(snapshotFrame(c)))) c.registered = false; // Not delivered: the pet does not have it.
   };
 
   // ---- Commands ------------------------------------------------------------------------------------

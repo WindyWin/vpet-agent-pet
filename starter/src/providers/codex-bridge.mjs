@@ -13,7 +13,7 @@ import fs from "node:fs";
 import net from "node:net";
 import os from "node:os";
 import path from "node:path";
-import { FrameDecoder, MAX_FRAME, defaultEndpoint, encodeFrame, fitSnapshot, fitText } from "./opencode-bridge.mjs";
+import { FrameDecoder, MAX_FRAME, defaultEndpoint, encodeFrame, fitSnapshot, fitText, requestFits } from "./opencode-bridge.mjs";
 
 export const PROVIDER = "codex";
 const TAIL = 50;          // Messages sent per snapshot.
@@ -291,7 +291,8 @@ export const requestFromQuestions = (params) => {
     options.push({ id: o.label, label: o.label });
   }
   const custom = options.length === 0 || q.isOther === true;
-  return { qid: q.id, request: { request_id: params.itemId, revision: 1, question, options, custom_answer: custom, state: "pending" } };
+  const request = { request_id: params.itemId, revision: 1, question, options, custom_answer: custom, state: "pending" };
+  return requestFits(request) ? { qid: q.id, request } : null;
 };
 
 // ---- Bridge core ------------------------------------------------------------------------------------
@@ -606,7 +607,7 @@ export function createBridge({ send, log = () => {}, tail = TAIL, maxTracked = M
     }
     c.registered = true;
     c.lastReady = readyOf(c);
-    emit(fitSnapshot(snapshotFrame(c)));
+    if (!emit(fitSnapshot(snapshotFrame(c)))) c.registered = false; // Not delivered: the pet does not have it.
   };
 
   // ---- Commands --------------------------------------------------------------------------------------
