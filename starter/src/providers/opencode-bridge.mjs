@@ -56,6 +56,22 @@ const byteLength = (text) => Buffer.byteLength(text);
 
 // A message is display text: when it will not fit it is shortened with a marker, never sent whole into
 // a frame the service would drop. (Questions are different: they are never shortened.)
+// A snapshot is one frame. Each message fits on its own, but a full tail does not: the oldest messages go
+// first (first_sequence follows, so the pet sees the gap), then settled requests. Pending questions stay.
+export const fitSnapshot = (frame) => {
+  const fits = () => byteLength(JSON.stringify({ version: 1, ...frame })) <= SAFE_FRAME;
+  while (!fits() && frame.messages.length) {
+    frame.messages.shift();
+    frame.first_sequence = frame.messages[0]?.sequence ?? frame.watermark + 1;
+  }
+  while (!fits()) {
+    const settled = frame.requests.findIndex((r) => r.state !== "pending");
+    if (settled < 0) break;
+    frame.requests.splice(settled, 1);
+  }
+  return frame;
+};
+
 export const fitText = (text, extra = 400) => {
   let out = text;
   while (byteLength(out) > MAX_TEXT_BYTES || byteLength(JSON.stringify(out)) + extra > SAFE_FRAME) {
@@ -278,7 +294,7 @@ export function createBridge({ api, send, log = () => {}, tail = TAIL, scanPages
     await refreshMessages(c);
     await syncForms(c, false);
     c.registered = true;
-    emit(snapshotFrame(c));
+    emit(fitSnapshot(snapshotFrame(c)));
   };
 
   // ---- Commands ------------------------------------------------------------------------------------
@@ -528,12 +544,18 @@ export function createBridge({ api, send, log = () => {}, tail = TAIL, scanPages
 
   // A terminal shows `sessionID` now (null: none). The session is tracked from this moment, and ended once no
   // terminal shows it.
+  // Lookups can finish out of order: only a viewer's latest update applies, and none after the terminal closed.
+  const viewTurns = new Map(); // viewer → its latest update
+  let viewTurn = 0;
   const viewing = async (viewer, sessionID) => {
-    const before = viewers.get(viewer) ?? null;
+    const turn = ++viewTurn;
+    viewTurns.set(viewer, turn);
     let root = null;
     if (typeof sessionID === "string" && sessionID) {
       try { root = await rootOf(sessionID); } catch (error) { log(`view ${sessionID}: ${error.message}`); root = null; }
     }
+    if (viewTurns.get(viewer) !== turn) return;
+    const before = viewers.get(viewer) ?? null;
     viewers.set(viewer, root);
     if (before && before !== root) leave(before);
     if (!root) return;
@@ -551,6 +573,7 @@ export function createBridge({ api, send, log = () => {}, tail = TAIL, scanPages
   const viewerGone = (viewer) => {
     const before = viewers.get(viewer);
     viewers.delete(viewer);
+    viewTurns.delete(viewer);
     if (before) leave(before);
   };
 
@@ -659,7 +682,12 @@ export const readService = (file = process.env.OPENCODE_SERVICE_FILE
   return { url: service.url, headers: { authorization: "Basic " + Buffer.from(`opencode:${service.password}`).toString("base64") } };
 };
 
-const sleep = (ms, signal) => new Promise((resolve) => { const t = setTimeout(resolve, ms); signal?.addEventListener("abort", () => { clearTimeout(t); resolve(); }, { once: true }); });
+// Each listener goes when its wait ends: the retry loops run for as long as the bridge does.
+const sleep = (ms, signal) => new Promise((resolve) => {
+  const abort = () => { clearTimeout(t); resolve(); };
+  const t = setTimeout(() => { signal?.removeEventListener("abort", abort); resolve(); }, ms);
+  signal?.addEventListener("abort", abort, { once: true });
+});
 
 // Runs until aborted: one loop keeps the Agent Pet link up, another keeps the OpenCode event stream up.
 export async function run({ endpoint = defaultEndpoint(), service = readService(), log = (m) => console.error(`[agent-pet-bridge] ${m}`), signal, api = openCodeApi(service), retryMs, bridgeOptions = {}, presence = presenceEndpoint() } = {}) {
@@ -686,8 +714,9 @@ export async function run({ endpoint = defaultEndpoint(), service = readService(
           catch { s.destroy(); }
         });
         s.on("error", () => {});
-        s.on("close", () => { if (socket === s) socket = null; bridge.linkLost(); if (opened) log("Agent Pet link closed"); resolve(); });
-        signal?.addEventListener("abort", () => s.destroy(), { once: true });
+        const abort = () => s.destroy();
+        s.on("close", () => { signal?.removeEventListener("abort", abort); if (socket === s) socket = null; bridge.linkLost(); if (opened) log("Agent Pet link closed"); resolve(); });
+        signal?.addEventListener("abort", abort, { once: true });
       });
       await sleep(delay, signal);
     }

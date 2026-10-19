@@ -56,3 +56,9 @@ content-free by design, so message text must not travel through it. The full des
   command for the conversation it was sent to even after the user looked at another, and keeps that conversation's
   composer busy meanwhile; the e2e test gives Node a full pipe path on Windows. Not fixed: Windows pipe ownership
   (above).
+- 2026-10-19: second review pass of PR 126. A follow-up whose delivery was unconfirmed and that the bridge later
+  accepts clears its draft, so it cannot be sent twice (`aLateAcceptanceOfAnUnconfirmedFollowUpClearsItsDraft`).
+  Both Node bridges fit a snapshot into one frame by dropping the oldest messages (with `first_sequence` following)
+  and then settled requests (`fitSnapshot`). The Codex bridge rejects an answer it could not write instead of
+  leaving it unknown forever. The bridges' retry loops no longer pile up abort listeners. The OpenCode bridge ignores
+  a terminal's out-of-date view lookup. The Vietnamese conversation strings are translated.

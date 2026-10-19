@@ -39,7 +39,7 @@ A direct client (Basic auth, user `opencode`, the password from the service regi
 1. ~~Observe `GET /api/event`~~ Done: see above. The bridge uses it for low-latency updates, with pull reconciliation as the fallback.
 2. Confirm behavior across a service restart, and across a client disconnect while a form is pending.
 3. ~~Decide the bridge host.~~ Done: a dependency-free Node script (`starter/src/providers/opencode-bridge.mjs`) using `fetch` with the registered password, not `@opencode/client`.
-4. ~~Evaluate Claude Code and Codex later.~~ Done: see the next two sections. Both still need a bridge and a decision on the opt-in model.
+4. ~~Evaluate Claude Code and Codex later.~~ Done: see the next two sections. At probe time both still needed a bridge and an opt-in decision; both bridges now exist (`starter/src/providers/codex-bridge.mjs`, the Claude Code session host) behind the same opt-in as OpenCode ([ADR 0048](../../starter/docs/adr/0048-codex-interaction-bridge.md), [interactions](../../starter/docs/interactions.md)).
 
 # Codex 0.163.0 (probed 2026-10-19)
 

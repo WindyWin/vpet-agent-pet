@@ -88,281 +88,283 @@
     <name>Conversations</name>
     <message>
         <source>Agent message</source>
-        <translation type="unfinished"></translation>
+        <translation>Tin nhắn của agent</translation>
     </message>
     <message>
         <source>View</source>
-        <translation type="unfinished"></translation>
+        <translation>Xem</translation>
     </message>
     <message>
         <source>View the conversation</source>
-        <translation type="unfinished"></translation>
+        <translation>Xem cuộc trò chuyện</translation>
     </message>
     <message>
         <source>Open the conversation</source>
-        <translation type="unfinished"></translation>
+        <translation>Mở cuộc trò chuyện</translation>
     </message>
     <message>
         <source>Open</source>
-        <translation type="unfinished">Mở</translation>
+        <translation>Mở</translation>
     </message>
     <message>
         <source>Bring the agent&apos;s terminal or editor forward</source>
-        <translation type="unfinished">Đưa terminal hoặc trình soạn thảo của agent lên trước</translation>
+        <translation>Đưa terminal hoặc trình soạn thảo của agent lên trước</translation>
     </message>
     <message>
         <source>Hide this preview</source>
-        <translation type="unfinished"></translation>
+        <translation>Ẩn bản xem trước này</translation>
     </message>
     <message>
         <source>Hide this preview (it stays unread)</source>
-        <translation type="unfinished"></translation>
+        <translation>Ẩn bản xem trước này (vẫn giữ là chưa đọc)</translation>
     </message>
     <message>
         <source>Show conversations</source>
-        <translation type="unfinished"></translation>
+        <translation>Hiện các cuộc trò chuyện</translation>
     </message>
     <message>
         <source>Agent conversations</source>
-        <translation type="unfinished"></translation>
+        <translation>Trò chuyện với agent</translation>
     </message>
     <message>
         <source>No conversations yet. An agent with interactions enabled appears here.</source>
-        <translation type="unfinished"></translation>
+        <translation>Chưa có cuộc trò chuyện nào. Agent đã bật tương tác sẽ xuất hiện ở đây.</translation>
     </message>
     <message>
         <source>Needs your answer</source>
-        <translation type="unfinished"></translation>
+        <translation>Cần bạn trả lời</translation>
     </message>
     <message>
         <source>1 new message</source>
-        <translation type="unfinished"></translation>
+        <translation>1 tin nhắn mới</translation>
     </message>
     <message>
         <source>%1 new messages</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 tin nhắn mới</translation>
     </message>
     <message>
         <source>Ready</source>
-        <translation type="unfinished"></translation>
+        <translation>Sẵn sàng</translation>
     </message>
     <message>
         <source>Working…</source>
-        <translation type="unfinished"></translation>
+        <translation>Đang làm việc…</translation>
     </message>
     <message>
         <source>1 conversation</source>
-        <translation type="unfinished"></translation>
+        <translation>1 cuộc trò chuyện</translation>
     </message>
     <message>
         <source>%1 conversations</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 cuộc trò chuyện</translation>
     </message>
     <message>
         <source>Agent conversation</source>
-        <translation type="unfinished"></translation>
+        <translation>Trò chuyện với agent</translation>
     </message>
     <message>
         <source>Collapse (Esc)</source>
-        <translation type="unfinished"></translation>
+        <translation>Thu gọn (Esc)</translation>
     </message>
     <message>
         <source>Collapse conversation</source>
-        <translation type="unfinished"></translation>
+        <translation>Thu gọn cuộc trò chuyện</translation>
     </message>
     <message>
         <source>Ctrl+Enter sends</source>
-        <translation type="unfinished"></translation>
+        <translation>Ctrl+Enter để gửi</translation>
     </message>
     <message>
         <source>Question to answer</source>
-        <translation type="unfinished"></translation>
+        <translation>Câu hỏi cần trả lời</translation>
     </message>
     <message>
         <source>Message to the agent</source>
-        <translation type="unfinished"></translation>
+        <translation>Tin nhắn gửi agent</translation>
     </message>
     <message>
         <source>Conversation unavailable</source>
-        <translation type="unfinished"></translation>
+        <translation>Không có cuộc trò chuyện</translation>
     </message>
     <message>
         <source>This conversation is no longer available.</source>
-        <translation type="unfinished"></translation>
+        <translation>Cuộc trò chuyện này không còn nữa.</translation>
     </message>
     <message>
         <source>Status: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Trạng thái: %1</translation>
     </message>
     <message>
         <source>Some earlier messages could not be loaded.</source>
-        <translation type="unfinished"></translation>
+        <translation>Không tải được một số tin nhắn trước đó.</translation>
     </message>
     <message>
         <source>Some messages could not be loaded.</source>
-        <translation type="unfinished"></translation>
+        <translation>Không tải được một số tin nhắn.</translation>
     </message>
     <message>
         <source>A question here is too large to show. Open the agent to answer it.</source>
-        <translation type="unfinished"></translation>
+        <translation>Có câu hỏi quá dài để hiển thị. Hãy mở agent để trả lời.</translation>
     </message>
     <message>
         <source>Show more</source>
-        <translation type="unfinished"></translation>
+        <translation>Xem thêm</translation>
     </message>
     <message>
         <source>Show less</source>
-        <translation type="unfinished"></translation>
+        <translation>Thu gọn</translation>
     </message>
     <message>
         <source>Agent</source>
-        <translation type="unfinished"></translation>
+        <translation>Agent</translation>
     </message>
     <message>
         <source>You</source>
-        <translation type="unfinished"></translation>
+        <translation>Bạn</translation>
     </message>
     <message>
         <source>Answered</source>
-        <translation type="unfinished"></translation>
+        <translation>Đã trả lời</translation>
     </message>
     <message>
         <source>Cancelled</source>
-        <translation type="unfinished"></translation>
+        <translation>Đã hủy</translation>
     </message>
     <message>
         <source>Replaced</source>
-        <translation type="unfinished"></translation>
+        <translation>Đã thay thế</translation>
     </message>
     <message>
         <source>Expired</source>
-        <translation type="unfinished"></translation>
+        <translation>Đã hết hạn</translation>
     </message>
     <message>
         <source>Question %1 of %2: %3</source>
-        <translation type="unfinished"></translation>
+        <translation>Câu hỏi %1/%2: %3</translation>
     </message>
     <message>
         <source>Custom answer</source>
-        <translation type="unfinished"></translation>
+        <translation>Câu trả lời khác</translation>
     </message>
     <message>
         <source>Answer this question</source>
-        <translation type="unfinished"></translation>
+        <translation>Trả lời câu hỏi này</translation>
     </message>
     <message>
         <source>Type a custom answer…</source>
-        <translation type="unfinished"></translation>
+        <translation>Nhập câu trả lời khác…</translation>
     </message>
     <message>
         <source>Send answer</source>
-        <translation type="unfinished"></translation>
+        <translation>Gửi câu trả lời</translation>
     </message>
     <message>
         <source>Follow up with this agent…</source>
-        <translation type="unfinished"></translation>
+        <translation>Nhắn tiếp cho agent này…</translation>
     </message>
     <message>
         <source>Send</source>
-        <translation type="unfinished"></translation>
+        <translation>Gửi</translation>
     </message>
     <message>
         <source>Sending…</source>
-        <translation type="unfinished"></translation>
+        <translation>Đang gửi…</translation>
     </message>
     <message>
         <source>Sent</source>
-        <translation type="unfinished"></translation>
+        <translation>Đã gửi</translation>
     </message>
     <message>
         <source>Delivery not confirmed. Check the agent before sending again.</source>
-        <translation type="unfinished"></translation>
+        <translation>Chưa xác nhận đã gửi tới. Hãy kiểm tra agent trước khi gửi lại.</translation>
     </message>
     <message>
         <source>%1
 Provider: %2
 Session: %3</source>
-        <translation type="unfinished"></translation>
+        <translation>%1
+Nhà cung cấp: %2
+Phiên: %3</translation>
     </message>
     <message>
         <source>Session ended</source>
-        <translation type="unfinished"></translation>
+        <translation>Phiên đã kết thúc</translation>
     </message>
     <message>
         <source>Disconnected</source>
-        <translation type="unfinished"></translation>
+        <translation>Mất kết nối</translation>
     </message>
     <message>
         <source>Connected</source>
-        <translation type="unfinished"></translation>
+        <translation>Đã kết nối</translation>
     </message>
     <message>
         <source>Waiting for your answer</source>
-        <translation type="unfinished"></translation>
+        <translation>Đang chờ bạn trả lời</translation>
     </message>
     <message>
         <source>Ready for a follow-up</source>
-        <translation type="unfinished"></translation>
+        <translation>Sẵn sàng nhận tin nhắn tiếp</translation>
     </message>
     <message>
         <source>The agent is disconnected.</source>
-        <translation type="unfinished"></translation>
+        <translation>Agent đã mất kết nối.</translation>
     </message>
     <message>
         <source>The session has ended.</source>
-        <translation type="unfinished"></translation>
+        <translation>Phiên đã kết thúc.</translation>
     </message>
     <message>
         <source>The question changed. Review it and answer again.</source>
-        <translation type="unfinished"></translation>
+        <translation>Câu hỏi đã thay đổi. Hãy xem lại và trả lời lần nữa.</translation>
     </message>
     <message>
         <source>This question was already answered.</source>
-        <translation type="unfinished"></translation>
+        <translation>Câu hỏi này đã được trả lời.</translation>
     </message>
     <message>
         <source>An answer is already being sent.</source>
-        <translation type="unfinished"></translation>
+        <translation>Một câu trả lời đang được gửi.</translation>
     </message>
     <message>
         <source>This question is closed.</source>
-        <translation type="unfinished"></translation>
+        <translation>Câu hỏi này đã đóng.</translation>
     </message>
     <message>
         <source>The agent is busy. Try again when it is ready.</source>
-        <translation type="unfinished"></translation>
+        <translation>Agent đang bận. Hãy thử lại khi nó sẵn sàng.</translation>
     </message>
     <message>
         <source>Answer the open question first.</source>
-        <translation type="unfinished"></translation>
+        <translation>Hãy trả lời câu hỏi đang mở trước.</translation>
     </message>
     <message>
         <source>That is too long to send.</source>
-        <translation type="unfinished"></translation>
+        <translation>Nội dung quá dài để gửi.</translation>
     </message>
     <message>
         <source>That option is no longer available.</source>
-        <translation type="unfinished"></translation>
+        <translation>Lựa chọn đó không còn nữa.</translation>
     </message>
     <message>
         <source>This question does not take a typed answer.</source>
-        <translation type="unfinished"></translation>
+        <translation>Câu hỏi này không nhận câu trả lời nhập tay.</translation>
     </message>
     <message>
         <source>This agent cannot do that.</source>
-        <translation type="unfinished"></translation>
+        <translation>Agent này không làm được việc đó.</translation>
     </message>
     <message>
         <source>The agent did not accept that answer. Edit it and try again.</source>
-        <translation type="unfinished"></translation>
+        <translation>Agent không nhận câu trả lời đó. Hãy sửa lại và thử lần nữa.</translation>
     </message>
     <message>
         <source>Could not send (%1).</source>
-        <translation type="unfinished"></translation>
+        <translation>Không gửi được (%1).</translation>
     </message>
     <message>
         <source>New message</source>
-        <translation type="unfinished"></translation>
+        <translation>Tin nhắn mới</translation>
     </message>
     <message>
         <source>Could not open the agent</source>
@@ -1055,7 +1057,7 @@ Nhấp chuột phải để mở menu · Esc để thoát</translation>
     </message>
     <message>
         <source>Agent conversations…</source>
-        <translation type="unfinished"></translation>
+        <translation>Trò chuyện với agent…</translation>
     </message>
     <message>
         <source>Today&apos;s recap</source>

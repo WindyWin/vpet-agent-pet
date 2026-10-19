@@ -8,7 +8,7 @@ import os from "node:os";
 import path from "node:path";
 import { after, afterEach, beforeEach, describe, test } from "node:test";
 import { FakeOpenCode } from "./fake_opencode.mjs";
-import { FrameDecoder, encodeFrame, fitText, openCodeApi, requestFromForm, run, visibleMessages } from "../src/providers/opencode-bridge.mjs";
+import { FrameDecoder, encodeFrame, fitSnapshot, fitText, openCodeApi, requestFromForm, run, visibleMessages } from "../src/providers/opencode-bridge.mjs";
 import { installTui, uninstallTui } from "../src/providers/opencode-presence.mjs";
 
 const until = async (predicate, what, ms = 3000) => {
@@ -121,6 +121,20 @@ describe("mapping", () => {
     assert.ok(fitted.endsWith("…"));
     const escapes = '"'.repeat(16000); // Small as text, large once JSON-escaped.
     assert.ok(Buffer.byteLength(JSON.stringify(fitText(escapes))) < 60 * 1024);
+  });
+
+  test("a snapshot of many long messages drops the oldest to fit one frame, and says where it starts", () => {
+    const messages = Array.from({ length: 50 }, (_, i) => ({ message_id: `m${i}`, sequence: i + 1, role: "agent", text: fitText("x".repeat(20000)), created_at: 1 }));
+    const pending = { request_id: "q", revision: 1, question: "Pick", options: [], custom_answer: true, state: "pending" };
+    const answered = { ...pending, request_id: "old", state: "answered" };
+    const frame = fitSnapshot({ type: "snapshot", watermark: 50, first_sequence: 1, requests: [answered, pending], messages });
+    assert.ok(Buffer.byteLength(JSON.stringify({ version: 1, ...frame })) <= 60 * 1024);
+    assert.ok(frame.messages.length > 0 && frame.messages.length < 50);
+    assert.equal(frame.messages.at(-1).sequence, 50); // The newest are kept.
+    assert.equal(frame.first_sequence, frame.messages[0].sequence);
+    assert.deepEqual(frame.requests.map((r) => r.request_id), ["old", "q"]); // Messages go before requests do.
+    const small = { type: "snapshot", watermark: 1, first_sequence: 1, requests: [], messages: messages.slice(0, 1) };
+    assert.deepEqual(fitSnapshot(structuredClone(small)), small);
   });
 
   test("framing round-trips and rejects hostile sizes", () => {

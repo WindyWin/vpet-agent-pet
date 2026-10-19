@@ -21,8 +21,9 @@ recorded but not deduplicated.
   thread only when it waits for user input, to have the pending question replayed, and never answers any other
   server request. Sub-agent threads appear only when they ask.
 - Only one non-secret question, with options or free text, is shown; the rest stays in the terminal.
-- Follow-ups are gated on a fresh `idle` read and are never sent to a running thread. They are never retried: a lost
-  outcome is `unknown` and is resolved by finding the user message with its client ID.
+- Follow-ups are gated on a fresh `idle` read, so a thread that reads as running is refused; a terminal turn that
+  starts between that read and `turn/start` can still be steered, since the API has no conditional start. They are
+  never retried: a lost outcome is `unknown` and is resolved by finding the user message with its client ID.
 - An answer is confirmed by the daemon's `serverRequest/resolved`, not by the write succeeding.
 - `idempotent_commands` is not advertised; the bridge still returns the known result for a repeated command ID.
 - Same opt-in as OpenCode: not started by the app, no UI.

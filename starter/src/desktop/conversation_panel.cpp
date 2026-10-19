@@ -190,7 +190,7 @@ void ConversationPanel::open(const ConversationKey &key) {
         bodySignature_.clear(); shownSlot_.clear(); stickToEnd_ = true;
         // A command still in flight for this conversation keeps its composer busy: no second click can duplicate it.
         for (auto it = flights_.constBegin(); it != flights_.constEnd(); ++it)
-            if (it->key == key) { sending_ = it.key(); feedback_->setText(::Conversations::tr("Sending…")); feedback_->setStyleSheet("color:#6b5643;"); }
+            if (it->key == key && !it->unconfirmed) { sending_ = it.key(); feedback_->setText(::Conversations::tr("Sending…")); feedback_->setStyleSheet("color:#6b5643;"); }
     }
     refresh();
     show(); raise(); activateWindow();
@@ -458,7 +458,9 @@ void ConversationPanel::send() {
     else if (auto *now = service_.find(current_)) updateComposer(*now);
 }
 void ConversationPanel::onResult(const CommandResult &result) {
-    const auto flight = flights_.take(result.commandId);
+    const bool settled = result.outcome != Outcome::Unknown;
+    const auto flight = settled ? flights_.take(result.commandId) : flights_.value(result.commandId);
+    if (!settled) flights_[result.commandId].unconfirmed = true;
     const bool visible = flight.key == current_;
     if (visible && sending_ == result.commandId) sending_.clear();
     const auto *c = service_.find(flight.key);

@@ -94,7 +94,8 @@ private:
     int observer_ = 0;
     interactions::ConversationKey current_;
     // A command is answered for the conversation it went to, whichever one the panel shows when the result arrives.
-    struct Flight { interactions::ConversationKey key; QString slot; };
+    // An unconfirmed one stays until the bridge settles it, so a late acceptance still clears what was sent.
+    struct Flight { interactions::ConversationKey key; QString slot; bool unconfirmed = false; };
     QHash<QString, Flight> flights_;  // Command ID → where it was sent and which draft it came from.
     QString sending_;                 // The command in flight for the conversation on screen, if any.
     QString shownSlot_;   // Which draft the composer currently holds, so a refresh never overwrites typing.

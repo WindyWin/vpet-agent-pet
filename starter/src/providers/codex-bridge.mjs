@@ -13,7 +13,7 @@ import fs from "node:fs";
 import net from "node:net";
 import os from "node:os";
 import path from "node:path";
-import { FrameDecoder, MAX_FRAME, defaultEndpoint, encodeFrame, fitText } from "./opencode-bridge.mjs";
+import { FrameDecoder, MAX_FRAME, defaultEndpoint, encodeFrame, fitSnapshot, fitText } from "./opencode-bridge.mjs";
 
 export const PROVIDER = "codex";
 const TAIL = 50;          // Messages sent per snapshot.
@@ -606,7 +606,7 @@ export function createBridge({ send, log = () => {}, tail = TAIL, maxTracked = M
     }
     c.registered = true;
     c.lastReady = readyOf(c);
-    emit(snapshotFrame(c));
+    emit(fitSnapshot(snapshotFrame(c)));
   };
 
   // ---- Commands --------------------------------------------------------------------------------------
@@ -630,7 +630,7 @@ export function createBridge({ send, log = () => {}, tail = TAIL, maxTracked = M
   const answerRequest = async (c, frame) => {
     const entry = c.requests.get(frame.request_id);
     if (!entry || entry.state !== "pending") return result(c, frame.command_id, "rejected", "unknown_request", false);
-    if (!rpc || entry.rpcId === undefined || entry.rpcEpoch !== rpcEpoch) return result(c, frame.command_id, "rejected", "provider_unavailable", true);
+    if (!rpc?.alive || entry.rpcId === undefined || entry.rpcEpoch !== rpcEpoch) return result(c, frame.command_id, "rejected", "provider_unavailable", true);
     const optionId = frame.payload?.option_id;
     const text = frame.payload?.text;
     const value = optionId ?? text;
@@ -641,9 +641,11 @@ export function createBridge({ send, log = () => {}, tail = TAIL, maxTracked = M
     entry.sent = true;
     try { rpc.respond(entry.rpcId, { answers: { [entry.qid]: { answers: [value] } } }); }
     catch (error) {
+      // write() throws only on a closed connection, before any byte leaves: the answer was not given.
       entry.answering = false;
+      entry.sent = false;
       log(`answer failed for ${c.id}: ${error.message}`);
-      return result(c, frame.command_id, "unknown", "provider_unreachable");
+      return result(c, frame.command_id, "rejected", "provider_unavailable", true);
     }
     // There is no reply to an answer; the daemon confirms by resolving the request.
     let confirmed = await waitSettled(entry, answerWaitMs);
@@ -835,7 +837,12 @@ export function createBridge({ send, log = () => {}, tail = TAIL, maxTracked = M
 
 // ---- Process: wiring --------------------------------------------------------------------------------
 
-const sleep = (ms, signal) => new Promise((resolve) => { const t = setTimeout(resolve, ms); signal?.addEventListener("abort", () => { clearTimeout(t); resolve(); }, { once: true }); });
+// Each listener goes when its wait ends: the retry loops run for as long as the bridge does.
+const sleep = (ms, signal) => new Promise((resolve) => {
+  const abort = () => { clearTimeout(t); resolve(); };
+  const t = setTimeout(() => { signal?.removeEventListener("abort", abort); resolve(); }, ms);
+  signal?.addEventListener("abort", abort, { once: true });
+});
 
 // Runs until aborted: one loop keeps the Agent Pet link up, another keeps the Codex daemon connection up.
 // The daemon need not exist yet; it is retried quietly (a state change is logged once, not every attempt).
@@ -864,8 +871,9 @@ export async function run({ endpoint = defaultEndpoint(), codexSocket = defaultC
           catch { s.destroy(); }
         });
         s.on("error", () => {});
-        s.on("close", () => { if (socket === s) socket = null; bridge.linkLost(); if (opened) log("Agent Pet link closed"); resolve(); });
-        signal?.addEventListener("abort", () => s.destroy(), { once: true });
+        const abort = () => s.destroy();
+        s.on("close", () => { signal?.removeEventListener("abort", abort); if (socket === s) socket = null; bridge.linkLost(); if (opened) log("Agent Pet link closed"); resolve(); });
+        signal?.addEventListener("abort", abort, { once: true });
       });
       await sleep(delay, signal);
     }
@@ -877,6 +885,7 @@ export async function run({ endpoint = defaultEndpoint(), codexSocket = defaultC
     let delay = base;
     while (!signal?.aborted) {
       let connection;
+      const abort = () => connection?.close();
       try {
         connection = await connect({
           socketPath: codexSocket,
@@ -886,7 +895,7 @@ export async function run({ endpoint = defaultEndpoint(), codexSocket = defaultC
           },
         });
         bridge.codexUp(connection);
-        signal?.addEventListener("abort", () => connection.close(), { once: true });
+        signal?.addEventListener("abort", abort, { once: true });
         if (lastProblem) log("Codex daemon connected");
         lastProblem = "";
         delay = base;
@@ -898,6 +907,7 @@ export async function run({ endpoint = defaultEndpoint(), codexSocket = defaultC
         connection?.close();
         delay = Math.min(delay * 2, retryMs ? retryMs * 4 : 30000);
       }
+      signal?.removeEventListener("abort", abort);
       bridge.codexLost();
       await sleep(delay, signal);
     }

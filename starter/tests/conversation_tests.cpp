@@ -146,6 +146,26 @@ private slots:
         QCOMPARE(rig.bridge.commands.size(), 1);
     }
 
+    // An unconfirmed follow-up that the bridge later confirms is not left behind as a draft to send twice.
+    void aLateAcceptanceOfAnUnconfirmedFollowUpClearsItsDraft() {
+        Rig rig;
+        ConversationPanel panel(rig.service);
+        panel.open(rig.a);
+        panel.typeText("run the tests");
+        panel.send();
+        const auto id = rig.bridge.commands[0].commandId;
+        rig.bridge.result(id, "unknown", "bridge_unreachable");
+        QCOMPARE(panel.composerText(), QString("run the tests"));
+        panel.open(rig.b);
+        panel.open(rig.a);
+        QCOMPARE(panel.feedback(), QString()); // Not shown as still sending.
+        rig.bridge.result(id, "accepted");
+        QCOMPARE(panel.composerText(), QString());
+        QCOMPARE(rig.service.draft(rig.a, QString()), QString());
+        QCOMPARE(panel.feedback(), QString("Sent"));
+        QCOMPARE(rig.bridge.commands.size(), 1);
+    }
+
     void timeoutShowsUnknownNotSuccess() {
         qint64 now = 1700000000000;
         Service service([&] { return now; });
