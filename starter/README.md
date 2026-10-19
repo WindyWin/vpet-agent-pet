@@ -473,8 +473,9 @@ runtime library manifest. The version comes from `project()` in CMakeLists.txt;
 `-DAGENT_PET_REVISION=<commit>` records the source revision shown by
 `agent-pet --version` and About. Output directories must be new.
 
-Packaging also writes `-app.tar.gz`, `-runtime.tar.gz`, `-artwork.tar.gz`,
-`-artwork-<sequence-hash>.tar.gz` and `-components.json` beside the full archive.
+Packaging also writes the versioned `-app.tar.gz` and `-components.json` beside
+the full archive. Runtime and artwork archives go into `blobs/`, named by their
+archive SHA-256, and are uploaded only if the shared release lacks them.
 Each PNG sequence directory becomes a separate resource pack with a stable name
 based on its path. Adding or editing a sequence only replaces that pack and the
 small catalog; other sequences and the runtime are reused when their installed
@@ -482,12 +483,12 @@ files still match. Editing animation timing alone only changes the catalog.
 
 `share/agent-pet/artwork.rcc` is the pet index (each pet's metadata, catalog, preview and pack
 list), and `share/agent-pet/artwork-<sequence-hash>.rcc` contains each sequence's frames.
-Local builds load the same files from `build/`. Component manifest format 2
-supports these packs; the updater also accepts legacy format 1 bundles.
+Local builds load the same files from `build/`. Component manifest format 3
+supports shared URLs; the updater also accepts legacy formats 1 and 2.
 Older updaters fall back to the full archive for the first upgrade to this layout.
 First installs still download all artwork. Keep the full archive for first
-installs and older updaters. CI uploads the full archive and all components for
-each release; this split reduces update downloads, not release upload volume.
+installs and older updaters. CI uploads the full archive and app component for
+each release, while reusing unchanged shared runtime and artwork blobs.
 
 Two checks exercise the package without a display:
 
@@ -521,12 +522,10 @@ QMAKE=/path/to/qmake python3 scripts/package_macos.py --universal
 ```
 
 It writes `dist/agent-pet-VERSION-macos-universal.zip` containing `Agent Pet.app`
-(signed ad hoc, not notarized) and `INSTALL.txt`, and
-`agent-pet-VERSION-macos-universal.dmg` with the same files plus an Applications
-shortcut. Before zipping it checks that every binary loads only bundled or system
-libraries and has both architectures, and runs `--version` and
-`--check-update-runtime` from the bundle; it then verifies and mounts the disk image
-read-only and checks its contents, signature and version.
+(signed ad hoc, not notarized) and `INSTALL.txt`. Before zipping it checks that every
+binary loads only bundled or system libraries and has both architectures, and runs
+`--version` and `--check-update-runtime` from the bundle. Optional `--dmg` also builds
+a disk image, mounts it read-only and checks its contents, signature and version.
 
 The Windows release is packaged from a Visual Studio developer prompt with Qt's
 `windeployqt` (found through `qmake`) and Inno Setup 6:
@@ -536,23 +535,37 @@ $env:QMAKE = "C:\Qt\6.5.3\msvc2019_64\bin\qmake.exe"; python scripts/package_win
 python scripts/check_install_windows.py dist\agent-pet-VERSION-windows-x86_64-setup.exe
 ```
 
-It writes `dist/agent-pet-VERSION-windows-x86_64.zip` (both executables, artwork, Qt,
-the Visual C++ runtime, notices and `INSTALL.txt`) and the per-user setup program
-`agent-pet-VERSION-windows-x86_64-setup.exe`, after running `--version`,
+It writes the per-user setup program `dist/agent-pet-VERSION-windows-x86_64-setup.exe`
+(both executables, artwork, Qt, the Visual C++ runtime, notices and `INSTALL.txt`), after running `--version`,
 `--check-update-runtime` and the smoke test with only Windows on `PATH`. The install check
 installs into a folder with spaces against throwaway Claude Code and Codex
 configurations, runs each registered hook the way its agent does, upgrades and
-uninstalls.
+uninstalls. Optional `--portable-zip` also builds a portable ZIP for local use.
 
 CI ([.github/workflows/release.yml](../.github/workflows/release.yml)) runs all of
 the above from a clean checkout on Ubuntu 22.04, macOS 14 and Windows Server 2022 with
-Qt 6.5.3, uploads the Linux full tarball, component tarballs and manifest, the macOS zip
-and dmg and the Windows zip and setup program, and attaches them to a draft GitHub
-release for `v*` tags. CI adds an English/Vietnamese download table for the three
-operating systems above GitHub's generated release notes, with portable and source
-downloads in a collapsible section. It verifies that all six linked packages exist
-and are nonempty before creating the draft. Component assets remain available for
-automatic updates.
+Qt 6.5.3. Version releases contain the Linux full tarball, app component and manifest,
+macOS ZIP, Windows Setup, and source archives. The ZIP and Setup are the assets
+existing macOS and Windows clients expect. Redundant DMG and Windows ZIP uploads
+are omitted. CI attaches these files to a draft GitHub release for `v*` tags, with
+an English/Vietnamese download table and verified nonempty download links.
+
+Linux format 3 manifests pin runtime and artwork component archives by SHA-256
+under the long-lived `release-blobs` prerelease (never latest). Identical content
+is uploaded once, including across app versions. The release-specific Qt source
+notice travels in the app component, retaining its installed path. Older clients
+reject format 3 and use the retained full Linux tarball. CI checks installer
+upgrades from the previous two stable releases.
+
+Run `python3 scripts/release_blobs.py prune --keep 3` to inspect retention. The
+manual **Prune shared release components** workflow defaults to this dry run;
+explicit `--apply` deletes only unreferenced blobs older than 14 days. It retains
+the last N stable releases plus all draft/prerelease manifests, verifies their
+digests, and aborts on incomplete metadata. Publication and pruning share a CI
+concurrency group. A warning starts at 900 assets; publishing beyond 1000 fails.
+Keep at least two stable releases and seven days of grace. Historical full
+packages remain available even after their shared components are pruned.
+The optional source/artwork split for AUR is deferred; source archives are unchanged.
 
 ### CI commit rules
 

@@ -89,10 +89,10 @@ static void installFiles(const QString &prefix, const QJsonObject &manifest) {
 class Network : public QNetworkAccessManager {
 public:
     int requests = 0; bool fail = false; QByteArray package = "package", download = "package";
-    QByteArray manifest; QStringList urls; QString failSuffix;
+    QByteArray manifest; QStringList urls, fullUrls; QString failSuffix;
 protected:
     QNetworkReply *createRequest(Operation, const QNetworkRequest &request, QIODevice *) override {
-        ++requests; urls.append(request.url().fileName());
+        ++requests; urls.append(request.url().fileName()); fullUrls.append(request.url().toString());
         auto release = releaseObject(package);
         if (!manifest.isEmpty()) release = withComponents(release, manifest);
         const auto bytes = request.url().host() == "api.github.com" ? QJsonDocument(release).toJson()
@@ -154,6 +154,56 @@ private slots:
         assets[assets.size() - 1] = manifestAsset; metadata["assets"] = assets;
         QVERIFY(parseRelease(metadata, QSysInfo::buildCpuArchitecture(), release, error));
         QVERIFY(release.componentsDownload.isEmpty()); // Full archive remains usable by old/new clients.
+    }
+    void sharedComponentValidation() {
+        const QString base = "https://github.com/WindyWin/vpet-agent-pet/releases/download/";
+        const QString hash = digest("package");
+        const QString archive = "sha256-" + hash.mid(7) + ".tar.gz";
+        const QString url = base + "release-blobs/" + archive;
+        const auto arch = QSysInfo::buildCpuArchitecture();
+        QVERIFY(validComponentUrl(url, "99.1.0", arch, "runtime", archive, hash));
+        QVERIFY(!validComponentUrl(url, "99.1.0", arch, "app", archive, hash));
+        QVERIFY(!validComponentUrl(url, "99.1.0", arch, "runtime", archive, digest("wrong")));
+        for (const auto &bad : {url + "?x=1", url + "#fragment", QString(url).replace("github.com", "evil.test"),
+             QString(url).replace("github.com", "github.com:443"), QString(url).replace("release-blobs", "main"),
+             QString(url).replace("vpet-agent-pet", "other"), QString(url).replace("sha256-", "%73ha256-")})
+            QVERIFY(!validComponentUrl(bad, "99.1.0", arch, "runtime", archive, hash));
+        QTemporaryDir dir; Components components; QString error;
+        auto manifest = componentManifest(); manifest["format"] = 3;
+        auto entries = manifest["components"].toArray();
+        for (int i = 0; i < entries.size(); ++i) {
+            auto entry = entries[i].toObject();
+            entry["url"] = base + "v99.1.0/" + entry["archive"].toString();
+            if (entry["name"] != "app") { entry["archive"] = archive; entry["url"] = url; }
+            entries[i] = entry;
+        }
+        manifest["components"] = entries;
+        auto bytes = QJsonDocument(manifest).toJson(); const auto path = dir.filePath("components.json"); write(path, bytes);
+        QVERIFY2(readComponents(path, digest(bytes), "99.1.0", arch, components, error), qPrintable(error));
+        auto entry = entries[0].toObject(); entry["url"] = url; entry["archive"] = archive;
+        entries[0] = entry; manifest["components"] = entries; bytes = QJsonDocument(manifest).toJson(); write(path, bytes);
+        QVERIFY(!readComponents(path, digest(bytes), "99.1.0", arch, components, error));
+    }
+    void downloadsSharedComponent() {
+        QTemporaryDir dir, installed; Network network;
+        auto manifest = componentManifest(); manifest["format"] = 3;
+        auto entries = manifest["components"].toArray();
+        const QString base = "https://github.com/WindyWin/vpet-agent-pet/releases/download/";
+        const QString archive = "sha256-" + digest("package").mid(7) + ".tar.gz";
+        for (int i = 0; i < entries.size(); ++i) {
+            auto entry = entries[i].toObject();
+            entry["url"] = base + "v99.1.0/" + entry["archive"].toString();
+            if (entry["name"] != "app") { entry["archive"] = archive; entry["url"] = base + "release-blobs/" + archive; }
+            entries[i] = entry;
+        }
+        manifest["components"] = entries; network.manifest = QJsonDocument(manifest).toJson();
+        installFiles(installed.path(), manifest); write(installed.filePath("lib/libtest.so"), "old");
+        write(dir.filePath("state.json"), QJsonDocument(QJsonObject{{"format", 1}, {"mode", 1}, {"enabled", true}}).toJson());
+        Controller controller(nullptr, &network, installed.path(), dir.path()); controller.check(true);
+        QTRY_VERIFY(QFile::exists(dir.filePath("pending.json")));
+        QCOMPARE(network.requests, 3);
+        QCOMPARE(network.fullUrls.last(), base + "release-blobs/" + archive);
+        QVERIFY(!QFile::exists(dir.filePath("package.tar.gz")));
     }
     void downloadsOnlyChangedComponents() {
         QTemporaryDir dir, installed; Network network;

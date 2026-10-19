@@ -14,6 +14,7 @@ import time
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("tarball", type=Path)
+parser.add_argument("--previous-tarball", type=Path, help="Install this released version before upgrading to tarball")
 parser.add_argument("--skip-launch", action="store_true", help="Skip the 20-second offscreen smoke test")
 args = parser.parse_args()
 
@@ -63,7 +64,12 @@ with tempfile.TemporaryDirectory(prefix="agent pet check ") as temporary:
     assert refused.returncode != 0 and (prefix / "notes.txt").exists(), refused
     shutil.rmtree(prefix)
 
-    print(run(str(package / "install.sh"), "--prefix", str(prefix)).stdout.strip())
+    initial = package
+    if args.previous_tarball:
+        with tarfile.open(args.previous_tarball) as archive:
+            archive.extractall(root / "Previous", filter="data")
+        initial = next((root / "Previous").iterdir())
+    print(run(str(initial / "install.sh"), "--prefix", str(prefix)).stdout.strip())
     assert app.is_file() and icon.is_file() and link.resolve() == app.resolve()
     assert f'Exec="{app}"' in desktop.read_text(), desktop.read_text()
     if shutil.which("desktop-file-validate"):

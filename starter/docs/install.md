@@ -211,6 +211,9 @@ libraries. Artwork is split into stable packs per animation sequence, with a sma
 separate catalog. Changing one image downloads its sequence pack; adding a sequence
 downloads its new pack and catalog. Changing a library downloads the runtime component. This is component-level reuse, not binary patches.
 Skipping versions is supported because files are compared with the target release.
+Unchanged runtime and artwork archives are shared across releases, with each
+component pinned by SHA-256 in the target manifest. Clients that do not understand
+this manifest format fetch the full package once to obtain the new updater.
 
 Existing installations receive one full update to obtain this updater and the
 sequence-pack layout. Later updates use component downloads when the release
@@ -320,18 +323,15 @@ offers a manual download, but never installs one. Upgrade through pacman instead
 ## macOS
 
 macOS releases contain one `Agent Pet.app` for Apple silicon and Intel Macs running
-macOS 11 or newer, with Qt and the artwork inside, in two forms:
-
-- `agent-pet-VERSION-macos-universal.dmg`, a disk image: open it and drag the app
-  onto the **Applications** shortcut. Recommended.
-- `agent-pet-VERSION-macos-universal.zip`, the same app and `INSTALL.txt` in a zip.
+macOS 11 or newer, with Qt and the artwork inside
+`agent-pet-VERSION-macos-universal.zip`. Extract the ZIP before moving the app.
 
 `INSTALL.txt` beside the app repeats these steps.
 
 1. Drag **Agent Pet.app** into **Applications** *before* opening it. macOS runs an
    app opened straight from Downloads or the disk image from a temporary copy
    ("App Translocation"); Agent Pet refuses to register hooks or login start from
-   that copy, because the path would stop working. Eject the disk image afterwards.
+   that copy, because the path would stop working. Eject the disk image afterwards if installing an older DMG release.
 2. Open it. The app is signed ad hoc but not notarized by Apple (that needs a paid
    Apple Developer ID), so macOS blocks the first launch:
    - macOS 15 or newer: open it once, then **System Settings → Privacy & Security →
@@ -372,10 +372,10 @@ move the app to the Trash, and optionally delete
 ## Windows
 
 Windows releases are for x64 Windows 10 version 1809 or newer and Windows 11, with Qt,
-the Visual C++ runtime and the artwork included, in two forms:
-
-- `agent-pet-VERSION-windows-x86_64-setup.exe`, a setup program. Recommended.
-- `agent-pet-VERSION-windows-x86_64.zip`, the same files for portable use.
+the Visual C++ runtime and the artwork included in
+`agent-pet-VERSION-windows-x86_64-setup.exe`. New releases publish only Setup,
+which is also the package the updater uses. Existing portable copies can migrate
+by running Setup; remove their old folder after reconnecting integrations.
 
 **Install or upgrade:** run the setup program. It installs for the current user without
 administrator rights into `%LOCALAPPDATA%\Programs\AgentPet` and adds **Agent Pet** to
@@ -386,7 +386,7 @@ program upgrades in place, closing a running pet; settings and enabled hooks are
 The programs are not code-signed yet, so SmartScreen may warn on first run: choose
 **More info → Run anyway**.
 
-For portable use, extract the zip into a folder whose path has no spaces and run
+For an older portable release or a locally built ZIP, extract the zip into a folder whose path has no spaces and run
 `agent-pet.exe` (Codex starts hooks through `cmd.exe`, which cannot run a program from a
 quoted path; Agent Pet uses the folder's short 8.3 name where Windows keeps one, and
 refuses to register Codex hooks otherwise).

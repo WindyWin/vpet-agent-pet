@@ -52,7 +52,7 @@ bool readComponents(const QString &path, const QString &digest, const QString &v
     const auto document = QJsonDocument::fromJson(file.readAll());
     const auto object = document.object();
     const int format = object["format"].toInt();
-    if ((format != 1 && format != 2) || object["version"].toString() != version
+    if ((format != 1 && format != 2 && format != 3) || object["version"].toString() != version
         || object["architecture"].toString() != architecture) return invalid();
     const auto entries = object["components"].toArray();
     if ((format == 1 && entries.size() != 3) || entries.size() < 3 || entries.size() > 4096) return invalid();
@@ -63,10 +63,12 @@ bool readComponents(const QString &path, const QString &digest, const QString &v
         Component component;
         component.name = item["name"].toString(); component.archive = item["archive"].toString();
         component.digest = item["digest"].toString(); component.size = item["size"].toInteger(-1);
-        const bool artworkPack = format == 2 && QRegularExpression("^artwork-[0-9a-f]{64}$").match(component.name).hasMatch();
+        const bool artworkPack = format >= 2 && QRegularExpression("^artwork-[0-9a-f]{64}$").match(component.name).hasMatch();
         if ((!QStringList{"app", "runtime", "artwork"}.contains(component.name) && !artworkPack) || names.contains(component.name)
-            || component.archive != platform::releaseArchive(version, architecture, component.name)
+            || (format < 3 ? component.archive != platform::releaseArchive(version, architecture, component.name)
+                : !validComponentUrl(item["url"].toString(), version, architecture, component.name, component.archive, component.digest))
             || !validDigest(component.digest) || component.size <= 0 || component.size > MaxArchive) return invalid();
+        if (format == 3) component.download = QUrl(item["url"].toString());
         names.insert(component.name);
         for (const auto &fileValue : item["files"].toArray()) {
             const auto entry = fileValue.toObject();

@@ -42,3 +42,12 @@ The [platform refactor plan](platform-refactor-plan.md) describes the platform
 seams; [platform services](../src/platform/README.md) lists their build
 registration. Desktop behavior is accepted by hand with the
 [manual acceptance checklist](adr/0008-window-behavior.md#manual-acceptance-checklist).
+
+### Shared release components
+
+`package.py` emits format 3 manifests. `updates/release.cpp` validates their exact
+version-local or content-addressed URLs before the controller fetches changed
+components. `release_blobs.py` publishes immutable runtime/artwork archives to
+the non-latest `release-blobs` prerelease and plans retention with a dry-run default.
+Full Linux packages remain the fallback for older readers. See ADR 0010 and 0014
+for the compatibility and retention policy.
