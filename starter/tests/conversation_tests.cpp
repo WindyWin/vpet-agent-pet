@@ -110,6 +110,28 @@ private slots:
         QVERIFY(panel.sendEnabled()); // Still answerable: correct it and retry.
     }
 
+    // The result belongs to the conversation the command went to, not to whichever one the panel shows when it arrives.
+    void aSendStaysInFlightWhileTheUserLooksAtAnotherConversation() {
+        Rig rig;
+        rig.bridge.open(rig.b);
+        ConversationPanel panel(rig.service);
+        panel.open(rig.a);
+        panel.typeText("run the tests");
+        panel.send();
+        QCOMPARE(rig.bridge.commands.size(), 1);
+        panel.open(rig.b);
+        QVERIFY(panel.composerText().isEmpty());
+        panel.open(rig.a);
+        QVERIFY(!panel.sendEnabled()); // Still waiting for the bridge: a second click would duplicate the follow-up.
+        panel.open(rig.b);
+        rig.bridge.accept(rig.bridge.commands[0]); // Accepted while the other conversation is on screen.
+        panel.open(rig.a);
+        QCOMPARE(panel.composerText(), QString());
+        QCOMPARE(rig.service.draft(rig.a, QString()), QString()); // What was sent is not kept as a draft.
+        QCOMPARE(panel.feedback(), QString());
+        QCOMPARE(rig.bridge.commands.size(), 1);
+    }
+
     void unknownDeliveryIsNotSuccessAndBlocksAResend() {
         Rig rig;
         rig.bridge.request(rig.a, "q1", 1, "Pick", {}, true);

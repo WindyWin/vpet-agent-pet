@@ -23,7 +23,14 @@ content-free by design, so message text must not travel through it. The full des
 
 - Message text is shared between an agent and the pet only after the user opts in.
 - Delivery is acknowledged by the provider, never assumed; an unconfirmed send is never retried automatically.
-- Windows named-pipe ownership is not yet verified on the client side.
+- **Windows pipe ownership is not verified.** Qt creates the pipe without `FILE_FLAG_FIRST_PIPE_INSTANCE`, so another
+  account on the same machine could create a pipe of the predictable name first, and a bridge that connects to it
+  would send that account the conversation text. On POSIX the private 0700 directory prevents this. The event
+  transport avoids it by checking the pipe's owner, but the clients here are Node bridges, which cannot read a pipe's
+  owner, and the C++ `InteractionClient` is used only by tests. A real fix is a change to the protocol (the service
+  proving it holds a per-user secret before a bridge sends any text) and needs a Windows machine to build and test,
+  so it is not part of this change. Until then, on a Windows machine shared with other accounts, leave
+  `agent_conversations` off and do not run a bridge. Recorded from the review of PR 126.
 
 ## Validation
 
@@ -40,3 +47,12 @@ content-free by design, so message text must not travel through it. The full des
   frame, confirmed by the user). Not verified against a real OpenCode terminal in this change: restart OpenCode
   after `--install-tui` and check that closing a terminal ends its conversation.
 
+- 2026-10-19: review of PR 126. Already fixed before this pass and verified in the code: the `Host` destructor detaches
+  its connections, JSON integers are range-checked before the `qint64` cast, the runtime directory fails closed, the
+  queued-bytes drop is deferred, prompt IDs are a hash of the whole command ID, the event stream buffer is capped
+  and accepts CRLF, a walk stops when a conversation holds the pet. Fixed here: a refused `conversation_open` gets
+  its error and no `resync` (`aRefusedOpenGetsAnErrorAndNoResync`); a sub-agent that is already shown keeps
+  receiving its events, so a question answered in the OpenCode terminal closes in the pet; the panel answers a
+  command for the conversation it was sent to even after the user looked at another, and keeps that conversation's
+  composer busy meanwhile; the e2e test gives Node a full pipe path on Windows. Not fixed: Windows pipe ownership
+  (above).

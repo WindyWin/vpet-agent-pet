@@ -265,6 +265,25 @@ describe("live events", () => {
     oc.ask(child);
     await until(opened, "conversation_open");
   });
+
+  test("once a sub-agent is shown, its later events keep it current", async () => {
+    const parent = oc.session();
+    const child = oc.session("/work/api-web", parent.id);
+    await start();
+    await until(() => pet.last("hello") && oc.streams.size > 0, "hello and the event stream"); // Events sent earlier are lost.
+    oc.start(child);
+    const form = oc.ask(child);
+    const snapshot = await until(() => pet.of("snapshot").find((f) => f.conversation.session_id === child.id), "snapshot");
+    const request = snapshot.requests[0];
+    assert.equal(request.state, "pending");
+    // Answered in the OpenCode terminal: the pet's card must close, not wait for a reconcile.
+    oc.answerElsewhere(child, form.id, "Yes");
+    const closed = await until(() => pet.of("request_state").find((f) => f.conversation.session_id === child.id && f.request_id === request.request_id), "request_state");
+    assert.equal(closed.state, "answered");
+    // And its turn finishing makes it ready again.
+    oc.finish(child);
+    await until(() => pet.of("ready").find((f) => f.conversation.session_id === child.id && f.ready === true), "ready");
+  });
 });
 
 describe("commands", () => {

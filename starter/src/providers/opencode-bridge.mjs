@@ -385,7 +385,8 @@ export function createBridge({ api, send, log = () => {}, tail = TAIL, scanPages
     await serial(sessionID, async () => {
       const c = await ensure(sessionID);
       if (!c) return;
-      if (c.parentID && type !== "form.created") return; // Sub-agent sessions appear only when they ask something.
+      // Sub-agent sessions appear only when they ask something; once shown, their events keep them current.
+      if (c.parentID && !c.registered && !c.opening && type !== "form.created") return;
       const announce = async () => {
         if (!c.registered && linked && !c.opening) {
           c.opening = true;

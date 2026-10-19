@@ -28,7 +28,8 @@ close the connection before anything is buffered. The endpoint is `interactions.
 `agent-pet-<uid>` runtime directory (mode 0700, socket 0600), or a per-user named pipe on Windows. One process
 owns an endpoint through a lock file, which a stale socket does not hold. At most 16 connections; a peer whose
 unsent output passes 1 MiB is dropped. This is the same-user trust boundary as the status socket, not a sandbox
-against other processes of the user.
+against other processes of the user. **On Windows the pipe's owner is not verified** (see
+[ADR 0047](adr/0047-direct-agent-interactions.md)): on a machine shared with other accounts, do not run a bridge.
 
 ## Frames
 

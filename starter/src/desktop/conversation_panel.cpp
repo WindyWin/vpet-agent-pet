@@ -139,7 +139,7 @@ ConversationPanel::ConversationPanel(Service &service, QWidget *parent) : QWidge
     });
     observer_ = service_.subscribe([this](const Change &change) {
         if (change.kind == Change::Kind::CommandResult) {
-            if (change.result.commandId == sending_) onResult(change.result);
+            if (flights_.contains(change.result.commandId)) onResult(change.result);
             return;
         }
         if (current_.valid() && change.key == current_) refresh();
@@ -188,6 +188,9 @@ void ConversationPanel::open(const ConversationKey &key) {
         // Another conversation: its own draft and selection, and none of this one's feedback.
         current_ = key; activeRequest_.clear(); requestSignature_.clear(); sending_.clear(); feedback_->clear();
         bodySignature_.clear(); shownSlot_.clear(); stickToEnd_ = true;
+        // A command still in flight for this conversation keeps its composer busy: no second click can duplicate it.
+        for (auto it = flights_.constBegin(); it != flights_.constEnd(); ++it)
+            if (it->key == key) { sending_ = it.key(); feedback_->setText(::Conversations::tr("Sending…")); feedback_->setStyleSheet("color:#6b5643;"); }
     }
     refresh();
     show(); raise(); activateWindow();
@@ -446,29 +449,32 @@ void ConversationPanel::send() {
         command.text = edit_->toPlainText().trimmed();
     }
     sending_ = command.commandId;
-    sendingSlot_ = request ? request->requestId : QString();
+    flights_.insert(command.commandId, {current_, request ? request->requestId : QString()});
     feedback_->setText(::Conversations::tr("Sending…"));
     feedback_->setStyleSheet("color:#6b5643;");
     send_->setEnabled(false);
     const auto result = service_.submit(command);
-    if (result.outcome != Outcome::Pending && sending_ == command.commandId) onResult(result);
+    if (result.outcome != Outcome::Pending && flights_.contains(command.commandId)) onResult(result);
     else if (auto *now = service_.find(current_)) updateComposer(*now);
 }
 void ConversationPanel::onResult(const CommandResult &result) {
-    sending_.clear();
-    const auto *c = service_.find(current_);
-    const QString slot = sendingSlot_;
+    const auto flight = flights_.take(result.commandId);
+    const bool visible = flight.key == current_;
+    if (visible && sending_ == result.commandId) sending_.clear();
+    const auto *c = service_.find(flight.key);
     if (result.outcome == Outcome::Accepted) {
         // "Sent" means the agent took it, not that the work it asked for succeeded.
+        chosen_.remove(flight.slot);
+        if (c) service_.setDraft(flight.key, flight.slot, {}); // What was sent is not kept as a draft.
+        if (!visible) return;
         feedback_->setText(::Conversations::tr("Sent"));
         feedback_->setStyleSheet("color:#2b6a3a;");
-        chosen_.remove(slot);
-        if (c) service_.setDraft(current_, slot, {});
         const bool was = loading_; loading_ = true; edit_->clear(); loading_ = was;
         if (c) { shownSlot_.clear(); refresh(); }
         return;
     }
     // The text and the choice stay: rejected or unconfirmed, nothing is lost and nothing is resent for the user.
+    if (!visible) return;
     feedback_->setStyleSheet(QString("color:%1;").arg(conversation::failureColor().name()));
     if (result.outcome == Outcome::Unknown)
         feedback_->setText(::Conversations::tr("Delivery not confirmed. Check the agent before sending again."));

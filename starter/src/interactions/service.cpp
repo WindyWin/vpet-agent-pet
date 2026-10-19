@@ -73,9 +73,10 @@ void Service::receive(int connection, const QByteArray &payload) {
     if (frame.value("version").toInt(-1) != protocolVersion) { error(connection, "unsupported_version", "unsupported protocol version"); return; }
     if (type == "conversation_open") {
         ConversationKey key;
-        registerConversation(connection, frame, key);
-        QJsonObject resync{{"version", protocolVersion}, {"type", "resync"}, {"conversation", key.toJson()}};
-        if (key.valid()) sendTo(connection, resync);
+        // A refusal (an ended identity, capacity, a provider mismatch) has already been answered with an error; a resync
+        // would make the bridge believe the conversation is registered.
+        if (registerConversation(connection, frame, key))
+            sendTo(connection, {{"version", protocolVersion}, {"type", "resync"}, {"conversation", key.toJson()}});
     }
     else if (type == "message") onMessage(connection, frame);
     else if (type == "request") onRequest(connection, frame);

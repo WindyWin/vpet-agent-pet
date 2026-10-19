@@ -50,7 +50,11 @@ private slots:
         QVERIFY2(host.start(error), qPrintable(error));
 
         driver_.setProcessChannelMode(QProcess::ForwardedErrorChannel);
-        driver_.start(NODE_PATH, {DRIVER_PATH, platform::interactionEndpoint(endpoint)});
+        auto wireEndpoint = platform::interactionEndpoint(endpoint);
+#ifdef Q_OS_WIN
+        wireEndpoint.prepend(QStringLiteral("\\\\.\\pipe\\")); // Node dials a pipe by its full path, Qt by its bare name.
+#endif
+        driver_.start(NODE_PATH, {DRIVER_PATH, wireEndpoint});
         QVERIFY2(driver_.waitForStarted(5000), "node did not start");
         QTRY_VERIFY_WITH_TIMEOUT((pump(), seen("ready")), 10000);
         const auto ready = line("ready");

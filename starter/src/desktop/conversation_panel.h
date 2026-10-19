@@ -93,8 +93,10 @@ private:
     interactions::Service &service_;
     int observer_ = 0;
     interactions::ConversationKey current_;
-    QString sendingSlot_; // The draft slot of the command in flight.
-    QString sending_;     // Command ID awaiting its result.
+    // A command is answered for the conversation it went to, whichever one the panel shows when the result arrives.
+    struct Flight { interactions::ConversationKey key; QString slot; };
+    QHash<QString, Flight> flights_;  // Command ID → where it was sent and which draft it came from.
+    QString sending_;                 // The command in flight for the conversation on screen, if any.
     QString shownSlot_;   // Which draft the composer currently holds, so a refresh never overwrites typing.
     QString bodySignature_, requestSignature_, activeRequest_, questionText_;
     QHash<QString, QString> chosen_; // Request ID → option ID picked but not sent (never transmitted by itself).
