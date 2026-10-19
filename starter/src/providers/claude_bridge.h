@@ -58,6 +58,9 @@ bool parseQuestion(const QJsonObject &hookInput, Question &question);
 QByteArray questionAnswerJson(const Question &question, const QString &answer);
 // What the woken model reads: the user's words, labelled as coming from the pet.
 QString wakeText(const QString &followUp);
+// Claude Code runs UserPromptSubmit for text it injects itself (a hook's wake feedback, background task notices): those are not
+// something the user typed, so they never become messages.
+bool injectedPrompt(const QString &prompt);
 // A prompt or reply shortened with an ellipsis to fit a relay line and a message.
 QString clipped(const QString &text);
 

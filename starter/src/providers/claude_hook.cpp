@@ -72,6 +72,11 @@ QByteArray questionAnswerJson(const Question &question, const QString &answer) {
     return QJsonDocument(QJsonObject{{"hookSpecificOutput", decision}}).toJson(QJsonDocument::Compact) + "\n";
 }
 
+bool injectedPrompt(const QString &prompt) {
+    const auto text = prompt.trimmed();
+    return text.startsWith("<task-notification>") || text.startsWith("<system-reminder>") || text.contains("desktop pet (Agent Pet)");
+}
+
 QString wakeText(const QString &followUp) {
     return "The user sent this message from their desktop pet (Agent Pet). Treat it as their next message to you:\n\n" + followUp + "\n";
 }
@@ -93,7 +98,7 @@ HookResult handleHook(const QString &event, int waitMs, const QJsonObject &input
         }
     };
     if (event == "UserPromptSubmit") {
-        if (relay.send({{"op", "prompt"}, {"text", clipped(input.value("prompt").toString())}})) relay.receive(reply, quickReplyMs);
+        if (relay.send({{"op", "prompt"}, {"text", injectedPrompt(input.value("prompt").toString()) ? QString() : clipped(input.value("prompt").toString())}})) relay.receive(reply, quickReplyMs);
     } else if (event == "Stop") {
         if (relay.send({{"op", "stop"}, {"text", clipped(input.value("last_assistant_message").toString())}}) && relay.receive(reply, quickReplyMs))
             wait(false);

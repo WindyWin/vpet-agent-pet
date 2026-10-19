@@ -186,6 +186,15 @@ private slots:
         QVERIFY(result.out.isEmpty() && result.err.isEmpty());
         QCOMPARE(relay.sent.first(), (QJsonObject{{"op", "prompt"}, {"text", "add tests"}}));
 
+        // Text Claude Code injects itself (our own wake, task notices) is a busy signal, never a message.
+        for (const auto &injected : {wakeText("run it"), QString("<task-notification>\n<summary>Stop hook feedback</summary>\n</task-notification>")}) {
+            FakeRelay woken;
+            woken.replies << QJsonObject{{"ok", true}};
+            input["prompt"] = injected;
+            run("UserPromptSubmit", input, woken);
+            QCOMPARE(woken.sent.first(), (QJsonObject{{"op", "prompt"}, {"text", ""}}));
+        }
+        input["prompt"] = "add tests";
         FakeRelay big;
         big.replies << QJsonObject{{"ok", true}};
         input["prompt"] = QString(40000, 'x');
