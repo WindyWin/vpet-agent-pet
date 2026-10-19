@@ -567,3 +567,13 @@ Artwork credit: **VUP-Simulator team**, via [LorisYounger/VPet](https://github.c
 The upstream terms require source attribution and a link for noncommercial use and require the authorization information to accompany distributions. They list extra conditions for commercial use, including contacting the rights holder. Git itself adds no license and does not change those terms. A public repository containing these sprites is a distribution, so keep the notices and this credit in the repository. If the app shows the sprites to users, carry the credit into its About screen and release package as well.
 
 Agent Pet's original application code is released under the [Apache License 2.0](LICENSE) (see also [NOTICE](NOTICE)). It does not cover the bundled artwork, the icon cropped from it, or anything under `licenses/`: the artwork keeps its separate upstream terms. The upstream VPet Apache-2.0 license copied in `licenses/` covers VPet's code only; neither it nor Agent Pet's license grants rights to the sprites.
+
+## Herdr plugin
+
+The [herdr-agent-pet plugin](https://github.com/WindyWin/herdr-agent-pet) starts
+Agent Pet with the Herdr server and provides an **Install or update Agent Pet**
+action. Install it with `herdr plugin install WindyWin/herdr-agent-pet` on Linux
+x86_64 or macOS with Herdr 0.7.5 or newer. Linux uses the release package's
+installer; macOS copies the app bundle. The startup flow clears the pane identity,
+so it cannot provide Herdr **Open** navigation. See the
+[installation guide](docs/install.md#herdr-plugin) and [decision record](docs/adr/0045-herdr-plugin.md).
