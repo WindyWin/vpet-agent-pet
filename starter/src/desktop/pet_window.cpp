@@ -727,6 +727,7 @@ void PetWindow::endDrag(bool released) {
     if (released && !click) letGo(touch::velocity(samples_));
     else { player_.release(); constrainPosition(); }
     samples_.clear();
+    emit moved(); // Popups skipped the drag; put them beside the pet now.
     // Wait for the window manager to release its move grab: a popup opened while it
     // holds the pointer cannot take its own grab and closes at once.
     if (click) QTimer::singleShot(150, this, &PetWindow::sessionsRequested);
