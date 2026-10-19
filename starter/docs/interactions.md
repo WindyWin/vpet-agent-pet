@@ -156,8 +156,11 @@ terminal shows it again or a new prompt arrives.
 `node src/providers/opencode-bridge.mjs [--endpoint <path>] [--opencode-url <url>]` connects OpenCode 2's HTTP API
 to the interaction stream. It is not started by the app yet and, unlike the content-free status plugin, shares
 message text, so it will start only from an explicit opt-in. Node 20 or newer; no packages. It finds OpenCode
-through its service registration file (`OPENCODE_SERVICE_FILE` or `~/.local/state/opencode/service.json`) and
-authenticates with the registered password, which it never logs. The endpoint defaults to the one the app
+the way the CLI does: the URL from the running service's registration (`~/.local/state/opencode/service.json`) or
+else from the service configuration in `~/.config/opencode/service.json` (`hostname`/`port`, default
+`http://127.0.0.1:49374`), and the password from `OPENCODE_SERVER_PASSWORD` / `OPENCODE_PASSWORD` or those files
+(`OPENCODE_SERVICE_FILE` replaces both files). `XDG_STATE_HOME` and `XDG_CONFIG_HOME` are honored. It never logs the
+password, and with none found it exits with a one-line message. The endpoint defaults to the one the app
 serves (`XDG_RUNTIME_DIR/agent-pet-<uid>/interactions.sock`, a per-user pipe on Windows); macOS defaults to
 `$TMPDIR`, which is unverified, so pass `--endpoint` or `AGENT_PET_INTERACTION_ENDPOINT` there.
 

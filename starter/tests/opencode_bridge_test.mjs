@@ -8,7 +8,7 @@ import os from "node:os";
 import path from "node:path";
 import { after, afterEach, beforeEach, describe, test } from "node:test";
 import { FakeOpenCode } from "./fake_opencode.mjs";
-import { FrameDecoder, encodeFrame, fitSnapshot, fitText, openCodeApi, requestFromForm, run, visibleMessages } from "../src/providers/opencode-bridge.mjs";
+import { FrameDecoder, encodeFrame, fitSnapshot, fitText, openCodeApi, readService, requestFromForm, run, visibleMessages } from "../src/providers/opencode-bridge.mjs";
 import { installTui, uninstallTui } from "../src/providers/opencode-presence.mjs";
 
 const until = async (predicate, what, ms = 3000) => {
@@ -484,6 +484,72 @@ describe("OpenCode API client", () => {
     assert.deepEqual(second.data.map((m) => m.text), ["m2", "m3"]);
     await assert.rejects(() => openCodeApi({ url: oc.url, headers: {} }).active(), /401/);
     assert.equal((await api.reply(s.id, "frm_none", { q0: "x" })).status, 404);
+  });
+});
+
+// OpenCode 2.0.29 layout: the state directory has no service.json; the config directory's holds the
+// `opencode service set` values, and the URL is implied (127.0.0.1:49374 unless hostname/port are set).
+describe("OpenCode service discovery", () => {
+  const basic = (password) => "Basic " + Buffer.from(`opencode:${password}`).toString("base64");
+  const home = () => fs.mkdtempSync(path.join(os.tmpdir(), "bridge-home-"));
+  const write = (root, area, name, value) => {
+    const file = path.join(root, area, "opencode", name);
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    fs.writeFileSync(file, JSON.stringify(value));
+    return file;
+  };
+  // XDG_* pinned so the developer's own OpenCode never leaks into the test.
+  const envOf = (root, extra = {}) => ({ XDG_STATE_HOME: path.join(root, "state"), XDG_CONFIG_HOME: path.join(root, "config"), ...extra });
+
+  test("reads the password from the config file and defaults the URL", () => {
+    const root = home();
+    write(root, "config", "service.json", { password: "pw" });
+    const service = readService({ env: envOf(root), home: root });
+    assert.equal(service.url, "http://127.0.0.1:49374");
+    assert.equal(service.headers.authorization, basic("pw"));
+  });
+
+  test("builds the URL from hostname and port, never connecting to a wildcard address", () => {
+    const root = home();
+    write(root, "config", "service.json", { password: "pw", hostname: "0.0.0.0", port: 5000 });
+    assert.equal(readService({ env: envOf(root), home: root }).url, "http://127.0.0.1:5000");
+    write(root, "config", "service.json", { password: "pw", hostname: "::1" });
+    assert.equal(readService({ env: envOf(root), home: root }).url, "http://[::1]:49374");
+  });
+
+  test("a registration's URL wins and the config file still supplies the password", () => {
+    const root = home();
+    write(root, "state", "service.json", { url: "http://127.0.0.1:6001/", version: "2.0.29" });
+    write(root, "config", "service.json", { password: "pw", port: 5000 });
+    const service = readService({ env: envOf(root), home: root });
+    assert.equal(service.url, "http://127.0.0.1:6001");
+    assert.equal(service.headers.authorization, basic("pw"));
+  });
+
+  test("the older state-file layout with url and password still works", () => {
+    const root = home();
+    write(root, "state", "service.json", { url: "http://127.0.0.1:7000", password: "old" });
+    const service = readService({ env: envOf(root), home: root });
+    assert.equal(service.url, "http://127.0.0.1:7000");
+    assert.equal(service.headers.authorization, basic("old"));
+  });
+
+  test("the environment password and OPENCODE_SERVICE_FILE take precedence", () => {
+    const root = home();
+    write(root, "config", "service.json", { password: "config" });
+    const explicit = write(root, "elsewhere", "svc.json", { url: "http://127.0.0.1:8000", password: "file" });
+    assert.equal(readService({ env: envOf(root, { OPENCODE_SERVER_PASSWORD: "env" }), home: root }).headers.authorization, basic("env"));
+    const service = readService({ env: envOf(root, { OPENCODE_SERVICE_FILE: explicit }), home: root });
+    assert.equal(service.url, "http://127.0.0.1:8000");
+    assert.equal(service.headers.authorization, basic("file"));
+  });
+
+  test("without a password it fails with an actionable message, not a stack trace", () => {
+    const root = home();
+    assert.throws(() => readService({ env: envOf(root), home: root }), /OPENCODE_SERVER_PASSWORD/);
+    fs.mkdirSync(path.join(root, "config", "opencode"), { recursive: true });
+    fs.writeFileSync(path.join(root, "config", "opencode", "service.json"), "{ not json");
+    assert.throws(() => readService({ env: envOf(root), home: root }), /password was not found/);
   });
 });
 

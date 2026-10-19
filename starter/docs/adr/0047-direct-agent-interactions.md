@@ -62,3 +62,10 @@ content-free by design, so message text must not travel through it. The full des
   and then settled requests (`fitSnapshot`). The Codex bridge rejects an answer it could not write instead of
   leaving it unknown forever. The bridges' retry loops no longer pile up abort listeners. The OpenCode bridge ignores
   a terminal's out-of-date view lookup. The Vietnamese conversation strings are translated.
+- 2026-10-19: OpenCode 2.0.29 keeps no `{url,password}` registration in the state directory; the config directory's
+  `service.json` is the `opencode service set` configuration (`hostname`, `port`, `password`, `cors`, ...) and the
+  URL defaults to `127.0.0.1:49374`. The bridge's first discovery assumed the old layout and exited with an unhandled
+  ENOENT; discovery now reads both layouts and the environment (tests: `OpenCode service discovery`). The repository's
+  bridge was then run against a private 2.0.29 server (own XDG directories, config-layout `service.json`): discovery,
+  the question form as a request in a snapshot, `answer_request` (204), `send_follow_up` on an idle session, and
+  `session.deleted` as `conversation_ended` all worked on real payloads.
