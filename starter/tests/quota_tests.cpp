@@ -1,7 +1,9 @@
 #include "quota/service.h"
 #include "desktop/session_list.h"
 #include "desktop/quota_panel.h"
+#include "i18n/language.h"
 #include <QBuffer>
+#include <QScopeGuard>
 #include <QFile>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -151,6 +153,17 @@ private slots:
         service.refresh(); QVERIFY(idle(service)); QVERIFY(network.requests.isEmpty());
         QCOMPARE(service.reading(Provider::Codex).problem, Problem::Missing);
         QCOMPARE(service.reading(Provider::Claude).problem, Problem::Expired);
+    }
+    void languageChangeRetranslatesTheRows() {
+        const auto english = qScopeGuard([] { pet::i18n::install(pet::i18n::Language::English); });
+        Network network; Service service(&network); service.loadCredential = credentials();
+        auto at = QDateTime::fromString("2026-10-18T09:00:00Z", Qt::ISODate); service.now = [&] { return at; };
+        pet::SessionList list; list.setQuotaService(&service); list.show();
+        QTRY_VERIFY(idle(service)); QTRY_COMPARE(list.findChildren<pet::RingGauge *>().size(), 2);
+        QTRY_VERIFY(panelText(list).contains("Weekly 82%"));
+        QVERIFY(pet::i18n::install(pet::i18n::Language::Vietnamese));
+        QTRY_VERIFY(panelText(list).contains("Giới hạn gói")); QVERIFY(panelText(list).contains("Hằng tuần 82%"));
+        QVERIFY(list.findChildren<pet::RingGauge *>().first()->accessibleName().contains("đã dùng"));
     }
     void footerAppearsBelowSessionsAndStopsPollingWhenHidden() {
         Network network; Service service(&network); service.loadCredential = credentials();

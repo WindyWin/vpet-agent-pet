@@ -18,6 +18,7 @@ The code map below describes the current implementation.
 | Module and library split | `src/*`, `CMakeLists.txt` | [0002](adr/0002-module-boundaries.md) |
 | Event transport, sessions | `src/ipc`, `src/sessions`, [events](events.md) | [0005](adr/0005-local-event-transport.md) |
 | Provider hooks, integration setup | `src/providers`, [integrations](integrations.md) | [0006](adr/0006-provider-adapters.md), [0041](adr/0041-additional-agent-providers.md) |
+| Plan limits | `src/quota/service.*`, `src/desktop/quota_panel.*` | [0045](adr/0045-quota-panel.md) |
 | Alerts, bubble, badge | `src/desktop/monitor.*`, `src/sessions` | [0007](adr/0007-alert-presentation.md) |
 | Open a session's host | `src/hosts`, `src/platform` | [0017](adr/0017-session-focus.md) |
 | Preferences | `src/settings` | [0004](adr/0004-preferences-storage.md) |
