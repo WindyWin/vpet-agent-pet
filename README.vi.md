@@ -37,7 +37,7 @@ Tải phiên bản mới nhất từ [trang Releases](https://github.com/WindyWi
 
 **macOS**
 
-1. Tải tệp `.dmg`, mở và kéo **Agent Pet** vào **Applications**.
+1. Tải và giải nén tệp `.zip` cho macOS, rồi chuyển **Agent Pet** vào **Applications**.
 2. Mở ứng dụng. Lần đầu, macOS yêu cầu xác nhận: vào **System Settings → Privacy & Security → Open Anyway** (trên macOS 14 trở xuống, giữ Control rồi nhấp ứng dụng → **Open**).
 3. Nhấp chuột phải vào thú cưng → **Cài đặt → Khởi động và agent** (Settings → Startup and agents), chọn **Bật** (Enable) cạnh Claude Code hoặc Codex, rồi khởi động lại ứng dụng agent.
 
@@ -47,7 +47,7 @@ Tải phiên bản mới nhất từ [trang Releases](https://github.com/WindyWi
 2. Trong bộ cài, chọn kết nối Claude Code hoặc Codex và tự khởi động thú cưng khi đăng nhập Windows hoặc khi phiên agent bắt đầu. Bạn cũng có thể kết nối sau tại **Cài đặt → Khởi động và agent** (Settings → Startup and agents).
 3. Khởi động lại Claude Code hoặc Codex và gửi một prompt. Hook của Claude Code cần phiên bản **2.1.139 trở lên**; với Codex, xác nhận tin cậy hook trong `/hooks`.
 
-Bản Windows chưa được ký mã. Nếu SmartScreen cảnh báo, chọn **More info → Run anyway**. Để dùng bản portable, giải nén `agent-pet-<version>-windows-x86_64.zip` vào thư mục có đường dẫn không chứa dấu cách, rồi chạy `agent-pet.exe`. Xem [hướng dẫn cài Windows](starter/docs/install.md#windows) để biết chi tiết.
+Bản Windows chưa được ký mã. Nếu SmartScreen cảnh báo, chọn **More info → Run anyway**. Các phiên bản mới cung cấp bộ cài Setup; nếu đang dùng bản portable, hãy chạy Setup để chuyển sang bản được cài đặt. Xem [hướng dẫn cài Windows](starter/docs/install.md#windows) để biết chi tiết.
 
 Cần hướng dẫn kỹ hơn hoặc gặp vấn đề? Xem [hướng dẫn cài đặt](starter/docs/install.md) và [bảng xử lý sự cố](starter/docs/install.md#troubleshooting) (tiếng Anh).
 

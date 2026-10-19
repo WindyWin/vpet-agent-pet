@@ -76,6 +76,7 @@ def main():
     parser.add_argument("--build", type=Path, default=ROOT / "build")
     parser.add_argument("--output", type=Path, help="Directory for the zip and setup program (default: dist)")
     parser.add_argument("--smoke-test", action="store_true", help="Also run the staged pet's --smoke-test (needs a desktop)")
+    parser.add_argument("--portable-zip", action="store_true", help="Also build the optional portable ZIP")
     args = parser.parse_args()
     if sys.platform != "win32":
         parser.error("Windows packages are built on Windows")
@@ -117,10 +118,12 @@ def main():
                     "--dir", str(stage), *(str(stage / executable) for executable in EXECUTABLES)], check=True)
     compiler_runtime(stage)
     check_stage(stage, version, args.smoke_test)
-    write_zip(stage, archive)
+    if args.portable_zip:
+        write_zip(stage, archive)
     subprocess.run([iscc, "/Q", f"/DAppVersion={version}", f"/DSourceDir={stage}", f"/DOutputDir={output}",
                     f"/DOutputBaseFilename={setup.stem}", str(ROOT / "packaging/windows/agent-pet.iss")], check=True)
-    print(archive)
+    if args.portable_zip:
+        print(archive)
     print(setup)
 
 

@@ -237,7 +237,7 @@ void Controller::downloadComponent(const Release &target, const QList<Component>
     const auto component = queue[index];
     file_ = index + 1;
     Release asset;
-    asset.download = target.componentsDownload.resolved(QUrl(component.archive));
+    asset.download = component.download.isEmpty() ? target.componentsDownload.resolved(QUrl(component.archive)) : component.download;
     asset.digest = component.digest; asset.size = component.size;
     fetch(asset, directory_ + '/' + component.archive, [this, target, queue, index] { downloadComponent(target, queue, index + 1); },
           [this, target] { downloadFull(target); });

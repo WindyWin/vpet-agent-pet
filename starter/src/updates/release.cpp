@@ -60,6 +60,16 @@ bool parseRelease(const QJsonObject &object, const QString &architecture, Releas
     }
     error = Updater::tr("This release has no compatible package for this system."); return false;
 }
+bool validComponentUrl(const QString &url, const QString &version, const QString &architecture,
+                       const QString &name, const QString &archive, const QString &digest) {
+    if (!QRegularExpression("^sha256:[0-9a-f]{64}$").match(digest).hasMatch()) return false;
+    const QString base = "https://github.com/WindyWin/vpet-agent-pet/releases/download/";
+    if (archive == platform::releaseArchive(version, architecture, name))
+        return url == base + 'v' + version + '/' + archive;
+    // The app stays versioned. Shared archives retain their installation paths inside.
+    return name != "app" && archive == "sha256-" + digest.mid(7) + ".tar.gz"
+        && url == base + "release-blobs/" + archive;
+}
 bool verifiedArchive(const QString &path, const QString &digest, QString &error) {
     if (QFileInfo(path).size() <= 0) { error = Updater::tr("Cannot read update package."); return false; }
     return verifiedFile(path, digest, MaxArchive, error);

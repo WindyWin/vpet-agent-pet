@@ -1,6 +1,7 @@
 #pragma once
 #include <QList>
 #include <QString>
+#include <QUrl>
 namespace pet::updates {
 constexpr qint64 MaxComponentsManifest = 4 * 1024 * 1024;
 struct ComponentFile {
@@ -12,6 +13,7 @@ struct Component {
     QString name, archive, digest;
     qint64 size = 0;
     QList<ComponentFile> files;
+    QUrl download; // Format 3 only; validated against release or content-store URL.
 };
 struct Components {
     QList<Component> entries;

@@ -230,6 +230,7 @@ endif() # Application
 include(CTest)
 if(BUILD_TESTING)
     find_package(Python3 COMPONENTS Interpreter REQUIRED)
+    add_test(NAME release-blobs COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/scripts/check_release_blobs.py)
     add_test(NAME qt-licenses COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/scripts/check_qt_licenses.py)
     find_package(Qt6 REQUIRED COMPONENTS Test)
     qt_add_executable(provider-tests tests/provider_tests.cpp)

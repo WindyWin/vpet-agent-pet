@@ -17,7 +17,7 @@ QString componentsManifest(const QString &version, const QString &architecture) 
     return "agent-pet-" + version + "-linux-" + architecture + "-components.json";
 }
 QStringList obsoleteComponentPatterns() {
-    return {releaseArchive("*", "*", "app"), releaseArchive("*", "*", "runtime"), releaseArchive("*", "*", "artwork")};
+    return {releaseArchive("*", "*", "app"), releaseArchive("*", "*", "runtime"), releaseArchive("*", "*", "artwork"), releaseArchive("*", "*", "artwork-*"), "sha256-*.tar.gz"};
 }
 QString applicationRelativePath() { return "bin/agent-pet"; }
 QString updaterRelativePath() { return "bin/agent-pet-updater"; }
