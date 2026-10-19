@@ -540,3 +540,29 @@ with a ten-minute step limit, verbose output and its own retained log. This is
 a runner-load mitigation and diagnostic change, not evidence of a specific
 macOS code defect. A check against CTest's enumerated suites confirms every
 test belongs to exactly one group.
+
+### Converter lifetime and current-main validation — 2026-10-19
+
+Individual pet-test steps isolated the macOS stall to VPet conversion. Running
+the pack tools first then exposed `SIGSEGV` in the native converter in run
+`39256109517`. Cue-report lookup used `auto` with a conditional whose branches
+returned `QJsonValueRef` from temporary `QJsonObject` values. Those objects had
+already been destroyed when the report inspected the reference. Keep the cue
+mapping alive and copy each target into an owned `QJsonValue` using `value()`.
+Conversion's PNG readers also disable unrelated image-format probing; that
+change alone did not resolve the macOS failure.
+
+Retain serial core/interaction, desktop UI and pack-tool groups with bounded
+steps and uploaded logs. A focused worker-conversion check has an external
+30-second watchdog that samples macOS thread stacks before terminating its
+process group. The temporary per-function pet steps have been removed; all
+CTest suites remain included. Regression coverage separately checks import
+window closure and worker conversion followed by main-thread validation.
+
+Pulled main through `2315affb`, including PRs #126 and #128. Updated the reminder
+test's expected Vietnamese text to the shipped translation. Two manual updater
+tests now explicitly select notification-only mode so automatic downloads do
+not race their own download calls. Linux Release validation against CI's Qt
+6.5.3 passed all 34 suites, with the updater suite rerun after correcting its
+manual-mode setup. The workflow grouping check covers all 34 suites exactly
+once; hosted macOS validation is still required for the lifetime fix.

@@ -215,9 +215,12 @@ bool convertVPetMod(const QString &input, const QString &output, const VPetOptio
         auto addVariants = [&](const QJsonObject &variants) { for (auto it = variants.begin(); it != variants.end(); ++it) { auto paths = states[it.key()].toArray(); for (const auto &v : it.value().toArray()) for (const auto &p : v.toObject()["sequences"].toArray()) paths.append(p); states[it.key()] = paths; } };
         addVariants(catalog["variants"].toObject()); const auto moods = catalog["moods"].toObject(); for (auto it = moods.begin(); it != moods.end(); ++it) addVariants(it.value().toObject());
         const auto activities = catalog["activity"].toObject(); for (auto it = activities.begin(); it != activities.end(); ++it) { auto paths = states[it.key()].toArray(); references(it.value(), reasons, paths); states[it.key()] = paths; }
-        const auto contracts = QJsonDocument::fromJson(read(":/vpet-conversion/src/animation/cues.json", MiB)).object()["cues"].toObject(); QJsonObject cues;
+        const auto contracts = QJsonDocument::fromJson(read(":/vpet-conversion/src/animation/cues.json", MiB)).object()["cues"].toObject();
+        const auto mappedCues = catalog.value("cues").toObject(); QJsonObject cues;
         for (auto it = contracts.begin(); it != contracts.end(); ++it) {
-            const auto target = (catalog["cues"].toObject().contains(it.key()) ? catalog["cues"].toObject()[it.key()] : it.value().toObject()["state"]); QJsonArray targets;
+            // operator[] on a temporary object returns a dangling QJsonValueRef.
+            const QJsonValue target = mappedCues.contains(it.key()) ? mappedCues.value(it.key()) : it.value().toObject().value("state");
+            QJsonArray targets;
             if (target.isString()) targets.append(target); else for (const auto &v : target.toArray()) targets.append(v.toObject()["state"]);
             bool exact = true; int count = 0; for (const auto &state : targets) for (const auto &p : states[state.toString()].toArray()) { ++count; if (reasons[p.toString()] != "exact") exact = false; }
             cues[it.key()] = count && exact ? "real" : "fallback";

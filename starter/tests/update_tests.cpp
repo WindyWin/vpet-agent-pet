@@ -409,6 +409,8 @@ private slots:
     }
     void offlineAndCorruptDownload() {
         QTemporaryDir dir; Network network; network.fail = true;
+        // This case explicitly starts the download; automatic mode can race it.
+        write(dir.filePath("state.json"), R"({"format":1,"mode":0,"enabled":true})");
         Controller controller(nullptr, &network, "/managed", dir.path());
         std::unique_ptr<QWidget> settings(controller.settings(nullptr)); controller.check(true);
         QTRY_VERIFY(([&] { for (auto *label : settings->findChildren<QLabel *>()) if (label->text().contains("Could not check")) return true; return false; })());
@@ -419,6 +421,7 @@ private slots:
     }
     void downloadWriteFailureAndCancellation() {
         QTemporaryDir dir; Network network;
+        write(dir.filePath("state.json"), R"({"format":1,"mode":0,"enabled":true})");
         Controller controller(nullptr, &network, "/managed", dir.path());
         std::unique_ptr<QWidget> settings(controller.settings(nullptr));
         controller.check(true); QTRY_VERIFY(controller.indicator().contains("99.1.0"));

@@ -2416,7 +2416,7 @@ private slots:
             // A language change says it again in the new language rather than dropping it.
             const auto english = qScopeGuard([] { pet::i18n::install(pet::i18n::Language::English); });
             QVERIFY(pet::i18n::install(pet::i18n::Language::Vietnamese));
-            QTRY_COMPARE(monitor.note().text(), QString("Bạn nhìn ra xa nha"));
+            QTRY_COMPARE(monitor.note().text(), QString("Nhìn ra xa một chút nha bạn"));
             QVERIFY(monitor.note().isVisible()); QCOMPARE(monitor.reminder(), QString("eyes"));
         }
         QTRY_COMPARE(monitor.note().text(), pet::Wellness::note("eyes")); QCOMPARE(monitor.reminder(), QString("eyes"));
