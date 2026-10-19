@@ -143,6 +143,10 @@ target_link_libraries(pet_interaction_stream PUBLIC Qt6::Network pet_interaction
 qt_add_library(pet_platform STATIC ${pet_platform_sources})
 target_include_directories(pet_platform PUBLIC src)
 target_link_libraries(pet_platform PUBLIC Qt6::Core)
+# The Claude Code interaction bridge's hook runtime and session host (docs/adr/0049-claude-interaction-hooks.md).
+qt_add_library(pet_claude_bridge STATIC src/providers/claude_hook.cpp src/providers/claude_host.cpp)
+target_include_directories(pet_claude_bridge PUBLIC src)
+target_link_libraries(pet_claude_bridge PUBLIC pet_events pet_platform pet_interaction_stream)
 if(WIN32)
     target_link_libraries(pet_platform PRIVATE user32) # The hook reads the agent's console window.
 endif()
@@ -180,7 +184,8 @@ file(READ src/providers/opencode-plugin-legacy.js OPENCODE_LEGACY_PLUGIN)
 configure_file(src/providers/opencode_plugin.h.in "${CMAKE_CURRENT_BINARY_DIR}/generated/opencode_plugin.h" @ONLY)
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
     src/providers/opencode-plugin.js src/providers/opencode-plugin-legacy.js)
-qt_add_library(pet_events STATIC src/ipc/local.cpp src/ipc/session_store.cpp src/ipc/autostart.cpp src/providers/integrations.cpp)
+qt_add_library(pet_events STATIC src/ipc/local.cpp src/ipc/session_store.cpp src/ipc/autostart.cpp src/providers/integrations.cpp
+    src/providers/claude_registration.cpp)
 target_include_directories(pet_events PUBLIC src PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/generated")
 target_link_libraries(pet_events PUBLIC pet_core PRIVATE pet_platform)
 if(WIN32)
@@ -200,7 +205,7 @@ qt_add_library(pet_updates STATIC src/updates/release.cpp src/updates/components
 target_include_directories(pet_updates PUBLIC src "${CMAKE_CURRENT_BINARY_DIR}/generated")
 target_link_libraries(pet_updates PUBLIC Qt6::Core PRIVATE pet_update_platform)
 qt_add_executable(agent-pet src/main.cpp)
-target_link_libraries(agent-pet PRIVATE pet_ui pet_events pet_native pet_i18n pet_interaction_stream)
+target_link_libraries(agent-pet PRIVATE pet_ui pet_events pet_native pet_i18n pet_interaction_stream pet_claude_bridge)
 set(pet_cli_target agent-pet) # The executable tests run as hooks and commands.
 if(WIN32)
     # agent-pet.exe opens no console window; agent-pet-cli.exe, the same program as a console
@@ -210,7 +215,7 @@ if(WIN32)
     target_sources(agent-pet PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/generated/agent-pet.rc")
     set_target_properties(agent-pet PROPERTIES WIN32_EXECUTABLE ON)
     qt_add_executable(agent-pet-cli src/main.cpp "${CMAKE_CURRENT_BINARY_DIR}/generated/agent-pet.rc")
-    target_link_libraries(agent-pet-cli PRIVATE pet_ui pet_events pet_native pet_i18n pet_interaction_stream)
+    target_link_libraries(agent-pet-cli PRIVATE pet_ui pet_events pet_native pet_i18n pet_interaction_stream pet_claude_bridge)
     set(pet_cli_target agent-pet-cli)
     qt_add_executable(agent-pet-updater src/platform/windows/update_helper.cpp)
     target_link_libraries(agent-pet-updater PRIVATE pet_updates pet_events pet_i18n)
@@ -287,6 +292,14 @@ if(BUILD_TESTING)
             target_compile_definitions(interaction-bridge-tests PRIVATE NODE_PATH="${PET_NODE_EXECUTABLE}"
                 DRIVER_PATH="${CMAKE_CURRENT_SOURCE_DIR}/tests/bridge_e2e_driver.mjs")
             add_test(NAME interaction-bridge COMMAND interaction-bridge-tests)
+        endif()
+        if(NOT WIN32)
+            # The Claude Code interaction bridge: hook handlers, registration, and the real hooks + session host against the real service.
+            qt_add_executable(claude-bridge-tests tests/claude_bridge_tests.cpp)
+            target_link_libraries(claude-bridge-tests PRIVATE pet_claude_bridge pet_interaction_stream Qt6::Test)
+            target_compile_definitions(claude-bridge-tests PRIVATE APP_PATH="$<TARGET_FILE:${pet_cli_target}>")
+            add_dependencies(claude-bridge-tests ${pet_cli_target})
+            add_test(NAME claude-bridge COMMAND claude-bridge-tests)
         endif()
         if(WIN32)
             qt_add_executable(session-process-fixture tests/session_process_fixture.cpp)
