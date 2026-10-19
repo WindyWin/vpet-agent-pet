@@ -310,7 +310,7 @@ void Service::markRead(const ConversationKey &key, const QString &messageId) {
 bool Service::addMessage(Conversation &c, Message message, bool trackGap) {
     for (const auto &m : c.messages)
         if (m.messageId == message.messageId) return false; // A repeated delivery changes nothing.
-    message.read = message.role == Role::User;
+    message.read = message.role == Role::User || message.history;
     if (!makeRoom(&c, utf8Size(message.text) + 64)) { c.capacityExceeded = true; return false; }
     if (trackGap && c.watermark > 0 && message.sequence > c.watermark + 1) c.historyGap = true;
     int at = c.messages.size();

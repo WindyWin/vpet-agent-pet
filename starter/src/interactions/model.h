@@ -52,7 +52,8 @@ struct Message {
     Role role = Role::Agent;
     QString text;
     qint64 createdAt = 0;
-    bool read = false; // Local display state; never sent by a bridge.
+    bool read = false;    // Local display state.
+    bool history = false; // Sent by a bridge for messages that predate its attachment: they start out read.
     QJsonObject toJson() const;
     static bool fromJson(const QJsonObject &object, Message &message, QString &error);
 };

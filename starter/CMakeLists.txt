@@ -276,6 +276,16 @@ if(BUILD_TESTING)
         qt_add_executable(interaction-transport-tests tests/interaction_transport_tests.cpp)
         target_link_libraries(interaction-transport-tests PRIVATE pet_interaction_stream Qt6::Test)
         add_test(NAME interaction-transport COMMAND interaction-transport-tests)
+        if(PET_NODE_EXECUTABLE)
+            # The OpenCode interaction bridge: its own behavior against fakes, then against the real service.
+            add_test(NAME opencode-bridge COMMAND "${PET_NODE_EXECUTABLE}" --test
+                "${CMAKE_CURRENT_SOURCE_DIR}/tests/opencode_bridge_test.mjs")
+            qt_add_executable(interaction-bridge-tests tests/interaction_bridge_tests.cpp)
+            target_link_libraries(interaction-bridge-tests PRIVATE pet_interaction_stream Qt6::Test)
+            target_compile_definitions(interaction-bridge-tests PRIVATE NODE_PATH="${PET_NODE_EXECUTABLE}"
+                DRIVER_PATH="${CMAKE_CURRENT_SOURCE_DIR}/tests/bridge_e2e_driver.mjs")
+            add_test(NAME interaction-bridge COMMAND interaction-bridge-tests)
+        endif()
         if(WIN32)
             qt_add_executable(session-process-fixture tests/session_process_fixture.cpp)
             target_link_libraries(session-process-fixture PRIVATE Qt6::Core)

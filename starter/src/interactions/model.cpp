@@ -62,7 +62,7 @@ bool ConversationKey::fromJson(const QJsonObject &o, ConversationKey &key, QStri
 
 QJsonObject Message::toJson() const {
     return {{"message_id", messageId}, {"sequence", double(sequence)}, {"role", role == Role::Agent ? "agent" : "user"},
-            {"text", text}, {"created_at", double(createdAt)}};
+            {"text", text}, {"created_at", double(createdAt)}, {"history", history}};
 }
 bool Message::fromJson(const QJsonObject &o, Message &m, QString &error) {
     QString role;
@@ -77,6 +77,9 @@ bool Message::fromJson(const QJsonObject &o, Message &m, QString &error) {
     if (!v.isString()) { error = "text must be a string"; return false; }
     m.text = v.toString();
     if (utf8Size(m.text) > Limits::textBytes) { error = QString(reason::tooLarge); return false; }
+    const auto history = o.value("history");
+    if (!history.isUndefined() && !history.isBool()) { error = "history must be a boolean"; return false; }
+    m.history = history.toBool(false);
     return whole(o, "created_at", m.createdAt, error, false);
 }
 

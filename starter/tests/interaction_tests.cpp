@@ -641,6 +641,21 @@ private slots:
         QCOMPARE(rig.conv().messages.size(), 3);
     }
 
+    void historyFromABridgeStartsReadButNewMessagesDoNot() {
+        Rig rig;
+        rig.bridge.send({{"type", "snapshot"}, {"conversation", rig.a.toJson()}, {"watermark", 2}, {"first_sequence", 1}, {"requests", QJsonArray{}},
+                         {"messages", QJsonArray{QJsonObject{{"message_id", "old1"}, {"sequence", 1}, {"role", "agent"}, {"text", "before"}, {"history", true}},
+                                                 QJsonObject{{"message_id", "new2"}, {"sequence", 2}, {"role", "agent"}, {"text", "after"}}}}});
+        QCOMPARE(rig.conv().messages.size(), 2);
+        QVERIFY(rig.conv().messages[0].read);
+        QVERIFY(!rig.conv().messages[1].read);
+        QCOMPARE(rig.conv().unreadCount(), 1);
+        Message parsed;
+        QString error;
+        auto bad = QJsonObject{{"message_id", "m"}, {"sequence", 1}, {"role", "agent"}, {"text", "t"}, {"history", "yes"}};
+        QVERIFY(!Message::fromJson(bad, parsed, error));
+    }
+
     // ---- Bounds ----------------------------------------------------------------------------------
 
     void messageHistoryIsBoundedReadFirst() {

@@ -13,7 +13,7 @@ Tested with **OpenCode v2.0.29** (shared background service, `opencode api` clie
 | 3 | Answer in the same running conversation | Pass | `POST /api/session/{id}/form/{formID}/reply` with `{"answer":{"q0":"Add focused tests"}}` returned 204. The blocked tool call completed with the answer, and the same assistant turn continued ("You chose …"). |
 | 4 | Follow-up after a completed turn | Pass | `POST /api/session/{id}/prompt` was admitted and started a new turn in the same session. |
 | 5 | Authoritative accept/reject | Partial | Replies are authoritative: 204 accepted, 400 `FormInvalidAnswerError`, 404 `FormNotFoundError`, 409 `FormAlreadySettledError`. A prompt returns an admission receipt (durable inbox item), which proves admission but not that the agent has started on it. |
-| 6 | Disconnect detection and reconcile | Pass (pull) / Unverified (push) | Pending forms (`GET …/form`), messages (`GET …/message`) and form state (`GET …/form/{id}` → `pending`, `answered`, `cancelled`) can be re-read at any time, so a snapshot can be rebuilt. `GET /api/event` (SSE) is documented as volatile (a slow consumer fails the stream, and events during disconnection are missed). Event payloads were not observed because the CLI client did not surface the stream. Verify with a direct client. |
+| 6 | Disconnect detection and reconcile | Pass (pull and push) | Pending forms (`GET …/form`), messages (`GET …/message`) and form state (`GET …/form/{id}` → `pending`, `answered`, `cancelled`) can be re-read at any time, so a snapshot can be rebuilt. `GET /api/event` (SSE) is documented as volatile (a slow consumer fails the stream, and events during disconnection are missed). Event payloads were not observed because the CLI client did not surface the stream. Verify with a direct client. |
 
 ## Behaviors the bridge must handle
 
@@ -30,9 +30,13 @@ Tested with **OpenCode v2.0.29** (shared background service, `opencode api` clie
 
 `messages`: yes. `single_choice`: yes. `custom_answer`: yes (when `custom: true`). `follow_up`: yes, when idle. `reconcile`: yes, by pull. `idempotent_commands`: partial. Prompts deduplicate by ID. Form replies are protected by the settled-state conflict.
 
+## Event stream (observed 2026-10-19)
+
+A direct client (Basic auth, user `opencode`, the password from the service registration file) read `GET /api/event` as server-sent events. Relevant types, each `{id, type, location?, data}` with `data.sessionID`: `form.created` (`data.form`), `form.replied` (`data.id`, `data.answer`), `form.cancelled`, `session.execution.started`, `session.execution.succeeded` / `failed` / `interrupted`, `session.text.ended` (full text, `assistantMessageID`, `ordinal`), `session.inbox.enqueued` (user prompts) and `session.deleted`. Events carry `durable.seq` numbers, but they are per-session and not contiguous over messages, so the bridge numbers messages itself. The stream is live-only; a drop loses events, so the bridge re-reads state when it reconnects. Message pages: `order` and `limit` for the first page, then `cursor` alone (combining them is an error); `cursor.next` is always present, so stop on a short page; user text is a top-level `text`, assistant text is in `content[]` parts, and `idle` entries are skipped.
+
 ## Open items before UI work
 
-1. Observe `GET /api/event` with a direct client (pairing and auth) and record the form, message and idle event shapes. The bridge needs them for low-latency updates, with pull reconciliation as the fallback.
+1. ~~Observe `GET /api/event`~~ Done: see above. The bridge uses it for low-latency updates, with pull reconciliation as the fallback.
 2. Confirm behavior across a service restart, and across a client disconnect while a form is pending.
-3. Decide the bridge host. A Node process using `@opencode/client` is the likely fit, since the status integration already ships an OpenCode JS plugin. Alternatively, use a C++ client over the paired HTTP API.
+3. ~~Decide the bridge host.~~ Done: a dependency-free Node script (`starter/src/providers/opencode-bridge.mjs`) using `fetch` with the registered password, not `@opencode/client`.
 4. Evaluate Claude Code and Codex later. Neither was probed in this pass.

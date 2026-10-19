@@ -1,7 +1,7 @@
 # Interaction protocol and service
 
-Stage 2 of [the direct-interaction specification](../../docs/design/agent-interactions-spec.md): the
-provider-neutral core, its private stream and a fake bridge. No provider bridge or UI is wired yet, and
+Stages 2 and 4 (bridge half) of [the direct-interaction specification](../../docs/design/agent-interactions-spec.md): the
+provider-neutral core, its private stream, a fake bridge and the OpenCode bridge. No UI is wired yet, and
 nothing here is started by the application. The status protocol ([events](events.md)) is unchanged and
 stays content-free.
 
@@ -13,7 +13,8 @@ stays content-free.
 | Service ↔ transport glue, timeout clock | `src/interactions/host.*` |
 | Stream contract | `src/platform/contracts/interaction_transport.h` |
 | Stream implementation and bridge-side client (Qt local sockets) | `src/platform/local_stream/` |
-| Tests | `tests/interaction_tests.cpp` (core, fake bridge), `tests/interaction_transport_tests.cpp` (real socket) |
+| OpenCode bridge (Node, no dependencies) | `src/providers/opencode-bridge.mjs` |
+| Tests | `tests/interaction_tests.cpp` (core, fake bridge), `tests/interaction_transport_tests.cpp` (real socket), `tests/opencode_bridge_test.mjs` (bridge against fakes), `tests/interaction_bridge_tests.cpp` (real service + real bridge) |
 
 `pet_interactions` needs Qt Core only and builds in the portable-core configuration. `pet_interaction_stream`
 adds Qt Network.
@@ -38,7 +39,7 @@ Bridge → service:
 | --- | --- |
 | `hello` | `version` or `versions`, `provider`, `generation`, `conversations`: `[{conversation, title, ready, capabilities}]`. Must be first; sent once. |
 | `conversation_open` | One conversation entry's fields at the top level, to register more later. |
-| `message` | `conversation`, `message {message_id, sequence, role, text, created_at}` |
+| `message` | `conversation`, `message {message_id, sequence, role, text, created_at, history}` (`history` marks a message that predates the bridge; it starts read) |
 | `request` | `conversation`, `request {request_id, revision, question, options[{id,label}], custom_answer, state, expires_at}` |
 | `request_state` | `conversation`, `request_id`, `state` (answered, cancelled, expired, replaced), `replaced_by` |
 | `ready` | `conversation`, `ready` (a new turn may start) |
@@ -84,9 +85,32 @@ conversation takes it over; the old one then gets `unknown_conversation`.
   `capacity` error and `capacityExceeded` is set. An oversized question is refused whole as
   `unsupported_content`; it is never truncated.
 
+## OpenCode bridge
+
+`node src/providers/opencode-bridge.mjs [--endpoint <path>] [--opencode-url <url>]` connects OpenCode 2's HTTP API
+to the interaction stream. It is not started by the app yet and, unlike the content-free status plugin, shares
+message text, so it will start only from an explicit opt-in. Node 20 or newer; no packages. It finds OpenCode
+through its service registration file (`OPENCODE_SERVICE_FILE` or `~/.local/state/opencode/service.json`) and
+authenticates with the registered password, which it never logs. The endpoint defaults to the one the app
+serves (`XDG_RUNTIME_DIR/agent-pet-<uid>/interactions.sock`, a per-user pipe on Windows); macOS defaults to
+`$TMPDIR`, which is unverified, so pass `--endpoint` or `AGENT_PET_INTERACTION_ENDPOINT` there.
+
+| Pet concept | OpenCode |
+| --- | --- |
+| Conversation | A session: ID, and `time.created` as the epoch. The project folder name is the title. |
+| Message | A user message, or each non-empty text part of an assistant message (`<message id>:<n>`). Sequence numbers count them from the start of the session; only the newest 50 are sent in a snapshot. Text is shortened with `…` to fit a frame. |
+| Request | A form with `metadata.kind: "question"` and one string field. Option `value` is the option ID, the field's description the question, `custom` the custom-answer flag. Forms with several fields, multiselect or external fields stay with OpenCode. |
+| Ready | The session is not in `GET /api/session/active`; `session.execution.started` / `succeeded` / `failed` / `interrupted` toggle it. |
+| `answer_request` | `POST …/form/{id}/reply` → 204 accepted; 409 is accepted only if the stored answer is the one sent (a retry), else `already_answered`; 404 `unknown_request`; 400 `invalid_answer` (still answerable); a lost connection is `unknown`. |
+| `send_follow_up` | `POST …/prompt` with `id = msg_apet_<command id>`, which OpenCode deduplicates. Checked against the active set first: a running session is refused as `not_ready`, never steered. |
+
+Tracked sessions are those running, with an open question, touched in the last 30 minutes (up to 8), or that
+show activity while the bridge runs; sub-agent sessions appear only when they ask something. The bridge keeps
+its state across a link loss and a lost event stream: a new `hello` brings a fresh generation, and snapshots
+carry anything missed, including the outcome of commands it ran while the service was away. After an event
+stream gap it re-reads active sessions, messages and forms.
+
 ## Bridge notes
 
-Replies and follow-ups reach the bridge as `command` frames and must be answered with a `command_result`; the
-fake bridge in `tests/fake_bridge.h` shows each frame. The OpenCode mapping found in the
-[provider proof](../../docs/design/agent-interactions-provider-proof.md) (`session.form.reply`,
-`session.prompt` with the command ID as message ID, form and message listing for snapshots) fits this shape.
+Replies and follow-ups reach a bridge as `command` frames and must be answered with a `command_result`; the
+fake bridge in `tests/fake_bridge.h` shows each frame.
