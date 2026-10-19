@@ -86,7 +86,7 @@ private slots:
         QCOMPARE(service.submit(answer(k, "cmd-answer", formId, 1, "tests")).outcome, Outcome::Pending);
         QTRY_VERIFY_WITH_TIMEOUT(results.contains("cmd-answer:accepted"), 10000);
         QTRY_COMPARE_WITH_TIMEOUT(service.find(k)->requests.value(formId).state, RequestState::Answered, 5000);
-        QVERIFY((pump(), seen("reply")));
+        QTRY_VERIFY_WITH_TIMEOUT((pump(), seen("reply")), 5000); // The driver's stdout can trail the bridge's result.
         const auto reply = line("reply").value("reply").toObject();
         QCOMPARE(reply.value("formID").toString(), formId);
         QCOMPARE(reply.value("answer").toObject().value("q0").toString(), QString("tests")); // Option ID, not label.
@@ -102,7 +102,7 @@ private slots:
         // A follow-up becomes a prompt, once, with an ID derived from the command ID.
         QCOMPARE(service.submit(followUp(k, "cmd-follow", "now run them")).outcome, Outcome::Pending);
         QTRY_VERIFY_WITH_TIMEOUT(results.contains("cmd-follow:accepted"), 10000);
-        QVERIFY((pump(), seen("prompt")));
+        QTRY_VERIFY_WITH_TIMEOUT((pump(), seen("prompt")), 5000); // The driver's stdout can trail the bridge's result.
         const auto prompt = line("prompt").value("prompt").toObject();
         QCOMPARE(prompt.value("text").toString(), QString("now run them"));
         QCOMPARE(prompt.value("id").toString(), QString("msg_apet_07931ed63e32591180e0e616b5dcff2a54909233"));

@@ -219,7 +219,8 @@ describe("registration and snapshots", () => {
     assert.deepEqual(open.conversation, keyOf(s));
     const snapshot = await until(() => pet.last("snapshot"), "snapshot");
     assert.equal(snapshot.messages[0].text, "hello there");
-    assert.equal(snapshot.ready, false);
+    // The start can be handled before or after the snapshot is sent; either way the pet ends up told it is busy.
+    await until(() => pet.frames.filter((f) => f.type === "snapshot" || f.type === "ready").at(-1)?.ready === false, "not ready");
   });
 });
 
