@@ -78,7 +78,8 @@ target_link_libraries(pet_behavior PUBLIC Qt6::Core)
 # Direct agent interactions (docs/design/agent-interactions-spec.md): models, request state machine,
 # command arbitration and the bounded store. Qt Core only, so it tests without a display or a socket.
 qt_add_library(pet_interactions STATIC
-    src/interactions/model.cpp src/interactions/frame.cpp src/interactions/service.cpp src/interactions/host.cpp)
+    src/interactions/model.cpp src/interactions/frame.cpp src/interactions/service.cpp src/interactions/host.cpp
+    src/interactions/bridge_launcher.cpp)
 target_include_directories(pet_interactions PUBLIC src)
 target_link_libraries(pet_interactions PUBLIC Qt6::Core)
 qt_add_library(pet_animation STATIC
@@ -244,6 +245,9 @@ else()
     install(PROGRAMS packaging/install.sh packaging/uninstall.sh DESTINATION .)
     install(FILES packaging/INSTALL.txt DESTINATION .)
     install(DIRECTORY licenses DESTINATION ${CMAKE_INSTALL_DATADIR}/agent-pet)
+    # The OpenCode and Codex interaction bridges, which the pet starts when agent conversations are on.
+    install(FILES src/providers/opencode-bridge.mjs src/providers/opencode-presence.mjs src/providers/opencode-tui.js
+                  src/providers/codex-bridge.mjs DESTINATION ${CMAKE_INSTALL_DATADIR}/agent-pet/bridges)
     # scripts/package.py copies only the required plugins and their library closure.
 endif() # Platform installation
 
@@ -284,6 +288,11 @@ if(BUILD_TESTING)
     qt_add_executable(interaction-tests tests/interaction_tests.cpp)
     target_link_libraries(interaction-tests PRIVATE pet_interactions Qt6::Test)
     add_test(NAME interactions COMMAND interaction-tests)
+    if(NOT WIN32) # The launcher test runs a shell script as Node.
+        qt_add_executable(bridge-launcher-tests tests/bridge_launcher_tests.cpp)
+        target_link_libraries(bridge-launcher-tests PRIVATE pet_interactions Qt6::Test)
+        add_test(NAME bridge-launcher COMMAND bridge-launcher-tests)
+    endif()
     if(NOT AGENT_PET_PORTABLE_CORE)
         qt_add_executable(interaction-transport-tests tests/interaction_transport_tests.cpp)
         target_link_libraries(interaction-transport-tests PRIVATE pet_interaction_stream Qt6::Test)

@@ -93,9 +93,12 @@ conversation takes it over; the old one then gets `unknown_conversation`.
 
 ## Desktop
 
-Off by default: no socket is created and no message text is shared until `agent_conversations` is `true` in the
-preferences file or the pet is started with `--interactions`. There is no Settings control or bridge launcher yet.
-`hide_message_previews` makes previews show identity and state only.
+Off by default: no socket is created and no message text is shared until it is turned on in Settings (Startup and
+agents → Agent conversations), `agent_conversations` is `true` in the preferences file, or the pet is started with
+`--interactions`. Settings starts and stops the service while the pet runs. `hide_message_previews` (also in
+Settings) makes previews show identity and state only. The same page registers the Claude Code conversation hooks
+(`integration enable --provider claude --interactions`). While the service runs, the pet starts the packaged OpenCode
+and Codex bridges itself (`src/interactions/bridge_launcher.*`; see [ADR 0051](adr/0051-interactions-in-install-packs.md)).
 
 | Part | Code |
 | --- | --- |
@@ -154,8 +157,8 @@ terminal shows it again or a new prompt arrives.
 ## OpenCode bridge
 
 `node src/providers/opencode-bridge.mjs [--endpoint <path>] [--opencode-url <url>]` connects OpenCode 2's HTTP API
-to the interaction stream. It is not started by the app yet and, unlike the content-free status plugin, shares
-message text, so it will start only from an explicit opt-in. Node 20 or newer; no packages. It finds OpenCode
+to the interaction stream. The pet starts it while agent conversations are on and, unlike the content-free status plugin, it shares
+message text, so it runs only after that opt-in. Node 20 or newer; no packages. It finds OpenCode
 through its service registration file (`OPENCODE_SERVICE_FILE` or `~/.local/state/opencode/service.json`) and
 authenticates with the registered password, which it never logs. The endpoint defaults to the one the app
 serves (`XDG_RUNTIME_DIR/agent-pet-<uid>/interactions.sock`, a per-user pipe on Windows); macOS defaults to
@@ -184,8 +187,8 @@ fake bridge in `tests/fake_bridge.h` shows each frame.
 ## Codex bridge
 
 `node src/providers/codex-bridge.mjs [--endpoint <path>] [--codex-socket <path>]` connects the shared Codex
-app-server daemon to the interaction stream. Like the OpenCode bridge it is not started by the app, shares
-message text, and will start only from an explicit opt-in. Node 20 or newer; no packages; Linux and macOS (the
+app-server daemon to the interaction stream. Like the OpenCode bridge the pet starts it only while agent conversations are on, and it shares
+message text. Node 20 or newer; no packages; Linux and macOS (the
 daemon's control channel on Windows is unverified, so its tests are not registered there). Tests:
 `tests/codex_bridge_test.mjs` (against `tests/fake_codex.mjs`, a fake daemon) and `tests/interaction_codex_bridge_tests.cpp`
 (real service, real bridge, fake daemon).

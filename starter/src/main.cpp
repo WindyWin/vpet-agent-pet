@@ -9,6 +9,7 @@
 #include "animation/pet_library.h"
 #include "desktop/conversations.h"
 #include "desktop/monitor.h"
+#include "interactions/bridge_launcher.h"
 #include "interactions/host.h"
 #include "platform/contracts/interaction_transport.h"
 #include "quota/service.h"
@@ -164,32 +165,50 @@ int main(int argc, char **argv) {
         if (persist && !parser.isSet("smoke-test")) monitor.sessionList().setQuotaService(&quotas);
         monitor.locked = pet::platform::createScreenLockQuery(&app); // The application outlives the monitor.
         if (receiver) monitor.listen(std::move(receiver));
-        // Direct agent conversations are opt-in: no socket exists, and no message text is shared, until chosen.
+        // Direct agent conversations are opt-in: no socket exists, and no message text is shared, until chosen
+        // (the preference or --interactions); Settings turns them on and off while the pet runs.
         // Declared in this order so the panel goes before the service it reads.
         std::unique_ptr<pet::interactions::Service> interactionService;
         std::unique_ptr<pet::interactions::Host> interactionHost;
+        std::unique_ptr<pet::interactions::BridgeLauncher> bridges;
         std::unique_ptr<pet::ConversationHub> conversations;
-        if (!parser.isSet("smoke-test") && (preferences.agentConversations || parser.isSet("interactions"))) {
+        const auto stopConversations = [&] {
+            conversations.reset(); bridges.reset(); interactionHost.reset(); interactionService.reset();
+        };
+        const auto startConversations = [&] {
+            if (interactionService) return;
             interactionService = std::make_unique<pet::interactions::Service>();
             interactionHost = std::make_unique<pet::interactions::Host>(*interactionService, pet::platform::createInteractionTransport());
             QString streamError;
-            if (interactionHost->start(streamError)) {
-                conversations = std::make_unique<pet::ConversationHub>(window, *interactionService);
-                conversations->setHideExcerpts(preferences.hideMessagePreviews);
-                conversations->avoid = [&monitor] {
-                    QVector<QRect> taken;
-                    for (const QWidget *widget : {static_cast<const QWidget *>(&monitor.bubble()), static_cast<const QWidget *>(&monitor.note()),
-                                                  static_cast<const QWidget *>(&monitor.sessionList())})
-                        if (widget->isVisible()) taken.append(widget->geometry());
-                    return taken;
-                };
-                conversations->focusHost = [&monitor](const pet::interactions::ConversationKey &key) {
-                    return monitor.focusSession(key.provider + QChar(0x1f) + key.sessionId);
-                };
-            } else {
+            if (!interactionHost->start(streamError)) {
                 qWarning().noquote() << "Agent conversations are unavailable:" << streamError;
-                interactionHost.reset(); interactionService.reset();
+                stopConversations();
+                return;
             }
+            conversations = std::make_unique<pet::ConversationHub>(window, *interactionService);
+            conversations->setHideExcerpts(window.hideMessagePreviews());
+            conversations->avoid = [&monitor] {
+                QVector<QRect> taken;
+                for (const QWidget *widget : {static_cast<const QWidget *>(&monitor.bubble()), static_cast<const QWidget *>(&monitor.note()),
+                                              static_cast<const QWidget *>(&monitor.sessionList())})
+                    if (widget->isVisible()) taken.append(widget->geometry());
+                return taken;
+            };
+            conversations->focusHost = [&monitor](const pet::interactions::ConversationKey &key) {
+                return monitor.focusSession(key.provider + QChar(0x1f) + key.sessionId);
+            };
+            // The packaged OpenCode and Codex bridges; Claude Code reaches the pet through its own hooks.
+            bridges = std::make_unique<pet::interactions::BridgeLauncher>();
+            if (!bridges->start()) qInfo().noquote() << bridges->status();
+        };
+        if (!parser.isSet("smoke-test")) {
+            if (preferences.agentConversations || parser.isSet("interactions")) startConversations();
+            QObject::connect(&window, &pet::PetWindow::agentConversationsChanged, &window, [&](bool enabled) {
+                if (enabled) startConversations(); else stopConversations();
+            });
+            QObject::connect(&window, &pet::PetWindow::hideMessagePreviewsChanged, &window, [&](bool hide) {
+                if (conversations) conversations->setHideExcerpts(hide);
+            });
         }
         std::unique_ptr<pet::updates::Controller> updates;
         std::unique_ptr<pet::packs::Updater> packUpdates;

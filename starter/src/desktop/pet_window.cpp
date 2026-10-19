@@ -95,6 +95,7 @@ PetWindow::PetWindow(QWidget *parent, const QString &path, bool persist)
     mood_.setSetting(MoodSetting(qBound(0, preferences.mood, 2))); mood_.setTurns(preferences.turns);
     connect(&mood_, &Mood::counted, this, [this] { if (ready_) saveTimer_.start(); });
     touchEnabled_ = preferences.touch; wanderEnabled_ = preferences.wander; recapEnabled_ = preferences.recap;
+    agentConversations_ = preferences.agentConversations; hideMessagePreviews_ = preferences.hideMessagePreviews;
     ambient_.setMoveGate([this](const Move &move) { return canWander(move); });
     eggs_.setReminderSchedule(preferences.reminderSchedule);
     eggs_.setEnabled(preferences.easterEggs); eggs_.setBirthday(preferences.birthday);
@@ -474,6 +475,18 @@ void PetWindow::setRecapEnabled(bool enabled) {
     if (enabled == recapEnabled_) return;
     recapEnabled_ = enabled;
     if (ready_) saveTimer_.start();
+}
+void PetWindow::setAgentConversations(bool enabled) {
+    if (enabled == agentConversations_) return;
+    agentConversations_ = enabled;
+    writePreferences([enabled](Preferences &preferences) { preferences.agentConversations = enabled; });
+    emit agentConversationsChanged(enabled);
+}
+void PetWindow::setHideMessagePreviews(bool hide) {
+    if (hide == hideMessagePreviews_) return;
+    hideMessagePreviews_ = hide;
+    writePreferences([hide](Preferences &preferences) { preferences.hideMessagePreviews = hide; });
+    emit hideMessagePreviewsChanged(hide);
 }
 QString PetWindow::recapPath() const { return persist_ ? QFileInfo(store_.path()).absolutePath() + "/recap.json" : QString(); }
 void PetWindow::showTrayMessage(const QString &title, const QString &text) {
@@ -1017,6 +1030,7 @@ void PetWindow::showSettings() {
     layout = page(tr("Startup and agents"));
     layout->addRow(startupSettings(dialog));
     layout->addRow(integrationSettings(dialog));
+    layout->addRow(conversationSettings(dialog));
     auto *status = new QLabel(dialog); status->setWordWrap(true); status->setTextInteractionFlags(Qt::TextSelectableByMouse);
     const auto updateStatus = [this, status] {
         status->setText(store_.error().isEmpty() ? tr("Preferences are saved automatically. Closing this window keeps monitoring; Quit stops it.")
@@ -1149,6 +1163,62 @@ QWidget *PetWindow::integrationSettings(QWidget *parent) {
                                 "after enabling; silent, remote and container sessions are not discovered. "
                                 "Reply to requests in the agent's own terminal or editor."), box);
     coverage->setWordWrap(true); layout->addRow(coverage);
+    return box;
+}
+QWidget *PetWindow::conversationSettings(QWidget *parent) {
+    auto *box = new QGroupBox(tr("Agent conversations"), parent); box->setObjectName("conversations");
+    auto *layout = new QFormLayout(box);
+    auto *enabled = new QCheckBox(tr("Answer agent &questions and send follow-ups from the pet"), box);
+    enabled->setChecked(agentConversations_); enabled->setAccessibleName(tr("Agent conversations"));
+    enabled->setToolTip(tr("Shares the text of agent messages and questions with the pet, on this machine only.\n"
+                        "Off, no conversation socket exists and nothing but status leaves the agent."));
+    layout->addRow(enabled);
+    connect(enabled, &QCheckBox::toggled, this, &PetWindow::setAgentConversations);
+    auto *hide = new QCheckBox(tr("&Hide message previews"), box);
+    hide->setChecked(hideMessagePreviews_);
+    hide->setToolTip(tr("Previews show who and what kind, never the agent's words."));
+    layout->addRow(hide);
+    connect(hide, &QCheckBox::toggled, this, &PetWindow::setHideMessagePreviews);
+    auto *note = new QLabel(tr("OpenCode and Codex connect on their own while this is on (they need Node 20 or newer). "
+                            "Claude Code needs its conversation hooks, below; restart Claude Code after changing them."), box);
+    note->setWordWrap(true); layout->addRow(note);
+#ifndef Q_OS_WIN
+    auto *row = new QWidget(box); auto *rowLayout = new QHBoxLayout(row); rowLayout->setContentsMargins(0, 0, 0, 0);
+    auto *status = new QLabel(row); status->setWordWrap(true); status->setTextInteractionFlags(Qt::TextSelectableByMouse);
+    auto *toggle = new QPushButton(row);
+    rowLayout->addWidget(status, 1); rowLayout->addWidget(toggle);
+    IntegrationOptions options; options.interactions = true;
+    const auto refresh = [status, toggle, options] {
+        QJsonObject report; QString error;
+        if (!runIntegration("inspect", "claude", {}, QCoreApplication::applicationFilePath(), report, error, options)) {
+            status->setText(error); toggle->setEnabled(false); return;
+        }
+        const int owned = report["owned_handlers"].toInt(), expected = report["expected_handlers"].toInt();
+        status->setText((owned == expected ? tr("Enabled") : owned == 0 ? tr("Not enabled") : tr("Partial (%1 of %2 hooks)").arg(owned).arg(expected))
+                        + "\n" + report["config"].toString());
+        toggle->setText(owned == expected ? tr("Disable") : owned ? tr("Update") : tr("Enable")); toggle->setEnabled(true);
+        toggle->setProperty("enable", owned != expected);
+    };
+    refresh();
+    connect(toggle, &QPushButton::clicked, box, [this, toggle, refresh, options] {
+        const bool enable = toggle->property("enable").toBool();
+        const auto executable = QCoreApplication::applicationFilePath();
+        const auto question = enable
+            ? tr("Add Agent Pet conversation hooks to %1?\n\nWhile a question waits for the pet the terminal shows no dialog; "
+                 "after %2 seconds it opens as usual. Other settings and hooks are preserved. Restart Claude Code afterwards.")
+                  .arg(integrationConfigPath("claude")).arg(options.questionWait)
+            : tr("Remove only Agent Pet conversation hooks from %1?").arg(integrationConfigPath("claude"));
+        QMessageBox ask(QMessageBox::Question, tr("Agent conversations"), question, QMessageBox::NoButton, this);
+        auto *confirm = ask.addButton(enable ? tr("Add hooks") : tr("Remove hooks"), QMessageBox::AcceptRole);
+        ask.addButton(tr("Cancel"), QMessageBox::RejectRole);
+        if (ask.exec(), ask.clickedButton() != confirm) return;
+        QJsonObject report; QString error;
+        if (!runIntegration(enable ? "enable" : "disable", "claude", {}, executable, report, error, options))
+            warn(this, tr("Agent conversations"), error);
+        refresh();
+    });
+    layout->addRow(tr("Claude Code hooks"), row);
+#endif
     return box;
 }
 void PetWindow::showAbout() {
