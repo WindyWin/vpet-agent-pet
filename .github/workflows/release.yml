@@ -133,6 +133,7 @@ jobs:
       && startsWith(github.event.head_commit.message, 'Merge pull request') && contains(github.event.head_commit.message, format('from {0}/release/', github.repository_owner))) }}
     # One universal (arm64 + x86_64) bundle for macOS 11 and newer.
     runs-on: macos-14
+    timeout-minutes: 20
     defaults:
       run:
         working-directory: starter
@@ -170,9 +171,33 @@ jobs:
         timeout-minutes: 10
         run: ctest --test-dir build --verbose --timeout 300 -j1 -E '^(quota|prototype-[0-9]+|pets|plugins|pack-.*|steam-workshop|vpet-converter|pet-scaffold)$' --output-log build/ctest-core.log
 
-      - name: Test desktop UI
-        timeout-minutes: 10
-        run: ctest --test-dir build --verbose --timeout 300 -j1 -R '^(quota|prototype-[0-9]+|pets|plugins)$' --output-log build/ctest-ui.log
+      - name: Test quota UI
+        timeout-minutes: 6
+        run: ctest --test-dir build --verbose --timeout 300 -R '^quota$' --output-log build/ctest-quota.log
+
+      - name: Test desktop UI shard 1
+        timeout-minutes: 6
+        run: ctest --test-dir build --verbose --timeout 300 -R '^prototype-1$' --output-log build/ctest-ui-1.log
+
+      - name: Test desktop UI shard 2
+        timeout-minutes: 6
+        run: ctest --test-dir build --verbose --timeout 300 -R '^prototype-2$' --output-log build/ctest-ui-2.log
+
+      - name: Test desktop UI shard 3
+        timeout-minutes: 6
+        run: ctest --test-dir build --verbose --timeout 300 -R '^prototype-3$' --output-log build/ctest-ui-3.log
+
+      - name: Test desktop UI shard 4
+        timeout-minutes: 6
+        run: ctest --test-dir build --verbose --timeout 300 -R '^prototype-4$' --output-log build/ctest-ui-4.log
+
+      - name: Test pet UI
+        timeout-minutes: 6
+        run: ctest --test-dir build --verbose --timeout 300 -R '^pets$' --output-log build/ctest-pets.log
+
+      - name: Test plugin UI
+        timeout-minutes: 6
+        run: ctest --test-dir build --verbose --timeout 300 -R '^plugins$' --output-log build/ctest-plugins.log
 
       - name: Test pack tools
         timeout-minutes: 10
