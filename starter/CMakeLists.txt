@@ -74,6 +74,12 @@ target_link_libraries(pet_core PUBLIC Qt6::Core pet_host_capture)
 qt_add_library(pet_behavior STATIC src/behavior/runtime.cpp)
 target_include_directories(pet_behavior PUBLIC src)
 target_link_libraries(pet_behavior PUBLIC Qt6::Core)
+# Direct agent interactions (docs/design/agent-interactions-spec.md): models, request state machine,
+# command arbitration and the bounded store. Qt Core only, so it tests without a display or a socket.
+qt_add_library(pet_interactions STATIC
+    src/interactions/model.cpp src/interactions/frame.cpp src/interactions/service.cpp src/interactions/host.cpp)
+target_include_directories(pet_interactions PUBLIC src)
+target_link_libraries(pet_interactions PUBLIC Qt6::Core)
 qt_add_library(pet_animation STATIC
     src/animation/catalog.cpp src/animation/pet_library.cpp src/animation/player.cpp src/animation/ambient.cpp src/animation/activity.cpp
     src/animation/mood.cpp src/animation/easter_eggs.cpp src/animation/stage.cpp src/animation/plugins.cpp src/animation/event_rules.cpp)
@@ -128,6 +134,11 @@ else()
         src/platform/posix/hook_input.cpp src/platform/posix/hook_command.cpp src/platform/posix/launch.cpp
         src/platform/linux/process.cpp src/platform/linux/headless.cpp src/platform/linux/startup.cpp src/platform/linux/session_identity.cpp)
 endif()
+# The private bidirectional stream of the interaction protocol (Qt's local sockets: a Unix socket or a named pipe).
+qt_add_library(pet_interaction_stream STATIC
+    src/platform/local_stream/interaction_transport.cpp src/platform/local_stream/interaction_client.cpp)
+target_include_directories(pet_interaction_stream PUBLIC src)
+target_link_libraries(pet_interaction_stream PUBLIC Qt6::Network pet_interactions)
 qt_add_library(pet_platform STATIC ${pet_platform_sources})
 target_include_directories(pet_platform PUBLIC src)
 target_link_libraries(pet_platform PUBLIC Qt6::Core)
@@ -257,7 +268,14 @@ if(BUILD_TESTING)
     qt_add_executable(behavior-tests tests/behavior_tests.cpp)
     target_link_libraries(behavior-tests PRIVATE pet_behavior Qt6::Test)
     add_test(NAME behavior COMMAND behavior-tests)
+    # The interaction service against a scriptable fake bridge; needs no display, socket or provider.
+    qt_add_executable(interaction-tests tests/interaction_tests.cpp)
+    target_link_libraries(interaction-tests PRIVATE pet_interactions Qt6::Test)
+    add_test(NAME interactions COMMAND interaction-tests)
     if(NOT AGENT_PET_PORTABLE_CORE)
+        qt_add_executable(interaction-transport-tests tests/interaction_transport_tests.cpp)
+        target_link_libraries(interaction-transport-tests PRIVATE pet_interaction_stream Qt6::Test)
+        add_test(NAME interaction-transport COMMAND interaction-transport-tests)
         if(WIN32)
             qt_add_executable(session-process-fixture tests/session_process_fixture.cpp)
             target_link_libraries(session-process-fixture PRIVATE Qt6::Core)

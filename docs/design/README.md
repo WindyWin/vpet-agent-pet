@@ -1,5 +1,9 @@
 # Agent Pet design target
 
+## Proposed interaction feature
+
+[Direct agent interactions and collapsible conversation panel](agent-interactions-spec.md) specifies the proposed two-way agent bridge, option answers and chat follow-ups, bubble/panel behavior, delivery rules, and future Telegram control. It extends the passive design below; it is not yet implemented. [Provider proof](agent-interactions-provider-proof.md) records the stage 1 results for OpenCode.
+
 Scope revised 2026-10-04: a floating animated pet with compact notifications and minimal settings. The complete interface consists of the pet, one alert bubble, an attention badge, and a context/tray menu.
 
 ## Current visual target

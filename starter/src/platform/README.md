@@ -9,6 +9,7 @@ share is under `posix/`; Windows has its own under `windows/`.
 | --- | --- | --- | --- | --- |
 | Process inspection and GUI bootstrap | `headless.h`, `contracts/process.h` | `linux/headless.cpp`, `linux/process.cpp` (`/proc`) | `macos/headless.cpp`, `macos/process.cpp` (sysctl, libproc) | `windows/headless.cpp`, `windows/process.cpp` (Toolhelp) |
 | Event delivery and instance ownership | `contracts/event_transport.h` | `posix/event_transport.cpp` | same | `windows/event_transport.cpp` (named pipe) |
+| Interaction stream (bidirectional, framed, one owner) | `contracts/interaction_transport.h` | `local_stream/interaction_transport.cpp` (Qt local socket) | same | same (named pipe) |
 | Deadline-bounded hook input / parent PID | `contracts/hook_input.h` | `posix/hook_input.cpp` | same | `windows/hook_input.cpp` |
 | Host CLI runner (tmux, herdr) | `contracts/command.h` | `posix/commands.cpp` | same | none (no tmux or herdr) |
 | Detached launch, pet executable | `contracts/startup.h` | `posix/launch.cpp` | same | `windows/launch.cpp` (CreateProcess) |
