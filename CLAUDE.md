@@ -12,7 +12,7 @@ Agent Pet is a desktop pet for Linux, macOS and Windows (C++17, Qt 6 Widgets, CM
 
 ## Commands (run from `starter/`)
 
-Build requirements: CMake 3.22+, Ninja, C++17, Qt 6.5+ (Widgets, DBus, Network, Test, LinguistTools), libarchive, X11 (+ Xtst for desktop tests). macOS needs only Qt (no DBus), Ninja and the Xcode tools; `scripts/package_macos.py` builds the `.app` zip and `.dmg` there. Windows needs MSVC (a VS developer prompt), Ninja and Qt for msvc2019_64; `scripts/package_windows.py` (windeployqt + Inno Setup 6) builds the zip and per-user `-setup.exe`, and `scripts/check_install_windows.py` checks install/upgrade/uninstall.
+Build requirements: CMake 3.22+, Ninja, C++17, Qt 6.5+ (Widgets, DBus, Network, Test, LinguistTools), libarchive, X11 (+ Xtst for desktop tests). macOS needs only Qt (no DBus), Ninja and the Xcode tools; `scripts/package_macos.py` builds the `.app` ZIP there (`--dmg` is optional). Windows needs MSVC (a VS developer prompt), Ninja and Qt for msvc2019_64; `scripts/package_windows.py` (windeployqt + Inno Setup 6) builds the per-user `-setup.exe` (`--portable-zip` is optional), and `scripts/check_install_windows.py` checks install/upgrade/uninstall.
 
 ```bash
 python3 scripts/verify_assets.py          # asset manifest/catalog check (also run in CI)

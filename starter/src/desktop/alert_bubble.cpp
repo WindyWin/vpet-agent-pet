@@ -62,8 +62,13 @@ void AlertBubble::present(const AlertText &text, const QString &kind, int more) 
 QPoint AlertBubble::placement(const QRect &pet, QSize bubble, const QRect &screen, const QVector<QRect> &avoid) {
     constexpr int gap = 8;
     const int top = pet.top() + pet.height() / 5, middle = pet.center().x() - bubble.width() / 2;
-    const QPoint candidates[] = {{pet.right() + 1 + gap, top}, {pet.left() - gap - bubble.width(), top},
-                                 {middle, pet.top() - gap - bubble.height()}, {middle, pet.bottom() + 1 + gap}};
+    // The ones above and below never cover the pet, so when the pet sits near a screen edge
+    // they slide along that edge instead of being rejected for overhanging it.
+    const int bent = qBound(screen.left(), middle, qMax(screen.left(), screen.right() - bubble.width() + 1));
+    // Likewise the ones beside the pet slide up when they would run off the bottom of the screen.
+    const int side = qBound(screen.top(), top, qMax(screen.top(), screen.bottom() - bubble.height() + 1));
+    const QPoint candidates[] = {{pet.right() + 1 + gap, side}, {pet.left() - gap - bubble.width(), side},
+                                 {bent, pet.top() - gap - bubble.height()}, {bent, pet.bottom() + 1 + gap}};
     const auto clear = [&](const QRect &area) {
         for (const auto &other : avoid) if (area.intersects(other)) return false;
         return true;
@@ -74,9 +79,17 @@ QPoint AlertBubble::placement(const QRect &pet, QSize bubble, const QRect &scree
         if (screen.contains(QRect(candidate, bubble)) && clear(QRect(candidate, bubble))) { position = candidate; found = true; break; }
     if (!found)
         for (const auto &candidate : candidates)
-            if (screen.contains(QRect(candidate, bubble))) { position = candidate; break; }
-    return {qBound(screen.left(), position.x(), qMax(screen.left(), screen.right() - bubble.width() + 1)),
-            qBound(screen.top(), position.y(), qMax(screen.top(), screen.bottom() - bubble.height() + 1))};
+            if (screen.contains(QRect(candidate, bubble))) { position = candidate; found = true; break; }
+    if (!found) {
+        // Nowhere whole on the screen: hug its edge, but the clamp must not drop the popup
+        // across the pet, which would hide it; end it above the pet, or start below it.
+        position = {qBound(screen.left(), position.x(), qMax(screen.left(), screen.right() - bubble.width() + 1)),
+                    qBound(screen.top(), position.y(), qMax(screen.top(), screen.bottom() - bubble.height() + 1))};
+        if (QRect(position, bubble).intersects(pet))
+            position.ry() = pet.top() - gap - bubble.height() >= screen.top() ? pet.top() - gap - bubble.height()
+                : qMin(pet.bottom() + 1 + gap, qMax(screen.top(), screen.bottom() - bubble.height() + 1));
+    }
+    return position;
 }
 void AlertBubble::place(const QRect &pet, const QVector<QRect> &screens) {
     QRect screen = screens.value(0, pet);

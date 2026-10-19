@@ -129,7 +129,7 @@ void ConversationList::present(const Service &service) {
         if (c->link == Conversation::Link::Ended) what = ::Conversations::tr("Session ended");
         else if (c->link == Conversation::Link::Disconnected) what = ::Conversations::tr("Disconnected");
         else if (c->needsAttention()) { what = ::Conversations::tr("Needs your answer"); color = conversation::pendingColor(); }
-        else if (c->unreadCount() > 0) { what = ::Conversations::tr("%n new message(s)", nullptr, c->unreadCount()); color = conversation::unreadColor(); }
+        else if (c->unreadCount() > 0) { what = c->unreadCount() == 1 ? ::Conversations::tr("1 new message") : ::Conversations::tr("%1 new messages").arg(c->unreadCount()); color = conversation::unreadColor(); }
         else what = c->ready ? ::Conversations::tr("Ready") : ::Conversations::tr("Working…");
         QString detail;
         if (const auto *request = conversation::firstOpenRequest(*c)) detail = conversation::firstLine(request->question);

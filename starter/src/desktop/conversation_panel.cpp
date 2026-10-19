@@ -312,6 +312,7 @@ void ConversationPanel::showRequest(const Conversation &c) {
         card_->hide(); activeRequest_.clear(); requestSignature_.clear(); return;
     }
     const auto *shown = selectedRequest(c);
+    if (!shown) shown = open.first(); // A request already being sent is still shown, read-only.
     activeRequest_ = shown->requestId;
     // Rebuilt only when the question changed, so a message arriving does not take keyboard focus off an option.
     QString signature = c.key.id() + '|' + shown->requestId + QString::number(shown->revision) + requestStateName(shown->state)
@@ -416,6 +417,7 @@ void ConversationPanel::send() {
         command.text = edit_->toPlainText().trimmed();
     }
     sending_ = command.commandId;
+    sendingSlot_ = request ? request->requestId : QString();
     feedback_->setText(::Conversations::tr("Sending…"));
     feedback_->setStyleSheet("color:#6b5643;");
     send_->setEnabled(false);
@@ -426,7 +428,7 @@ void ConversationPanel::send() {
 void ConversationPanel::onResult(const CommandResult &result) {
     sending_.clear();
     const auto *c = service_.find(current_);
-    const QString slot = draftSlot();
+    const QString slot = sendingSlot_;
     if (result.outcome == Outcome::Accepted) {
         // "Sent" means the agent took it, not that the work it asked for succeeded.
         feedback_->setText(::Conversations::tr("Sent"));

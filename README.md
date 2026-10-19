@@ -37,7 +37,7 @@ Download the latest version from the [Releases page](https://github.com/WindyWin
 
 **macOS**
 
-1. Download the `.dmg`, open it and drag **Agent Pet** into **Applications**.
+1. Download and extract the macOS `.zip`, then move **Agent Pet** into **Applications**.
 2. Open it. The first time, macOS asks you to confirm: go to **System Settings → Privacy & Security → Open Anyway** (on macOS 14 or older, Control-click the app → **Open**).
 3. Right-click the pet → **Settings → Startup and agents**, press **Enable** next to Claude Code or Codex, then restart the client.
 
@@ -47,7 +47,7 @@ Download the latest version from the [Releases page](https://github.com/WindyWin
 2. In setup, choose whether to connect Claude Code and/or Codex and start the pet at sign-in or when an agent session starts. You can also connect them later from **Settings → Startup and agents**.
 3. Restart Claude Code or Codex and send a prompt. Claude Code hooks need **2.1.139+**; in Codex, trust the hooks in `/hooks`.
 
-The Windows build is not code-signed yet. If SmartScreen warns, choose **More info → Run anyway**. For portable use, extract `agent-pet-<version>-windows-x86_64.zip` into a folder whose path has no spaces, then run `agent-pet.exe`. See the [Windows install guide](starter/docs/install.md#windows) for details.
+The Windows build is not code-signed yet. If SmartScreen warns, choose **More info → Run anyway**. New releases provide the Setup installer; existing portable copies can migrate by running Setup. See the [Windows install guide](starter/docs/install.md#windows) for details.
 
 Need more detail, or something isn't working? See the [install guide](starter/docs/install.md) and its [troubleshooting table](starter/docs/install.md#troubleshooting).
 

@@ -12,7 +12,7 @@ import fs from "node:fs";
 import net from "node:net";
 import os from "node:os";
 import path from "node:path";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 
 export const PROVIDER = "opencode";
 export const MAX_FRAME = 64 * 1024;
@@ -320,7 +320,7 @@ export function createBridge({ api, send, log = () => {}, tail = TAIL, scanPages
       emit({ type: "ready", conversation: keyOf(c), ready: false });
       return result(c, frame.command_id, "rejected", "not_ready", true);
     }
-    const id = `msg_apet_${String(frame.command_id).replace(/[^A-Za-z0-9]/g, "").slice(0, 64)}`;
+    const id = `msg_apet_${createHash("sha256").update(String(frame.command_id)).digest("hex").slice(0, 40)}`;
     let response;
     try {
       response = await api.prompt(c.id, { id, text: frame.payload?.text ?? "" });
@@ -520,7 +520,8 @@ export function openCodeApi({ url, headers, fetchImpl = fetch, timeoutMs = 10000
       const decoder = new TextDecoder();
       let buffer = "";
       for await (const chunk of response.body) {
-        buffer += decoder.decode(chunk, { stream: true });
+        buffer += decoder.decode(chunk, { stream: true }).replace(/\r\n?/g, "\n");
+        if (buffer.length > 1024 * 1024) throw new Error("event too large");
         let end;
         while ((end = buffer.indexOf("\n\n")) >= 0) {
           const raw = buffer.slice(0, end);

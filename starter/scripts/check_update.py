@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """Exercise the update helper with disposable installations and simulated apps."""
+import argparse
 import hashlib
 import io
 import json
 import platform
+import shutil
 import os
 from pathlib import Path
 import subprocess
@@ -12,7 +14,11 @@ import tarfile
 import tempfile
 from package import write_components
 
-helper = Path(sys.argv[1]).resolve()
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument("helper", type=Path)
+parser.add_argument("--full-only", action="store_true", help="Exercise the retained full-package protocol with an older helper")
+args = parser.parse_args()
+helper = args.helper.resolve()
 with tempfile.TemporaryDirectory(prefix="pet-update-") as temporary:
     root = Path(temporary)
     runtime = root / "runtime"
@@ -95,6 +101,9 @@ exit 1
     assert settings.read_text() == '{"preserve":"settings"}'
     assert not Path(str(app) + ".update-transaction.json").exists()
     assert not list(root.glob("installed pet.update-*"))
+    if args.full_only:
+        print("Previous updater: full-package checksums, path safety, rollback and replacement passed")
+        sys.exit(0)
     # Component updates use the real publisher and installer. An old full-package
     # installation can immediately supply matching files without an old manifest.
     bundle = root / "bundle"
@@ -114,11 +123,16 @@ exit 1
         target.chmod(0o755)
         manifest = write_components(bundle, "99.1.0", platform.machine())
         manifest_path = root / f"agent-pet-99.1.0-linux-{platform.machine()}-components.json"
+        cache_blobs()
         # No runtime/artwork archives are available: matching files must be reused.
         for component in manifest["components"]:
             if component["name"] != "app":
-                (root / component["archive"]).unlink()
+                (root / component["archive"]).unlink(missing_ok=True)
         return manifest, manifest_path
+
+    def cache_blobs():
+        for blob in (root / "blobs").glob("*.tar.gz"):
+            shutil.move(str(blob), root / blob.name)
 
     def apply_components(manifest_path):
         checksum = "sha256:" + hashlib.sha256(manifest_path.read_bytes()).hexdigest()
@@ -180,17 +194,19 @@ exit 1
         (bundle / f"share/agent-pet/{name}.rcc").write_bytes(name.encode())
     (bundle / "share/agent-pet/artwork.rcc").write_bytes(b"catalog and pack index")
     manifest = write_components(bundle, "99.1.0", platform.machine())
-    assert manifest["format"] == 2
+    cache_blobs()
+    assert manifest["format"] == 3
     for component in manifest["components"]:
         if component["name"] in ("app", "runtime"):
-            (root / component["archive"]).unlink()
+            (root / component["archive"]).unlink(missing_ok=True)
     result = apply_components(manifest_path)
     assert result.returncode == 0, result
     (bundle / f"share/agent-pet/{packs[1]}.rcc").write_bytes(b"changed sequence")
     manifest = write_components(bundle, "99.1.0", platform.machine())
+    cache_blobs()
     for component in manifest["components"]:
         if component["name"] != packs[1]:
-            (root / component["archive"]).unlink()
+            (root / component["archive"]).unlink(missing_ok=True)
     result = apply_components(manifest_path)
     assert result.returncode == 0, result
     assert (app / f"share/agent-pet/{packs[0]}.rcc").read_bytes() == packs[0].encode()

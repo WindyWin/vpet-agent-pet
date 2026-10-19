@@ -106,12 +106,23 @@ jobs:
       - name: Check install, upgrade and uninstall
         run: python3 scripts/check_install.py dist/agent-pet-*-linux-x86_64.tar.gz
 
+      - name: Check upgrades from the previous two releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/check_previous_releases.py dist/agent-pet-*-linux-x86_64.tar.gz
+
       - uses: actions/upload-artifact@v4
         with:
           name: agent-pet-linux-x86_64
           path: |
             starter/dist/*.tar.gz
             starter/dist/*-components.json
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-component-blobs
+          path: starter/dist/blobs/
           if-no-files-found: error
 
       # Packs of pets that are not bundled, named by content for the long-lived `pets` release (docs/pets.md).
@@ -170,9 +181,7 @@ jobs:
         run: |
           QMAKE="$QT_ROOT_DIR/bin/qmake" python3 scripts/package_macos.py --universal
           if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
-            for asset in zip dmg; do
-              test -f "dist/agent-pet-${GITHUB_REF_NAME#v}-macos-universal.$asset" || { echo "Tag does not match project() version"; exit 1; }
-            done
+            test -f "dist/agent-pet-${GITHUB_REF_NAME#v}-macos-universal.zip" || { echo "Tag does not match project() version"; exit 1; }
           fi
           ls -l dist
 
@@ -181,7 +190,6 @@ jobs:
           name: agent-pet-macos-universal
           path: |
             starter/dist/*.zip
-            starter/dist/*.dmg
           if-no-files-found: error
 
   windows:
@@ -242,10 +250,7 @@ jobs:
           python scripts/package_windows.py --smoke-test
           if ($env:GITHUB_REF -like 'refs/tags/v*') {
             $version = $env:GITHUB_REF_NAME.Substring(1)
-            foreach ($asset in "zip", "setup.exe") {
-              $suffix = if ($asset -eq "zip") { ".zip" } else { "-setup.exe" }
-              if (-not (Test-Path "dist/agent-pet-$version-windows-x86_64$suffix")) { throw "Tag does not match project() version" }
-            }
+            if (-not (Test-Path "dist/agent-pet-$version-windows-x86_64-setup.exe")) { throw "Tag does not match project() version" }
           }
           Get-ChildItem dist
 
@@ -261,13 +266,15 @@ jobs:
         with:
           name: agent-pet-windows-x86_64
           path: |
-            starter/dist/*.zip
             starter/dist/*-setup.exe
           if-no-files-found: error
 
   release:
     if: startsWith(github.ref, 'refs/tags/v')
     needs: [linux, macos, windows]
+    concurrency:
+      group: release-blob-store
+      cancel-in-progress: false
     runs-on: ubuntu-22.04
     permissions:
       contents: write
@@ -279,6 +286,14 @@ jobs:
         with:
           pattern: agent-pet-*
           merge-multiple: true
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-component-blobs
+          path: blobs
+      - name: Publish shared release components
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 starter/scripts/release_blobs.py publish .
       # Source for the Arch AUR package: only starter/, without the repository's 749 MB artwork bundle.
       - name: Source tarball
         run: |
@@ -295,8 +310,7 @@ jobs:
           download="https://github.com/$GITHUB_REPOSITORY/releases/download/$GITHUB_REF_NAME"
           docs="https://github.com/$GITHUB_REPOSITORY/blob/main"
           # Every download link must point to a nonempty asset in this release.
-          for suffix in windows-x86_64-setup.exe macos-universal.dmg linux-x86_64.tar.gz \
-                        windows-x86_64.zip macos-universal.zip source.tar.gz; do
+          for suffix in windows-x86_64-setup.exe macos-universal.zip linux-x86_64.tar.gz source.tar.gz; do
             test -s "$package-$suffix" || { echo "Missing download: $package-$suffix"; exit 1; }
           done
           cat > release-notes.md <<EOF
@@ -308,23 +322,21 @@ jobs:
           | Operating system / Hệ điều hành | Download / Tải xuống | Install / Cài đặt |
           | --- | --- | --- |
           | Windows 10 (1809+) / 11 · x64 | [**Download Windows**]($download/$package-windows-x86_64-setup.exe) | Run the installer / Chạy bộ cài |
-          | macOS 11+ · Apple silicon & Intel | [**Download macOS**]($download/$package-macos-universal.dmg) | Drag Agent Pet into Applications / Kéo Agent Pet vào Applications |
+          | macOS 11+ · Apple silicon & Intel | [**Download macOS**]($download/$package-macos-universal.zip) | Extract and move Agent Pet into Applications / Giải nén và chuyển Agent Pet vào Applications |
           | Linux · x86_64 | [**Download Linux**]($download/$package-linux-x86_64.tar.gz) | Extract and run ./install.sh / Giải nén và chạy ./install.sh |
 
           [Installation guide]($docs/starter/docs/install.md) · [Hướng dẫn tiếng Việt]($docs/README.vi.md#bắt-đầu)
 
           <details>
-          <summary>Portable packages and source / Bản portable và mã nguồn</summary>
+          <summary>Source / Mã nguồn</summary>
 
-          - [Windows portable ZIP]($download/$package-windows-x86_64.zip)
-          - [macOS app ZIP]($download/$package-macos-universal.zip)
           - [Source archive (starter/)]($download/$package-source.tar.gz)
           - Qt $QT_VERSION source: [QtBase]($download/qtbase-everywhere-src-$QT_VERSION.tar.xz), [QtSvg]($download/qtsvg-everywhere-src-$QT_VERSION.tar.xz), [QtImageFormats]($download/qtimageformats-everywhere-src-$QT_VERSION.tar.xz) · [SHA-256 checksums]($download/qt-source-SHA256SUMS.txt)
 
           </details>
 
-          The app downloads the \`app\`, \`runtime\`, \`artwork-*\` and \`components.json\` assets below automatically when updating. For installation, use the links above.
-          Ứng dụng tự tải các tệp \`app\`, \`runtime\`, \`artwork-*\` và \`components.json\` bên dưới khi cập nhật. Để cài đặt, dùng các liên kết phía trên.
+          The app uses \`components.json\` to download changed components automatically when updating. For installation, use the links above.
+          Ứng dụng dùng \`components.json\` để tự tải các thành phần đã thay đổi khi cập nhật. Để cài đặt, dùng các liên kết phía trên.
           EOF
       - uses: actions/download-artifact@v4
         with:
@@ -358,5 +370,4 @@ jobs:
             qt-source-SHA256SUMS.txt
             *-components.json
             *.zip
-            *.dmg
             *-setup.exe

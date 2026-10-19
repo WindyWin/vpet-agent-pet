@@ -1,4 +1,5 @@
 #include "interactions/service.h"
+#include <cmath>
 #include <QDateTime>
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -511,7 +512,7 @@ void Service::onSnapshot(int connection, const QJsonObject &frame) {
     const auto number = [&](const char *name, qint64 &out) {
         const auto v = frame.value(name);
         if (v.isUndefined() || v.isNull()) return true;
-        if (!v.isDouble()) return false;
+        if (!v.isDouble() || !(v.toDouble() >= -9007199254740992.0 && v.toDouble() <= 9007199254740992.0 && v.toDouble() == std::trunc(v.toDouble()))) return false;
         out = qint64(v.toDouble());
         return true;
     };

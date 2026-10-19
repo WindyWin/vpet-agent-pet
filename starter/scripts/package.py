@@ -17,6 +17,7 @@ import subprocess
 import tarfile
 
 from qt_licenses import qt_notices
+from release_blobs import BLOB_BASE, blob_name
 
 ROOT = Path(__file__).resolve().parents[1]
 QMAKE = None
@@ -81,13 +82,13 @@ def write_components(output, version, architecture):
         component = "app"
         if relative in ("share/agent-pet/artwork.rcc", "share/agent-pet/THIRD_PARTY_NOTICES.md") or relative.startswith("share/agent-pet/licenses/"):
             component = "artwork"
-        elif relative.startswith(("lib/", "plugins/", "share/agent-pet/runtime-licenses/")):
+        elif relative != "share/agent-pet/runtime-licenses/qt/SOURCES.txt" and relative.startswith(("lib/", "plugins/", "share/agent-pet/runtime-licenses/")):
             component = "runtime"
         if re.fullmatch(r"share/agent-pet/artwork-[0-9a-f]{64}\.rcc", relative):
             component = path.stem
         groups.setdefault(component, []).append(path)
     base = f"agent-pet-{version}-linux-{architecture}"
-    manifest = {"format": 2 if any(name.startswith("artwork-") for name in groups) else 1, "version": version, "architecture": architecture, "components": []}
+    manifest = {"format": 3, "version": version, "architecture": architecture, "components": []}
 
     def pack(name, paths):
         archive_path = output.parent / f"{base}-{name}.tar.gz"
@@ -104,8 +105,18 @@ def write_components(output, version, architecture):
                         archive.addfile(entry, content)
                     files.append({"path": relative, "size": entry.size, "executable": executable,
                                   "digest": "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()})
+        digest = "sha256:" + hashlib.sha256(archive_path.read_bytes()).hexdigest()
+        if name != "app":
+            blobs = output.parent / "blobs"
+            blobs.mkdir(exist_ok=True)
+            target = blobs / blob_name(digest)
+            archive_path.replace(target)
+            archive_path = target
+            url = BLOB_BASE + archive_path.name
+        else:
+            url = f"https://github.com/WindyWin/vpet-agent-pet/releases/download/v{version}/{archive_path.name}"
         return {"name": name, "archive": archive_path.name, "size": archive_path.stat().st_size, "files": files,
-                "digest": "sha256:" + hashlib.sha256(archive_path.read_bytes()).hexdigest()}
+                "digest": digest, "url": url}
 
     # zlib and hashlib release the GIL, so threads compress in parallel; map keeps the manifest order.
     with ThreadPoolExecutor() as pool:

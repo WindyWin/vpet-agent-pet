@@ -101,7 +101,7 @@ private slots:
         QVERIFY((pump(), seen("prompt")));
         const auto prompt = line("prompt").value("prompt").toObject();
         QCOMPARE(prompt.value("text").toString(), QString("now run them"));
-        QCOMPARE(prompt.value("id").toString(), QString("msg_apet_cmdfollow"));
+        QCOMPARE(prompt.value("id").toString(), QString("msg_apet_07931ed63e32591180e0e616b5dcff2a54909233"));
         QVERIFY(!service.find(k)->ready); // Busy again.
         QCOMPARE(service.submit(followUp(k, "cmd-follow", "now run them")).outcome, Outcome::Accepted); // Known outcome.
 

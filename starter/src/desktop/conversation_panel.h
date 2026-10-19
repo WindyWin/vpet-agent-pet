@@ -92,6 +92,7 @@ private:
     interactions::Service &service_;
     int observer_ = 0;
     interactions::ConversationKey current_;
+    QString sendingSlot_; // The draft slot of the command in flight.
     QString sending_;     // Command ID awaiting its result.
     QString shownSlot_;   // Which draft the composer currently holds, so a refresh never overwrites typing.
     QString bodySignature_, requestSignature_, activeRequest_;

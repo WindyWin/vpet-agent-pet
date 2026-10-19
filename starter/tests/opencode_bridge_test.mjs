@@ -65,7 +65,8 @@ const start = async () => {
 beforeEach(async () => {
   dir = fs.mkdtempSync(path.join(os.tmpdir(), "bridge-"));
   oc = await new FakeOpenCode().listen();
-  pet = await new FakePet().listen(path.join(dir, "i.sock"));
+  const socketPath = process.platform === "win32" ? `\\\\.\\pipe\\agent-pet-bridge-test-${path.basename(dir)}` : path.join(dir, "i.sock");
+  pet = await new FakePet().listen(socketPath);
   logs = [];
 });
 afterEach(async () => {
@@ -335,7 +336,7 @@ describe("commands", () => {
     assert.equal(result.outcome, "accepted");
     assert.equal(oc.prompts.length, 1);
     assert.equal(oc.prompts[0].text, "now add tests");
-    assert.match(oc.prompts[0].id, /^msg_apet_cmd1$/);
+    assert.match(oc.prompts[0].id, /^msg_apet_[0-9a-f]{40}$/);
     assert.equal(result.receipt, oc.prompts[0].id);
     pet.send(followUp("cmd-1", keyOf(s), "now add tests")); // The same command again.
     await until(() => pet.of("command_result").length === 2, "second result");

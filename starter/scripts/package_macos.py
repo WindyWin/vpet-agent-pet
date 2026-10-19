@@ -129,6 +129,7 @@ def main():
     parser.add_argument("--build", type=Path, default=ROOT / "build")
     parser.add_argument("--output", type=Path, help="Directory for the zip and dmg (default: dist)")
     parser.add_argument("--universal", action="store_true", help="Require arm64 and x86_64 in every binary")
+    parser.add_argument("--dmg", action="store_true", help="Also build and validate the optional disk image")
     args = parser.parse_args()
     build = args.build.resolve()
     version = project_version(build)
@@ -144,7 +145,7 @@ def main():
     if not qmake:
         parser.error("Missing build tool: qmake (or set QMAKE)")
     deploy = Path(run(qmake, "-query", "QT_INSTALL_BINS")) / "macdeployqt"
-    for tool in ("codesign", "ditto", "hdiutil", "otool", "install_name_tool", "lipo", "sips", "iconutil", "file"):
+    for tool in ("codesign", "ditto", "otool", "install_name_tool", "lipo", "sips", "iconutil", "file", *(("hdiutil",) if args.dmg else ())):
         if not shutil.which(tool):
             parser.error(f"Missing macOS tool: {tool}")
     if not deploy.exists():
@@ -198,10 +199,12 @@ def main():
     shutil.copy2(ROOT / "packaging/macos/INSTALL.txt", stage / "INSTALL.txt")
     # ditto keeps the bundle's symlinks and extended attributes, as Finder's Archive Utility expects.
     subprocess.run(["ditto", "-c", "-k", "--sequesterRsrc", "--keepParent", str(stage), str(archive)], check=True)
-    make_dmg(stage, image)
-    check_dmg(image, version)
+    if args.dmg:
+        make_dmg(stage, image)
+        check_dmg(image, version)
     print(archive)
-    print(image)
+    if args.dmg:
+        print(image)
 
 
 if __name__ == "__main__":

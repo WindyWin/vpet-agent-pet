@@ -6,6 +6,8 @@
 #include <QWidget>
 
 namespace pet {
+namespace quota { class Service; }
+class QuotaPanel;
 // Small popup beside the pet listing running sessions, most urgent first. Clicking
 // a row brings that session's terminal or editor forward. Closes on outside click or Esc.
 class SessionList : public QWidget {
@@ -14,6 +16,7 @@ public:
     static constexpr int maxRows = 10;
     explicit SessionList(QWidget *parent = nullptr);
     void present(const QVector<SessionRow> &rows);
+    void setQuotaService(quota::Service *service);
     void place(const QRect &pet, const QVector<QRect> &screens, const QVector<QRect> &avoid = {});
     int rowCount() const { return buttons_.size(); }
     QString rowText(int row) const { return buttons_.value(row) ? buttons_[row]->text() : QString(); }
@@ -21,6 +24,7 @@ public:
     static QColor stateColor(const QString &state);
 signals:
     void focusRequested(const QString &session);
+    void sizeChanged();
 protected:
     void changeEvent(QEvent *) override;
     void paintEvent(QPaintEvent *) override;
@@ -28,6 +32,7 @@ private:
     void retranslate();
     QVBoxLayout *rows_;
     QLabel *header_, *empty_, *overflow_;
+    QuotaPanel *quota_;
     QVector<QPushButton *> buttons_;
     QString shown_;
     bool presented_ = false;

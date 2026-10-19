@@ -2,6 +2,7 @@
 #include "interactions/frame.h"
 #include <QDir>
 #include <QFile>
+#include <QFileInfo>
 #include <QLocalServer>
 #include <QLocalSocket>
 #include <QLockFile>
@@ -30,8 +31,13 @@ QString privateDirectory() {
     auto root = QStandardPaths::writableLocation(QStandardPaths::RuntimeLocation);
     if (root.isEmpty()) root = QDir::tempPath();
     const auto directory = root + "/agent-pet-" + userTag();
-    QDir().mkpath(directory);
-    QFile::setPermissions(directory, QFile::ReadOwner | QFile::WriteOwner | QFile::ExeOwner);
+    const auto owner = QFile::ReadOwner | QFile::WriteOwner | QFile::ExeOwner;
+    // Fail closed: a directory someone else pre-created in a shared temp location must never host the socket.
+    if (!QDir().mkpath(directory) || !QFile::setPermissions(directory, owner)) return {};
+    const QFileInfo info(directory);
+#ifdef Q_OS_UNIX
+    if (!info.isDir() || info.ownerId() != getuid() || (info.permissions() & ~(owner | QFile::ReadUser | QFile::WriteUser | QFile::ExeUser))) return {};
+#endif
     return directory;
 }
 QString safeName(const QString &name) {
@@ -53,7 +59,9 @@ public:
 
     bool start(QString &error) override {
         // The lock, not the socket, is what makes one process the owner: a stale socket file is replaced.
-        lock_ = std::make_unique<QLockFile>(privateDirectory() + "/" + safeName(name_.isEmpty() ? "interactions" : name_) + ".lock");
+        const auto directory = privateDirectory();
+        if (directory.isEmpty()) { error = "Cannot secure the interaction directory"; return false; }
+        lock_ = std::make_unique<QLockFile>(directory + "/" + safeName(name_.isEmpty() ? "interactions" : name_) + ".lock");
         lock_->setStaleLockTime(0);
         if (!lock_->tryLock(0)) { error = "Another Agent Pet interaction service is running"; return false; }
         server_ = new QLocalServer(this);
@@ -71,7 +79,11 @@ public:
         if (it == connections_.end()) return false;
         if (payload.isEmpty() || payload.size() > interactions::Limits::frameBytes) return false;
         auto *socket = it->second.socket;
-        if (socket->bytesToWrite() > maxQueuedBytes) { drop(id, true); return false; }
+        if (socket->bytesToWrite() > maxQueuedBytes) {
+            // Torn down outside the caller: the service may be inside sendTo() on this connection.
+            QMetaObject::invokeMethod(this, [this, id] { drop(id, true); }, Qt::QueuedConnection);
+            return false;
+        }
         socket->write(interactions::encodeFrame(payload));
         return true;
     }
@@ -132,7 +144,8 @@ private:
 
 QString interactionEndpoint(const QString &name) {
 #ifdef Q_OS_UNIX
-    return privateDirectory() + "/" + safeName(name.isEmpty() ? "interactions" : name) + ".sock";
+    const auto directory = privateDirectory();
+    return directory.isEmpty() ? QString() : directory + "/" + safeName(name.isEmpty() ? "interactions" : name) + ".sock";
 #else
     return "agent-pet-" + userTag() + "-" + safeName(name.isEmpty() ? "interactions" : name);
 #endif

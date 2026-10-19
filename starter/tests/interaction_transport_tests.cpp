@@ -185,7 +185,7 @@ private slots:
         bool refused = false;
         for (int i = 0; i < 400 && !refused; ++i) refused = !transport->send(id, payload);
         QVERIFY(refused);
-        QVERIFY(gone);
+        QTRY_VERIFY(gone);
         QVERIFY(!transport->send(id, "{}")); // The connection is closed.
         QVERIFY(!transport->send(12345, "{}"));
         QVERIFY(!transport->send(id, QByteArray(Limits::frameBytes + 1, 'x'))); // Never sends an oversized frame.

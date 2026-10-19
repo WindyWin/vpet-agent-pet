@@ -2,6 +2,8 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 
+#include <cmath>
+
 namespace pet::interactions {
 
 namespace {
@@ -23,13 +25,15 @@ bool str(const QJsonObject &o, const char *name, QString &out, QString &error, b
     if (required && out.isEmpty()) { error = QString("%1 is empty").arg(name); return false; }
     return true;
 }
+// Every integer up to 2^53 is exact in a double; checking first keeps the cast defined for hostile input.
+bool integral(double d) { return d >= -9007199254740992.0 && d <= 9007199254740992.0 && d == std::trunc(d); }
 bool whole(const QJsonObject &o, const char *name, qint64 &out, QString &error, bool required = true) {
     const auto v = o.value(name);
     if (v.isUndefined() || v.isNull()) {
         if (required) error = QString("missing %1").arg(name);
         return !required;
     }
-    if (!v.isDouble() || v.toDouble() != double(qint64(v.toDouble()))) { error = QString("%1 must be an integer").arg(name); return false; }
+    if (!v.isDouble() || !integral(v.toDouble())) { error = QString("%1 must be an integer").arg(name); return false; }
     out = qint64(v.toDouble());
     return true;
 }

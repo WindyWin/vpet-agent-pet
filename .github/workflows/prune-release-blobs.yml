@@ -1,0 +1,35 @@
+name: Prune shared release components
+on:
+  workflow_dispatch:
+    inputs:
+      keep:
+        description: Number of recent stable releases to retain (minimum 2)
+        default: '3'
+        required: true
+      apply:
+        description: Delete unreferenced blobs older than 14 days (otherwise dry run)
+        type: boolean
+        default: false
+permissions:
+  contents: read
+jobs:
+  prune:
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    concurrency:
+      group: release-blob-store
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Review retention or prune
+        env:
+          GH_TOKEN: ${{ github.token }}
+          KEEP: ${{ inputs.keep }}
+          APPLY: ${{ inputs.apply }}
+        run: |
+          args=()
+          if [[ "$APPLY" == true ]]; then args+=(--apply); fi
+          python3 starter/scripts/release_blobs.py prune --keep "$KEEP" "${args[@]}"

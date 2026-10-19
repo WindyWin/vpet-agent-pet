@@ -112,7 +112,7 @@ qt_add_library(pet_ui STATIC
     src/desktop/pet_window.cpp src/desktop/overlay.cpp
     src/desktop/pet_picker.cpp src/desktop/pet_downloader.cpp src/desktop/plugin_list.cpp
     src/desktop/touch.cpp src/desktop/wander.cpp src/desktop/wellness.cpp src/desktop/snooze.cpp src/desktop/alert_bubble.cpp src/desktop/monitor.cpp
-    src/desktop/session_list.cpp src/updates/controller.cpp
+    src/desktop/session_list.cpp src/desktop/quota_panel.cpp src/quota/service.cpp src/updates/controller.cpp
     src/desktop/conversation_text.cpp src/desktop/conversation_bubbles.cpp src/desktop/conversation_panel.cpp src/desktop/conversations.cpp)
 target_include_directories(pet_ui PUBLIC src "${CMAKE_CURRENT_BINARY_DIR}/generated")
 target_link_libraries(pet_ui PUBLIC Qt6::Widgets pet_animation pet_events pet_updates pet_i18n pet_interactions Qt6::Network PRIVATE pet_native)
@@ -242,6 +242,7 @@ endif() # Application
 include(CTest)
 if(BUILD_TESTING)
     find_package(Python3 COMPONENTS Interpreter REQUIRED)
+    add_test(NAME release-blobs COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/scripts/check_release_blobs.py)
     add_test(NAME qt-licenses COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/scripts/check_qt_licenses.py)
     find_package(Qt6 REQUIRED COMPONENTS Test)
     qt_add_executable(provider-tests tests/provider_tests.cpp)
@@ -307,6 +308,10 @@ if(BUILD_TESTING)
         add_dependencies(event-tests ${pet_cli_target})
         qt_add_executable(prototype-tests tests/prototype_tests.cpp)
         target_link_libraries(prototype-tests PRIVATE pet_ui Qt6::Test)
+        qt_add_executable(quota-tests tests/quota_tests.cpp)
+        target_link_libraries(quota-tests PRIVATE pet_ui Qt6::Test)
+        add_test(NAME quota COMMAND quota-tests)
+        set_tests_properties(quota PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
         # The slowest suite runs as shards, so ctest -j spreads it over the cores (prototype-1 … prototype-N).
         set(AGENT_PET_PROTOTYPE_SHARDS 4 CACHE STRING "Parallel CTest shards for prototype-tests")
         foreach(shard RANGE 1 ${AGENT_PET_PROTOTYPE_SHARDS})

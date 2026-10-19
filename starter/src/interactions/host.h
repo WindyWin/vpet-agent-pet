@@ -1,5 +1,6 @@
 #pragma once
 #include <QObject>
+#include <QSet>
 #include <QTimer>
 #include <memory>
 #include "interactions/service.h"
@@ -12,11 +13,13 @@ namespace pet::interactions {
 class Host : public QObject {
 public:
     Host(Service &service, std::unique_ptr<platform::InteractionTransport> transport, QObject *parent = nullptr);
+    ~Host() override;
     bool start(QString &error);
 private:
     Service &service_;
     std::unique_ptr<platform::InteractionTransport> transport_;
     QTimer timer_;
+    QSet<int> attached_;
 };
 
 }
