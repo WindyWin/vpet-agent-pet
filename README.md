@@ -17,7 +17,7 @@ It sits on your screen, thinks when your agent thinks, gets busy when it runs to
 
 - **Know at a glance** what every agent session is doing.
 - **Never miss a request**: a small note pops up when an agent waits for you, and one click takes you to the right terminal.
-- **A pet, not just a status light**: drag it, pet it, throw it, watch it wander and nap.
+- **A pet as well as a status light**: drag it, pet it, throw it, watch it wander and nap.
 - **Looks after you**: reminders to rest your eyes, drink water and eat lunch, a Break Buddy that exercises with you, and a recap of your day.
 - **Private**: it only learns *what kind* of thing is happening, never your prompts, code or commands.
 
