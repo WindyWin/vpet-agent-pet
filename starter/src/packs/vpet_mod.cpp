@@ -90,7 +90,11 @@ QVector<Frame> frames(const QStringList &paths) {
         bool okIndex, okDuration; const auto index = match.captured(1).toLongLong(&okIndex), duration = match.captured(2).toLongLong(&okDuration);
         require(okIndex && okDuration && duration > 0 && duration <= 2147483647, "Invalid frame index or duration: " + name);
         const auto prefix = name.left(match.capturedStart()); const auto bytes = read(path, 4 * MiB);
-        QImageReader reader(path, "png"); const auto size = reader.size();
+        QImageReader reader(path, "png");
+        // Only PNG is accepted. Avoid probing unrelated native image plugins
+        // when conversion runs on a worker thread.
+        reader.setAutoDetectImageFormat(false);
+        const auto size = reader.size();
         require(size.width() > 0 && size.height() > 0 && size.width() <= 2048 && size.height() <= 2048, "PNG dimensions must be 1–2048 pixels: " + name);
         const auto hash = QCryptographicHash::hash(bytes, QCryptographicHash::Sha256); const auto key = qMakePair(prefix, index);
         require(!pictures.contains(key) || pictures[key] == hash, "Conflicting duplicate frame index: " + name);
@@ -199,7 +203,9 @@ bool convertVPetMod(const QString &input, const QString &output, const VPetOptio
         auto states = catalog["states"].toObject(); auto moves = catalog["moves"].toObject(); QJsonArray kept;
         for (const auto &move : moves["list"].toArray()) { bool exact = true; for (const auto &path : states[move.toObject()["state"].toString()].toArray()) if (reasons[path.toString()] != "exact") exact = false; if (exact) kept.append(move); }
         if (kept.isEmpty()) catalog.remove("moves"); else { moves["list"] = kept; catalog["moves"] = moves; }
-        QImageReader reader(preview, "png"); const auto size = reader.size();
+        QImageReader reader(preview, "png");
+        reader.setAutoDetectImageFormat(false);
+        const auto size = reader.size();
         if (size.width() > 512 || size.height() > 512) { auto image = reader.read(); require(!image.isNull() && image.scaled(512, 512, Qt::KeepAspectRatio, Qt::SmoothTransformation).save(output + "/preview.png", "PNG"), "Cannot resize preview."); }
         else write(output + "/preview.png", read(preview, 4 * MiB));
         write(output + "/licenses/TERMS.txt", terms.toUtf8());
