@@ -532,3 +532,11 @@ The same run's macOS check reports that the hosted runner lost communication
 with GitHub during testing; it has no downloadable test log. That infrastructure
 failure does not establish a separate code defect. A fresh three-platform run
 is needed to validate the repaired main commit.
+
+Run `39212886083` passed Linux and Windows tests, but macOS again stopped
+advancing during the combined Test step beyond its per-test timeout. Run macOS
+tests serially in separate core/native, desktop UI and pack-tool steps, each
+with a ten-minute step limit, verbose output and its own retained log. This is
+a runner-load mitigation and diagnostic change, not evidence of a specific
+macOS code defect. A check against CTest's enumerated suites confirms every
+test belongs to exactly one group.

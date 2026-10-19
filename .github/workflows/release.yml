@@ -164,10 +164,19 @@ jobs:
             -DAGENT_PET_REVISION="${GITHUB_SHA::12}"
           cmake --build build
 
-      - name: Test
-        # Bound simultaneous artwork decoding on hosted macOS runners and turn
-        # a stalled test into a named failure with diagnostics.
-        run: ctest --test-dir build --output-on-failure --timeout 300 -j2 --output-log build/ctest.log
+      # Keep artwork-heavy suites serial on hosted runners. Separate steps show
+      # which group was running even if the runner disconnects before log upload.
+      - name: Test core and native services
+        timeout-minutes: 10
+        run: ctest --test-dir build --verbose --timeout 300 -j1 -E '^(quota|prototype-[0-9]+|pets|plugins|pack-.*|steam-workshop|vpet-converter|pet-scaffold)$' --output-log build/ctest-core.log
+
+      - name: Test desktop UI
+        timeout-minutes: 10
+        run: ctest --test-dir build --verbose --timeout 300 -j1 -R '^(quota|prototype-[0-9]+|pets|plugins)$' --output-log build/ctest-ui.log
+
+      - name: Test pack tools
+        timeout-minutes: 10
+        run: ctest --test-dir build --verbose --timeout 300 -j1 -R '^(pack-.*|steam-workshop|vpet-converter|pet-scaffold)$' --output-log build/ctest-packs.log
 
       - name: Upload macOS test diagnostics
         if: always()
@@ -175,7 +184,7 @@ jobs:
         with:
           name: agent-pet-macos-test-logs
           path: |
-            starter/build/ctest.log
+            starter/build/ctest-*.log
             starter/build/Testing/Temporary/LastTest.log
             starter/build/Testing/Temporary/LastTestsFailed.log
           if-no-files-found: ignore
