@@ -81,6 +81,7 @@ export class WsDecoder {
         offset = 10;
       }
       if (len > this.limit) throw new Error("websocket frame too large");
+      if (op >= 8 && (!fin || len > 125)) throw new Error("invalid websocket control frame");
       const total = offset + (masked ? 4 : 0) + len;
       if (buf.length < total) { this.#need = total; break; }
       let payload = buf.subarray(offset + (masked ? 4 : 0), total);
@@ -90,7 +91,6 @@ export class WsDecoder {
       }
       buf = buf.subarray(total);
       if (op >= 8) {
-        if (!fin || len > 125) throw new Error("invalid websocket control frame");
         out.push({ opcode: op, payload });
         continue;
       }
@@ -300,7 +300,7 @@ export const requestFromQuestions = (params) => {
 // The Codex connection is attached with codexUp(connection) and removed with codexLost(); between the two
 // the bridge keeps what it knows and refuses commands that would need the daemon.
 export function createBridge({ send, log = () => {}, tail = TAIL, maxTracked = MAX_TRACKED, generation = () => randomUUID(),
-                              answerWaitMs = 5000 }) {
+                              answerWaitMs = 5000, requestMs = 20000 }) {
   const conversations = new Map(); // threadId → state
   const chains = new Map();
   const ensuring = new Map();
@@ -669,7 +669,7 @@ export function createBridge({ send, log = () => {}, tail = TAIL, maxTracked = M
     remember(c.commands, frame.command_id, { outcome: "unknown", clientId, epoch: rpcEpoch }, 100);
     let response;
     try {
-      response = await call("turn/start", { threadId: c.id, input: [{ type: "text", text: frame.payload?.text ?? "" }], clientUserMessageId: clientId });
+      response = await call("turn/start", { threadId: c.id, input: [{ type: "text", text: frame.payload?.text ?? "" }], clientUserMessageId: clientId }, requestMs);
     } catch (error) {
       if (error.name === "RpcError" && typeof error.code === "number") {
         c.commands.delete(frame.command_id);
