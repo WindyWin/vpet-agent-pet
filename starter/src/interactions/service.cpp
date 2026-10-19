@@ -437,6 +437,14 @@ void Service::endConversation(Conversation &c) {
     changed(c);
 }
 
+bool Service::release(const ConversationKey &key) {
+    auto *c = mutableFind(key);
+    if (!c || c->link == Conversation::Link::Ended) return false;
+    if (c->connection >= 0) sendTo(c->connection, {{"version", protocolVersion}, {"type", "release"}, {"conversation", key.toJson()}});
+    endConversation(*c);
+    return true;
+}
+
 void Service::onEnded(int connection, const QJsonObject &frame) {
     QString err;
     auto *c = owned(connection, frame, err);

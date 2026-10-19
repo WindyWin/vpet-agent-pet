@@ -9,6 +9,7 @@ import path from "node:path";
 import { after, afterEach, beforeEach, describe, test } from "node:test";
 import { FakeOpenCode } from "./fake_opencode.mjs";
 import { FrameDecoder, encodeFrame, fitText, openCodeApi, requestFromForm, run, visibleMessages } from "../src/providers/opencode-bridge.mjs";
+import { installTui, uninstallTui } from "../src/providers/opencode-presence.mjs";
 
 const until = async (predicate, what, ms = 3000) => {
   const end = Date.now() + ms;
@@ -52,13 +53,14 @@ class FakePet {
   async close() { this.drop(); await new Promise((r) => { this.server.close(r); }); }
 }
 
-let dir, oc, pet, controller, running, logs;
+let dir, oc, pet, controller, running, logs, presencePath;
 const start = async () => {
   controller = new AbortController();
   running = run({
     endpoint: pet.path, signal: controller.signal, retryMs: 40, log: (m) => logs.push(m),
     service: { url: oc.url, headers: oc.headers() },
-    bridgeOptions: { now: () => oc.now(), recentMs: 60_000 }, // The fake's clock is its own.
+    bridgeOptions: { now: () => oc.now(), recentMs: 60_000, goneMs: 80 }, // The fake's clock is its own.
+    presence: presencePath,
   });
 };
 
@@ -68,8 +70,10 @@ beforeEach(async () => {
   const socketPath = process.platform === "win32" ? `\\\\.\\pipe\\agent-pet-bridge-test-${path.basename(dir)}` : path.join(dir, "i.sock");
   pet = await new FakePet().listen(socketPath);
   logs = [];
+  presencePath = process.platform === "win32" ? `\\\\.\\pipe\\agent-pet-presence-test-${path.basename(dir)}` : path.join(dir, "p.sock");
 });
 afterEach(async () => {
+  for (const socket of terminals.splice(0)) socket.destroy();
   controller?.abort();
   await running?.catch(() => {});
   await pet.close();
@@ -233,6 +237,17 @@ describe("live events", () => {
     await start();
     await until(() => pet.last("snapshot"), "snapshot");
     oc.remove(s);
+    const ended = await until(() => pet.last("conversation_ended"), "ended");
+    assert.deepEqual(ended.conversation, keyOf(s));
+  });
+
+  test("a session deleted while the event stream was down ends its conversation on reconcile", async () => {
+    const s = oc.session();
+    oc.addUser(s, "x");
+    await start();
+    await until(() => pet.last("snapshot"), "snapshot");
+    oc.sessions.delete(s.id); // No event: the stream missed it.
+    oc.dropStreams();
     const ended = await until(() => pet.last("conversation_ended"), "ended");
     assert.deepEqual(ended.conversation, keyOf(s));
   });
@@ -425,3 +440,142 @@ describe("OpenCode API client", () => {
 });
 
 after(() => {});
+
+// A terminal as the plugin behaves: one socket per terminal, one JSON line per change.
+const terminals = [];
+const terminal = async () => {
+  await until(() => fs.existsSync(presencePath) || process.platform === "win32", "presence socket");
+  const socket = net.connect(presencePath);
+  await new Promise((resolve, reject) => { socket.once("connect", resolve); socket.once("error", reject); });
+  terminals.push(socket);
+  return { show: (session) => socket.write(JSON.stringify({ type: "view", session }) + "\n"), close: () => socket.destroy() };
+};
+const epochOf = (frame) => frame.conversation.conversation_epoch;
+
+describe("terminals", () => {
+  test("a session a terminal shows is tracked, and ends when the terminal closes", async () => {
+    const s = oc.session();
+    oc.addUser(s, "hello");
+    s.created = 1; // Long quiet: only the terminal makes it worth tracking.
+    await start();
+    const t = await terminal();
+    t.show(s.id);
+    const opened = await until(() => pet.last("conversation_open"), "open");
+    assert.equal(opened.conversation.session_id, s.id);
+    t.close();
+    const ended = await until(() => pet.last("conversation_ended"), "ended");
+    assert.deepEqual(ended.conversation, opened.conversation);
+  });
+
+  test("another terminal showing it keeps it; changing session lets the old one go", async () => {
+    const a = oc.session(); const b = oc.session();
+    oc.addUser(a, "a"); oc.addUser(b, "b");
+    await start();
+    const t1 = await terminal(); const t2 = await terminal();
+    t1.show(a.id); t2.show(a.id);
+    await until(() => pet.of("conversation_open").some((f) => f.conversation.session_id === a.id), "open a");
+    t1.close();
+    await new Promise((r) => setTimeout(r, 250));
+    assert.equal(pet.of("conversation_ended").length, 0); // t2 still shows it.
+    t2.show(b.id);
+    const ended = await until(() => pet.last("conversation_ended"), "ended a");
+    assert.equal(ended.conversation.session_id, a.id);
+    t2.close();
+  });
+
+  test("a sub-agent view counts as its root", async () => {
+    const root = oc.session(); const child = oc.session("/work/api-web", root.id);
+    oc.addUser(root, "go");
+    await start();
+    const t = await terminal();
+    t.show(child.id);
+    const opened = await until(() => pet.last("conversation_open"), "open");
+    assert.equal(opened.conversation.session_id, root.id);
+    t.show(null);
+    await until(() => pet.last("conversation_ended"), "ended");
+  });
+
+  test("showing it again after it ended opens a new conversation", async () => {
+    const s = oc.session();
+    oc.addUser(s, "hello");
+    await start();
+    const t = await terminal();
+    t.show(s.id);
+    const first = await until(() => pet.last("conversation_open"), "open");
+    t.show(null);
+    await until(() => pet.last("conversation_ended"), "ended");
+    t.show(s.id);
+    await until(() => pet.of("conversation_open").length === 2, "open again");
+    assert.notEqual(epochOf(pet.of("conversation_open")[1]), epochOf(first));
+    t.close();
+  });
+
+  test("a session nobody ever showed is left to the quiet-time rule", async () => {
+    const s = oc.session();
+    oc.addUser(s, "hello");
+    await start();
+    await until(() => pet.last("snapshot"), "snapshot");
+    await new Promise((r) => setTimeout(r, 250));
+    assert.equal(pet.of("conversation_ended").length, 0);
+  });
+
+  test("a release from the pet stops tracking until a new prompt or a terminal brings it back", async () => {
+    const s = oc.session();
+    oc.addUser(s, "hello");
+    await start();
+    const open = await until(() => pet.last("snapshot"), "snapshot");
+    pet.send({ type: "release", conversation: open.conversation });
+    await new Promise((r) => setTimeout(r, 100));
+    const before = pet.of("conversation_open").length + pet.of("snapshot").length;
+    oc.start(s); oc.finish(s); oc.say(s, "still working"); // Activity alone does not bring it back.
+    await new Promise((r) => setTimeout(r, 200));
+    assert.equal(pet.of("conversation_open").length + pet.of("snapshot").length, before);
+    assert.equal(pet.of("conversation_ended").length, 0); // The pet already ended it.
+    oc.emit("session.inbox.enqueued", { sessionID: s.id });
+    const again = await until(() => pet.of("conversation_open").at(-1) && pet.of("conversation_open").length > 0 && pet.of("conversation_open").at(-1).conversation.conversation_epoch !== open.conversation.conversation_epoch ? pet.of("conversation_open").at(-1) : null, "revived");
+    assert.equal(again.conversation.session_id, s.id);
+  });
+
+  test("an 'ended' error for a conversation lets it go without announcing it", async () => {
+    const s = oc.session();
+    oc.addUser(s, "hello");
+    await start();
+    const open = await until(() => pet.last("snapshot"), "snapshot");
+    pet.send({ type: "error", code: "ended", message: "conversation has ended", conversation: open.conversation });
+    await new Promise((r) => setTimeout(r, 100));
+    oc.say(s, "more");
+    await new Promise((r) => setTimeout(r, 200));
+    assert.equal(pet.of("conversation_ended").length, 0);
+  });
+});
+
+describe("installing the terminal plugin", () => {
+  test("adds one plugin entry, keeps foreign keys and entries, and removes only its own", () => {
+    const cli = path.join(dir, "cli.json");
+    fs.writeFileSync(cli, JSON.stringify({ theme: { name: "x" }, plugins: ["./herdr-opencode"] }));
+    installTui(dir);
+    installTui(dir); // Again: no duplicate.
+    let config = JSON.parse(fs.readFileSync(cli, "utf8"));
+    assert.deepEqual(config.plugins, ["./herdr-opencode", "./agent-pet-opencode"]);
+    assert.deepEqual(config.theme, { name: "x" });
+    assert.ok(fs.readFileSync(path.join(dir, "agent-pet-opencode", "tui.js"), "utf8").startsWith("// installed by agent-pet"));
+    uninstallTui(dir);
+    config = JSON.parse(fs.readFileSync(cli, "utf8"));
+    assert.deepEqual(config.plugins, ["./herdr-opencode"]);
+    assert.ok(!fs.existsSync(path.join(dir, "agent-pet-opencode")));
+  });
+
+  test("creates cli.json when absent, and refuses a file that is not plain JSON or not ours", () => {
+    installTui(dir);
+    assert.deepEqual(JSON.parse(fs.readFileSync(path.join(dir, "cli.json"), "utf8")).plugins, ["./agent-pet-opencode"]);
+    uninstallTui(dir);
+    assert.deepEqual(JSON.parse(fs.readFileSync(path.join(dir, "cli.json"), "utf8")), { $schema: "https://opencode.ai/v2/cli.json" });
+    fs.writeFileSync(path.join(dir, "cli.json"), "{ // comment\n}");
+    assert.throws(() => installTui(dir));
+    fs.writeFileSync(path.join(dir, "cli.json"), "{}");
+    fs.mkdirSync(path.join(dir, "agent-pet-opencode"));
+    fs.writeFileSync(path.join(dir, "agent-pet-opencode", "tui.js"), "// somebody else's");
+    assert.throws(() => installTui(dir), /not an Agent Pet file/);
+    assert.equal(fs.readFileSync(path.join(dir, "agent-pet-opencode", "tui.js"), "utf8"), "// somebody else's");
+  });
+});

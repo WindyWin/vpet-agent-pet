@@ -5,6 +5,7 @@
 // uses no dependencies beyond Node 20.
 //
 //   node opencode-bridge.mjs [--endpoint <socket path or pipe>] [--opencode-url <url>]
+//   node opencode-bridge.mjs --install-tui | --uninstall-tui [--config-dir <dir>]   (terminal presence plugin)
 //
 // OpenCode is found through its service registration file (OPENCODE_SERVICE_FILE, or the standard state
 // directory); its password is never logged or forwarded.
@@ -13,6 +14,7 @@ import net from "node:net";
 import os from "node:os";
 import path from "node:path";
 import { createHash, randomUUID } from "node:crypto";
+import { installTui, listenPresence, presenceEndpoint, uninstallTui } from "./opencode-presence.mjs";
 
 export const PROVIDER = "opencode";
 export const MAX_FRAME = 64 * 1024;
@@ -110,13 +112,23 @@ const basename = (directory) => (directory ? path.basename(directory.replace(/[\
 //        reply(sessionID, formID, answer) → {status}, prompt(sessionID, body) → {status, body}, sessions(limit) }
 // send(frame) → boolean: false when the Agent Pet link is down (state is rebuilt by snapshot on reconnect).
 export function createBridge({ api, send, log = () => {}, tail = TAIL, scanPages = MAX_PAGES, generation = () => randomUUID(),
-                              now = Date.now, recentSessions = 8, recentMs = 30 * 60 * 1000 }) {
+                              now = Date.now, recentSessions = 8, recentMs = 30 * 60 * 1000, goneMs = 3000 }) {
   const startedAt = now();
   const conversations = new Map(); // sessionID → state
   const chains = new Map();
   const ensuring = new Map();
   let linked = false;
   let linkGeneration = generation();
+  // Which terminals show which session (see opencode-presence.mjs). A session a terminal has shown and none
+  // shows any more is over: OpenCode's service keeps it, and says nothing when its terminal closes.
+  const viewers = new Map();  // viewer id → root session ID it shows, or null
+  const watched = new Set();  // sessions some terminal has shown
+  const leaving = new Map();  // session ID → timer for the grace before it ends
+  // Sessions the pet has let go of (detached by the user, or ended by the terminal closing). They come back
+  // only when a terminal shows them again or the user sends a new prompt, as a new epoch: an ended
+  // conversation's identity is never reused.
+  const dormant = new Set();
+  const epochs = new Map();   // session ID → epoch suffix of a revived session
 
   const serial = (sessionID, work) => {
     const next = (chains.get(sessionID) ?? Promise.resolve()).then(work).catch((error) => log(`session ${sessionID}: ${error.message}`));
@@ -146,7 +158,7 @@ export function createBridge({ api, send, log = () => {}, tail = TAIL, scanPages
         const info = body?.data ?? body;
         if (!info?.id) return null;
         const c = {
-          id: sessionID, epoch: String(info.time?.created ?? "1"), title: basename(info.location?.directory) || info.title || sessionID,
+          id: sessionID, epoch: String(info.time?.created ?? "1") + (epochs.has(sessionID) ? `.${epochs.get(sessionID)}` : ""), title: basename(info.location?.directory) || info.title || sessionID,
           parentID: info.parentID, running: false, registered: false, ended: false,
           known: new Map(), last: 0, window: [], forms: new Map(), resolved: new Map(), outcomes: new Map(),
         };
@@ -358,9 +370,14 @@ export function createBridge({ api, send, log = () => {}, tail = TAIL, scanPages
     const sessionID = data.sessionID ?? data.form?.sessionID;
     if (!sessionID) return;
     if (type === "session.deleted") {
+      dormant.delete(sessionID); watched.delete(sessionID);
       const c = conversations.get(sessionID);
-      if (c) await serial(sessionID, async () => { c.ended = true; if (c.registered) emit({ type: "conversation_ended", conversation: keyOf(c) }); conversations.delete(sessionID); });
+      if (c) await serial(sessionID, () => finish(c));
       return;
+    }
+    if (dormant.has(sessionID)) {
+      if (type !== "session.inbox.enqueued") return; // Only a new prompt brings it back by itself.
+      revive(sessionID);
     }
     const relevant = type === "form.created" || type === "form.replied" || type === "form.cancelled" || type === "session.text.ended"
       || type === "session.inbox.enqueued" || type.startsWith("session.execution.");
@@ -405,16 +422,46 @@ export function createBridge({ api, send, log = () => {}, tail = TAIL, scanPages
       if (c) await serial(c.id, () => sendSnapshot(c));
     } else if (frame?.type === "command") {
       await execute(frame);
+    } else if (frame?.type === "release") {
+      const c = conversations.get(frame.conversation?.session_id);
+      if (c && c.epoch === frame.conversation?.conversation_epoch) await serial(c.id, () => retire(c, false));
     } else if (frame?.type === "error") {
+      // The service holds this identity as ended (an earlier release, before a restart): let it go.
+      if (frame.code === "ended" && frame.conversation?.session_id) {
+        const c = conversations.get(frame.conversation.session_id);
+        if (c && c.epoch === frame.conversation.conversation_epoch) await serial(c.id, () => retire(c, false));
+      }
       // Never log content: the code and message the service chose are all there is.
       log(`service error ${frame.code}: ${frame.message}${frame.request_id ? ` (request ${frame.request_id})` : ""}`);
     }
+  };
+
+  // The session is gone from OpenCode: its conversation is over, whether the event was seen or only found out.
+  const finish = (c) => {
+    c.ended = true;
+    if (c.registered) emit({ type: "conversation_ended", conversation: keyOf(c) });
+    conversations.delete(c.id);
+  };
+
+  // The pet no longer wants it (the user detached it, or the service says it ended): stop tracking without
+  // announcing anything, and wait for a sign of life.
+  const retire = (c, announce) => {
+    if (announce && c.registered) emit({ type: "conversation_ended", conversation: keyOf(c) });
+    c.ended = true;
+    conversations.delete(c.id);
+    dormant.add(c.id);
+  };
+
+  const revive = (sessionID) => {
+    if (!dormant.delete(sessionID)) return;
+    epochs.set(sessionID, Date.now());
   };
 
   // Everything OpenCode shows as running or waiting on a question is worth tracking from the start.
   const discover = async () => {
     const active = (await api.active())?.data ?? {};
     for (const [id, state] of Object.entries(active)) {
+      if (dormant.has(id)) continue;
       const c = await ensure(id).catch((e) => { log(`discover ${id}: ${e.message}`); return null; });
       if (c) c.running = state?.type === "running" || c.running;
     }
@@ -423,7 +470,7 @@ export function createBridge({ api, send, log = () => {}, tail = TAIL, scanPages
     const sessions = (await api.sessions(30))?.data ?? [];
     let recent = 0;
     for (const s of sessions) {
-      if (conversations.has(s.id) || s.parentID) continue;
+      if (conversations.has(s.id) || s.parentID || dormant.has(s.id)) continue;
       let forms = [];
       try { forms = (await api.forms(s.id))?.data ?? []; } catch { continue; }
       const asking = forms.some((f) => requestFromForm(f));
@@ -450,17 +497,79 @@ export function createBridge({ api, send, log = () => {}, tail = TAIL, scanPages
     }
   };
 
+  // ---- Terminals -----------------------------------------------------------------------------------
+
+  // A sub-agent session the terminal is looking at belongs to its root: that is the conversation.
+  const rootOf = async (id) => {
+    for (let depth = 0; depth < 8; depth++) {
+      const body = await api.session(id);
+      const info = body?.data ?? body;
+      if (!info?.parentID) return id;
+      id = info.parentID;
+    }
+    return id;
+  };
+
+  const shownBySomeone = (id) => [...viewers.values()].includes(id);
+
+  const leave = (id) => {
+    if (!id || shownBySomeone(id) || !watched.has(id) || leaving.has(id)) return;
+    const timer = setTimeout(() => {
+      leaving.delete(id);
+      if (shownBySomeone(id)) return;
+      watched.delete(id);
+      const c = conversations.get(id);
+      serial(id, () => { if (c && conversations.get(id) === c) retire(c, true); else dormant.add(id); });
+    }, goneMs);
+    timer.unref?.();
+    leaving.set(id, timer);
+  };
+
+  // A terminal shows `sessionID` now (null: none). The session is tracked from this moment, and ended once no
+  // terminal shows it.
+  const viewing = async (viewer, sessionID) => {
+    const before = viewers.get(viewer) ?? null;
+    let root = null;
+    if (typeof sessionID === "string" && sessionID) {
+      try { root = await rootOf(sessionID); } catch (error) { log(`view ${sessionID}: ${error.message}`); root = null; }
+    }
+    viewers.set(viewer, root);
+    if (before && before !== root) leave(before);
+    if (!root) return;
+    watched.add(root);
+    clearTimeout(leaving.get(root)); leaving.delete(root);
+    revive(root);
+    await serial(root, async () => {
+      const c = await ensure(root).catch((e) => { log(`view ${root}: ${e.message}`); return null; });
+      if (!c) return;
+      await syncForms(c, false);
+      announceAll();
+    });
+  };
+
+  const viewerGone = (viewer) => {
+    const before = viewers.get(viewer);
+    viewers.delete(viewer);
+    if (before) leave(before);
+  };
+
   return {
     conversations,
+    viewing,
+    viewerGone,
+    isDormant: (id) => dormant.has(id),
     discover,
     handleEvent,
     handleFrame,
     // After an OpenCode event-stream gap: events were missed, so re-read everything tracked.
     async reconcile() {
       await discover();
-      for (const c of conversations.values()) {
+      for (const c of [...conversations.values()]) {
         if (!c.registered) continue;
         await serial(c.id, async () => {
+          // A session deleted while the event stream was down is found missing here, not announced.
+          try { await api.session(c.id); }
+          catch (error) { if (/→ 404$/.test(error.message)) return finish(c); throw error; }
           await refreshMessages(c);
           emit({ type: "ready", conversation: keyOf(c), ready: !c.running });
         });
@@ -552,7 +661,7 @@ export const readService = (file = process.env.OPENCODE_SERVICE_FILE
 const sleep = (ms, signal) => new Promise((resolve) => { const t = setTimeout(resolve, ms); signal?.addEventListener("abort", () => { clearTimeout(t); resolve(); }, { once: true }); });
 
 // Runs until aborted: one loop keeps the Agent Pet link up, another keeps the OpenCode event stream up.
-export async function run({ endpoint = defaultEndpoint(), service = readService(), log = (m) => console.error(`[agent-pet-bridge] ${m}`), signal, api = openCodeApi(service), retryMs, bridgeOptions = {} } = {}) {
+export async function run({ endpoint = defaultEndpoint(), service = readService(), log = (m) => console.error(`[agent-pet-bridge] ${m}`), signal, api = openCodeApi(service), retryMs, bridgeOptions = {}, presence = presenceEndpoint() } = {}) {
   let socket = null;
   const bridge = createBridge({
     ...bridgeOptions, api, log,
@@ -596,11 +705,21 @@ export async function run({ endpoint = defaultEndpoint(), service = readService(
     }
   };
 
+  // Terminals with the Agent Pet plugin report which session they show; null leaves that to the quiet-time rule.
+  if (presence) await listenPresence({ endpoint: presence, bridge, log, signal });
   await Promise.all([link(), events()]);
 }
 
 if (process.argv[1] && import.meta.url === new URL(`file://${path.resolve(process.argv[1])}`).href) {
   const arg = (name) => { const i = process.argv.indexOf(name); return i > 0 ? process.argv[i + 1] : undefined; };
+  if (process.argv.includes("--install-tui") || process.argv.includes("--uninstall-tui")) {
+    try {
+      const dir = arg("--config-dir");
+      const done = process.argv.includes("--install-tui") ? installTui(dir) : uninstallTui(dir);
+      console.log(`${process.argv.includes("--install-tui") ? "Installed" : "Removed"} the terminal plugin (${done.plugin}, ${done.config}). Restart OpenCode.`);
+    } catch (error) { console.error(`[agent-pet-bridge] ${error.message}`); process.exitCode = 1; }
+    process.exit();
+  }
   const controller = new AbortController();
   for (const s of ["SIGINT", "SIGTERM"]) process.on(s, () => controller.abort());
   const service = readService();
