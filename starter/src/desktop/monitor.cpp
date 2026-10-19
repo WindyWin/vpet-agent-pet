@@ -33,6 +33,7 @@ Monitor::Monitor(PetWindow &window, std::shared_ptr<hosts::FocusService> focus)
     connect(&bubble_, &AlertBubble::listRequested, this, &Monitor::toggleSessions);
     connect(&bubble_, &AlertBubble::dismissRequested, this, &Monitor::dismiss);
     connect(&list_, &SessionList::focusRequested, this, &Monitor::focusSession);
+    connect(&list_, &SessionList::sizeChanged, this, &Monitor::layoutBubbles);
     // A reminder keeps clear of the alert bubble and the session list, which share the pet's sides with it.
     note_.setAvoid([this] {
         QVector<QRect> taken;

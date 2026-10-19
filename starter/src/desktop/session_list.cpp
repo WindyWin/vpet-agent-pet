@@ -1,5 +1,6 @@
 #include "session_list.h"
 #include "alert_bubble.h"
+#include "quota_panel.h"
 #include <QEvent>
 #include <QPainter>
 
@@ -30,8 +31,12 @@ SessionList::SessionList(QWidget *parent) : QWidget(parent) {
     overflow_ = new QLabel(this); overflow_->setStyleSheet("color:#7a6450; padding:2px 4px;");
     rows_ = new QVBoxLayout; rows_->setSpacing(1);
     layout->addWidget(header_); layout->addWidget(empty_); layout->addLayout(rows_); layout->addWidget(overflow_);
+    quota_ = new QuotaPanel(this);
+    layout->addWidget(quota_);
+    connect(quota_, &QuotaPanel::sizeChanged, this, [this] { adjustSize(); emit sizeChanged(); });
     retranslate();
 }
+void SessionList::setQuotaService(quota::Service *service) { quota_->setService(service); }
 void SessionList::retranslate() {
     setAccessibleName(tr("Running agent sessions"));
     empty_->setText(tr("No sessions yet. A session appears after its next hook event."));

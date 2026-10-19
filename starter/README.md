@@ -35,6 +35,20 @@ Jobs without events for 30 minutes still expire. This feature uses Claude's
 `background_tasks` Stop field; Codex has no equivalent signal. See
 [ADR 0026](docs/adr/0026-background-waiting.md) for validation status.
 
+## Plan limits
+
+The session popup ends with a "Plan limits" footer showing how much of each
+provider's subscription limit the account has used (5-hour, daily, weekly and
+monthly windows, room permitting), with a "Refresh" button for an immediate
+check. It reads the sign-in that the Codex or Claude Code CLI already keeps on
+this computer — never renewing or changing it — and asks only
+`chatgpt.com/backend-api/wham/usage` and `api.anthropic.com/api/oauth/usage`
+about that account's quotas. No token, usage number or account identity is
+stored on disk or reported to anything else; limits are account-wide, so they
+never describe one session's token count. A sign-in that is missing, expired
+or locked behind the macOS Keychain says so instead of guessing. See
+[ADR 0045](docs/adr/0045-quota-panel.md).
+
 ## Build and run
 
 From this directory, install CMake 3.22+, Ninja, a C++17 compiler and Qt 6.5+
