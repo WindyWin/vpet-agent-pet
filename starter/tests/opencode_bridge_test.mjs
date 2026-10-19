@@ -536,12 +536,12 @@ describe("terminals", () => {
     assert.equal(again.conversation.session_id, s.id);
   });
 
-  test("an 'ended' error for a conversation lets it go without announcing it", async () => {
+  test("a conversation_ended error for a conversation lets it go without announcing it", async () => {
     const s = oc.session();
     oc.addUser(s, "hello");
     await start();
     const open = await until(() => pet.last("snapshot"), "snapshot");
-    pet.send({ type: "error", code: "ended", message: "conversation has ended", conversation: open.conversation });
+    pet.send({ type: "error", code: "conversation_ended", message: "conversation has ended", conversation: open.conversation });
     await new Promise((r) => setTimeout(r, 100));
     oc.say(s, "more");
     await new Promise((r) => setTimeout(r, 200));

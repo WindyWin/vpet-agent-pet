@@ -427,7 +427,7 @@ export function createBridge({ api, send, log = () => {}, tail = TAIL, scanPages
       if (c && c.epoch === frame.conversation?.conversation_epoch) await serial(c.id, () => retire(c, false));
     } else if (frame?.type === "error") {
       // The service holds this identity as ended (an earlier release, before a restart): let it go.
-      if (frame.code === "ended" && frame.conversation?.session_id) {
+      if (frame.code === "conversation_ended" && frame.conversation?.session_id) {
         const c = conversations.get(frame.conversation.session_id);
         if (c && c.epoch === frame.conversation.conversation_epoch) await serial(c.id, () => retire(c, false));
       }
