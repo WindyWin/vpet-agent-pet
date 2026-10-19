@@ -129,12 +129,14 @@ private slots:
         QTemporaryDir directory; const auto path = directory.path() + "/preferences.json";
         pet::PreferencesStore store(path); pet::Preferences prefs;
         prefs.autostart = true; prefs.whenIdle = pet::IdlePolicy::Quit;
+        prefs.agentConversations = true; prefs.hideMessagePreviews = true;
         QVERIFY(store.save(prefs)); // No position yet: written without one.
         QFile file(path); QVERIFY(file.open(QIODevice::ReadOnly));
         const auto object = QJsonDocument::fromJson(file.readAll()).object(); file.close();
         QVERIFY(!object.contains("x")); QCOMPARE(object["when_idle"].toString(), "quit"); QVERIFY(object["autostart"].toBool());
         auto loaded = pet::PreferencesStore(path).load();
         QVERIFY(loaded.autostart); QCOMPARE(loaded.whenIdle, pet::IdlePolicy::Quit); QVERIFY(!loaded.hasPosition);
+        QVERIFY(loaded.agentConversations); QVERIFY(loaded.hideMessagePreviews);
         loaded.hasPosition = true; loaded.position = {5, 6}; loaded.whenIdle = pet::IdlePolicy::Hide;
         QVERIFY(store.save(loaded));
         loaded = pet::PreferencesStore(path).load();
@@ -146,7 +148,10 @@ private slots:
                  {R"({"version":1,"size":200,"on_top":true,"when_idle":"keep","autostart":false})", true},
                  {R"({"version":1,"size":200,"on_top":true,"x":10})", false},
                  {R"({"version":1,"size":200,"on_top":true,"autostart":"yes"})", false},
-                 {R"({"version":1,"size":200,"on_top":true,"when_idle":"sleep"})", false}}) {
+                 {R"({"version":1,"size":200,"on_top":true,"when_idle":"sleep"})", false},
+                 {R"({"version":1,"size":200,"on_top":true,"agent_conversations":"yes"})", false},
+                 {R"({"version":1,"size":200,"on_top":true,"hide_message_previews":1})", false},
+                 {R"({"version":1,"size":200,"on_top":true,"agent_conversations":true,"hide_message_previews":true})", true}}) {
             QVERIFY(file.open(QIODevice::WriteOnly)); file.write(text); file.close();
             pet::PreferencesStore check(path); const auto result = check.load();
             QVERIFY2(check.error().isEmpty() == valid, text.constData());

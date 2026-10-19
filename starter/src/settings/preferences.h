@@ -56,6 +56,10 @@ struct Preferences {
     QStringList plugins;
     // Startup keys. `agent-pet autostart` edits them without a display, possibly
     // while a pet runs, so the pet re-reads them before each save.
+    // Direct agent conversations: answer questions and send follow-ups from the pet. Off until chosen, since
+    // it shares message text between an agent and the pet. A run can also turn it on with --interactions.
+    bool agentConversations = false;
+    bool hideMessagePreviews = false; // Previews show who and what kind, never the agent's words.
     bool autostart = false; // Hook launches the pet on a session start when none is running.
     IdlePolicy whenIdle = IdlePolicy::Keep;
     static QPoint visiblePosition(QPoint position, QSize size, const QVector<QRect> &screens);

@@ -42,7 +42,7 @@ provider's subscription limit the account has used: a ring for the shortest
 window (5 hours), the weekly or monthly figure beside it and the reset times,
 one row per provider, with every window in a tooltip and a "Refresh" button for
 an immediate check. It reads the sign-in that the Codex or Claude Code CLI already keeps on
-this computer — never renewing or changing it — and asks only
+this computer (never renewing or changing it) and asks only
 `chatgpt.com/backend-api/wham/usage` and `api.anthropic.com/api/oauth/usage`
 about that account's quotas. No token, usage number or account identity is
 stored on disk or reported to anything else; limits are account-wide, so they

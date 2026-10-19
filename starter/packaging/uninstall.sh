@@ -59,6 +59,11 @@ if [ "$keep_integrations" = 0 ]; then
             echo "Removed Agent Pet hooks for $provider"
         fi
     done
+    # The opt-in Claude Code interaction hooks are a separate registration.
+    if "$app" integration inspect --provider claude --interactions 2>/dev/null | grep -q '"owned_handlers": [1-9]'; then
+        "$app" integration disable --provider claude --interactions >/dev/null
+        echo "Removed Agent Pet interaction hooks for claude"
+    fi
 fi
 
 for pid in $(pgrep -x agent-pet 2>/dev/null || true); do

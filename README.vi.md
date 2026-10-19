@@ -15,8 +15,8 @@ Thú cưng luôn ở bên bạn trên màn hình: suy nghĩ cùng agent, bận r
   <img src="docs/media/turn-finished.gif" width="120" alt="Lượt đã hoàn thành">
 </p>
 
-- **Nhìn là biết trạng thái**: dễ dàng theo dõi các phiên agent đang làm gì.
-- **Không bỏ lỡ yêu cầu**: thông báo nhỏ xuất hiện khi agent chờ bạn; một cú nhấp đưa bạn đến đúng terminal.
+- **Nhìn là biết trạng thái**: theo dõi được các phiên agent đang làm gì.
+- **Không bỏ lỡ yêu cầu**: khi agent chờ bạn sẽ có thông báo nhỏ, nhấp một cái là đến đúng terminal.
 - **Chơi cùng thú cưng**: kéo, vuốt ve, tung lên, ngắm nó đi dạo và ngủ.
 - **Nhắc bạn chăm sóc bản thân**: nghỉ mắt, uống nước, ăn trưa, vận động cùng Break Buddy và xem lại hoạt động trong ngày.
 - **Riêng tư**: chỉ nhận biết *loại hoạt động*, không đọc prompt, mã nguồn hay câu lệnh của bạn.
@@ -63,7 +63,7 @@ Cần hướng dẫn kỹ hơn hoặc gặp vấn đề? Xem [hướng dẫn cà
 
 ## Các tính năng
 
-*Tất cả hình ảnh đều chụp từ ứng dụng thật; tên dự án chỉ là ví dụ.*
+*Hình ảnh đều chụp từ ứng dụng thật; tên dự án chỉ là ví dụ.*
 
 ### Hiển thị hoạt động của agent
 
@@ -109,7 +109,7 @@ Nhấp vào thú cưng để xem các phiên đang chạy, sắp xếp theo mứ
 
 Kéo thú cưng đến bất kỳ đâu, nó sẽ đung đưa theo con trỏ. Nhấn giữ chuột trái trên đầu hoặc bụng và giữ yên để vuốt ve. Thả giữa lúc đang đung đưa, nó sẽ ngã xuống rồi đứng dậy. Đẩy ra mép màn hình, nó sẽ trốn ở đó và ló đầu ra cho đến khi agent bận rộn trở lại.
 
-Nhưng đừng quá tay: tung quá nhiều, vuốt ve liên tục hoặc giữ quá lâu sẽ khiến nó giận và bỏ đi.
+Đừng quá tay: tung nhiều quá, vuốt ve liên tục hoặc giữ quá lâu thì nó sẽ giận và bỏ đi.
 
 <table>
   <tr>
@@ -127,7 +127,7 @@ Nhưng đừng quá tay: tung quá nhiều, vuốt ve liên tục hoặc giữ q
 
 ### Có nhịp sống riêng
 
-Khi không có việc cần chú ý, thú cưng ngáp, nhìn quanh, thỉnh thoảng đi dạo, bò trên màn hình hoặc leo mép màn hình. Nó cũng có tâm trạng: nhiều lượt hoàn thành khiến nó vui, nhiều lỗi khiến nó buồn, còn làm việc liên tục quá lâu khiến nó đói — cũng là lời nhắc bạn nên nghỉ một chút.
+Khi không có việc cần chú ý, thú cưng ngáp, nhìn quanh, thỉnh thoảng đi dạo, bò trên màn hình hoặc leo mép màn hình. Nó cũng có tâm trạng: nhiều lượt hoàn thành khiến nó vui, nhiều lỗi khiến nó buồn, còn làm việc liên tục quá lâu thì nó đói, cũng là lời nhắc bạn nên nghỉ một chút.
 
 Khi một lượt hoàn thành, VPet chọn ngẫu nhiên cách ăn mừng: vẫy tay, reo vui lấp lánh, cười ngượng hoặc một trong hai động tác chân mèo vui vẻ. Vẫy tay có xác suất gấp đôi từng phản ứng còn lại; dịp đặc biệt và phần thưởng tích lũy có thể mang đến cách ăn mừng khác.
 

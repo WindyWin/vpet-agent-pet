@@ -10,6 +10,7 @@ struct Updater { Q_DECLARE_TR_FUNCTIONS(Updater) };           // Update checks, 
 struct Integrations { Q_DECLARE_TR_FUNCTIONS(Integrations) }; // Agent hook configuration
 struct Startup { Q_DECLARE_TR_FUNCTIONS(Startup) };           // Start at login
 struct Focus { Q_DECLARE_TR_FUNCTIONS(Focus) };               // Window focus requirements
+struct Conversations { Q_DECLARE_TR_FUNCTIONS(Conversations) };   // Agent conversations: previews, panel and list
 struct Settings { Q_DECLARE_TR_FUNCTIONS(Settings) };         // Preferences file errors
 
 struct PackSources { Q_DECLARE_TR_FUNCTIONS(PackSources) }; // Catalogs and pack downloads

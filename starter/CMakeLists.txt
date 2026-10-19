@@ -75,6 +75,12 @@ target_link_libraries(pet_core PUBLIC Qt6::Core pet_host_capture)
 qt_add_library(pet_behavior STATIC src/behavior/runtime.cpp)
 target_include_directories(pet_behavior PUBLIC src)
 target_link_libraries(pet_behavior PUBLIC Qt6::Core)
+# Direct agent interactions (docs/design/agent-interactions-spec.md): models, request state machine,
+# command arbitration and the bounded store. Qt Core only, so it tests without a display or a socket.
+qt_add_library(pet_interactions STATIC
+    src/interactions/model.cpp src/interactions/frame.cpp src/interactions/service.cpp src/interactions/host.cpp)
+target_include_directories(pet_interactions PUBLIC src)
+target_link_libraries(pet_interactions PUBLIC Qt6::Core)
 qt_add_library(pet_animation STATIC
     src/packs/archive.cpp src/packs/installer.cpp src/packs/vpet_mod.cpp src/packs/steam_workshop.cpp
     src/animation/catalog.cpp src/animation/pet_library.cpp src/animation/local_pet.cpp src/animation/player.cpp src/animation/ambient.cpp src/animation/activity.cpp
@@ -111,9 +117,10 @@ qt_add_library(pet_ui STATIC
     src/desktop/pet_window.cpp src/desktop/pack_controls.cpp src/desktop/vpet_import.cpp src/desktop/source_browser.cpp src/desktop/overlay.cpp
     src/desktop/pet_picker.cpp src/desktop/plugin_list.cpp
     src/desktop/touch.cpp src/desktop/wander.cpp src/desktop/wellness.cpp src/desktop/snooze.cpp src/desktop/alert_bubble.cpp src/desktop/monitor.cpp
-    src/desktop/session_list.cpp src/desktop/quota_panel.cpp src/quota/service.cpp src/updates/controller.cpp)
+    src/desktop/session_list.cpp src/desktop/quota_panel.cpp src/quota/service.cpp src/updates/controller.cpp
+    src/desktop/conversation_text.cpp src/desktop/conversation_bubbles.cpp src/desktop/conversation_panel.cpp src/desktop/conversations.cpp)
 target_include_directories(pet_ui PUBLIC src "${CMAKE_CURRENT_BINARY_DIR}/generated")
-target_link_libraries(pet_ui PUBLIC Qt6::Widgets pet_sources pet_animation pet_events pet_updates pet_i18n Qt6::Network PRIVATE pet_native)
+target_link_libraries(pet_ui PUBLIC Qt6::Widgets pet_sources pet_animation pet_events pet_updates pet_i18n pet_interactions Qt6::Network PRIVATE pet_native)
 qt_add_resources(pet_ui pet_assets PREFIX "/" FILES ${pet_notices})
 add_dependencies(pet_ui pet_artwork)
 # Headless platform services shared by the hook and the pet: POSIX event transport, hook input,
@@ -133,9 +140,18 @@ else()
         src/platform/posix/hook_input.cpp src/platform/posix/hook_command.cpp src/platform/posix/launch.cpp
         src/platform/linux/process.cpp src/platform/linux/headless.cpp src/platform/linux/startup.cpp src/platform/linux/session_identity.cpp)
 endif()
+# The private bidirectional stream of the interaction protocol (Qt's local sockets: a Unix socket or a named pipe).
+qt_add_library(pet_interaction_stream STATIC
+    src/platform/local_stream/interaction_transport.cpp src/platform/local_stream/interaction_client.cpp)
+target_include_directories(pet_interaction_stream PUBLIC src)
+target_link_libraries(pet_interaction_stream PUBLIC Qt6::Network pet_interactions)
 qt_add_library(pet_platform STATIC ${pet_platform_sources})
 target_include_directories(pet_platform PUBLIC src)
 target_link_libraries(pet_platform PUBLIC Qt6::Core)
+# The Claude Code interaction bridge's hook runtime and session host (docs/adr/0049-claude-interaction-hooks.md).
+qt_add_library(pet_claude_bridge STATIC src/providers/claude_hook.cpp src/providers/claude_host.cpp)
+target_include_directories(pet_claude_bridge PUBLIC src)
+target_link_libraries(pet_claude_bridge PUBLIC pet_events pet_platform pet_interaction_stream)
 if(WIN32)
     target_link_libraries(pet_platform PRIVATE user32) # The hook reads the agent's console window.
 endif()
@@ -173,7 +189,8 @@ file(READ src/providers/opencode-plugin-legacy.js OPENCODE_LEGACY_PLUGIN)
 configure_file(src/providers/opencode_plugin.h.in "${CMAKE_CURRENT_BINARY_DIR}/generated/opencode_plugin.h" @ONLY)
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
     src/providers/opencode-plugin.js src/providers/opencode-plugin-legacy.js)
-qt_add_library(pet_events STATIC src/ipc/local.cpp src/ipc/session_store.cpp src/ipc/autostart.cpp src/providers/integrations.cpp)
+qt_add_library(pet_events STATIC src/ipc/local.cpp src/ipc/session_store.cpp src/ipc/autostart.cpp src/providers/integrations.cpp
+    src/providers/claude_registration.cpp)
 target_include_directories(pet_events PUBLIC src PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/generated")
 target_link_libraries(pet_events PUBLIC pet_core PRIVATE pet_platform)
 if(WIN32)
@@ -193,7 +210,7 @@ qt_add_library(pet_updates STATIC src/updates/release.cpp src/updates/components
 target_include_directories(pet_updates PUBLIC src "${CMAKE_CURRENT_BINARY_DIR}/generated")
 target_link_libraries(pet_updates PUBLIC Qt6::Core PRIVATE pet_update_platform)
 qt_add_executable(agent-pet src/main.cpp)
-target_link_libraries(agent-pet PRIVATE pet_ui pet_events pet_native pet_i18n)
+target_link_libraries(agent-pet PRIVATE pet_ui pet_events pet_native pet_i18n pet_interaction_stream pet_claude_bridge)
 set(pet_cli_target agent-pet) # The executable tests run as hooks and commands.
 if(WIN32)
     # agent-pet.exe opens no console window; agent-pet-cli.exe, the same program as a console
@@ -203,7 +220,7 @@ if(WIN32)
     target_sources(agent-pet PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/generated/agent-pet.rc")
     set_target_properties(agent-pet PROPERTIES WIN32_EXECUTABLE ON)
     qt_add_executable(agent-pet-cli src/main.cpp "${CMAKE_CURRENT_BINARY_DIR}/generated/agent-pet.rc")
-    target_link_libraries(agent-pet-cli PRIVATE pet_ui pet_events pet_native pet_i18n)
+    target_link_libraries(agent-pet-cli PRIVATE pet_ui pet_events pet_native pet_i18n pet_interaction_stream pet_claude_bridge)
     set(pet_cli_target agent-pet-cli)
     qt_add_executable(agent-pet-updater src/platform/windows/update_helper.cpp)
     target_link_libraries(agent-pet-updater PRIVATE pet_updates pet_events pet_i18n)
@@ -263,7 +280,42 @@ if(BUILD_TESTING)
     qt_add_executable(behavior-tests tests/behavior_tests.cpp)
     target_link_libraries(behavior-tests PRIVATE pet_behavior Qt6::Test)
     add_test(NAME behavior COMMAND behavior-tests)
+    # The interaction service against a scriptable fake bridge; needs no display, socket or provider.
+    qt_add_executable(interaction-tests tests/interaction_tests.cpp)
+    target_link_libraries(interaction-tests PRIVATE pet_interactions Qt6::Test)
+    add_test(NAME interactions COMMAND interaction-tests)
     if(NOT AGENT_PET_PORTABLE_CORE)
+        qt_add_executable(interaction-transport-tests tests/interaction_transport_tests.cpp)
+        target_link_libraries(interaction-transport-tests PRIVATE pet_interaction_stream Qt6::Test)
+        add_test(NAME interaction-transport COMMAND interaction-transport-tests)
+        if(PET_NODE_EXECUTABLE)
+            # The OpenCode interaction bridge: its own behavior against fakes, then against the real service.
+            add_test(NAME opencode-bridge COMMAND "${PET_NODE_EXECUTABLE}" --test
+                "${CMAKE_CURRENT_SOURCE_DIR}/tests/opencode_bridge_test.mjs")
+            qt_add_executable(interaction-bridge-tests tests/interaction_bridge_tests.cpp)
+            target_link_libraries(interaction-bridge-tests PRIVATE pet_interaction_stream Qt6::Test)
+            target_compile_definitions(interaction-bridge-tests PRIVATE NODE_PATH="${PET_NODE_EXECUTABLE}"
+                DRIVER_PATH="${CMAKE_CURRENT_SOURCE_DIR}/tests/bridge_e2e_driver.mjs")
+            add_test(NAME interaction-bridge COMMAND interaction-bridge-tests)
+        endif()
+        if(PET_NODE_EXECUTABLE AND NOT WIN32)
+            # The Codex interaction bridge (a unix-socket WebSocket to the app-server daemon): against a fake daemon, then the real service.
+            add_test(NAME codex-bridge COMMAND "${PET_NODE_EXECUTABLE}" --test
+                "${CMAKE_CURRENT_SOURCE_DIR}/tests/codex_bridge_test.mjs")
+            qt_add_executable(interaction-codex-bridge-tests tests/interaction_codex_bridge_tests.cpp)
+            target_link_libraries(interaction-codex-bridge-tests PRIVATE pet_interaction_stream Qt6::Test)
+            target_compile_definitions(interaction-codex-bridge-tests PRIVATE NODE_PATH="${PET_NODE_EXECUTABLE}"
+                DRIVER_PATH="${CMAKE_CURRENT_SOURCE_DIR}/tests/codex_bridge_e2e_driver.mjs")
+            add_test(NAME interaction-codex-bridge COMMAND interaction-codex-bridge-tests)
+        endif()
+        if(NOT WIN32)
+            # The Claude Code interaction bridge: hook handlers, registration, and the real hooks + session host against the real service.
+            qt_add_executable(claude-bridge-tests tests/claude_bridge_tests.cpp)
+            target_link_libraries(claude-bridge-tests PRIVATE pet_claude_bridge pet_interaction_stream Qt6::Test)
+            target_compile_definitions(claude-bridge-tests PRIVATE APP_PATH="$<TARGET_FILE:${pet_cli_target}>")
+            add_dependencies(claude-bridge-tests ${pet_cli_target})
+            add_test(NAME claude-bridge COMMAND claude-bridge-tests)
+        endif()
         if(WIN32)
             qt_add_executable(session-process-fixture tests/session_process_fixture.cpp)
             target_link_libraries(session-process-fixture PRIVATE Qt6::Core)
@@ -294,6 +346,10 @@ if(BUILD_TESTING)
             add_test(NAME prototype-${shard} COMMAND prototype-tests --shard ${shard}/${AGENT_PET_PROTOTYPE_SHARDS})
             set_tests_properties(prototype-${shard} PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
         endforeach()
+        qt_add_executable(conversation-tests tests/conversation_tests.cpp)
+        target_link_libraries(conversation-tests PRIVATE pet_ui Qt6::Test)
+        add_test(NAME conversations COMMAND conversation-tests)
+        set_tests_properties(conversations PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
         qt_add_executable(i18n-tests tests/i18n_tests.cpp)
         target_link_libraries(i18n-tests PRIVATE pet_i18n Qt6::Test)
         target_compile_definitions(i18n-tests PRIVATE TS_PATH="${CMAKE_CURRENT_SOURCE_DIR}/translations/agent-pet_vi.ts")

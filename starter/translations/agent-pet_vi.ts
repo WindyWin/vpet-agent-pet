@@ -85,6 +85,309 @@
     </message>
 </context>
 <context>
+    <name>Conversations</name>
+    <message>
+        <source>Agent message</source>
+        <translation>Tin nhắn của agent</translation>
+    </message>
+    <message>
+        <source>View</source>
+        <translation>Xem</translation>
+    </message>
+    <message>
+        <source>View the conversation</source>
+        <translation>Xem cuộc trò chuyện</translation>
+    </message>
+    <message>
+        <source>Open the conversation</source>
+        <translation>Mở cuộc trò chuyện</translation>
+    </message>
+    <message>
+        <source>Open</source>
+        <translation>Mở</translation>
+    </message>
+    <message>
+        <source>Bring the agent&apos;s terminal or editor forward</source>
+        <translation>Đưa terminal hoặc trình soạn thảo của agent lên trước</translation>
+    </message>
+    <message>
+        <source>Hide this preview</source>
+        <translation>Ẩn bản xem trước này</translation>
+    </message>
+    <message>
+        <source>Hide this preview (it stays unread)</source>
+        <translation>Ẩn bản xem trước này (vẫn giữ là chưa đọc)</translation>
+    </message>
+    <message>
+        <source>Show conversations</source>
+        <translation>Hiện các cuộc trò chuyện</translation>
+    </message>
+    <message>
+        <source>Agent conversations</source>
+        <translation>Trò chuyện với agent</translation>
+    </message>
+    <message>
+        <source>No conversations yet. An agent with interactions enabled appears here.</source>
+        <translation>Chưa có cuộc trò chuyện nào. Agent đã bật tương tác sẽ xuất hiện ở đây.</translation>
+    </message>
+    <message>
+        <source>Needs your answer</source>
+        <translation>Cần bạn trả lời</translation>
+    </message>
+    <message>
+        <source>1 new message</source>
+        <translation>1 tin nhắn mới</translation>
+    </message>
+    <message>
+        <source>%1 new messages</source>
+        <translation>%1 tin nhắn mới</translation>
+    </message>
+    <message>
+        <source>Ready</source>
+        <translation>Sẵn sàng</translation>
+    </message>
+    <message>
+        <source>Working…</source>
+        <translation>Đang làm việc…</translation>
+    </message>
+    <message>
+        <source>1 conversation</source>
+        <translation>1 cuộc trò chuyện</translation>
+    </message>
+    <message>
+        <source>%1 conversations</source>
+        <translation>%1 cuộc trò chuyện</translation>
+    </message>
+    <message>
+        <source>Agent conversation</source>
+        <translation>Trò chuyện với agent</translation>
+    </message>
+    <message>
+        <source>Collapse (Esc)</source>
+        <translation>Thu gọn (Esc)</translation>
+    </message>
+    <message>
+        <source>Collapse conversation</source>
+        <translation>Thu gọn cuộc trò chuyện</translation>
+    </message>
+    <message>
+        <source>Ctrl+Enter sends</source>
+        <translation>Ctrl+Enter để gửi</translation>
+    </message>
+    <message>
+        <source>Question to answer</source>
+        <translation>Câu hỏi cần trả lời</translation>
+    </message>
+    <message>
+        <source>Message to the agent</source>
+        <translation>Tin nhắn gửi agent</translation>
+    </message>
+    <message>
+        <source>Conversation unavailable</source>
+        <translation>Không có cuộc trò chuyện</translation>
+    </message>
+    <message>
+        <source>This conversation is no longer available.</source>
+        <translation>Cuộc trò chuyện này không còn nữa.</translation>
+    </message>
+    <message>
+        <source>Status: %1</source>
+        <translation>Trạng thái: %1</translation>
+    </message>
+    <message>
+        <source>Some earlier messages could not be loaded.</source>
+        <translation>Không tải được một số tin nhắn trước đó.</translation>
+    </message>
+    <message>
+        <source>Some messages could not be loaded.</source>
+        <translation>Không tải được một số tin nhắn.</translation>
+    </message>
+    <message>
+        <source>A question here is too large to show. Open the agent to answer it.</source>
+        <translation>Có câu hỏi quá dài để hiển thị. Hãy mở agent để trả lời.</translation>
+    </message>
+    <message>
+        <source>Show more</source>
+        <translation>Xem thêm</translation>
+    </message>
+    <message>
+        <source>Show less</source>
+        <translation>Thu gọn</translation>
+    </message>
+    <message>
+        <source>Agent</source>
+        <translation>Agent</translation>
+    </message>
+    <message>
+        <source>You</source>
+        <translation>Bạn</translation>
+    </message>
+    <message>
+        <source>Answered</source>
+        <translation>Đã trả lời</translation>
+    </message>
+    <message>
+        <source>Cancelled</source>
+        <translation>Đã hủy</translation>
+    </message>
+    <message>
+        <source>Replaced</source>
+        <translation>Đã thay thế</translation>
+    </message>
+    <message>
+        <source>Expired</source>
+        <translation>Đã hết hạn</translation>
+    </message>
+    <message>
+        <source>Question %1 of %2: %3</source>
+        <translation>Câu hỏi %1/%2: %3</translation>
+    </message>
+    <message>
+        <source>Custom answer</source>
+        <translation>Câu trả lời khác</translation>
+    </message>
+    <message>
+        <source>Answer this question</source>
+        <translation>Trả lời câu hỏi này</translation>
+    </message>
+    <message>
+        <source>Type a custom answer…</source>
+        <translation>Nhập câu trả lời khác…</translation>
+    </message>
+    <message>
+        <source>Send answer</source>
+        <translation>Gửi câu trả lời</translation>
+    </message>
+    <message>
+        <source>Follow up with this agent…</source>
+        <translation>Nhắn tiếp cho agent này…</translation>
+    </message>
+    <message>
+        <source>Send</source>
+        <translation>Gửi</translation>
+    </message>
+    <message>
+        <source>Sending…</source>
+        <translation>Đang gửi…</translation>
+    </message>
+    <message>
+        <source>Sent</source>
+        <translation>Đã gửi</translation>
+    </message>
+    <message>
+        <source>Delivery not confirmed. Check the agent before sending again.</source>
+        <translation>Chưa xác nhận đã gửi tới. Hãy kiểm tra agent trước khi gửi lại.</translation>
+    </message>
+    <message>
+        <source>%1
+Provider: %2
+Session: %3</source>
+        <translation>%1
+Nhà cung cấp: %2
+Phiên: %3</translation>
+    </message>
+    <message>
+        <source>Session ended</source>
+        <translation>Phiên đã kết thúc</translation>
+    </message>
+    <message>
+        <source>Disconnected</source>
+        <translation>Mất kết nối</translation>
+    </message>
+    <message>
+        <source>Connected</source>
+        <translation>Đã kết nối</translation>
+    </message>
+    <message>
+        <source>Waiting for your answer</source>
+        <translation>Đang chờ bạn trả lời</translation>
+    </message>
+    <message>
+        <source>Ready for a follow-up</source>
+        <translation>Sẵn sàng nhận tin nhắn tiếp</translation>
+    </message>
+    <message>
+        <source>The agent is disconnected.</source>
+        <translation>Agent đã mất kết nối.</translation>
+    </message>
+    <message>
+        <source>The session has ended.</source>
+        <translation>Phiên đã kết thúc.</translation>
+    </message>
+    <message>
+        <source>The question changed. Review it and answer again.</source>
+        <translation>Câu hỏi đã thay đổi. Hãy xem lại và trả lời lần nữa.</translation>
+    </message>
+    <message>
+        <source>This question was already answered.</source>
+        <translation>Câu hỏi này đã được trả lời.</translation>
+    </message>
+    <message>
+        <source>An answer is already being sent.</source>
+        <translation>Một câu trả lời đang được gửi.</translation>
+    </message>
+    <message>
+        <source>This question is closed.</source>
+        <translation>Câu hỏi này đã đóng.</translation>
+    </message>
+    <message>
+        <source>The agent is busy. Try again when it is ready.</source>
+        <translation>Agent đang bận. Hãy thử lại khi nó sẵn sàng.</translation>
+    </message>
+    <message>
+        <source>Answer the open question first.</source>
+        <translation>Hãy trả lời câu hỏi đang mở trước.</translation>
+    </message>
+    <message>
+        <source>That is too long to send.</source>
+        <translation>Nội dung quá dài để gửi.</translation>
+    </message>
+    <message>
+        <source>That option is no longer available.</source>
+        <translation>Lựa chọn đó không còn nữa.</translation>
+    </message>
+    <message>
+        <source>This question does not take a typed answer.</source>
+        <translation>Câu hỏi này không nhận câu trả lời nhập tay.</translation>
+    </message>
+    <message>
+        <source>This agent cannot do that.</source>
+        <translation>Agent này không làm được việc đó.</translation>
+    </message>
+    <message>
+        <source>The agent did not accept that answer. Edit it and try again.</source>
+        <translation>Agent không nhận câu trả lời đó. Hãy sửa lại và thử lần nữa.</translation>
+    </message>
+    <message>
+        <source>Could not send (%1).</source>
+        <translation>Không gửi được (%1).</translation>
+    </message>
+    <message>
+        <source>New message</source>
+        <translation>Tin nhắn mới</translation>
+    </message>
+    <message>
+        <source>Could not open the agent</source>
+        <translation>Không mở được agent</translation>
+    </message>
+    <message>
+        <source>Agent Pet could not find the window of %1.</source>
+        <translation>Agent Pet không tìm thấy cửa sổ của %1.</translation>
+    </message>
+    <message>
+        <source>Stop showing this conversation in the pet? The agent is not affected, and the conversation returns when you use the agent again.</source>
+        <translation>Ngừng hiển thị cuộc trò chuyện này trên thú cưng? Agent không bị ảnh hưởng, và cuộc trò chuyện sẽ quay lại khi bạn dùng lại agent.</translation>
+    </message>
+    <message>
+        <source>Remove from the pet</source>
+        <translation>Gỡ khỏi thú cưng</translation>
+    </message>
+    <message>
+        <source>Keep</source>
+        <translation>Giữ lại</translation>
+    </message>
+</context>
+<context>
     <name>Focus</name>
     <message>
         <source>Wayland focus requires KDE Plasma 6.</source>
@@ -364,23 +667,23 @@ Nguồn: %6</translation>
     <name>Pet</name>
     <message>
         <source>Monday again... I&apos;m so tired. Let&apos;s take it slow today.</source>
-        <translation>Lại thứ Hai rồi... Em mệt quá. Hôm nay mình làm thong thả thôi nha.</translation>
+        <translation>Lại thứ Hai rồi... Em uể oải quá. Hôm nay mình cứ từ từ thôi nha.</translation>
     </message>
     <message>
         <source>It&apos;s %1. Time to step away, take a break, and enjoy some lunch! 🍱</source>
-        <translation>%1 rồi bạn ơi. Mình nghỉ tay, rời màn hình và ăn trưa thôi! 🍱</translation>
+        <translation>%1 rồi đó bạn! Rời màn hình đi ăn trưa thôi! 🍱</translation>
     </message>
     <message>
         <source>It&apos;s %1. Time to wrap up and get ready to head home!</source>
-        <translation>%1 rồi bạn ơi. Mình thu xếp công việc, chuẩn bị về nhà thôi!</translation>
+        <translation>%1 rồi, mình dọn dẹp rồi về nhà thôi bạn ơi!</translation>
     </message>
     <message>
         <source>It&apos;s %1. Time to put everything down and go to sleep!</source>
-        <translation>%1 rồi bạn ơi. Mình gác mọi việc lại và đi ngủ thôi!</translation>
+        <translation>%1 rồi đó. Gác hết lại đi ngủ thôi bạn!</translation>
     </message>
     <message>
         <source>It&apos;s getting late. Maybe finish up and get some sleep?</source>
-        <translation>Khuya rồi bạn ơi. Mình làm nốt rồi đi ngủ nha?</translation>
+        <translation>Khuya lắm rồi. Bạn làm nốt rồi đi ngủ nha?</translation>
     </message>
     <message>
         <source>Start break</source>
@@ -388,19 +691,19 @@ Nguồn: %6</translation>
     </message>
     <message>
         <source>Move or stretch with me…</source>
-        <translation>Vận động hoặc giãn cơ cùng em nha…</translation>
+        <translation>Cùng em vươn vai giãn cơ nha…</translation>
     </message>
     <message>
         <source>Eyes on something far away…</source>
-        <translation>Nhìn ra xa nào…</translation>
+        <translation>Nhìn ra xa một chút nào…</translation>
     </message>
     <message>
         <source>Nice! Your eyes got a rest.</source>
-        <translation>Tốt lắm! Mắt bạn đã được nghỉ ngơi.</translation>
+        <translation>Tốt lắm! Mắt bạn được nghỉ rồi nè.</translation>
     </message>
     <message>
         <source>Nice! Thanks for moving with me.</source>
-        <translation>Tuyệt! Cảm ơn bạn đã vận động cùng em nha.</translation>
+        <translation>Tuyệt! Cảm ơn bạn đã tập cùng em nha.</translation>
     </message>
     <message>
         <source>Today&apos;s recap</source>
@@ -408,7 +711,7 @@ Nguồn: %6</translation>
     </message>
     <message>
         <source>Look at something far away</source>
-        <translation>Bạn nhìn ra xa nha</translation>
+        <translation>Nhìn ra xa một chút nha bạn</translation>
     </message>
     <message>
         <source>Time for some water 💧</source>
@@ -416,7 +719,7 @@ Nguồn: %6</translation>
     </message>
     <message>
         <source>Take a movement break with me</source>
-        <translation>Mình nghỉ tay, vận động cùng em nha</translation>
+        <translation>Đứng dậy vận động với em chút nha</translation>
     </message>
     <message>
         <source>1 turn</source>
@@ -457,7 +760,7 @@ Nguồn: %6</translation>
     </message>
     <message>
         <source>No agent work yet today.</source>
-        <translation>Hôm nay chưa có hoạt động nào của agent.</translation>
+        <translation>Hôm nay agent chưa làm gì cả.</translation>
     </message>
     <message>
         <source>Today: %1 in %2</source>
@@ -484,7 +787,7 @@ Nguồn: %6</translation>
     <message>
         <source>%1 waited 10+ min</source>
         <extracomment>%1 = &quot;2 approvals&quot;</extracomment>
-        <translation>%1 phải chờ hơn 10 phút</translation>
+        <translation>%1 đã chờ hơn 10 phút</translation>
     </message>
     <message>
         <source>longest run %1</source>
@@ -502,15 +805,15 @@ Nguồn: %6</translation>
     </message>
     <message>
         <source>Too much petting! I need a break. Bye!</source>
-        <translation>Vuốt ve nhiều quá rồi! Em cần nghỉ một chút. Tạm biệt bạn!</translation>
+        <translation>Vuốt nhiều quá rồi! Em phải nghỉ đây. Chào bạn nha!</translation>
     </message>
     <message>
         <source>Put me down! I&apos;m leaving!</source>
-        <translation>Thả em xuống! Em đi đây!</translation>
+        <translation>Thả em xuống! Em đi luôn đó!</translation>
     </message>
     <message>
         <source>Stop throwing me! I&apos;m leaving!</source>
-        <translation>Đừng ném em nữa! Em đi đây!</translation>
+        <translation>Đừng quăng em nữa! Em giận đi đây!</translation>
     </message>
 </context>
 <context>
@@ -965,6 +1268,10 @@ Nhấp chuột phải để mở menu · Esc để thoát</translation>
     <message>
         <source>Running sessions…</source>
         <translation>Các phiên đang chạy…</translation>
+    </message>
+    <message>
+        <source>Agent conversations…</source>
+        <translation>Trò chuyện với agent…</translation>
     </message>
     <message>
         <source>Today&apos;s recap</source>

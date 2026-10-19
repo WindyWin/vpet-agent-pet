@@ -24,6 +24,7 @@ follows the phases of #91; the code map below remains the current architecture.
 | Provider hooks, integration setup | `src/providers`, [integrations](integrations.md) | [0006](adr/0006-provider-adapters.md), [0041](adr/0041-additional-agent-providers.md) |
 | Plan limits | `src/quota/service.*`, `src/desktop/quota_panel.*` | [0046](adr/0046-quota-panel.md) |
 | Alerts, bubble, badge | `src/desktop/monitor.*`, `src/sessions` | [0007](adr/0007-alert-presentation.md) |
+| Direct agent interactions (core, stream, desktop preview and panel; opt-in) | `src/interactions`, `src/platform/local_stream`, `src/desktop/conversation*`, [interactions](interactions.md), [specification](../../docs/design/agent-interactions-spec.md) | [0047](adr/0047-direct-agent-interactions.md) |
 | Open a session's host | `src/hosts`, `src/platform` | [0017](adr/0017-session-focus.md) |
 | Preferences | `src/settings` | [0004](adr/0004-preferences-storage.md) |
 | Window, menus, recovery | `src/desktop` | [0008](adr/0008-window-behavior.md) |
