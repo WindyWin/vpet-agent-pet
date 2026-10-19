@@ -4,6 +4,7 @@
 #include <QRegularExpression>
 #include "animation/pet_library.h"
 #include "desktop/monitor.h"
+#include "quota/service.h"
 #include "ipc/autostart.h"
 #include "ipc/local.h"
 #include "platform/native.h"
@@ -123,7 +124,9 @@ int main(int argc, char **argv) {
             std::fprintf(stderr, "%s\n", qPrintable(window.player().error()));
             return 1;
         }
+        pet::quota::Service quotas;
         pet::Monitor monitor(window, pet::platform::createFocusService());
+        if (persist && !parser.isSet("smoke-test")) monitor.sessionList().setQuotaService(&quotas);
         monitor.locked = pet::platform::createScreenLockQuery(&app); // The application outlives the monitor.
         if (receiver) monitor.listen(std::move(receiver));
         std::unique_ptr<pet::updates::Controller> updates;

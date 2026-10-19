@@ -1453,6 +1453,117 @@ Các cài đặt và hook khác được giữ nguyên. Hãy đăng ký từ th�
     </message>
 </context>
 <context>
+    <name>pet::QuotaPanel</name>
+    <message>
+        <source>Plan limits</source>
+        <translation>Giới hạn gói</translation>
+    </message>
+    <message>
+        <source>Account-wide · % used</source>
+        <translation>Toàn tài khoản · % đã dùng</translation>
+    </message>
+    <message>
+        <source>Uses the CLI account configured on this computer. Limits are shared by all of that account&apos;s sessions.</source>
+        <translation>Dùng tài khoản CLI đã cấu hình trên máy này. Giới hạn được dùng chung cho mọi phiên của tài khoản đó.</translation>
+    </message>
+    <message>
+        <source>Refresh</source>
+        <translation>Làm mới</translation>
+    </message>
+    <message>
+        <source>Checked %1</source>
+        <translation>Đã kiểm tra %1</translation>
+    </message>
+    <message>
+        <source>Sign in with the CLI to see plan limits.</source>
+        <translation>Đăng nhập bằng CLI để xem giới hạn gói.</translation>
+    </message>
+    <message>
+        <source>Sign-in expired. Open the CLI to renew it.</source>
+        <translation>Đăng nhập đã hết hạn. Hãy mở CLI để làm mới.</translation>
+    </message>
+    <message>
+        <source>Could not read the CLI sign-in from Keychain.</source>
+        <translation>Không đọc được thông tin đăng nhập CLI từ Keychain.</translation>
+    </message>
+    <message>
+        <source>Provider asked to slow down. Try again later.</source>
+        <translation>Nhà cung cấp yêu cầu chậm lại. Hãy thử lại sau.</translation>
+    </message>
+    <message>
+        <source>Could not read plan limits. Try again later.</source>
+        <translation>Không đọc được giới hạn gói. Hãy thử lại sau.</translation>
+    </message>
+    <message>
+        <source>Checking limits…</source>
+        <translation>Đang kiểm tra giới hạn…</translation>
+    </message>
+    <message>
+        <source>Last known usage</source>
+        <translation>Mức sử dụng gần nhất</translation>
+    </message>
+    <message>
+        <source>%1 %2: %3% used</source>
+        <translation>%1 %2: đã dùng %3%</translation>
+    </message>
+    <message>
+        <source>%1: %2</source>
+        <translation>%1: %2</translation>
+    </message>
+    <message>
+        <source>%1 %2%</source>
+        <translation>%1 %2%</translation>
+    </message>
+    <message>
+        <source>%1 in %2</source>
+        <translation>%1 sau %2</translation>
+    </message>
+    <message>
+        <source>5 hours</source>
+        <translation>5 giờ</translation>
+    </message>
+    <message>
+        <source>Daily</source>
+        <translation>Hằng ngày</translation>
+    </message>
+    <message>
+        <source>Weekly</source>
+        <translation>Hằng tuần</translation>
+    </message>
+    <message>
+        <source>Monthly</source>
+        <translation>Hằng tháng</translation>
+    </message>
+    <message>
+        <source>%1 · %2</source>
+        <translation>%1 · %2</translation>
+    </message>
+    <message>
+        <source>%1: %2% used</source>
+        <translation>%1: đã dùng %2%</translation>
+    </message>
+    <message>
+        <source>%1d %2h</source>
+        <translation>%1 ngày %2 giờ</translation>
+    </message>
+    <message>
+        <source>%1h %2m</source>
+        <translation>%1 giờ %2 phút</translation>
+    </message>
+    <message>
+        <source>%1m</source>
+        <translation>%1 phút</translation>
+    </message>
+    <message>
+        <source>Resets in %1</source>
+        <translation>Đặt lại sau %1</translation>
+    </message>
+    <message>
+        <source>Reset due · refresh to check</source>
+        <translation>Đến giờ đặt lại · làm mới để kiểm tra</translation>
+    </message>
+</context>
+<context>
     <name>pet::SessionList</name>
     <message>
         <source>Running agent sessions</source>
