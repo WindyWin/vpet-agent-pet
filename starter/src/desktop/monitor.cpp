@@ -416,7 +416,6 @@ void Monitor::refreshAlerts() {
 }
 // Places what is showing beside the pet, most urgent first, each clear of the ones before it.
 void Monitor::layoutBubbles() {
-    if (window_.dragged()) return; // Re-placed once on release; chasing a fast drag made them shake and cost a round trip per move.
     const auto figure = window_.figure();
     const auto screens = window_.screenAreas();
     if (bubble_.isVisible()) bubble_.place(figure, screens);

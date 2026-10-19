@@ -71,7 +71,6 @@ public:
     // Hiding behind a screen edge, partly off-screen. Session activity brings it back out.
     touch::Edge edge() const { return edge_; }
     bool hiding() const { return edge_ != touch::Edge::None; }
-    bool dragged() const { return dragging_; } // Held by the pointer; popups wait for it to settle.
     // Walking, crawling and climbing along the screen after a long idle spell; persisted. Off, the pet
     // stays where it was put.
     void setWanderEnabled(bool enabled);
