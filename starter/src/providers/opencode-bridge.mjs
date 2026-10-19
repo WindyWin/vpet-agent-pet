@@ -543,10 +543,29 @@ export const defaultEndpoint = () => {
   return path.join(root, `agent-pet-${process.getuid()}`, "interactions.sock");
 };
 
-export const readService = (file = process.env.OPENCODE_SERVICE_FILE
-  || path.join(process.env.XDG_STATE_HOME || path.join(os.homedir(), ".local", "state"), "opencode", "service.json")) => {
-  const service = JSON.parse(fs.readFileSync(file, "utf8"));
-  return { url: service.url, headers: { authorization: "Basic " + Buffer.from(`opencode:${service.password}`).toString("base64") } };
+// OpenCode 2 keeps two files called service.json. The one in the state directory is the running service's
+// registration ({ url, ... }); the one in the config directory is `opencode service set …`: { hostname, port,
+// password, … }, where the URL is implied and defaults to 127.0.0.1:49374. Older builds put url and password in
+// the state file. Each file contributes what it has; the password may also come from the environment.
+const DEFAULT_SERVICE_PORT = 49374;
+
+const readJson = (file) => {
+  try { return JSON.parse(fs.readFileSync(file, "utf8")); } catch { return undefined; }
+};
+
+export const readService = ({ env = process.env, home = os.homedir() } = {}) => {
+  const state = path.join(env.XDG_STATE_HOME || path.join(home, ".local", "state"), "opencode", "service.json");
+  const config = path.join(env.XDG_CONFIG_HOME || path.join(home, ".config"), "opencode", "service.json");
+  const files = (env.OPENCODE_SERVICE_FILE ? [env.OPENCODE_SERVICE_FILE] : [state, config]).map(readJson).filter((f) => f && typeof f === "object");
+  const password = env.OPENCODE_SERVER_PASSWORD || env.OPENCODE_PASSWORD || files.find((f) => typeof f.password === "string" && f.password)?.password;
+  if (!password) throw new Error("OpenCode's service password was not found; set OPENCODE_SERVER_PASSWORD or run `opencode service set password …`");
+  let url = files.find((f) => typeof f.url === "string" && f.url)?.url;
+  if (!url) {
+    const configured = files.find((f) => f.hostname || f.port);
+    const host = configured?.hostname && configured.hostname !== "0.0.0.0" && configured.hostname !== "::" ? configured.hostname : "127.0.0.1";
+    url = `http://${host.includes(":") && !host.startsWith("[") ? `[${host}]` : host}:${configured?.port || DEFAULT_SERVICE_PORT}`;
+  }
+  return { url: url.replace(/\/+$/, ""), headers: { authorization: "Basic " + Buffer.from(`opencode:${password}`).toString("base64") } };
 };
 
 const sleep = (ms, signal) => new Promise((resolve) => { const t = setTimeout(resolve, ms); signal?.addEventListener("abort", () => { clearTimeout(t); resolve(); }, { once: true }); });
@@ -603,8 +622,13 @@ if (process.argv[1] && import.meta.url === new URL(`file://${path.resolve(proces
   const arg = (name) => { const i = process.argv.indexOf(name); return i > 0 ? process.argv[i + 1] : undefined; };
   const controller = new AbortController();
   for (const s of ["SIGINT", "SIGTERM"]) process.on(s, () => controller.abort());
-  const service = readService();
-  if (arg("--opencode-url")) service.url = arg("--opencode-url");
-  run({ endpoint: arg("--endpoint") || process.env.AGENT_PET_INTERACTION_ENDPOINT || defaultEndpoint(), service, signal: controller.signal })
-    .catch((error) => { console.error(`[agent-pet-bridge] ${error.message}`); process.exitCode = 1; });
+  try {
+    const service = readService();
+    if (arg("--opencode-url")) service.url = arg("--opencode-url");
+    run({ endpoint: arg("--endpoint") || process.env.AGENT_PET_INTERACTION_ENDPOINT || defaultEndpoint(), service, signal: controller.signal })
+      .catch((error) => { console.error(`[agent-pet-bridge] ${error.message}`); process.exitCode = 1; });
+  } catch (error) {
+    console.error(`[agent-pet-bridge] ${error.message}`);
+    process.exitCode = 1;
+  }
 }
