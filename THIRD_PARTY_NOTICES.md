@@ -21,3 +21,5 @@ Release packages must include this notice and the artwork terms. Include source 
 ## Agent Pet application code
 
 Agent Pet's original application code is under the Apache License 2.0 (`starter/LICENSE`, with `starter/NOTICE`). That license does not apply to the artwork, the icon, or the upstream documents in `licenses/`.
+
+Additional pet artwork and its individual notices are maintained in the [gallery repository](https://github.com/WindyWin/agent-pet-gallery); those assets are no longer included in the application source or packages.

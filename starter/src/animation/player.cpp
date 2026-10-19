@@ -1,6 +1,9 @@
 #include "player.h"
 #include "pet_library.h"
 #include <QDebug>
+#include <QFile>
+#include <QFileInfo>
+#include <QDir>
 #include <QImageReader>
 #include <algorithm>
 #include <utility>
@@ -313,9 +316,29 @@ void Player::display() {
     const auto &frame = catalog_.sequences[sequence_].at(index_);
     auto *cached = cache_.object(frame.path);
     if (!cached) {
-        QImageReader reader(frame.path);
+        QFile file(frame.path);
+        QFileInfo pathInfo(frame.path);
+        auto confined = [&] {
+            if (frame.root.isEmpty()) return true;
+            const auto root = QFileInfo(frame.root).canonicalFilePath();
+            const auto path = pathInfo.canonicalFilePath();
+            if (root.isEmpty() || path.isEmpty()) return false;
+            const auto relative = QDir(root).relativeFilePath(path);
+            return safeAssetPath(relative) && relative != ".." && !relative.startsWith("../");
+        };
+        if (pathInfo.isSymLink() || pathInfo.isJunction() || !confined()
+            || !file.open(QIODevice::ReadOnly) || file.size() > 4LL * 1024 * 1024) {
+            fail("Missing, linked or oversized frame: " + frame.path); return;
+        }
+        // Decode from the open file handle after rechecking the current path and byte limit. Replacing the path
+        // after open cannot redirect this read to another file.
+        pathInfo.refresh();
+        if (!pathInfo.exists() || pathInfo.isSymLink() || pathInfo.isJunction() || !confined()) {
+            fail("Missing or linked frame: " + frame.path); return;
+        }
+        QImageReader reader(&file);
         const auto dimensions = reader.size();
-        if (!dimensions.isValid() || dimensions.width() > 2048 || dimensions.height() > 2048) {
+        if (reader.format() != "png" || !dimensions.isValid() || dimensions.width() > 2048 || dimensions.height() > 2048) {
             fail("Missing, invalid or oversized frame: " + frame.path); return;
         }
         reader.setScaledSize(dimensions.scaled(renderSize_, renderSize_, Qt::KeepAspectRatio));

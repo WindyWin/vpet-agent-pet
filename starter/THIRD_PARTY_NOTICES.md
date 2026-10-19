@@ -20,18 +20,6 @@ The [artwork notice and authorization terms](licenses/VPET-ARTWORK-TERMS.md) are
 
 Preserve this notice, the artwork terms, and the upstream link when distributing this repository or an application package containing its art. The [upstream code license](licenses/VPET-CODE-LICENSE.txt) is included for provenance only; no upstream renderer code has been imported.
 
-## Fat Cat pet artwork
-
-The PNG frames in `assets/fat-cat/` are the **Orange Fat Cat** pack by **shuaa** of [megupets](https://www.megupets.com), published on [OpenGameArt](https://opengameart.org/content/orange-fat-cat) under [CC0 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/) (public domain dedication). CC0 requires no credit; Agent Pet gives it anyway, in About. The pack's Idle, Walk, Jump (a wave), Dead and Extra frames were placed in the idle pose's position on a shared 1000 × 1000 canvas and scaled by one factor; the drawings are unchanged. The pack was downloaded as `Orange Fat Cat.zip` (SHA-256 `4926ef27df2736a7cc90b5713731c591f9962b6fa237ac3cb1c5c89277a71918`); `assets/fat-cat/manifest.json` records the exact bytes shipped. The [terms](licenses/FAT-CAT-ARTWORK-TERMS.md) are in `licenses/`. Fat Cat is not bundled: it downloads when chosen in Settings.
-
-## Whale Girl pet artwork
-
-The PNG frames in `assets/whale-girl/` come from [Multimodal-AI-Companion-Assets](https://github.com/oyxdsg/Multimodal-AI-Companion-Assets), release `v1.0.0` (archive SHA-256 `276c85901546682ba585dbe2cf8f1587599b607078e8d5c02e68b72de3f67979`). The character is **「溟月」 by 上善无形**, with the **whale-maid design by ZipZipPipe**; animation frames were made and processed by **Multimodal-AI-Companion**. Upstream declares the artwork **CC BY-NC-SA 4.0**. Agent Pet preserves all 1,662 animation frames, aligns them on transparent 600 × 600 canvases at 25 fps and bakes in jump/roll trajectories. The adapted artwork is shared under the same terms. `assets/whale-girl/manifest.json` records the exact shipped bytes. The [terms and upstream notices](licenses/WHALE-GIRL-ARTWORK-TERMS.md) are in `licenses/`. Whale Girl downloads when chosen in Settings.
-
-## Kuro and Yun pet artwork
-
-The PNG frames in `assets/kuro/` and `assets/yun/` are original Agent Pet artwork, not third-party material. They are drawn from vector shapes by `scripts/draw_kuro.py` and `scripts/draw_yun.py` (with `scripts/pet_art.py`) and dedicated to the public domain under [CC0 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/); see [Kuro's terms](licenses/KURO-ARTWORK-TERMS.md) and [Yun's terms](licenses/YUN-ARTWORK-TERMS.md). Neither pet is bundled: each downloads when chosen in Settings.
-
 ## Agent Pet application icon
 
 `packaging/agent-pet.png` (installed as the `agent-pet` icon) is a cropped, resized copy of the idle frame `Default/Nomal/1/_000_250.png` and is covered by the artwork terms above, not by the application code license. `assets/vpet/preview.png`, VPet's tile in Settings, is the same image under the same terms.

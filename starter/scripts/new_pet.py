@@ -15,6 +15,8 @@ animations.json and run
 scripts/verify_assets.py; docs/pets.md walks through it.
 """
 import argparse
+import os
+import sys
 import hashlib
 import json
 import re
@@ -33,6 +35,11 @@ SHAPES = {('loop', 'idle'): 'idle', ('phased', 'idle'): 'busy', ('once', 'idle')
           ('once', 'stop'): 'bye'}
 OWN = {'drag': 'held'}
 FILE_NAME = re.compile(r'[A-Za-z0-9_-][A-Za-z0-9._-]*')
+# Keep in step with packs/installer.cpp: SemVer, including numeric prerelease rules.
+SEMVER = re.compile(r'(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)'
+                    r'(?:-(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)'
+                    r'(?:\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*)?'
+                    r'(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?')
 
 
 def write_json(path, document):
@@ -50,7 +57,27 @@ def main():
     parser.add_argument('--preview', type=Path, help='PNG tile for Settings (default: the first idle frame)')
     parser.add_argument('--assets', type=Path, default=ROOT / 'assets', help='folder holding the pet folders')
     parser.add_argument('--licenses', type=Path, default=ROOT / 'licenses', help="folder holding the pets' terms")
+    parser.add_argument('--local', action='store_true', help='scaffold into the per-user packs/pets folder')
+    parser.add_argument('--license', default='LicenseRef-Custom', help='licence label for local packs')
+    parser.add_argument('--version', default='1.0.0', help='local pack SemVer')
     args = parser.parse_args()
+    if len(args.version) > 32 or not SEMVER.fullmatch(args.version):
+        parser.error('--version must be SemVer with at most 32 characters')
+    if args.local:
+        if Path(args.terms).suffix not in ('.txt', '.md'):
+            parser.error('Local pack terms must use .txt or .md')
+        if not args.license.strip() or len(args.license) > 64:
+            parser.error('--license needs 1-64 characters')
+        if args.id == 'vpet':
+            parser.error('vpet is reserved for the built-in pet')
+        if sys.platform == 'win32':
+            data = Path(os.environ.get('APPDATA', Path.home() / 'AppData/Roaming')) / 'agent-pet'
+        elif sys.platform == 'darwin':
+            data = Path.home() / 'Library/Application Support/agent-pet'
+        else:
+            data = Path(os.environ.get('XDG_DATA_HOME', Path.home() / '.local/share')) / 'agent-pet'
+        args.assets = data / 'packs/pets'
+
 
     if not re.fullmatch(r'[a-z0-9-]{1,32}', args.id) or windows_reserved(args.id):
         raise SystemExit(f'Invalid id: {args.id} (lowercase letters, digits and "-", at most 32, not {RESERVED_TEXT})')
@@ -105,6 +132,12 @@ def main():
     write_json(folder / 'animations.json', {'schema_version': CATALOG_SCHEMA, 'asset_root': f'assets/{args.id}',
                                              'states': states, 'sequences': [sequence], 'playback': playback,
                                              'cues': cues})
+    if args.local:
+        (folder / 'licenses').mkdir()
+        shutil.copyfile(args.licenses / args.terms, folder / 'licenses' / args.terms)
+        write_json(folder / 'pack.json', {'kind': 'pet', 'id': args.id, 'name': args.name,
+            'author': args.author, 'license': args.license, 'version': args.version, 'schema': CATALOG_SCHEMA,
+            'minAppVersion': '0.17.0', 'terms': 'licenses/' + args.terms})
     print(f'Created {folder}: its {len(frames)} idle frames play every cue. '
           f'Add sequences with scripts/add_sequences.py --pet {args.id}, then run scripts/verify_assets.py.')
 

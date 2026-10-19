@@ -41,7 +41,7 @@ public:
     QString heading() const { return heading_->text(); }
     QString status() const { return status_->text(); }
     QString feedback() const { return feedback_->text(); }
-    QString question() const { return question_->text(); }
+    QString question() const { return questionText_; }
     QString composerText() const { return edit_->toPlainText(); }
     QString placeholder() const { return edit_->placeholderText(); }
     int messageCount() const { return messages_.size(); }
@@ -67,6 +67,7 @@ signals:
 protected:
     void keyPressEvent(QKeyEvent *) override;
     void closeEvent(QCloseEvent *) override;
+    void paintEvent(QPaintEvent *) override;
     void showEvent(QShowEvent *) override;
     void resizeEvent(QResizeEvent *) override;
     void changeEvent(QEvent *) override;
@@ -92,10 +93,13 @@ private:
     interactions::Service &service_;
     int observer_ = 0;
     interactions::ConversationKey current_;
-    QString sendingSlot_; // The draft slot of the command in flight.
-    QString sending_;     // Command ID awaiting its result.
+    // A command is answered for the conversation it went to, whichever one the panel shows when the result arrives.
+    // An unconfirmed one stays until the bridge settles it, so a late acceptance still clears what was sent.
+    struct Flight { interactions::ConversationKey key; QString slot; bool unconfirmed = false; };
+    QHash<QString, Flight> flights_;  // Command ID → where it was sent and which draft it came from.
+    QString sending_;                 // The command in flight for the conversation on screen, if any.
     QString shownSlot_;   // Which draft the composer currently holds, so a refresh never overwrites typing.
-    QString bodySignature_, requestSignature_, activeRequest_;
+    QString bodySignature_, requestSignature_, activeRequest_, questionText_;
     QHash<QString, QString> chosen_; // Request ID → option ID picked but not sent (never transmitted by itself).
     QSet<QString> expanded_;         // Conversation + message IDs opened by the user.
     bool loading_ = false, stickToEnd_ = true;

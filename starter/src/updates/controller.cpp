@@ -368,7 +368,7 @@ QWidget *Controller::settings(QWidget *parent) {
         cancelButton->setEnabled(reply_ || scanning_);
     };
     connect(this, &Controller::changed, box, refresh); refresh();
-    connect(enabled, &QCheckBox::toggled, this, [this](bool value) { state_["enabled"] = value; save(); });
+    connect(enabled, &QCheckBox::toggled, this, [this](bool value) { state_["enabled"] = value; save(); emit changed(); });
     connect(mode, &QComboBox::currentIndexChanged, this, [this](int value) { state_["mode"] = value; if (save() && value > 0 && state_["skipped"].toString() != release_.version) download(); });
     connect(checkButton, &QPushButton::clicked, this, [this] { check(true); });
     connect(notes, &QPushButton::clicked, this, [this] { QDesktopServices::openUrl(release_.page); });

@@ -18,6 +18,7 @@ get_target_property(agent_pet_qt_type Qt6::Core TYPE)
 if(NOT AGENT_PET_PORTABLE_CORE AND agent_pet_qt_type STREQUAL "STATIC_LIBRARY")
     message(FATAL_ERROR "Release packaging requires shared Qt libraries so users can replace them under LGPLv3.")
 endif()
+find_package(ZLIB REQUIRED)
 if(NOT AGENT_PET_PORTABLE_CORE)
     find_package(Qt6 6.5 REQUIRED COMPONENTS Widgets Network LinguistTools)
     if(NOT APPLE AND NOT WIN32)
@@ -81,19 +82,20 @@ qt_add_library(pet_interactions STATIC
 target_include_directories(pet_interactions PUBLIC src)
 target_link_libraries(pet_interactions PUBLIC Qt6::Core)
 qt_add_library(pet_animation STATIC
-    src/animation/catalog.cpp src/animation/pet_library.cpp src/animation/player.cpp src/animation/ambient.cpp src/animation/activity.cpp
+    src/packs/archive.cpp src/packs/installer.cpp src/packs/vpet_mod.cpp src/packs/steam_workshop.cpp
+    src/animation/catalog.cpp src/animation/pet_library.cpp src/animation/local_pet.cpp src/animation/player.cpp src/animation/ambient.cpp src/animation/activity.cpp
     src/animation/mood.cpp src/animation/easter_eggs.cpp src/animation/stage.cpp src/animation/plugins.cpp src/animation/event_rules.cpp)
+qt_add_resources(pet_animation vpet_conversion PREFIX "/vpet-conversion"
+    FILES assets/vpet/animations.json src/animation/cues.json)
 target_include_directories(pet_animation PUBLIC src PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/generated")
-target_link_libraries(pet_animation PUBLIC Qt6::Gui pet_behavior)
+target_link_libraries(pet_animation PUBLIC Qt6::Gui pet_behavior pet_core ZLIB::ZLIB)
 
 if(NOT AGENT_PET_PORTABLE_CORE)
 # Every pet folder under assets/ (docs/pets.md): one stable pack per frame folder, so additions never repack
 # unrelated artwork, and the small index (artwork.rcc) of every pet's metadata, catalog, preview and packs.
 include(cmake/pets.cmake)
-# Pets that ship with the app; any other pet under assets/ downloads on demand from the `pets` release.
-set(AGENT_PET_BUNDLED_PETS vpet CACHE STRING "Pets whose artwork packs are installed (the rest download on demand)")
-add_pets(pet_artwork SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/assets" OUTPUT "${CMAKE_CURRENT_BINARY_DIR}" INSTALL
-    BUNDLED ${AGENT_PET_BUNDLED_PETS})
+# VPet is the only pet in the application source; gallery pets load from user folders.
+add_pets(pet_artwork SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/assets" OUTPUT "${CMAKE_CURRENT_BINARY_DIR}" INSTALL)
 file(GLOB pet_notices CONFIGURE_DEPENDS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "licenses/*")
 list(APPEND pet_notices THIRD_PARTY_NOTICES.md LICENSE NOTICE)
 # Translations. English is the source language; each .ts compiles to a .qm embedded at :/i18n/ in every
@@ -108,14 +110,17 @@ list(SORT pet_translated_sources)
 qt_add_lupdate(pet_i18n TS_FILES ${pet_ts_files} SOURCES ${pet_translated_sources} OPTIONS -locations none -no-ui-lines -no-obsolete)
 qt_add_lrelease(pet_i18n TS_FILES ${pet_ts_files} QM_FILES_OUTPUT_VARIABLE pet_qm_files)
 qt_add_resources(pet_i18n pet_translations PREFIX "/i18n" BASE "${CMAKE_CURRENT_BINARY_DIR}" FILES ${pet_qm_files})
+qt_add_library(pet_sources STATIC src/packs/sources.cpp src/packs/updater.cpp)
+target_include_directories(pet_sources PUBLIC src PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/generated")
+target_link_libraries(pet_sources PUBLIC Qt6::Network pet_animation)
 qt_add_library(pet_ui STATIC
-    src/desktop/pet_window.cpp src/desktop/overlay.cpp
-    src/desktop/pet_picker.cpp src/desktop/pet_downloader.cpp src/desktop/plugin_list.cpp
+    src/desktop/pet_window.cpp src/desktop/pack_controls.cpp src/desktop/vpet_import.cpp src/desktop/source_browser.cpp src/desktop/overlay.cpp
+    src/desktop/pet_picker.cpp src/desktop/plugin_list.cpp
     src/desktop/touch.cpp src/desktop/wander.cpp src/desktop/wellness.cpp src/desktop/snooze.cpp src/desktop/alert_bubble.cpp src/desktop/monitor.cpp
     src/desktop/session_list.cpp src/desktop/quota_panel.cpp src/quota/service.cpp src/updates/controller.cpp
     src/desktop/conversation_text.cpp src/desktop/conversation_bubbles.cpp src/desktop/conversation_panel.cpp src/desktop/conversations.cpp)
 target_include_directories(pet_ui PUBLIC src "${CMAKE_CURRENT_BINARY_DIR}/generated")
-target_link_libraries(pet_ui PUBLIC Qt6::Widgets pet_animation pet_events pet_updates pet_i18n pet_interactions Qt6::Network PRIVATE pet_native)
+target_link_libraries(pet_ui PUBLIC Qt6::Widgets pet_sources pet_animation pet_events pet_updates pet_i18n pet_interactions Qt6::Network PRIVATE pet_native)
 qt_add_resources(pet_ui pet_assets PREFIX "/" FILES ${pet_notices})
 add_dependencies(pet_ui pet_artwork)
 # Headless platform services shared by the hook and the pet: POSIX event transport, hook input,
@@ -143,6 +148,10 @@ target_link_libraries(pet_interaction_stream PUBLIC Qt6::Network pet_interaction
 qt_add_library(pet_platform STATIC ${pet_platform_sources})
 target_include_directories(pet_platform PUBLIC src)
 target_link_libraries(pet_platform PUBLIC Qt6::Core)
+# The Claude Code interaction bridge's hook runtime and session host (docs/adr/0049-claude-interaction-hooks.md).
+qt_add_library(pet_claude_bridge STATIC src/providers/claude_hook.cpp src/providers/claude_host.cpp)
+target_include_directories(pet_claude_bridge PUBLIC src)
+target_link_libraries(pet_claude_bridge PUBLIC pet_events pet_platform pet_interaction_stream)
 if(WIN32)
     target_link_libraries(pet_platform PRIVATE user32) # The hook reads the agent's console window.
 endif()
@@ -180,7 +189,8 @@ file(READ src/providers/opencode-plugin-legacy.js OPENCODE_LEGACY_PLUGIN)
 configure_file(src/providers/opencode_plugin.h.in "${CMAKE_CURRENT_BINARY_DIR}/generated/opencode_plugin.h" @ONLY)
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
     src/providers/opencode-plugin.js src/providers/opencode-plugin-legacy.js)
-qt_add_library(pet_events STATIC src/ipc/local.cpp src/ipc/session_store.cpp src/ipc/autostart.cpp src/providers/integrations.cpp)
+qt_add_library(pet_events STATIC src/ipc/local.cpp src/ipc/session_store.cpp src/ipc/autostart.cpp src/providers/integrations.cpp
+    src/providers/claude_registration.cpp)
 target_include_directories(pet_events PUBLIC src PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/generated")
 target_link_libraries(pet_events PUBLIC pet_core PRIVATE pet_platform)
 if(WIN32)
@@ -200,7 +210,7 @@ qt_add_library(pet_updates STATIC src/updates/release.cpp src/updates/components
 target_include_directories(pet_updates PUBLIC src "${CMAKE_CURRENT_BINARY_DIR}/generated")
 target_link_libraries(pet_updates PUBLIC Qt6::Core PRIVATE pet_update_platform)
 qt_add_executable(agent-pet src/main.cpp)
-target_link_libraries(agent-pet PRIVATE pet_ui pet_events pet_native pet_i18n pet_interaction_stream)
+target_link_libraries(agent-pet PRIVATE pet_ui pet_events pet_native pet_i18n pet_interaction_stream pet_claude_bridge)
 set(pet_cli_target agent-pet) # The executable tests run as hooks and commands.
 if(WIN32)
     # agent-pet.exe opens no console window; agent-pet-cli.exe, the same program as a console
@@ -210,7 +220,7 @@ if(WIN32)
     target_sources(agent-pet PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/generated/agent-pet.rc")
     set_target_properties(agent-pet PROPERTIES WIN32_EXECUTABLE ON)
     qt_add_executable(agent-pet-cli src/main.cpp "${CMAKE_CURRENT_BINARY_DIR}/generated/agent-pet.rc")
-    target_link_libraries(agent-pet-cli PRIVATE pet_ui pet_events pet_native pet_i18n pet_interaction_stream)
+    target_link_libraries(agent-pet-cli PRIVATE pet_ui pet_events pet_native pet_i18n pet_interaction_stream pet_claude_bridge)
     set(pet_cli_target agent-pet-cli)
     qt_add_executable(agent-pet-updater src/platform/windows/update_helper.cpp)
     target_link_libraries(agent-pet-updater PRIVATE pet_updates pet_events pet_i18n)
@@ -288,6 +298,24 @@ if(BUILD_TESTING)
                 DRIVER_PATH="${CMAKE_CURRENT_SOURCE_DIR}/tests/bridge_e2e_driver.mjs")
             add_test(NAME interaction-bridge COMMAND interaction-bridge-tests)
         endif()
+        if(PET_NODE_EXECUTABLE AND NOT WIN32)
+            # The Codex interaction bridge (a unix-socket WebSocket to the app-server daemon): against a fake daemon, then the real service.
+            add_test(NAME codex-bridge COMMAND "${PET_NODE_EXECUTABLE}" --test
+                "${CMAKE_CURRENT_SOURCE_DIR}/tests/codex_bridge_test.mjs")
+            qt_add_executable(interaction-codex-bridge-tests tests/interaction_codex_bridge_tests.cpp)
+            target_link_libraries(interaction-codex-bridge-tests PRIVATE pet_interaction_stream Qt6::Test)
+            target_compile_definitions(interaction-codex-bridge-tests PRIVATE NODE_PATH="${PET_NODE_EXECUTABLE}"
+                DRIVER_PATH="${CMAKE_CURRENT_SOURCE_DIR}/tests/codex_bridge_e2e_driver.mjs")
+            add_test(NAME interaction-codex-bridge COMMAND interaction-codex-bridge-tests)
+        endif()
+        if(NOT WIN32)
+            # The Claude Code interaction bridge: hook handlers, registration, and the real hooks + session host against the real service.
+            qt_add_executable(claude-bridge-tests tests/claude_bridge_tests.cpp)
+            target_link_libraries(claude-bridge-tests PRIVATE pet_claude_bridge pet_interaction_stream Qt6::Test)
+            target_compile_definitions(claude-bridge-tests PRIVATE APP_PATH="$<TARGET_FILE:${pet_cli_target}>")
+            add_dependencies(claude-bridge-tests ${pet_cli_target})
+            add_test(NAME claude-bridge COMMAND claude-bridge-tests)
+        endif()
         if(WIN32)
             qt_add_executable(session-process-fixture tests/session_process_fixture.cpp)
             target_link_libraries(session-process-fixture PRIVATE Qt6::Core)
@@ -328,11 +356,22 @@ if(BUILD_TESTING)
         add_test(NAME i18n COMMAND i18n-tests)
         # Pet packs: the catalog and its core state contract, the pet library over fixture pets, choosing a pet.
         add_pets(pet_test_artwork SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/pets" OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/test-pets")
+        qt_add_executable(pack-updates-tests tests/pack_updates_tests.cpp)
+        target_link_libraries(pack-updates-tests PRIVATE pet_sources Qt6::Test)
+        target_compile_definitions(pack-updates-tests PRIVATE PET_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}" PYTHON="${Python3_EXECUTABLE}")
+        add_test(NAME pack-updates COMMAND pack-updates-tests)
+        qt_add_executable(sources-tests tests/sources_tests.cpp)
+        target_link_libraries(sources-tests PRIVATE pet_sources Qt6::Test)
+        add_test(NAME pack-sources COMMAND sources-tests)
+        qt_add_executable(pack-tests tests/pack_tests.cpp)
+        target_link_libraries(pack-tests PRIVATE pet_animation Qt6::Test)
+        target_compile_definitions(pack-tests PRIVATE PET_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}")
+        add_test(NAME pack-transactions COMMAND pack-tests)
         qt_add_executable(pets-tests tests/pets_tests.cpp)
         target_link_libraries(pets-tests PRIVATE pet_ui Qt6::Test)
         target_compile_definitions(pets-tests PRIVATE PET_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}"
             PET_INDEX="${CMAKE_CURRENT_BINARY_DIR}/artwork.rcc" FIXTURE_INDEX="${CMAKE_CURRENT_BINARY_DIR}/test-pets/artwork.rcc"
-            RCC="$<TARGET_FILE:Qt6::rcc>")
+            RCC="$<TARGET_FILE:Qt6::rcc>" PYTHON="${Python3_EXECUTABLE}")
         add_dependencies(pets-tests pet_test_artwork)
         add_test(NAME pets COMMAND pets-tests)
         set_tests_properties(pets PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
@@ -345,6 +384,16 @@ if(BUILD_TESTING)
         add_test(NAME plugins COMMAND plugin-tests)
         set_tests_properties(plugins PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
         find_package(Python3 COMPONENTS Interpreter REQUIRED)
+        # This integration suite isolates QStandardPaths with XDG_DATA_HOME.
+        if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+            add_test(NAME pack-import COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/scripts/check_pack.py $<TARGET_FILE:agent-pet>)
+        endif()
+        qt_add_executable(vpet-convert-fixture tests/vpet_convert_fixture.cpp)
+        target_link_libraries(vpet-convert-fixture PRIVATE pet_animation)
+        qt_add_executable(steam-workshop-tests tests/steam_workshop_tests.cpp)
+        target_link_libraries(steam-workshop-tests PRIVATE pet_animation Qt6::Test)
+        add_test(NAME steam-workshop COMMAND steam-workshop-tests)
+        add_test(NAME vpet-converter COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/scripts/check_convert_vpet_mod.py $<TARGET_FILE:${pet_cli_target}> $<TARGET_FILE:vpet-convert-fixture>)
         add_test(NAME pet-scaffold COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/scripts/check_new_pet.py)
     endif()
     if(NOT AGENT_PET_PORTABLE_CORE AND NOT APPLE AND NOT WIN32)

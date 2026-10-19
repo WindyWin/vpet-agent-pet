@@ -15,13 +15,23 @@ Thú cưng luôn ở bên bạn trên màn hình: suy nghĩ cùng agent, bận r
   <img src="docs/media/turn-finished.gif" width="120" alt="Lượt đã hoàn thành">
 </p>
 
-- **Nhìn là biết trạng thái**: dễ dàng theo dõi các phiên agent đang làm gì.
-- **Không bỏ lỡ yêu cầu**: thông báo nhỏ xuất hiện khi agent chờ bạn; một cú nhấp đưa bạn đến đúng terminal.
+- **Nhìn là biết trạng thái**: theo dõi được các phiên agent đang làm gì.
+- **Không bỏ lỡ yêu cầu**: khi agent chờ bạn sẽ có thông báo nhỏ, nhấp một cái là đến đúng terminal.
 - **Chơi cùng thú cưng**: kéo, vuốt ve, tung lên, ngắm nó đi dạo và ngủ.
 - **Nhắc bạn chăm sóc bản thân**: nghỉ mắt, uống nước, ăn trưa, vận động cùng Break Buddy và xem lại hoạt động trong ngày.
 - **Riêng tư**: chỉ nhận biết *loại hoạt động*, không đọc prompt, mã nguồn hay câu lệnh của bạn.
 
 Hỗ trợ **Linux** x86_64 (X11 hoặc desktop Wayland có XWayland như GNOME và KDE), **macOS 11+** (Apple silicon và Intel), và **Windows 10 phiên bản 1809 trở lên / Windows 11** (x64).
+
+## Nhập thú cưng hoặc plugin của bạn
+
+Trong **Cài đặt → Thú cưng / Plugin**, chọn **Nhập…** hoặc kéo tệp `.agentpet` vào
+thú cưng hay cửa sổ Cài đặt. Đọc và chấp nhận điều khoản, rồi khởi động lại ứng dụng.
+Có thể dùng `agent-pet import <file.agentpet>` hoặc
+`agent-pet remove <pet|plugin> <id>` mà không cần giao diện. Cài đặt cũng có nút gỡ
+gói; nếu kiểm tra gói thay thế thất bại, gói cũ được giữ nguyên. Xem
+[hướng dẫn tạo thú cưng](starter/docs/pets.md#importing-and-removing-packs) và
+[gói plugin](starter/docs/plugins.md#importing-a-agentpet-file).
 
 ## Bắt đầu
 
@@ -53,7 +63,7 @@ Cần hướng dẫn kỹ hơn hoặc gặp vấn đề? Xem [hướng dẫn cà
 
 ## Các tính năng
 
-*Tất cả hình ảnh đều chụp từ ứng dụng thật; tên dự án chỉ là ví dụ.*
+*Hình ảnh đều chụp từ ứng dụng thật; tên dự án chỉ là ví dụ.*
 
 ### Hiển thị hoạt động của agent
 
@@ -99,7 +109,7 @@ Nhấp vào thú cưng để xem các phiên đang chạy, sắp xếp theo mứ
 
 Kéo thú cưng đến bất kỳ đâu, nó sẽ đung đưa theo con trỏ. Nhấn giữ chuột trái trên đầu hoặc bụng và giữ yên để vuốt ve. Thả giữa lúc đang đung đưa, nó sẽ ngã xuống rồi đứng dậy. Đẩy ra mép màn hình, nó sẽ trốn ở đó và ló đầu ra cho đến khi agent bận rộn trở lại.
 
-Nhưng đừng quá tay: tung quá nhiều, vuốt ve liên tục hoặc giữ quá lâu sẽ khiến nó giận và bỏ đi.
+Đừng quá tay: tung nhiều quá, vuốt ve liên tục hoặc giữ quá lâu thì nó sẽ giận và bỏ đi.
 
 <table>
   <tr>
@@ -117,7 +127,7 @@ Nhưng đừng quá tay: tung quá nhiều, vuốt ve liên tục hoặc giữ q
 
 ### Có nhịp sống riêng
 
-Khi không có việc cần chú ý, thú cưng ngáp, nhìn quanh, thỉnh thoảng đi dạo, bò trên màn hình hoặc leo mép màn hình. Nó cũng có tâm trạng: nhiều lượt hoàn thành khiến nó vui, nhiều lỗi khiến nó buồn, còn làm việc liên tục quá lâu khiến nó đói — cũng là lời nhắc bạn nên nghỉ một chút.
+Khi không có việc cần chú ý, thú cưng ngáp, nhìn quanh, thỉnh thoảng đi dạo, bò trên màn hình hoặc leo mép màn hình. Nó cũng có tâm trạng: nhiều lượt hoàn thành khiến nó vui, nhiều lỗi khiến nó buồn, còn làm việc liên tục quá lâu thì nó đói, cũng là lời nhắc bạn nên nghỉ một chút.
 
 Khi một lượt hoàn thành, VPet chọn ngẫu nhiên cách ăn mừng: vẫy tay, reo vui lấp lánh, cười ngượng hoặc một trong hai động tác chân mèo vui vẻ. Vẫy tay có xác suất gấp đôi từng phản ứng còn lại; dịp đặc biệt và phần thưởng tích lũy có thể mang đến cách ăn mừng khác.
 
@@ -312,3 +322,20 @@ Thư mục gốc còn giữ bộ hình ảnh VPet nguyên bản (khoảng 5.500 
 Hình ảnh nhân vật do **đội ngũ VUP-Simulator** thực hiện, từ [LorisYounger/VPet](https://github.com/LorisYounger/VPet). Hình ảnh tuân theo [điều khoản riêng](licenses/VPET-ARTWORK-TERMS.md); xem [thông báo về bên thứ ba](THIRD_PARTY_NOTICES.md).
 
 Mã nguồn riêng của Agent Pet được cấp phép theo [Apache-2.0](starter/LICENSE). Giấy phép đó không áp dụng cho hình ảnh nhân vật.
+
+## Cài thú cưng từ thư mục cục bộ
+
+Trong Cài đặt → Thú cưng, chọn **Mở thư mục thú cưng**, rồi chép một bộ thú cưng
+đầy đủ vào `packs/pets/<id>/`. Khởi động lại để làm mới danh sách thú cưng,
+rồi mở Cài đặt, chọn ô **Cục bộ** và khởi động lại;
+`--pet <id>` cũng dùng được với thú cưng cục bộ. Siêu dữ liệu hiển thị không hợp lệ
+sẽ có lý do và không thể được chọn; toàn bộ hình ảnh được kiểm tra khi khởi chạy
+thú cưng. Nếu bộ đã chọn bị xóa hoặc không còn hợp lệ, ứng dụng dùng
+VPet cho lần chạy đó và giữ lựa chọn đã lưu. Mục Giới thiệu cho phép đọc điều khoản
+hình ảnh của từng thú cưng đã cài. Cập nhật ứng dụng và dọn bộ nhớ tải xuống không
+xóa các thư mục này. Xem [hướng dẫn cài đặt](starter/docs/pets.md#installing-a-local-pet)
+để biết cấu trúc và giới hạn. Nhập tệp ZIP sẽ được bổ sung ở giai đoạn sau; duyệt nguồn đã có sẵn trong Cài đặt.
+
+Ứng dụng chỉ tích hợp VPet. Tải gói `.agentpet` từ [thư viện thú cưng](https://github.com/WindyWin/agent-pet-gallery/releases), rồi nhập gói trong Cài đặt → Thú cưng.
+
+Danh mục gói: [duyệt, cài đặt và xuất bản nguồn](starter/docs/pack-sources.vi.md).

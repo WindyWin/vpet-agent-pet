@@ -608,6 +608,31 @@ private slots:
         rig.bridge.open({reused}); // An ended conversation cannot come back.
         QCOMPARE(rig.conv(reused).link, Conversation::Link::Ended);
     }
+    // A refused conversation_open is answered with its error alone: a resync would make the bridge treat it as registered.
+    void aRefusedOpenGetsAnErrorAndNoResync() {
+        Rig rig;
+        const auto resyncs = [&](const ConversationKey &k) {
+            int n = 0;
+            for (const auto &f : rig.bridge.inbox)
+                if (f.value("type") == "resync" && f.value("conversation").toObject().value("conversation_epoch") == k.epoch) ++n;
+            return n;
+        };
+        const auto ended = key("session-e", "e1");
+        rig.bridge.open({ended});
+        QCOMPARE(resyncs(ended), 1); // Accepted: the bridge is asked for its snapshot.
+        rig.bridge.ended(ended);
+        rig.bridge.inbox.clear();
+        rig.bridge.open({ended});    // The identity is held as ended.
+        QCOMPARE(resyncs(ended), 0);
+        QCOMPARE(rig.bridge.errorCodes(), QStringList{QString(reason::ended)});
+        FakeBridge other(rig.service, 2, "other"); // Another provider's name in the key.
+        other.connect();
+        other.hello({});
+        other.send({{"type", "conversation_open"}, {"conversation", key("session-f", "e1").toJson()}, {"title", "x"}, {"ready", true},
+                    {"capabilities", QJsonArray{"messages"}}});
+        QCOMPARE(other.errorCodes().size(), 1);
+        for (const auto &f : other.inbox) QVERIFY(f.value("type") != "resync");
+    }
     void endedConversationsKeepReadableHistory() {
         Rig rig;
         rig.bridge.message(rig.a, 1, "m1", "keep me");

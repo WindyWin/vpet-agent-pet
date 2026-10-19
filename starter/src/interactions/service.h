@@ -43,6 +43,9 @@ public:
     // Interface side. Validates, reserves the request and dispatches. The result is Pending while the
     // bridge works; its final outcome arrives as a Change of kind CommandResult.
     CommandResult submit(const Command &command);
+    // The user lets this conversation go (its terminal is gone, say): the bridge is told to stop tracking it and
+    // it ends here, exactly as if the session had. The agent itself is untouched. False if there is nothing to end.
+    bool release(const ConversationKey &key);
     void expire();
 
     const Conversation *find(const ConversationKey &key) const;

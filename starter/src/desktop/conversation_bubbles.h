@@ -7,7 +7,7 @@
 
 namespace pet {
 // The collapsed preview: a compact two-line card beside the pet, "● Needs your answer · api-web  +2" over the
-// first line of the message, with View and Hide. It never takes focus and never expands by itself.
+// first line of the message, with View (the conversation), Open (the agent's own window) and Hide. It never takes focus and never expands by itself.
 class ConversationPreview : public QWidget {
     Q_OBJECT
 public:
@@ -24,9 +24,11 @@ public:
     QString body() const { return body_->text(); }
     QString more() const { return more_->isVisible() ? more_->text() : QString(); }
     void view() { emit viewRequested(); }
+    void openHost() { emit openRequested(); }
     void hideMessage() { emit hideRequested(); }
 signals:
     void viewRequested();
+    void openRequested(); // Bring the agent's own terminal or editor forward.
     void hideRequested();
     void listRequested();
 protected:
@@ -36,7 +38,8 @@ protected:
 private:
     void retranslate();
     QLabel *title_, *name_, *body_;
-    QPushButton *more_, *view_, *hide_;
+    QPushButton *more_, *view_, *open_, *hide_;
+    static constexpr int width_ = 380;
     QString fullBody_;
     QColor accent_;
 };

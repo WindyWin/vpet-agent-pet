@@ -85,6 +85,309 @@
     </message>
 </context>
 <context>
+    <name>Conversations</name>
+    <message>
+        <source>Agent message</source>
+        <translation>Tin nhắn của agent</translation>
+    </message>
+    <message>
+        <source>View</source>
+        <translation>Xem</translation>
+    </message>
+    <message>
+        <source>View the conversation</source>
+        <translation>Xem cuộc trò chuyện</translation>
+    </message>
+    <message>
+        <source>Open the conversation</source>
+        <translation>Mở cuộc trò chuyện</translation>
+    </message>
+    <message>
+        <source>Open</source>
+        <translation>Mở</translation>
+    </message>
+    <message>
+        <source>Bring the agent&apos;s terminal or editor forward</source>
+        <translation>Đưa terminal hoặc trình soạn thảo của agent lên trước</translation>
+    </message>
+    <message>
+        <source>Hide this preview</source>
+        <translation>Ẩn bản xem trước này</translation>
+    </message>
+    <message>
+        <source>Hide this preview (it stays unread)</source>
+        <translation>Ẩn bản xem trước này (vẫn giữ là chưa đọc)</translation>
+    </message>
+    <message>
+        <source>Show conversations</source>
+        <translation>Hiện các cuộc trò chuyện</translation>
+    </message>
+    <message>
+        <source>Agent conversations</source>
+        <translation>Trò chuyện với agent</translation>
+    </message>
+    <message>
+        <source>No conversations yet. An agent with interactions enabled appears here.</source>
+        <translation>Chưa có cuộc trò chuyện nào. Agent đã bật tương tác sẽ xuất hiện ở đây.</translation>
+    </message>
+    <message>
+        <source>Needs your answer</source>
+        <translation>Cần bạn trả lời</translation>
+    </message>
+    <message>
+        <source>1 new message</source>
+        <translation>1 tin nhắn mới</translation>
+    </message>
+    <message>
+        <source>%1 new messages</source>
+        <translation>%1 tin nhắn mới</translation>
+    </message>
+    <message>
+        <source>Ready</source>
+        <translation>Sẵn sàng</translation>
+    </message>
+    <message>
+        <source>Working…</source>
+        <translation>Đang làm việc…</translation>
+    </message>
+    <message>
+        <source>1 conversation</source>
+        <translation>1 cuộc trò chuyện</translation>
+    </message>
+    <message>
+        <source>%1 conversations</source>
+        <translation>%1 cuộc trò chuyện</translation>
+    </message>
+    <message>
+        <source>Agent conversation</source>
+        <translation>Trò chuyện với agent</translation>
+    </message>
+    <message>
+        <source>Collapse (Esc)</source>
+        <translation>Thu gọn (Esc)</translation>
+    </message>
+    <message>
+        <source>Collapse conversation</source>
+        <translation>Thu gọn cuộc trò chuyện</translation>
+    </message>
+    <message>
+        <source>Ctrl+Enter sends</source>
+        <translation>Ctrl+Enter để gửi</translation>
+    </message>
+    <message>
+        <source>Question to answer</source>
+        <translation>Câu hỏi cần trả lời</translation>
+    </message>
+    <message>
+        <source>Message to the agent</source>
+        <translation>Tin nhắn gửi agent</translation>
+    </message>
+    <message>
+        <source>Conversation unavailable</source>
+        <translation>Không có cuộc trò chuyện</translation>
+    </message>
+    <message>
+        <source>This conversation is no longer available.</source>
+        <translation>Cuộc trò chuyện này không còn nữa.</translation>
+    </message>
+    <message>
+        <source>Status: %1</source>
+        <translation>Trạng thái: %1</translation>
+    </message>
+    <message>
+        <source>Some earlier messages could not be loaded.</source>
+        <translation>Không tải được một số tin nhắn trước đó.</translation>
+    </message>
+    <message>
+        <source>Some messages could not be loaded.</source>
+        <translation>Không tải được một số tin nhắn.</translation>
+    </message>
+    <message>
+        <source>A question here is too large to show. Open the agent to answer it.</source>
+        <translation>Có câu hỏi quá dài để hiển thị. Hãy mở agent để trả lời.</translation>
+    </message>
+    <message>
+        <source>Show more</source>
+        <translation>Xem thêm</translation>
+    </message>
+    <message>
+        <source>Show less</source>
+        <translation>Thu gọn</translation>
+    </message>
+    <message>
+        <source>Agent</source>
+        <translation>Agent</translation>
+    </message>
+    <message>
+        <source>You</source>
+        <translation>Bạn</translation>
+    </message>
+    <message>
+        <source>Answered</source>
+        <translation>Đã trả lời</translation>
+    </message>
+    <message>
+        <source>Cancelled</source>
+        <translation>Đã hủy</translation>
+    </message>
+    <message>
+        <source>Replaced</source>
+        <translation>Đã thay thế</translation>
+    </message>
+    <message>
+        <source>Expired</source>
+        <translation>Đã hết hạn</translation>
+    </message>
+    <message>
+        <source>Question %1 of %2: %3</source>
+        <translation>Câu hỏi %1/%2: %3</translation>
+    </message>
+    <message>
+        <source>Custom answer</source>
+        <translation>Câu trả lời khác</translation>
+    </message>
+    <message>
+        <source>Answer this question</source>
+        <translation>Trả lời câu hỏi này</translation>
+    </message>
+    <message>
+        <source>Type a custom answer…</source>
+        <translation>Nhập câu trả lời khác…</translation>
+    </message>
+    <message>
+        <source>Send answer</source>
+        <translation>Gửi câu trả lời</translation>
+    </message>
+    <message>
+        <source>Follow up with this agent…</source>
+        <translation>Nhắn tiếp cho agent này…</translation>
+    </message>
+    <message>
+        <source>Send</source>
+        <translation>Gửi</translation>
+    </message>
+    <message>
+        <source>Sending…</source>
+        <translation>Đang gửi…</translation>
+    </message>
+    <message>
+        <source>Sent</source>
+        <translation>Đã gửi</translation>
+    </message>
+    <message>
+        <source>Delivery not confirmed. Check the agent before sending again.</source>
+        <translation>Chưa xác nhận đã gửi tới. Hãy kiểm tra agent trước khi gửi lại.</translation>
+    </message>
+    <message>
+        <source>%1
+Provider: %2
+Session: %3</source>
+        <translation>%1
+Nhà cung cấp: %2
+Phiên: %3</translation>
+    </message>
+    <message>
+        <source>Session ended</source>
+        <translation>Phiên đã kết thúc</translation>
+    </message>
+    <message>
+        <source>Disconnected</source>
+        <translation>Mất kết nối</translation>
+    </message>
+    <message>
+        <source>Connected</source>
+        <translation>Đã kết nối</translation>
+    </message>
+    <message>
+        <source>Waiting for your answer</source>
+        <translation>Đang chờ bạn trả lời</translation>
+    </message>
+    <message>
+        <source>Ready for a follow-up</source>
+        <translation>Sẵn sàng nhận tin nhắn tiếp</translation>
+    </message>
+    <message>
+        <source>The agent is disconnected.</source>
+        <translation>Agent đã mất kết nối.</translation>
+    </message>
+    <message>
+        <source>The session has ended.</source>
+        <translation>Phiên đã kết thúc.</translation>
+    </message>
+    <message>
+        <source>The question changed. Review it and answer again.</source>
+        <translation>Câu hỏi đã thay đổi. Hãy xem lại và trả lời lần nữa.</translation>
+    </message>
+    <message>
+        <source>This question was already answered.</source>
+        <translation>Câu hỏi này đã được trả lời.</translation>
+    </message>
+    <message>
+        <source>An answer is already being sent.</source>
+        <translation>Một câu trả lời đang được gửi.</translation>
+    </message>
+    <message>
+        <source>This question is closed.</source>
+        <translation>Câu hỏi này đã đóng.</translation>
+    </message>
+    <message>
+        <source>The agent is busy. Try again when it is ready.</source>
+        <translation>Agent đang bận. Hãy thử lại khi nó sẵn sàng.</translation>
+    </message>
+    <message>
+        <source>Answer the open question first.</source>
+        <translation>Hãy trả lời câu hỏi đang mở trước.</translation>
+    </message>
+    <message>
+        <source>That is too long to send.</source>
+        <translation>Nội dung quá dài để gửi.</translation>
+    </message>
+    <message>
+        <source>That option is no longer available.</source>
+        <translation>Lựa chọn đó không còn nữa.</translation>
+    </message>
+    <message>
+        <source>This question does not take a typed answer.</source>
+        <translation>Câu hỏi này không nhận câu trả lời nhập tay.</translation>
+    </message>
+    <message>
+        <source>This agent cannot do that.</source>
+        <translation>Agent này không làm được việc đó.</translation>
+    </message>
+    <message>
+        <source>The agent did not accept that answer. Edit it and try again.</source>
+        <translation>Agent không nhận câu trả lời đó. Hãy sửa lại và thử lần nữa.</translation>
+    </message>
+    <message>
+        <source>Could not send (%1).</source>
+        <translation>Không gửi được (%1).</translation>
+    </message>
+    <message>
+        <source>New message</source>
+        <translation>Tin nhắn mới</translation>
+    </message>
+    <message>
+        <source>Could not open the agent</source>
+        <translation>Không mở được agent</translation>
+    </message>
+    <message>
+        <source>Agent Pet could not find the window of %1.</source>
+        <translation>Agent Pet không tìm thấy cửa sổ của %1.</translation>
+    </message>
+    <message>
+        <source>Stop showing this conversation in the pet? The agent is not affected, and the conversation returns when you use the agent again.</source>
+        <translation>Ngừng hiển thị cuộc trò chuyện này trên thú cưng? Agent không bị ảnh hưởng, và cuộc trò chuyện sẽ quay lại khi bạn dùng lại agent.</translation>
+    </message>
+    <message>
+        <source>Remove from the pet</source>
+        <translation>Gỡ khỏi thú cưng</translation>
+    </message>
+    <message>
+        <source>Keep</source>
+        <translation>Giữ lại</translation>
+    </message>
+</context>
+<context>
     <name>Focus</name>
     <message>
         <source>Wayland focus requires KDE Plasma 6.</source>
@@ -207,26 +510,180 @@
     </message>
 </context>
 <context>
+    <name>PackControls</name>
+    <message>
+        <source>Pack installation</source>
+        <translation>Cài đặt gói</translation>
+    </message>
+    <message>
+        <source>Import pack</source>
+        <translation>Nhập gói</translation>
+    </message>
+    <message>
+        <source>Unverified local content: %1
+%2 by %3
+Version: %4
+Licence: %5
+Source: %6</source>
+        <translation>Nội dung cục bộ chưa được xác minh: %1
+%2 của %3
+Phiên bản: %4
+Giấy phép: %5
+Nguồn: %6</translation>
+    </message>
+    <message>
+        <source>Replace installed version %1 (%2) with %3. This also permits an equal version or a downgrade.</source>
+        <translation>Thay phiên bản đã cài %1 (%2) bằng %3. Thao tác này cũng cho phép cài lại cùng phiên bản hoặc hạ phiên bản.</translation>
+    </message>
+    <message>
+        <source>Accept terms and install</source>
+        <translation>Chấp nhận điều khoản và cài đặt</translation>
+    </message>
+    <message>
+        <source>Pack change queued. Restart Agent Pet to apply it.</source>
+        <translation>Thay đổi gói đã được xếp hàng. Khởi động lại Agent Pet để áp dụng.</translation>
+    </message>
+    <message>
+        <source>Browse pack sources…</source>
+        <translation>Duyệt nguồn gói…</translation>
+    </message>
+    <message>
+        <source>Import…</source>
+        <translation>Nhập…</translation>
+    </message>
+    <message>
+        <source>Agent Pet packs (*.agentpet)</source>
+        <translation>Gói Agent Pet (*.agentpet)</translation>
+    </message>
+    <message>
+        <source>Import VPet mod…</source>
+        <translation>Nhập mod VPet…</translation>
+    </message>
+    <message>
+        <source> — No source (manual updates only)</source>
+        <translation> — Không có nguồn (chỉ cập nhật thủ công)</translation>
+    </message>
+    <message>
+        <source> — Installed from a source</source>
+        <translation> — Đã cài từ một nguồn</translation>
+    </message>
+    <message>
+        <source>Remove installed pack…</source>
+        <translation>Gỡ gói đã cài…</translation>
+    </message>
+    <message>
+        <source>Remove pack</source>
+        <translation>Gỡ gói</translation>
+    </message>
+    <message>
+        <source>Remove %1 on the next start? Removing the selected pet switches to VPet.</source>
+        <translation>Gỡ %1 ở lần khởi động tiếp theo? Gỡ thú cưng đang chọn sẽ chuyển sang VPet.</translation>
+    </message>
+</context>
+<context>
+    <name>PackSources</name>
+    <message>
+        <source>Cannot save pack sources or catalog cache.</source>
+        <translation>Không thể lưu nguồn gói hoặc bộ nhớ đệm danh mục.</translation>
+    </message>
+    <message>
+        <source>Malformed or unsupported pack catalog.</source>
+        <translation>Danh mục gói không hợp lệ hoặc chưa được hỗ trợ.</translation>
+    </message>
+    <message>
+        <source>Unsupported catalog schema.</source>
+        <translation>Phiên bản cấu trúc danh mục chưa được hỗ trợ.</translation>
+    </message>
+    <message>
+        <source>Requires Agent Pet %1 or newer.</source>
+        <translation>Yêu cầu Agent Pet %1 trở lên.</translation>
+    </message>
+    <message>
+        <source>Install the target pet first: %1</source>
+        <translation>Hãy cài thú cưng đích trước: %1</translation>
+    </message>
+    <message>
+        <source>Cannot read pack sources.</source>
+        <translation>Không thể đọc nguồn gói.</translation>
+    </message>
+    <message>
+        <source>Enter an HTTPS URL without credentials or a fragment.</source>
+        <translation>Nhập URL HTTPS không chứa thông tin đăng nhập hoặc phần neo.</translation>
+    </message>
+    <message>
+        <source>Another source change is in progress.</source>
+        <translation>Một thay đổi nguồn khác đang được xử lý.</translation>
+    </message>
+    <message>
+        <source>At most 32 sources are supported.</source>
+        <translation>Hỗ trợ tối đa 32 nguồn.</translation>
+    </message>
+    <message>
+        <source>The official source cannot be removed.</source>
+        <translation>Không thể xóa nguồn chính thức.</translation>
+    </message>
+    <message>
+        <source>Cannot read cached catalog.</source>
+        <translation>Không thể đọc danh mục đã lưu.</translation>
+    </message>
+    <message>
+        <source>Download timed out.</source>
+        <translation>Tải xuống đã hết thời gian chờ.</translation>
+    </message>
+    <message>
+        <source>Download cancelled. Installed packs are unchanged.</source>
+        <translation>Đã hủy tải xuống. Các gói đã cài không thay đổi.</translation>
+    </message>
+    <message>
+        <source>Invalid download URL, size or digest.</source>
+        <translation>URL tải xuống, dung lượng hoặc mã băm không hợp lệ.</translation>
+    </message>
+    <message>
+        <source>Cannot create a temporary download.</source>
+        <translation>Không thể tạo tệp tải xuống tạm thời.</translation>
+    </message>
+    <message>
+        <source>Download redirected to an unsafe URL.</source>
+        <translation>Tải xuống chuyển hướng đến URL không an toàn.</translation>
+    </message>
+    <message>
+        <source>Download size does not match the catalog or exceeds the limit.</source>
+        <translation>Dung lượng tải xuống không khớp danh mục hoặc vượt giới hạn.</translation>
+    </message>
+    <message>
+        <source>Download failed: %1</source>
+        <translation>Tải xuống thất bại: %1</translation>
+    </message>
+    <message>
+        <source>Download SHA-256 does not match the catalog.</source>
+        <translation>Mã SHA-256 của tệp tải xuống không khớp danh mục.</translation>
+    </message>
+    <message>
+        <source>Cannot save downloaded data.</source>
+        <translation>Không thể lưu dữ liệu tải xuống.</translation>
+    </message>
+</context>
+<context>
     <name>Pet</name>
     <message>
         <source>Monday again... I&apos;m so tired. Let&apos;s take it slow today.</source>
-        <translation>Lại thứ Hai rồi... Em mệt quá. Hôm nay mình làm thong thả thôi nha.</translation>
+        <translation>Lại thứ Hai rồi... Em uể oải quá. Hôm nay mình cứ từ từ thôi nha.</translation>
     </message>
     <message>
         <source>It&apos;s %1. Time to step away, take a break, and enjoy some lunch! 🍱</source>
-        <translation>%1 rồi bạn ơi. Mình nghỉ tay, rời màn hình và ăn trưa thôi! 🍱</translation>
+        <translation>%1 rồi đó bạn! Rời màn hình đi ăn trưa thôi! 🍱</translation>
     </message>
     <message>
         <source>It&apos;s %1. Time to wrap up and get ready to head home!</source>
-        <translation>%1 rồi bạn ơi. Mình thu xếp công việc, chuẩn bị về nhà thôi!</translation>
+        <translation>%1 rồi, mình dọn dẹp rồi về nhà thôi bạn ơi!</translation>
     </message>
     <message>
         <source>It&apos;s %1. Time to put everything down and go to sleep!</source>
-        <translation>%1 rồi bạn ơi. Mình gác mọi việc lại và đi ngủ thôi!</translation>
+        <translation>%1 rồi đó. Gác hết lại đi ngủ thôi bạn!</translation>
     </message>
     <message>
         <source>It&apos;s getting late. Maybe finish up and get some sleep?</source>
-        <translation>Khuya rồi bạn ơi. Mình làm nốt rồi đi ngủ nha?</translation>
+        <translation>Khuya lắm rồi. Bạn làm nốt rồi đi ngủ nha?</translation>
     </message>
     <message>
         <source>Start break</source>
@@ -234,19 +691,19 @@
     </message>
     <message>
         <source>Move or stretch with me…</source>
-        <translation>Vận động hoặc giãn cơ cùng em nha…</translation>
+        <translation>Cùng em vươn vai giãn cơ nha…</translation>
     </message>
     <message>
         <source>Eyes on something far away…</source>
-        <translation>Nhìn ra xa nào…</translation>
+        <translation>Nhìn ra xa một chút nào…</translation>
     </message>
     <message>
         <source>Nice! Your eyes got a rest.</source>
-        <translation>Tốt lắm! Mắt bạn đã được nghỉ ngơi.</translation>
+        <translation>Tốt lắm! Mắt bạn được nghỉ rồi nè.</translation>
     </message>
     <message>
         <source>Nice! Thanks for moving with me.</source>
-        <translation>Tuyệt! Cảm ơn bạn đã vận động cùng em nha.</translation>
+        <translation>Tuyệt! Cảm ơn bạn đã tập cùng em nha.</translation>
     </message>
     <message>
         <source>Today&apos;s recap</source>
@@ -254,7 +711,7 @@
     </message>
     <message>
         <source>Look at something far away</source>
-        <translation>Bạn nhìn ra xa nha</translation>
+        <translation>Nhìn ra xa một chút nha bạn</translation>
     </message>
     <message>
         <source>Time for some water 💧</source>
@@ -262,7 +719,7 @@
     </message>
     <message>
         <source>Take a movement break with me</source>
-        <translation>Mình nghỉ tay, vận động cùng em nha</translation>
+        <translation>Đứng dậy vận động với em chút nha</translation>
     </message>
     <message>
         <source>1 turn</source>
@@ -303,7 +760,7 @@
     </message>
     <message>
         <source>No agent work yet today.</source>
-        <translation>Hôm nay chưa có hoạt động nào của agent.</translation>
+        <translation>Hôm nay agent chưa làm gì cả.</translation>
     </message>
     <message>
         <source>Today: %1 in %2</source>
@@ -330,7 +787,7 @@
     <message>
         <source>%1 waited 10+ min</source>
         <extracomment>%1 = &quot;2 approvals&quot;</extracomment>
-        <translation>%1 phải chờ hơn 10 phút</translation>
+        <translation>%1 đã chờ hơn 10 phút</translation>
     </message>
     <message>
         <source>longest run %1</source>
@@ -348,15 +805,15 @@
     </message>
     <message>
         <source>Too much petting! I need a break. Bye!</source>
-        <translation>Vuốt ve nhiều quá rồi! Em cần nghỉ một chút. Tạm biệt bạn!</translation>
+        <translation>Vuốt nhiều quá rồi! Em phải nghỉ đây. Chào bạn nha!</translation>
     </message>
     <message>
         <source>Put me down! I&apos;m leaving!</source>
-        <translation>Thả em xuống! Em đi đây!</translation>
+        <translation>Thả em xuống! Em đi luôn đó!</translation>
     </message>
     <message>
         <source>Stop throwing me! I&apos;m leaving!</source>
-        <translation>Đừng ném em nữa! Em đi đây!</translation>
+        <translation>Đừng quăng em nữa! Em giận đi đây!</translation>
     </message>
 </context>
 <context>
@@ -577,6 +1034,85 @@
     </message>
 </context>
 <context>
+    <name>VPetImport</name>
+    <message>
+        <source>Import VPet mod</source>
+        <translation>Nhập mod VPet</translation>
+    </message>
+    <message>
+        <source>Bring your own mod and its licence text. Only LPS metadata and PNG artwork are read; code plugins are ignored. Nothing is downloaded from Steam.</source>
+        <translation>Hãy cung cấp mod và văn bản giấy phép của mod. Ứng dụng chỉ đọc siêu dữ liệu LPS và ảnh PNG, bỏ qua plugin mã nguồn và không tải gì từ Steam.</translation>
+    </message>
+    <message>
+        <source>Mod folder, ZIP or pet definition</source>
+        <translation>Thư mục mod, ZIP hoặc tệp định nghĩa thú cưng</translation>
+    </message>
+    <message>
+        <source>Choose folder…</source>
+        <translation>Chọn thư mục…</translation>
+    </message>
+    <message>
+        <source>Choose ZIP or LPS…</source>
+        <translation>Chọn ZIP hoặc LPS…</translation>
+    </message>
+    <message>
+        <source>Choose mod folder</source>
+        <translation>Chọn thư mục mod</translation>
+    </message>
+    <message>
+        <source>Choose mod</source>
+        <translation>Chọn mod</translation>
+    </message>
+    <message>
+        <source>VPet mods (*.zip *.lps)</source>
+        <translation>Mod VPet (*.zip *.lps)</translation>
+    </message>
+    <message>
+        <source>Choose an installed Steam workshop item…</source>
+        <translation>Chọn một mục Steam Workshop đã cài…</translation>
+    </message>
+    <message>
+        <source>Installed workshop items</source>
+        <translation>Các mục Workshop đã cài</translation>
+    </message>
+    <message>
+        <source>Pet id</source>
+        <translation>Mã thú cưng</translation>
+    </message>
+    <message>
+        <source>Use mod metadata if available</source>
+        <translation>Dùng siêu dữ liệu của mod nếu có</translation>
+    </message>
+    <message>
+        <source>Author</source>
+        <translation>Tác giả</translation>
+    </message>
+    <message>
+        <source>Licence</source>
+        <translation>Giấy phép</translation>
+    </message>
+    <message>
+        <source>Choose licence text…</source>
+        <translation>Chọn văn bản giấy phép…</translation>
+    </message>
+    <message>
+        <source>Choose licence text</source>
+        <translation>Chọn văn bản giấy phép</translation>
+    </message>
+    <message>
+        <source>Text files (*.txt *.md);;All files (*)</source>
+        <translation>Tệp văn bản (*.txt *.md);;Tất cả tệp (*)</translation>
+    </message>
+    <message>
+        <source>Convert and review…</source>
+        <translation>Chuyển đổi và xem lại…</translation>
+    </message>
+    <message>
+        <source>Converting artwork… You can close this window to discard the result.</source>
+        <translation>Đang chuyển đổi ảnh… Bạn có thể đóng cửa sổ này để bỏ kết quả.</translation>
+    </message>
+</context>
+<context>
     <name>pet::AlertBubble</name>
     <message>
         <source>Agent Pet alert</source>
@@ -666,25 +1202,6 @@
     </message>
 </context>
 <context>
-    <name>pet::PetDownloader</name>
-    <message>
-        <source>Cannot save %1. Check free disk space.</source>
-        <translation>Không thể lưu %1. Hãy kiểm tra dung lượng đĩa còn trống.</translation>
-    </message>
-    <message>
-        <source>Download cancelled.</source>
-        <translation>Đã hủy tải xuống.</translation>
-    </message>
-    <message>
-        <source>The download of %1 did not match its checksum. Try again later.</source>
-        <translation>Mã kiểm tra của tệp %1 đã tải về không khớp. Hãy thử lại sau.</translation>
-    </message>
-    <message>
-        <source>Could not download %1. Check your connection and try again.</source>
-        <translation>Không thể tải %1. Hãy kiểm tra kết nối mạng rồi thử lại.</translation>
-    </message>
-</context>
-<context>
     <name>pet::PetPicker</name>
     <message>
         <source>Pet character</source>
@@ -699,29 +1216,29 @@
         <translation>%1 sẽ xuất hiện khi bạn khởi động lại Agent Pet.</translation>
     </message>
     <message>
-        <source>Pet download progress</source>
-        <translation>Tiến độ tải thú cưng</translation>
+        <source>Pet %1 is unavailable: %2. Using %3 for this run.</source>
+        <translation>Không thể dùng thú cưng %1: %2. Dùng %3 trong lần chạy này.</translation>
     </message>
     <message>
-        <source>Cancel download</source>
-        <translation>Hủy tải xuống</translation>
+        <source>The pet is not installed.</source>
+        <translation>Thú cưng chưa được cài đặt.</translation>
     </message>
     <message>
-        <source>by %1 · %2 to download</source>
-        <translation>của %1 · cần tải %2</translation>
+        <source>Local</source>
+        <translation>Cục bộ</translation>
     </message>
     <message>
-        <source>Downloading %1…</source>
-        <translation>Đang tải %1…</translation>
+        <source>Local · by %1 · %2</source>
+        <translation>Cục bộ · tác giả %1 · %2</translation>
+    </message>
+    <message>
+        <source>Cannot be used: %1</source>
+        <translation>Không thể sử dụng: %1</translation>
     </message>
     <message>
         <source>✓ %1</source>
         <extracomment>A pet tile&apos;s label; %1 = the pet&apos;s name. Marks the chosen pet.</extracomment>
         <translation>✓ %1</translation>
-    </message>
-    <message>
-        <source>⬇ %1</source>
-        <translation>⬇ %1</translation>
     </message>
 </context>
 <context>
@@ -751,6 +1268,10 @@ Nhấp chuột phải để mở menu · Esc để thoát</translation>
     <message>
         <source>Running sessions…</source>
         <translation>Các phiên đang chạy…</translation>
+    </message>
+    <message>
+        <source>Agent conversations…</source>
+        <translation>Trò chuyện với agent…</translation>
     </message>
     <message>
         <source>Today&apos;s recap</source>
@@ -874,6 +1395,14 @@ Nhấp chuột phải để mở menu · Esc để thoát</translation>
         <translation>đang tạm hoãn</translation>
     </message>
     <message>
+        <source>Pets have moved to the gallery</source>
+        <translation>Thú cưng đã chuyển sang thư viện riêng</translation>
+    </message>
+    <message>
+        <source>Agent Pet now includes only VPet. Additional pets are available as separate packs. Import them from the &lt;a href=&quot;https://github.com/WindyWin/agent-pet-gallery/releases&quot;&gt;pet gallery&lt;/a&gt;. VPet is selected for now.</source>
+        <translation>Agent Pet hiện chỉ tích hợp VPet. Các thú cưng khác được cung cấp dưới dạng gói riêng. Bạn có thể nhập gói từ &lt;a href=&quot;https://github.com/WindyWin/agent-pet-gallery/releases&quot;&gt;thư viện thú cưng&lt;/a&gt;. Hiện tại, VPet đã được chọn.</translation>
+    </message>
+    <message>
         <source>Artwork unavailable
 Right-click for controls</source>
         <translation>Không có hình ảnh
@@ -950,6 +1479,10 @@ Nhấp chuột phải để mở menu</translation>
     <message>
         <source>&amp;Character</source>
         <translation>&amp;Nhân vật</translation>
+    </message>
+    <message>
+        <source>Open pets &amp;folder</source>
+        <translation>Mở &amp;thư mục thú cưng</translation>
     </message>
     <message>
         <source>Off (no fidgets or alternate idle loops)</source>
@@ -1358,6 +1891,10 @@ Các cài đặt và hook khác được giữ nguyên. Hãy đăng ký từ th�
         <translation>Không có thông tin về điều khoản sử dụng hình ảnh.</translation>
     </message>
     <message>
+        <source>Pet artwork terms</source>
+        <translation>Điều khoản hình ảnh thú cưng</translation>
+    </message>
+    <message>
         <source>Animation preview</source>
         <translation>Xem trước hoạt ảnh</translation>
     </message>
@@ -1417,7 +1954,7 @@ Các cài đặt và hook khác được giữ nguyên. Hãy đăng ký từ th�
     </message>
     <message>
         <source>Cannot be used: %1</source>
-        <translation>Không dùng được: %1</translation>
+        <translation>Không thể sử dụng: %1</translation>
     </message>
     <message>
         <source>Unloads the next time Agent Pet starts</source>
@@ -1588,6 +2125,342 @@ Các cài đặt và hook khác được giữ nguyên. Hãy đăng ký từ th�
     <message>
         <source>and %1 more</source>
         <translation>và %1 phiên khác</translation>
+    </message>
+</context>
+<context>
+    <name>pet::SourceBrowser</name>
+    <message>
+        <source>Pack sources</source>
+        <translation>Nguồn gói</translation>
+    </message>
+    <message>
+        <source>Source</source>
+        <translation>Nguồn</translation>
+    </message>
+    <message>
+        <source>Add source…</source>
+        <translation>Thêm nguồn…</translation>
+    </message>
+    <message>
+        <source>Remove source</source>
+        <translation>Xóa nguồn</translation>
+    </message>
+    <message>
+        <source>Refresh</source>
+        <translation>Làm mới</translation>
+    </message>
+    <message>
+        <source>Catalogs are cached for offline browsing. Refresh contacts the selected source; selecting a pack loads its preview. Third-party sources are unverified. Installing a plugin does not enable it or connect an external integration.</source>
+        <translation>Danh mục được lưu để duyệt khi ngoại tuyến. Làm mới sẽ kết nối với nguồn đã chọn; chọn gói sẽ tải ảnh xem trước. Nguồn bên thứ ba chưa được xác minh. Cài tiện ích không tự bật tiện ích hoặc kết nối tích hợp bên ngoài.</translation>
+    </message>
+    <message>
+        <source>Available packs</source>
+        <translation>Các gói hiện có</translation>
+    </message>
+    <message>
+        <source>Pack details</source>
+        <translation>Chi tiết gói</translation>
+    </message>
+    <message>
+        <source>Install…</source>
+        <translation>Cài đặt…</translation>
+    </message>
+    <message>
+        <source>Remove pack…</source>
+        <translation>Xóa gói…</translation>
+    </message>
+    <message>
+        <source>Install from URL…</source>
+        <translation>Cài từ URL…</translation>
+    </message>
+    <message>
+        <source>Cancel download</source>
+        <translation>Hủy tải xuống</translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation>Đóng</translation>
+    </message>
+    <message>
+        <source>Add source</source>
+        <translation>Thêm nguồn</translation>
+    </message>
+    <message>
+        <source>HTTPS catalog URL:</source>
+        <translation>URL HTTPS của danh mục:</translation>
+    </message>
+    <message>
+        <source>Third-party source</source>
+        <translation>Nguồn bên thứ ba</translation>
+    </message>
+    <message>
+        <source>This source is not verified by Agent Pet. Its operator controls its catalog, downloads and updates. Only add sources you trust.
+
+%1</source>
+        <translation>Nguồn này chưa được Agent Pet xác minh. Người vận hành kiểm soát danh mục, tệp tải xuống và bản cập nhật. Chỉ thêm nguồn bạn tin tưởng.
+
+%1</translation>
+    </message>
+    <message>
+        <source>Remove %1 from the source list? Installed packs will be kept.</source>
+        <translation>Xóa %1 khỏi danh sách nguồn? Các gói đã cài sẽ được giữ lại.</translation>
+    </message>
+    <message>
+        <source>Remove pack</source>
+        <translation>Xóa gói</translation>
+    </message>
+    <message>
+        <source>Remove %1 on the next start? Removing the selected pet switches to VPet.</source>
+        <translation>Xóa %1 vào lần khởi động tiếp theo? Xóa thú cưng đang chọn sẽ chuyển về VPet.</translation>
+    </message>
+    <message>
+        <source>Pack change queued. Restart Agent Pet to apply it.</source>
+        <translation>Đã ghi nhận thay đổi gói. Khởi động lại Agent Pet để áp dụng.</translation>
+    </message>
+    <message>
+        <source>Cached catalogs and installed packs are unchanged.</source>
+        <translation>Danh mục đã lưu và các gói đã cài không thay đổi.</translation>
+    </message>
+    <message>
+        <source>Downloaded %1 MiB</source>
+        <translation>Đã tải %1 MiB</translation>
+    </message>
+    <message>
+        <source>Preview unavailable</source>
+        <translation>Không có ảnh xem trước</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>Hủy</translation>
+    </message>
+    <message>
+        <source>Official gallery</source>
+        <translation>Thư viện chính thức</translation>
+    </message>
+    <message>
+        <source>Automatically update installed packs from this source</source>
+        <translation>Tự động cập nhật gói đã cài từ nguồn này</translation>
+    </message>
+    <message>
+        <source>Off by default. Verified updates with unchanged terms are staged for the next start. Automatic checks must also be enabled in Updates settings.</source>
+        <translation>Mặc định tắt. Bản cập nhật đã xác minh với điều khoản không đổi được chuẩn bị cho lần khởi động sau. Cần bật kiểm tra tự động trong phần Cập nhật.</translation>
+    </message>
+    <message>
+        <source>Automatic pack updates</source>
+        <translation>Tự động cập nhật gói</translation>
+    </message>
+    <message>
+        <source>Allow background updates from %1? Only packs installed from this source are eligible. Changed terms require manual acceptance. Updates apply on the next start.</source>
+        <translation>Cho phép cập nhật trong nền từ %1? Chỉ áp dụng cho gói đã cài từ nguồn này. Điều khoản thay đổi phải được chấp nhận thủ công. Bản cập nhật áp dụng ở lần khởi động sau.</translation>
+    </message>
+    <message>
+        <source>Enable automatic updates</source>
+        <translation>Bật cập nhật tự động</translation>
+    </message>
+    <message>
+        <source>Background pack download: %1 / %2 MiB</source>
+        <translation>Tải gói trong nền: %1 / %2 MiB</translation>
+    </message>
+    <message>
+        <source>Third-party: %1</source>
+        <translation>Bên thứ ba: %1</translation>
+    </message>
+    <message>
+        <source>Not installed</source>
+        <translation>Chưa cài</translation>
+    </message>
+    <message>
+        <source>Update available</source>
+        <translation>Có bản cập nhật</translation>
+    </message>
+    <message>
+        <source>Installed</source>
+        <translation>Đã cài</translation>
+    </message>
+    <message>
+        <source>Restart required</source>
+        <translation>Cần khởi động lại</translation>
+    </message>
+    <message>
+        <source>Showing the last valid catalog. Refresh to check for new packs.</source>
+        <translation>Đang hiển thị danh mục hợp lệ gần nhất. Làm mới để kiểm tra gói mới.</translation>
+    </message>
+    <message>
+        <source>Update…</source>
+        <translation>Cập nhật…</translation>
+    </message>
+    <message>
+        <source>%1 by %2
+Licence: %3 · Requires Agent Pet %4 · Schema %5
+%6
+%7</source>
+        <translation>%1 của %2
+Giấy phép: %3 · Yêu cầu Agent Pet %4 · Cấu trúc %5
+%6
+%7</translation>
+    </message>
+    <message>
+        <source>Compatible</source>
+        <translation>Tương thích</translation>
+    </message>
+    <message>
+        <source>Installed source: %1</source>
+        <translation>Nguồn đã cài: %1</translation>
+    </message>
+    <message>
+        <source>No source — manual updates only</source>
+        <translation>Không có nguồn — chỉ cập nhật thủ công</translation>
+    </message>
+    <message>
+        <source>Setup required: %1</source>
+        <translation>Cần thiết lập: %1</translation>
+    </message>
+    <message>
+        <source>Target pet: %1</source>
+        <translation>Thú cưng đích: %1</translation>
+    </message>
+    <message>
+        <source>Download pack</source>
+        <translation>Tải gói</translation>
+    </message>
+    <message>
+        <source>Download %1 (%2 MiB)?
+Licence: %3
+Source: %4
+%5
+You will review the archive&apos;s terms before installing.</source>
+        <translation>Tải %1 (%2 MiB)?
+Giấy phép: %3
+Nguồn: %4
+%5
+Bạn sẽ xem điều khoản của gói trước khi cài đặt.</translation>
+    </message>
+    <message>
+        <source>Unverified third-party source</source>
+        <translation>Nguồn bên thứ ba chưa được xác minh</translation>
+    </message>
+    <message>
+        <source>Download</source>
+        <translation>Tải xuống</translation>
+    </message>
+    <message>
+        <source>Install from URL</source>
+        <translation>Cài từ URL</translation>
+    </message>
+    <message>
+        <source>HTTPS .agentpet URL:</source>
+        <translation>URL HTTPS của tệp .agentpet:</translation>
+    </message>
+    <message>
+        <source>Unpinned third-party download</source>
+        <translation>Tệp bên thứ ba chưa có mã băm đối chiếu</translation>
+    </message>
+    <message>
+        <source>This direct download has no catalog digest. Its origin and contents are unverified; HTTPS alone does not establish trust.
+
+%1
+
+You will review the pack and its terms before installing.</source>
+        <translation>Tệp tải trực tiếp này không có mã băm trong danh mục. Nguồn gốc và nội dung chưa được xác minh; chỉ có HTTPS không đủ đảm bảo độ tin cậy.
+
+%1
+
+Bạn sẽ xem gói và điều khoản trước khi cài đặt.</translation>
+    </message>
+    <message>
+        <source>Cannot read downloaded catalog.</source>
+        <translation>Không thể đọc danh mục đã tải.</translation>
+    </message>
+    <message>
+        <source>Validating pack…</source>
+        <translation>Đang kiểm tra gói…</translation>
+    </message>
+    <message>
+        <source>Archive metadata does not match the catalog.</source>
+        <translation>Thông tin trong gói không khớp danh mục.</translation>
+    </message>
+    <message>
+        <source>Review pack terms</source>
+        <translation>Xem điều khoản gói</translation>
+    </message>
+    <message>
+        <source>%1 by %2
+Version: %3 · Licence: %4
+Compatible with this app.
+Installed version: %5
+Plugins remain disabled unless already enabled. External integrations require separate setup.</source>
+        <translation>%1 của %2
+Phiên bản: %3 · Giấy phép: %4
+Tương thích với ứng dụng này.
+Phiên bản đã cài: %5
+Tiện ích sẽ tắt trừ khi đã được bật trước đó. Tích hợp bên ngoài cần thiết lập riêng.</translation>
+    </message>
+    <message>
+        <source>Source: %1</source>
+        <translation>Nguồn: %1</translation>
+    </message>
+    <message>
+        <source>Accept terms and install</source>
+        <translation>Chấp nhận điều khoản và cài đặt</translation>
+    </message>
+    <message>
+        <source>Source is unavailable.</source>
+        <translation>Nguồn không khả dụng.</translation>
+    </message>
+    <message>
+        <source>Installation cancelled. Installed packs are unchanged.</source>
+        <translation>Đã hủy cài đặt. Các gói đã cài không thay đổi.</translation>
+    </message>
+</context>
+<context>
+    <name>pet::packs::Updater</name>
+    <message>
+        <source>Cannot save pack update settings.</source>
+        <translation>Không thể lưu cài đặt cập nhật gói.</translation>
+    </message>
+    <message>
+        <source>Source is unavailable.</source>
+        <translation>Nguồn không khả dụng.</translation>
+    </message>
+    <message>
+        <source>Another pack update settings change is in progress.</source>
+        <translation>Một thay đổi cài đặt cập nhật gói khác đang diễn ra.</translation>
+    </message>
+    <message>
+        <source>Cannot read pack update settings.</source>
+        <translation>Không thể đọc cài đặt cập nhật gói.</translation>
+    </message>
+    <message>
+        <source>Checking installed packs for updates…</source>
+        <translation>Đang kiểm tra bản cập nhật cho gói đã cài…</translation>
+    </message>
+    <message>
+        <source>Update available: %1 %2</source>
+        <translation>Có bản cập nhật: %1 %2</translation>
+    </message>
+    <message>
+        <source>Pack update staged. Restart Agent Pet to apply it.</source>
+        <translation>Đã chuẩn bị bản cập nhật gói. Khởi động lại Agent Pet để áp dụng.</translation>
+    </message>
+    <message>
+        <source>Automatic update consent is no longer valid.</source>
+        <translation>Quyền cập nhật tự động không còn hiệu lực.</translation>
+    </message>
+    <message>
+        <source>The installed pack or its origin changed.</source>
+        <translation>Gói đã cài hoặc nguồn gốc của gói đã thay đổi.</translation>
+    </message>
+    <message>
+        <source>Downloaded pack failed integrity verification.</source>
+        <translation>Gói đã tải không vượt qua kiểm tra tính toàn vẹn.</translation>
+    </message>
+    <message>
+        <source>Archive metadata does not match the catalog.</source>
+        <translation>Thông tin trong gói không khớp danh mục.</translation>
+    </message>
+    <message>
+        <source>Updated pack terms or origin require manual acceptance.</source>
+        <translation>Điều khoản hoặc nguồn gốc của gói cập nhật cần được chấp nhận thủ công.</translation>
     </message>
 </context>
 <context>

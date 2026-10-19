@@ -3,6 +3,7 @@
 #include "conversation_text.h"
 #include "i18n/contexts.h"
 #include "desktop/overlay.h"
+#include <QDateTime>
 #include <QEvent>
 #include <QHBoxLayout>
 #include <QMouseEvent>
@@ -20,7 +21,7 @@ ConversationPreview::ConversationPreview(QWidget *parent) : QWidget(parent) {
     setAttribute(Qt::WA_MacAlwaysShowToolWindow);
     overlay::prepare(this, true, false);
     setCursor(Qt::PointingHandCursor);
-    setFixedWidth(340);
+    setFixedWidth(width_);
     auto *layout = new QVBoxLayout(this);
     layout->setContentsMargins(26, 10, 12, 10); layout->setSpacing(4);
     auto *top = new QHBoxLayout; top->setSpacing(8);
@@ -34,23 +35,26 @@ ConversationPreview::ConversationPreview(QWidget *parent) : QWidget(parent) {
     auto *bottom = new QHBoxLayout; bottom->setSpacing(8);
     body_ = new QLabel(this); body_->setTextFormat(Qt::PlainText); body_->setStyleSheet("color:#453324;");
     body_->setWordWrap(true);
-    view_ = new QPushButton(this); hide_ = new QPushButton("×", this);
-    for (auto *button : {view_, hide_})
+    view_ = new QPushButton(this); open_ = new QPushButton(this); hide_ = new QPushButton("×", this);
+    for (auto *button : {view_, open_, hide_})
         button->setStyleSheet("QPushButton{color:#8a4b12; font-weight:600; border:0; padding:0 3px;}"
                               "QPushButton:hover{text-decoration:underline;}");
     hide_->setStyleSheet(hide_->styleSheet() + "QPushButton{font-size:15px;}");
-    for (auto *button : {more_, view_, hide_}) { button->setFlat(true); button->setCursor(Qt::PointingHandCursor); }
-    bottom->addWidget(body_, 1); bottom->addWidget(view_, 0, Qt::AlignTop); bottom->addWidget(hide_, 0, Qt::AlignTop);
+    for (auto *button : {more_, view_, open_, hide_}) { button->setFlat(true); button->setCursor(Qt::PointingHandCursor); }
+    bottom->addWidget(body_, 1); bottom->addWidget(view_, 0, Qt::AlignTop); bottom->addWidget(open_, 0, Qt::AlignTop); bottom->addWidget(hide_, 0, Qt::AlignTop);
     layout->addLayout(top); layout->addLayout(bottom);
     retranslate();
     connect(more_, &QPushButton::clicked, this, &ConversationPreview::listRequested);
     connect(view_, &QPushButton::clicked, this, &ConversationPreview::viewRequested);
+    connect(open_, &QPushButton::clicked, this, &ConversationPreview::openRequested);
     connect(hide_, &QPushButton::clicked, this, &ConversationPreview::hideRequested);
 }
 void ConversationPreview::retranslate() {
     setAccessibleName(::Conversations::tr("Agent message"));
     view_->setText(::Conversations::tr("View"));
     view_->setAccessibleName(::Conversations::tr("View the conversation")); view_->setToolTip(::Conversations::tr("Open the conversation"));
+    open_->setText(::Conversations::tr("Open"));
+    open_->setToolTip(::Conversations::tr("Bring the agent's terminal or editor forward")); open_->setAccessibleName(open_->toolTip());
     hide_->setAccessibleName(::Conversations::tr("Hide this preview")); hide_->setToolTip(::Conversations::tr("Hide this preview (it stays unread)"));
     more_->setAccessibleName(::Conversations::tr("Show conversations")); more_->setToolTip(::Conversations::tr("Show conversations"));
 }
@@ -63,7 +67,7 @@ void ConversationPreview::present(const Content &content) {
     name_->setText(fontMetrics().elidedText(content.name, Qt::ElideMiddle, 120));
     fullBody_ = content.body;
     // The real first line, shortened to two lines of width, never rewritten.
-    const int width = 340 - 26 - 12 - 90;
+    const int width = width_ - 26 - 12 - 130;
     body_->setText(fontMetrics().elidedText(content.body, Qt::ElideRight, width * 2));
     body_->setVisible(!content.body.isEmpty());
     setToolTip(content.tooltip);
@@ -123,12 +127,10 @@ void ConversationList::present(const Service &service) {
     QString signature;
     for (const auto &key : service.keys()) {
         const auto *c = service.find(key);
-        if (!c) continue;
+        if (!c || !conversation::listed(*c, QDateTime::currentMSecsSinceEpoch())) continue;
         QString what;
         QColor color = conversation::neutralColor();
-        if (c->link == Conversation::Link::Ended) what = ::Conversations::tr("Session ended");
-        else if (c->link == Conversation::Link::Disconnected) what = ::Conversations::tr("Disconnected");
-        else if (c->needsAttention()) { what = ::Conversations::tr("Needs your answer"); color = conversation::pendingColor(); }
+        if (c->needsAttention()) { what = ::Conversations::tr("Needs your answer"); color = conversation::pendingColor(); }
         else if (c->unreadCount() > 0) { what = c->unreadCount() == 1 ? ::Conversations::tr("1 new message") : ::Conversations::tr("%1 new messages").arg(c->unreadCount()); color = conversation::unreadColor(); }
         else what = c->ready ? ::Conversations::tr("Ready") : ::Conversations::tr("Working…");
         QString detail;

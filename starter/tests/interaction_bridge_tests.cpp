@@ -50,7 +50,11 @@ private slots:
         QVERIFY2(host.start(error), qPrintable(error));
 
         driver_.setProcessChannelMode(QProcess::ForwardedErrorChannel);
-        driver_.start(NODE_PATH, {DRIVER_PATH, platform::interactionEndpoint(endpoint)});
+        auto wireEndpoint = platform::interactionEndpoint(endpoint);
+#ifdef Q_OS_WIN
+        wireEndpoint.prepend(QStringLiteral("\\\\.\\pipe\\")); // Node dials a pipe by its full path, Qt by its bare name.
+#endif
+        driver_.start(NODE_PATH, {DRIVER_PATH, wireEndpoint});
         QVERIFY2(driver_.waitForStarted(5000), "node did not start");
         QTRY_VERIFY_WITH_TIMEOUT((pump(), seen("ready")), 10000);
         const auto ready = line("ready");
@@ -82,7 +86,7 @@ private slots:
         QCOMPARE(service.submit(answer(k, "cmd-answer", formId, 1, "tests")).outcome, Outcome::Pending);
         QTRY_VERIFY_WITH_TIMEOUT(results.contains("cmd-answer:accepted"), 10000);
         QTRY_COMPARE_WITH_TIMEOUT(service.find(k)->requests.value(formId).state, RequestState::Answered, 5000);
-        QVERIFY((pump(), seen("reply")));
+        QTRY_VERIFY_WITH_TIMEOUT((pump(), seen("reply")), 5000); // The driver's stdout can trail the bridge's result.
         const auto reply = line("reply").value("reply").toObject();
         QCOMPARE(reply.value("formID").toString(), formId);
         QCOMPARE(reply.value("answer").toObject().value("q0").toString(), QString("tests")); // Option ID, not label.
@@ -98,7 +102,7 @@ private slots:
         // A follow-up becomes a prompt, once, with an ID derived from the command ID.
         QCOMPARE(service.submit(followUp(k, "cmd-follow", "now run them")).outcome, Outcome::Pending);
         QTRY_VERIFY_WITH_TIMEOUT(results.contains("cmd-follow:accepted"), 10000);
-        QVERIFY((pump(), seen("prompt")));
+        QTRY_VERIFY_WITH_TIMEOUT((pump(), seen("prompt")), 5000); // The driver's stdout can trail the bridge's result.
         const auto prompt = line("prompt").value("prompt").toObject();
         QCOMPARE(prompt.value("text").toString(), QString("now run them"));
         QCOMPARE(prompt.value("id").toString(), QString("msg_apet_07931ed63e32591180e0e616b5dcff2a54909233"));

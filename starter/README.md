@@ -42,7 +42,7 @@ provider's subscription limit the account has used: a ring for the shortest
 window (5 hours), the weekly or monthly figure beside it and the reset times,
 one row per provider, with every window in a tooltip and a "Refresh" button for
 an immediate check. It reads the sign-in that the Codex or Claude Code CLI already keeps on
-this computer — never renewing or changing it — and asks only
+this computer (never renewing or changing it) and asks only
 `chatgpt.com/backend-api/wham/usage` and `api.anthropic.com/api/oauth/usage`
 about that account's quotas. No token, usage number or account identity is
 stored on disk or reported to anything else; limits are account-wide, so they
@@ -126,6 +126,21 @@ About shows the running pet's artwork credit and terms.
 Settings → Startup (or `agent-pet autostart enable [--when-idle keep|hide|quit]`)
 lets a connected agent's session start launch the pet, and chooses whether it
 stays, hides or quits once no sessions remain; see [install guide](docs/install.md#autostart).
+
+## Local pet folders
+
+Settings → Pet → **Open pets folder** opens the per-user `packs/pets` directory.
+Copy a complete pet folder there and restart Agent Pet to refresh the list. Open
+Settings, choose its **Local** tile and restart again to play it. `--pet <id>` also
+runs a local pet. Invalid display metadata shows its reason and prevents selection;
+activation validates all artwork. A missing or invalid saved pet falls back to VPet without
+forgetting the choice. About lets you read each installed pet's artwork terms.
+These folders survive app updates and download-cache cleanup.
+
+See [Installing a local pet](docs/pets.md#installing-a-local-pet) for the layout,
+metadata, validation limits and a minimal fixture. To install a packed pet, see
+[importing and removing packs](docs/pets.md#importing-and-removing-packs); source
+browsing follows in a later phase.
 
 ## Idle animation
 
@@ -302,13 +317,13 @@ native Wayland is for builds against the system Qt (see
 
 ## Pets
 
-VPet is the bundled pet. **Fat Cat** (an orange cat, CC0 art by shuaa of megupets), **Kuro** (a little ninja), **Whale Girl** (a detailed blue whale-maid with 16 animated actions, CC BY-NC-SA 4.0 art) and **Yun** (a xianxia cultivator who meditates, brews pills and flies on a sword) download when chosen in Settings; Kuro and Yun are original art drawn by scripts in `scripts/` and released under CC0. The app is built for more. A pet is a folder of frames, a catalog, a
+VPet is the only bundled pet. Additional pets are distributed as `.agentpet` packs in the [gallery](https://github.com/WindyWin/agent-pet-gallery/releases) and installed through Settings → Pet → Import. The app is built for more. A pet is a folder of frames, a catalog, a
 preview and its own art terms under `assets/`, and a rebuild picks up every such folder with no code
 changes. Once two or more pets are installed, Settings → Pet → **Character** shows a tile per pet. The
 chosen pet appears the next time Agent Pet starts, and only its artwork is loaded. `--pet <id>` runs
 another installed pet once without saving the choice. A pet that cannot load is skipped and VPet runs
-instead. VPet ships with the app; other pets show their download size and download when chosen, verified
-pack by pack against hashes the app already carries, with progress and Cancel in Settings. The app tells a pet what is happening through named cues (a session needs you, a turn finished,
+instead. Import additional `.agentpet` packs from the gallery through Settings → Pet → Import, review
+their artwork terms, then restart Agent Pet to use them. The app tells a pet what is happening through named cues (a session needs you, a turn finished,
 time for water), and each pet decides which of its animations answers each one. To make a pet, see
 [the pet guide](docs/pets.md) and the design records for [pet packs](docs/adr/0028-pet-packs.md),
 [cues](docs/adr/0029-cues.md) and [on-demand pets](docs/adr/0030-on-demand-pets.md), [Fat Cat](docs/adr/0036-fat-cat-pet.md), [Kuro and Yun](docs/adr/0037-drawn-pets.md), and [Whale Girl](docs/adr/0039-whale-girl-pet.md).
@@ -589,7 +604,7 @@ and library replacement instructions; release bundles include exact source links
 and official releases attach the matching Qt source archives. See
 [Qt release licensing](docs/qt-licensing.md) for packaging and custom Qt builds.
 
-Fat Cat's artwork is **Orange Fat Cat** by shuaa ([megupets](https://www.megupets.com)), released under [CC0 1.0](licenses/FAT-CAT-ARTWORK-TERMS.md). Kuro and Yun are original Agent Pet artwork, drawn by `scripts/draw_kuro.py` and `scripts/draw_yun.py` and released under CC0 1.0 ([Kuro](licenses/KURO-ARTWORK-TERMS.md), [Yun](licenses/YUN-ARTWORK-TERMS.md)). Whale Girl uses [Multimodal-AI-Companion animation artwork](https://github.com/oyxdsg/Multimodal-AI-Companion-Assets), depicting **「溟月」 by 上善无形** with **ZipZipPipe**’s whale-maid design, under **CC BY-NC-SA 4.0** ([terms](licenses/WHALE-GIRL-ARTWORK-TERMS.md)). The rest of this section is about VPet's art.
+Additional pets and their individual artwork terms live in the [gallery](https://github.com/WindyWin/agent-pet-gallery). The rest of this section is about VPet's art.
 
 Artwork credit: **VUP-Simulator team**, via [LorisYounger/VPet](https://github.com/LorisYounger/VPet). See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and the [upstream artwork terms](licenses/VPET-ARTWORK-TERMS.md).
 
@@ -606,3 +621,36 @@ x86_64 or macOS with Herdr 0.7.5 or newer. Linux uses the release package's
 installer; macOS copies the app bundle. The startup flow clears the pane identity,
 so it cannot provide Herdr **Open** navigation. See the
 [installation guide](docs/install.md#herdr-plugin) and [decision record](docs/adr/0045-herdr-plugin.md).
+
+## ZIP import build dependency
+
+Pack import links zlib on every platform. Install `zlib1g-dev` on Debian/Ubuntu
+(`zlib` on Arch); macOS uses the SDK's zlib. With MSVC, install
+`vcpkg install zlib:x64-windows-static-md` and configure CMake with
+`-DCMAKE_TOOLCHAIN_FILE=<vcpkg>/scripts/buildsystems/vcpkg.cmake`
+`-DVCPKG_TARGET_TRIPLET=x64-windows-static-md`. This links zlib statically while
+using the same dynamic C runtime as Qt. Portable core builds also require zlib.
+
+See [pet import and authoring](docs/pets.md#importing-and-removing-packs) for
+`.agentpet` packaging, headless commands and restart behavior.
+
+### Convert workshop pets
+
+`scripts/convert_vpet_mod.py` converts a local VPet-Simulator workshop pet to a
+validated `.agentpet` archive, with a report of artwork mappings and fallbacks.
+Bring the original artwork terms and credit; see [the conversion guide](docs/pets.md#convert-a-vpet-workshop-mod).
+
+### Browse pack sources
+
+Settings → Pet or Plugins → **Browse pack sources…** discovers packs from the official
+gallery or explicitly added third-party HTTPS catalogs. Refresh, preview, install,
+update and remove packs; review terms before every install. Downloads are checked
+against catalog sizes and SHA-256; failed refreshes retain an offline catalog.
+See [pack sources](docs/pack-sources.md) ([Tiếng Việt](docs/pack-sources.vi.md)) for
+direct URL installation, trust warnings and publishing your own source.
+
+VPet workshop mods can be imported without Python from **Settings → Pet → Import
+VPet mod…** or `agent-pet import --vpet-mod <folder-or-zip> --id my-pet --terms
+<licence.txt>` (`agent-pet-cli.exe` on Windows). Bring your own mod and licence;
+review the conversion report and accept its terms before installing. Local Steam
+workshop discovery never downloads content. See [the pet guide](docs/pets.md#convert-a-vpet-workshop-mod).

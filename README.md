@@ -17,11 +17,20 @@ It sits on your screen, thinks when your agent thinks, gets busy when it runs to
 
 - **Know at a glance** what every agent session is doing.
 - **Never miss a request**: a small note pops up when an agent waits for you, and one click takes you to the right terminal.
-- **A pet, not just a status light**: drag it, pet it, throw it, watch it wander and nap.
+- **A pet as well as a status light**: drag it, pet it, throw it, watch it wander and nap.
 - **Looks after you**: reminders to rest your eyes, drink water and eat lunch, a Break Buddy that exercises with you, and a recap of your day.
 - **Private**: it only learns *what kind* of thing is happening, never your prompts, code or commands.
 
 Works on **Linux** x86_64 (X11, or Wayland desktops with XWayland such as GNOME and KDE), **macOS 11+** (Apple silicon and Intel), and **Windows 10 version 1809+ / Windows 11** (x64).
+
+## Import your own pet or plugin
+
+Use **Settings → Pet / Plugins → Import…**, or drop a `.agentpet` file onto the pet
+or Settings. Review and accept its terms, then restart. You can also use
+`agent-pet import <file.agentpet>` or `agent-pet remove <pet|plugin> <id>` without a
+display. Settings includes removal; replacements retain the previous pack if validation
+fails. See [pet authoring](starter/docs/pets.md#importing-and-removing-packs) and
+[plugin packs](starter/docs/plugins.md#importing-a-agentpet-file).
 
 ## Get started
 
@@ -332,3 +341,7 @@ This repository root also keeps the original VPet artwork archive (about 5,500 f
 Character artwork by the **VUP-Simulator team**, from [LorisYounger/VPet](https://github.com/LorisYounger/VPet). The artwork keeps its own [terms](licenses/VPET-ARTWORK-TERMS.md); see [third-party notices](THIRD_PARTY_NOTICES.md).
 
 Agent Pet's own code is licensed under [Apache-2.0](starter/LICENSE). That license doesn't cover the artwork.
+
+VPet is the only bundled pet. Install additional `.agentpet` packs from the [gallery](https://github.com/WindyWin/agent-pet-gallery/releases) through Settings → Pet → Import.
+
+Pack catalogs: [browse, install and publish sources](starter/docs/pack-sources.md).

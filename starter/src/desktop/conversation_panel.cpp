@@ -6,6 +6,7 @@
 #include <QCloseEvent>
 #include <QEvent>
 #include <QKeyEvent>
+#include <QPainter>
 #include <QRadioButton>
 #include <QScrollBar>
 #include <QTimer>
@@ -23,21 +24,33 @@ void ComposerEdit::keyPressEvent(QKeyEvent *event) {
 static constexpr int foldedLines = 6;
 
 ConversationPanel::ConversationPanel(Service &service, QWidget *parent) : QWidget(parent), service_(service) {
-    setWindowFlags(Qt::Tool | Qt::WindowStaysOnTopHint | Qt::WindowCloseButtonHint);
+    // A bubble, not a window: no title bar or frame, drawn like the toast and the preview, and it takes the
+    // keyboard because it holds the composer. Esc or the collapse button puts it away.
+    setWindowFlags(Qt::Tool | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
+    setAttribute(Qt::WA_TranslucentBackground);
     setAttribute(Qt::WA_MacAlwaysShowToolWindow);
     overlay::prepare(this, true, true);
     resize(400, 480);
     setMinimumSize(320, 300);
     setObjectName("conversationPanel");
-    setStyleSheet("#conversationPanel{background:#fff7e3;} QLabel{color:#453324;}"
+    setStyleSheet("#conversationPanel{background:transparent;} QLabel{color:#453324;}"
                   "QPushButton{color:#8a4b12; background:#f3e3c3; border:0; border-radius:8px; padding:4px 12px; font-weight:600; min-height:24px;}"
                   "QPushButton:hover{background:#ecd3a5;} QPushButton:disabled{color:#a8977f; background:#f6ecd8;}"
                   "QPushButton#send{color:#fff7e3; background:#8a4b12;} QPushButton#send:hover{background:#6f3b0d;}"
                   "QPushButton#send:disabled{color:#fff7e3; background:#c9b497;}"
                   "QPlainTextEdit, QComboBox{color:#453324; background:#fffdf6; border:1px solid #d8c4a0; border-radius:8px; padding:4px;}"
-                  "QRadioButton{color:#453324; min-height:28px; spacing:8px;}");
+                  "QRadioButton{color:#453324; min-height:28px; spacing:8px;}"
+                  // Drawn by hand: the platform style fills every indicator alike here, so a choice looked unmade.
+                  "QRadioButton::indicator{width:14px; height:14px; border-radius:9px; border:2px solid #8a4b12; background:#fffdf6;}"
+                  "QRadioButton::indicator:hover{background:#f3e3c3;}"
+                  "QRadioButton::indicator:checked{background:qradialgradient(cx:0.5, cy:0.5, radius:0.5, fx:0.5, fy:0.5,"
+                  " stop:0 #8a4b12, stop:0.55 #8a4b12, stop:0.6 #fffdf6, stop:1 #fffdf6);}"
+                  "QRadioButton::indicator:disabled{border-color:#c9b497; background:#f6ecd8;}"
+                  "QRadioButton::indicator:checked:disabled{background:qradialgradient(cx:0.5, cy:0.5, radius:0.5, fx:0.5, fy:0.5,"
+                  " stop:0 #c9b497, stop:0.55 #c9b497, stop:0.6 #f6ecd8, stop:1 #f6ecd8);}"
+                  "QRadioButton:checked{font-weight:600;}");
     auto *root = new QVBoxLayout(this);
-    root->setContentsMargins(14, 12, 14, 12); root->setSpacing(8);
+    root->setContentsMargins(28, 16, 16, 16); root->setSpacing(8);
 
     auto *top = new QHBoxLayout;
     heading_ = new QLabel(this); heading_->setTextFormat(Qt::PlainText);
@@ -57,6 +70,7 @@ ConversationPanel::ConversationPanel(Service &service, QWidget *parent) : QWidge
     scroll_->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     body_ = new QWidget; body_->setObjectName("body"); body_->setStyleSheet("#body{background:transparent;}");
     scroll_->setStyleSheet("QScrollArea{background:transparent;}");
+    scroll_->viewport()->setAutoFillBackground(false); // The bubble is translucent: nothing may paint a square behind it.
     auto *bodyLayout = new QVBoxLayout(body_);
     bodyLayout->setContentsMargins(0, 0, 6, 0); bodyLayout->setSpacing(10);
     messageLayout_ = new QVBoxLayout; messageLayout_->setSpacing(10);
@@ -73,8 +87,10 @@ ConversationPanel::ConversationPanel(Service &service, QWidget *parent) : QWidge
     auto *cardTitle = new QLabel(card_); cardTitle->setObjectName("cardTitle");
     cardTitle->setStyleSheet("font-weight:700; color:#8a4b12;");
     selector_ = new QComboBox(card_);
-    question_ = new QLabel(card_); question_->setWordWrap(true); question_->setTextFormat(Qt::PlainText);
-    question_->setTextInteractionFlags(Qt::TextSelectableByMouse);
+    question_ = new QLabel(card_); question_->setWordWrap(true); question_->setTextFormat(Qt::RichText);
+    question_->setTextInteractionFlags(Qt::TextSelectableByMouse | Qt::LinksAccessibleByMouse);
+    question_->setOpenExternalLinks(false);
+    connect(question_, &QLabel::linkHovered, question_, [this](const QString &url) { question_->setToolTip(url); });
     optionBox_ = new QWidget(card_);
     optionLayout_ = new QVBoxLayout(optionBox_);
     optionLayout_->setContentsMargins(0, 0, 0, 0); optionLayout_->setSpacing(0);
@@ -123,7 +139,7 @@ ConversationPanel::ConversationPanel(Service &service, QWidget *parent) : QWidge
     });
     observer_ = service_.subscribe([this](const Change &change) {
         if (change.kind == Change::Kind::CommandResult) {
-            if (change.result.commandId == sending_) onResult(change.result);
+            if (flights_.contains(change.result.commandId)) onResult(change.result);
             return;
         }
         if (current_.valid() && change.key == current_) refresh();
@@ -172,12 +188,25 @@ void ConversationPanel::open(const ConversationKey &key) {
         // Another conversation: its own draft and selection, and none of this one's feedback.
         current_ = key; activeRequest_.clear(); requestSignature_.clear(); sending_.clear(); feedback_->clear();
         bodySignature_.clear(); shownSlot_.clear(); stickToEnd_ = true;
+        // A command still in flight for this conversation keeps its composer busy: no second click can duplicate it.
+        for (auto it = flights_.constBegin(); it != flights_.constEnd(); ++it)
+            if (it->key == key && !it->unconfirmed) { sending_ = it.key(); feedback_->setText(::Conversations::tr("Sending…")); feedback_->setStyleSheet("color:#6b5643;"); }
     }
     refresh();
     show(); raise(); activateWindow();
 }
 void ConversationPanel::collapse() { hide(); emit collapsed(); }
 void ConversationPanel::closeEvent(QCloseEvent *event) { event->ignore(); collapse(); }
+void ConversationPanel::paintEvent(QPaintEvent *) {
+    QPainter painter(this);
+    painter.setRenderHint(QPainter::Antialiasing);
+    painter.setPen(QPen(QColor("#453324"), 1.2)); painter.setBrush(QColor("#fff7e3"));
+    painter.drawRoundedRect(QRectF(rect()).adjusted(1, 1, -1, -1), 14, 14);
+    const auto *c = service_.find(current_);
+    painter.setPen(Qt::NoPen);
+    painter.setBrush(c && c->needsAttention() ? conversation::pendingColor() : conversation::unreadColor());
+    painter.drawEllipse(QPointF(14, 28), 5, 5);
+}
 void ConversationPanel::keyPressEvent(QKeyEvent *event) {
     if (event->key() == Qt::Key_Escape) { collapse(); return; }
     QWidget::keyPressEvent(event);
@@ -270,9 +299,11 @@ void ConversationPanel::rebuildBody(const Conversation &c) {
         layout->setContentsMargins(0, 0, 0, 0); layout->setSpacing(2);
         auto *who = new QLabel(view.agent ? ::Conversations::tr("Agent") : ::Conversations::tr("You"), view.box);
         who->setStyleSheet(QString("font-weight:700; color:%1;").arg(view.agent ? "#6b5643" : "#8a4b12"));
-        view.text = new QLabel(m.text, view.box);
-        view.text->setTextFormat(Qt::PlainText); view.text->setWordWrap(true);
-        view.text->setTextInteractionFlags(Qt::TextSelectableByMouse);
+        view.text = new QLabel(conversation::markdownHtml(m.text), view.box);
+        view.text->setTextFormat(Qt::RichText); view.text->setWordWrap(true);
+        view.text->setTextInteractionFlags(Qt::TextSelectableByMouse | Qt::LinksAccessibleByMouse);
+        view.text->setOpenExternalLinks(false); // A link in agent text shows its address on hover and goes nowhere.
+        connect(view.text, &QLabel::linkHovered, view.text, [label = view.text](const QString &url) { label->setToolTip(url); });
         view.text->setAccessibleName(who->text());
         layout->addWidget(who); layout->addWidget(view.text);
         view.fold = new QPushButton(view.box);
@@ -332,7 +363,8 @@ void ConversationPanel::showRequest(const Conversation &c) {
     }
     selector_->blockSignals(false);
     selector_->setVisible(open.size() > 1);
-    question_->setText(shown->question);
+    questionText_ = shown->question;
+    question_->setText(conversation::markdownHtml(shown->question));
     const bool answerable = shown->state == RequestState::Pending && c.link == Conversation::Link::Connected;
     const QString picked = chosen_.value(activeRequest_);
     bool anyChecked = false;
@@ -417,29 +449,34 @@ void ConversationPanel::send() {
         command.text = edit_->toPlainText().trimmed();
     }
     sending_ = command.commandId;
-    sendingSlot_ = request ? request->requestId : QString();
+    flights_.insert(command.commandId, {current_, request ? request->requestId : QString()});
     feedback_->setText(::Conversations::tr("Sending…"));
     feedback_->setStyleSheet("color:#6b5643;");
     send_->setEnabled(false);
     const auto result = service_.submit(command);
-    if (result.outcome != Outcome::Pending && sending_ == command.commandId) onResult(result);
+    if (result.outcome != Outcome::Pending && flights_.contains(command.commandId)) onResult(result);
     else if (auto *now = service_.find(current_)) updateComposer(*now);
 }
 void ConversationPanel::onResult(const CommandResult &result) {
-    sending_.clear();
-    const auto *c = service_.find(current_);
-    const QString slot = sendingSlot_;
+    const bool settled = result.outcome != Outcome::Unknown;
+    const auto flight = settled ? flights_.take(result.commandId) : flights_.value(result.commandId);
+    if (!settled) flights_[result.commandId].unconfirmed = true;
+    const bool visible = flight.key == current_;
+    if (visible && sending_ == result.commandId) sending_.clear();
+    const auto *c = service_.find(flight.key);
     if (result.outcome == Outcome::Accepted) {
         // "Sent" means the agent took it, not that the work it asked for succeeded.
+        chosen_.remove(flight.slot);
+        if (c) service_.setDraft(flight.key, flight.slot, {}); // What was sent is not kept as a draft.
+        if (!visible) return;
         feedback_->setText(::Conversations::tr("Sent"));
         feedback_->setStyleSheet("color:#2b6a3a;");
-        chosen_.remove(slot);
-        if (c) service_.setDraft(current_, slot, {});
         const bool was = loading_; loading_ = true; edit_->clear(); loading_ = was;
         if (c) { shownSlot_.clear(); refresh(); }
         return;
     }
     // The text and the choice stay: rejected or unconfirmed, nothing is lost and nothing is resent for the user.
+    if (!visible) return;
     feedback_->setStyleSheet(QString("color:%1;").arg(conversation::failureColor().name()));
     if (result.outcome == Outcome::Unknown)
         feedback_->setText(::Conversations::tr("Delivery not confirmed. Check the agent before sending again."));
