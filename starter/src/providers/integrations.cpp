@@ -1,6 +1,7 @@
 #include "integrations.h"
 #include "i18n/contexts.h"
 #include "adapters.h"
+#include "claude_bridge.h"
 #include "registry.h"
 #include "opencode_plugin.h"
 #include "platform/contracts/hook_command.h"
@@ -149,12 +150,20 @@ QString integrationConfigPath(const QString &provider) {
     return root + (provider == "claude" ? "/settings.json" : "/hooks.json");
 }
 bool runIntegration(const QString &operation, const QString &provider, QString path, const QString &application,
-                    QJsonObject &report, QString &error) {
+                    QJsonObject &report, QString &error, const IntegrationOptions &options) {
     auto fail = [] { return false; };
     const auto executable = hookExecutable(application);
     const auto entry = findProvider(provider);
     if (!QStringList{"preview", "inspect", "enable", "disable"}.contains(operation) || !entry) {
-        error = "Usage: agent-pet integration preview|inspect|enable|disable --provider claude|codex|opencode|antigravity [--config PATH] [--executable PATH]"; return fail();
+        error = "Usage: agent-pet integration preview|inspect|enable|disable --provider claude|codex|opencode|antigravity [--config PATH] [--executable PATH] [--interactions [--question-wait SECONDS]]"; return fail();
+    }
+    const bool interactions = options.interactions;
+    if (interactions && provider != "claude") { error = "--interactions is available for --provider claude only"; return fail(); }
+#ifdef Q_OS_WIN
+    if (interactions) { error = "The Claude Code interaction hooks are not available on Windows yet"; return fail(); }
+#endif
+    if (interactions && (options.questionWait < 1 || options.questionWait > claude::maxQuestionWaitSeconds)) {
+        error = "--question-wait must be between 1 and " + QString::number(claude::maxQuestionWaitSeconds) + " seconds"; return fail();
     }
     const bool plugin = entry->format == IntegrationFormat::JavaScriptPlugin;
     if (operation != "disable" && (!QDir::isAbsolutePath(executable) || executable.contains(QChar('\n')) ||
@@ -195,11 +204,12 @@ bool runIntegration(const QString &operation, const QString &provider, QString p
     }
     QJsonObject output; int owned = 0;
     if (plugin) owned = existed ? 1 : 0;
-    else if (!mergeIntegration(input, provider, executable, operation != "disable", output, owned, error)) return fail();
+    else if (interactions ? !claude::mergeInteractions(input, executable, operation != "disable", options.questionWait, output, owned, error)
+                           : !mergeIntegration(input, provider, executable, operation != "disable", output, owned, error)) return fail();
     const auto after = plugin ? (operation == "disable" ? QByteArray() : pluginSource(executable)) : QJsonDocument(output).toJson();
     const bool changed = plugin ? before != after : input != output;
     report = QJsonObject{{"provider", provider}, {"config", path}, {"owned_handlers", owned},
-                       {"expected_handlers", plugin ? 1 : hookEvents(provider).size()},
+                       {"expected_handlers", plugin ? 1 : interactions ? claude::interactionEvents().size() : hookEvents(provider).size()},
                        {"coverage", Integrations::tr("Local observed sessions only. Restart the client after setup; verify in /hooks. Silent sessions and remote/container hosts are not discovered.")}};
     if (provider == "codex") report["setup"] = Integrations::tr("Review and trust these definitions in Codex /hooks. features.hooks and managed policy can prevent execution. Agent Pet does not change trust or policy.");
     else report["setup"] = Integrations::tr("Inspect /hooks. disableAllHooks or managed policy can prevent execution. Agent Pet does not change policy.");
@@ -207,6 +217,12 @@ bool runIntegration(const QString &operation, const QString &provider, QString p
     if (provider == "antigravity") {
         report["setup"] = Integrations::tr("Restart Antigravity and inspect Customizations > Hooks (CLI: /hooks). Live compatibility is experimental.");
         if (input["agent-pet-v1"].toObject()["enabled"] == false) report["warning"] = Integrations::tr("Agent Pet hook namespace is disabled");
+    }
+    if (interactions) {
+        report["interactions"] = true;
+        report["setup"] = QString("Restart Claude Code sessions to load these hooks. They send prompts, replies and questions to the local Agent Pet "
+                                  "(it must run with agent_conversations or --interactions) and nothing else. While a question waits for the pet "
+                                  "(%1 s) the terminal dialog is not shown. Follow-ups reach only sessions that started with the hooks.").arg(options.questionWait);
     }
     if (input.value("disableAllHooks").toBool()) report["warning"] = Integrations::tr("disableAllHooks is set in this file");
     if (operation == "preview") {
@@ -219,7 +235,7 @@ bool runIntegration(const QString &operation, const QString &provider, QString p
             QJsonArray handlers;
             for (const auto &group : input.value("hooks").toObject().value(name).toArray())
                 for (const auto &handler : group.toObject().value("hooks").toArray())
-                    if (ownedHookHandler(handler.toObject(), provider)) handlers.append(handler);
+                    if (interactions ? claude::ownedInteractionHandler(handler.toObject()) : ownedHookHandler(handler.toObject(), provider)) handlers.append(handler);
             if (!handlers.isEmpty()) registered[name] = handlers;
         }
         report["entries"] = registered;
@@ -247,17 +263,27 @@ bool runIntegration(const QString &operation, const QString &provider, QString p
 }
 int integrationCommand(const QStringList &args) {
     QString provider, path, executable = QCoreApplication::applicationFilePath(), error;
+    IntegrationOptions options;
     auto fail = [&] { std::fprintf(stderr, "%s\n", qPrintable(error)); return 1; };
+    bool waitSet = false;
     for (int i = 3; i < args.size(); ++i) {
         const auto option = args[i];
+        if (option == "--interactions" && !options.interactions) { options.interactions = true; continue; }
         if (i + 1 >= args.size()) { error = Integrations::tr("Missing option value"); return fail(); }
         if (option == "--provider" && provider.isEmpty()) provider = args[++i];
         else if (option == "--config" && path.isEmpty()) path = args[++i];
         else if (option == "--executable") executable = args[++i];
+        else if (option == "--question-wait" && !waitSet) {
+            bool ok = false;
+            options.questionWait = args[++i].toInt(&ok);
+            if (!ok) options.questionWait = 0; // Reported with the allowed range.
+            waitSet = true;
+        }
         else { error = Integrations::tr("Unknown integration option"); return fail(); }
     }
+    if (waitSet && !options.interactions) { error = "--question-wait needs --interactions"; return fail(); }
     QJsonObject report;
-    if (!runIntegration(args.value(2), provider, path, executable, report, error)) return fail();
+    if (!runIntegration(args.value(2), provider, path, executable, report, error, options)) return fail();
     const auto result = QJsonDocument(report).toJson();
     std::fwrite(result.constData(), 1, result.size(), stdout);
     return 0;

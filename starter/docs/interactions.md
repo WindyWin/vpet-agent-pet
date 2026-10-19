@@ -15,6 +15,7 @@ stays content-free.
 | Stream implementation and bridge-side client (Qt local sockets) | `src/platform/local_stream/` |
 | OpenCode bridge (Node, no dependencies) | `src/providers/opencode-bridge.mjs` |
 | Codex bridge (Node, no dependencies) | `src/providers/codex-bridge.mjs` |
+| Claude Code bridge (opt-in hooks and a per-session host) | `src/providers/claude_hook.cpp`, `claude_host.cpp`, `claude_registration.cpp` |
 | Tests | `tests/interaction_tests.cpp` (core, fake bridge), `tests/interaction_transport_tests.cpp` (real socket), `tests/opencode_bridge_test.mjs` (bridge against fakes), `tests/interaction_bridge_tests.cpp` (real service + real bridge) |
 
 `pet_interactions` needs Qt Core only and builds in the portable-core configuration. `pet_interaction_stream`
@@ -203,3 +204,42 @@ Known gaps: a thread in `systemError` is treated as not ready (whether Codex acc
 turn started in the terminal between the idle check and `turn/start` would be steered (the API has no conditional
 start); full-history `thread/read` is used to number messages, which the daemon marks deprecated for paginated
 threads; threads that never go through the shared daemon are invisible.
+
+## Claude Code bridge (hooks)
+
+Claude Code has no API for a running terminal session, so this bridge works through an opt-in set of hooks and a
+per-session host process ([ADR 0049](adr/0049-claude-interaction-hooks.md)). It is separate from the content-free status
+hooks, which are unchanged.
+
+```bash
+./build/agent-pet integration preview --provider claude --interactions
+./build/agent-pet integration enable  --provider claude --interactions --question-wait 20
+./build/agent-pet integration inspect --provider claude --interactions
+./build/agent-pet integration disable --provider claude --interactions
+```
+
+Restart Claude Code sessions afterwards (hooks load at startup). The pet must run the interaction service
+(`agent_conversations` or `--interactions`); otherwise the hooks exit at once and nothing is shared. Linux and macOS.
+
+| Pet concept | Claude Code |
+| --- | --- |
+| Conversation | `session_id` and epoch `<pid>.<startedAt>` of the Claude process (from its `sessions/<pid>.json`); the folder name is the title. |
+| Message | `UserPromptSubmit` prompt (user) and `Stop` `last_assistant_message` (agent), shortened to 12 KiB. No history before the hooks ran. |
+| Request | One single-select `AskUserQuestion`: option IDs `1…n`, custom text allowed, `expires_at` = the wait. Several questions or multi-select stay in the terminal. |
+| Ready | After `Stop`, not after `UserPromptSubmit`, a wake waiter is armed, no question open, and the session file does not say busy or waiting. |
+| `answer_request` | The `PreToolUse` hook prints `permissionDecision: allow` with `updatedInput.answers`; `accepted` after the hook confirms it printed. |
+| `send_follow_up` | The armed `asyncRewake` hook exits 2 with the text on stderr; `accepted` after it confirms it wrote it. Refused as `not_ready` while busy. |
+
+Moving parts: hooks (`agent-pet claude-interact --event …`) are short-lived and talk to one **session host**
+(`claude-interact host`, detached, one per Claude process, started by the first hook when a pet is listening). The
+host holds the only interaction connection for the session, so hooks never take the conversation from each other;
+it ends with the Claude process, on `SessionEnd`, or after the pet has been away for a minute.
+
+Know before enabling:
+
+- **The terminal dialog is suppressed while a question waits for the pet** (default 20 s, `--question-wait` 1 to 120).
+  The terminal user cannot answer in that time; afterwards the normal dialog opens. Keep the wait short.
+- A follow-up reaches only sessions that started with the hooks, and only while idle with a waiter armed (re-armed at
+  each `Stop`). It arrives as "Stop hook feedback", labelled as the user's message, not as a typed prompt.
+- Claude Code acknowledges nothing: `accepted` means the hook wrote it; no confirmation is `unknown` and never retried.
+- Messages and questions go to the local pet only; `hide_message_previews` applies in the pet as for any bridge.
