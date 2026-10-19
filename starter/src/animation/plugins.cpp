@@ -66,6 +66,22 @@ PluginPack readInfo(const QString &folder, const QString &id, const QString &app
         if (const auto running = QVersionNumber::fromString(appVersion); !running.isNull() && running < minimum)
             return invalid("Needs Agent Pet " + pack.minApp + " or later.");
     }
+    // Imported packs retain the envelope compatibility checks on every startup.
+    if (QFileInfo::exists(folder + "/pack.json")) {
+        const auto envelope = readObject(folder + "/pack.json", 64 * 1024, &error);
+        if (!error.isEmpty()) return invalid(error);
+        if (envelope.value("kind").toString() != "plugin" || envelope.value("schema").toDouble(-1) != catalogSchema)
+            return invalid("Unsupported imported plugin kind or catalog schema.");
+        for (const auto &key : {"id", "name", "version", "author", "license", "pet"})
+            if (envelope.value(key) != object.value(key)) return invalid("pack.json disagrees with plugin.json: " + QString(key));
+        const auto requiredText = envelope.value("minAppVersion").toString();
+        qsizetype end = 0; const auto required = QVersionNumber::fromString(requiredText, &end);
+        if (end != requiredText.size() || required.segmentCount() != 3) return invalid("Invalid pack minAppVersion.");
+        const auto running = QVersionNumber::fromString(appVersion);
+        if (running < required || (running == required && appVersion.contains('-')))
+            return invalid("Needs Agent Pet " + requiredText + " or later.");
+        if (object.contains("min_app_version") && pack.minApp != requiredText) return invalid("Conflicting minimum app versions.");
+    }
     return pack;
 }
 // Merges one pack's fragment into `source`. `claims` maps each replaced name ("states.<name>", "cues.<name>",

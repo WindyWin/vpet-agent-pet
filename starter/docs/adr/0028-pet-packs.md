@@ -61,3 +61,12 @@ frame folder's resource path ([0010](0010-application-updates.md), [0014](0014-a
   pet.json: nosuch; using vpet` and kept running as VPet until the 5 s timeout ended it.
 - No `.cpp` or `.h` file under `src` names `assets/vpet` any more; `"vpet"` remains only as the default id.
 - Open: macOS and Windows CI runs of the new suites; a second real pet.
+
+## Phase 4 follow-up (2026-10-17)
+
+Issue #96 retires indexed non-VPet artwork and on-demand RCC downloads. Only
+VPet retains the installed resource tree, with unchanged paths and pack names.
+Other pets are independently versioned `.agentpet` gallery packs loaded from
+user folders. Known legacy selections without a local replacement migrate once
+to VPet with a gallery notice; only recognized legacy download files are removed.
+The old remote `pets` release remains for older application versions.

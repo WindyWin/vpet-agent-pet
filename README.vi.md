@@ -23,6 +23,16 @@ Thú cưng luôn ở bên bạn trên màn hình: suy nghĩ cùng agent, bận r
 
 Hỗ trợ **Linux** x86_64 (X11 hoặc desktop Wayland có XWayland như GNOME và KDE), **macOS 11+** (Apple silicon và Intel), và **Windows 10 phiên bản 1809 trở lên / Windows 11** (x64).
 
+## Nhập thú cưng hoặc plugin của bạn
+
+Trong **Cài đặt → Thú cưng / Plugin**, chọn **Nhập…** hoặc kéo tệp `.agentpet` vào
+thú cưng hay cửa sổ Cài đặt. Đọc và chấp nhận điều khoản, rồi khởi động lại ứng dụng.
+Có thể dùng `agent-pet import <file.agentpet>` hoặc
+`agent-pet remove <pet|plugin> <id>` mà không cần giao diện. Cài đặt cũng có nút gỡ
+gói; nếu kiểm tra gói thay thế thất bại, gói cũ được giữ nguyên. Xem
+[hướng dẫn tạo thú cưng](starter/docs/pets.md#importing-and-removing-packs) và
+[gói plugin](starter/docs/plugins.md#importing-a-agentpet-file).
+
 ## Bắt đầu
 
 Tải phiên bản mới nhất từ [trang Releases](https://github.com/WindyWin/vpet-agent-pet/releases/latest). Chọn hệ điều hành trong bảng **Download / Tải xuống** ở đầu trang phát hành; mỗi gói đều có sẵn hình ảnh thú cưng.
@@ -312,3 +322,20 @@ Thư mục gốc còn giữ bộ hình ảnh VPet nguyên bản (khoảng 5.500 
 Hình ảnh nhân vật do **đội ngũ VUP-Simulator** thực hiện, từ [LorisYounger/VPet](https://github.com/LorisYounger/VPet). Hình ảnh tuân theo [điều khoản riêng](licenses/VPET-ARTWORK-TERMS.md); xem [thông báo về bên thứ ba](THIRD_PARTY_NOTICES.md).
 
 Mã nguồn riêng của Agent Pet được cấp phép theo [Apache-2.0](starter/LICENSE). Giấy phép đó không áp dụng cho hình ảnh nhân vật.
+
+## Cài thú cưng từ thư mục cục bộ
+
+Trong Cài đặt → Thú cưng, chọn **Mở thư mục thú cưng**, rồi chép một bộ thú cưng
+đầy đủ vào `packs/pets/<id>/`. Khởi động lại để làm mới danh sách thú cưng,
+rồi mở Cài đặt, chọn ô **Cục bộ** và khởi động lại;
+`--pet <id>` cũng dùng được với thú cưng cục bộ. Siêu dữ liệu hiển thị không hợp lệ
+sẽ có lý do và không thể được chọn; toàn bộ hình ảnh được kiểm tra khi khởi chạy
+thú cưng. Nếu bộ đã chọn bị xóa hoặc không còn hợp lệ, ứng dụng dùng
+VPet cho lần chạy đó và giữ lựa chọn đã lưu. Mục Giới thiệu cho phép đọc điều khoản
+hình ảnh của từng thú cưng đã cài. Cập nhật ứng dụng và dọn bộ nhớ tải xuống không
+xóa các thư mục này. Xem [hướng dẫn cài đặt](starter/docs/pets.md#installing-a-local-pet)
+để biết cấu trúc và giới hạn. Nhập tệp ZIP sẽ được bổ sung ở giai đoạn sau; duyệt nguồn đã có sẵn trong Cài đặt.
+
+Ứng dụng chỉ tích hợp VPet. Tải gói `.agentpet` từ [thư viện thú cưng](https://github.com/WindyWin/agent-pet-gallery/releases), rồi nhập gói trong Cài đặt → Thú cưng.
+
+Danh mục gói: [duyệt, cài đặt và xuất bản nguồn](starter/docs/pack-sources.vi.md).

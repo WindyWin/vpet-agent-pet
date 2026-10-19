@@ -3,11 +3,103 @@
 A pet is a folder under `assets/` with its own frames, catalog, preview and art terms. A rebuild picks up
 every folder that has a `pet.json`; no C++ or CMake changes are needed. Once two or more pets are
 known, Settings → Pet shows a **Character** row with a tile per pet, and the chosen pet appears the
-next time Agent Pet starts. VPet ships with the app; other pets, such as Fat Cat ([0036](adr/0036-fat-cat-pet.md), a worked example of a
-small pet on borrowed CC0 art), Whale Girl ([0039](adr/0039-whale-girl-pet.md), 16 detailed PNG animations on 600 × 600 canvases; its art is CC BY-NC-SA 4.0), Kuro and Yun ([0037](adr/0037-drawn-pets.md), original art drawn by `scripts/draw_kuro.py` and `scripts/draw_yun.py`; Yun shows touch throws, edge hiding, flying moves and activity handovers in a pet of its own), download when chosen (see
-[Bundled and on-demand pets](#bundled-and-on-demand-pets)). `agent-pet --pet <id>` runs another pet
-once without saving the choice. Only the running pet's artwork is loaded.
+next time Agent Pet starts. VPet ships with the app; additional pets are imported
+from `.agentpet` archives in the [gallery](https://github.com/WindyWin/agent-pet-gallery/releases).
+`agent-pet --pet <id>` runs an installed pet once without saving the choice.
+Only the running pet's artwork is loaded.
 To add animations to an existing pet without a rebuild, make a [plugin pack](plugins.md) instead.
+
+The `.agentpet` format is defined in
+[ADR 0041 — Packs](adr/0041-packs.md), including metadata, limits, licensing and
+compatibility. VPet is the only built-in pet. Local folders and `.agentpet` archives load from disk; online source browsing follows in phase 5. Authoring sources for Fat Cat, Whale Girl, Kuro and Yun live in the gallery repository.
+
+## Importing and removing packs
+
+Choose **Settings → Pet → Import…**, or drop one `.agentpet` file onto the pet or
+Settings. Review its name, author, version, licence, source label and full terms,
+then choose **Accept terms and install**. Local content is unverified. A replacement
+shows the installed version and provenance, including equal versions and downgrades.
+Changes are queued until restart so a running pet keeps its frames. After restarting,
+select the installed character in Settings. **Remove installed pack…** queues removal;
+removing the selected pet switches to VPet.
+
+The headless commands show plain English output and require typing `yes`:
+
+```sh
+agent-pet import cat.agentpet
+agent-pet remove pet local-cat
+agent-pet remove plugin example
+```
+
+When no pet is running, the CLI commits immediately. Otherwise it queues the change
+for restart. A failed validation or replacement retains the previous pack. Pending
+changes are serialized per identity; restart before changing the same pack again.
+
+Archives must be ZIP32, stored or deflated, with `pack.json` at their root. The importer
+rejects traversal, absolute paths, links, special files, duplicate or case-colliding
+paths, encryption, ZIP64, and file types other than JSON, PNG and UTF-8 `.txt`/`.md`.
+It checks actual decoded bytes and CRCs, caps expansion at 200:1 per entry, checks PNG
+dimensions before decoding, and applies the [ADR limits](adr/0041-packs.md#validation-and-limits).
+
+To author a local pet and package it without rebuilding artwork resources:
+
+```sh
+python3 scripts/new_pet.py my-cat --local --name "My Cat" --author "Artist" \
+  --terms CAT-TERMS.txt --licenses ./licenses --idle ./frames --license CC0-1.0
+python3 scripts/pack.py ~/.local/share/agent-pet/packs/pets/my-cat \
+  -o my-cat.agentpet --app /path/to/agent-pet
+```
+
+`pack.py` uses the app's `validate-pack <folder>` command, then emits a deterministic
+stored ZIP with sorted paths, fixed timestamps and fixed permissions. Install or build
+Agent Pet first, or pass `--app`. The output must be outside the source folder. Update
+`pack.json.version` and `minAppVersion` when changing the pack or its requirements.
+
+## Installing a local pet
+
+In Settings → Pet, choose **Open pets folder** and copy a complete unpacked pet
+folder into it, then restart Agent Pet to refresh the installed-pet list. Settings and About
+reuse bounded identity metadata read at startup, without scanning inactive artwork. The display
+list includes up to 256 local folders; remove unused folders if that limit is reached. Starting a pet
+always validates its complete current contents.
+The folder name must match its `id`:
+
+| Platform | Folder |
+| --- | --- |
+| Linux | `~/.local/share/agent-pet/packs/pets/<id>/` (or under `$XDG_DATA_HOME`) |
+| macOS | `~/Library/Application Support/agent-pet/packs/pets/<id>/` |
+| Windows | `%APPDATA%\agent-pet\packs\pets\<id>\` |
+
+A local folder contains `pack.json`, `pet.json`, `animations.json`, `manifest.json`,
+`preview.png`, frame subfolders and `licenses/<terms>.txt` or `.md`. See
+[ADR 0041](adr/0041-packs.md#archive-and-metadata) for the manifest fields.
+`pack.json` has `kind: "pet"`, catalog `schema: 2`, a SemVer `version`, and a
+`minAppVersion` no newer than the running app. Its id, name and author must agree
+with `pet.json`; its `terms` path must be `licenses/` plus `pet.json.terms`.
+Use the checked-in [`local-cat` fixture](../tests/fixtures/local-pets/local-cat/pack.json)
+as a complete minimal example.
+
+Keep catalog and manifest frame paths as `assets/<id>/<folder>/<frame>.png`.
+The loader maps that logical prefix to the installed folder. The manifest lists
+every referenced frame's byte size and SHA-256. It rejects missing or changed
+frames, escaping paths, links, executable files, incompatible metadata and
+broken state cues. Limits include 10,000 frame references, 4 MiB per PNG, 2,048
+pixels per side, 512 MiB of PNGs and an 8 MiB catalog; previews stay within
+512 × 512 pixels. Full limits are in the ADR.
+
+Restart Agent Pet after copying a folder, then open Settings. Character tiles mark these pets **Local**;
+the tooltip shows author, licence and any display-metadata failure. Pets with invalid
+metadata remain listed but cannot be selected. Choose a pet and restart to play it, or run
+`agent-pet --pet <id>` once; activation fully validates its artwork before loading it.
+About includes a pet selector to read the artwork terms of installed pets with valid
+metadata. Copying a folder does not verify its author or grant permission to redistribute its art.
+
+VPet's id is reserved. During the transition, ids already in the app's resource
+index also take priority: a conflicting local folder is listed as unusable.
+If a saved pet is removed or becomes invalid, VPet runs instead, the log and
+Settings explain why, and the saved choice is retained. Installed folders survive
+app updates and are never removed by cleanup of the legacy `pets/*.rcc` download
+cache. Edit or replace a local pet only while Agent Pet is stopped.
 
 ## A minimal pet
 
@@ -170,29 +262,95 @@ example `vup/Default/Nomal/1` for VPet.
 - `root` is the SHA-256 of `"agent-pet-pet-tree 1\ncatalog <catalog>\n"` followed by one
   `"<name> <sha256>\n"` line per pack, in the same order.
 
-Installed packs are found by name. Pets that are not bundled use the digests: see below. `ctest -R pets`
+VPet resource packs are installed beside the index and found by name. Local pets use validated PNG files. `ctest -R pets`
 recomputes every digest from the built files.
 
-## Bundled and on-demand pets
+## Gallery and migration
 
-Only the pets in `AGENT_PET_BUNDLED_PETS` (CMake, default `vpet`) install their packs. Every other pet is in
-the index with its preview and hash tree, and its packs download when a user chooses it in Settings; the
-tile shows the download size, and a progress bar with Cancel shows while it runs. The pet appears on the
-next start once every pack is in.
+The app builds and releases only VPet. Additional pets live in the
+[gallery repository](https://github.com/WindyWin/agent-pet-gallery), which builds
+standalone `.agentpet` archives with their artwork terms and an official source
+index. The old bundled-pet CMake option, downloader and `pets` release publisher
+have been removed. VPet's paths and resource pack names remain unchanged.
 
-- Downloads come from one long-lived GitHub release, tag `pets`, where each pack is named by its SHA-256
-  (`<sha256>.rcc`). The release workflow runs `scripts/pet_blobs.py`, which collects every pack that is
-  not bundled, and uploads only the ones that release does not have yet, so app releases never upload
-  unchanged pet art again.
-- The store is `pets/` in the per-user data folder (see [install](install.md)). A pack enters it only
-  after its size and SHA-256 match the leaf in the installed index; a mismatch is fetched once more,
-  then the download fails and nothing is kept. Redirects may only go to GitHub's asset hosts over HTTPS.
-- `<id>.root` in the store records the tree root last found complete, so after an app update an
-  unchanged pet costs one comparison, and a changed one downloads only the packs whose leaves changed.
-- A downloaded pack that is missing or damaged when the pet starts is removed, VPet runs instead, and the
-  picker offers the download again. Packs no pet in the index uses are removed at startup.
+After upgrading, a saved Fat Cat, Whale Girl, Kuro, Yun or Bocchi selection without
+a valid local replacement switches to VPet once and shows a notice linking to
+the gallery. A valid imported pack with the same id keeps the selection. Unknown
+custom ids retain their existing fallback behavior. `--pet`, `--no-persist` and
+smoke tests do not migrate the saved selection.
 
-Try a pet as on-demand locally by leaving it out of the bundled list:
-`cmake -S . -B build -DAGENT_PET_BUNDLED_PETS=vpet` keeps every pack in the build folder, where it still
-counts as installed, but `cmake --install` and the packages carry only VPet's. ADR
-[0030](adr/0030-on-demand-pets.md) records the design.
+Normal startup removes only old `<data>/pets/<sha256>.rcc` downloads, their partial
+files and `<id>.root` stamps. It leaves unknown files, symlinks, directories,
+`<data>/packs/pets` and plugin folders alone. The old GitHub `pets` release is
+left available to older app versions; new versions no longer publish to it.
+
+## Convert a VPet workshop mod
+
+In **Settings → Pet (Character) → Import VPet mod…**, choose a mod folder,
+ZIP, or `pet/<name>.lps`. The installed Steam workshop list finds local items
+for VPet-Simulator (app **1920960**) across Steam libraries. Discovery is
+read-only: it does not subscribe, download, or load workshop code. A workshop
+item can contain several pets or only code; select one pet definition when
+needed. On Linux/macOS, a copied mod folder works without Steam.
+
+Provide a unique lowercase pet id and the original artwork licence text.
+Author and licence labels can come from the mod metadata. **Convert and
+review…** shows the conversion report, credit, licence and any replacement
+warning; installation requires **Accept terms and install**. Restart to apply
+it. Conversion runs in the background; closing its window discards the result.
+Bring your own mods and licences: conversion grants no redistribution rights.
+
+The native importer requires no Python:
+
+```bash
+agent-pet import --vpet-mod /path/to/mod.zip --id my-pet \
+  --author 'Original artist' --license 'LicenseRef-Custom' \
+  --terms /path/to/artwork-terms.txt --report my-pet-report.json
+```
+
+Use `agent-pet-cli.exe` on Windows. The command prints the report and terms and
+requires `yes` before installing (or queuing while the app runs). `--report` is
+optional and creates a new JSON file; it will not overwrite an existing file.
+ZIP input uses the same bounded ZIP32 checks as pack import, supports Unicode
+mod names, and extracts only `.lps` and `.png`. DLLs and other files stay out of
+the extracted input. Links, traversal paths, conflicting names, more than
+20,000 entries, PNGs over 4 MiB, and more than 512 MiB of PNG data are rejected.
+The artwork itself is read without modification except a resized preview when
+needed. Steam workshop items are found under each library's
+`steamapps/workshop/content/1920960/<item>/` using `libraryfolders.vdf`;
+Windows registry, Linux native/Flatpak, and macOS Steam roots are supported.
+
+The Python authoring converter remains available to create a redistributable
+`.agentpet` archive when the artwork licence permits it. Install Pillow
+(`python -m pip install Pillow`) if idle frames exceed the 512-pixel preview
+limit. From `starter/`, with the application built:
+
+```bash
+python scripts/convert_vpet_mod.py /path/to/mod -o my-pet.agentpet \
+  --id my-pet --author 'Original artist' --license 'LicenseRef-Custom' \
+  --terms /path/to/artwork-terms.txt --report my-pet-report.json \
+  --app build/agent-pet
+```
+
+On Windows use `--app build/agent-pet-cli.exe`. Author and licence labels may
+come from `author` / `license` fields in the pet definition; otherwise supply
+these options. The terms text is always explicit. If the mod contains several
+pets, pass the desired `pet/<name>.lps` instead of the mod directory. `--id`
+defaults to `converted-pet`; choose a distinct id for each pet you keep.
+
+The converter uses the app's VPet catalog as its mapping template. Matching
+folders supply their own frames; absent mood variants use `Nomal`, then missing
+sequences use the mod's `Default` idle. It never copies VPet artwork into the
+result. Frame names become portable names without changing ordering or timing.
+Only PNG art is copied from graph folders, and the supplied terms are embedded;
+DLLs, scripts and other mod content are ignored. Symlinks are rejected.
+
+The JSON report lists exact, normal-mood and idle mappings, cue coverage, unused
+PNG folders, tags and raise points. Touch rectangles use VPet's 500-unit coordinate
+system. Raise points are recorded only because Agent Pet has no corresponding
+catalog field. Movement requires matching art and currently uses the template's
+speeds and geometry; review these for characters with different proportions.
+Custom graph layouts may require hand-written catalog mappings. The generated
+pack passes the app's full validator before consent; the Python archive workflow
+also validates through `pack.py`. Shared generated fixtures compare native and
+Python catalogs, manifests, reports, frame bytes, ordering and durations.

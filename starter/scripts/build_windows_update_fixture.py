@@ -14,6 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--vcpkg-triplet", help="vcpkg target triplet used by the main Windows build")
     args = parser.parse_args()
     if sys.platform != "win32":
         parser.error("The upgrade fixture must be built on Windows")
@@ -29,8 +30,11 @@ def main():
             raise RuntimeError("Could not set the disposable fixture's project version")
         cmake.write_text(content)
         build = Path(temporary) / "build"
-        subprocess.run(["cmake", "-S", str(source), "-B", str(build), "-G", "Ninja",
-                        "-DCMAKE_BUILD_TYPE=Release", "-DAGENT_PET_REVISION=update-fixture"], check=True)
+        configure = ["cmake", "-S", str(source), "-B", str(build), "-G", "Ninja",
+                     "-DCMAKE_BUILD_TYPE=Release", "-DAGENT_PET_REVISION=update-fixture"]
+        if args.vcpkg_triplet:
+            configure.append(f"-DVCPKG_TARGET_TRIPLET={args.vcpkg_triplet}")
+        subprocess.run(configure, check=True)
         subprocess.run(["cmake", "--build", str(build), "--target", "agent-pet", "agent-pet-cli",
                         "agent-pet-updater", "--parallel", "2"], check=True)
         subprocess.run([sys.executable, str(source / "scripts/package_windows.py"), "--build", str(build),

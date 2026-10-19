@@ -48,6 +48,7 @@ the order the decisions were made. For a map of the code, start with the
 | [0039](0039-whale-girl-pet.md) | Whale Girl, a pet from a PNG animation pack | 2026-10-10 |
 | [0040](0040-break-buddy-and-meal-reminders.md) | Break Buddy and animated meal reminders | 2026-10-13 |
 | [0041](0041-additional-agent-providers.md) | Provider registry, OpenCode and Antigravity | 2026-10-14 |
+| [0041 — packs](0041-packs.md) | Pack archive format, storage, trust and compatibility (#92) | 2026-10-16 |
 | [0042](0042-xwayland-scale-follow.md) | Keep the pet's size when XWayland's scale changes | 2026-10-16 |
 | [0043](0043-native-wayland-layer-shell.md) | Native Wayland through layer-shell | 2026-10-16 |
 | [0044](0044-qt-release-licensing.md) | Qt notices and corresponding source in releases | 2026-10-16 |
