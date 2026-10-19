@@ -2676,6 +2676,13 @@ private slots:
         const QRect wide(0, 400, 1900, 240); // No side fits: above.
         QCOMPARE(pet::AlertBubble::placement(wide, bubble, screen).y(), 400 - 8 - 90);
         QVERIFY(inside(pet::AlertBubble::placement({-500, -500, 240, 240}, bubble, screen)));
+        // A tall popup, such as the session list with its quota panel, beside a pet parked near
+        // the bottom-right corner: nothing fits whole beside or centred above it, yet it must
+        // not end up stacked over the pet and hiding it.
+        const QSize tall(300, 420); const QRect parked(1800, 900, 47, 91);
+        const auto fits = [&](QPoint p, QSize size) { return screen.contains(QRect(p, size)); };
+        const auto above = pet::AlertBubble::placement(parked, tall, screen);
+        QVERIFY(fits(above, tall)); QVERIFY(!QRect(above, tall).intersects(parked));
     }
     void bubblePlacementKeepsClearOfOtherBubbles() {
         const QRect screen(0, 0, 1920, 1080), pet(800, 400, 240, 240); const QSize bubble(300, 90);
