@@ -12,6 +12,7 @@
 #include <QSignalSpy>
 #include "packs/sources.h"
 #include "packs/updater.h"
+#include "packs/installer.h"
 #include <QCheckBox>
 #include <QLockFile>
 #include <QListWidget>
@@ -56,6 +57,17 @@ void copyLocalPet(const QString &destination) {
         const auto target = destination + "/local-cat/" + QDir(fixture).relativeFilePath(source);
         QVERIFY(QDir().mkpath(QFileInfo(target).absolutePath())); QVERIFY(QFile::copy(source, target));
     }
+}
+bool createVPetModFixture(const QString &source) {
+    if (!QDir().mkpath(source + "/pet/cat/Default/Nomal/1")) return false;
+    QFile definition(source + "/pet/cat.lps");
+    if (!definition.open(QIODevice::WriteOnly)) return false;
+    definition.write("pet#cat:|path#cat:|author#Fixture artist:|license#CC0-1.0:|\n");
+    definition.close();
+    if (!QFile::copy(QString(PET_SOURCE) + "/tests/fixtures/local-pets/local-cat/idle/_000_100.png",
+                     source + "/pet/cat/Default/Nomal/1/_000_100.png")) return false;
+    QFile terms(source + "/terms.txt");
+    return terms.open(QIODevice::WriteOnly) && terms.write("Fixture licence terms") == 21;
 }
 // A catalog for pet "test" in which every state cue's default state plays one idle frame with the cue's shape.
 QJsonObject contractCatalog() {
@@ -894,18 +906,40 @@ private slots:
                 QVERIFY(!button->isEnabled());
         browser->reject(); QTRY_VERIFY(browser.isNull());
     }
+    void vpetImportOpensAndCloses() {
+        QWidget owner;
+        pet::showVPetImport(&owner);
+        QPointer<QDialog> dialog = owner.findChild<QDialog *>();
+        QVERIFY(dialog); QVERIFY(dialog->isVisible());
+        dialog->close(); QTRY_VERIFY(dialog.isNull());
+    }
+    void vpetConversionRunsOnWorkerThread() {
+        QTemporaryDir source, data;
+        QVERIFY(source.isValid()); QVERIFY(data.isValid());
+        QVERIFY(createVPetModFixture(source.path()));
+        QString error;
+        auto candidate = pet::packs::stage(error, data.path());
+        QVERIFY2(candidate, qPrintable(error));
+        const pet::packs::VPetOptions options{"converted-pet", {}, {}, source.path() + "/terms.txt"};
+        QJsonObject report; bool converted = false;
+        auto worker = std::unique_ptr<QThread>(QThread::create([&] {
+            converted = pet::packs::convertVPetMod(source.path(), candidate->folder, options, report, error);
+        }));
+        worker->start();
+        QTRY_VERIFY_WITH_TIMEOUT(worker->isFinished(), 10000);
+        QVERIFY(worker->wait(1000));
+        QVERIFY2(converted, qPrintable(error));
+        QVERIFY2(pet::packs::inspectStaged(*candidate, error, data.path()), qPrintable(error));
+        QCOMPARE(candidate->metadata["kind"].toString(), QString("pet"));
+        QVERIFY(report.contains("raise_points"));
+    }
     void vpetImportReviewsBeforeInstallation() {
         QTemporaryDir source; QVERIFY(source.isValid());
-        QVERIFY(QDir().mkpath(source.path() + "/pet/cat/Default/Nomal/1"));
-        QFile definition(source.path() + "/pet/cat.lps"); QVERIFY(definition.open(QIODevice::WriteOnly));
-        definition.write("pet#cat:|path#cat:|author#Fixture artist:|license#CC0-1.0:|\n"); definition.close();
-        QVERIFY(QFile::copy(QString(PET_SOURCE) + "/tests/fixtures/local-pets/local-cat/idle/_000_100.png",
-                           source.path() + "/pet/cat/Default/Nomal/1/_000_100.png"));
-        QFile terms(source.path() + "/terms.txt"); QVERIFY(terms.open(QIODevice::WriteOnly)); terms.write("Fixture licence terms"); terms.close();
+        QVERIFY(createVPetModFixture(source.path()));
         auto owner = std::make_unique<QWidget>(); pet::showVPetImport(owner.get());
         auto *dialog = owner->findChild<QDialog *>(); QVERIFY(dialog);
         dialog->findChild<QLineEdit *>("vpetModPath")->setText(source.path());
-        dialog->findChild<QLineEdit *>("vpetModTerms")->setText(terms.fileName());
+        dialog->findChild<QLineEdit *>("vpetModTerms")->setText(source.path() + "/terms.txt");
         QPushButton *convert = nullptr;
         for (auto *button : dialog->findChildren<QPushButton *>()) if (button->text() == "Convert and review…") convert = button;
         QVERIFY(convert); convert->click();

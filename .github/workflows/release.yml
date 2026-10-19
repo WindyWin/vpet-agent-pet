@@ -402,6 +402,18 @@ jobs:
           QT_QPA_PLATFORM: offscreen
         run: ./build/pets-tests sourceBrowserShowsCachedPacksWithoutRefreshing -o -,txt -o build/pets-sourceBrowserShowsCachedPacksWithoutRefreshing.txt,txt
 
+      - name: Pet test - vpetImportOpensAndCloses
+        timeout-minutes: 2
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: ./build/pets-tests vpetImportOpensAndCloses -o -,txt -o build/pets-vpetImportOpensAndCloses.txt,txt
+
+      - name: Pet test - vpetConversionRunsOnWorkerThread
+        timeout-minutes: 2
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: ./build/pets-tests vpetConversionRunsOnWorkerThread -o -,txt -o build/pets-vpetConversionRunsOnWorkerThread.txt,txt
+
       - name: Pet test - vpetImportReviewsBeforeInstallation
         timeout-minutes: 2
         env:
