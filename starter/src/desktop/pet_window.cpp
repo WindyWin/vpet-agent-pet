@@ -1,8 +1,8 @@
 #include "providers/registry.h"
 #include "updates/controller.h"
 #include "pet_window.h"
+#include "pack_controls.h"
 #include "animation/pet_library.h"
-#include "desktop/pet_downloader.h"
 #include "desktop/pet_picker.h"
 #include "desktop/plugin_list.h"
 #include "platform/contracts/native_window.h"
@@ -20,6 +20,9 @@
 #include <QDateEdit>
 #include <QTimeEdit>
 #include <QDialogButtonBox>
+#include <QDesktopServices>
+#include <QDir>
+#include <QUrl>
 #include <QFile>
 #include <QFileInfo>
 #include <QFormLayout>
@@ -76,6 +79,7 @@ static behavior::Intent edgeIntent(const QString &state) {
 PetWindow::PetWindow(QWidget *parent, const QString &path, bool persist)
     : QWidget(parent), player_(this), stage_(player_, [this] { return eggs_.now().toMSecsSinceEpoch(); }, this),
       ambient_(player_, this), activity_(player_, this), mood_(player_, this), eggs_(player_, this), store_(path), menu_(this), tray_(this), persist_(persist) {
+    setAcceptDrops(true); installEventFilter(this);
     const auto preferences = persist_ ? store_.load() : Preferences{};
     setWindowTitle("Agent Pet");
     setWindowFlags(Qt::Tool | Qt::FramelessWindowHint);
@@ -327,6 +331,7 @@ void PetWindow::relocate(QPoint where) {
     windowHandle()->requestUpdate();
 }
 bool PetWindow::eventFilter(QObject *watched, QEvent *event) {
+    if (auto *widget = qobject_cast<QWidget *>(watched); widget && packDrop(widget, event)) return true;
     if (event->type() == QEvent::UpdateRequest && watched == frames_) awaitingFrame_ = false;
     return QWidget::eventFilter(watched, event);
 }
@@ -603,6 +608,18 @@ void PetWindow::setWhenIdle(IdlePolicy policy) {
     presence_.setPolicy(policy);
     writePreferences([policy](Preferences &preferences) { preferences.whenIdle = policy; });
 }
+void PetWindow::migrateLegacyPet() {
+    if (!persist_ || PetLibrary::shared().active() != "vpet" || !PetLibrary::shared().retiredPet(pet_)) return;
+    setPet("vpet");
+    auto *notice = new QMessageBox(QMessageBox::Information, tr("Pets have moved to the gallery"),
+        tr("Agent Pet now includes only VPet. Additional pets are available as separate packs. "
+           "Import them from the <a href=\"https://github.com/WindyWin/agent-pet-gallery/releases\">pet gallery</a>. "
+           "VPet is selected for now."), QMessageBox::Ok, this);
+    notice->setTextFormat(Qt::RichText);
+    notice->setTextInteractionFlags(Qt::TextBrowserInteraction);
+    notice->setAttribute(Qt::WA_DeleteOnClose);
+    notice->open();
+}
 void PetWindow::setPet(const QString &id) {
     if (!Preferences::validPet(id)) return;
     pet_ = id;
@@ -614,14 +631,10 @@ void PetWindow::setPlugins(const QStringList &ids) {
         if (Preferences::validPet(id) && !plugins_.contains(id) && plugins_.size() < Preferences::maxPlugins) plugins_.append(id);
     writePreferences([this](Preferences &preferences) { preferences.plugins = plugins_; });
 }
-PetDownloader &PetWindow::petDownloader() {
-    if (!downloader_) {
-        downloader_ = new PetDownloader(PetLibrary::shared(), nullptr, this);
-        connect(downloader_, &PetDownloader::finished, this, [this](const QString &id, const QString &error) {
-            if (error.isEmpty() && id != pet_) setPet(id);
-        });
-    }
-    return *downloader_;
+void PetWindow::packRemoved(const QString &, const QString &) {
+    // Removal is only queued. Keep the running and saved selections unchanged;
+    // applyPending clears a plugin selection only when committing its removal.
+    // Startup falls back to VPet if the selected pet pack is actually removed.
 }
 bool PetWindow::savePreferences() { return writePreferences([](Preferences &) {}); }
 bool PetWindow::writePreferences(const std::function<void(Preferences &)> &change) {
@@ -843,6 +856,7 @@ void PetWindow::setUpdates(updates::Controller *controller) {
 void PetWindow::showSettings() {
     if (settingsDialog_) { settingsDialog_->show(); settingsDialog_->raise(); return; }
     auto *dialog = new QDialog(this); settingsDialog_ = dialog;
+    dialog->setAcceptDrops(true); dialog->installEventFilter(this);
     dialog->setAttribute(Qt::WA_DeleteOnClose); dialog->setWindowTitle(tr("Agent Pet settings"));
     // Three short tabs instead of one long form; status and Close/Quit stay below them.
     auto *outer = new QVBoxLayout(dialog);
@@ -880,18 +894,24 @@ void PetWindow::showSettings() {
     layout->addRow(reminders);
     layout = page(tr("Pet"));
     // Shown once there is a choice; the chosen pet appears on the next start.
-    if (const auto pets = PetLibrary::shared().pets(); pets.size() > 1) {
+    if (const auto pets = PetLibrary::shared().pets(); pets.size() > 1 || pet_ != PetLibrary::shared().active()) {
         auto *picker = new PetPicker(pets, pet_, PetLibrary::shared().active(), dialog);
         layout->addRow(tr("&Character"), picker);
         connect(picker, &PetPicker::chosen, this, &PetWindow::setPet);
-        // Pets that are not bundled download first; the download outlives the dialog.
-        auto &downloads = petDownloader();
-        connect(picker, &PetPicker::downloadRequested, &downloads, &PetDownloader::start);
-        connect(picker, &PetPicker::cancelRequested, &downloads, &PetDownloader::cancel);
-        connect(&downloads, &PetDownloader::progressed, picker, &PetPicker::downloading);
-        connect(&downloads, &PetDownloader::finished, picker, &PetPicker::downloaded);
-        if (!downloads.pet().isEmpty()) picker->downloading(downloads.pet(), downloads.done(), downloads.total());
     }
+    layout->addRow(packControls(dialog, "pet", [this](const QString &kind, const QString &id) {
+        if (kind == "pet") { if (pet_ == id) setPet("vpet"); }
+        else { auto ids = plugins_; ids.removeAll(id); setPlugins(ids); }
+        packRemoved(kind, id);
+    }));
+    auto *openPets = new QPushButton(tr("Open pets &folder"), dialog);
+    openPets->setObjectName("openPetsFolder");
+    layout->addRow(openPets);
+    connect(openPets, &QPushButton::clicked, this, [] {
+        const auto folder = PetLibrary::shared().petFolder();
+        QDir().mkpath(folder);
+        QDesktopServices::openUrl(QUrl::fromLocalFile(folder));
+    });
     auto *ambient = new QComboBox(dialog);
     ambient->addItems({tr("Off (no fidgets or alternate idle loops)"), tr("Subtle (a fidget about once a minute)"), tr("Lively (a fidget every 15–25 seconds)")});
     ambient->setCurrentIndex(ambientLevel()); ambient->setAccessibleName(tr("Idle animation"));
@@ -988,6 +1008,9 @@ void PetWindow::showSettings() {
     auto &library = PetLibrary::shared();
     auto *pluginList = new PluginList(library.plugins(), plugins_, library.active(), library.pluginFolder(), dialog);
     layout->addRow(pluginList);
+    layout->addRow(packControls(dialog, "plugin", [this](const QString &kind, const QString &id) {
+        packRemoved(kind, id);
+    }));
     connect(pluginList, &PluginList::changed, this, &PetWindow::setPlugins);
     layout = page(tr("Startup and agents"));
     layout->addRow(startupSettings(dialog));
@@ -1150,12 +1173,28 @@ void PetWindow::showAbout() {
         QFile file(path);
         return file.open(QIODevice::ReadOnly) ? QString::fromUtf8(file.readAll()) + "\n\n" : QString();
     };
-    auto artworkTerms = artwork.terms.isEmpty() ? QString() : read(":/licenses/" + artwork.terms);
+    auto artworkTerms = library.terms(artwork) + "\n\n";
+    if (artworkTerms.trimmed().isEmpty()) artworkTerms.clear();
     if (artworkTerms.isEmpty()) artworkTerms = tr("Artwork terms unavailable.") + "\n\n";
     terms->setPlainText(read(":/licenses/QT-NOTICE.txt") + read(":/NOTICE")
                         + read(":/THIRD_PARTY_NOTICES.md") + artworkTerms + read(":/LICENSE")
                         + read(":/licenses/LGPL-3.0.txt") + read(":/licenses/GPL-3.0.txt"));
     layout->addWidget(terms);
+    auto *petTerms = new QComboBox(dialog);
+    petTerms->setObjectName("petTerms");
+    for (const auto &installed : library.pets())
+        if (installed.error.isEmpty()) petTerms->addItem(installed.name, installed.id);
+    petTerms->setAccessibleName(tr("Pet artwork terms"));
+    petTerms->setCurrentIndex(petTerms->findData(library.active()));
+    connect(petTerms, &QComboBox::currentIndexChanged, dialog, [petTerms, terms, &library, read](int) {
+        const auto pet = library.info(petTerms->currentData().toString());
+        auto text = library.terms(pet);
+        if (text.isEmpty()) text = tr("Artwork terms unavailable.");
+        terms->setPlainText(read(":/licenses/QT-NOTICE.txt") + read(":/NOTICE") + read(":/THIRD_PARTY_NOTICES.md")
+                           + pet.name + " — " + pet.author + "\n" + pet.license + "\n\n" + text + "\n\n" + read(":/LICENSE")
+                           + read(":/licenses/LGPL-3.0.txt") + read(":/licenses/GPL-3.0.txt"));
+    });
+    layout->addWidget(petTerms);
     auto *buttons = new QDialogButtonBox(QDialogButtonBox::Close, dialog);
     buttons->button(QDialogButtonBox::Close)->setText(tr("Close"));
     connect(buttons, &QDialogButtonBox::rejected, dialog, &QDialog::close); layout->addWidget(buttons); dialog->show();

@@ -1,0 +1,11 @@
+{
+  "kind": "pet",
+  "id": "local-cat",
+  "version": "1.0.0",
+  "schema": 2,
+  "minAppVersion": "0.16.0",
+  "name": "Local Cat",
+  "author": "Agent Pet tests",
+  "license": "Apache-2.0",
+  "terms": "licenses/TERMS.txt"
+}

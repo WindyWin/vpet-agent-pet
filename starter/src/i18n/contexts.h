@@ -11,3 +11,5 @@ struct Integrations { Q_DECLARE_TR_FUNCTIONS(Integrations) }; // Agent hook conf
 struct Startup { Q_DECLARE_TR_FUNCTIONS(Startup) };           // Start at login
 struct Focus { Q_DECLARE_TR_FUNCTIONS(Focus) };               // Window focus requirements
 struct Settings { Q_DECLARE_TR_FUNCTIONS(Settings) };         // Preferences file errors
+
+struct PackSources { Q_DECLARE_TR_FUNCTIONS(PackSources) }; // Catalogs and pack downloads

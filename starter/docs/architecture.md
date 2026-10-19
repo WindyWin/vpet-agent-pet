@@ -11,6 +11,10 @@ and [issue-linked roadmap](../../README.md#roadmap-mapped-to-the-architecture), 
 the planned pet library, cue mapping, behavior runtime and plugin boundaries.
 The code map below describes the current implementation.
 
+The planned `.agentpet` format, per-user storage, trust levels and compatibility
+contract are defined in [ADR 0041 — Packs](adr/0041-packs.md). Implementation
+follows the phases of #91; the code map below remains the current architecture.
+
 ## Code map
 
 | Area | Code | Decision |
@@ -24,12 +28,14 @@ The code map below describes the current implementation.
 | Preferences | `src/settings` | [0004](adr/0004-preferences-storage.md) |
 | Window, menus, recovery | `src/desktop` | [0008](adr/0008-window-behavior.md) |
 | Pets, playback and catalog | `src/animation` (`Catalog`, `PetLibrary`, `Player`), `assets/<id>/`, `cmake/pets.cmake`, [pets](pets.md) | [0003](adr/0003-catalog-driven-playback.md), [0014](adr/0014-artwork-resource-file.md), [0028](adr/0028-pet-packs.md) |
+| Local pet folders | `src/animation/local_pet.*`, `PetLibrary`, `Catalog::read`, Settings Character picker and About | [0041 — packs](adr/0041-packs.md), [manual installation](pets.md#installing-a-local-pet) |
 | Cues (event → animation mapping) | `src/animation/cues.json`, `Catalog::stateFor`, `Player::play`/`pool` | [0029](adr/0029-cues.md) |
 | Behavior runtime (which behavior may show) | `src/behavior/runtime.*`, `src/animation/stage.*`, producers in `Monitor`, `PetWindow`, `Ambient`, `EasterEggs` | [0031](adr/0031-behavior-runtime.md) |
 | Plugin packs (catalog fragments, Settings → Plugins) | `src/animation/plugins.*`, `PetLibrary::setPlugins`, `src/desktop/plugin_list.*`, [plugins](plugins.md) | [0033](adr/0033-plugin-packs.md) |
 | Custom events and plugin rules (`events.json`) | `Event` (`kind: custom`), `src/animation/event_rules.*`, `Monitor::react`, `agent-pet emit --custom`, [events](events.md#custom-events) | [0034](adr/0034-custom-events.md) |
 | The pet's own triggers as rules | `src/animation/triggers.json`, `EventRules` on `Player::rules()`, `EasterEggs`, `Mood::celebrate`, `Stage`, [plugins](plugins.md#the-pets-own-triggers) | [0035](adr/0035-built-in-triggers-as-rules.md) |
-| On-demand pets (store, downloads) | `PetLibrary` (store, stamps, `prune`), `src/desktop/pet_downloader.*`, `scripts/pet_blobs.py` | [0030](adr/0030-on-demand-pets.md) |
+| Local pet packs and gallery migration | `PetLibrary`, `src/animation/local_pet.*`, `src/packs/`, `PetWindow::migrateLegacyPet` | [0041](adr/0041-packs.md) |
+| VPet mod import and Steam workshop discovery | `src/packs/vpet_mod.*` (LPS/PNG conversion and report), `src/packs/steam_workshop.*` (local library discovery), `src/desktop/vpet_import.*` (background conversion and consent) | [0041](adr/0041-packs.md), [import guide](pets.md#convert-a-vpet-workshop-mod) |
 | Idle, active, mood, touch, eggs, walking | `src/animation`, `src/desktop` | [0011](adr/0011-idle-animation.md), [0021](adr/0021-active-animation.md), [0012](adr/0012-mood.md), [0013](adr/0013-touch-reactions.md), [0015](adr/0015-easter-eggs.md), [0016](adr/0016-walking.md) |
 | Recap, wellness | `src/sessions/recap.*`, `src/desktop/wellness.*` | [0018](adr/0018-daily-recap.md), [0019](adr/0019-wellness-reminders.md) |
 | Snooze, re-remind | `src/desktop/snooze.*` | [0038](adr/0038-reminder-confirm-and-snooze.md) |
@@ -51,3 +57,16 @@ components. `release_blobs.py` publishes immutable runtime/artwork archives to
 the non-latest `release-blobs` prerelease and plans retention with a dry-run default.
 Full Linux packages remain the fallback for older readers. See ADR 0010 and 0014
 for the compatibility and retention policy.
+
+Pack discovery uses `packs/sources` (`pet_sources`, Qt Network): strict versioned
+HTTPS catalogs, per-user source configuration and last-good caches, and bounded
+size/digest-verified temporary downloads. `desktop/source_browser` provides manual
+browse/refresh/install/update/remove and terms consent, then calls the existing
+`packs/installer` transaction pipeline. Preview decoding is bounded; catalog text
+is inert. Neither catalog refresh nor installation enables a plugin or integration.
+`packs/updater` schedules daily checks under the app updater's automatic-check
+policy. Separate per-source opt-ins allow verified updates with unchanged terms
+to enter the same restart transaction. App-owned origin records commit with each
+payload; source revocation revisions prevent re-added URLs from restoring old
+consent. Local and direct-URL imports remain without an update source.
+See [source publishing and usage](pack-sources.md).

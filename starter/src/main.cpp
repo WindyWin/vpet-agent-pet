@@ -1,5 +1,9 @@
 #include "updates/controller.h"
+#include "packs/updater.h"
 #include <QSaveFile>
+#include <QLockFile>
+#include <QDir>
+#include "packs/installer.h"
 #include <QSslSocket>
 #include <QRegularExpression>
 #include "animation/pet_library.h"
@@ -43,6 +47,18 @@ int main(int argc, char **argv) {
     if (argc == 2 && QString::fromLocal8Bit(argv[1]) == "--version") {
         std::printf("agent-pet %s (%s)\n", AGENT_PET_VERSION, AGENT_PET_REVISION);
         return 0;
+    }
+    if (argc > 1 && (QString::fromLocal8Bit(argv[1]) == "import" || QString::fromLocal8Bit(argv[1]) == "remove")) {
+        QCoreApplication app(argc, argv); app.setApplicationName("agent-pet");
+        return pet::packs::command(app.arguments());
+    }
+    if (argc > 1 && QString::fromLocal8Bit(argv[1]) == "validate-pack") {
+        QCoreApplication app(argc, argv); app.setApplicationName("agent-pet");
+        QJsonObject metadata; QString terms, error;
+        if (argc != 3 || !pet::packs::validate(QString::fromLocal8Bit(argv[2]), metadata, terms, error)) {
+            std::fprintf(stderr, "%s\n", qPrintable(error)); return 1;
+        }
+        std::puts("Pack is valid."); return 0;
     }
     if (argc > 1 && QString::fromLocal8Bit(argv[1]) == "integration") {
         QCoreApplication app(argc, argv);
@@ -104,6 +120,11 @@ int main(int argc, char **argv) {
             }
         }
         const bool persist = !parser.isSet("smoke-test") && !parser.isSet("no-persist");
+        QDir().mkpath(pet::packs::dataFolder());
+        QLockFile packRuntime(pet::packs::dataFolder() + "/pack-runtime.lock");
+        if (!packRuntime.tryLock()) { std::fprintf(stderr, "Another process is using installed packs.\n"); return 1; }
+        QString packError;
+        if (persist && !pet::packs::applyPending(packError)) qWarning().noquote() << packError;
         const auto preferences = persist ? pet::PreferencesStore().load() : pet::Preferences{};
         // Before any window exists, so everything is created in the chosen language. Headless commands
         // above never translate: the CLI stays English and `hook` stays silent.
@@ -116,9 +137,13 @@ int main(int argc, char **argv) {
         if (persist) pet::PetLibrary::shared().setPlugins({}, preferences.plugins);
         if (!pet::PetLibrary::shared().activate(chosen, &petError) && chosen != "vpet")
             qWarning().noquote() << QString("Pet \"%1\" is unavailable: %2; using vpet").arg(chosen, petError);
-        // Downloaded packs that no pet of this version uses any more go.
-        if (persist) pet::PetLibrary::shared().prune();
+        // Remove only the retired download cache; installed packs are separate.
+        if (persist) pet::PetLibrary::shared().removeLegacyDownloads();
+        // Read only bounded display metadata here, never scan or hash inactive packs' artwork.
+        // Activation validates the selected pack independently of this display-only snapshot.
+        pet::PetLibrary::shared().refreshDisplaySnapshot();
         pet::PetWindow window(nullptr, {}, persist);
+        if (persist && !parser.isSet("pet")) window.migrateLegacyPet();
         // Only an explicit --state: the window already plays the pet's own `start` cue, whose state a pet names itself.
         if (parser.isSet("state") && !window.player().select(parser.value("state"), true)) {
             std::fprintf(stderr, "%s\n", qPrintable(window.player().error()));
@@ -130,6 +155,7 @@ int main(int argc, char **argv) {
         monitor.locked = pet::platform::createScreenLockQuery(&app); // The application outlives the monitor.
         if (receiver) monitor.listen(std::move(receiver));
         std::unique_ptr<pet::updates::Controller> updates;
+        std::unique_ptr<pet::packs::Updater> packUpdates;
         if (!parser.isSet("smoke-test") && !parser.isSet("no-persist")) {
             updates = std::make_unique<pet::updates::Controller>();
             monitor.restoreSessions(pet::updates::dataDirectory() + "/sessions.json");
@@ -137,6 +163,10 @@ int main(int argc, char **argv) {
             window.setUpdates(updates.get());
             QObject::connect(updates.get(), &pet::updates::Controller::restartRequested, &window, &pet::PetWindow::requestQuit);
             updates->start();
+            packUpdates = std::make_unique<pet::packs::Updater>(pet::packs::dataFolder());
+            packUpdates->checksEnabled = [&updates] { return updates->automaticChecksEnabled(); };
+            QObject::connect(updates.get(), &pet::updates::Controller::changed, packUpdates.get(), &pet::packs::Updater::policyChanged);
+            packUpdates->start();
         }
         window.show();
         const QString health = parser.value("update-health");

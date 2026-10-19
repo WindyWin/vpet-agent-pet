@@ -22,6 +22,7 @@ public:
     // Rebuilds an open updates dialog in the current language, at the same place.
     void retranslate(QWidget *parent);
     void start();
+    bool automaticChecksEnabled() const { return writable_ && state_["enabled"].toBool(true); }
     void check(bool manual = false);
     void download();
     void install();
