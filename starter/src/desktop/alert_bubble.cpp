@@ -65,7 +65,9 @@ QPoint AlertBubble::placement(const QRect &pet, QSize bubble, const QRect &scree
     // The ones above and below never cover the pet, so when the pet sits near a screen edge
     // they slide along that edge instead of being rejected for overhanging it.
     const int bent = qBound(screen.left(), middle, qMax(screen.left(), screen.right() - bubble.width() + 1));
-    const QPoint candidates[] = {{pet.right() + 1 + gap, top}, {pet.left() - gap - bubble.width(), top},
+    // Likewise the ones beside the pet slide up when they would run off the bottom of the screen.
+    const int side = qBound(screen.top(), top, qMax(screen.top(), screen.bottom() - bubble.height() + 1));
+    const QPoint candidates[] = {{pet.right() + 1 + gap, side}, {pet.left() - gap - bubble.width(), side},
                                  {bent, pet.top() - gap - bubble.height()}, {bent, pet.bottom() + 1 + gap}};
     const auto clear = [&](const QRect &area) {
         for (const auto &other : avoid) if (area.intersects(other)) return false;

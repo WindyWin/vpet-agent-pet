@@ -2683,6 +2683,10 @@ private slots:
         const auto fits = [&](QPoint p, QSize size) { return screen.contains(QRect(p, size)); };
         const auto above = pet::AlertBubble::placement(parked, tall, screen);
         QVERIFY(fits(above, tall)); QVERIFY(!QRect(above, tall).intersects(parked));
+        // A pet in the bottom-left corner gets the tall popup on its right, slid up to fit.
+        const QRect corner2(40, 900, 47, 91);
+        const auto beside = pet::AlertBubble::placement(corner2, tall, screen);
+        QVERIFY(fits(beside, tall)); QCOMPARE(beside.x(), corner2.right() + 1 + 8); QVERIFY(!QRect(beside, tall).intersects(corner2));
     }
     void bubblePlacementKeepsClearOfOtherBubbles() {
         const QRect screen(0, 0, 1920, 1080), pet(800, 400, 240, 240); const QSize bubble(300, 90);

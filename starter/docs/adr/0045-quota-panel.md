@@ -32,7 +32,7 @@ limits up itself.
 - Readings are keyed by a credential hash: a different account starts with no
   numbers instead of inheriting the previous account's usage.
 - Because the footer makes the popup much taller, popup placement must never
-  clamp onto the pet: the above/below candidates slide along a screen edge, and
+  clamp onto the pet: the candidates above and below slide along a screen edge and the ones beside the pet slide up off the bottom edge, and
   the last-resort clamp ends the popup above the pet (or starts it below) so
   the pet stays visible. Rebuilding the footer after each reading must show
   every created widget again — hidden rebuilt widgets contribute zero to
