@@ -112,9 +112,10 @@ qt_add_library(pet_ui STATIC
     src/desktop/pet_window.cpp src/desktop/overlay.cpp
     src/desktop/pet_picker.cpp src/desktop/pet_downloader.cpp src/desktop/plugin_list.cpp
     src/desktop/touch.cpp src/desktop/wander.cpp src/desktop/wellness.cpp src/desktop/snooze.cpp src/desktop/alert_bubble.cpp src/desktop/monitor.cpp
-    src/desktop/session_list.cpp src/updates/controller.cpp)
+    src/desktop/session_list.cpp src/updates/controller.cpp
+    src/desktop/conversation_text.cpp src/desktop/conversation_bubbles.cpp src/desktop/conversation_panel.cpp src/desktop/conversations.cpp)
 target_include_directories(pet_ui PUBLIC src "${CMAKE_CURRENT_BINARY_DIR}/generated")
-target_link_libraries(pet_ui PUBLIC Qt6::Widgets pet_animation pet_events pet_updates pet_i18n Qt6::Network PRIVATE pet_native)
+target_link_libraries(pet_ui PUBLIC Qt6::Widgets pet_animation pet_events pet_updates pet_i18n pet_interactions Qt6::Network PRIVATE pet_native)
 qt_add_resources(pet_ui pet_assets PREFIX "/" FILES ${pet_notices})
 add_dependencies(pet_ui pet_artwork)
 # Headless platform services shared by the hook and the pet: POSIX event transport, hook input,
@@ -199,7 +200,7 @@ qt_add_library(pet_updates STATIC src/updates/release.cpp src/updates/components
 target_include_directories(pet_updates PUBLIC src "${CMAKE_CURRENT_BINARY_DIR}/generated")
 target_link_libraries(pet_updates PUBLIC Qt6::Core PRIVATE pet_update_platform)
 qt_add_executable(agent-pet src/main.cpp)
-target_link_libraries(agent-pet PRIVATE pet_ui pet_events pet_native pet_i18n)
+target_link_libraries(agent-pet PRIVATE pet_ui pet_events pet_native pet_i18n pet_interaction_stream)
 set(pet_cli_target agent-pet) # The executable tests run as hooks and commands.
 if(WIN32)
     # agent-pet.exe opens no console window; agent-pet-cli.exe, the same program as a console
@@ -209,7 +210,7 @@ if(WIN32)
     target_sources(agent-pet PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/generated/agent-pet.rc")
     set_target_properties(agent-pet PROPERTIES WIN32_EXECUTABLE ON)
     qt_add_executable(agent-pet-cli src/main.cpp "${CMAKE_CURRENT_BINARY_DIR}/generated/agent-pet.rc")
-    target_link_libraries(agent-pet-cli PRIVATE pet_ui pet_events pet_native pet_i18n)
+    target_link_libraries(agent-pet-cli PRIVATE pet_ui pet_events pet_native pet_i18n pet_interaction_stream)
     set(pet_cli_target agent-pet-cli)
     qt_add_executable(agent-pet-updater src/platform/windows/update_helper.cpp)
     target_link_libraries(agent-pet-updater PRIVATE pet_updates pet_events pet_i18n)
@@ -312,6 +313,10 @@ if(BUILD_TESTING)
             add_test(NAME prototype-${shard} COMMAND prototype-tests --shard ${shard}/${AGENT_PET_PROTOTYPE_SHARDS})
             set_tests_properties(prototype-${shard} PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
         endforeach()
+        qt_add_executable(conversation-tests tests/conversation_tests.cpp)
+        target_link_libraries(conversation-tests PRIVATE pet_ui Qt6::Test)
+        add_test(NAME conversations COMMAND conversation-tests)
+        set_tests_properties(conversations PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
         qt_add_executable(i18n-tests tests/i18n_tests.cpp)
         target_link_libraries(i18n-tests PRIVATE pet_i18n Qt6::Test)
         target_compile_definitions(i18n-tests PRIVATE TS_PATH="${CMAKE_CURRENT_SOURCE_DIR}/translations/agent-pet_vi.ts")

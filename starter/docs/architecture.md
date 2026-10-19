@@ -19,7 +19,7 @@ The code map below describes the current implementation.
 | Event transport, sessions | `src/ipc`, `src/sessions`, [events](events.md) | [0005](adr/0005-local-event-transport.md) |
 | Provider hooks, integration setup | `src/providers`, [integrations](integrations.md) | [0006](adr/0006-provider-adapters.md), [0041](adr/0041-additional-agent-providers.md) |
 | Alerts, bubble, badge | `src/desktop/monitor.*`, `src/sessions` | [0007](adr/0007-alert-presentation.md) |
-| Direct agent interactions (core, stream; not yet wired to the app) | `src/interactions`, `src/platform/local_stream`, [interactions](interactions.md), [specification](../../docs/design/agent-interactions-spec.md) | n/a |
+| Direct agent interactions (core, stream, desktop preview and panel; opt-in) | `src/interactions`, `src/platform/local_stream`, `src/desktop/conversation*`, [interactions](interactions.md), [specification](../../docs/design/agent-interactions-spec.md) | n/a |
 | Open a session's host | `src/hosts`, `src/platform` | [0017](adr/0017-session-focus.md) |
 | Preferences | `src/settings` | [0004](adr/0004-preferences-storage.md) |
 | Window, menus, recovery | `src/desktop` | [0008](adr/0008-window-behavior.md) |

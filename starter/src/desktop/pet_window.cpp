@@ -117,6 +117,8 @@ PetWindow::PetWindow(QWidget *parent, const QString &path, bool persist)
     connect(showAction_, &QAction::toggled, this, [this](bool shown) { setPetHidden(!shown); });
     menu_.addSeparator();
     sessionsAction_ = menu_.addAction(QString(), this, &PetWindow::sessionsRequested);
+    conversationsAction_ = menu_.addAction(QString(), this, &PetWindow::conversationsRequested);
+    conversationsAction_->setVisible(false);
     recapAction_ = menu_.addAction(QString(), this, &PetWindow::recapRequested);
     movementBreakAction_ = menu_.addAction(QString(), this, &PetWindow::movementBreakRequested);
     connect(&menu_, &QMenu::aboutToShow, this, [this] {
@@ -244,6 +246,7 @@ void PetWindow::retranslate() {
     showAction_->setText(tr("Show pet"));
     showAction_->setToolTip(showAction_->isEnabled() ? QString() : tr("Hiding needs a system tray to show the pet again"));
     sessionsAction_->setText(tr("Running sessions…"));
+    conversationsAction_->setText(tr("Agent conversations…"));
     recapAction_->setText(tr("Today's recap"));
     muteAction_->setText(tr("Mute alerts"));
     {
@@ -764,10 +767,11 @@ void PetWindow::slideTo(QPoint target, touch::Edge hide) {
     slide_.setStartValue(nativePos()); slide_.setEndValue(target);
     slide_.start();
 }
+void PetWindow::setConversationsAvailable(bool available) { conversationsAction_->setVisible(available); }
 bool PetWindow::canWander(const Move &move) const {
     // Native Wayland leaves window placement to the compositor, so the pet could not go anywhere,
     // unless it is a layer-shell surface that places itself.
-    if (!wanderEnabled_ || quitting_ || petHidden() || !isVisible() || hiding() || dragging_ || flight_ || sliding()
+    if (!wanderEnabled_ || wanderHeld_ || quitting_ || petHidden() || !isVisible() || hiding() || dragging_ || flight_ || sliding()
         || (QGuiApplication::platformName().startsWith("wayland") && !platform::layerShellActive()))
         return false;
     if (!move.mood.isEmpty() && move.mood != player_.mood()) return false;

@@ -3,7 +3,10 @@
 #include <QSslSocket>
 #include <QRegularExpression>
 #include "animation/pet_library.h"
+#include "desktop/conversations.h"
 #include "desktop/monitor.h"
+#include "interactions/host.h"
+#include "platform/contracts/interaction_transport.h"
 #include "ipc/autostart.h"
 #include "ipc/local.h"
 #include "platform/native.h"
@@ -76,6 +79,7 @@ int main(int argc, char **argv) {
     parser.addVersionOption();
     parser.addOption({"state", "Initial animation state (default: the pet's own start animation)", "state"});
     parser.addOption({"pet", "Pet to show for this run, by id (default: the one chosen in Settings)", "id"});
+    parser.addOption({"interactions", "Answer agent questions and send follow-ups from the pet (also the agent_conversations preference)"});
     parser.addOption({"preview", "Open the developer animation preview"});
     parser.addOption({"settings", "Open desktop settings"});
     parser.addOption({"no-persist", "Do not read or write preferences (testing)"});
@@ -126,6 +130,33 @@ int main(int argc, char **argv) {
         pet::Monitor monitor(window, pet::platform::createFocusService());
         monitor.locked = pet::platform::createScreenLockQuery(&app); // The application outlives the monitor.
         if (receiver) monitor.listen(std::move(receiver));
+        // Direct agent conversations are opt-in: no socket exists, and no message text is shared, until chosen.
+        // Declared in this order so the panel goes before the service it reads.
+        std::unique_ptr<pet::interactions::Service> interactionService;
+        std::unique_ptr<pet::interactions::Host> interactionHost;
+        std::unique_ptr<pet::ConversationHub> conversations;
+        if (!parser.isSet("smoke-test") && (preferences.agentConversations || parser.isSet("interactions"))) {
+            interactionService = std::make_unique<pet::interactions::Service>();
+            interactionHost = std::make_unique<pet::interactions::Host>(*interactionService, pet::platform::createInteractionTransport());
+            QString streamError;
+            if (interactionHost->start(streamError)) {
+                conversations = std::make_unique<pet::ConversationHub>(window, *interactionService);
+                conversations->setHideExcerpts(preferences.hideMessagePreviews);
+                conversations->avoid = [&monitor] {
+                    QVector<QRect> taken;
+                    for (const QWidget *widget : {static_cast<const QWidget *>(&monitor.bubble()), static_cast<const QWidget *>(&monitor.note()),
+                                                  static_cast<const QWidget *>(&monitor.sessionList())})
+                        if (widget->isVisible()) taken.append(widget->geometry());
+                    return taken;
+                };
+                conversations->focusHost = [&monitor](const pet::interactions::ConversationKey &key) {
+                    return monitor.focusSession(key.provider + QChar(0x1f) + key.sessionId);
+                };
+            } else {
+                qWarning().noquote() << "Agent conversations are unavailable:" << streamError;
+                interactionHost.reset(); interactionService.reset();
+            }
+        }
         std::unique_ptr<pet::updates::Controller> updates;
         if (!parser.isSet("smoke-test") && !parser.isSet("no-persist")) {
             updates = std::make_unique<pet::updates::Controller>();

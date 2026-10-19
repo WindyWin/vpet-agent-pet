@@ -82,6 +82,8 @@ Preferences PreferencesStore::load() {
         || !validTime("lunch_time") || !validTime("monday_time") || !validTime("leave_work_time") || !validTime("sleep_time")
         || (object.contains("recap") && !object["recap"].isBool())
         || (object.contains("autostart") && !object["autostart"].isBool())
+        || (object.contains("agent_conversations") && !object["agent_conversations"].isBool())
+        || (object.contains("hide_message_previews") && !object["hide_message_previews"].isBool())
         || (object.contains("language") && !object["language"].isString())
         || (object.contains("pet") && !object["pet"].isString())
         || (object.contains("plugins") && !object["plugins"].isArray())
@@ -112,6 +114,8 @@ Preferences PreferencesStore::load() {
     if (object.contains("sleep_time")) result.reminderSchedule.sleep = QTime::fromString(object["sleep_time"].toString(), "HH:mm");
     result.recap = object["recap"].toBool(true);
     result.autostart = object["autostart"].toBool();
+    result.agentConversations = object["agent_conversations"].toBool();
+    result.hideMessagePreviews = object["hide_message_previews"].toBool();
     result.whenIdle = whenIdle;
     const auto language = object["language"].toString();
     if (language == "en" || language == "vi") result.language = language;
@@ -135,7 +139,8 @@ bool PreferencesStore::save(const Preferences &preferences) {
                        {"wander", preferences.wander}, {"easter_eggs", preferences.easterEggs}, {"recap", preferences.recap},
                        {"eye_minutes", preferences.eyeMinutes}, {"water_minutes", preferences.waterMinutes},
                        {"movement_minutes", preferences.movementMinutes},
-                       {"autostart", preferences.autostart}, {"when_idle", idlePolicyName(preferences.whenIdle)},
+                       {"autostart", preferences.autostart}, {"agent_conversations", preferences.agentConversations},
+                       {"hide_message_previews", preferences.hideMessagePreviews}, {"when_idle", idlePolicyName(preferences.whenIdle)},
                        {"language", preferences.language},
                        {"lunch_time", preferences.reminderSchedule.lunch.toString("HH:mm")},
                        {"monday_time", preferences.reminderSchedule.monday.toString("HH:mm")},

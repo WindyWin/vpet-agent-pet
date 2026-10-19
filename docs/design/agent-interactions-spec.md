@@ -1,6 +1,6 @@
 # Direct agent interactions and collapsible conversation panel
 
-Status: proposed implementation specification. Date: 2026-10-19. Stage 1 (provider proof) and stage 2 (core, transport, fake bridge) are implemented; see [the protocol notes](../../starter/docs/interactions.md). Nothing is wired into the application yet.
+Status: proposed implementation specification. Date: 2026-10-19. Stages 1 (provider proof), 2 (core, transport, fake bridge) and 3 (desktop preview, panel and list) are implemented, and the OpenCode bridge half of stage 4 exists; see [the protocol notes](../../starter/docs/interactions.md). The feature is off unless enabled by the `agent_conversations` preference or `--interactions`; there is no Settings control or bridge launcher yet.
 
 This specifies the next interaction feature; it does not describe shipped functionality. Product direction: answer agent option requests and send chat follow-ups directly from the pet, with a shared foundation for future Telegram remote control. Provider API compatibility must be demonstrated during implementation before advertising support.
 

@@ -76,6 +76,10 @@ public:
     // stays where it was put.
     void setWanderEnabled(bool enabled);
     bool wanderEnabled() const { return wanderEnabled_; }
+    // While held (an open conversation) the pet stays where it is, whatever the wander preference says.
+    void setWanderHold(bool hold) { wanderHeld_ = hold; }
+    // The menu entry for agent conversations exists only while the interaction service runs.
+    void setConversationsAvailable(bool available);
     // Whether a move could start now: wandering is on, the mood suits it, the pet is in plain view and
     // free, it has the room the move needs, and the display server lets the app place its window.
     bool canWander(const Move &move) const;
@@ -154,6 +158,7 @@ signals:
     void notificationsChanged();
     void quitRequested();
     void presenceChanged(); // The pet was hidden or shown.
+    void conversationsRequested();
     void sessionsRequested(); // A click on the pet (press and release without moving it), or the menu.
     void recapRequested(); // "Today's recap" in the menu.
     void movementBreakRequested();
@@ -210,6 +215,8 @@ private:
     QAction *resumeAction_ = nullptr, *turnSnoozeAction_ = nullptr, *tomorrowSnoozeAction_ = nullptr;
     QVector<QAction *> snoozeActions_; // One per Snooze::minuteChoices.
     QAction *updateAction_ = nullptr, *updatesItem_ = nullptr;
+    QAction *conversationsAction_ = nullptr;
+    bool wanderHeld_ = false;
     QAction *sessionsAction_ = nullptr, *recapAction_ = nullptr, *settingsAction_ = nullptr, *previewAction_ = nullptr;
     QAction *movementBreakAction_ = nullptr;
     QAction *recoverAction_ = nullptr, *aboutAction_ = nullptr, *quitAction_ = nullptr;

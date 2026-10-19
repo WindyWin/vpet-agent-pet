@@ -1,8 +1,8 @@
 # Interaction protocol and service
 
-Stages 2 and 4 (bridge half) of [the direct-interaction specification](../../docs/design/agent-interactions-spec.md): the
-provider-neutral core, its private stream, a fake bridge and the OpenCode bridge. No UI is wired yet, and
-nothing here is started by the application. The status protocol ([events](events.md)) is unchanged and
+Stages 2, 3 and 4 (bridge half) of [the direct-interaction specification](../../docs/design/agent-interactions-spec.md): the
+provider-neutral core, its private stream, a fake bridge, the OpenCode bridge and the desktop preview, panel and list.
+None of it runs unless the user opts in (below). The status protocol ([events](events.md)) is unchanged and
 stays content-free.
 
 | Part | Code |
@@ -84,6 +84,33 @@ conversation takes it over; the old one then gets `unknown_conversation`.
   in-flight commands and drafts are never evicted: when only they remain, a new record is refused with a
   `capacity` error and `capacityExceeded` is set. An oversized question is refused whole as
   `unsupported_content`; it is never truncated.
+
+## Desktop
+
+Off by default: no socket is created and no message text is shared until `agent_conversations` is `true` in the
+preferences file or the pet is started with `--interactions`. There is no Settings control or bridge launcher yet.
+`hide_message_previews` makes previews show identity and state only.
+
+| Part | Code |
+| --- | --- |
+| Wording and colors shared by the three views | `src/desktop/conversation_text.*` |
+| Collapsed preview and conversation list | `src/desktop/conversation_bubbles.*` |
+| Expanded panel and composer | `src/desktop/conversation_panel.*` |
+| Coordinator: what to preview, hiding, fading, placement | `src/desktop/conversations.*` (`ConversationHub`) |
+| Tests (offscreen; `PET_SCREENSHOT_DIR=… conversation-tests screenshots` writes the states) | `tests/conversation_tests.cpp` |
+
+The panel and the preview read and write only the service: drafts (`setDraft`), read state (`markRead`), answers
+and follow-ups (`submit`). A question outranks a message in the single preview; a new message never opens the panel
+or takes focus; hiding a preview neither answers nor reads anything; an ordinary preview fades after 8 s (it waits
+while hovered) and stays unread in the list; the same message delivered again does nothing. The pet's menu has
+Agent conversations… (shown only while the service runs); the panel's Open raises the agent's terminal through the
+existing host focus, using the status session with the same provider and ID. While the panel is open the pet does
+not wander. Ctrl+Enter (Cmd+Enter on macOS) sends, Enter adds a line, Esc collapses and keeps drafts.
+
+Known gaps against the specification: the running-sessions rows have no Conversation action or unread marker (use
+the menu or the preview's `+N`); the pet badge does not yet merge interaction questions with status attention;
+a focused host does not suppress previews; there is no preview sound; the header has no parent-path hint because
+bridges send only a project name; Vietnamese strings are not translated yet.
 
 ## OpenCode bridge
 
