@@ -667,23 +667,23 @@ Nguồn: %6</translation>
     <name>Pet</name>
     <message>
         <source>Monday again... I&apos;m so tired. Let&apos;s take it slow today.</source>
-        <translation>Lại thứ Hai rồi... Em mệt quá. Hôm nay mình làm thong thả thôi nha.</translation>
+        <translation>Lại thứ Hai rồi... Em uể oải quá. Hôm nay mình cứ từ từ thôi nha.</translation>
     </message>
     <message>
         <source>It&apos;s %1. Time to step away, take a break, and enjoy some lunch! 🍱</source>
-        <translation>%1 rồi bạn ơi. Mình nghỉ tay, rời màn hình và ăn trưa thôi! 🍱</translation>
+        <translation>%1 rồi đó bạn! Rời màn hình đi ăn trưa thôi! 🍱</translation>
     </message>
     <message>
         <source>It&apos;s %1. Time to wrap up and get ready to head home!</source>
-        <translation>%1 rồi bạn ơi. Mình thu xếp công việc, chuẩn bị về nhà thôi!</translation>
+        <translation>%1 rồi, mình dọn dẹp rồi về nhà thôi bạn ơi!</translation>
     </message>
     <message>
         <source>It&apos;s %1. Time to put everything down and go to sleep!</source>
-        <translation>%1 rồi bạn ơi. Mình gác mọi việc lại và đi ngủ thôi!</translation>
+        <translation>%1 rồi đó. Gác hết lại đi ngủ thôi bạn!</translation>
     </message>
     <message>
         <source>It&apos;s getting late. Maybe finish up and get some sleep?</source>
-        <translation>Khuya rồi bạn ơi. Mình làm nốt rồi đi ngủ nha?</translation>
+        <translation>Khuya lắm rồi. Bạn làm nốt rồi đi ngủ nha?</translation>
     </message>
     <message>
         <source>Start break</source>
@@ -691,19 +691,19 @@ Nguồn: %6</translation>
     </message>
     <message>
         <source>Move or stretch with me…</source>
-        <translation>Vận động hoặc giãn cơ cùng em nha…</translation>
+        <translation>Cùng em vươn vai giãn cơ nha…</translation>
     </message>
     <message>
         <source>Eyes on something far away…</source>
-        <translation>Nhìn ra xa nào…</translation>
+        <translation>Nhìn ra xa một chút nào…</translation>
     </message>
     <message>
         <source>Nice! Your eyes got a rest.</source>
-        <translation>Tốt lắm! Mắt bạn đã được nghỉ ngơi.</translation>
+        <translation>Tốt lắm! Mắt bạn được nghỉ rồi nè.</translation>
     </message>
     <message>
         <source>Nice! Thanks for moving with me.</source>
-        <translation>Tuyệt! Cảm ơn bạn đã vận động cùng em nha.</translation>
+        <translation>Tuyệt! Cảm ơn bạn đã tập cùng em nha.</translation>
     </message>
     <message>
         <source>Today&apos;s recap</source>
@@ -711,7 +711,7 @@ Nguồn: %6</translation>
     </message>
     <message>
         <source>Look at something far away</source>
-        <translation>Bạn nhìn ra xa nha</translation>
+        <translation>Nhìn ra xa một chút nha bạn</translation>
     </message>
     <message>
         <source>Time for some water 💧</source>
@@ -719,7 +719,7 @@ Nguồn: %6</translation>
     </message>
     <message>
         <source>Take a movement break with me</source>
-        <translation>Mình nghỉ tay, vận động cùng em nha</translation>
+        <translation>Đứng dậy vận động với em chút nha</translation>
     </message>
     <message>
         <source>1 turn</source>
@@ -760,7 +760,7 @@ Nguồn: %6</translation>
     </message>
     <message>
         <source>No agent work yet today.</source>
-        <translation>Hôm nay chưa có hoạt động nào của agent.</translation>
+        <translation>Hôm nay agent chưa làm gì cả.</translation>
     </message>
     <message>
         <source>Today: %1 in %2</source>
@@ -787,7 +787,7 @@ Nguồn: %6</translation>
     <message>
         <source>%1 waited 10+ min</source>
         <extracomment>%1 = &quot;2 approvals&quot;</extracomment>
-        <translation>%1 phải chờ hơn 10 phút</translation>
+        <translation>%1 đã chờ hơn 10 phút</translation>
     </message>
     <message>
         <source>longest run %1</source>
@@ -805,15 +805,15 @@ Nguồn: %6</translation>
     </message>
     <message>
         <source>Too much petting! I need a break. Bye!</source>
-        <translation>Vuốt ve nhiều quá rồi! Em cần nghỉ một chút. Tạm biệt bạn!</translation>
+        <translation>Vuốt nhiều quá rồi! Em phải nghỉ đây. Chào bạn nha!</translation>
     </message>
     <message>
         <source>Put me down! I&apos;m leaving!</source>
-        <translation>Thả em xuống! Em đi đây!</translation>
+        <translation>Thả em xuống! Em đi luôn đó!</translation>
     </message>
     <message>
         <source>Stop throwing me! I&apos;m leaving!</source>
-        <translation>Đừng ném em nữa! Em đi đây!</translation>
+        <translation>Đừng quăng em nữa! Em giận đi đây!</translation>
     </message>
 </context>
 <context>

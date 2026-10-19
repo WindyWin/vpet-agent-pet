@@ -14,7 +14,7 @@ limits up itself.
 
 ## Decision
 
-- A `quota::Service` reads each provider sign-in read-only — `auth.json` (or
+- A `quota::Service` reads each provider sign-in read-only: `auth.json` (or
   `CODEX_HOME`) for Codex and `.credentials.json` (or `CLAUDE_CONFIG_DIR`) for
   Claude Code, with the macOS Keychain read through `/usr/bin/security` when it
   may hold a newer token. It never renews, writes or shells out beyond that
@@ -38,8 +38,8 @@ limits up itself.
   clamp onto the pet: the candidates above and below slide along a screen edge and the ones beside the pet slide up off the bottom edge, and
   the last-resort clamp ends the popup above the pet (or starts it below) so
   the pet stays visible. Rebuilding the footer after each reading must show
-  every created widget again — hidden rebuilt widgets contribute zero to
-  layout hints, and an unshown reading would be clipped.
+  every created widget again, because hidden rebuilt widgets contribute zero to
+  layout hints and an unshown reading would be clipped.
 
 ## Consequences
 
