@@ -501,3 +501,16 @@ Both Settings tabs now delegate removal notifications to one handler, so the reu
   Steam, import, transaction, source, update, pet, plugin and i18n suites passed
   again. CLI tests verify refusal leaves no installed pet and reports cannot
   overwrite licence text; GUI tests close during conversion and during consent.
+
+
+### macOS CI diagnostics follow-up — 2026-10-19
+
+PR #122's first two macOS attempts built successfully but lost the hosted runner
+during the Test step. Both check-run annotations state that the runner lost
+communication with GitHub; neither attempt uploaded macOS logs, so no failing
+test or resource-exhaustion cause can be established. Linux and Windows passed.
+Limit macOS CTest parallelism to two, apply a five-minute per-test timeout, and
+write/upload CTest diagnostics on completed runners. This bounds concurrent
+artwork decoding and makes a future stalled test diagnosable; the next hosted
+run is required to establish its result. Added the VPet conversion, Steam
+library discovery and desktop import modules to the architecture code map.

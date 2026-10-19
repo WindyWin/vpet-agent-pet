@@ -35,6 +35,7 @@ follows the phases of #91; the code map below remains the current architecture.
 | Custom events and plugin rules (`events.json`) | `Event` (`kind: custom`), `src/animation/event_rules.*`, `Monitor::react`, `agent-pet emit --custom`, [events](events.md#custom-events) | [0034](adr/0034-custom-events.md) |
 | The pet's own triggers as rules | `src/animation/triggers.json`, `EventRules` on `Player::rules()`, `EasterEggs`, `Mood::celebrate`, `Stage`, [plugins](plugins.md#the-pets-own-triggers) | [0035](adr/0035-built-in-triggers-as-rules.md) |
 | Local pet packs and gallery migration | `PetLibrary`, `src/animation/local_pet.*`, `src/packs/`, `PetWindow::migrateLegacyPet` | [0041](adr/0041-packs.md) |
+| VPet mod import and Steam workshop discovery | `src/packs/vpet_mod.*` (LPS/PNG conversion and report), `src/packs/steam_workshop.*` (local library discovery), `src/desktop/vpet_import.*` (background conversion and consent) | [0041](adr/0041-packs.md), [import guide](pets.md#convert-a-vpet-workshop-mod) |
 | Idle, active, mood, touch, eggs, walking | `src/animation`, `src/desktop` | [0011](adr/0011-idle-animation.md), [0021](adr/0021-active-animation.md), [0012](adr/0012-mood.md), [0013](adr/0013-touch-reactions.md), [0015](adr/0015-easter-eggs.md), [0016](adr/0016-walking.md) |
 | Recap, wellness | `src/sessions/recap.*`, `src/desktop/wellness.*` | [0018](adr/0018-daily-recap.md), [0019](adr/0019-wellness-reminders.md) |
 | Snooze, re-remind | `src/desktop/snooze.*` | [0038](adr/0038-reminder-confirm-and-snooze.md) |

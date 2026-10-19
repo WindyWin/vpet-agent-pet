@@ -165,7 +165,20 @@ jobs:
           cmake --build build
 
       - name: Test
-        run: ctest --test-dir build --output-on-failure -j"$(sysctl -n hw.ncpu)"
+        # Bound simultaneous artwork decoding on hosted macOS runners and turn
+        # a stalled test into a named failure with diagnostics.
+        run: ctest --test-dir build --output-on-failure --timeout 300 -j2 --output-log build/ctest.log
+
+      - name: Upload macOS test diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: agent-pet-macos-test-logs
+          path: |
+            starter/build/ctest.log
+            starter/build/Testing/Temporary/LastTest.log
+            starter/build/Testing/Temporary/LastTestsFailed.log
+          if-no-files-found: ignore
 
       - name: Package
         run: |
