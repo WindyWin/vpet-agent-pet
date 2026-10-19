@@ -54,10 +54,10 @@ class FakePet {
 }
 
 let dir, oc, pet, controller, running, logs, presencePath;
-const start = async () => {
+const start = async (api) => {
   controller = new AbortController();
   running = run({
-    endpoint: pet.path, signal: controller.signal, retryMs: 40, log: (m) => logs.push(m),
+    api, endpoint: pet.path, signal: controller.signal, retryMs: 40, log: (m) => logs.push(m),
     service: { url: oc.url, headers: oc.headers() },
     bridgeOptions: { now: () => oc.now(), recentMs: 60_000, goneMs: 80 }, // The fake's clock is its own.
     presence: presencePath,
@@ -239,6 +239,24 @@ describe("registration and snapshots", () => {
     assert.equal(snapshot.first_sequence, 81);
     assert.equal(snapshot.watermark, 130);
     assert.equal(snapshot.messages.at(-1).text, "m130");
+  });
+
+  test("a session started while the event stream connects is discovered", async () => {
+    const api = openCodeApi({ url: oc.url, headers: oc.headers() });
+    const events = api.events.bind(api);
+    let session;
+    api.events = async function* (...args) {
+      // This event is emitted before the server has a subscriber and cannot be replayed.
+      session = oc.session();
+      oc.addUser(session, "during connection");
+      oc.start(session);
+      yield* events(...args);
+    };
+    await start(api);
+    const snapshot = await until(() => pet.last("snapshot"), "connection-gap snapshot");
+    assert.deepEqual(snapshot.conversation, keyOf(session));
+    assert.equal(snapshot.messages[0].text, "during connection");
+    assert.equal(snapshot.ready, false);
   });
 
   test("a session that appears after startup is opened and snapshotted on demand", async () => {

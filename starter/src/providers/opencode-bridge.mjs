@@ -665,9 +665,13 @@ export function openCodeApi({ url, headers, fetchImpl = fetch, timeoutMs = 10000
     form: (formID, sessionID) => get(`/api/session/${sessionID}/form/${formID}`),
     reply: (sessionID, formID, answer) => call("POST", `/api/session/${sessionID}/form/${formID}/reply`, { answer }),
     prompt: (sessionID, body) => call("POST", `/api/session/${sessionID}/prompt`, body),
-    async *events(signal) {
+    async *events(signal, connected = async () => {}) {
       const response = await fetchImpl(url + "/api/event", { headers, signal });
       if (!response.ok) throw new Error(`event stream → ${response.status}`);
+      // Subscribe before taking the recovery snapshot. Events arriving during discovery
+      // stay buffered in the response body, closing the discovery-to-subscription gap.
+      try { await connected(); }
+      catch (error) { await response.body.cancel(); throw error; }
       const decoder = new TextDecoder();
       let buffer = "";
       for await (const chunk of response.body) {
@@ -744,10 +748,12 @@ export async function run({ endpoint = defaultEndpoint(), service = readService(
     let first = true;
     for (let delay = retryMs ?? 1000; !signal?.aborted; delay = Math.min(delay * 2, retryMs ? retryMs * 4 : 30000)) {
       try {
-        // Events during a gap are lost, so every (re)connect starts by re-reading what is tracked.
-        if (first) await bridge.discover(); else await bridge.reconcile();
-        first = false;
-        for await (const event of api.events(signal)) { delay = retryMs ?? 1000; bridge.handleEvent(event).catch((e) => log(e.message)); }
+        // Re-read only after the stream is connected so new activity cannot fall into a gap.
+        const connected = async () => {
+          if (first) await bridge.discover(); else await bridge.reconcile();
+          first = false;
+        };
+        for await (const event of api.events(signal, connected)) { delay = retryMs ?? 1000; bridge.handleEvent(event).catch((e) => log(e.message)); }
       } catch (error) { if (!signal?.aborted) log(`OpenCode event stream: ${error.message}`); }
       await sleep(delay, signal);
     }
