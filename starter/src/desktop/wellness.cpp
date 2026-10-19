@@ -17,20 +17,20 @@ bool Wellness::quietAt(const QDateTime &local) {
     return hour >= quietFrom || hour < quietUntil;
 }
 QString Wellness::note(const QString &reminder) {
-    //: %1 = seconds
-    if (reminder == "eyes") return Pet::tr("Look at something far away for %1 seconds").arg(eyeRestSeconds);
+    if (reminder == "eyes") return Pet::tr("Look at something far away");
     if (reminder == "water") return Pet::tr("Time for some water 💧");
-    if (reminder == "movement") return Pet::tr("Take a movement break with me for %1 seconds").arg(movementRestSeconds);
+    if (reminder == "movement") return Pet::tr("Take a movement break with me");
     return {};
 }
 void Wellness::activity(qint64 now, bool user) {
     if (user) lastUser_ = std::max(lastUser_, now);
-    else if (lastUser_ < 0 || now - lastUser_ >= breakMs) return; // Nobody has been there for a while.
+    else if (lastUser_ < 0 || now - lastUser_ >= absentMs) return; // Nobody has been there for a while.
     if (last_ >= 0 && now < last_) return; // Out of order: already counted.
     const qint64 gap = last_ < 0 ? breakMs : now - last_;
     if (gap >= breakMs) eyes_ = water_ = movement_ = 0; // Back from a real break.
     else { const qint64 counted = std::min(gap, graceMs); eyes_ += counted; water_ += counted; movement_ += counted; }
     last_ = now;
+    if (!user) lastAgent_ = std::max(lastAgent_, now);
 }
 // The part of the gap since the last activity that already counts.
 qint64 Wellness::pending(qint64 now) const {

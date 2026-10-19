@@ -234,7 +234,7 @@ pet has no art for, and no pack answers, is skipped, as before.
 | `monday`, `lunch`, `leave-work`, `sleep` | reminder | the configured clock reminders | the cue of the same name; `lunch` falls back to `snack`, then `celebrate` |
 | `eye-break`, `water` | reminder | the wellness reminders | `eye-break`, `water` |
 | `movement-break` | reminder | Break Buddy is due | `movement-break`, then `eye-break` |
-| `break-buddy` | surprise | a movement break starts, and while its countdown runs | `movement-break`, then `celebrate` |
+| `break-buddy` | surprise | a movement break starts, and while the break runs | `movement-break`, then `celebrate` |
 
 A rule for a trigger chooses only the art, and may add a remark where the class allows it. The trigger keeps
 everything else: its class decides how the runtime plays it (a surprise now or never, a celebration in a

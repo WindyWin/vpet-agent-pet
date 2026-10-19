@@ -11,13 +11,15 @@ namespace pet {
 // the timers over. Only the intervals are preferences; the timers live in memory. Time is passed in.
 class Wellness {
 public:
-    static constexpr qint64 graceMs = 60 * 1000, breakMs = 5 * 60 * 1000;
+    // `absentMs`: without the user's own activity for this long, agent events stop counting. `breakMs`: a gap this
+    // long is a real break that starts the timers over; a shorter one only pauses them.
+    static constexpr qint64 graceMs = 60 * 1000, absentMs = 5 * 60 * 1000, breakMs = 10 * 60 * 1000;
     // Interval choices in minutes, as offered in settings; 0 is off. The second is the default.
     static constexpr int eyeChoices[] = {0, 20, 30, 45}, waterChoices[] = {0, 45, 60, 90}, movementChoices[] = {0, 30, 60, 90};
     static constexpr int defaultEyeMinutes = 20, defaultWaterMinutes = 60;
     // Local hours with no reminders: the late-evening bedtime note and late-night yawns cover them.
     static constexpr int quietFrom = 22, quietUntil = 6;
-    static constexpr int eyeRestSeconds = 20; // The countdown after the user takes the eye break.
+    static constexpr int eyeRestSeconds = 20; // How long the eye break lasts once the user takes it.
     static constexpr int movementRestSeconds = 60;
     static bool validEyeMinutes(int minutes);
     static bool validWaterMinutes(int minutes);
@@ -32,8 +34,13 @@ public:
     int waterMinutes() const { return waterMinutes_; }
     int movementMinutes() const { return movementMinutes_; }
     void activity(qint64 now, bool user = true);
-    // The user was seen within `graceMs`: someone is there to read a reminder.
-    bool present(qint64 now) const { return lastUser_ >= 0 && now >= lastUser_ && now - lastUser_ < graceMs; }
+    // The user was seen within `graceMs`, or the agent is at work for a user seen within `absentMs` (typing in a
+    // terminal moves no pointer): someone is there to read a reminder.
+    bool present(qint64 now) const {
+        if (lastUser_ < 0 || now < lastUser_) return false;
+        if (now - lastUser_ < graceMs) return true;
+        return now - lastUser_ < absentMs && lastAgent_ >= 0 && now >= lastAgent_ && now - lastAgent_ < graceMs;
+    }
     // Active time counted toward each reminder, up to `now`; 0 once a real break has begun.
     qint64 eyesActiveMs(qint64 now) const { return counted(eyes_, now); }
     qint64 waterActiveMs(qint64 now) const { return counted(water_, now); }
@@ -44,12 +51,12 @@ public:
     void given(const QString &reminder, qint64 now);
     // A break seen some other way, such as a locked screen: all timers start over, and only the
     // user's own activity starts them again.
-    void reset() { last_ = lastUser_ = -1; eyes_ = water_ = movement_ = 0; }
+    void reset() { last_ = lastUser_ = lastAgent_ = -1; eyes_ = water_ = movement_ = 0; }
 private:
     qint64 pending(qint64 now) const;
     qint64 counted(qint64 base, qint64 now) const;
     int eyeMinutes_ = defaultEyeMinutes, waterMinutes_ = defaultWaterMinutes;
     int movementMinutes_ = 60;
-    qint64 last_ = -1, lastUser_ = -1, eyes_ = 0, water_ = 0, movement_ = 0;
+    qint64 last_ = -1, lastUser_ = -1, lastAgent_ = -1, eyes_ = 0, water_ = 0, movement_ = 0;
 };
 }

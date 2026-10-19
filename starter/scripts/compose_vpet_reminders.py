@@ -162,6 +162,8 @@ def main():
             catalog['states'][f'reminder_{action}'] = [sequence]
             catalog['playback'][f'reminder_{action}'] = {'mode': 'once', 'after': 'idle'}
             catalog['cues']['lunch' if action == 'eat' else 'water'] = [{'state': f'reminder_{action}', 'weight': 1}]
+            # The snack treat after a long productive stretch holds the same props.
+            catalog['cues']['snack'] = [{'state': f'reminder_{a}', 'weight': 1} for a in SVG]
             print(f'{sequence}: {len(files)} frames, {entry["duration_ms"]} ms')
     manifest['file_count'] = len(manifest['files'])
     manifest['total_bytes'] = sum(f['bytes'] for f in manifest['files'])

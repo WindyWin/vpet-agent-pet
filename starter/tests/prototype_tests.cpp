@@ -1142,7 +1142,7 @@ private slots:
         QCOMPARE(mood.treat(), QString());
         mood.finished(now); QCOMPARE(mood.treat(), QString("snack"));
         draws.values = {1}; const auto snack = mood.celebrate();
-        QCOMPARE(snack.state, QString("snack_thirsty")); QCOMPARE(snack.cue, QString("snack")); QCOMPARE(mood.treat(), QString());
+        QCOMPARE(snack.state, QString("reminder_drink")); QCOMPARE(snack.cue, QString("snack")); QCOMPARE(mood.treat(), QString());
         // A break of more than half an hour starts the count again.
         for (int i = 0; i < 19; ++i) { mood.finished(now); now += 60000; }
         now += pet::Mood::breakMs; mood.finished(now); QCOMPARE(mood.treat(), QString());
@@ -1894,7 +1894,7 @@ private slots:
         for (int i = 0; i < pet::Mood::snackTurns && mood.treat().isEmpty(); ++i) mood.finished(2000);
         QCOMPARE(mood.treat(), QString("snack"));
         QCOMPARE(mood.celebrate("friday-evening").state, QString("dance")); QCOMPARE(mood.treat(), QString("snack"));
-        draws.values = {0}; QCOMPARE(mood.celebrate().state, QString("snack_hungry")); QCOMPARE(mood.treat(), QString());
+        draws.values = {0}; QCOMPARE(mood.celebrate().state, QString("reminder_eat")); QCOMPARE(mood.treat(), QString());
         // A pool the catalog lacks changes nothing, and neither do the eggs when turned off.
         draws.values = {0}; QCOMPARE(mood.celebrate("nobody").state, QString("turn_finished"));
         eggs.setEnabled(false); QCOMPARE(eggs.celebration(pet::EasterEggs::longTurnMs), QString());
@@ -2215,14 +2215,14 @@ private slots:
         QCOMPARE(wellness.due(t - 30000), QString());
         QCOMPARE(wellness.due(t), QString("eyes")); QCOMPARE(wellness.due(t + 5000), QString("eyes")); // Waits until given.
         wellness.given("eyes", t); QCOMPARE(wellness.eyesActiveMs(t), qint64(0)); QCOMPARE(wellness.due(t), QString());
-        // A gap of a few minutes counts one minute and pauses the rest; five minutes away is a break.
+        // A gap of a few minutes counts one minute and pauses the rest; ten minutes away is a break.
         QCOMPARE(wellness.waterActiveMs(t), 20 * minute);
         wellness.activity(t + 3 * minute); QCOMPARE(wellness.waterActiveMs(t + 3 * minute), 20 * minute + 30000); // Last seen at t - 30 s.
-        QCOMPARE(wellness.waterActiveMs(t + 9 * minute), qint64(0)); QCOMPARE(wellness.due(t + 9 * minute), QString());
-        wellness.activity(t + 9 * minute); QCOMPARE(wellness.waterActiveMs(t + 9 * minute), qint64(0));
-        QCOMPARE(wellness.eyesActiveMs(t + 9 * minute), qint64(0));
+        QCOMPARE(wellness.waterActiveMs(t + 14 * minute), qint64(0)); QCOMPARE(wellness.due(t + 14 * minute), QString());
+        wellness.activity(t + 14 * minute); QCOMPARE(wellness.waterActiveMs(t + 14 * minute), qint64(0));
+        QCOMPARE(wellness.eyesActiveMs(t + 14 * minute), qint64(0));
         // Water comes after eyes when both are due; off means never.
-        t += 9 * minute; wellness.setEyeMinutes(0);
+        t += 14 * minute; wellness.setEyeMinutes(0);
         for (const qint64 end = t + 60 * minute; t <= end; t += 30000) wellness.activity(t);
         QCOMPARE(wellness.due(t), QString("water")); wellness.given("water", t); QCOMPARE(wellness.due(t), QString());
         wellness.setEyeMinutes(25); QCOMPARE(wellness.eyeMinutes(), 0); // Not a choice.
@@ -2232,7 +2232,7 @@ private slots:
         QVERIFY(pet::Wellness::quietAt(QDateTime(QDate(2026, 10, 7), QTime(5, 59))));
         QVERIFY(!pet::Wellness::quietAt(QDateTime(QDate(2026, 10, 7), QTime(6, 0))));
         QVERIFY(!pet::Wellness::quietAt(QDateTime(QDate(2026, 10, 7), QTime(21, 59))));
-        QCOMPARE(pet::Wellness::note("eyes"), QString("Look at something far away for 20 seconds"));
+        QCOMPARE(pet::Wellness::note("eyes"), QString("Look at something far away"));
         QCOMPARE(pet::Wellness::note("water"), QString("Time for some water 💧"));
         QCOMPARE(pet::Wellness::note("snack"), QString());
         // Agent events alone start nothing, and keep a stretch going only while the user was seen within
@@ -2243,6 +2243,15 @@ private slots:
         for (qint64 at = t0 + 30000; at <= t0 + 20 * minute; at += 30000) agent.activity(at, false);
         QCOMPARE(agent.eyesActiveMs(t0 + 4 * minute + 30000), 4 * minute + 30000);
         QCOMPARE(agent.eyesActiveMs(t0 + 20 * minute), qint64(0)); QCOMPARE(agent.due(t0 + 20 * minute), QString());
+        // A pause longer than five minutes only holds the timers; ten minutes is a real break that starts them over.
+        pet::Wellness pause; pause.activity(t0); pause.activity(t0 + 30000);
+        pause.activity(t0 + 30000 + 8 * minute); QCOMPARE(pause.eyesActiveMs(t0 + 30000 + 8 * minute), 90000 + 0LL);
+        pause.activity(t0 + 30000 + 8 * minute + 10 * minute); QCOMPARE(pause.eyesActiveMs(t0 + 30000 + 18 * minute), qint64(0));
+        // Typing in a terminal moves no pointer: agent work for a user seen within five minutes still counts as present.
+        pet::Wellness typing; typing.activity(t0);
+        typing.activity(t0 + 2 * minute, false); QVERIFY(typing.present(t0 + 2 * minute + 30000)); QVERIFY(!typing.present(t0 + 3 * minute + 30000));
+        typing.activity(t0 + 4 * minute + 30000, false); QVERIFY(typing.present(t0 + 4 * minute + 40000));
+        QVERIFY(!typing.present(t0 + 5 * minute + 10000)); // The user was last seen five minutes ago.
         // A reset (the screen was locked) also forgets the user: agent events alone do not restart it.
         pet::Wellness locked; locked.activity(t0); locked.activity(t0 + 30000); locked.reset();
         QVERIFY(!locked.present(t0 + 30000));
@@ -2407,13 +2416,13 @@ private slots:
             // A language change says it again in the new language rather than dropping it.
             const auto english = qScopeGuard([] { pet::i18n::install(pet::i18n::Language::English); });
             QVERIFY(pet::i18n::install(pet::i18n::Language::Vietnamese));
-            QTRY_COMPARE(monitor.note().text(), QString("Bạn nhìn ra xa trong 20 giây nha"));
+            QTRY_COMPARE(monitor.note().text(), QString("Bạn nhìn ra xa nha"));
             QVERIFY(monitor.note().isVisible()); QCOMPARE(monitor.reminder(), QString("eyes"));
         }
         QTRY_COMPARE(monitor.note().text(), pet::Wellness::note("eyes")); QCOMPARE(monitor.reminder(), QString("eyes"));
         // Clicking it starts a twenty-second countdown, then the pet cheers.
         emit monitor.note().clicked(); QCOMPARE(monitor.restLeft(), 20); QVERIFY(monitor.note().isVisible());
-        QVERIFY(monitor.note().text().endsWith("20")); QCOMPARE(monitor.reminder(), QString());
+        QCOMPARE(monitor.note().text(), QString("Eyes on something far away…")); QCOMPARE(monitor.reminder(), QString());
         playOut(player);
         QTRY_COMPARE_WITH_TIMEOUT(monitor.restLeft(), 0, 2500);
         QVERIFY(poolContains(player, "reminder-done", player.requestedState())); playOut(player);
@@ -2443,9 +2452,9 @@ private slots:
         // (The evening's own sleep note may show; the reminder does not.)
         work(61); QCOMPARE(monitor.reminder(), QString()); QCOMPARE(window.wellness().due(t), QString());
         monitor.note().hide();
-        // Five minutes away starts the stretch over.
+        // Ten minutes away starts the stretch over.
         local = QDateTime(QDate(2026, 10, 7), QTime(14, 0));
-        work(50); t += 6 * minute; monitor.update(t); work(15); QVERIFY(!monitor.note().isVisible());
+        work(50); t += 11 * minute; monitor.update(t); work(15); QVERIFY(!monitor.note().isVisible());
         // A locked screen counts nothing, from the pointer or from agents, and shows nothing.
         bool locked = false; monitor.locked = [&] { return locked; };
         work(40); const auto before = window.wellness().waterActiveMs(t);
@@ -2490,7 +2499,7 @@ private slots:
         QCOMPARE(wellness.movementActiveMs(start + 30 * minute), qint64(0));
         wellness.setMovementMinutes(25); QCOMPARE(wellness.movementMinutes(), 30);
         wellness.reset(); QVERIFY(wellness.due(start + 31 * minute).isEmpty());
-        QCOMPARE(pet::Wellness::note("movement"), QString("Take a movement break with me for 60 seconds"));
+        QCOMPARE(pet::Wellness::note("movement"), QString("Take a movement break with me"));
     }
     void breakBuddyReminderCanBeDelayedStartedAndSkipped() {
         pet::PetWindow window(nullptr, {}, false); window.show();

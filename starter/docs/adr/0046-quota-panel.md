@@ -1,4 +1,4 @@
-# 0045. Plan limits footer in the session popup
+# 0046. Plan limits footer in the session popup
 
 - Status: Accepted
 - Date: 2026-10-19

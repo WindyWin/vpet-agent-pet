@@ -355,9 +355,8 @@ void Monitor::rest() {
     if (locked && locked()) { dropReminder(); return; }
     if (!active_ || window_.petHidden() || --restLeft_ < 0) { stopRest(); return; }
     if (restLeft_ > 0) {
-        //: A countdown; %1 = seconds left
-        const auto text = restKind_ == "movement" ? Pet::tr("Move or stretch with me… %1").arg(restLeft_)
-                                                   : Pet::tr("Eyes on something far away… %1").arg(restLeft_);
+        const auto text = restKind_ == "movement" ? Pet::tr("Move or stretch with me…")
+                                                   : Pet::tr("Eyes on something far away…");
         note_.say(text, window_.figure(), window_.screenAreas(), {}, 1500);
         return;
     }
@@ -416,6 +415,7 @@ void Monitor::refreshAlerts() {
 }
 // Places what is showing beside the pet, most urgent first, each clear of the ones before it.
 void Monitor::layoutBubbles() {
+    if (window_.dragged()) return; // Re-placed once on release; chasing a fast drag made them shake and cost a round trip per move.
     const auto figure = window_.figure();
     const auto screens = window_.screenAreas();
     if (bubble_.isVisible()) bubble_.place(figure, screens);
