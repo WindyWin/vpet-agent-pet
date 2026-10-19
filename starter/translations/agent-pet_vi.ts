@@ -1505,6 +1505,22 @@ Các cài đặt và hook khác được giữ nguyên. Hãy đăng ký từ th�
         <translation>Mức sử dụng gần nhất</translation>
     </message>
     <message>
+        <source>%1 %2: %3% used</source>
+        <translation>%1 %2: đã dùng %3%</translation>
+    </message>
+    <message>
+        <source>%1: %2</source>
+        <translation>%1: %2</translation>
+    </message>
+    <message>
+        <source>%1 %2%</source>
+        <translation>%1 %2%</translation>
+    </message>
+    <message>
+        <source>%1 in %2</source>
+        <translation>%1 sau %2</translation>
+    </message>
+    <message>
         <source>5 hours</source>
         <translation>5 giờ</translation>
     </message>
@@ -1523,10 +1539,6 @@ Các cài đặt và hook khác được giữ nguyên. Hãy đăng ký từ th�
     <message>
         <source>%1 · %2</source>
         <translation>%1 · %2</translation>
-    </message>
-    <message>
-        <source>%1% used</source>
-        <translation>Đã dùng %1%</translation>
     </message>
     <message>
         <source>%1: %2% used</source>

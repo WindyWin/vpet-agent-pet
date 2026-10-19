@@ -8,6 +8,19 @@ class QLabel;
 class QPushButton;
 class QVBoxLayout;
 namespace pet {
+// A donut showing how much of a limit is used; a negative value draws an empty dotted ring.
+class RingGauge : public QWidget {
+    Q_OBJECT
+public:
+    explicit RingGauge(QWidget *parent = nullptr);
+    void set(double used, const QString &text, const QString &caption);
+    double used() const { return used_; }
+protected:
+    void paintEvent(QPaintEvent *) override;
+private:
+    double used_ = -1;
+    QString text_, caption_;
+};
 // Footer of the session popup; polling belongs to its visibility, not the pet's lifetime.
 class QuotaPanel : public QWidget {
     Q_OBJECT

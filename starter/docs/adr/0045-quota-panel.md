@@ -28,6 +28,9 @@ limits up itself.
   shown, 30 seconds minimum between attempts, minding cached staleness: only
   the CLI itself renews sign-ins, and an expired or missing sign-in never
   triggers a network request. A "Refresh" button forces an immediate check.
+  Each provider is one row: a ring gauge for its shortest window (5 hours when
+  reported), the longest unscoped window beside it, and the reset times; every
+  window, including scoped ones such as Opus, is in the row's tooltip.
   Account limits are subscription-wide, never a session's token count.
 - Readings are keyed by a credential hash: a different account starts with no
   numbers instead of inheriting the previous account's usage.

@@ -3,7 +3,7 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QLocale>
-#include <QProgressBar>
+#include <QPainter>
 #include <QPushButton>
 #include <QVBoxLayout>
 #include <cmath>
@@ -48,6 +48,45 @@ void QuotaPanel::changeEvent(QEvent *event) {
     if (event->type() == QEvent::LanguageChange) render();
     QWidget::changeEvent(event);
 }
+namespace {
+QString kindName(quota::Window::Kind kind) {
+    return kind == quota::Window::Session ? QuotaPanel::tr("5 hours") : kind == quota::Window::Day ? QuotaPanel::tr("Daily")
+         : kind == quota::Window::Week ? QuotaPanel::tr("Weekly") : QuotaPanel::tr("Monthly");
+}
+QString percent(double used) { return QLocale().toString(used, 'f', used > 0 && used < 1 ? 1 : 0); }
+QString timeLeft(qint64 minutes) {
+    return minutes >= 1440 ? QuotaPanel::tr("%1d %2h").arg(minutes / 1440).arg(minutes / 60 % 24)
+         : minutes >= 60 ? QuotaPanel::tr("%1h %2m").arg(minutes / 60).arg(minutes % 60) : QuotaPanel::tr("%1m").arg(minutes);
+}
+}
+RingGauge::RingGauge(QWidget *parent) : QWidget(parent) { setFixedSize(54, 54); }
+void RingGauge::set(double used, const QString &text, const QString &caption) {
+    used_ = used; text_ = text; caption_ = caption;
+    update();
+}
+void RingGauge::paintEvent(QPaintEvent *) {
+    QPainter painter(this);
+    painter.setRenderHint(QPainter::Antialiasing);
+    constexpr qreal width = 5;
+    const QRectF ring = QRectF(rect()).adjusted(width / 2 + 1, width / 2 + 1, -width / 2 - 1, -width / 2 - 1);
+    painter.setBrush(Qt::NoBrush);
+    QPen track(QColor(used_ < 0 ? "#cfc2a8" : "#ebddc5"), width);
+    if (used_ < 0) track.setStyle(Qt::DotLine);
+    painter.setPen(track); painter.drawEllipse(ring);
+    if (used_ >= 0) {
+        QPen arc(QColor(used_ >= 80 ? "#d9480f" : "#2b8a3e"), width, Qt::SolidLine, Qt::RoundCap);
+        painter.setPen(arc);
+        painter.drawArc(ring, 90 * 16, -qRound(qBound(0.0, used_, 100.0) * 3.6 * 16));
+    }
+    painter.setPen(QColor("#453324"));
+    QFont big = font(); big.setPixelSize(13); big.setBold(true);
+    QFont small = font(); small.setPixelSize(9);
+    const QRectF inner = ring.adjusted(width, width, -width, -width);
+    painter.setFont(big);
+    painter.drawText(QRectF(inner.left() - 4, inner.top() + 2, inner.width() + 8, inner.height() / 2 + 3), Qt::AlignCenter, text_);
+    painter.setFont(small); painter.setPen(QColor("#7a6450"));
+    painter.drawText(QRectF(inner.left() - 4, inner.center().y() + 4, inner.width() + 8, inner.height() / 2 - 2), Qt::AlignHCenter | Qt::AlignTop, caption_);
+}
 void QuotaPanel::render() {
     title_->setText(tr("Plan limits"));
     hint_->setText(tr("Account-wide · % used"));
@@ -57,25 +96,18 @@ void QuotaPanel::render() {
     if (!service_) return;
     bool loading = false;
     const auto now = service_->now();
-    auto label = [](const QString &text, QWidget *parent) {
+    auto label = [](const QString &text, QWidget *parent, const char *style) {
         auto *result = new QLabel(text, parent);
         result->setTextFormat(Qt::PlainText); result->setWordWrap(true);
-        result->setStyleSheet("color:#7a6450; font-size:11px;");
+        result->setStyleSheet(style);
         result->show(); // Rebuilt children must be shown: hints forget hidden ones.
         return result;
     };
+    const auto minutesTo = [&](const QDateTime &when) { return qint64(std::ceil(now.msecsTo(when) / 60000.0)); };
     for (auto provider : {quota::Provider::Codex, quota::Provider::Claude}) {
         const auto reading = service_->reading(provider);
         loading |= reading.loading;
-        auto *group = new QWidget(this);
-        auto *layout = new QVBoxLayout(group); layout->setContentsMargins(0, 0, 0, 0); layout->setSpacing(3);
         const auto name = provider == quota::Provider::Codex ? QStringLiteral("Codex") : QStringLiteral("Claude Code");
-        auto *heading = label(name, group);
-        heading->setStyleSheet("color:#453324; font-weight:600; font-size:11px;");
-        // Long account names belong in a tooltip, keeping this popup narrow.
-        heading->setToolTip(reading.account);
-        if (reading.checked.isValid()) heading->setToolTip(reading.account + "\n" + tr("Checked %1").arg(QLocale().toString(reading.checked.toLocalTime(), QLocale::ShortFormat)));
-        layout->addWidget(heading);
         QString problem;
         switch (reading.problem) {
         case quota::Problem::Missing: problem = tr("Sign in with the CLI to see plan limits."); break;
@@ -86,34 +118,50 @@ void QuotaPanel::render() {
         case quota::Problem::None: break;
         }
         if (reading.loading && reading.windows.isEmpty()) problem = tr("Checking limits…");
-        if (!problem.isEmpty()) layout->addWidget(label(problem, group));
-        if (reading.problem != quota::Problem::None && !reading.windows.isEmpty()) layout->addWidget(label(tr("Last known usage"), group));
+        // The ring is the shortest window; beside it, the longest unscoped one (scoped limits stay in the tooltip).
+        const quota::Window *primary = nullptr, *secondary = nullptr;
+        for (const auto &window : reading.windows) if (!primary || window.kind < primary->kind) primary = &window;
+        for (const auto &window : reading.windows)
+            if (&window != primary && window.scope.isEmpty() && (!secondary || window.kind > secondary->kind)) secondary = &window;
+        // Long account names and every window belong in a tooltip, keeping this popup narrow.
+        QStringList details;
+        if (!reading.account.isEmpty()) details << reading.account;
+        if (reading.checked.isValid()) details << tr("Checked %1").arg(QLocale().toString(reading.checked.toLocalTime(), QLocale::ShortFormat));
+        if (reading.problem != quota::Problem::None && !reading.windows.isEmpty()) details << tr("Last known usage");
         for (const auto &window : reading.windows) {
-            const auto kind = window.kind == quota::Window::Session ? tr("5 hours") : window.kind == quota::Window::Day ? tr("Daily")
-                : window.kind == quota::Window::Week ? tr("Weekly") : tr("Monthly");
-            const auto windowName = window.scope.isEmpty() ? kind : tr("%1 · %2").arg(kind, window.scope);
-            const auto used = QLocale().toString(window.used, 'f', window.used > 0 && window.used < 1 ? 1 : 0);
-            auto *line = new QHBoxLayout;
-            line->addWidget(label(windowName, group)); line->addStretch(); line->addWidget(label(tr("%1% used").arg(used), group));
-            layout->addLayout(line);
-            auto *bar = new QProgressBar(group); bar->setRange(0, 1000); bar->setValue(qRound(window.used * 10));
-            bar->setTextVisible(false); bar->setFixedHeight(5);
-            bar->show();
-            bar->setAccessibleName(tr("%1: %2% used").arg(windowName, used));
-            const auto color = window.used >= 80 ? "#d9480f" : "#2b8a3e";
-            bar->setStyleSheet(QString("QProgressBar{background:#ebddc5; border:0; border-radius:2px;} QProgressBar::chunk{background:%1; border-radius:2px;}").arg(color));
-            layout->addWidget(bar);
-            if (window.resets.isValid()) {
-                const auto minutes = qint64(std::ceil(now.msecsTo(window.resets) / 60000.0));
-                const auto time = minutes >= 1440 ? tr("%1d %2h").arg(minutes / 1440).arg(minutes / 60 % 24)
-                    : minutes >= 60 ? tr("%1h %2m").arg(minutes / 60).arg(minutes % 60) : tr("%1m").arg(minutes);
-                auto *reset = label(minutes > 0 ? tr("Resets in %1").arg(time) : tr("Reset due · refresh to check"), group);
-                reset->setToolTip(QLocale().toString(window.resets.toLocalTime(), QLocale::LongFormat));
-                layout->addWidget(reset);
-            }
+            const auto windowName = window.scope.isEmpty() ? kindName(window.kind) : tr("%1 · %2").arg(kindName(window.kind), window.scope);
+            auto line = tr("%1: %2% used").arg(windowName, percent(window.used));
+            if (window.resets.isValid()) line += " · " + (minutesTo(window.resets) > 0 ? tr("Resets in %1").arg(timeLeft(minutesTo(window.resets))) : tr("Reset due · refresh to check"));
+            details << line;
         }
-        readings_->addWidget(group);
-        group->show();
+        if (!problem.isEmpty()) details << problem;
+        auto *row = new QWidget(this);
+        row->setToolTip(details.join('\n'));
+        auto *across = new QHBoxLayout(row); across->setContentsMargins(0, 0, 0, 0); across->setSpacing(10);
+        auto *ring = new RingGauge(row);
+        if (primary) ring->set(primary->used, percent(primary->used) + "%", kindName(primary->kind));
+        else ring->set(-1, reading.loading ? QStringLiteral("…") : QStringLiteral("–"), {});
+        ring->setAccessibleName(primary ? tr("%1 %2: %3% used").arg(name, kindName(primary->kind), percent(primary->used)) : tr("%1: %2").arg(name, problem));
+        ring->show();
+        across->addWidget(ring);
+        auto *text = new QVBoxLayout; text->setSpacing(1);
+        auto *top = new QHBoxLayout; top->setSpacing(8);
+        top->addWidget(label(name, row, "color:#453324; font-weight:600;"));
+        top->addStretch();
+        if (secondary) top->addWidget(label(tr("%1 %2%").arg(kindName(secondary->kind), percent(secondary->used)), row,
+                                            secondary->used >= 80 ? "color:#d9480f; font-weight:600;" : "color:#453324; font-weight:600;"));
+        text->addLayout(top);
+        QStringList resets;
+        if (primary && primary->resets.isValid())
+            resets << (minutesTo(primary->resets) > 0 ? tr("Resets in %1").arg(timeLeft(minutesTo(primary->resets))) : tr("Reset due · refresh to check"));
+        if (secondary && secondary->resets.isValid() && minutesTo(secondary->resets) > 0)
+            resets << tr("%1 in %2").arg(kindName(secondary->kind), timeLeft(minutesTo(secondary->resets)));
+        // A problem outranks the reset times: last known numbers are shown, but not as current.
+        const auto summary = !problem.isEmpty() ? problem : resets.join(" · ");
+        text->addWidget(label(summary, row, "color:#7a6450; font-size:11px;"));
+        across->addLayout(text, 1);
+        readings_->addWidget(row);
+        row->show();
     }
     refresh_->setEnabled(!loading);
     emit sizeChanged();

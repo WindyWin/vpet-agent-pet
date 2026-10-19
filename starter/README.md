@@ -38,9 +38,10 @@ Jobs without events for 30 minutes still expire. This feature uses Claude's
 ## Plan limits
 
 The session popup ends with a "Plan limits" footer showing how much of each
-provider's subscription limit the account has used (5-hour, daily, weekly and
-monthly windows, room permitting), with a "Refresh" button for an immediate
-check. It reads the sign-in that the Codex or Claude Code CLI already keeps on
+provider's subscription limit the account has used: a ring for the shortest
+window (5 hours), the weekly or monthly figure beside it and the reset times,
+one row per provider, with every window in a tooltip and a "Refresh" button for
+an immediate check. It reads the sign-in that the Codex or Claude Code CLI already keeps on
 this computer — never renewing or changing it — and asks only
 `chatgpt.com/backend-api/wham/usage` and `api.anthropic.com/api/oauth/usage`
 about that account's quotas. No token, usage number or account identity is

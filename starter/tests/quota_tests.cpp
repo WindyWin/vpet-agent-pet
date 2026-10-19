@@ -7,7 +7,6 @@
 #include <QJsonObject>
 #include <QLabel>
 #include <QNetworkReply>
-#include <QProgressBar>
 #include <QPushButton>
 #include <QSignalSpy>
 #include <QTemporaryDir>
@@ -159,11 +158,15 @@ private slots:
         pet::SessionList list;
         pet::SessionRow row; row.key = "session"; row.name = "agent-pet"; row.status = "Working"; row.detail = "Codex · project"; row.state = "working";
         list.present({row}); list.setQuotaService(&service); list.show();
-        QTRY_VERIFY(idle(service)); QTRY_COMPARE(list.findChildren<QProgressBar *>().size(), 4);
+        QTRY_VERIFY(idle(service)); QTRY_COMPARE(list.findChildren<pet::RingGauge *>().size(), 2);
         QCOMPARE(list.rowCount(), 1);
         const auto text = panelText(list);
         QVERIFY(text.contains("Plan limits")); QVERIFY(text.contains("Account-wide"));
-        QVERIFY(text.contains("37% used")); QVERIFY(text.contains("Resets in 2h 0m"));
+        QVERIFY(text.contains("Weekly 82%")); QVERIFY(text.contains("Resets in 2h 0m")); QVERIFY(text.contains("Weekly in "));
+        const auto rings = list.findChildren<pet::RingGauge *>();
+        QCOMPARE(rings[0]->used(), 37.0); QCOMPARE(rings[1]->used(), 21.5);
+        QCOMPARE(rings[0]->accessibleName(), QString("Codex 5 hours: 37% used"));
+        QVERIFY(rings[0]->parentWidget()->toolTip().contains("Weekly: 82% used")); // Every window is in the tooltip.
         auto *panel = list.findChild<pet::QuotaPanel *>(); QVERIFY(panel);
         auto *sessionButton = list.findChildren<QPushButton *>().last();
         for (auto *button : list.findChildren<QPushButton *>()) if (button->text().startsWith("agent-pet")) sessionButton = button;
