@@ -278,3 +278,14 @@ subprocess tests do not establish live compatibility for Antigravity or a minimu
 supported client version. Live turns, permissions, concurrent tools, interruption,
 reload, autostart and IDE focus still need acceptance on the actual clients and
 operating systems. See [ADR 0041](adr/0041-additional-agent-providers.md).
+
+## Claude Code interaction hooks (opt-in)
+
+Separate from the content-free hooks above: `integration enable --provider claude --interactions` registers five
+extra entries marked `--registration agent-pet-interact-v1` (`SessionStart`, `UserPromptSubmit`, `PreToolUse` for
+`AskUserQuestion`, `Stop`, `SessionEnd`) in the same `settings.json`. They share prompts, replies and questions with the
+local pet's interaction service and can answer questions and wake an idle session. Each registration only ever adds,
+replaces or removes its own entries (plain `enable` and `disable` leave these alone, and the reverse); foreign handlers
+are preserved. `--question-wait SECONDS` (default 20) sets how long a question waits for the pet. Linux and macOS only.
+See [interactions.md](interactions.md#claude-code-bridge-hooks) and [ADR 0049](adr/0049-claude-interaction-hooks.md).
+

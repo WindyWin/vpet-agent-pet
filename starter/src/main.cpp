@@ -12,6 +12,7 @@
 #include "ipc/local.h"
 #include "platform/native.h"
 #include "platform/headless.h"
+#include "providers/claude_bridge.h"
 #include "providers/integrations.h"
 #include "i18n/language.h"
 #include "settings/preferences.h"
@@ -50,6 +51,11 @@ int main(int argc, char **argv) {
     if (argc > 1 && QString::fromLocal8Bit(argv[1]) == "integration") {
         QCoreApplication app(argc, argv);
         return pet::integrationCommand(app.arguments());
+    }
+    if (argc > 1 && QString::fromLocal8Bit(argv[1]) == "claude-interact") {
+        QCoreApplication app(argc, argv); // The opt-in Claude Code interaction hooks: silent, and 0 unless waking a session.
+        app.setApplicationName("agent-pet");
+        return pet::claude::interactCommand(app.arguments());
     }
     if (argc > 1 && QString::fromLocal8Bit(argv[1]) == "autostart") {
         QCoreApplication app(argc, argv);

@@ -18,3 +18,6 @@ and return neutral JSON as required by that client's contract. See
 `opencode-bridge.mjs` is separate from the status plugin: it is the OpenCode half of the
 [interaction protocol](../../docs/interactions.md), shares message text and answers questions,
 and is not installed by `integrations.cpp`. It runs only when started explicitly.
+
+`codex-bridge.mjs` is the Codex half: it connects to the shared app-server daemon's control socket and is also
+started only explicitly.
