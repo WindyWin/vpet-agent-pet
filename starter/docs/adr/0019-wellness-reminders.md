@@ -70,10 +70,21 @@ front layer), which the player does not compose, so no new art was imported.
 
 Validation in a cloud Ubuntu 24.04 container with Qt 6.4.2 (the 6.5 requirement was
 lowered only locally): all CTest suites passed. New tests cover active-time counting
-(grace, pause, ten-minute reset, out-of-order activity), due order and `given`,
+(grace, pause, five-minute reset, out-of-order activity), due order and `given`,
 interval choices and quiet-hour boundaries; the monitor showing the eye break after 20
-minutes of pointer movement with its note and cheer, the water reminder held by
+minutes of pointer movement with its countdown and cheer, the water reminder held by
 a waiting approval until it is answered, the click reaction, muted alerts holding it,
 quiet hours dropping it and a break resetting it; and the settings group with
 persistence, legacy files and malformed values. Still open: how the cadence feels on
 a real desktop, and CI on Qt 6.5.3.
+
+### Quieter reminders and presence evidence — 2026-10-19
+
+PR #123 reports all 18 offscreen CTest suites passing for static eye/movement
+notes, a ten-minute absence reset (shorter gaps pause timers), and accepted agent
+activity counting as presence while the user was seen within five minutes.
+The eye-break note no longer displays a ticking countdown; its timer, completion
+cheer and early dismissal remain. Linux, macOS and Windows CI tests passed on
+2026-10-18 with Qt 6.5.3. On 2026-10-19, `scripts/verify_assets.py` also passed
+for all five bundled pets. The cadence and behavior on a real desktop remain
+untested for this change.
