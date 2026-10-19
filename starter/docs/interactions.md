@@ -48,7 +48,10 @@ Bridge → service:
 | `conversation_ended` | `conversation` |
 
 Service → bridge: `welcome` (`resync`: conversations to send a `snapshot` for, `refused`), `resync`, `command`
-(the spec's answer and follow-up shape), and `error` (`code`, `message`, optional `request_id`).
+(the spec's answer and follow-up shape), `release` (`conversation`: the user let it go, stop tracking it; the
+service has already ended it), and `error` (`code`, `message`, optional `conversation`, `request_id`). A bridge
+that does not know `release` ignores it. An ended conversation's identity is never reused: a bridge that tracks
+the session again does so under a new `conversation_epoch`.
 
 A bridge can act only on conversations its own connection registered. A newer connection that registers a
 conversation takes it over; the old one then gets `unknown_conversation`.
@@ -111,6 +114,39 @@ Known gaps against the specification: the running-sessions rows have no Conversa
 the menu or the preview's `+N`); the pet badge does not yet merge interaction questions with status attention;
 a focused host does not suppress previews; there is no preview sound; the header has no parent-path hint because
 bridges send only a project name; Vietnamese strings are not translated yet.
+
+## Markdown and lifetime
+
+Agent text is Markdown. The panel renders it with Qt's own parser (`QTextDocument::setMarkdown`, GitHub dialect, no
+new dependency) with raw HTML disabled, images replaced by their address as text, and links inert (the address shows
+on hover). The preview and the list show a message's first line as plain words, marks removed.
+
+The list shows a conversation only while it is connected and either waiting on you, working, holding a draft or an
+unread message, or active within 30 minutes. An ended or disconnected one leaves the list, and an open panel closes
+when its session ends unless a draft was typed there. OpenCode's background service outlives its terminal and says
+nothing when one closes, so a quiet idle session is taken to be closed until it speaks again. The bridge also ends
+a conversation whose session OpenCode no longer has (found on reconcile when the delete event was missed).
+
+## Closing a session
+
+Nothing in OpenCode 2 says a terminal closed: its background service keeps the session. herdr solves this with a
+plugin in each terminal that reports the session on screen to its own server; the pet does the same.
+
+`node src/providers/opencode-bridge.mjs --install-tui` copies a small plugin to `<opencode config>/agent-pet-opencode/`
+and adds `./agent-pet-opencode` to `cli.json`'s `plugins` (other entries and keys are kept; a `cli.json` with
+comments is refused untouched; `--uninstall-tui` removes only this). Restart OpenCode afterwards. The plugin keeps
+a socket open to the bridge (`opencode-presence.sock` beside the interaction stream, `AGENT_PET_OPENCODE_PRESENCE`
+overrides) and sends `{"type":"view","session":"ses_…"|null}` whenever the session on screen changes: only an ID,
+no text. A sub-agent view counts as its root session.
+
+The bridge tracks what a terminal shows from that moment. When no terminal shows a session that one had shown
+(the terminal closed or crashed, or moved to another session) it ends the conversation after 3 s. It returns
+under a new epoch when a terminal shows it again or the user sends a new prompt. Sessions no terminal ever
+showed (the web UI, `opencode run`) stay under the quiet-time rule above.
+
+When Open cannot raise the agent's window, the pet asks whether to stop showing the conversation. On yes the
+service sends `release` and ends it; the agent is untouched. The bridge stops tracking the session until a
+terminal shows it again or a new prompt arrives.
 
 ## OpenCode bridge
 
