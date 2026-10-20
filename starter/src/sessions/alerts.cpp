@@ -85,7 +85,8 @@ void AlertQueue::dismiss(Sessions &sessions) {
     sync(sessions.pending());
 }
 static int stateRank(const QString &state) {
-    static const QStringList order{"attention", "exhausted", "error", "working", "reading", "thinking", "waiting", "turn-finished", "idle", "inactive"};
+    static const QStringList order{"attention", "exhausted", "error", "executing", "editing", "delegating", "browsing",
+                                   "searching", "working", "reading", "thinking", "waiting", "turn-finished", "idle", "inactive"};
     const int i = order.indexOf(state);
     return i < 0 ? order.size() : i;
 }
@@ -93,6 +94,11 @@ static QString statusText(const Session &s, qint64 now) {
     if (s.state == "attention") return alertTitle({{}, "attention", {}, {}, {}, s.reason});
     if (s.state == "exhausted") return alertTitle({{}, "exhausted", {}, {}, {}, s.reason});
     if (s.state == "error") return s.reason == "turn" ? Alerts::tr("Turn failed") : Alerts::tr("Tool error");
+    if (s.state == "executing") return Alerts::tr("Running");
+    if (s.state == "editing") return Alerts::tr("Editing");
+    if (s.state == "delegating") return Alerts::tr("Delegating");
+    if (s.state == "browsing") return Alerts::tr("Browsing");
+    if (s.state == "searching") return Alerts::tr("Searching");
     if (s.state == "working") return Alerts::tr("Working");
     if (s.state == "reading") return Alerts::tr("Reading");
     if (s.state == "thinking") return Alerts::tr("Thinking");

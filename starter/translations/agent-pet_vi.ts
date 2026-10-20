@@ -44,6 +44,26 @@
         <translation>Không có đường dẫn dự án cho phiên này</translation>
     </message>
     <message>
+        <source>Running</source>
+        <translation>Đang chạy lệnh</translation>
+    </message>
+    <message>
+        <source>Editing</source>
+        <translation>Đang sửa tệp</translation>
+    </message>
+    <message>
+        <source>Delegating</source>
+        <translation>Đang giao việc</translation>
+    </message>
+    <message>
+        <source>Browsing</source>
+        <translation>Đang duyệt web</translation>
+    </message>
+    <message>
+        <source>Searching</source>
+        <translation>Đang tìm kiếm</translation>
+    </message>
+    <message>
         <source>Working</source>
         <translation>Đang làm việc</translation>
     </message>

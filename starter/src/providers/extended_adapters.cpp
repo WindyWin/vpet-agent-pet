@@ -1,8 +1,8 @@
 #include "adapters.h"
+#include "sessions/state.h"
 #include <QCryptographicHash>
 #include <QJsonArray>
 #include <QJsonDocument>
-#include <QSet>
 #include <QUuid>
 #include <cmath>
 
@@ -11,11 +11,6 @@ static QJsonObject envelope(const QString &provider, const QString &session, con
     if (session.isEmpty() || kind.isEmpty()) return {};
     return {{"version", 1}, {"provider", provider}, {"session_id", session}, {"kind", kind},
             {"timestamp_ms", now}, {"event_id", QUuid::createUuid().toString(QUuid::WithoutBraces)}};
-}
-static QString activity(const QString &tool) {
-    static const QSet<QString> reading{"read", "glob", "grep", "list", "webfetch", "websearch",
-        "view_file", "list_dir", "find_by_name", "grep_search", "search_web", "read_url_content"};
-    return reading.contains(tool) ? "reading" : "working";
 }
 static QString toolEventId(const QString &type, const QString &tool) {
     return QString::fromLatin1(QCryptographicHash::hash(QJsonDocument(QJsonArray{type, tool}).toJson(QJsonDocument::Compact),
@@ -41,7 +36,7 @@ QJsonObject normalizeOpenCode(const QJsonObject &in, qint64 now) {
         if (tool.isEmpty()) return {};
         out["tool_id"] = tool;
         out["event_id"] = toolEventId(type, tool);
-        if (kind == "tool_start") out["activity"] = activity(in["tool"].toString());
+        if (kind == "tool_start") out["activity"] = toolActivity(in["tool"].toString());
     }
     if (kind == "attention") {
         out["reason"] = type == "question.asked" ? "input" : "approval";
@@ -76,7 +71,7 @@ QJsonObject normalizeAntigravity(const QJsonObject &in, qint64 now) {
         out["event_id"] = toolEventId(name, id);
         if (kind == "tool_start") {
             const auto call = in["toolCall"].toObject();
-            out["activity"] = activity(call["name"].toString());
+            out["activity"] = toolActivity(call["name"].toString());
             if (destructiveCommand(call["args"].toObject()["CommandLine"].toString())) out["risky"] = true;
         }
     }

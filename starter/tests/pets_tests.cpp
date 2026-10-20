@@ -155,7 +155,7 @@ private slots:
     }
     void cuesComeFromTheirDataFile() {
         const auto &cues = pet::cues();
-        QCOMPARE(cues.size(), 35);
+        QCOMPARE(cues.size(), 41);
         QVERIFY(std::is_sorted(cues.begin(), cues.end(), [](const pet::Cue &a, const pet::Cue &b) { return a.name < b.name; }));
         auto shape = [](const QString &name) {
             const auto *cue = pet::findCue(name);
@@ -170,11 +170,14 @@ private slots:
         QCOMPARE(shape("exhausted"), QString("out_of_quota:loop/idle"));
         QVERIFY(pet::findCue("lunch")->reaction);
         QVERIFY(pet::findCue("movement-break")->reaction);
+        // The turn choreography cues are state cues a pet without art opts out of through their fallback.
+        QCOMPARE(shape("turn-start"), QString("turn_start:once/idle"));
+        QCOMPARE(pet::findCue("turn-start")->fallback, QString("start")); QVERIFY(!pet::findCue("turn-start")->reaction);
         QVERIFY(pet::findCue("celebrate")->reaction); QVERIFY(pet::findCue("danger")->reaction);
         QVERIFY(!pet::findCue("nobody")); QVERIFY(!pet::findCue("turn_finished")); // Cue names use hyphens.
         // Every session aggregate is a state cue of the same name.
-        for (const auto *state : {"attention", "exhausted", "error", "turn-finished", "working", "reading", "thinking",
-                                  "waiting", "idle", "inactive"})
+        for (const auto *state : {"attention", "exhausted", "error", "turn-finished", "executing", "editing", "delegating",
+                                  "browsing", "searching", "working", "reading", "thinking", "waiting", "idle", "inactive"})
             QVERIFY2(pet::findCue(state) && !pet::findCue(state)->reaction, state);
     }
     void vpetMeetsTheContract() {
@@ -216,6 +219,22 @@ private slots:
         QCOMPARE(loaded.pools.value("celebrate").size(), 1); QCOMPARE(loaded.pools.value("celebrate").first().weight, 2);
         QVERIFY(!loaded.pools.contains("snack")); // An unmapped reaction cue plays nothing.
         QCOMPARE(loaded.contractError(), QString());
+        // A cue with a fallback degrades to that cue's state when the pet has no art for it, so the tool
+        // vocabulary can grow without every pet catalog following.
+        auto noArt = contractCatalog();
+        auto noArtStates = noArt["states"].toObject(); noArtStates.remove("searching"); noArt["states"] = noArtStates;
+        auto noArtPlayback = noArt["playback"].toObject(); noArtPlayback.remove("searching"); noArt["playback"] = noArtPlayback;
+        QCOMPARE(load(noArt).stateFor("searching"), QString("working")); QVERIFY(load(noArt).contractError().isEmpty());
+        // The turn choreography degrades the same way: without the beat's art the pet plays its arrival instead.
+        auto noBeat = contractCatalog();
+        auto noBeatStates = noBeat["states"].toObject(); noBeatStates.remove("turn_start"); noBeat["states"] = noBeatStates;
+        auto noBeatPlayback = noBeat["playback"].toObject(); noBeatPlayback.remove("turn_start"); noBeat["playback"] = noBeatPlayback;
+        QCOMPARE(load(noBeat).stateFor("turn-start"), QString("starting")); QVERIFY(load(noBeat).contractError().isEmpty());
+        // A cue without one must still name a state the pet has.
+        auto noReading = contractCatalog();
+        auto noReadingStates = noReading["states"].toObject(); noReadingStates.remove("reading"); noReading["states"] = noReadingStates;
+        auto noReadingPlayback = noReading["playback"].toObject(); noReadingPlayback.remove("reading"); noReading["playback"] = noReadingPlayback;
+        QCOMPARE(load(noReading).contractError(), QString("Cue reading plays missing state reading"));
         // Once mapped away, a default state need not exist.
         auto states = catalog["states"].toObject(); states.remove("needs_input"); catalog["states"] = states;
         auto playback = catalog["playback"].toObject(); playback.remove("needs_input"); catalog["playback"] = playback;

@@ -1,6 +1,7 @@
 #include "session_list.h"
 #include "alert_bubble.h"
 #include "quota_panel.h"
+#include "sessions/state.h"
 #include <QEvent>
 #include <QPainter>
 
@@ -10,7 +11,7 @@ QColor SessionList::stateColor(const QString &state) {
     if (state == "exhausted") return QColor("#e67700");
     if (state == "error") return QColor("#c92a2a");
     if (state == "waiting") return QColor("#4c6ef5");
-    if (state == "working" || state == "reading" || state == "thinking") return QColor("#1971c2");
+    if (busy(state) || state == "thinking") return QColor("#1971c2");
     if (state == "turn-finished") return QColor("#2b8a3e");
     return QColor("#adb5bd");
 }

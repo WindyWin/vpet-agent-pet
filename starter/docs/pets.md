@@ -180,11 +180,13 @@ whose state cues cannot all play does not start; Agent Pet logs why and shows VP
 | --- | --- | --- | --- |
 | `idle` | nothing is happening (cannot be remapped) | `idle` | loop, then idle |
 | `waiting` | an agent waits on background work | `idle` | loop, then idle |
-| `thinking`, `reading`, `working` | an agent thinks, reads files, runs tools | same name | phased, then idle |
+| `thinking` | an agent is thinking with no tool running | same name | phased, then idle |
+| `executing`, `editing`, `delegating`, `browsing`, `searching`, `working`, `reading` | the class of tool an agent is running | same name | phased, then idle |
 | `attention` | a session needs you | `needs_input` | phased, then idle |
 | `exhausted` | the agent's usage limit is reached | `out_of_quota` | loop, then idle |
 | `error` | a tool failed | `tool_error` | once, then back to what was playing |
 | `turn-finished` | a turn finished, when no `celebrate` pool exists | `turn_finished` | once, then idle |
+| `turn-start` | a prompt opens a new turn: one getting-ready beat before the work settles in | `turn_start` | once, then idle |
 | `inactive` | every session went quiet | `sleeping` | phased, then idle |
 | `nap` | a long quiet spell while idle | `sleeping` | phased, then idle |
 | `start` | Agent Pet starts | `starting` | once, then idle |
@@ -194,6 +196,11 @@ whose state cues cannot all play does not start; Agent Pet logs why and shows VP
 
 A phased state has three sequences (start, loop, end) and no `loops` count: it ends when the app moves
 on. Art without separate start and end can list the same sequence three times. Cues may share a state.
+
+The tool classes and the turn beats are a vocabulary the app may grow. A cue may name a `fallback`: when
+the pet has no state for it, it plays that cue's state instead (the tool cues fall back to `working`, and
+`turn-start` to `start`), so a pet that ignores a cue still starts. Map it to your own art with the `cues`
+section, or leave it out to inherit the fallback. VPet draws all seven tool classes and the beat.
 
 A **reaction cue** draws one state from a weighted pool, and plays nothing when the pet maps none. Each
 state in a pool must end by itself and return to idle (`once`, or `phased` with `loops`). The app never

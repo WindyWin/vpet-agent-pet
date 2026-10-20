@@ -133,8 +133,9 @@ QJsonObject normalizeLegacyHook(const QString &provider, const QJsonObject &in, 
         else if (type == "billing_error") out["reason"] = "billing";
     }
     if (kind == "tool_start") {
-        const QSet<QString> reading{"Read", "Grep", "Glob", "WebFetch", "WebSearch", "read_file", "list_dir"};
-        out["activity"] = reading.contains(in.value("tool_name").toString()) ? "reading" : "working";
+        // The tool name stays here; only its class travels (reading, searching, editing, executing, browsing,
+        // delegating, or working for anything else, MCP tools included).
+        out["activity"] = toolActivity(in.value("tool_name").toString());
         // A shell tool's command line, as one string or an argument list, is checked here and dropped.
         const auto command = in.value("tool_input").toObject().value("command");
         QString line = command.toString();

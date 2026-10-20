@@ -8,6 +8,18 @@
 #include <QVector>
 
 namespace pet {
+// The tool classes an event's `activity` may carry, most active first. The provider adapters map a tool
+// name to one of these and `working` is the fallback for anything unrecognized (including MCP tools).
+// One list so the state machine, the adapters and the session list agree; a class is also a session state
+// and an animation cue of the same name.
+inline const QStringList &activityClasses() {
+    static const QStringList classes{"executing", "editing", "delegating", "browsing", "searching", "working", "reading"};
+    return classes;
+}
+// A tool-derived activity: the pet is at work and its state changes with the tools.
+inline bool busy(const QString &state) { return activityClasses().contains(state); }
+// The class a tool name maps to; "working" for anything unrecognized.
+QString toolActivity(const QString &toolName);
 struct Event {
     QString provider, session, id, kind, tool, parent, project, activity;
     qint64 timestamp = 0;

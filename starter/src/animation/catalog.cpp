@@ -40,7 +40,7 @@ const QVector<Cue> &cues() {
         for (auto it = entries.begin(); it != entries.end(); ++it) {
             const auto cue = it.value().toObject();
             parsed.append({it.key(), cue["kind"].toString() == "reaction", cue["state"].toString(), cue["mode"].toString(),
-                           cue["after"].toString(), cue["fixed"].toBool()});
+                           cue["after"].toString(), cue["fixed"].toBool(), cue["fallback"].toString()});
         }
         return parsed;
     }();
@@ -53,9 +53,13 @@ const Cue *findCue(const QString &name) {
     return found != vocabulary.end() && found->name == name ? &*found : nullptr;
 }
 QString Catalog::stateFor(const QString &cue) const {
-    if (const auto mapped = cueStates.constFind(cue); mapped != cueStates.constEnd()) return *mapped;
     const auto *known = findCue(cue);
-    return known && !known->reaction ? known->state : QString();
+    if (!known || known->reaction) return {};
+    if (const auto mapped = cueStates.constFind(cue); mapped != cueStates.constEnd()) return *mapped;
+    if (animations.contains(known->state) || known->fallback.isEmpty()) return known->state;
+    // A cue this pet has no art for may name another cue to fall back to, so a cue added to the
+    // vocabulary degrades to an existing state instead of making the pet invalid.
+    return stateFor(known->fallback);
 }
 QString Catalog::contractError() const {
     for (const auto &cue : cues()) {
