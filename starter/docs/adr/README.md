@@ -60,6 +60,7 @@ the order the decisions were made. For a map of the code, start with the
 | [0051](0051-interactions-in-install-packs.md) | Agent conversations in the install packs | 2026-10-19 |
 | [0052](0052-tool-aware-animations.md) | Tool-aware activity animations | 2026-10-17 |
 | [0053](0053-turn-choreography.md) | Turn choreography: a getting-ready beat | 2026-10-17 |
+| [0054](0054-command-aware-activity.md) | Command-aware activity for shell tools | 2026-10-20 |
 
 ## Writing a record
 

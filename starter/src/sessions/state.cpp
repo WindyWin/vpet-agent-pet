@@ -15,11 +15,12 @@ QString toolActivity(const QString &toolName) {
     static const QSet<QString> editing{"edit", "write", "multiedit", "notebookedit", "apply_patch", "edit_file",
                                        "write_file", "create_file", "replace", "str_replace_editor", "delete_file", "move_file", "patch"};
     static const QSet<QString> executing{"bash", "bashoutput", "killshell", "run_command", "run_terminal_cmd",
-                                         "execute", "execute_command", "command", "terminal", "shell", "exec"};
+                                         "execute", "execute_command", "command", "terminal", "shell", "exec",
+                                         "exec_command", "local_shell"};
     static const QSet<QString> delegating{"task", "agent", "subagent", "delegate"};
     static const QSet<QString> browsing{"webfetch", "websearch", "web_search", "read_url_content", "fetch_url", "open_url", "codesearch"};
     static const QSet<QString> searching{"grep", "glob", "grep_search", "find_by_name", "search_files", "list_dir", "ls", "list"};
-    static const QSet<QString> reading{"read", "read_file", "view_file", "notebookread", "cat"};
+    static const QSet<QString> reading{"read", "read_file", "view_file", "notebookread", "cat", "lsp"};
     if (editing.contains(name)) return "editing";
     if (executing.contains(name)) return "executing";
     if (delegating.contains(name)) return "delegating";

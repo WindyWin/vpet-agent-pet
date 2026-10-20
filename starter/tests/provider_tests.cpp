@@ -182,6 +182,12 @@ private slots:
                                     "dd if=/dev/zero of=disk.img", "echo 'select * from dropbox'", "cmake --build build",
                                     "bash -lc 'make test'", "sh scripts/build.sh"})
             QVERIFY2(!pet::destructiveCommand(command), command);
+        // The shared splitter: timeout and keywords are skipped, quoted text is one argument, and
+        // unbalanced quotes (an apostrophe in a here-document) fall back to dropping them.
+        for (const auto *command : {"timeout 60 rm -rf x", "if true; then rm -rf x; fi", "sh -c 'cd x && rm -rf y'",
+                                    "echo \"$(rm -rf x)\"", "cat > f <<EOF\nit's\nEOF\nrm -rf build"})
+            QVERIFY2(pet::destructiveCommand(command), command);
+        QVERIFY(!pet::destructiveCommand("git commit -m 'fix; rm -rf build'"));
         // The hook flags a tool start; the command itself never leaves it.
         for (const auto &provider : {QString("claude"), QString("codex")}) {
             auto start = payload("PreToolUse", "call"); start["tool_name"] = "Bash";
@@ -199,6 +205,51 @@ private slots:
             auto end = payload("PostToolUse", "call"); end["tool_input"] = QJsonObject{{"command", "rm -rf build-output"}};
             QVERIFY(!pet::normalizeHook(provider, end, now).contains("risky"));
         }
+    }
+    void commandActivities() {
+        const QList<QPair<const char *, const char *>> rows{
+            {"cd starter && grep -n tool docs/x.md | cut -c1-220 | head -30; echo ===; grep -n foo t.cpp", "searching"},
+            {"rg -n 'a|b' src", "searching"}, {"find . -name '*.cpp'", "searching"}, {"/usr/bin/grep -r x .", "searching"},
+            {"git ls-files | wc -l", "searching"}, {"timeout 5 grep x f", "searching"}, {"xargs -0 grep x", "searching"},
+            {"cat f.txt", "reading"}, {"sed -n '1,40p' f.cpp", "reading"}, {"awk '$1 > 5' data", "reading"},
+            {"git status && git diff", "reading"}, {"git -C repo log --oneline", "reading"}, {"git stash list", "reading"},
+            {"git branch", "reading"}, {"jq .name pet.json 2>/dev/null", "reading"}, {"grep x f 2>&1 | head", "searching"},
+            {"diff <(sort a) <(sort b)", "reading"}, {"ls >/dev/null 2>&1", "searching"},
+            {"curl -s https://example.com", "browsing"}, {"gh pr view 1", "browsing"}, {"git fetch origin", "browsing"},
+            {"sed -i s/a/b/ f", "editing"}, {"sed -Ei 's/a/b/' f", "editing"}, {"perl -pi -e 's/a/b/' f", "editing"},
+            {"mkdir -p out && cp a out/", "editing"}, {"echo hi > notes.txt", "editing"}, {"cat a b >> all.txt", "editing"},
+            {"git add -A && git commit -m 'x'", "editing"}, {"git branch -D old", "editing"}, {"git stash", "editing"},
+            {"cd x && sed -i s/a/b/ f && cat f", "editing"}, {"cat > f.txt <<'EOF'\nmake all\nrm -rf x\nEOF", "editing"},
+            {"claude -p hi", "delegating"},
+            {"npm test | tail -5", "executing"}, {"cmake --build build", "executing"}, {"./run.sh", "executing"},
+            {". env.sh && ls", "executing"}, {"git push", "executing"}, {"make > build.log", "executing"},
+            {"cd x", "executing"}, {"echo hi; true", "executing"}, {"", "executing"},
+            {"bash -lc \"rg x\"", "searching"}, {"bash -lc 'git diff | head'", "reading"},
+            {"for f in *.cpp; do grep -c x $f; done", "searching"}, {"if [ -f x ]; then cat x; fi", "reading"}};
+        for (const auto &[command, activity] : rows) QVERIFY2(pet::commandActivity(command) == activity,
+            qPrintable(QString("%1 -> %2").arg(command, pet::commandActivity(command))));
+        // In the hook the command decides a shell tool's class and never leaves it.
+        for (const auto &provider : {QString("claude"), QString("codex")}) {
+            auto start = payload("PreToolUse", "call"); start["tool_name"] = "Bash";
+            start["tool_input"] = QJsonObject{{"command", "grep -rn PRIVATE ."}};
+            auto out = pet::normalizeHook(provider, start, now);
+            QCOMPARE(out["activity"].toString(), QString("searching"));
+            QVERIFY(!QJsonDocument(out).toJson().contains("PRIVATE"));
+            QCOMPARE(event(provider, start, now).activity, QString("searching"));
+            start["tool_input"] = QJsonObject{{"command", QJsonArray{"bash", "-lc", "git diff PRIVATE"}}};
+            out = pet::normalizeHook(provider, start, now);
+            QCOMPARE(out["activity"].toString(), QString("reading")); QVERIFY(!QJsonDocument(out).toJson().contains("PRIVATE"));
+            start.remove("tool_input");
+            QCOMPARE(pet::normalizeHook(provider, start, now)["activity"].toString(), QString("executing"));
+            // Only shell tools are reclassified.
+            start["tool_name"] = "Edit"; start["tool_input"] = QJsonObject{{"command", "cat PRIVATE"}};
+            QCOMPARE(pet::normalizeHook(provider, start, now)["activity"].toString(), QString("editing"));
+        }
+        const QJsonObject ag{{"hook_event_name", "PreToolUse"}, {"conversationId", "c1"}, {"stepIdx", 3},
+            {"toolCall", QJsonObject{{"name", "run_command"}, {"args", QJsonObject{{"CommandLine", "cat PRIVATE"}}}}}};
+        const auto out = pet::normalizeHook("antigravity", ag, now);
+        QCOMPARE(out["activity"].toString(), QString("reading"));
+        QVERIFY(!QJsonDocument(out).toJson().contains("PRIVATE"));
     }
     void concurrentAndChildren() {
         for (const auto &provider : {QString("claude"), QString("codex")}) {
