@@ -8858,6 +8858,51 @@
       "handover": {
         "reading": "WORK/Desk/working_to_reading"
       }
+    },
+    "editing": {
+      "loops": [
+        {
+          "sequence": "WORK/WorkONE/B/Nomal/1",
+          "weight": 1,
+          "style": "playful"
+        }
+      ]
+    },
+    "executing": {
+      "loops": [
+        {
+          "sequence": "WORK/WorkONE/B/Nomal/1",
+          "weight": 1,
+          "style": "playful"
+        }
+      ]
+    },
+    "searching": {
+      "loops": [
+        {
+          "sequence": "WORK/WorkONE/B/Nomal/1",
+          "weight": 1,
+          "style": "playful"
+        }
+      ]
+    },
+    "browsing": {
+      "loops": [
+        {
+          "sequence": "WORK/WorkONE/B/Nomal/1",
+          "weight": 1,
+          "style": "playful"
+        }
+      ]
+    },
+    "delegating": {
+      "loops": [
+        {
+          "sequence": "WORK/WorkONE/B/Nomal/1",
+          "weight": 1,
+          "style": "playful"
+        }
+      ]
     }
   }
 }
