@@ -1176,11 +1176,16 @@ QWidget *PetWindow::conversationSettings(QWidget *parent) {
     connect(enabled, &QCheckBox::toggled, this, &PetWindow::setAgentConversations);
     auto *hide = new QCheckBox(tr("&Hide message previews"), box);
     hide->setChecked(hideMessagePreviews_);
-    hide->setToolTip(tr("Previews show who and what kind, never the agent's words."));
+    hide->setToolTip(tr("Previews normally show the start of the agent's message. With this on they show only who and what kind, never the agent's words."));
     layout->addRow(hide);
     connect(hide, &QCheckBox::toggled, this, &PetWindow::setHideMessagePreviews);
+#ifdef Q_OS_WIN
+    auto *note = new QLabel(tr("OpenCode connects on its own while this is on (it needs Node 20 or newer). "
+                            "Codex and Claude Code conversations are not available on Windows."), box);
+#else
     auto *note = new QLabel(tr("OpenCode and Codex connect on their own while this is on (they need Node 20 or newer). "
                             "Claude Code needs its conversation hooks, below; restart Claude Code after changing them."), box);
+#endif
     note->setWordWrap(true); layout->addRow(note);
 #ifndef Q_OS_WIN
     auto *row = new QWidget(box); auto *rowLayout = new QHBoxLayout(row); rowLayout->setContentsMargins(0, 0, 0, 0);

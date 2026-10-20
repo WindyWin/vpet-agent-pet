@@ -1881,8 +1881,12 @@ Khi tắt, không có socket trò chuyện nào và agent chỉ gửi trạng th
         <translation>&amp;Ẩn bản xem trước tin nhắn</translation>
     </message>
     <message>
-        <source>Previews show who and what kind, never the agent&apos;s words.</source>
-        <translation>Bản xem trước chỉ cho biết ai và loại gì, không bao giờ hiện lời của agent.</translation>
+        <source>Previews normally show the start of the agent&apos;s message. With this on they show only who and what kind, never the agent&apos;s words.</source>
+        <translation>Bình thường bản xem trước hiện phần đầu tin nhắn của agent. Khi bật, chỉ hiện ai và loại gì, không bao giờ hiện lời của agent.</translation>
+    </message>
+    <message>
+        <source>OpenCode connects on its own while this is on (it needs Node 20 or newer). Codex and Claude Code conversations are not available on Windows.</source>
+        <translation>OpenCode tự kết nối khi mục này bật (cần Node 20 trở lên). Trò chuyện với Codex và Claude Code chưa có trên Windows.</translation>
     </message>
     <message>
         <source>OpenCode and Codex connect on their own while this is on (they need Node 20 or newer). Claude Code needs its conversation hooks, below; restart Claude Code after changing them.</source>

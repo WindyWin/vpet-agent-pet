@@ -98,7 +98,7 @@ agents → Agent conversations), `agent_conversations` is `true` in the preferen
 `--interactions`. Settings starts and stops the service while the pet runs. `hide_message_previews` (also in
 Settings) makes previews show identity and state only. The same page registers the Claude Code conversation hooks
 (`integration enable --provider claude --interactions`). While the service runs, the pet starts the packaged OpenCode
-and Codex bridges itself (`src/interactions/bridge_launcher.*`; see [ADR 0051](adr/0051-interactions-in-install-packs.md)).
+bridge (and the Codex bridge, off Windows) itself (`src/interactions/bridge_launcher.*`; see [ADR 0051](adr/0051-interactions-in-install-packs.md)).
 
 | Part | Code |
 | --- | --- |

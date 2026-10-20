@@ -199,6 +199,7 @@ int main(int argc, char **argv) {
             };
             // The packaged OpenCode and Codex bridges; Claude Code reaches the pet through its own hooks.
             bridges = std::make_unique<pet::interactions::BridgeLauncher>();
+            bridges->endpoint = pet::platform::interactionEndpoint(); // The bridges' own default is unverified on macOS.
             if (!bridges->start()) qInfo().noquote() << bridges->status();
         };
         if (!parser.isSet("smoke-test")) {
