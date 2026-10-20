@@ -1883,6 +1883,52 @@ Các cài đặt và hook khác được giữ nguyên. Hãy đăng ký từ th�
         <translation>Theo dõi các phiên trên máy này có gửi sự kiện sau khi thiết lập. Khởi động lại ứng dụng agent sau khi bật; các phiên không gửi sự kiện, trên máy từ xa hoặc trong container sẽ không được phát hiện. Hãy phản hồi yêu cầu trong terminal hoặc trình soạn thảo của agent.</translation>
     </message>
     <message>
+        <source>Agent conversations</source>
+        <translation>Trò chuyện với agent</translation>
+    </message>
+    <message>
+        <source>Answer agent &amp;questions and send follow-ups from the pet</source>
+        <translation>Trả lời &amp;câu hỏi của agent và gửi tin nhắn tiếp theo từ thú cưng</translation>
+    </message>
+    <message>
+        <source>Shares the text of agent messages and questions with the pet, on this machine only.
+Off, no conversation socket exists and nothing but status leaves the agent.</source>
+        <translation>Chia sẻ nội dung tin nhắn và câu hỏi của agent với thú cưng, chỉ trên máy này.
+Khi tắt, không có socket trò chuyện nào và agent chỉ gửi trạng thái.</translation>
+    </message>
+    <message>
+        <source>&amp;Hide message previews</source>
+        <translation>&amp;Ẩn bản xem trước tin nhắn</translation>
+    </message>
+    <message>
+        <source>Previews normally show the start of the agent&apos;s message. With this on they show only who and what kind, never the agent&apos;s words.</source>
+        <translation>Bình thường bản xem trước hiện phần đầu tin nhắn của agent. Khi bật, chỉ hiện ai và loại gì, không bao giờ hiện lời của agent.</translation>
+    </message>
+    <message>
+        <source>OpenCode connects on its own while this is on (it needs Node 20 or newer). Codex and Claude Code conversations are not available on Windows.</source>
+        <translation>OpenCode tự kết nối khi mục này bật (cần Node 20 trở lên). Trò chuyện với Codex và Claude Code chưa có trên Windows.</translation>
+    </message>
+    <message>
+        <source>OpenCode and Codex connect on their own while this is on (they need Node 20 or newer). Claude Code needs its conversation hooks, below; restart Claude Code after changing them.</source>
+        <translation>OpenCode và Codex tự kết nối khi mục này bật (cần Node 20 trở lên). Claude Code cần hook trò chuyện ở bên dưới; hãy khởi động lại Claude Code sau khi thay đổi.</translation>
+    </message>
+    <message>
+        <source>Add Agent Pet conversation hooks to %1?
+
+While a question waits for the pet the terminal shows no dialog; after %2 seconds it opens as usual. Other settings and hooks are preserved. Restart Claude Code afterwards.</source>
+        <translation>Thêm hook trò chuyện của Agent Pet vào %1?
+
+Trong lúc câu hỏi chờ thú cưng, terminal không hiện hộp thoại; sau %2 giây hộp thoại mở như bình thường. Các cài đặt và hook khác được giữ nguyên. Hãy khởi động lại Claude Code sau đó.</translation>
+    </message>
+    <message>
+        <source>Remove only Agent Pet conversation hooks from %1?</source>
+        <translation>Chỉ gỡ hook trò chuyện của Agent Pet khỏi %1?</translation>
+    </message>
+    <message>
+        <source>Claude Code hooks</source>
+        <translation>Hook Claude Code</translation>
+    </message>
+    <message>
         <source>About Agent Pet — artwork and terms</source>
         <translation>Giới thiệu Agent Pet — hình ảnh và điều khoản sử dụng</translation>
     </message>

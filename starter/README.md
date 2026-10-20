@@ -172,14 +172,14 @@ The pet also shows *which* work is in flight: running commands, editing files,
 delegating a subagent, browsing the web and searching the tree each have their own
 state, drawn from the tool the agent started (unknown and MCP tools stay at the
 desk). A turn running several tools shows the most active one. See
-[the design record](docs/adr/0051-tool-aware-animations.md).
+[the design record](docs/adr/0052-tool-aware-animations.md).
 
 Each turn opens with a short getting-ready beat before the work settles into its
 activity states, so the start of a new task reads differently from the middle. It
 is a one-shot moment: it never interrupts a session that needs you, and attention,
 an exhausted quota, an error, a destructive command or a finished turn still take
 its place. A pet that draws no art for it plays its arrival instead. See
-[the design record](docs/adr/0052-turn-choreography.md).
+[the design record](docs/adr/0053-turn-choreography.md).
 
 ## Mood
 
@@ -467,6 +467,14 @@ stops it. Alerts live only in memory and are not replayed after restart.
 ```bash
 printf '%s\n' '{"version":1,"provider":"claude","session_id":"a1b2c3","kind":"attention","reason":"approval","project_path":"/projects/demo"}' | ./build/agent-pet emit
 ```
+
+## Agent conversations
+
+Answer an agent's question or send a follow-up from the pet. Off by default, since it shares message text between
+an agent and the pet (on this machine only). Turn it on in Settings, Startup and agents, Agent conversations; it takes
+effect at once. The same page registers the Claude Code conversation hooks (restart Claude Code afterwards). While it
+is on, the pet runs the packaged OpenCode bridge, and the Codex bridge off Windows, itself; they need Node 20 or newer on `PATH`. Details:
+[docs/interactions.md](docs/interactions.md) and [ADR 0051](docs/adr/0051-interactions-in-install-packs.md).
 
 ## Provider setup
 

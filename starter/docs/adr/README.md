@@ -57,8 +57,9 @@ the order the decisions were made. For a map of the code, start with the
 | [0047](0047-direct-agent-interactions.md) | Direct agent interactions | 2026-10-19 |
 | [0048](0048-codex-interaction-bridge.md) | Codex interaction bridge over the app-server daemon | 2026-10-19 |
 | [0049](0049-claude-interaction-hooks.md) | Claude Code interaction hooks | 2026-10-19 |
-| [0051](0051-tool-aware-animations.md) | Tool-aware activity animations | 2026-10-17 |
-| [0052](0052-turn-choreography.md) | Turn choreography: a getting-ready beat | 2026-10-17 |
+| [0051](0051-interactions-in-install-packs.md) | Agent conversations in the install packs | 2026-10-19 |
+| [0052](0052-tool-aware-animations.md) | Tool-aware activity animations | 2026-10-17 |
+| [0053](0053-turn-choreography.md) | Turn choreography: a getting-ready beat | 2026-10-17 |
 
 ## Writing a record
 

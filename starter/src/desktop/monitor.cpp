@@ -119,7 +119,7 @@ bool Monitor::apply(const Event &event, qint64 now) {
     // A prompt opens a new turn: one getting-ready beat (a one-shot moment, not a state) before the work settles
     // in. It is a Reminder-class moment, so a destructive command's surprise and a finished turn's celebration
     // still take its place, and attention, exhausted and error, being urgent, preempt it; a session already
-    // needing the user, or a hidden, mute or spoken-for pet, keeps the beat away (docs/adr/0052-turn-choreography.md).
+    // needing the user, or a hidden, mute or spoken-for pet, keeps the beat away (docs/adr/0053-turn-choreography.md).
     if (event.kind == "prompt")
         window_.stage().runtime().submit(
             {"lifecycle", "turn-start", "turn-start", behavior::Policy::Reminder, behavior::Lifetime::OneShot});

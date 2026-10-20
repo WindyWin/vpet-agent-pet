@@ -55,6 +55,12 @@ public:
     QString birthday() const { return eggs_.birthday(); }
     // Today's recap rides on the go-home reminder; persisted. The menu shows it either way.
     void setRecapEnabled(bool enabled);
+    // Agent conversations (docs/interactions.md): the preference, and whether previews hide the agent's words.
+    // The change is saved and announced; main starts or stops the service.
+    void setAgentConversations(bool enabled);
+    void setHideMessagePreviews(bool hide);
+    bool agentConversations() const { return agentConversations_; }
+    bool hideMessagePreviews() const { return hideMessagePreviews_; }
     bool recapEnabled() const { return recapEnabled_; }
     QString recapPath() const; // recap.json beside the preferences; empty when nothing is persisted.
     void showTrayMessage(const QString &title, const QString &text); // For a hidden pet's notes.
@@ -161,6 +167,8 @@ signals:
     void quitRequested();
     void presenceChanged(); // The pet was hidden or shown.
     void conversationsRequested();
+    void agentConversationsChanged(bool enabled);
+    void hideMessagePreviewsChanged(bool hide);
     void sessionsRequested(); // A click on the pet (press and release without moving it), or the menu.
     void recapRequested(); // "Today's recap" in the menu.
     void movementBreakRequested();
@@ -196,6 +204,7 @@ private:
     void showAbout();
     void watchScreen(QScreen *screen);
     QWidget *integrationSettings(QWidget *parent);
+    QWidget *conversationSettings(QWidget *parent);
     QWidget *startupSettings(QWidget *parent);
     QWidget *reminderSettings(QWidget *parent);
     updates::Controller *updates_ = nullptr;
@@ -247,6 +256,7 @@ private:
     bool trayError_ = false;
     QPoint dragOffset_;
     bool snoozeShown_ = false, fallbackDrag_ = false, dragging_ = false, clickThrough_ = false, touchEnabled_ = true, wanderEnabled_ = true, recapEnabled_ = true;
+    bool agentConversations_ = false, hideMessagePreviews_ = false;
     bool persist_ = true, ready_ = false, quitting_ = false, muted_ = false, sound_ = false, autostart_ = false;
     int attention_ = 0, bubbles_ = Preferences::RequestsAndErrors;
     QPoint pressPosition_;

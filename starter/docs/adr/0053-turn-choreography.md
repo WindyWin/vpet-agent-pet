@@ -1,4 +1,4 @@
-# 0052. Turn choreography: a getting-ready beat
+# 0053. Turn choreography: a getting-ready beat
 
 - Status: Accepted
 - Date: 2026-10-17
@@ -10,7 +10,7 @@ The pet shows session states exactly as they happen, so an agent turn
 beginning. Starting a new task looks like any other `thinking` or tool state,
 and watching the pet it is hard to tell when one task ended and the next began.
 
-ADR 0051 gave each turn tool-aware activity states, but nothing marks its first
+ADR 0052 gave each turn tool-aware activity states, but nothing marks its first
 moment. [Issue #107](https://github.com/WindyWin/vpet-agent-pet/issues/107)
 proposes a small, optional choreography on top of the existing states: a one-shot
 beat when a prompt opens a new turn, and a wrap-up beat before a turn finishes.
@@ -19,7 +19,7 @@ This record covers the first half (the start beat).
 ## Decision
 
 Add one **state cue** to the schema-2 vocabulary, `turn-start`, default state
-`turn_start`, playing `once` and then idle, with `fallback: "start"` (ADR 0051's
+`turn_start`, playing `once` and then idle, with `fallback: "start"` (ADR 0052's
 degradation rule). VPet draws it from `Switch/Up/Nomal` (13 frames, ~1.9 MB).
 
 `Monitor::apply` raises the beat once per accepted prompt, right after the

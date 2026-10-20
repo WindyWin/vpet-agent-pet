@@ -1,4 +1,4 @@
-# 0051. Tool-aware activity animations
+# 0052. Tool-aware activity animations
 
 - Status: Accepted
 - Date: 2026-10-17
