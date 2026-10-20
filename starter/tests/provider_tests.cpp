@@ -35,6 +35,21 @@ private slots:
         auto first = pet::normalizeHook("opencode", open, now);
         QCOMPARE(first["activity"].toString(), QString("reading"));
         QCOMPARE(first["event_id"], pet::normalizeHook("opencode", open, now + 1)["event_id"]);
+        // OpenCode and Antigravity name their tools differently from Claude; each maps to the same activity classes.
+        const QList<QPair<QString, QString>> openCodeTools{{"bash", "executing"}, {"edit", "editing"}, {"write", "editing"}, {"patch", "editing"},
+            {"glob", "searching"}, {"grep", "searching"}, {"list", "searching"}, {"webfetch", "browsing"}, {"websearch", "browsing"},
+            {"task", "delegating"}, {"todowrite", "working"}, {"mcp_server_tool", "working"}};
+        for (const auto &[tool, activity] : openCodeTools) {
+            open["tool"] = tool;
+            QCOMPARE(pet::normalizeHook("opencode", open, now)["activity"].toString(), activity);
+        }
+        open["tool"] = "read";
+        const QList<QPair<QString, QString>> antigravityTools{{"run_command", "executing"}, {"view_file", "reading"}, {"grep_search", "searching"},
+            {"find_by_name", "searching"}, {"read_url_content", "browsing"}};
+        for (const auto &[tool, activity] : antigravityTools) {
+            const QJsonObject step{{"hook_event_name", "PreToolUse"}, {"conversationId", "c"}, {"stepIdx", 1}, {"toolCall", QJsonObject{{"name", tool}}}};
+            QCOMPARE(pet::normalizeHook("antigravity", step, now)["activity"].toString(), activity);
+        }
         QVERIFY(!QJsonDocument(first).toJson().contains("PRIVATE"));
         pet::Sessions sessions;
         QVERIFY(sessions.apply(event("opencode", open, now), now));
