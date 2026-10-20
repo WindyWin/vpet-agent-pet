@@ -40,6 +40,7 @@ public:
     // Sessions with a question or an unread message, for the tray.
     int attention() const;
     void refresh();
+    void layout();
     void stop();
 private:
     struct Pick {
@@ -51,7 +52,6 @@ private:
     bool pick(Pick &out, int &more) const;
     void openHost(const interactions::ConversationKey &key);
     bool askToDetach(const interactions::ConversationKey &key);
-    void layout();
     void fadeFired();
     PetWindow &window_;
     interactions::Service &service_;

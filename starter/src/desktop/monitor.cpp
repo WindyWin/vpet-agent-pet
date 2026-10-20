@@ -390,6 +390,7 @@ void Monitor::remind() {
         if (!nudges_.held(due, now_)) runtime.submit({"clock", due, due, Policy::Reminder, Lifetime::OneShot, runtime.now() + reminderWaitMs});
 }
 bool Monitor::shown(const Alert &alert) const {
+    if (alert.kind == "attention" && conversationQuestion && conversationQuestion(alert.session)) return false;
     const int level = window_.bubbles();
     return alert.kind == "attention" || ((alert.kind == "error" || alert.kind == "exhausted") && level >= Preferences::RequestsAndErrors) ||
            level >= Preferences::AllAlerts;
@@ -428,6 +429,7 @@ void Monitor::layoutBubbles() {
     if (bubble_.isVisible()) bubble_.place(figure, screens);
     if (list_.isVisible()) list_.place(figure, screens, bubble_.isVisible() ? QVector<QRect>{bubble_.geometry()} : QVector<QRect>());
     if (note_.isVisible()) note_.place(figure, screens);
+    emit bubblesChanged();
 }
 void Monitor::dismiss() { queue_.dismiss(sessions_); checkpointSessions(); refreshAlerts(); }
 void Monitor::toggleSessions() {

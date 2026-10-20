@@ -1,4 +1,7 @@
-# Interaction protocol and service
+# Interaction protocol and service (Beta)
+
+Agent conversations are beta. Session detection and message history can be incomplete; the agent remains the place
+to check the full conversation.
 
 Stages 2, 3 and 4 (bridge half) of [the direct-interaction specification](../../docs/design/agent-interactions-spec.md): the
 provider-neutral core, its private stream, a fake bridge, the OpenCode bridge and the desktop preview, panel and list.
@@ -94,7 +97,7 @@ conversation takes it over; the old one then gets `unknown_conversation`.
 ## Desktop
 
 Off by default: no socket is created and no message text is shared until it is turned on in Settings (Startup and
-agents → Agent conversations), `agent_conversations` is `true` in the preferences file, or the pet is started with
+agents → Agent conversations (Beta)), `agent_conversations` is `true` in the preferences file, or the pet is started with
 `--interactions`. Settings starts and stops the service while the pet runs. `hide_message_previews` (also in
 Settings) makes previews show identity and state only. The same page registers the Claude Code conversation hooks
 (`integration enable --provider claude --interactions`). While the service runs, the pet starts the packaged OpenCode
@@ -120,6 +123,9 @@ Known gaps against the specification: the running-sessions rows have no Conversa
 the menu or the preview's `+N`); the pet badge does not yet merge interaction questions with status attention;
 a focused host does not suppress previews; there is no preview sound; the header has no parent-path hint because
 bridges send only a project name; Vietnamese strings are not translated yet.
+
+A connected interaction question replaces the matching status-only attention bubble. Other session alerts remain
+available, and the normal attention bubble returns if interactions are disabled or disconnected.
 
 ## Markdown and lifetime
 
@@ -215,7 +221,7 @@ with `capabilities.experimentalApi` (questions need it), then `initialized`.
 first, then the most recently updated, plus any that report activity later (`thread/started`, status changes).
 Saved threads (`notLoaded`) are never read or resumed, because resuming loads them into the daemon. Sub-agent threads
 (a parent thread or sub-agent source) appear only when they ask a question. An archived or deleted thread ends its
-conversation; an unloaded one only stops being ready. A thread the pet releases (or reports as
+conversation; an unloaded one ends its conversation and returns under a fresh epoch on a new turn. A thread the pet releases (or reports as
 `conversation_ended`) is no longer tracked, its questions stay with the terminal, and only a new turn (the thread
 going from not active to active) brings it back, under the epoch `<createdAt>.<time>`.
 

@@ -391,7 +391,7 @@ export function createBridge({ send, log = () => {}, tail = TAIL, maxTracked = M
 
   // Reads the whole thread (messages are numbered from its start) and publishes what is new. Returns the
   // thread. The first read marks what it finds as history. A thread without a first turn has nothing to read.
-  const readMessages = async (c) => {
+  const readMessages = async (c, settled = false) => {
     let thread;
     try { thread = await readThread(c.id, true); }
     catch (error) {
@@ -400,7 +400,7 @@ export function createBridge({ send, log = () => {}, tail = TAIL, maxTracked = M
       throw error;
     }
     const fresh = [];
-    for (const m of threadMessages(thread, statusOf(thread?.status).type === "idle")) {
+    for (const m of threadMessages(thread, settled || statusOf(thread?.status).type === "idle")) {
       const added = absorb(c, m, !c.synced);
       if (added) fresh.push(added);
     }
@@ -496,7 +496,8 @@ export function createBridge({ send, log = () => {}, tail = TAIL, maxTracked = M
   const applyStatus = async (c, status) => {
     const idle = statusOf(status).type === "idle";
     const reads = !c.sub || c.requests.size > 0;
-    if (idle && reads) await readMessages(c);
+    if (statusOf(status).type === "notLoaded") { setStatus(c, { type: "notLoaded" }); endConversation(c); retire(c); return; }
+    if (idle && reads) await readMessages(c, true);
     setStatus(c, status);
     if (c.waiting) await attach(c);
     else if (c.requests.size) settleAll(c, c.turnStatus === "interrupted" || c.turnStatus === "failed" ? "cancelled" : "expired");
@@ -545,8 +546,8 @@ export function createBridge({ send, log = () => {}, tail = TAIL, maxTracked = M
       const c = tracked();
       if (c) await serial(threadId, async () => endConversation(c));
     } else if (method === "thread/closed") {
-      const c = tracked(); // Unloaded from the daemon, not deleted: not ready, but it may come back.
-      if (c) await serial(threadId, async () => { setStatus(c, { type: "notLoaded" }); settleAll(c); });
+      const c = tracked();
+      if (c) await serial(threadId, async () => { setStatus(c, { type: "notLoaded" }); endConversation(c); retire(c); });
     } else if (method === "thread/started") {
       await serial(threadId, async () => { const c = await ensure(threadId); if (c) { announce(c); } });
     } else if (method === "thread/status/changed") {
@@ -564,7 +565,16 @@ export function createBridge({ send, log = () => {}, tail = TAIL, maxTracked = M
       if (method === "turn/completed") scheduleRefresh(c);
     } else if (method === "item/completed") {
       const c = tracked();
-      if (c && (params.item?.type === "userMessage" || params.item?.type === "agentMessage")) scheduleRefresh(c);
+      if (c && (!c.sub || c.requests.size) && itemMessage(params.item)) {
+        await serial(threadId, async () => {
+          if (c.ended) return;
+          // The completion event is authoritative even when thread/read still lags behind it.
+          // Read first to retain preceding messages in order, then fill any missing completed item.
+          try { await readMessages(c); } catch (error) { log(`thread ${c.id}: ${error.message}`); }
+          const message = absorb(c, itemMessage(params.item), false);
+          if (message && c.registered) emit(messageFrame(c, message));
+        });
+      }
     } else if (method === "serverRequest/resolved") {
       // Not queued behind the thread's other work: an answer in flight is waiting for exactly this.
       const c = tracked();
@@ -785,7 +795,7 @@ export function createBridge({ send, log = () => {}, tail = TAIL, maxTracked = M
     for (const t of threads) if (dormant.has(t.id)) wakes(t.id, statusOf(t.status).type);
     for (const c of conversations.values()) {
       if (loaded.has(c.id)) continue;
-      await serial(c.id, async () => { setStatus(c, { type: "notLoaded" }); settleAll(c); });
+      await serial(c.id, async () => { setStatus(c, { type: "notLoaded" }); endConversation(c); retire(c); });
     }
     const fresh = threads.filter((t) => !conversations.has(t.id) && !dormant.has(t.id));
     const wanted = fresh.filter((t) => (statusOf(t.status).waiting || (!isSubAgent(t) && statusOf(t.status).type === "active")));
