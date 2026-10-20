@@ -999,6 +999,28 @@ private slots:
         finishSequence(player); now += 3600000; finishSequence(player); QCOMPARE(player.sequence(), QString("Think/Nomal/B"));
         QCOMPARE(draws.unexpected, 0);
     }
+    // The per-tool states keep working's playful pen spin: it used to show for every tool before they split.
+    void toolStatesKeepThePenSpin() {
+        const QString penSpin = "WORK/WorkONE/B/Nomal/1";
+        for (const char *name : {"editing", "executing", "searching", "browsing", "delegating"}) {
+            const QString state = name;
+            pet::Player player; player.setPaused(true); player.setRandom([](int) { return 0; });
+            pet::Activity activity(player); Draws draws; qint64 now = 1000000;
+            activity.setRandom(draws.random()); activity.setClock([&] { return now; });
+            QVERIFY2(player.activity(state), name);
+            draws.values = {0}; player.select(state, true);
+            for (int i = 0; i < 6 && player.phase() != "loop"; ++i) finishSequence(player);
+            QCOMPARE(player.state(), state); QCOMPARE(player.phase(), QString("loop"));
+            const auto loop = player.sequence();
+            // Subtle never draws the playful tier, so it plays nothing extra.
+            draws.values = {0, 0, 0}; activity.setStyle(pet::ActivityStyle::Subtle);
+            now += 20000; finishSequence(player); QCOMPARE(player.sequence(), loop);
+            // Playful draws it for one pass, then goes back to the state's own loop.
+            draws.values = {0, 0, 0}; activity.setStyle(pet::ActivityStyle::Playful);
+            now += 20000; finishSequence(player); QCOMPARE(player.sequence(), penSpin);
+            finishSequence(player); QCOMPARE(player.sequence(), loop);
+        }
+    }
     void activityReactionsShareTheClock() {
         pet::Player player; player.setPaused(true); player.setRandom([](int) { return 0; });
         pet::Activity activity(player); Draws draws; qint64 now = 1000000;

@@ -58,3 +58,20 @@ suites, including the new `EventTests::toolActivities` (class ordering and the
 `working` fallback) and the catalog fallback checks in `pets_tests.cpp`. The
 five new cues raise the vocabulary to 40; `pets` and `prototype` shards were
 updated for the new states.
+
+### Pen spin lost after the split — 2026-10-20
+
+The release that introduced these states dropped the chin-in-hand pen spin
+(`WORK/WorkONE/B/Nomal/1`) from most turns. It is a `playful` loop in the
+catalog's `activity` section, which is keyed by state name and held entries only
+for `thinking`, `reading` and `working`; Bash, Edit, Grep, WebFetch and Task now
+map to states without one. VPet's `activity` section now gives `editing`,
+`executing`, `searching`, `browsing` and `delegating` the same playful loop, so
+it plays again in the Playful style and nowhere else. `PrototypeTests::
+toolStatesKeepThePenSpin` covers all five.
+
+The clip is drawn on the bare WorkONE desk, so the monitor, scroll or other prop
+of the current state is absent for its one pass. The `linger` and `handover`
+parts of `working` (the ponder loop and the prop swaps under `WORK/Desk/`) are
+WorkONE transitions and were not copied; going from a tool state to thinking
+still plays the plain end.
