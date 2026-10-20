@@ -108,6 +108,8 @@ def main():
     for rcc in ["artwork.rcc", *packs]:
         shutil.copy2(build / rcc, stage / rcc)
     shutil.copytree(ROOT / "licenses", stage / "licenses")
+    shutil.copytree(ROOT / "src/providers", stage / "bridges",
+                    ignore=shutil.ignore_patterns("*.cpp", "*.h", "*.in", "*.md", "opencode-plugin*.js"))
     for notice in ("THIRD_PARTY_NOTICES.md", "LICENSE", "NOTICE"):
         shutil.copy2(ROOT / notice, stage / notice)
     qt_notices(qmake, stage / "runtime-licenses/qt")

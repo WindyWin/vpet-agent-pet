@@ -455,6 +455,14 @@ stops it. Alerts live only in memory and are not replayed after restart.
 printf '%s\n' '{"version":1,"provider":"claude","session_id":"a1b2c3","kind":"attention","reason":"approval","project_path":"/projects/demo"}' | ./build/agent-pet emit
 ```
 
+## Agent conversations
+
+Answer an agent's question or send a follow-up from the pet. Off by default, since it shares message text between
+an agent and the pet (on this machine only). Turn it on in Settings, Startup and agents, Agent conversations; it takes
+effect at once. The same page registers the Claude Code conversation hooks (restart Claude Code afterwards). While it
+is on, the pet runs the packaged OpenCode bridge, and the Codex bridge off Windows, itself; they need Node 20 or newer on `PATH`. Details:
+[docs/interactions.md](docs/interactions.md) and [ADR 0051](docs/adr/0051-interactions-in-install-packs.md).
+
 ## Provider setup
 
 Preview the exact configuration before enabling either integration:
