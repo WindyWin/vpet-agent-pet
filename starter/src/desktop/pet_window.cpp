@@ -251,7 +251,7 @@ void PetWindow::retranslate() {
     showAction_->setText(tr("Show pet"));
     showAction_->setToolTip(showAction_->isEnabled() ? QString() : tr("Hiding needs a system tray to show the pet again"));
     sessionsAction_->setText(tr("Running sessions…"));
-    conversationsAction_->setText(tr("Agent conversations…"));
+    conversationsAction_->setText(tr("Agent conversations (Beta)…"));
     recapAction_->setText(tr("Today's recap"));
     muteAction_->setText(tr("Mute alerts"));
     {
@@ -1166,13 +1166,15 @@ QWidget *PetWindow::integrationSettings(QWidget *parent) {
     return box;
 }
 QWidget *PetWindow::conversationSettings(QWidget *parent) {
-    auto *box = new QGroupBox(tr("Agent conversations"), parent); box->setObjectName("conversations");
+    auto *box = new QGroupBox(tr("Agent conversations (Beta)"), parent); box->setObjectName("conversations");
     auto *layout = new QFormLayout(box);
     auto *enabled = new QCheckBox(tr("Answer agent &questions and send follow-ups from the pet"), box);
-    enabled->setChecked(agentConversations_); enabled->setAccessibleName(tr("Agent conversations"));
+    enabled->setChecked(agentConversations_); enabled->setAccessibleName(tr("Agent conversations (Beta)"));
     enabled->setToolTip(tr("Shares the text of agent messages and questions with the pet, on this machine only.\n"
                         "Off, no conversation socket exists and nothing but status leaves the agent."));
     layout->addRow(enabled);
+    auto *beta = new QLabel(tr("Beta: session detection and message history may be incomplete. Check the agent for the full conversation."), box);
+    beta->setWordWrap(true); layout->addRow(beta);
     connect(enabled, &QCheckBox::toggled, this, &PetWindow::setAgentConversations);
     auto *hide = new QCheckBox(tr("&Hide message previews"), box);
     hide->setChecked(hideMessagePreviews_);
@@ -1213,13 +1215,13 @@ QWidget *PetWindow::conversationSettings(QWidget *parent) {
                  "after %2 seconds it opens as usual. Other settings and hooks are preserved. Restart Claude Code afterwards.")
                   .arg(integrationConfigPath("claude")).arg(options.questionWait)
             : tr("Remove only Agent Pet conversation hooks from %1?").arg(integrationConfigPath("claude"));
-        QMessageBox ask(QMessageBox::Question, tr("Agent conversations"), question, QMessageBox::NoButton, this);
+        QMessageBox ask(QMessageBox::Question, tr("Agent conversations (Beta)"), question, QMessageBox::NoButton, this);
         auto *confirm = ask.addButton(enable ? tr("Add hooks") : tr("Remove hooks"), QMessageBox::AcceptRole);
         ask.addButton(tr("Cancel"), QMessageBox::RejectRole);
         if (ask.exec(), ask.clickedButton() != confirm) return;
         QJsonObject report; QString error;
         if (!runIntegration(enable ? "enable" : "disable", "claude", {}, executable, report, error, options))
-            warn(this, tr("Agent conversations"), error);
+            warn(this, tr("Agent conversations (Beta)"), error);
         refresh();
     });
     layout->addRow(tr("Claude Code hooks"), row);

@@ -33,6 +33,7 @@ ConversationHub::ConversationHub(PetWindow &window, Service &service, QObject *p
     connect(&panel_, &ConversationPanel::openRequested, this, [this](const ConversationKey &key) { openHost(key); });
     connect(&window_, &PetWindow::moved, this, &ConversationHub::layout);
     connect(&window_, &PetWindow::presenceChanged, this, &ConversationHub::refresh);
+    connect(&window_, &PetWindow::notificationsChanged, this, &ConversationHub::refresh);
     connect(&window_, &PetWindow::conversationsRequested, this, &ConversationHub::toggleList);
     connect(&window_, &PetWindow::quitRequested, this, &ConversationHub::stop);
     window_.setConversationsAvailable(true);
@@ -48,7 +49,7 @@ int ConversationHub::attention() const {
     int count = 0;
     for (const auto &key : service_.keys()) {
         const auto *c = service_.find(key);
-        if (c && c->link != Conversation::Link::Ended && (c->needsAttention() || c->unreadCount() > 0)) ++count;
+        if (c && c->link == Conversation::Link::Connected && (c->needsAttention() || c->unreadCount() > 0)) ++count;
     }
     return count;
 }
@@ -61,7 +62,7 @@ bool ConversationHub::pick(Pick &out, int &more) const {
     const bool panelOpen = panel_.isVisible();
     for (const auto &key : service_.keys()) {
         const auto *c = service_.find(key);
-        if (!c || c->link == Conversation::Link::Ended) continue;
+        if (!c || c->link != Conversation::Link::Connected) continue;
         Pick candidate{key, {}, {}, false};
         if (const auto *request = conversation::firstOpenRequest(*c); request && c->needsAttention()) {
             candidate.attention = true; candidate.id = key.id() + "|q|" + request->requestId + '|' + QString::number(request->revision);
@@ -121,8 +122,8 @@ void ConversationHub::refresh() {
         shown_ = pick.id;
         if (pick.attention) fade_.stop(); else fade_.start();
     }
-    layout();
     if (!preview_.isVisible()) preview_.show();
+    layout();
     refreshing_ = false;
 }
 
@@ -161,8 +162,10 @@ void ConversationHub::layout() {
     const auto screens = window_.screenAreas();
     QVector<QRect> taken = avoid ? avoid() : QVector<QRect>();
     if (preview_.isVisible()) preview_.place(figure, screens, taken);
-    if (panel_.isVisible()) panel_.place(figure, screens);
-    if (list_.isVisible()) list_.place(figure, screens, preview_.isVisible() ? QVector<QRect>{preview_.geometry()} : QVector<QRect>());
+    if (panel_.isVisible()) panel_.place(figure, screens, taken);
+    if (preview_.isVisible()) taken.append(preview_.geometry());
+    if (panel_.isVisible()) taken.append(panel_.geometry());
+    if (list_.isVisible()) list_.place(figure, screens, taken);
 }
 
 void ConversationHub::open(const ConversationKey &key) {

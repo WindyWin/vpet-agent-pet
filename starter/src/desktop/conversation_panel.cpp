@@ -149,8 +149,8 @@ ConversationPanel::ConversationPanel(Service &service, QWidget *parent) : QWidge
 ConversationPanel::~ConversationPanel() { service_.unsubscribe(observer_); }
 
 void ConversationPanel::retranslate() {
-    setWindowTitle(::Conversations::tr("Agent conversation"));
-    setAccessibleName(::Conversations::tr("Agent conversation"));
+    setWindowTitle(::Conversations::tr("Agent conversation (Beta)"));
+    setAccessibleName(::Conversations::tr("Agent conversation (Beta)"));
     open_->setText(::Conversations::tr("Open"));
     open_->setToolTip(::Conversations::tr("Bring the agent's terminal or editor forward"));
     collapse_->setToolTip(::Conversations::tr("Collapse (Esc)")); collapse_->setAccessibleName(::Conversations::tr("Collapse conversation"));
@@ -219,13 +219,13 @@ void ConversationPanel::resizeEvent(QResizeEvent *event) {
     QWidget::resizeEvent(event);
     QTimer::singleShot(0, this, &ConversationPanel::markVisibleRead);
 }
-void ConversationPanel::place(const QRect &pet, const QVector<QRect> &screens) {
+void ConversationPanel::place(const QRect &pet, const QVector<QRect> &screens, const QVector<QRect> &avoid) {
     QRect screen = screens.value(0, pet);
     for (const auto &area : screens) if (area.contains(pet.center())) { screen = area; break; }
     // Never larger than the screen's usable area: the body scrolls instead.
     const QSize fit(qMin(width(), screen.width()), qMin(height(), screen.height()));
     if (fit != size()) resize(fit);
-    overlay::place(this, AlertBubble::placement(pet, size(), screen));
+    overlay::place(this, AlertBubble::placement(pet, size(), screen, avoid));
 }
 
 // ---- Rendering ---------------------------------------------------------------------------------
@@ -288,7 +288,11 @@ void ConversationPanel::rebuildBody(const Conversation &c) {
     if (signature == bodySignature_) return;
     bodySignature_ = signature;
     stickToEnd_ = stickToEnd_ || scroll_->verticalScrollBar()->value() >= scroll_->verticalScrollBar()->maximum() - 4;
-    for (auto &view : messages_) view.box->deleteLater();
+    for (auto &view : messages_) {
+        messageLayout_->removeWidget(view.box);
+        view.box->hide();
+        view.box->deleteLater();
+    }
     messages_.clear();
     while (auto *item = answeredLayout_->takeAt(0)) { delete item->widget(); delete item; }
     for (const auto &m : c.messages) {

@@ -443,6 +443,31 @@ private slots:
 
     // ---- Coordinator -----------------------------------------------------------------------------
 
+    void disconnectedConversationsDoNotKeepPreviewingOrCountAsAttention() {
+        Rig rig;
+        PetWindow window(nullptr, {}, false);
+        ConversationHub hub(window, rig.service);
+        rig.bridge.request(rig.a, "q1", 1, "Answer?", {"yes"});
+        QVERIFY(hub.preview().isVisible());
+        rig.bridge.disconnect();
+        QVERIFY(!hub.preview().isVisible());
+        QCOMPARE(hub.attention(), 0);
+    }
+
+    void firstPreviewIsPlacedClearOfExistingNotifications() {
+        Rig rig;
+        PetWindow window(nullptr, {}, false);
+        window.move(300, 300);
+        ConversationHub hub(window, rig.service);
+        int placements = 0;
+        const QRect occupied(0, 0, 120, 120);
+        hub.avoid = [&] { ++placements; return QVector<QRect>{occupied}; };
+        rig.bridge.message(rig.a, 1, "m1", "All done.");
+        QVERIFY(hub.preview().isVisible());
+        QVERIFY(placements > 0);
+        QVERIFY(!hub.preview().geometry().intersects(occupied));
+    }
+
     void aQuestionPreviewsAndHidingKeepsItPending() {
         Rig rig;
         PetWindow window(nullptr, {}, false);
@@ -587,7 +612,7 @@ private slots:
         const auto visible = [&] {
             for (auto *menu : window.findChildren<QMenu *>())
                 for (auto *action : menu->actions())
-                    if (action->text() == "Agent conversations…") return action->isVisible();
+                    if (action->text() == "Agent conversations (Beta)…") return action->isVisible();
             return false;
         };
         QVERIFY(!visible());

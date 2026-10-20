@@ -115,6 +115,23 @@ class PrototypeTests : public QObject {
     Q_OBJECT
     QTemporaryDir clients;
 private slots:
+    void interactionQuestionsReplaceMatchingAlertsAndRestoreTheFallback() {
+        QTemporaryDir directory;
+        pet::PetWindow window(nullptr, directory.path() + "/preferences.json");
+        window.show();
+        pet::Monitor monitor(window);
+        const qint64 now = QDateTime::currentMSecsSinceEpoch();
+        const QString session = QString("claude") + QChar(0x1f) + "beta-session";
+        monitor.conversationQuestion = [&](const QString &key) { return key == session; };
+        pet::Event e{"claude", "beta-session", "beta-question", "attention", {}, {}, "/project", {}, now};
+        QVERIFY(monitor.apply(e, now));
+        QVERIFY(!monitor.bubble().isVisible());
+        QCOMPARE(window.attention(), 1);
+        monitor.conversationQuestion = {};
+        monitor.update(now + 1);
+        QVERIFY(monitor.bubble().isVisible());
+    }
+
     void monitorWaitsWithoutCelebrating() {
         QTemporaryDir directory;
         pet::PetWindow window(nullptr, directory.path() + "/preferences.json"); window.show();

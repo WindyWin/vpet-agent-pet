@@ -52,6 +52,8 @@ public:
     std::function<hosts::FocusResult(const Session &)> bringForward;
     // Where the pointer is; moving it counts as activity for wellness reminders.
     std::function<QPoint()> pointer;
+    // A live interaction question replaces the matching status-only attention alert.
+    std::function<bool(const QString &)> conversationQuestion;
     // Whether the screen is locked; while it is, nothing counts as activity and no reminder shows. Unset: never.
     std::function<bool()> locked;
     static QString bedtimeNote(); // Shown once a night when a turn finishes late.
@@ -60,6 +62,8 @@ public:
     Nudges &nudges() { return nudges_; } // Which reminders were asked, and when they ask again.
     int restLeft() const { return restLeft_; } // Seconds left of an eye or movement break; 0 for none.
     void setRestTickMs(int ms) { rest_.setInterval(ms); } // One countdown second; tests shorten it.
+signals:
+    void bubblesChanged();
 private:
     void refreshAlerts();
     void withdrawReminders(qint64 now);

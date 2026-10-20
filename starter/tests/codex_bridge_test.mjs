@@ -303,6 +303,47 @@ describe("registration and snapshots", () => {
 });
 
 describe("live events", () => {
+  test("an idle notification delivers the final answer even when the history status lags", async () => {
+    const t = daemon.thread();
+    daemon.addTurn(t, "first", "one");
+    await start();
+    await until(() => snapshotOf(t), "snapshot");
+    daemon.addTurn(t, "second", "final answer", { status: "inProgress" });
+    daemon.setStatus(t, { type: "active", activeFlags: [] });
+    await until(() => pet.of("message").some((f) => f.message.text === "second"), "prompt");
+    for (const c of daemon.clients) c.write({ method: "thread/status/changed", params: { threadId: t.id, status: { type: "idle" } } });
+    await until(() => pet.of("message").some((f) => f.message.text === "final answer"), "final answer despite stale read");
+  });
+
+  test("completed items are delivered when history has not recorded them yet, without duplicates", async () => {
+    const t = daemon.thread();
+    daemon.addTurn(t, "first", "one");
+    await start();
+    await until(() => snapshotOf(t), "snapshot");
+    const item = { type: "agentMessage", id: "lagging-final", text: "Completed before history caught up", phase: "final_answer" };
+    for (const c of daemon.clients) c.write({ method: "item/completed", params: { threadId: t.id, item } });
+    await until(() => pet.of("message").some((f) => f.message.message_id === item.id), "completed item");
+    t.turns.at(-1).items.push(item);
+    for (const c of daemon.clients) c.write({ method: "item/completed", params: { threadId: t.id, item } });
+    await settleDown();
+    assert.equal(pet.of("message").filter((f) => f.message.message_id === item.id).length, 1);
+  });
+
+  test("closed threads leave the pet and return under a new epoch on a new turn", async () => {
+    const t = daemon.thread();
+    daemon.addTurn(t, "first", "one");
+    await start();
+    const before = await until(() => snapshotOf(t), "snapshot");
+    for (const c of daemon.clients) c.write({ method: "thread/closed", params: { threadId: t.id } });
+    await until(() => pet.of("conversation_ended").length, "ended");
+    daemon.setStatus(t, { type: "idle" });
+    await settleDown();
+    const count = pet.of("conversation_open").length;
+    daemon.setStatus(t, { type: "active", activeFlags: [] });
+    const opened = await until(() => pet.of("conversation_open").length > count && pet.last("conversation_open"), "reopened");
+    assert.notEqual(opened.conversation.conversation_epoch, before.conversation.conversation_epoch);
+  });
+
   test("a terminal turn publishes the prompt, then the final answer, then ready", async () => {
     const t = daemon.thread();
     daemon.addTurn(t, "first", "one");
@@ -337,7 +378,7 @@ describe("live events", () => {
     assert.equal(snapshot.ready, false);
   });
 
-  test("archiving ends the conversation; unloading only makes it not ready", async () => {
+  test("archiving and unloading both end the conversation", async () => {
     const a = daemon.thread();
     daemon.addTurn(a, "x", "y");
     const b = daemon.thread();
@@ -346,9 +387,9 @@ describe("live events", () => {
     await until(() => snapshotOf(a) && snapshotOf(b), "snapshots");
     daemon.setStatus(b, { type: "notLoaded" });
     await until(() => pet.of("ready").some((r) => r.conversation.session_id === b.id && r.ready === false), "b not ready");
-    assert.equal(pet.of("conversation_ended").length, 0);
+    await until(() => pet.of("conversation_ended").some((f) => f.conversation.session_id === b.id), "unloaded ended");
     for (const c of daemon.clients) c.write({ method: "thread/archived", params: { threadId: a.id } });
-    const ended = await until(() => pet.last("conversation_ended"), "ended");
+    const ended = await until(() => pet.of("conversation_ended").find((f) => f.conversation.session_id === a.id), "ended");
     assert.deepEqual(ended.conversation, keyOf(a));
   });
 });

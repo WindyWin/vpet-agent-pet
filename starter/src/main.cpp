@@ -172,6 +172,15 @@ int main(int argc, char **argv) {
         std::unique_ptr<pet::interactions::Host> interactionHost;
         std::unique_ptr<pet::interactions::BridgeLauncher> bridges;
         std::unique_ptr<pet::ConversationHub> conversations;
+        monitor.conversationQuestion = [&](const QString &session) {
+            if (!interactionService) return false;
+            for (const auto &key : interactionService->keys()) {
+                if (key.provider + QChar(0x1f) + key.sessionId != session) continue;
+                const auto *conversation = interactionService->find(key);
+                if (conversation && conversation->link == pet::interactions::Conversation::Link::Connected && conversation->needsAttention()) return true;
+            }
+            return false;
+        };
         const auto stopConversations = [&] {
             conversations.reset(); bridges.reset(); interactionHost.reset(); interactionService.reset();
         };
@@ -187,6 +196,7 @@ int main(int argc, char **argv) {
             }
             conversations = std::make_unique<pet::ConversationHub>(window, *interactionService);
             conversations->setHideExcerpts(window.hideMessagePreviews());
+            QObject::connect(&monitor, &pet::Monitor::bubblesChanged, conversations.get(), &pet::ConversationHub::layout);
             conversations->avoid = [&monitor] {
                 QVector<QRect> taken;
                 for (const QWidget *widget : {static_cast<const QWidget *>(&monitor.bubble()), static_cast<const QWidget *>(&monitor.note()),

@@ -179,10 +179,6 @@
         <translation>%1 cuộc trò chuyện</translation>
     </message>
     <message>
-        <source>Agent conversation</source>
-        <translation>Trò chuyện với agent</translation>
-    </message>
-    <message>
         <source>Collapse (Esc)</source>
         <translation>Thu gọn (Esc)</translation>
     </message>
@@ -289,6 +285,10 @@
     <message>
         <source>Sending…</source>
         <translation>Đang gửi…</translation>
+    </message>
+    <message>
+        <source>Agent conversation (Beta)</source>
+        <translation>Trò chuyện với agent (Beta)</translation>
     </message>
     <message>
         <source>Sent</source>
@@ -1290,8 +1290,8 @@ Nhấp chuột phải để mở menu · Esc để thoát</translation>
         <translation>Các phiên đang chạy…</translation>
     </message>
     <message>
-        <source>Agent conversations…</source>
-        <translation>Trò chuyện với agent…</translation>
+        <source>Agent conversations (Beta)…</source>
+        <translation>Trò chuyện với agent (Beta)…</translation>
     </message>
     <message>
         <source>Today&apos;s recap</source>
@@ -1883,8 +1883,8 @@ Các cài đặt và hook khác được giữ nguyên. Hãy đăng ký từ th�
         <translation>Theo dõi các phiên trên máy này có gửi sự kiện sau khi thiết lập. Khởi động lại ứng dụng agent sau khi bật; các phiên không gửi sự kiện, trên máy từ xa hoặc trong container sẽ không được phát hiện. Hãy phản hồi yêu cầu trong terminal hoặc trình soạn thảo của agent.</translation>
     </message>
     <message>
-        <source>Agent conversations</source>
-        <translation>Trò chuyện với agent</translation>
+        <source>Agent conversations (Beta)</source>
+        <translation>Trò chuyện với agent (Beta)</translation>
     </message>
     <message>
         <source>Answer agent &amp;questions and send follow-ups from the pet</source>
@@ -1895,6 +1895,10 @@ Các cài đặt và hook khác được giữ nguyên. Hãy đăng ký từ th�
 Off, no conversation socket exists and nothing but status leaves the agent.</source>
         <translation>Chia sẻ nội dung tin nhắn và câu hỏi của agent với thú cưng, chỉ trên máy này.
 Khi tắt, không có socket trò chuyện nào và agent chỉ gửi trạng thái.</translation>
+    </message>
+    <message>
+        <source>Beta: session detection and message history may be incomplete. Check the agent for the full conversation.</source>
+        <translation>Beta: Việc phát hiện phiên và lịch sử tin nhắn có thể chưa đầy đủ. Hãy kiểm tra trong ứng dụng agent để xem toàn bộ cuộc trò chuyện.</translation>
     </message>
     <message>
         <source>&amp;Hide message previews</source>

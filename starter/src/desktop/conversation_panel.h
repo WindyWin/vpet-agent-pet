@@ -35,7 +35,7 @@ public:
     // Shows this conversation and gives the panel keyboard focus: only an explicit user action calls it.
     void open(const interactions::ConversationKey &key);
     const interactions::ConversationKey &current() const { return current_; }
-    void place(const QRect &pet, const QVector<QRect> &screens);
+    void place(const QRect &pet, const QVector<QRect> &screens, const QVector<QRect> &avoid = {});
 
     // What the panel shows, for tests and accessibility checks.
     QString heading() const { return heading_->text(); }
