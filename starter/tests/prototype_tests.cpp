@@ -369,6 +369,63 @@ private slots:
         pet::PreferencesStore invalid(path); QVERIFY(!invalid.load().muted); QVERIFY(!invalid.save(prefs));
     }
 
+    void lifecycleVariants_data() {
+        QTest::addColumn<QString>("state");
+        QTest::addColumn<int>("draw");
+        QTest::addColumn<QString>("sequence");
+        QTest::addColumn<int>("durationMs");
+        const QStringList arrivals{"StartUP/Nomal", "StartUP/Nomal", "StartUP/Happy", "StartUP/Happy_1"};
+        const QList<int> arrivalDurations{1750, 1750, 1750, 1375};
+        const QStringList exits{"Shutdown/Nomal_1", "Shutdown/Nomal_1", "Shutdown/Nomal_2",
+                                "Shutdown/Nomal_2", "Shutdown/Happy_1", "Shutdown/2/Nomal"};
+        const QList<int> exitDurations{1500, 1500, 1500, 1500, 1875, 4125};
+        for (int i = 0; i < arrivals.size(); ++i)
+            QTest::newRow(qPrintable(QString("arrival-%1").arg(i))) << QString("starting") << i << arrivals[i] << arrivalDurations[i];
+        for (int i = 0; i < exits.size(); ++i)
+            QTest::newRow(qPrintable(QString("exit-%1").arg(i))) << QString("closing") << i << exits[i] << exitDurations[i];
+    }
+    void lifecycleVariants() {
+        QFETCH(QString, state); QFETCH(int, draw); QFETCH(QString, sequence); QFETCH(int, durationMs);
+        pet::Player player; player.setPaused(true);
+        int calls = 0, firstBound = 0;
+        player.setRandom([&](int bound) { if (++calls == 1) { firstBound = bound; return draw; } return 0; });
+        QSignalSpy completed(&player, &pet::Player::completed);
+        QVERIFY(player.select(state, true));
+        QCOMPARE(firstBound, state == "starting" ? 4 : 6);
+        const int frames = player.frameCount();
+        int elapsed = 0;
+        for (int i = 0; i < frames; ++i) {
+            QCOMPARE(player.state(), state); QCOMPARE(player.sequence(), sequence);
+            QCOMPARE(player.frameIndex(), i); QCOMPARE(calls, 1); QCOMPARE(completed.size(), 0);
+            QVERIFY2(player.error().isEmpty(), qPrintable(player.error()));
+            QVERIFY(!player.pixmap().isNull());
+            elapsed += player.frameDuration(); player.advance();
+        }
+        QCOMPARE(elapsed, durationMs); QCOMPARE(completed.size(), 1);
+        QCOMPARE(completed.first().first().toString(), state);
+        if (state == "starting") {
+            QCOMPARE(player.state(), QString("idle")); QVERIFY(!player.stopped());
+            // The turn's opening beat keeps its own artwork.
+            QVERIFY(player.play("turn-start", true)); QCOMPARE(player.sequence(), QString("Switch/Up/Nomal"));
+        } else {
+            QVERIFY(player.stopped()); player.advance(); QCOMPARE(completed.size(), 1);
+        }
+    }
+    void everyArrivalVariantIsInterruptible() {
+        for (int draw = 0; draw < 4; ++draw) {
+            for (const auto *target : {"working", "needs_input", "tool_error"}) {
+                pet::Player player; player.setPaused(true); player.setRandom([draw](int) { return draw; });
+                pet::Stage stage(player);
+                QSignalSpy completed(&player, &pet::Player::completed);
+                stage.runtime().submit({"lifecycle", "start", "start", pet::behavior::Policy::Startup});
+                QCOMPARE(player.state(), QString("starting")); player.advance();
+                const auto policy = QString(target) == "working" ? pet::behavior::Policy::Activity : pet::behavior::Policy::Urgent;
+                stage.runtime().submit({"session", "activity", target, policy, pet::behavior::Lifetime::Persistent});
+                QCOMPARE(player.state(), QString(target)); QCOMPARE(player.frameIndex(), 0);
+                QCOMPARE(completed.size(), 0);
+            }
+        }
+    }
     void variantsAreDrawnByWeight() {
         pet::Player player; player.setPaused(true);
         QCOMPARE(player.sequence(), QString("Default/Nomal/1")); // The first idle is always the catalog's own.
@@ -1564,8 +1621,9 @@ private slots:
         QTRY_COMPARE_WITH_TIMEOUT(player.state(), QString("closing_angry"), 3000);
         QCOMPARE(player.sequence(), QString("Shutdown/PoorCondition"));
         finishSequence(player); QVERIFY(player.stopped());
-        // Ordinary quit keeps its original animation, and disabled touch never counts throws.
+        // Ordinary quit uses the normal exit pool, and disabled touch never counts throws.
         pet::PetWindow normal(nullptr, {}, false);
+        normal.player().setRandom([](int) { return 0; }); // Pin the base choice in the weighted exit pool.
         normal.setTouchEnabled(false);
         for (int i = 0; i < 10; ++i) normal.letGo({1200, 0});
         QVERIFY(!normal.quitting());

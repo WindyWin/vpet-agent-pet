@@ -71,3 +71,21 @@ to enter the same restart transaction. App-owned origin records commit with each
 payload; source revocation revisions prevent re-added URLs from restoring old
 consent. Local and direct-URL imports remain without an update source.
 See [source publishing and usage](pack-sources.md).
+
+## VPet arrival and exit variants — 2026-10-21
+
+VPet's `starting` state now has three weighted choices (2/1/1), and `closing`
+has four (2/2/1/1), configured through the existing catalog `variants` and
+playback weights. `Player::choose()` draws once on entry; the lifecycle states
+retain `once` → `idle` and `once` → `stop`. No runtime, cue vocabulary,
+preference, or schema changes are needed. `closing_angry` remains separate,
+and `turn-start` retains `Switch/Up/Nomal`. Other pets' catalogs are unchanged.
+
+Five original sequences were imported through `scripts/add_sequences.py`, adding
+85 PNGs and 10,556,682 bytes (10.07 MiB). The manifest and remaining-animation
+inventory were regenerated. Sampled original frames were inspected for arrival
+and departure continuity, transparency, and distinct gestures; the longer portal
+exit lasts 4,125 ms, within the runtime's existing 10-second shutdown bound.
+A live desktop pacing walkthrough remains manual acceptance.
+
+Validation is recorded in the [implementation plan](superpowers/plans/2026-10-21-vpet-arrival-exit-variants.md).
