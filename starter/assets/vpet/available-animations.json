@@ -6,9 +6,9 @@
   "source_commit": "6358445aa54587f9cd524264eaf17ef97bc826a8",
   "source_root": "VPet-Simulator.Windows/mod/0000_core/pet/vup",
   "bundled_catalog": "assets/vpet/animations.json",
-  "missing_sequence_count": 401,
-  "missing_frame_count": 4016,
-  "missing_size_bytes": 549548313,
+  "missing_sequence_count": 396,
+  "missing_frame_count": 3936,
+  "missing_size_bytes": 537836450,
   "sequences": [
     {
       "path": "Default/Happy/2",
@@ -1586,48 +1586,12 @@
       "timing_valid": true
     },
     {
-      "path": "Say/Self/A",
-      "category": "Say",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Say/Self/A",
-      "frame_count": 6,
-      "total_duration_ms": 1125,
-      "size_bytes": 1012092,
-      "timing_valid": true
-    },
-    {
-      "path": "Say/Self/B_1",
-      "category": "Say",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Say/Self/B_1",
-      "frame_count": 15,
-      "total_duration_ms": 1875,
-      "size_bytes": 2694816,
-      "timing_valid": true
-    },
-    {
-      "path": "Say/Self/B_2",
-      "category": "Say",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Say/Self/B_2",
-      "frame_count": 15,
-      "total_duration_ms": 1875,
-      "size_bytes": 2685312,
-      "timing_valid": true
-    },
-    {
       "path": "Say/Self/B_3",
       "category": "Say",
       "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Say/Self/B_3",
       "frame_count": 14,
       "total_duration_ms": 1875,
       "size_bytes": 2445038,
-      "timing_valid": true
-    },
-    {
-      "path": "Say/Self/C",
-      "category": "Say",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Say/Self/C",
-      "frame_count": 4,
-      "total_duration_ms": 500,
-      "size_bytes": 654765,
       "timing_valid": true
     },
     {
@@ -3473,15 +3437,6 @@
       "frame_count": 36,
       "total_duration_ms": 4500,
       "size_bytes": 4252090,
-      "timing_valid": true
-    },
-    {
-      "path": "WORK/WorkONE/B/Nomal/2",
-      "category": "WORK",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/WORK/WorkONE/B/Nomal/2",
-      "frame_count": 40,
-      "total_duration_ms": 5000,
-      "size_bytes": 4664878,
       "timing_valid": true
     },
     {

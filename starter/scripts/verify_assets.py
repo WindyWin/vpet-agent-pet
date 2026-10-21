@@ -351,6 +351,17 @@ def check_catalog(animations, errors):
             continue
         others = set(activity) - {state}
         valid = 'loops' not in entry or pool(state, entry['loops'], styled=True)
+        if 'sustained' in entry:
+            sustained = entry['sustained']
+            valid = (valid and isinstance(sustained, dict) and count(sustained.get('after_ms'))
+                     and sustained['after_ms'] <= 60000 and claim(state, sustained.get('sequence')))
+            if isinstance(sustained, dict):
+                if 'loop' in sustained:
+                    valid = claim(state, sustained['loop']) and valid
+                if 'resume' in sustained:
+                    resume = sustained['resume']
+                    valid = (valid and 'loop' in sustained and isinstance(resume, dict)
+                             and all(source in others and claim(state, path) for source, path in resume.items()))
         if 'enter' in entry:
             enter = entry['enter']
             valid = (valid and isinstance(enter, dict) and isinstance(enter.get('from'), list) and bool(enter['from'])

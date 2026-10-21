@@ -18,6 +18,17 @@ section of `animations.json` decorates states that end only when asked (phased, 
 state, never the state itself, and a state without an entry plays as before.
 
 - `loops`: weighted alternate loop passes, `style` `subtle` (default) or `playful`.
+- `sustained`: an optional `sequence` started after `after_ms` (1–60000) in the
+  same uninterrupted state. Subtle and Playful switch at the next loop boundary;
+  Classic ignores it. VPet uses 3000 ms and `Think/Extended/cycle`, combining
+  self-talk, then desk pen-spinning with their authored entry
+  and exit movements. An optional `loop` repeats after this opening sequence;
+  without it the opening sequence repeats as before. Optional `resume` maps
+  activity source states to transitions into this tail loop after a tool call.
+  Activity enables these transitions in Subtle and Playful; a plain Player or
+  Classic retains the original transitions. It remains the thinking state, so activity
+  changes and urgent cues can interrupt it. `scripts/compose_long_thinking.py`
+  rebuilds this performance from the upstream artwork without changing frames.
 - `enter`: a first loop pass drawn from `choices` when entered from a state in `from`.
 - `exit`: per target state, an end sequence that replaces the usual one.
 - `linger`: a non-urgent request for `to` keeps the pet at its desk: `in`, passes of

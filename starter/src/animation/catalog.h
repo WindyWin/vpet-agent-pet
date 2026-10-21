@@ -53,6 +53,8 @@ struct ActivityChoice { QString sequence; int weight = 1; bool playful = false; 
 // Staying at the desk while another activity is requested: `in`, passes of `loop`, then `out`.
 struct ActivityLinger { QString to; int maxMs = 0; QString in, out; QStringList loop; };
 struct ActivityArt {
+    int sustainedAfterMs = 0; QString sustained; // Start this performance after uninterrupted activity.
+    QString sustainedLoop; QMap<QString, QString> sustainedResume; // Tail loop and transitions from tools.
     QVector<ActivityChoice> loops; // Alternate loop passes; `playful` ones only in the Playful style.
     QStringList enterFrom; QVector<ActivityChoice> enter; // A first loop pass after one of these states.
     QMap<QString, QVector<ActivityChoice>> exit; // An end phase for leaving to that state.

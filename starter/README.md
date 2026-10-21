@@ -2,9 +2,9 @@
 
 A small starting repository for a desktop pet that reacts to Claude Code and Codex activity. The sprite files are bundled here, so development can proceed without a local VPet installation.
 
-The current asset pack contains **1,583 PNG files in 164 animation sequences (229.36 MiB)**. They cover idle (with two alternate loops, a few idle fidgets, and happy and droopy moods), thinking, reading, working, running commands, editing, delegating, browsing and searching, a getting-ready beat when a turn starts, waiting for input, tool errors, several ways to celebrate a finished turn, sleeping, startup, closing, the original dragging animation, reactions to being petted, thrown and pushed against a screen edge, a few easter eggs, walking, crawling and climbing, jump rope for Break Buddy, and eating and drinking with reminders. [animations.json](assets/vpet/animations.json) maps each state to its sequences, records frame durations, and lists the idle variants, fidgets, mood art, reaction cues, touch hit boxes and moves. [manifest.json](assets/vpet/manifest.json) records every file's size and SHA-256 hash.
+The current asset pack contains **1,663 PNG files in 171 animation sequences (240.52 MiB)**. They cover idle (with two alternate loops, a few idle fidgets, and happy and droopy moods), thinking, reading, working, running commands, editing, delegating, browsing and searching, a getting-ready beat when a turn starts, waiting for input, tool errors, several ways to celebrate a finished turn, sleeping, startup, closing, the original dragging animation, reactions to being petted, thrown and pushed against a screen edge, a few easter eggs, walking, crawling and climbing, jump rope for Break Buddy, and eating and drinking with reminders. [animations.json](assets/vpet/animations.json) maps each state to its sequences, records frame durations, and lists the idle variants, fidgets, mood art, reaction cues, touch hit boxes and moves. [manifest.json](assets/vpet/manifest.json) records every file's size and SHA-256 hash.
 
-[available-animations.json](assets/vpet/available-animations.json) catalogs the **401 remaining sequences and 4,016 frames** from the original character pack. Each entry gives its upstream folder, category, frame count, size, and timing status. These are references for future work; their PNG files are not included here. To add one later, run `python3 scripts/add_sequences.py IDEL/yawning/Nomal …` against a copy of the upstream VPet tree (`--source`; the full archive next to this folder is the default). It copies the frames, updates the manifest and both catalogs, and leaves you to map the sequences in `animations.json`, which `scripts/verify_assets.py` then checks. Retain the artwork notices.
+[available-animations.json](assets/vpet/available-animations.json) catalogs the **396 remaining sequences and 3,936 frames** from the original character pack. Each entry gives its upstream folder, category, frame count, size, and timing status. These are references for future work; their PNG files are not included here. To add one later, run `python3 scripts/add_sequences.py IDEL/yawning/Nomal …` against a copy of the upstream VPet tree (`--source`; the full archive next to this folder is the default). It copies the frames, updates the manifest and both catalogs, and leaves you to map the sequences in `animations.json`, which `scripts/verify_assets.py` then checks. Retain the artwork notices.
 
 This folder is ready to become its own repository:
 
@@ -167,6 +167,14 @@ seconds, pen spinning, and now and then a small happy reaction when it gets to w
 It is independent of Idle animation. Requests, errors, finished turns, pausing and
 dragging always take over at once. See
 [the design record](docs/adr/0021-active-animation.md).
+
+In Subtle and Playful, uninterrupted thinking switches at the first loop boundary
+after 3 seconds to talking to herself, then desk pen-spinning.
+The opening progression plays once; the final 5-second pen-spinning animation
+loops until the activity changes. After a tool call, an ongoing turn returns
+directly to desk thinking through a transition for that tool, without replaying
+the opening progression. Finished turns, input requests and errors still take
+over. Classic keeps the original thinking loop. This performance is specific to VPet.
 
 The pet also shows *which* work is in flight: running commands, editing files,
 delegating a subagent, browsing the web and searching the tree each have their own

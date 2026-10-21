@@ -1,4 +1,5 @@
 #include "animation/activity.h"
+#include "animation/pet_library.h"
 #include "desktop/monitor.h"
 #include "desktop/pet_window.h"
 #include "animation/catalog.h"
@@ -631,17 +632,21 @@ private slots:
         QVERIFY(monitor.apply(event("tool_start", now + 1, "t1", "reading"), now + 1));
         for (int i = 0; i < 6 && !(player.state() == "reading" && player.phase() == "loop"); ++i) finishSequence(player);
         QCOMPARE(player.state(), QString("reading")); QCOMPARE(player.phase(), QString("loop"));
-        // The tool ends; after the activity hold the aggregate is thinking, and the pet stays at its book.
+        // The tool ends; after the activity hold the ongoing turn resumes desk thinking.
         QVERIFY(monitor.apply(event("tool_end", now + 2, "t1"), now + 2));
         monitor.update(now + 5002);
-        QCOMPARE(player.state(), QString("reading")); QCOMPARE(player.phase(), QString("linger"));
+        QCOMPARE(player.state(), QString("thinking")); QCOMPARE(player.phase(), QString("loop"));
+        QCOMPARE(player.sequence(), QString("WORK/Desk/reading_to_working"));
         QCOMPARE(player.requestedState(), QString("thinking"));
         // The periodic update sees its request honoured and restarts nothing.
         player.advance(); const auto sequence = player.sequence(); const int frame = player.frameIndex();
         monitor.update(now + 6000);
-        QCOMPARE(player.phase(), QString("linger")); QCOMPARE(player.sequence(), sequence); QCOMPARE(player.frameIndex(), frame);
-        // The next tool picks the book back up: no end, no start.
+        QCOMPARE(player.phase(), QString("loop")); QCOMPARE(player.sequence(), sequence); QCOMPARE(player.frameIndex(), frame);
+        finishSequence(player); QCOMPARE(player.sequence(), QString("Think/Extended/desk_loop"));
+        // The next tool replaces thinking; the desk loop cannot hold it up.
         QVERIFY(monitor.apply(event("tool_start", now + 7000, "t2", "reading"), now + 7000));
+        QCOMPARE(player.requestedState(), QString("reading"));
+        for (int i = 0; i < 6 && !(player.state() == "reading" && player.phase() == "loop"); ++i) finishSequence(player);
         QCOMPARE(player.phase(), QString("loop")); QCOMPARE(player.sequence(), QString("WORK/Study/B_1_Nomal"));
         // A request for the user still cuts in at once.
         QVERIFY(monitor.apply(event("attention", now + 7001), now + 7001));
@@ -736,6 +741,13 @@ private slots:
         counted["playback"] = policies; QVERIFY(!loads(counted));
         // Each broken part is refused.
         QVERIFY(!loads(broken("thinking", "loops", QJsonArray{})));
+        QVERIFY(loads(broken("thinking", "sustained", QJsonObject{{"after_ms", 3000}, {"sequence", "work"}})));
+        QVERIFY(!loads(broken("thinking", "sustained", QJsonObject{{"after_ms", 0}, {"sequence", "work"}})));
+        QVERIFY(!loads(broken("thinking", "sustained", QJsonObject{{"after_ms", 60001}, {"sequence", "work"}})));
+        QVERIFY(!loads(broken("thinking", "sustained", QJsonObject{{"after_ms", 3000}, {"sequence", "missing"}})));
+        QVERIFY(!loads(broken("thinking", "sustained", QJsonObject{{"after_ms", 3000}, {"sequence", "work"}, {"loop", "missing"}})));
+        QVERIFY(!loads(broken("thinking", "sustained", QJsonObject{{"after_ms", 3000}, {"sequence", "work"},
+                          {"loop", "work"}, {"resume", QJsonObject{{"thinking", "work"}}}})));
         QVERIFY(!loads(broken("thinking", "loops", QJsonArray{choice("missing")})));
         QVERIFY(!loads(broken("thinking", "loops", QJsonArray{choice("work", 0)})));
         QVERIFY(!loads(broken("thinking", "loops", QJsonArray{choice("work", 1001)})));
@@ -987,7 +999,12 @@ private slots:
         QCOMPARE(player.state(), QString("reading")); QCOMPARE(player.phase(), QString("loop"));
     }
     void activityAlternatesOnePassAtATime() {
-        pet::Player player; player.setPaused(true); player.setRandom([](int) { return 0; });
+        pet::Player bundled;
+        auto catalog = pet::PetLibrary::shared().catalog();
+        // A pet without a sustained performance retains the weighted alternate behavior.
+        catalog.activity["thinking"].sustained.clear();
+        catalog.activity["thinking"].sustainedResume.clear();
+        pet::Player player(nullptr, catalog); player.setPaused(true); player.setRandom([](int) { return 0; });
         pet::Activity activity(player); Draws draws; qint64 now = 1000000;
         activity.setRandom(draws.random()); activity.setClock([&] { return now; });
         QCOMPARE(activity.style(), pet::ActivityStyle::Playful); QVERIFY(player.continuity());
@@ -1015,6 +1032,67 @@ private slots:
         activity.setStyle(pet::ActivityStyle::Classic); QVERIFY(!player.continuity());
         finishSequence(player); now += 3600000; finishSequence(player); QCOMPARE(player.sequence(), QString("Think/Nomal/B"));
         QCOMPARE(draws.unexpected, 0);
+    }
+    void longThinkingProgressesToDeskLoop() {
+        for (const auto style : {pet::ActivityStyle::Subtle, pet::ActivityStyle::Playful}) {
+            pet::Player player; player.setPaused(true);
+            pet::Activity activity(player); qint64 now = 1000000;
+            activity.setClock([&] { return now; }); activity.setRandom([](int) { return 0; });
+            activity.setStyle(style);
+            player.select("thinking", true); finishSequence(player);
+            now += 2999; finishSequence(player);
+            QCOMPARE(player.sequence(), QString("Think/Nomal/B"));
+            now += 1; finishSequence(player);
+            QCOMPARE(player.sequence(), QString("Think/Extended/cycle"));
+            QCOMPARE(player.requestedState(), QString("thinking"));
+            // Decode the whole composed performance, including self-talk and entering the desk.
+            for (int i = 0, count = player.frameCount(); i < count; ++i) {
+                QVERIFY2(!player.pixmap().isNull(), qPrintable(player.error()));
+                player.advance();
+            }
+            QCOMPARE(player.sequence(), QString("Think/Extended/desk_loop")); // Only the last animation repeats.
+            finishSequence(player); QCOMPARE(player.sequence(), QString("Think/Extended/desk_loop"));
+            QVERIFY(player.error().isEmpty());
+            player.select("working");
+            QVERIFY(player.sequence() != "Think/Extended/cycle"); // A tool cuts the performance short.
+            player.select("turn_finished", true);
+            player.select("thinking", true); finishSequence(player); finishSequence(player);
+            QCOMPARE(player.sequence(), QString("Think/Nomal/B")); // A fresh three-second delay.
+            now += 3000; finishSequence(player);
+            QCOMPARE(player.sequence(), QString("Think/Extended/cycle"));
+            player.select("needs_input", true); QCOMPARE(player.state(), QString("needs_input"));
+            player.select("thinking", true); finishSequence(player);
+            activity.setStyle(pet::ActivityStyle::Classic);
+            now += 60000; finishSequence(player);
+            QCOMPARE(player.sequence(), QString("Think/Nomal/B"));
+        }
+    }
+    void thinkingResumesAtDeskAfterTools() {
+        for (const auto style : {pet::ActivityStyle::Subtle, pet::ActivityStyle::Playful}) {
+            for (const char *tool : {"working", "reading", "editing", "executing", "searching", "browsing", "delegating"}) {
+                pet::Player player; player.setPaused(true);
+                pet::Activity activity(player); activity.setStyle(style);
+                activity.setClock([] { return qint64(1000000); });
+                activity.setRandom([](int) { return 0; });
+                player.select(tool, true); finishSequence(player);
+                player.select("thinking");
+                QCOMPARE(player.state(), QString("thinking"));
+                QCOMPARE(player.requestedState(), QString("thinking"));
+                QVERIFY(player.sustainedActive());
+                QVERIFY(player.sequence() != "Think/Extended/cycle");
+                finishSequence(player);
+                QCOMPARE(player.sequence(), QString("Think/Extended/desk_loop"));
+                finishSequence(player);
+                QCOMPARE(player.sequence(), QString("Think/Extended/desk_loop"));
+                // A finished turn or an approval request takes over immediately.
+                for (const char *stop : {"turn_finished", "needs_input", "tool_error", "out_of_quota"}) {
+                    player.select(stop, true); QCOMPARE(player.state(), QString(stop));
+                    QVERIFY(!player.sustainedActive());
+                    player.select("thinking", true); finishSequence(player);
+                    QCOMPARE(player.sequence(), QString("Think/Nomal/B"));
+                }
+            }
+        }
     }
     // The per-tool states keep working's playful pen spin: it used to show for every tool before they split.
     void toolStatesKeepThePenSpin() {
@@ -1091,11 +1169,14 @@ private slots:
         pet::Player playful; playful.setPaused(true); playful.setRandom([](int) { return 0; });
         pet::Activity paced(playful); paced.setRandom([](int) { return 0; }); paced.setClock([] { return qint64(0); });
         const auto desk = script(playful);
-        QVERIFY(desk.contains("reading linger WORK/Study/B_4_Nomal"));
+        QVERIFY(desk.contains("thinking loop WORK/Desk/reading_to_working"));
         QVERIFY(desk.contains("reading handover WORK/Desk/reading_to_working"));
     }
     void activityStyleChangesMidDesk() {
-        pet::Player player; player.setPaused(true); player.setRandom([](int) { return 0; });
+        pet::Player bundled;
+        auto catalog = pet::PetLibrary::shared().catalog();
+        catalog.activity["thinking"].sustainedResume.clear(); // Legacy packs still support desk linger.
+        pet::Player player(nullptr, catalog); player.setPaused(true); player.setRandom([](int) { return 0; });
         pet::Activity activity(player); activity.setRandom([](int) { return 0; }); activity.setClock([] { return qint64(0); });
         player.select("reading", true); finishSequence(player); player.select("thinking");
         QCOMPARE(player.phase(), QString("linger"));

@@ -7,9 +7,10 @@ Activity::Activity(Player &player, QObject *parent)
     connect(&player_, &Player::entered, this, &Activity::entered);
     connect(&player_, &Player::looped, this, &Activity::looped);
     player_.setContinuity(style_ != ActivityStyle::Classic);
+    player_.setSustainedEnabled(style_ != ActivityStyle::Classic);
     player_.setReactionGate([this] { return react(); });
 }
-Activity::~Activity() { player_.setReactionGate({}); }
+Activity::~Activity() { player_.setReactionGate({}); player_.setSustainedEnabled(false); }
 QPair<int, int> Activity::gapSeconds(ActivityStyle style) {
     return style == ActivityStyle::Playful ? QPair<int, int>{6, 12} : QPair<int, int>{10, 18};
 }
@@ -17,6 +18,7 @@ void Activity::setStyle(ActivityStyle style) {
     if (style == style_) return;
     style_ = style;
     player_.setContinuity(style != ActivityStyle::Classic);
+    player_.setSustainedEnabled(style != ActivityStyle::Classic);
     if (nextDue_ >= 0) nextDue_ = style == ActivityStyle::Classic ? 0 : clock_() + gapMs(); // A new pace starts from now.
 }
 void Activity::setClock(std::function<qint64()> milliseconds) {
@@ -27,12 +29,18 @@ qint64 Activity::gapMs() {
     return qint64(low + qBound(0, random_(high - low + 1), high - low)) * 1000;
 }
 void Activity::entered(const QString &state) {
+    stateSince_ = clock_();
     // One clock runs from the first activity to the last, across the transitions between them.
     if (!player_.activity(state)) nextDue_ = -1;
     else if (nextDue_ < 0) nextDue_ = style_ == ActivityStyle::Classic ? 0 : clock_() + gapMs();
 }
 void Activity::looped(const QString &state) {
     const auto *art = player_.activity(state);
+    if (style_ != ActivityStyle::Classic && art && !art->sustained.isEmpty()
+        && (player_.sustainedActive() || (stateSince_ >= 0 && clock_() - stateSince_ >= art->sustainedAfterMs))) {
+        player_.vary(player_.sustainedActive() && !art->sustainedLoop.isEmpty() ? art->sustainedLoop : art->sustained);
+        return;
+    }
     if (style_ == ActivityStyle::Classic || !art || nextDue_ < 0 || clock_() < nextDue_) return;
     QVector<const ActivityChoice *> pool;
     for (const auto &loop : art->loops)

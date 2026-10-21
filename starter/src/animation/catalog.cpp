@@ -360,6 +360,23 @@ Catalog Catalog::build(const CatalogSource &source, QString *error) {
             auto other = [&](const QString &state) { return state != it.key() && activity.contains(state); };
             ActivityArt art;
             bool ok = decorated(it.key()) && it.value().isObject();
+            if (ok && object.contains("sustained")) {
+                const auto sustained = object["sustained"].toObject();
+                art.sustainedAfterMs = sustained["after_ms"].toInt(0);
+                art.sustained = sustained["sequence"].toString();
+                ok = art.sustainedAfterMs >= 1 && art.sustainedAfterMs <= 60000
+                    && catalog.sequences.contains(art.sustained);
+                art.sustainedLoop = sustained["loop"].toString();
+                ok = ok && (!sustained.contains("loop") || catalog.sequences.contains(art.sustainedLoop));
+                if (sustained.contains("resume")) {
+                    ok = ok && sustained["resume"].isObject() && !art.sustainedLoop.isEmpty();
+                    const auto resume = sustained["resume"].toObject();
+                    for (auto source = resume.begin(); source != resume.end(); ++source) {
+                        ok = ok && other(source.key()) && catalog.sequences.contains(source.value().toString());
+                        art.sustainedResume.insert(source.key(), source.value().toString());
+                    }
+                }
+            }
             if (ok && object.contains("loops")) ok = pool(object["loops"], art.loops, true);
             if (ok && object.contains("enter")) {
                 const auto enter = object["enter"].toObject();

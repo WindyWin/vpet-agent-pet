@@ -107,6 +107,13 @@ bool Player::decorate(const QString &target) {
     const auto found = catalog_.activity.constFind(state_);
     if (!continuity_ || phase_ != 1 || found == catalog_.activity.constEnd()) return false;
     const auto &art = *found;
+    // A tool finished but the turn continues: play the authored transition to desk thinking.
+    const auto landing = catalog_.activity.constFind(target);
+    if (sustainedEnabled_ && decoration_ == Decoration::None && landing != catalog_.activity.constEnd()
+        && landing->sustainedResume.contains(state_)) {
+        pending_.clear(); enter(target, 1);
+        return true;
+    }
     if (decoration_ != Decoration::None && target == pending_) return true; // Already on its way there.
     if (decoration_ == Decoration::Handover) {
         // Changing course mid-swap: it lands first, then acts on the latest request from that desk.
@@ -197,11 +204,13 @@ QString Player::drawLinger() {
 }
 bool Player::vary(const QString &sequence) {
     const auto found = catalog_.activity.constFind(state_);
-    if (found == catalog_.activity.constEnd() || stopped_ || phase_ != 1 || decoration_ != Decoration::None || index_ != 0
-        || std::none_of(found->loops.begin(), found->loops.end(),
-                        [&](const ActivityChoice &choice) { return choice.sequence == sequence; }))
+    if (found == catalog_.activity.constEnd() || !catalog_.sequences.contains(sequence)
+        || stopped_ || phase_ != 1 || decoration_ != Decoration::None || index_ != 0
+        || (sequence != found->sustained && sequence != found->sustainedLoop && std::none_of(found->loops.begin(), found->loops.end(),
+                        [&](const ActivityChoice &choice) { return choice.sequence == sequence; })))
         return false;
     sequence_ = sequence;
+    sustainedActive_ = sequence == found->sustained || sequence == found->sustainedLoop;
     display(); // In the same event-loop turn as the pass's first frame, so nothing is painted in between.
     return true;
 }
@@ -251,10 +260,14 @@ void Player::enter(const QString &state, int phase) {
     loopCount_ = 0;
     decoration_ = Decoration::None;
     welcome_.clear();
+    sustainedActive_ = false;
     // A welcome replaces the first loop pass when the pet comes from one of the listed states.
     const auto art = catalog_.activity.constFind(state);
     if (art != catalog_.activity.constEnd() && art->enterFrom.contains(from) && reactionGate_ && reactionGate_())
         welcome_ = drawChoice(art->enter);
+    if (sustainedEnabled_ && continuity_ && art != catalog_.activity.constEnd() && art->sustainedResume.contains(from)) {
+        phase = 1; welcome_ = art->sustainedResume.value(from); sustainedActive_ = true;
+    }
     emit entered(state);
     enterSequence(phase, phase == 1 ? std::exchange(welcome_, {}) : QString());
 }

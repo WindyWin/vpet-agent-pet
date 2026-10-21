@@ -35,5 +35,6 @@ private:
     std::function<qint64()> clock_;
     qint64 nextDue_ = -1; // -1 outside an activity state.
     QString last_; // The previous alternate, not drawn twice in a row.
+    qint64 stateSince_ = -1; // Unlike the shared variation clock, resets on every state entry.
 };
 }

@@ -91,9 +91,11 @@ public:
     // Asked each time an enter or exit reaction could play; true spends that opportunity on it. Unset,
     // none plays.
     void setReactionGate(std::function<bool()> gate) { reactionGate_ = std::move(gate); }
-    // Plays one of the state's alternate loops for this pass instead of its own. Only at the first frame
+    // Plays one of the state's alternate loops or sustained performance for this pass. Only at the first frame
     // of a loop pass, as from a `looped` handler; false otherwise.
     bool vary(const QString &sequence);
+    void setSustainedEnabled(bool enabled) { sustainedEnabled_ = enabled; if (!enabled) sustainedActive_ = false; }
+    bool sustainedActive() const { return sustainedActive_; }
     // Ends a phased state's start or loop now: it plays its end, then goes on as it would have.
     void finish();
 signals:
@@ -133,6 +135,7 @@ private:
     QString handoverTo_; // Where a playing handover lands; the request may have moved on meanwhile.
     int lingerMs_ = 0;
     bool continuity_ = false;
+    bool sustainedEnabled_ = false, sustainedActive_ = false;
     QStringList chosen_;
     Random random_ = systemRandom();
     QCache<QString, QPixmap> cache_{cacheLimitKiB};
