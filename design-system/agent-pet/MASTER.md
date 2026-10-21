@@ -50,6 +50,27 @@ for the stage and dock). Measured contrast (WCAG): muted text is 5.0–5.8:1 on 
 and the scene tints; ink on bg 14.1:1; white on `--violet` 5.5:1; `--violet-dark` on bg
 7.1:1. Check any new pair, including buttons and selected states, before shipping it.
 
+### Dark mode
+
+Added 2026-10-21; it does not bring back the old dark-only page. The rule: **what depicts the
+product stays light, what is the website's own UI goes dark.** The page, nav, section
+backgrounds, controls and text go dark; mock desktops, every pet scene panel and the footer
+pet card keep the light palette above, so the pet artwork is never shown on a dark scene.
+
+| Role | Light | Dark | Variable |
+|------|-------|------|----------|
+| Page background | `#F7F5FC` | `#151220` | `--bg` |
+| Main text | `#282238` | `#ECE7F6` | `--ink` |
+| Text on `--ink` | `#FFFFFF` | `#1B1627` | `--on-ink` |
+| Secondary text | `#655C76` | `#B3A9C7` | `--muted` |
+| Primary action | `#7050D5` | `#A78BFA` | `--violet` |
+| Text on primary | `#FFFFFF` | `#1B1627` | `--on-violet` |
+| Eyebrows, links | `#5B39BB` | `#C4B0FF` | `--violet-dark` |
+
+Tokens are defined once with `light-dark()`. Use `--on-ink` and `--on-violet`, never
+`white`, on those fills. Measured dark contrast: ink on bg 15.2:1, muted on bg 8.3:1,
+`--violet-dark` on bg 9.7:1, `--on-violet` on `--violet` 6.5:1, `--on-ink` on `--ink` 14.6:1.
+
 ## Typography
 
 | Role | Family | Used for |

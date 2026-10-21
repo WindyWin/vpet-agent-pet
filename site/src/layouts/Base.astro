@@ -21,7 +21,7 @@ const canonical = new URL(localeUrl(locale), Astro.site);
     <link rel="alternate" hreflang="vi" href={new URL(localeUrl('vi'), Astro.site)} />
     <link rel="alternate" hreflang="x-default" href={new URL(localeUrl('en'), Astro.site)} />
     <link rel="icon" type="image/svg+xml" href={`${base}/favicon.svg`} />
-    <meta name="theme-color" content="#F7F5FC" />
+    <meta name="theme-color" content="#F7F5FC" data-theme-color />
     <meta property="og:type" content="website" />
     <meta property="og:title" content={t.meta.title} />
     <meta property="og:description" content={t.meta.description} />
@@ -40,6 +40,12 @@ const canonical = new URL(localeUrl(locale), Astro.site);
         try { saved = localStorage.getItem('agent-pet-motion'); } catch (e) {}
         var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
         root.dataset.motion = (saved ? saved === 'paused' : reduce) ? 'paused' : 'running';
+        var theme = null;
+        try { theme = localStorage.getItem('agent-pet-theme'); } catch (e) {}
+        var dark = theme ? theme === 'dark' : !!(window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches);
+        root.dataset.theme = dark ? 'dark' : 'light';
+        var meta = document.querySelector('[data-theme-color]');
+        if (meta) meta.setAttribute('content', dark ? '#151220' : '#F7F5FC');
       })();
     </script>
     {entry && <script is:inline define:vars={{ viUrl }}>

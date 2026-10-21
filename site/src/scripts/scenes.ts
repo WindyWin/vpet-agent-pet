@@ -1,4 +1,6 @@
+import { initFeatures } from './features';
 import { bindMotionToggle } from './motion';
+import { bindThemeToggle } from './theme';
 import { PetActor, type PetMedia, type PetOptions } from './pet';
 import { initCare, initInstall, initPlay, initStates } from './demos';
 import { initNavigation, initReveal } from './page';
@@ -25,11 +27,13 @@ const demo = (selector: string, start: (root: HTMLElement, actor: PetActor) => v
   if (root) start(root, actorIn(root));
 };
 demo('[data-state-demo]', initStates);
+demo('[data-feature-demo]', initFeatures);
 demo('[data-play-demo]', initPlay);
 demo('[data-care-demo]', initCare);
 demo('[data-install-demo]', initInstall);
 
 bindMotionToggle();
+bindThemeToggle();
 initReveal();
 initNavigation();
 window.addEventListener('pagehide', () => actors.forEach(actor => actor.destroy()));
