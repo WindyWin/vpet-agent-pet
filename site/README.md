@@ -35,7 +35,7 @@ tracks a 1.2 GiB artwork archive that the build never reads.
 
 ```text
 src/components/   Site (page + runtime entry), Scene (pet actor), Nav, Hero, States,
-                  Play, Care, Privacy, Install, Footer
+                  Features, Play, Care, Privacy, Install, Footer
 src/i18n/         locale types, en/vi dictionaries, base-aware URL helpers
 src/scripts/      motion.ts (pause / reduced motion), pet.ts (one reusable pet),
                   demos.ts (state, play, care, install demos), page.ts (reveal,
@@ -97,3 +97,16 @@ platform requirements come from the release workflow (`../.github/workflows/rele
 and `../starter/docs/install.md`. The download buttons open the latest GitHub release page
 (they do not resolve an OS-specific asset). Break demos are labelled website previews and
 use their own short durations.
+
+### Feature refresh (main, 2026-10-21)
+
+The bilingual “What’s new” section covers tool/command activity, opt-in agent
+conversations (Beta), experimental OpenCode/Antigravity status integrations, and
+pet/plugin sources. Support and privacy wording comes from
+`starter/docs/integrations.md`, `interactions.md`, `pack-sources.md`, `install.md`,
+and ADR 0054, checked against main at `5fa7f383`.
+
+Keep status-only privacy separate from opt-in conversations, which share message
+text. Do not imply every provider supports conversations on every OS or that the
+website's eight-pose demo previews all native activity animations. Update both
+locales together when these capabilities change.

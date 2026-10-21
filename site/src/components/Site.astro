@@ -3,6 +3,7 @@ import Base from '../layouts/Base.astro';
 import Nav from './Nav.astro';
 import Hero from './Hero.astro';
 import States from './States.astro';
+import Features from './Features.astro';
 import Play from './Play.astro';
 import Care from './Care.astro';
 import Privacy from './Privacy.astro';
@@ -14,7 +15,7 @@ interface Props { locale: Locale; entry?: boolean; }
 const { locale, entry = false } = Astro.props;
 const t = messages[locale];
 ---
-<Base locale={locale} entry={entry}><Nav locale={locale} t={t}/><main id="main"><Hero t={t}/><States t={t}/><Play t={t}/><Care t={t}/><Privacy t={t}/><Install t={t}/></main><Footer t={t}/><script type="application/json" id="pet-media" set:html={JSON.stringify(petMedia).replace(/</g, '\\u003c')} /></Base>
+<Base locale={locale} entry={entry}><Nav locale={locale} t={t}/><main id="main"><Hero t={t}/><States t={t}/><Features t={t}/><Play t={t}/><Care t={t}/><Privacy t={t}/><Install t={t}/></main><Footer t={t}/><script type="application/json" id="pet-media" set:html={JSON.stringify(petMedia).replace(/</g, '\\u003c')} /></Base>
 <script>
   import '../scripts/scenes';
 </script>

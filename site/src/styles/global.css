@@ -110,7 +110,7 @@ h3 { font-weight: 800; line-height: 1.35; }
 .drawn-spark { position: absolute; color: var(--violet); font-size: 42px; }
 .spark-one { left: -35px; top: -17px; animation: twinkle 4s ease-in-out infinite; }
 .spark-two { right: -35px; bottom: 65px; font-size: 32px; color: #d797b6; }
-.hero-bottom { margin-top: 72px; display: flex; gap: 20px; align-items: center; justify-content: center; color: #655c76; font-size: .8rem; font-weight: 800; }
+.hero-bottom { margin-top: 72px; display: flex; flex-wrap: wrap; gap: 20px; align-items: center; justify-content: center; color: #655c76; font-size: .8rem; font-weight: 800; }
 .connection-line { width: 100px; height: 1px; background: var(--line); }
 .little-heart { font-size: 1.6rem; color: var(--violet); }
 /* Shared scene: the actor position belongs exclusively to its controller. */
@@ -334,7 +334,7 @@ html[data-motion=paused] *, html[data-motion=paused] *::before, html[data-motion
   .care-grid, .privacy-grid { gap: 45px; }.install-panel { padding-inline: 40px; }.install-content { gap: 40px; }
 }
 @media (max-width: 900px) {
-  .nav-inner { height: auto; flex-wrap: wrap; row-gap: 0; padding-top: 12px; }.nav-links { display: flex; order: 3; width: 100%; justify-content: center; gap: 2px; padding: 0 0 4px; overflow-x: auto; scrollbar-width: none; }.nav-links a { padding: 10px 9px; white-space: nowrap; font-size: .78rem; }.nav-links a::after { bottom: 4px; left: 9px; }.nav-links a:hover::after, .nav-links a.active::after { right: 9px; }.hero { padding-top: 65px; }.hero-grid { gap: 45px; grid-template-columns: 1fr; }.hero-copy { text-align: center; }.hero-copy .lede { margin-inline: auto; }.hero-actions, .hero-facts, .platform-caption { justify-content: center; }.hero-visual { width: min(560px, 100% - 24px); margin-inline: auto; }h1 { font-size: 3.5rem; }
+  .nav-inner { height: auto; flex-wrap: wrap; row-gap: 0; padding-top: 12px; }.nav-links { display: flex; order: 3; width: 100%; justify-content: safe center; gap: 2px; padding: 0 0 4px; overflow-x: auto; scrollbar-width: none; }.nav-links a { padding: 10px 9px; white-space: nowrap; font-size: .78rem; }.nav-links a::after { bottom: 4px; left: 9px; }.nav-links a:hover::after, .nav-links a.active::after { right: 9px; }.hero { padding-top: 65px; }.hero-grid { gap: 45px; grid-template-columns: 1fr; }.hero-copy { text-align: center; }.hero-copy .lede { margin-inline: auto; }.hero-actions, .hero-facts, .platform-caption { justify-content: center; }.hero-visual { width: min(560px, 100% - 24px); margin-inline: auto; }h1 { font-size: 3.5rem; }
   .hero-copy .lede { font-size: .92rem; }.hero-badge { font-size: .75rem; right: -8px; }.hero-sticker { font-size: .75rem; }
   .hero-scene { --pet-size: 190px; height: 280px; }.terminal { padding: 18px 15px; font-size: .72rem; }.desktop-status { font-size: .72rem; }
   .hero .eyebrow { font-size: .75rem; padding-inline: 10px; }.hero-facts { gap: 8px 18px; margin-top: 20px; }
