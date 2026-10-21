@@ -6,9 +6,9 @@
   "source_commit": "6358445aa54587f9cd524264eaf17ef97bc826a8",
   "source_root": "VPet-Simulator.Windows/mod/0000_core/pet/vup",
   "bundled_catalog": "assets/vpet/animations.json",
-  "missing_sequence_count": 396,
-  "missing_frame_count": 3936,
-  "missing_size_bytes": 537836450,
+  "missing_sequence_count": 391,
+  "missing_frame_count": 3851,
+  "missing_size_bytes": 527279768,
   "sequences": [
     {
       "path": "Default/Happy/2",
@@ -1640,15 +1640,6 @@
       "timing_valid": true
     },
     {
-      "path": "Shutdown/2/Nomal",
-      "category": "Shutdown",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Shutdown/2/Nomal",
-      "frame_count": 33,
-      "total_duration_ms": 4125,
-      "size_bytes": 4531585,
-      "timing_valid": true
-    },
-    {
       "path": "Shutdown/2/PoorCondition",
       "category": "Shutdown",
       "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Shutdown/2/PoorCondition",
@@ -1658,30 +1649,12 @@
       "timing_valid": true
     },
     {
-      "path": "Shutdown/Happy_1",
-      "category": "Shutdown",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Shutdown/Happy_1",
-      "frame_count": 15,
-      "total_duration_ms": 1875,
-      "size_bytes": 2030757,
-      "timing_valid": true
-    },
-    {
       "path": "Shutdown/Ill",
       "category": "Shutdown",
       "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Shutdown/Ill",
       "frame_count": 19,
       "total_duration_ms": 2875,
       "size_bytes": 994934,
-      "timing_valid": true
-    },
-    {
-      "path": "Shutdown/Nomal_2",
-      "category": "Shutdown",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Shutdown/Nomal_2",
-      "frame_count": 12,
-      "total_duration_ms": 1500,
-      "size_bytes": 1138623,
       "timing_valid": true
     },
     {
@@ -2123,24 +2096,6 @@
       "frame_count": 7,
       "total_duration_ms": 875,
       "size_bytes": 805053,
-      "timing_valid": true
-    },
-    {
-      "path": "StartUP/Happy",
-      "category": "StartUP",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/StartUP/Happy",
-      "frame_count": 14,
-      "total_duration_ms": 1750,
-      "size_bytes": 1226608,
-      "timing_valid": true
-    },
-    {
-      "path": "StartUP/Happy_1",
-      "category": "StartUP",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/StartUP/Happy_1",
-      "frame_count": 11,
-      "total_duration_ms": 1375,
-      "size_bytes": 1629109,
       "timing_valid": true
     },
     {
