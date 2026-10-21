@@ -18,7 +18,7 @@ Required fields: `version` (integer 1), `provider` (`claude`, `codex`, `opencode
 Optional fields: `tool_id`, `parent_id`, `project_path`, `activity`, `reason`,
 `risky`, `waiting`, `name` (custom events only), and the host fields below.
 `tool_start` and `tool_end` require `tool_id`; `activity` is the class of the
-tool that started: `executing`, `editing`, `delegating`, `browsing`, `searching`,
+tool that started (for a shell tool, of its command line, judged inside the hook): `executing`, `editing`, `delegating`, `browsing`, `searching`,
 `working` or `reading` (default `working`, which is also what an unknown or MCP
 tool sends). The wire carries only the class, never the tool name.
 `reason` is allowed on `attention`, as `approval` or `input`

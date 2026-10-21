@@ -115,7 +115,7 @@ Codex hosted tools can lack tool hooks. There is no universal input-request even
 | --- | --- |
 | SessionStart | Refresh/create idle session metadata |
 | UserPromptSubmit | Thinking; starts a new observed turn |
-| PreToolUse | Track tool ID; the tool name maps to an activity class (executing, editing, delegating, browsing, searching, working, reading) |
+| PreToolUse | Track tool ID; the tool name (a shell tool's command line) maps to an activity class (executing, editing, delegating, browsing, searching, working, reading) |
 | PostToolUse | Remove that tool; the last tool's activity is held 4 s before thinking resumes |
 | PermissionRequest | Attention (reason approval); never return an approval decision |
 | Stop | Turn finished, without claiming success; Claude adds `waiting: true` when `background_tasks` is a non-empty array |
@@ -132,8 +132,12 @@ A callback carrying `agent_id` uses that child identity; a child Stop or StopFai
 cannot finish or fail its parent's turn. Concurrent tools retain their own IDs. A tool name is mapped
 case-insensitively to an activity class (`Bash` runs, `Edit` edits, `Task` delegates, `WebFetch` browses,
 `Grep` searches, `Read` reads); anything unrecognized, MCP tools included, is working. The one argument examined is a tool start's
-`tool_input.command` (a string, or a list of strings): the hook checks it in
-memory against a fixed list of destructive patterns (`rm` with recursive and force
+`tool_input.command` (a string, or a list of strings; Antigravity's `CommandLine`). For a shell tool the
+hook classifies it in memory by the programs it runs (`grep` searches, `cat` or `git diff` reads,
+`sed -i` or a redirection to a file edits, `curl` browses, the most active command winning, anything
+else executing; [ADR 0054](adr/0054-command-aware-activity.md)) and sends only that class. OpenCode's
+plugin sends only the tool name, so its shell calls stay executing. The hook also checks the command
+against a fixed list of destructive patterns (`rm` with recursive and force
 flags, a forced `git push`, `git reset --hard`, `git clean -f`, `mkfs`, `dd` onto
 `/dev/`, SQL `DROP`/`TRUNCATE`) and sends only `risky: true` for the pet's startled
 reaction. Tool failure text, prompt text, tool arguments/results, assistant

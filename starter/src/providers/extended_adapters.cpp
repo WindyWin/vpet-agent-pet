@@ -72,7 +72,9 @@ QJsonObject normalizeAntigravity(const QJsonObject &in, qint64 now) {
         if (kind == "tool_start") {
             const auto call = in["toolCall"].toObject();
             out["activity"] = toolActivity(call["name"].toString());
-            if (destructiveCommand(call["args"].toObject()["CommandLine"].toString())) out["risky"] = true;
+            const auto line = call["args"].toObject()["CommandLine"].toString();
+            if (destructiveCommand(line)) out["risky"] = true;
+            if (out["activity"].toString() == "executing" && !line.trimmed().isEmpty()) out["activity"] = commandActivity(line);
         }
     }
     if (kind == "turn_finished" && in["fullyIdle"].isBool() && !in["fullyIdle"].toBool()) out["waiting"] = true;

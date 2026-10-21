@@ -75,3 +75,5 @@ of the current state is absent for its one pass. The `linger` and `handover`
 parts of `working` (the ponder loop and the prop swaps under `WORK/Desk/`) are
 WorkONE transitions and were not copied; going from a tool state to thinking
 still plays the plain end.
+
+Shell tools are classified by their command line since [0054](0054-command-aware-activity.md).

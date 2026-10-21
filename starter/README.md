@@ -171,7 +171,8 @@ dragging always take over at once. See
 The pet also shows *which* work is in flight: running commands, editing files,
 delegating a subagent, browsing the web and searching the tree each have their own
 state, drawn from the tool the agent started (unknown and MCP tools stay at the
-desk). A turn running several tools shows the most active one. See
+desk). A shell command counts by what it runs, so `grep` searches and `cat` reads; the
+command itself never leaves the hook. A turn running several tools shows the most active one. See
 [the design record](docs/adr/0052-tool-aware-animations.md).
 
 Each turn opens with a short getting-ready beat before the work settles into its
