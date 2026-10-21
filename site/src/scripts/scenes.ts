@@ -1,5 +1,6 @@
 import { initFeatures } from './features';
 import { bindMotionToggle } from './motion';
+import { bindThemeToggle } from './theme';
 import { PetActor, type PetMedia, type PetOptions } from './pet';
 import { initCare, initInstall, initPlay, initStates } from './demos';
 import { initNavigation, initReveal } from './page';
@@ -32,6 +33,7 @@ demo('[data-care-demo]', initCare);
 demo('[data-install-demo]', initInstall);
 
 bindMotionToggle();
+bindThemeToggle();
 initReveal();
 initNavigation();
 window.addEventListener('pagehide', () => actors.forEach(actor => actor.destroy()));

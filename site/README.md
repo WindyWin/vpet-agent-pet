@@ -37,7 +37,7 @@ tracks a 1.2 GiB artwork archive that the build never reads.
 src/components/   Site (page + runtime entry), Scene (pet actor), Nav, Hero, States,
                   Features, Play, Care, Privacy, Install, Footer
 src/i18n/         locale types, en/vi dictionaries, base-aware URL helpers
-src/scripts/      motion.ts (pause / reduced motion), pet.ts (one reusable pet),
+src/scripts/      motion.ts (pause / reduced motion), theme.ts (light / dark), pet.ts (one reusable pet),
                   demos.ts (state, play, care, install demos), page.ts (reveal,
                   scroll-spy, language switch), scenes.ts (entry point)
 src/pages/        index.astro (English entry), [lang]/index.astro (/en/, /vi/)
@@ -84,6 +84,18 @@ opaque pale-blue backdrop baked into every frame. It flood-fills from each frame
 `dispose: background`, and crops each animation to the union of its frames. `break-buddy`
 is rebuilt from the source frames because `docs/media/break-buddy.gif` uses
 `dispose: none` and leaves a scribble of rope positions in a compliant viewer.
+
+## Dark mode
+
+Colour tokens in `:root` use `light-dark()` with `color-scheme: light dark`, so the page
+follows the system with no JavaScript. The nav button stores an override in
+`localStorage` (`agent-pet-theme`); the inline script in `Base.astro` applies it before
+first paint, and `theme.ts` keeps the button and `theme-color` in sync. Dark mode recolours
+the site's own chrome only. Anything that depicts the product or hosts a pet scene (mock
+desktops, scene panels, the footer pet card) is listed near the top of `global.css` and set
+to `color-scheme: light; color: var(--ink)`, so its inner colours stay as drawn. A new
+scene panel needs adding to that list. Needs `light-dark()`: Chrome 123, Safari 17.5,
+Firefox 120.
 
 ## Design
 
