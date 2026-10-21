@@ -15,6 +15,7 @@ const { locale, t } = Astro.props;
         {(['en', 'vi'] as const).map(lang => <a href={localeUrl(lang)} lang={lang} hreflang={lang} aria-current={locale === lang ? 'page' : undefined} data-locale-link>{lang.toUpperCase()}</a>)}
       </div>
       <button class="motion-toggle" type="button" data-motion-toggle data-pause={t.nav.pause} data-resume={t.nav.resume} aria-label={t.nav.motion} aria-pressed="false"><span data-motion-icon aria-hidden="true">Ⅱ</span><span class="sr-only" data-motion-label>{t.nav.pause}</span></button>
+      <button class="theme-toggle" type="button" data-theme-toggle data-to-light={t.nav.toLight} data-to-dark={t.nav.toDark} aria-label={t.nav.theme} aria-pressed="false"><span data-theme-icon aria-hidden="true">☾</span><span class="sr-only" data-theme-label>{t.nav.toDark}</span></button>
       <a class="button button-small nav-download" href="#install">{t.nav.install}<Icon name="arrow" size={16} /></a>
     </div>
   </div>
