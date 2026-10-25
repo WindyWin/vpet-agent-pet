@@ -1415,10 +1415,10 @@ private slots:
             }
         }
     }
-    // The per-tool states keep working's playful pen spin: it used to show for every tool before they split.
+    // Seated tool states keep working's playful pen spin.
     void toolStatesKeepThePenSpin() {
         const QString penSpin = "WORK/WorkONE/B/Nomal/1";
-        for (const char *name : {"editing", "executing", "searching", "browsing", "delegating"}) {
+        for (const char *name : {"editing", "executing", "searching", "delegating"}) {
             const QString state = name;
             pet::Player player; player.setPaused(true); player.setRandom([](int) { return 0; });
             pet::Activity activity(player); Draws draws; qint64 now = 1000000;
@@ -1435,6 +1435,30 @@ private slots:
             draws.values = {0, 0, 0}; activity.setStyle(pet::ActivityStyle::Playful);
             now += 20000; finishSequence(player); QCOMPARE(player.sequence(), penSpin);
             finishSequence(player); QCOMPARE(player.sequence(), loop);
+        }
+    }
+    void browsingStaysAtItsEasel() {
+        const QString pen = "WORK/WorkONE/B/Nomal/1";
+        for (const auto style : {pet::ActivityStyle::Subtle, pet::ActivityStyle::Playful}) {
+            pet::Player player; player.setPaused(true); player.setRandom([](int) { return 0; });
+            pet::Activity activity(player); qint64 now = 1000000;
+            activity.setClock([&] { return now; }); activity.setRandom([](int) { return 0; });
+            activity.setStyle(style);
+            player.select("browsing", true); finishSequence(player);
+            QCOMPARE(player.sequence(), QString("WORK/StudyPaint/Nomal/B"));
+            QVERIFY(!player.vary(pen));
+            // An overdue playful opportunity must keep the easel, across repeated passes.
+            for (int pass = 0; pass < 6; ++pass) {
+                now += 60000; finishSequence(player);
+                QCOMPARE(player.state(), QString("browsing")); QCOMPARE(player.phase(), QString("loop"));
+                QCOMPARE(player.sequence(), QString("WORK/StudyPaint/Nomal/B"));
+            }
+            player.select("working");
+            QCOMPARE(player.phase(), QString("end"));
+            QCOMPARE(player.sequence(), QString("WORK/StudyPaint/Nomal/C"));
+            finishSequence(player); QCOMPARE(player.state(), QString("working"));
+            QCOMPARE(player.phase(), QString("start"));
+            QVERIFY(player.error().isEmpty());
         }
     }
     void activityReactionsShareTheClock() {

@@ -17,6 +17,13 @@ DESK = 'Think/Extended/desk_loop'
 
 
 def compose(catalog):
+    # The easel is standing artwork. A seated pen-spin pass has no matching join
+    # in either direction, so it must not be offered as a browsing alternate.
+    browsing = catalog['activity']['browsing']
+    if 'loops' in browsing:
+        browsing['loops'] = [choice for choice in browsing['loops'] if choice['sequence'] != PEN]
+        if not browsing['loops']:
+            browsing.pop('loops')
     bundled = {s['path']: s for s in catalog['sequences']}
     generated = {}
 

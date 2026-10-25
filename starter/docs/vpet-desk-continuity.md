@@ -57,8 +57,9 @@ Of 42 directed tool pairs, 30 have seated coverage and 12 require the full stand
 Of 14 tool/thinking directions, 12 have seated coverage and 2 require the full standing arrival/departure.
 The standing easel cannot convincingly be made seated by concatenating frames;
 its full arrival/departure is deliberate. Its full resume to seated thinking
-remains available, and subsequent requests wait for that clip to land. Its existing Playful pen-spin alternate still
-plays, but does not opt the entire browsing activity into seated transitions.
+remains available, and subsequent requests wait for that clip to land. Browsing
+has no seated pen-spin alternate: its standing easel has no matching join to or
+from that pose. It keeps its ordinary easel loop in both activity styles.
 
 ## Reproduction and visual review
 

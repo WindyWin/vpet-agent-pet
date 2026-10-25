@@ -13718,15 +13718,7 @@
         "delegating": "WORK/Desk/searching_to_delegating"
       }
     },
-    "browsing": {
-      "loops": [
-        {
-          "sequence": "WORK/WorkONE/B/Nomal/1",
-          "weight": 1,
-          "style": "playful"
-        }
-      ]
-    },
+    "browsing": {},
     "delegating": {
       "loops": [
         {

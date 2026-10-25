@@ -99,3 +99,13 @@ Validation: `verify_assets.py`; the directed-pair, pose, queued-request, standin
 fallback and malformed-metadata cases in `prototype_tests.cpp`. A standalone
 moving preview can be generated with `preview_desk_continuity.py`; automated
 sequence checks do not establish live visual smoothness.
+
+
+### Keep browsing at the easel — 2026-10-25
+
+The shared Playful pen-spin alternate is removed from browsing. It switched
+straight from the standing easel to a seated desk and back, with no authored
+transition. Browsing now keeps its easel loop, while seated tool states retain
+the pen spin. The desk composer also removes this incompatible alternate when
+regenerating the catalog. `browsingStaysAtItsEasel` exercises overdue alternate
+opportunities in both styles and the full exit to another activity.
