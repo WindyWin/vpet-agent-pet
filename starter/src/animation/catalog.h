@@ -24,7 +24,7 @@ struct Reaction { QString state; int weight = 1; };
 QString drawReaction(const QVector<Reaction> &pool, const Random &random);
 // How the pet answers being handled, from the catalog's "touch" section. Rectangles and edge lines are
 // in the artwork's own square space of `scale` units, so they follow the pet's size.
-struct TouchRegion { QString state; QRect rect; };
+struct TouchRegion { QString state; QRect rect; bool tap = true; };
 struct Touch {
     int scale = 0; // 0: the catalog has no touch section.
     QVector<TouchRegion> regions; // Held presses; the first region containing the point wins.
@@ -52,6 +52,12 @@ struct Move {
 struct ActivityChoice { QString sequence; int weight = 1; bool playful = false; };
 // Staying at the desk while another activity is requested: `in`, passes of `loop`, then `out`.
 struct ActivityLinger { QString to; int maxMs = 0; QString in, out; QStringList loop; };
+struct ActivityContinuity {
+    QStringList sources; // Sequences whose pose can switch props without moving the desk.
+    QMap<QString, QString> landings; // Finish these sequences before switching; then use this loop.
+    QMap<QString, QMap<QString, QString>> overrides; // Source pose -> destination state -> swap.
+    QString exit; // Exit from a seated pose when the normal state is standing.
+};
 struct ActivityArt {
     int sustainedAfterMs = 0; QString sustained; // Start this performance after uninterrupted activity.
     QString sustainedLoop; QMap<QString, QString> sustainedResume; // Tail loop and transitions from tools.
@@ -60,6 +66,7 @@ struct ActivityArt {
     QMap<QString, QVector<ActivityChoice>> exit; // An end phase for leaving to that state.
     ActivityLinger linger; // None while `linger.to` is empty.
     QMap<QString, QString> handover; // To that state without leaving the desk.
+    ActivityContinuity continuity;
 };
 
 // What the app asks a pet to show, from src/animation/cues.json (embedded at build time), sorted by name. A state
@@ -91,6 +98,7 @@ struct Catalog {
     QMap<QString, Animation> animations;
     QVector<Fidget> fidgets;
     QMap<QString, QMap<QString, QVector<Choice>>> moods; // mood -> state -> choices
+    QMap<QString, QVector<Choice>> bedtime; // Optional nighttime art, independent of mood.
     QMap<QString, QString> cueStates; // The catalog's own state for a state cue, where it maps one.
     QMap<QString, QVector<Reaction>> pools; // Reaction cue -> its pool, where the catalog maps one.
     QSet<QString> fidgetStates, touchStates;

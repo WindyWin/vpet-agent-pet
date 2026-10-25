@@ -6,8 +6,11 @@
 #include <QVector>
 
 namespace pet::touch {
-// A press held this long without moving the pet pets it; a shorter one is a click.
-constexpr int holdMs = 500;
+// A press held this long sustains its touch reaction; shorter taps play one reaction pass.
+constexpr int holdMs = 300;
+// Minimum pointer travel in logical pixels before a press becomes a drag.
+constexpr int dragDistance = 8;
+constexpr int dragHoldMs = 50;
 // Let go while moving at least this fast (pixels per second) and the pet is thrown and falls.
 constexpr double throwSpeed = 900;
 // A short burst of throws, or one uninterrupted long pet, makes the pet leave.

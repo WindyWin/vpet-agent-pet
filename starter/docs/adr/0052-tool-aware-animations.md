@@ -77,3 +77,25 @@ WorkONE transitions and were not copied; going from a tool state to thinking
 still plays the plain end.
 
 Shell tools are classified by their command line since [0054](0054-command-aware-activity.md).
+
+
+### One desk across seated tool changes — 2026-10-25
+
+Working, reading, editing, executing, searching and delegating now exchange props
+using the stationary parts of their existing entrances and exits. All 30 directed
+tool pairs and 12 directions between those tools and seated thinking share the
+desk. Browsing keeps its standing easel arrival/departure and full thinking resume;
+there is no seated easel artwork. See [the source audit](../vpet-desk-continuity.md).
+
+The optional `activity.continuity` metadata records valid source poses, the loop
+where an entrance or performance lands, an exit for seated thinking, and swap
+overrides for a pen spin that already put the old prop away. The player finishes
+an entrance or standing performance before a seated swap, keeps the latest request
+during a swap, and leaves urgent interruptions immediate. Classic retains full
+entrances and exits; catalogs without this metadata keep their existing behavior.
+The composer reuses licensed frame paths, with no extra PNGs or pack changes.
+
+Validation: `verify_assets.py`; the directed-pair, pose, queued-request, standing
+fallback and malformed-metadata cases in `prototype_tests.cpp`. A standalone
+moving preview can be generated with `preview_desk_continuity.py`; automated
+sequence checks do not establish live visual smoothness.

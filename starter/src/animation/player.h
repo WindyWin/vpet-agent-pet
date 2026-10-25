@@ -66,6 +66,9 @@ public:
     // what it drew until it is entered again; a loop picks up the new mood on its next pass.
     void setMood(const QString &mood) { mood_ = mood; }
     QString mood() const { return mood_; }
+    void setBedtime(bool enabled);
+    bool bedtime() const { return bedtime_; }
+    bool hasBedtime(const QString &state) const { return catalog_.bedtime.contains(state); }
     bool hasMood(const QString &mood, const QString &state) const { return catalog_.moods.value(mood).contains(state); }
     // The weighted states a reaction cue ("celebrate", "snack", "danger", ...) draws from; empty when the pet maps none.
     QVector<Reaction> pool(const QString &cue) const { return catalog_.pools.value(cue); }
@@ -78,7 +81,7 @@ public:
     const Touch &touch() const { return catalog_.touch; }
     bool isTouch(const QString &state) const { return catalog_.touchStates.contains(state); }
     // The state for a press at `point` on a square widget `side` pixels wide; empty off every region.
-    QString touchAt(QPointF point, int side) const;
+    QString touchAt(QPointF point, int side, bool tapOnly = false) const;
     // The move a state plays, or null. Moves are in the artwork's square space of moveScale() units.
     const Move *move(const QString &state) const;
     int moveScale() const { return catalog_.moveScale; }
@@ -114,7 +117,9 @@ private:
     // Plays `catalog`, or shows `error` (the "Artwork unavailable" placeholder) when it is empty.
     void open(const Catalog &catalog, const QString &error);
     enum class Decoration { None, LingerIn, Linger, LingerOut, Handover };
-    void enter(const QString &state, int phase = 0);
+    void enter(const QString &state, int phase = 0, const QString &sequence = {});
+    bool seated() const;
+    QString handover(const QString &target, const QString &fallback) const;
     // `sequence` replaces the phase's own for this pass, as an alternate or a reaction does.
     void enterSequence(int phase, const QString &sequence = {});
     bool decorate(const QString &target);
@@ -134,7 +139,8 @@ private:
     QString welcome_, lingerLast_; // `welcome_`: the enter reaction waiting for the first loop pass.
     QString handoverTo_; // Where a playing handover lands; the request may have moved on meanwhile.
     int lingerMs_ = 0;
-    bool continuity_ = false;
+    bool continuity_ = false, seated_ = false;
+    bool bedtime_ = false, bedtimeArt_ = false; // Requested schedule and the art chosen on entry.
     bool sustainedEnabled_ = false, sustainedActive_ = false;
     QStringList chosen_;
     Random random_ = systemRandom();

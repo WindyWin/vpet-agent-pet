@@ -11,9 +11,19 @@ already moves it.
 
 ## Decision
 
-Phase 3 of the animation epic. A single click already opens the running-sessions
-list, so petting is a press held still for 500 ms (`touch::holdMs`), the same length
-that already separated a click from a long press. The optional `touch` catalog section
+Tapping a catalog touch region plays its head pat or body poke. Cheek pinching
+requires a 300 ms hold; a short tap on the cheek opens sessions. A region's
+optional `tap` boolean defaults to true; VPet's cheek sets it to false. The
+reaction holds through its start and one loop pass, then releases into its end and
+resumes the latest requested session animation. A click outside the touch regions
+opens the running-sessions list. With Touch disabled, every click opens sessions.
+Holding a touch region for 300 ms (`touch::holdMs`) sustains the reaction until
+release. A new press, disabling Touch, hiding or quitting cancels a tap reaction.
+Pointer travel below
+8 logical pixels is tolerated for both clicking and petting. A press starts the
+compositor move or application fallback only after holding for more than 50 ms
+and reaching that distance; this commits the gesture to dragging,
+even if the pointer returns to its starting position. The optional `touch` catalog section
 holds the hit boxes and edge lines from the upstream `vup.lps`, in its 500-unit
 artwork space (`scale`), so they follow the pet's size:
 
@@ -68,6 +78,34 @@ together; dragging and clicking are unchanged. The art is the `Nomal` set only:
 - One setting turns holds, throws and hiding off together.
 
 ## Validation
+
+### Tap regions — 2026-10-22
+
+The VPet head and body rectangles are inset by about 25% on each edge (about
+50% smaller in width and height than the original), leaving their outer margins for session clicks.
+The cheek rectangle is unchanged.
+
+Short taps now route through the same catalog hit boxes as held touches, rather
+than opening sessions everywhere. `tapTouchRegions` covers head/body taps,
+start-loop-end playback, resuming a session that changes during the tap, and
+cancelling a tap before dragging or disabling Touch. Session-click coverage uses
+a point below the touch regions, including the session-list focus integration.
+`holdToPinch` covers cheek taps opening sessions and a 300 ms held press pinching
+until released. Catalog validation rejects a non-boolean `tap` flag.
+Built `agent-pet` and `prototype-tests` with Qt 6.11.2; these tests and
+`holdToPet`, `touchRegionsAndHolds`, `windowTouchReactions` and
+`oneShotsAndDragResume` passed offscreen (8 results including setup/cleanup).
+
+### Gesture thresholds — 2026-10-22
+
+Reduced the hold from 500 to 300 ms and deferred native/fallback movement until
+the pointer crosses the drag distance. Built `agent-pet` and `prototype-tests`
+with Qt 6.11.2. The offscreen run of `holdToPet`, `touchRegionsAndHolds`,
+`windowTouchReactions`, `oneShotsAndDragResume` and both `angryQuitAfterLongHold`
+rows passed (8 results including setup/cleanup). Coverage includes click jitter,
+petting despite jitter within 450 ms, a drag returning to its origin without
+opening sessions, and the distinct petting/dragging patience deadlines. Native
+compositor movement and the feel of the thresholds still need manual evaluation.
 
 ### Touch reactions evidence — 2026-10-05
 

@@ -75,6 +75,7 @@ Preferences PreferencesStore::load() {
         || (object.contains("touch") && !object["touch"].isBool())
         || (object.contains("wander") && !object["wander"].isBool())
         || (object.contains("easter_eggs") && !object["easter_eggs"].isBool())
+        || (object.contains("bedtime_animations") && !object["bedtime_animations"].isBool())
         || (object.contains("birthday") && !Preferences::validBirthday(object["birthday"].toString()))
         || (object.contains("eye_minutes") && !integer(object["eye_minutes"], 0, 1440))
         || (object.contains("water_minutes") && !integer(object["water_minutes"], 0, 1440))
@@ -104,6 +105,7 @@ Preferences PreferencesStore::load() {
     result.touch = object["touch"].toBool(true);
     result.wander = object["wander"].toBool(true);
     result.easterEggs = object["easter_eggs"].toBool(true);
+    result.bedtimeAnimations = object["bedtime_animations"].toBool(true);
     result.birthday = object["birthday"].toString();
     result.eyeMinutes = object["eye_minutes"].toInt(result.eyeMinutes);
     result.waterMinutes = object["water_minutes"].toInt(result.waterMinutes);
@@ -137,6 +139,7 @@ bool PreferencesStore::save(const Preferences &preferences) {
                        {"muted", preferences.muted}, {"sound", preferences.sound}, {"bubbles", preferences.bubbles}, {"ambient", preferences.ambient}, {"activity", preferences.activity},
                        {"mood", preferences.mood}, {"turns", preferences.turns}, {"touch", preferences.touch},
                        {"wander", preferences.wander}, {"easter_eggs", preferences.easterEggs}, {"recap", preferences.recap},
+                       {"bedtime_animations", preferences.bedtimeAnimations},
                        {"eye_minutes", preferences.eyeMinutes}, {"water_minutes", preferences.waterMinutes},
                        {"movement_minutes", preferences.movementMinutes},
                        {"autostart", preferences.autostart}, {"agent_conversations", preferences.agentConversations},

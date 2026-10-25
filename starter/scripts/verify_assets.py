@@ -146,7 +146,7 @@ def check_files(folder, assets, pet, animations, errors):
 
 
 def check_catalog(animations, errors):
-    """Playback rules: timing, states, variants, moods, cues, fidgets, touch, moves and activity."""
+    """Playback rules: timing, states, variants, moods, bedtime, cues, fidgets, touch, moves and activity."""
     if animations.get('schema_version') != CATALOG_SCHEMA:
         errors.append(f'Catalog schema_version must be {CATALOG_SCHEMA}; run scripts/migrate_catalog.py')
     for sequence in animations['sequences']:
@@ -203,6 +203,26 @@ def check_catalog(animations, errors):
                 if not count(choice.get('weight')):
                     errors.append(f'Invalid mood weight: {mood}/{state}')
                 used.update(paths)
+    bedtime = animations.get('bedtime', {})
+    if not isinstance(bedtime, dict):
+        errors.append('Invalid bedtime section')
+        bedtime = {}
+    for state, choices in bedtime.items():
+        if state not in animations['states'] or not isinstance(choices, list) or not choices:
+            errors.append(f'Bedtime art for an unknown or empty state: {state}')
+            continue
+        for choice in choices:
+            if not isinstance(choice, dict):
+                errors.append(f'Invalid bedtime choice: {state}')
+                continue
+            paths = choice.get('sequences', [])
+            if (not isinstance(paths, list) or len(paths) != len(animations['states'][state])
+                    or any(not isinstance(path, str) or path not in bundled_sequences for path in paths)):
+                errors.append(f'Invalid bedtime sequences: {state}')
+                continue
+            if not count(choice.get('weight')) or choice['weight'] > 1000:
+                errors.append(f'Invalid bedtime weight: {state}')
+            used.update(paths)
     owners = {}
     for state, paths in animations['states'].items():
         for path in paths:
@@ -216,6 +236,13 @@ def check_catalog(animations, errors):
             for choice in choices:
                 for path in choice.get('sequences', []):
                     owners.setdefault(path, set()).add(state)
+    for state, choices in bedtime.items():
+        if isinstance(choices, list):
+            for choice in choices:
+                if isinstance(choice, dict) and isinstance(choice.get('sequences'), list):
+                    for path in choice['sequences']:
+                        if isinstance(path, str):
+                            owners.setdefault(path, set()).add(state)
 
     def ends_itself(state):
         policy = animations.get('playback', {}).get(state, {})
@@ -272,6 +299,8 @@ def check_catalog(animations, errors):
             scale = 0
         for region in touch.get('regions', []):
             rect = region.get('rect')
+            if 'tap' in region and not isinstance(region['tap'], bool):
+                errors.append(f'Invalid touch tap flag: {region.get("state")}')
             if not held(region.get('state')):
                 errors.append(f'Touch region must hold a phased state until released: {region.get("state")}')
             if (not isinstance(rect, list) or len(rect) != 4 or not all(count(value, 0) for value in rect)
@@ -381,11 +410,29 @@ def check_catalog(animations, errors):
             handover = entry['handover']
             valid = (valid and isinstance(handover, dict) and bool(handover)
                      and all(target in others and claim(state, path) for target, path in handover.items()))
+        if 'continuity' in entry:
+            visual = entry['continuity']
+            if not isinstance(visual, dict):
+                valid = False
+            else:
+                sources = visual.get('sources', [])
+                valid = (valid and isinstance(sources, list) and bool(sources)
+                         and all(claim(state, path) for path in sources))
+                landings = visual.get('landings', {})
+                valid = (valid and isinstance(landings, dict)
+                         and all(claim(state, path) and target in sources for path, target in landings.items()))
+                if 'exit' in visual:
+                    valid = claim(state, visual['exit']) and valid
+                overrides = visual.get('overrides', {})
+                valid = (valid and isinstance(overrides, dict)
+                         and all(source in sources and isinstance(targets, dict)
+                                 and all(target in others and claim(state, path) for target, path in targets.items())
+                                 for source, targets in overrides.items()))
         if not valid:
             errors.append(f'Invalid activity: {state}')
 
     if used != bundled_sequences:
-        errors.append('State, variant, mood and activity maps do not cover the bundled sequences')
+        errors.append('State, variant, mood, bedtime and activity maps do not cover the bundled sequences')
     for sequence in animations['sequences']:
         if sequence.get('state') not in owners.get(sequence['path'], set()):
             errors.append(f'Sequence names no state that uses it: {sequence["path"]}')

@@ -207,6 +207,29 @@ Catalog Catalog::build(const CatalogSource &source, QString *error) {
             catalog.moods[mood.key()].insert(it.key(), choices);
         }
     }
+    // Nighttime art keeps each state's playback shape, and takes precedence over mood art.
+    if (document.contains("bedtime")) {
+        if (!document["bedtime"].isObject()) return invalid("Invalid bedtime section.");
+        const auto states = document["bedtime"].toObject();
+        for (auto it = states.begin(); it != states.end(); ++it) {
+            if (!catalog.animations.contains(it.key()) || !it.value().isArray() || it.value().toArray().isEmpty())
+                return invalid("Bedtime art for an unknown or empty state: " + it.key());
+            const int phases = catalog.animations[it.key()].choices.first().sequences.size();
+            QVector<Choice> choices;
+            for (const auto &value : it.value().toArray()) {
+                Choice choice;
+                choice.weight = value.toObject()["weight"].toInt(0);
+                for (const auto &id : value.toObject()["sequences"].toArray()) {
+                    if (!catalog.sequences.contains(id.toString())) return invalid("Unknown bedtime sequence for " + it.key());
+                    choice.sequences.append(id.toString());
+                }
+                if (choice.sequences.size() != phases || choice.weight < 1 || choice.weight > maxWeight)
+                    return invalid("Invalid bedtime choice for " + it.key());
+                choices.append(choice);
+            }
+            catalog.bedtime.insert(it.key(), choices);
+        }
+    }
     // A fidget or a reaction must end by itself and hand back to idle, so nothing has to wait for it.
     auto endsItself = [&catalog](const QString &state) {
         const auto found = catalog.animations.constFind(state);
@@ -269,6 +292,8 @@ Catalog Catalog::build(const CatalogSource &source, QString *error) {
             const auto object = value.toObject();
             const auto rect = object["rect"].toArray();
             TouchRegion region;
+            if (object.contains("tap") && !object["tap"].isBool()) return invalid("Invalid touch tap flag.");
+            region.tap = object["tap"].toBool(true);
             if (!heldState(object["state"], region.state) || rect.size() != 4) return invalid("Invalid touch region.");
             region.rect = QRect(rect[0].toInt(-1), rect[1].toInt(-1), rect[2].toInt(0), rect[3].toInt(0));
             if (region.rect.left() < 0 || region.rect.top() < 0 || region.rect.width() < 1 || region.rect.height() < 1
@@ -410,6 +435,40 @@ Catalog Catalog::build(const CatalogSource &source, QString *error) {
                 for (auto target = handover.begin(); ok && target != handover.end(); ++target) {
                     ok = other(target.key()) && catalog.sequences.contains(target.value().toString());
                     art.handover.insert(target.key(), target.value().toString());
+                }
+            }
+            if (ok && object.contains("continuity")) {
+                const auto visual = object["continuity"].toObject();
+                ok = object["continuity"].isObject() && visual["sources"].isArray()
+                    && !visual["sources"].toArray().isEmpty();
+                for (const auto &source : visual["sources"].toArray()) {
+                    ok = ok && catalog.sequences.contains(source.toString());
+                    art.continuity.sources.append(source.toString());
+                }
+                if (visual.contains("landings")) {
+                    ok = ok && visual["landings"].isObject();
+                    const auto landings = visual["landings"].toObject();
+                    for (auto landing = landings.begin(); landing != landings.end(); ++landing) {
+                        ok = ok && catalog.sequences.contains(landing.key())
+                            && art.continuity.sources.contains(landing.value().toString());
+                        art.continuity.landings.insert(landing.key(), landing.value().toString());
+                    }
+                }
+                if (visual.contains("exit")) {
+                    art.continuity.exit = visual["exit"].toString();
+                    ok = ok && catalog.sequences.contains(art.continuity.exit);
+                }
+                if (visual.contains("overrides")) {
+                    ok = ok && visual["overrides"].isObject();
+                    const auto overrides = visual["overrides"].toObject();
+                    for (auto source = overrides.begin(); source != overrides.end(); ++source) {
+                        ok = ok && art.continuity.sources.contains(source.key()) && source.value().isObject();
+                        const auto targets = source.value().toObject();
+                        for (auto target = targets.begin(); target != targets.end(); ++target) {
+                            ok = ok && other(target.key()) && catalog.sequences.contains(target.value().toString());
+                            art.continuity.overrides[source.key()].insert(target.key(), target.value().toString());
+                        }
+                    }
                 }
             }
             if (!ok) return invalid("Invalid activity for " + it.key());

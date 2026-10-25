@@ -67,7 +67,8 @@ def main():
     available['missing_sequence_count'] = len(available['sequences'])
     available['missing_frame_count'] = sum(s['frame_count'] for s in available['sequences'])
     available['missing_size_bytes'] = sum(s['size_bytes'] for s in available['sequences'])
-    save(folder, 'animations.json', catalog)
+    from compose_desk_continuity import compose
+    save(folder, 'animations.json', compose(catalog))
     save(folder, 'manifest.json', manifest)
     save(folder, 'available-animations.json', available)
 

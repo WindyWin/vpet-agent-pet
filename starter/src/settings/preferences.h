@@ -12,6 +12,11 @@ namespace pet {
 struct ReminderSchedule {
     QTime lunch = QTime(12, 0);
     QTime monday = QTime(6, 0), leaveWork = QTime(16, 45), sleep = QTime(22, 0);
+    bool bedtimeAt(QTime local) const {
+        const QTime wake(6, 0);
+        if (!sleep.isValid() || !local.isValid() || sleep == wake) return false;
+        return sleep < wake ? local >= sleep && local < wake : local >= sleep || local < wake;
+    }
 };
 struct Preferences {
     static constexpr int defaultSize = 160;
@@ -39,6 +44,7 @@ struct Preferences {
     bool touch = true; // Reacts to petting, throwing and being pushed against a screen edge.
     bool wander = true; // Walks, crawls and climbs along the screen after a long idle spell.
     bool easterEggs = true; // Special days, late nights and a few rare surprises.
+    bool bedtimeAnimations = true; // Tired work and sleep from the configured bedtime until 06:00.
     QString birthday; // "MM-dd" for a birthday surprise, or empty.
     // Wellness reminders: minutes of active time between eye breaks, water and movement breaks; 0 is off.
     int eyeMinutes = 20, waterMinutes = 60, movementMinutes = 60;

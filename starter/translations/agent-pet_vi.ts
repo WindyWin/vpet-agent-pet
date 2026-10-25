@@ -1264,6 +1264,16 @@ Nguồn: %6</translation>
 <context>
     <name>pet::PetWindow</name>
     <message>
+        <source>Follow bedtime animations</source>
+        <translation>Đổi hoạt ảnh theo giờ đi ngủ</translation>
+    </message>
+    <message>
+        <source>From the Sleep reminder time until 06:00, use tired working and completion animations
+when available, and sleep while idle. Independent of reminder notifications and mood.</source>
+        <translation>Từ giờ nhắc đi ngủ đến 06:00, dùng hoạt ảnh làm việc và hoàn thành lúc buồn ngủ
+nếu có, và ngủ khi rảnh. Độc lập với thông báo nhắc nhở và tâm trạng.</translation>
+    </message>
+    <message>
         <source>OK</source>
         <translation>Đồng ý</translation>
     </message>

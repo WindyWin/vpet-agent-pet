@@ -46,8 +46,20 @@ const Move *Player::move(const QString &state) const {
     return found == catalog_.moves.constEnd() ? nullptr : &*found;
 }
 const ActivityArt *Player::activity(const QString &state) const {
+    if ((state == state_ && bedtimeArt_) || (bedtime_ && hasBedtime(state))) return nullptr;
     const auto found = catalog_.activity.constFind(state);
     return found == catalog_.activity.constEnd() ? nullptr : &*found;
+}
+void Player::setBedtime(bool enabled) {
+    if (bedtime_ == enabled) return;
+    bedtime_ = enabled;
+    // Leave the current desk using the art it entered with, then enter the new version. A queued
+    // transition or one-shot keeps its original art and will pick up the schedule at its next entry.
+    if (hasBedtime(state_) && !held_ && !stopped_ && pending_.isEmpty()
+        && catalog_.animations.value(state_).mode == "phased" && phase_ != 2) {
+        pending_ = state_;
+        beginEnd();
+    }
 }
 void Player::finish() {
     if (stopped_ || held_ || catalog_.animations.value(state_).mode != "phased" || phase_ == 2) return;
@@ -102,26 +114,54 @@ bool Player::play(const QString &cue, bool interrupt) {
     }
     return select(state, interrupt);
 }
+// A catalog may restrict desk transitions to specific poses. A sustained performance can
+// begin standing and only land at the desk when the complete sequence has played.
+bool Player::seated() const {
+    if (bedtimeArt_) return false;
+    const auto found = catalog_.activity.constFind(state_);
+    if (found == catalog_.activity.constEnd()) return false;
+    const auto &visual = found->continuity;
+    return phase_ == 1 && (visual.sources.isEmpty() || seated_ || decoration_ != Decoration::None);
+}
+QString Player::handover(const QString &target, const QString &fallback) const {
+    return catalog_.activity.value(state_).continuity.overrides.value(sequence_).value(target, fallback);
+}
 // A non-urgent change from an activity's loop phase that can stay at the desk; false plays the usual end.
 bool Player::decorate(const QString &target) {
+    if (bedtimeArt_ || (bedtime_ && hasBedtime(target))) return false;
     const auto found = catalog_.activity.constFind(state_);
-    if (!continuity_ || phase_ != 1 || found == catalog_.activity.constEnd()) return false;
+    if (!continuity_ || found == catalog_.activity.constEnd() || phase_ == 2
+        || (phase_ != 1 && found->continuity.sources.isEmpty())) return false;
     const auto &art = *found;
-    // A tool finished but the turn continues: play the authored transition to desk thinking.
-    const auto landing = catalog_.activity.constFind(target);
-    if (sustainedEnabled_ && decoration_ == Decoration::None && landing != catalog_.activity.constEnd()
-        && landing->sustainedResume.contains(state_)) {
-        pending_.clear(); enter(target, 1);
-        return true;
-    }
     if (decoration_ != Decoration::None && target == pending_) return true; // Already on its way there.
     if (decoration_ == Decoration::Handover) {
-        // Changing course mid-swap: it lands first, then acts on the latest request from that desk.
+        // Finish the current prop swap, then act on the latest request from its landing pose.
         const auto landing = catalog_.activity.constFind(handoverTo_);
+        const auto destination = catalog_.activity.constFind(target);
         const bool desk = target == handoverTo_ || (landing != catalog_.activity.constEnd()
-            && (landing->handover.contains(target) || landing->linger.to == target));
+            && (landing->handover.contains(target) || landing->linger.to == target
+                || (sustainedEnabled_ && destination != catalog_.activity.constEnd()
+                    && destination->sustainedResume.contains(handoverTo_))));
         if (desk) pending_ = target;
         return desk;
+    }
+    const auto landing = catalog_.activity.constFind(target);
+    const bool resume = sustainedEnabled_ && landing != catalog_.activity.constEnd()
+        && landing->sustainedResume.contains(state_);
+    if (!seated()) {
+        // Don't cut an entrance or a standing performance into a seated prop swap.
+        // Keep only the latest desk request and honour it once this clip lands.
+        if (art.continuity.landings.contains(sequence_)
+            && (target == state_ || art.handover.contains(target) || resume || art.linger.to == target)) {
+            pending_ = target == state_ ? QString() : target;
+            return true;
+        }
+        return false;
+    }
+    if (resume && decoration_ == Decoration::None) {
+        const auto sequence = handover(target, landing->sustainedResume.value(state_));
+        pending_.clear(); enter(target, 1, sequence);
+        return true;
     }
     const bool lingering = decoration_ == Decoration::LingerIn || decoration_ == Decoration::Linger
         || decoration_ == Decoration::LingerOut;
@@ -141,7 +181,7 @@ bool Player::decorate(const QString &target) {
     }
     if (decoration_ == Decoration::None && art.handover.contains(target)) {
         pending_ = handoverTo_ = target; decoration_ = Decoration::Handover;
-        enterSequence(1, art.handover.value(target));
+        enterSequence(1, handover(target, art.handover.value(target)));
         return true;
     }
     return false;
@@ -151,8 +191,9 @@ void Player::decorationEnded() {
     const auto &art = catalog_.activity[state_];
     if (decoration_ == Decoration::Handover) {
         const auto target = std::exchange(handoverTo_, {}), next = std::exchange(pending_, {});
-        enter(target, 1);
-        if (next != target) select(next); // The request moved on while the props swapped.
+        const auto loop = catalog_.activity.value(target).continuity.landings.value(sequence_);
+        enter(target, 1, loop);
+        if (!next.isEmpty() && next != target) select(next); // The request moved on while the props swapped.
         return;
     }
     if (decoration_ == Decoration::LingerIn || (decoration_ == Decoration::Linger && lingerMs_ < art.linger.maxMs)) {
@@ -178,11 +219,14 @@ void Player::leaveLinger() {
 }
 // The end phase, or a reaction drawn for leaving to the pending state when the gate allows one.
 void Player::beginEnd() {
+    const bool atDesk = seated();
     decoration_ = Decoration::None;
     QString farewell;
     const auto found = catalog_.activity.constFind(state_);
-    if (found != catalog_.activity.constEnd() && reactionGate_)
+    if (!bedtimeArt_ && found != catalog_.activity.constEnd() && reactionGate_)
         if (const auto pool = found->exit.value(pending_); !pool.isEmpty() && reactionGate_()) farewell = drawChoice(pool);
+    if (atDesk && found != catalog_.activity.constEnd() && !found->continuity.exit.isEmpty())
+        farewell = found->continuity.exit;
     enterSequence(2, farewell);
 }
 QString Player::drawChoice(const QVector<ActivityChoice> &pool) {
@@ -203,6 +247,7 @@ QString Player::drawLinger() {
     return lingerLast_;
 }
 bool Player::vary(const QString &sequence) {
+    if (bedtimeArt_) return false;
     const auto found = catalog_.activity.constFind(state_);
     if (found == catalog_.activity.constEnd() || !catalog_.sequences.contains(sequence)
         || stopped_ || phase_ != 1 || decoration_ != Decoration::None || index_ != 0
@@ -210,6 +255,7 @@ bool Player::vary(const QString &sequence) {
                         [&](const ActivityChoice &choice) { return choice.sequence == sequence; })))
         return false;
     sequence_ = sequence;
+    if (!found->continuity.sources.isEmpty()) seated_ = found->continuity.sources.contains(sequence);
     sustainedActive_ = sequence == found->sustained || sequence == found->sustainedLoop;
     display(); // In the same event-loop turn as the pass's first frame, so nothing is painted in between.
     return true;
@@ -230,17 +276,19 @@ void Player::release() {
     select(holdResume_);
     emit heldChanged(false);
 }
-QString Player::touchAt(QPointF point, int side) const {
+QString Player::touchAt(QPointF point, int side, bool tapOnly) const {
     if (catalog_.touch.scale <= 0 || side <= 0) return {};
     const QPointF scaled(point.x() * catalog_.touch.scale / side, point.y() * catalog_.touch.scale / side);
     for (const auto &region : catalog_.touch.regions)
-        if (QRectF(region.rect).contains(scaled)) return region.state;
+        if (QRectF(region.rect).contains(scaled)) return !tapOnly || region.tap ? region.state : QString();
     return {};
 }
 QStringList Player::choose(const QString &state) {
     const QVector<Choice> *art = &catalog_.animations[state].choices;
     if (const auto mood = catalog_.moods.constFind(mood_); mood != catalog_.moods.constEnd())
         if (const auto found = mood->constFind(state); found != mood->constEnd()) art = &*found;
+    if (bedtime_)
+        if (const auto found = catalog_.bedtime.constFind(state); found != catalog_.bedtime.constEnd()) art = &*found;
     const auto &choices = *art;
     if (!variants_ || choices.size() == 1) return choices.first().sequences;
     int total = 0;
@@ -252,21 +300,27 @@ QStringList Player::choose(const QString &state) {
     }
     return choices.first().sequences;
 }
-void Player::enter(const QString &state, int phase) {
+void Player::enter(const QString &state, int phase, const QString &sequence) {
     const auto from = state_;
+    const bool fromBedtimeArt = bedtimeArt_;
+    const bool atDesk = !catalog_.activity.value(from).continuity.sources.isEmpty() && seated();
+    seated_ = !sequence.isEmpty() && atDesk;
     state_ = state;
     stopped_ = false;
     chosen_ = choose(state);
+    bedtimeArt_ = bedtime_ && hasBedtime(state);
     loopCount_ = 0;
     decoration_ = Decoration::None;
     welcome_.clear();
     sustainedActive_ = false;
     // A welcome replaces the first loop pass when the pet comes from one of the listed states.
     const auto art = catalog_.activity.constFind(state);
-    if (art != catalog_.activity.constEnd() && art->enterFrom.contains(from) && reactionGate_ && reactionGate_())
+    if (!bedtimeArt_ && !fromBedtimeArt && art != catalog_.activity.constEnd() && art->enterFrom.contains(from) && reactionGate_ && reactionGate_())
         welcome_ = drawChoice(art->enter);
-    if (sustainedEnabled_ && continuity_ && art != catalog_.activity.constEnd() && art->sustainedResume.contains(from)) {
-        phase = 1; welcome_ = art->sustainedResume.value(from); sustainedActive_ = true;
+    if (!bedtimeArt_ && !fromBedtimeArt && !sequence.isEmpty()) {
+        welcome_ = sequence;
+        sustainedActive_ = art != catalog_.activity.constEnd() && !art->sustainedLoop.isEmpty()
+            && (art->continuity.landings.contains(sequence) || art->sustainedResume.values().contains(sequence));
     }
     emit entered(state);
     enterSequence(phase, phase == 1 ? std::exchange(welcome_, {}) : QString());
@@ -276,6 +330,12 @@ void Player::enterSequence(int phase, const QString &sequence) {
     phase_ = phase;
     sequence_ = sequence.isEmpty() ? chosen_.value(phase) : sequence;
     index_ = 0;
+    const auto art = catalog_.activity.constFind(state_);
+    if (art != catalog_.activity.constEnd() && !art->continuity.sources.isEmpty()) {
+        if (phase != 1 || sequence_ == art->sustained) seated_ = false;
+        else if (art->continuity.sources.contains(sequence_)) seated_ = true;
+        else if (!art->continuity.landings.contains(sequence_)) seated_ = false;
+    }
     pixmap_ = {};
     cache_.clear();
     display();
@@ -289,6 +349,20 @@ void Player::advance() {
     if (decoration_ != Decoration::None) { decorationEnded(); return; }
     const auto &animation = catalog_.animations[state_];
     if (animation.mode == "phased") {
+        const auto landing = catalog_.activity.value(state_).continuity.landings.value(sequence_);
+        if (phase_ <= 1 && !landing.isEmpty() && (continuity_ || phase_ == 1)) {
+            const bool newPass = phase_ == 1;
+            const auto art = catalog_.activity.constFind(state_);
+            if (art != catalog_.activity.constEnd() && landing == art->sustainedLoop) {
+                chosen_[1] = landing;
+                sustainedActive_ = true;
+            }
+            const auto next = std::exchange(pending_, {});
+            enterSequence(1, !newPass && !welcome_.isEmpty() ? std::exchange(welcome_, {}) : landing);
+            if (!next.isEmpty() && next != state_) select(next);
+            else if (newPass) emit looped(state_);
+            return;
+        }
         if (phase_ == 0) { enterSequence(1, std::exchange(welcome_, {})); return; }
         if (phase_ == 1 && animation.loops > 0 && ++loopCount_ >= animation.loops) { enterSequence(2); return; }
         if (phase_ == 2) {
@@ -319,6 +393,7 @@ void Player::advance() {
     // returns to its own sequence: an alternate or a welcome lasts one pass.
     if (animation.mode == "loop") {
         chosen_ = choose(state_);
+        bedtimeArt_ = bedtime_ && hasBedtime(state_);
         sequence_ = chosen_.value(0);
     } else sequence_ = chosen_.value(phase_);
     index_ = 0;

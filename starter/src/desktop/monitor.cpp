@@ -152,6 +152,10 @@ bool Monitor::react(const QString &trigger, qint64 stamp, qint64 now) {
 void Monitor::update(qint64 now) {
     if (!active_) return;
     now_ = now;
+    const bool bedtime = window_.bedtimeAnimations()
+        && window_.eggs().reminderSchedule().bedtimeAt(window_.eggs().now().time());
+    window_.player().setBedtime(bedtime);
+    if (!bedtime) window_.stage().runtime().withdraw("bedtime", "nap");
     sessions_.expire(now);
     // A reminder that faded, or was hidden, without an answer is asked again later; one that lost its bubble to
     // something else is only put off.
@@ -189,16 +193,28 @@ void Monitor::update(qint64 now) {
     runtime.tick();
     remind();
     remindWellness(now);
-    if (!observed_) return;
+    // With no sessions, allow a nighttime rest after the arrival has finished. A daytime pet keeps
+    // its existing startup/ambient behavior until it has observed a session.
+    if (!observed_ && (!bedtime || (runtime.showing() && runtime.showing()->policy == behavior::Policy::Startup))) return;
     using namespace behavior;
     const auto cue = sessions_.aggregate(now);
     const auto *shape = findCue(cue);
     const bool moment = shape && shape->mode == "once"; // turn-finished, error: shown once, never replayed.
     const auto submitted = runtime.submit({"session", "activity", cue, urgent(cue) ? Policy::Urgent : Policy::Activity,
                                            moment ? Lifetime::Moment : Lifetime::Persistent});
+    if (bedtime && (cue == "idle" || cue == "waiting"))
+        runtime.submit({"bedtime", "nap", "nap", Policy::Ambient, Lifetime::Persistent});
     // A turn that just finished is celebrated in one of several ways, or with a treat when one is due; the
     // celebration takes the turn-finished state's place.
     if (submitted != Submission::Admitted || cue != "turn-finished") return;
+    if (bedtime && window_.player().hasBedtime(window_.player().stateFor("turn-finished"))) {
+        // One composite acknowledgment and yawn; the normal desk exit runs before it. The runtime
+        // holds it across activity changes, while urgent attention can still cut in immediately.
+        // Leave earned milestone/snack rewards pending for the next daytime completion.
+        runtime.submit({"bedtime", "completion", "turn-finished", Policy::Celebration, Lifetime::OneShot,
+                        runtime.now() + EasterEggs::surpriseMs});
+        return;
+    }
     const auto celebration = window_.mood().celebrate(window_.eggs().celebration(lastTurnMs_));
     if (celebration.cue == "turn-finished") return; // No pool for any of them: the cue's own state shows.
     // A productivity snack is only a reaction; it does not confirm a water reminder for the user.

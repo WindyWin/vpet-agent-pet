@@ -46,6 +46,8 @@ public:
     // Special days, late nights and rare surprises; persisted. Off, none of them happen.
     void setEasterEggsEnabled(bool enabled);
     bool easterEggsEnabled() const { return eggs_.enabled(); }
+    void setBedtimeAnimations(bool enabled);
+    bool bedtimeAnimations() const { return bedtimeAnimations_; }
     void setBirthday(const QString &monthDay); // "MM-dd" or empty; persisted.
     Wellness &wellness() { return wellness_; }
     // Minutes of active time between wellness reminders, from Wellness's choices; 0 is off. Persisted.
@@ -169,7 +171,7 @@ signals:
     void conversationsRequested();
     void agentConversationsChanged(bool enabled);
     void hideMessagePreviewsChanged(bool hide);
-    void sessionsRequested(); // A click on the pet (press and release without moving it), or the menu.
+    void sessionsRequested(); // A click outside the pet's touch regions, or the menu.
     void recapRequested(); // "Today's recap" in the menu.
     void movementBreakRequested();
 protected:
@@ -236,10 +238,9 @@ private:
     // Moves the window to global coordinates: QWidget::move, or a layer-shell margin under native Wayland.
     void relocate(QPoint where);
     // A layer surface moves when the compositor applies the new margin, and pointer events sent before that
-    // still carry coordinates for the old place. After a move, the pointer is not followed until a frame
-    // has come back.
-    bool awaitingFrame_ = false;
-    QElapsedTimer frameClock_; // Bounds the wait, should a compositor send no frame.
+    // still carry coordinates for the old place. Wait for the paint and a compositor acknowledgement.
+    bool awaitingFrame_ = false, frameSyncPending_ = false;
+    quint64 frameGeneration_ = 0;
     QPointer<QWindow> frames_;
     void syncDisplayScale();
     void scheduleDisplayScaleSync();
@@ -255,13 +256,17 @@ private:
     int trayAttention_ = 0; // Badge shown on the tray icon; -1 forces a redraw.
     bool trayError_ = false;
     QPoint dragOffset_;
+    bool dragStarted_ = false, petStarted_ = false;
     bool snoozeShown_ = false, fallbackDrag_ = false, dragging_ = false, clickThrough_ = false, touchEnabled_ = true, wanderEnabled_ = true, recapEnabled_ = true;
     bool agentConversations_ = false, hideMessagePreviews_ = false;
+    bool bedtimeAnimations_ = true;
     bool persist_ = true, ready_ = false, quitting_ = false, muted_ = false, sound_ = false, autostart_ = false;
     int attention_ = 0, bubbles_ = Preferences::RequestsAndErrors;
-    QPoint pressPosition_;
+    QPoint pressPointer_;
     QElapsedTimer pressTimer_, flightClock_, walkClock_;
     QString pressTouch_; // What a held press pets, decided where it landed.
+    QString pressTap_; // Only regions allowing a short tap; other taps open sessions.
+    QString tapTouch_; // A released tap plays the touch's start, one loop, then its end.
     QVector<touch::Sample> samples_;
     touch::Patience patience_;
     QElapsedTimer touchClock_;

@@ -87,4 +87,5 @@ bool layerShellActive() { return false; }
 void layerAttach(QWindow *, bool, bool) {}
 void layerSetScreen(QWindow *, QScreen *) {}
 void layerPlace(QWindow *, QPoint) {}
+void layerSync(QObject *, std::function<void()> ready) { ready(); }
 }

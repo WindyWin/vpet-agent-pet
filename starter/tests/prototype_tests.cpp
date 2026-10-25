@@ -7,6 +7,7 @@
 #include "i18n/language.h"
 #include "version.h"
 #include <QApplication>
+#include <QMouseEvent>
 #include <QCheckBox>
 #include <QComboBox>
 #include <QDateEdit>
@@ -116,6 +117,161 @@ class PrototypeTests : public QObject {
     Q_OBJECT
     QTemporaryDir clients;
 private slots:
+    void bedtimeScheduleAndSettings() {
+        pet::ReminderSchedule schedule;
+        QVERIFY(!schedule.bedtimeAt(QTime(21, 59, 59)));
+        QVERIFY(schedule.bedtimeAt(QTime(22, 0)));
+        QVERIFY(schedule.bedtimeAt(QTime(23, 59, 59)));
+        QVERIFY(schedule.bedtimeAt(QTime(0, 0)));
+        QVERIFY(schedule.bedtimeAt(QTime(5, 59, 59)));
+        QVERIFY(!schedule.bedtimeAt(QTime(6, 0)));
+        schedule.sleep = QTime(1, 30);
+        QVERIFY(!schedule.bedtimeAt(QTime(0, 30)));
+        QVERIFY(schedule.bedtimeAt(QTime(1, 30)));
+        QVERIFY(!schedule.bedtimeAt(QTime(23, 0)));
+        schedule.sleep = QTime(6, 0); QVERIFY(!schedule.bedtimeAt(QTime(12, 0)));
+        QTemporaryDir directory; const auto path = directory.path() + "/preferences.json";
+        {
+            pet::PetWindow window(nullptr, path); QVERIFY(window.bedtimeAnimations());
+            window.showSettings(); auto *dialog = window.findChild<QDialog*>(); QVERIFY(dialog);
+            auto *box = dialog->findChild<QCheckBox*>("bedtimeAnimations"); QVERIFY(box);
+            QVERIFY(box->isChecked()); box->setChecked(false); QVERIFY(!window.bedtimeAnimations());
+            dialog->close(); QVERIFY(window.savePreferences());
+        }
+        QVERIFY(!pet::PreferencesStore(path).load().bedtimeAnimations);
+        pet::PetWindow restored(nullptr, path); QVERIFY(!restored.bedtimeAnimations());
+        QFile file(path); QVERIFY(file.open(QIODevice::WriteOnly));
+        file.write(R"({"version":1,"size":200,"on_top":true})"); file.close();
+        QVERIFY(pet::PreferencesStore(path).load().bedtimeAnimations);
+        QVERIFY(file.open(QIODevice::WriteOnly));
+        file.write(R"({"version":1,"size":200,"on_top":true,"bedtime_animations":"yes"})"); file.close();
+        pet::PreferencesStore invalid(path); invalid.load(); QVERIFY(!invalid.save(pet::Preferences{}));
+    }
+    void bedtimeCatalogAndMoodAreIndependent() {
+        QTemporaryDir directory; auto catalog = fixture(directory.path());
+        const QJsonObject choice{{"sequences", QJsonArray{"idle"}}, {"weight", 1}};
+        catalog["bedtime"] = QJsonObject{{"working", QJsonArray{choice}}};
+        writeCatalog(directory.path(), catalog);
+        pet::Player custom(nullptr, directory.path()); QVERIFY(custom.valid()); custom.setPaused(true);
+        custom.setMood("happy"); custom.setBedtime(true); QVERIFY(custom.select("working"));
+        QCOMPARE(custom.sequence(), QString("idle")); QCOMPARE(custom.mood(), QString("happy"));
+        custom.setBedtime(false); finishSequence(custom); QCOMPARE(custom.sequence(), QString("work"));
+        catalog["bedtime"] = QJsonObject{{"missing", QJsonArray{choice}}}; QVERIFY(!loads(catalog));
+        catalog["bedtime"] = QJsonObject{{"working", QJsonArray{QJsonObject{{"sequences", QJsonArray{"missing"}}, {"weight", 1}}}}};
+        QVERIFY(!loads(catalog));
+        catalog["bedtime"] = QJsonObject{{"working", QJsonArray{QJsonObject{{"sequences", QJsonArray{"idle", "idle"}}, {"weight", 1}}}}};
+        QVERIFY(!loads(catalog)); catalog["bedtime"] = QJsonArray{}; QVERIFY(!loads(catalog));
+        // No optional art: a custom pet keeps its ordinary animation at night.
+        catalog = fixture(directory.path()); writeCatalog(directory.path(), catalog);
+        pet::Player fallback(nullptr, directory.path()); fallback.setPaused(true); fallback.setBedtime(true);
+        QVERIFY(!fallback.hasBedtime("working")); QVERIFY(fallback.select("working"));
+        QCOMPARE(fallback.sequence(), QString("work"));
+    }
+    void bedtimeWorkingLeavesDeskAndRespectsScheduleChanges() {
+        pet::Player player; player.setPaused(true); pet::Activity activity(player);
+        player.setMood("happy"); player.setBedtime(true); QVERIFY(player.select("working", true));
+        QCOMPARE(player.sequence(), QString("WORK/WorkONE/PoorCondition/A")); finishSequence(player);
+        QCOMPARE(player.sequence(), QString("WORK/WorkONE/PoorCondition/B"));
+        QVERIFY(!player.activity("working"));
+        for (int i = 0; i < 4; ++i) finishSequence(player);
+        QCOMPARE(player.sequence(), QString("WORK/WorkONE/PoorCondition/B"));
+        player.setBedtime(false);
+        QCOMPARE(player.sequence(), QString("WORK/WorkONE/PoorCondition/c"));
+        finishSequence(player); QCOMPARE(player.state(), QString("working"));
+        QCOMPARE(player.sequence(), QString("WORK/WorkONE/A_Nomal"));
+        QCOMPARE(player.mood(), QString("happy"));
+        finishSequence(player); player.setBedtime(true);
+        QCOMPARE(player.phase(), QString("end")); finishSequence(player);
+        QCOMPARE(player.sequence(), QString("WORK/WorkONE/PoorCondition/A"));
+        finishSequence(player); QVERIFY(player.select("turn_finished"));
+        QCOMPARE(player.sequence(), QString("WORK/WorkONE/PoorCondition/c"));
+        finishSequence(player); QCOMPARE(player.sequence(), QString("Bedtime/turn_finished"));
+        QCOMPARE(player.frameCount(), 45);
+        // Last acknowledgment frame -> first yawn frame, with no intervening idle.
+        for (int i = 0; i < 27; ++i) player.advance();
+        QCOMPARE(player.frameIndex(), 27); QCOMPARE(player.state(), QString("turn_finished"));
+        QVERIFY(!player.pixmap().isNull()); finishSequence(player);
+        QCOMPARE(player.state(), QString("idle")); QCOMPARE(player.mood(), QString("happy"));
+        // Tired work dismantles its desk; the next thinking state must not use a seated handover.
+        QVERIFY(player.select("working", true)); finishSequence(player);
+        QVERIFY(player.select("thinking")); finishSequence(player);
+        QCOMPARE(player.state(), QString("thinking")); QCOMPARE(player.phase(), QString("start"));
+        QVERIFY(!player.sustainedActive());
+    }
+    void monitorBedtimeCompletionSleepsAndAttentionInterrupts() {
+        pet::PetWindow window(nullptr, {}, false); window.show();
+        window.setEasterEggsEnabled(false); window.setMuted(true);
+        QDateTime local(QDate(2026, 10, 25), QTime(23, 59, 58)); window.eggs().setClock([&] { return local; });
+        auto &player = window.player(); player.setPaused(true); pet::Monitor monitor(window);
+        const qint64 now = QDateTime::currentMSecsSinceEpoch();
+        pet::Event event{"claude", "night", "1", "tool_start", "other", {}, "/project", {}, now};
+        QVERIFY(monitor.apply(event, now));
+        for (int i = 0; i < 4 && player.phase() != "loop"; ++i) finishSequence(player);
+        QCOMPARE(player.sequence(), QString("WORK/WorkONE/PoorCondition/B"));
+        event.id = "2"; event.kind = "turn_finished"; event.timestamp = now + 1;
+        QVERIFY(monitor.apply(event, now + 1));
+        QCOMPARE(player.sequence(), QString("WORK/WorkONE/PoorCondition/c"));
+        finishSequence(player); QCOMPARE(player.sequence(), QString("Bedtime/turn_finished"));
+        QVERIFY(window.stage().runtime().showing());
+        QCOMPARE(window.stage().runtime().showing()->source, QString("bedtime"));
+        local = local.addSecs(7); monitor.update(now + 7000); // Midnight does not end bedtime.
+        QCOMPARE(player.sequence(), QString("Bedtime/turn_finished"));
+        finishSequence(player); monitor.update(now + 7001);
+        QCOMPARE(player.state(), QString("sleeping")); finishSequence(player);
+        QCOMPARE(player.sequence(), QString("Sleep/B_Nomal"));
+        for (int i = 0; i < 4; ++i) { finishSequence(player); monitor.update(now + 7002 + i); }
+        QCOMPARE(player.sequence(), QString("Sleep/B_Nomal"));
+        event.id = "3"; event.kind = "attention"; event.reason = "approval"; event.timestamp = now + 7010;
+        QVERIFY(monitor.apply(event, now + 7010));
+        QCOMPARE(player.state(), QString("needs_input")); QCOMPARE(window.attention(), 1);
+        monitor.update(now + 7011); QCOMPARE(player.state(), QString("needs_input"));
+    }
+    void monitorBedtimeCompletionReturnsToOtherWork() {
+        pet::PetWindow window(nullptr, {}, false); window.show();
+        window.setEasterEggsEnabled(false); window.setMuted(true);
+        window.eggs().setClock([] { return QDateTime(QDate(2026, 10, 25), QTime(23, 0)); });
+        auto &player = window.player(); player.setPaused(true); pet::Monitor monitor(window);
+        const qint64 now = QDateTime::currentMSecsSinceEpoch();
+        pet::Event event{"claude", "one", "1", "turn_finished", {}, {}, "/project", {}, now};
+        QVERIFY(monitor.apply(event, now)); QCOMPARE(player.sequence(), QString("Bedtime/turn_finished"));
+        event.session = "two"; event.id = "2"; event.kind = "tool_start"; event.tool = "other"; event.timestamp = now + 1;
+        QVERIFY(monitor.apply(event, now + 1)); monitor.update(now + 7000);
+        QCOMPARE(player.sequence(), QString("Bedtime/turn_finished"));
+        finishSequence(player); QCOMPARE(player.state(), QString("working"));
+        QCOMPARE(player.sequence(), QString("WORK/WorkONE/PoorCondition/A"));
+        finishSequence(player); monitor.update(now + 7001);
+        QCOMPARE(player.sequence(), QString("WORK/WorkONE/PoorCondition/B"));
+        // A fresh completion is cut at once when another session needs approval.
+        event.session = "two"; event.id = "3"; event.kind = "turn_finished"; event.timestamp = now + 7002;
+        QVERIFY(monitor.apply(event, now + 7002)); finishSequence(player);
+        QCOMPARE(player.sequence(), QString("Bedtime/turn_finished"));
+        event.session = "three"; event.id = "4"; event.kind = "attention"; event.reason = "approval"; event.timestamp = now + 7003;
+        QVERIFY(monitor.apply(event, now + 7003)); QCOMPARE(player.state(), QString("needs_input"));
+        monitor.update(now + 7004); QCOMPARE(player.state(), QString("needs_input"));
+    }
+    void monitorBedtimeRestEndsAtMorningOrWhenDisabled() {
+        pet::PetWindow window(nullptr, {}, false); window.show();
+        window.setEasterEggsEnabled(false); window.setMuted(true);
+        QDateTime local(QDate(2026, 10, 25), QTime(2, 0)); window.eggs().setClock([&] { return local; });
+        auto &player = window.player(); player.setPaused(true); pet::Monitor monitor(window);
+        finishSequence(player); const qint64 now = QDateTime::currentMSecsSinceEpoch();
+        monitor.update(now); QCOMPARE(player.requestedState(), QString("sleeping"));
+        finishSequence(player); window.setBedtimeAnimations(false); monitor.update(now + 1);
+        QCOMPARE(player.sequence(), QString("Sleep/C_Nomal")); finishSequence(player);
+        QCOMPARE(player.state(), QString("idle")); QVERIFY(!player.bedtime());
+        window.setBedtimeAnimations(true); monitor.update(now + 2); finishSequence(player);
+        QCOMPARE(player.sequence(), QString("Sleep/B_Nomal"));
+        local.setTime(QTime(6, 0)); monitor.update(now + 3);
+        QCOMPARE(player.sequence(), QString("Sleep/C_Nomal")); finishSequence(player);
+        QCOMPARE(player.state(), QString("idle")); QVERIFY(!player.bedtime());
+        local.setTime(QTime(2, 0)); monitor.update(now + 4); finishSequence(player);
+        QCOMPARE(player.sequence(), QString("Sleep/B_Nomal"));
+        pet::Event event{"claude", "wake", "1", "prompt", {}, {}, "/project", {}, now + 5};
+        QVERIFY(monitor.apply(event, now + 5));
+        QCOMPARE(player.sequence(), QString("Sleep/C_Nomal")); finishSequence(player);
+        QCOMPARE(player.state(), QString("thinking"));
+        monitor.update(now + 6); QCOMPARE(player.state(), QString("thinking"));
+    }
     void interactionQuestionsReplaceMatchingAlertsAndRestoreTheFallback() {
         QTemporaryDir directory;
         pet::PetWindow window(nullptr, directory.path() + "/preferences.json");
@@ -136,6 +292,7 @@ private slots:
     void monitorWaitsWithoutCelebrating() {
         QTemporaryDir directory;
         pet::PetWindow window(nullptr, directory.path() + "/preferences.json"); window.show();
+        window.setBedtimeAnimations(false); // Isolate background status from the separate overnight nap.
         window.setBubbles(pet::Preferences::AllAlerts);
         window.eggs().setClock([] { return QDateTime(QDate(2026, 10, 7), QTime(2, 0)); });
         pet::Monitor monitor(window);
@@ -276,7 +433,8 @@ private slots:
         for (const auto &region : touch.regions) touches.insert(region.state);
         QCOMPARE(touches.size(), 7);
         for (const auto &state : touches) QVERIFY2(player.isTouch(state), qPrintable(state));
-        QCOMPARE(player.states().size(), 24 + reactions.size() - 1 + player.fidgets().size() + touches.size());
+        QVERIFY(player.states().contains("sleepy_acknowledge"));
+        QCOMPARE(player.states().size(), 25 + reactions.size() - 1 + player.fidgets().size() + touches.size());
         QVERIFY(!player.fidgets().isEmpty());
         // Walks in each mood, crawls and climbs up and down both edges: all fidgets that move the window.
         int moves = 0;
@@ -693,7 +851,7 @@ private slots:
         QVERIFY(monitor.apply(event("tool_end", now + 2, "t1"), now + 2));
         monitor.update(now + 5002);
         QCOMPARE(player.state(), QString("thinking")); QCOMPARE(player.phase(), QString("loop"));
-        QCOMPARE(player.sequence(), QString("WORK/Desk/reading_to_working"));
+        QCOMPARE(player.sequence(), QString("WORK/Desk/reading_to_thinking"));
         QCOMPARE(player.requestedState(), QString("thinking"));
         // The periodic update sees its request honoured and restarts nothing.
         player.advance(); const auto sequence = player.sequence(); const int frame = player.frameIndex();
@@ -823,6 +981,112 @@ private slots:
         QVERIFY(!loads(broken("reading", "handover", QJsonObject{{"idle", "work"}})));
         QVERIFY(!loads(broken("reading", "handover", QJsonObject{{"working", "missing"}})));
         QVERIFY(!loads(broken("reading", "handover", QJsonObject{})));
+        const QJsonObject visual{{"sources", QJsonArray{"work"}}, {"landings", QJsonObject{{"idle", "work"}}},
+            {"overrides", QJsonObject{{"work", QJsonObject{{"reading", "idle"}}}}}, {"exit", "idle"}};
+        QVERIFY(loads(broken("working", "continuity", visual)));
+        for (const auto &value : {QJsonValue(42), QJsonValue(QJsonObject{}),
+                QJsonValue(QJsonObject{{"sources", QJsonArray{"missing"}}})})
+            QVERIFY(!loads(broken("working", "continuity", value)));
+        for (const auto &key : {"sources", "landings", "overrides", "exit"}) {
+            auto bad = visual; bad[key] = 42; QVERIFY(!loads(broken("working", "continuity", bad)));
+        }
+        auto bad = visual; bad["landings"] = QJsonObject{{"idle", "missing"}};
+        QVERIFY(!loads(broken("working", "continuity", bad)));
+        bad = visual; bad["overrides"] = QJsonObject{{"work", QJsonObject{{"working", "idle"}}}};
+        QVERIFY(!loads(broken("working", "continuity", bad)));
+    }
+    void seatedToolsKeepOneDesk() {
+        const QStringList tools{"working", "reading", "editing", "executing", "searching", "delegating"};
+        for (const auto style : {pet::ActivityStyle::Subtle, pet::ActivityStyle::Playful}) {
+            for (const auto &source : tools) for (const auto &target : tools) {
+                if (source == target) continue;
+                pet::Player player; player.setPaused(true); player.setRandom([](int) { return 0; });
+                pet::Activity activity(player); activity.setStyle(style); activity.setClock([] { return qint64(0); });
+                player.select(source, true); finishSequence(player);
+                const auto swap = player.activity(source)->handover.value(target);
+                QVERIFY(!swap.isEmpty());
+                player.select(target);
+                QCOMPARE(player.phase(), QString("handover")); QCOMPARE(player.sequence(), swap);
+                // Repeated updates neither restart the swap nor repeat the table entrance.
+                player.advance(); const int frame = player.frameIndex();
+                player.select(target); QCOMPARE(player.frameIndex(), frame);
+                finishSequence(player);
+                QCOMPARE(player.state(), target); QCOMPARE(player.phase(), QString("loop"));
+                QVERIFY(player.activity(target)->continuity.sources.contains(player.sequence()));
+                QVERIFY2(player.error().isEmpty(), qPrintable(player.error()));
+            }
+        }
+    }
+    void deskSwapsFollowTheActualPose() {
+        const QString pen = "WORK/WorkONE/B/Nomal/1";
+        const QStringList tools{"working", "reading", "editing", "executing", "searching", "delegating"};
+        for (const auto &source : tools) {
+            pet::Player player; player.setPaused(true); player.setRandom([](int) { return 0; });
+            pet::Activity activity(player); activity.setClock([] { return qint64(0); });
+            player.select(source, true); finishSequence(player);
+            player.select("thinking"); finishSequence(player);
+            QCOMPARE(player.sequence(), QString("Think/Extended/desk_loop"));
+            player.select(source); QCOMPARE(player.phase(), QString("handover"));
+            finishSequence(player); QCOMPARE(player.state(), source); QCOMPARE(player.phase(), QString("loop"));
+            if (source != "reading") {
+                QVERIFY(player.vary(pen));
+                const auto target = source == "executing" ? QString("editing") : QString("executing");
+                player.select(target); QCOMPARE(player.sequence(), QString("WORK/Desk/pen_to_") + target);
+                finishSequence(player); QCOMPARE(player.state(), target);
+                QVERIFY(player.vary(pen));
+                player.select("thinking"); QCOMPARE(player.sequence(), QString("WORK/Desk/pen_to_thinking"));
+                finishSequence(player); QCOMPARE(player.sequence(), QString("Think/Extended/desk_loop"));
+            }
+            if (player.state() != "thinking") { player.select("thinking"); finishSequence(player); }
+            player.select("idle"); QCOMPARE(player.phase(), QString("end"));
+            QCOMPARE(player.sequence(), QString("WORK/WorkONE/C_Nomal"));
+        }
+    }
+    void deskChangesWaitForArrivalAndKeepLatestRequest() {
+        pet::Player player; player.setPaused(true); player.setRandom([](int) { return 0; });
+        pet::Activity activity(player); activity.setClock([] { return qint64(0); });
+        player.select("executing", true); player.advance();
+        const auto entrance = player.sequence(); const int frame = player.frameIndex();
+        player.select("editing"); player.select("searching");
+        QCOMPARE(player.sequence(), entrance); QCOMPARE(player.frameIndex(), frame);
+        QCOMPARE(player.requestedState(), QString("searching"));
+        finishSequence(player);
+        QCOMPARE(player.sequence(), QString("WORK/Desk/executing_to_searching"));
+        player.select("working"); player.select("thinking");
+        finishSequence(player); // Land at searching, then remove that prop for thinking.
+        QCOMPARE(player.state(), QString("thinking"));
+        QCOMPARE(player.sequence(), QString("Think/Extended/from_searching"));
+        player.select("reading");
+        QCOMPARE(player.sequence(), QString("WORK/Desk/thinking_to_reading"));
+        finishSequence(player); QCOMPARE(player.state(), QString("reading"));
+        // Cancelling a queued change during an entrance just finishes that entrance.
+        player.select("editing", true); player.select("executing"); player.select("editing");
+        finishSequence(player); QCOMPARE(player.state(), QString("editing")); QCOMPARE(player.phase(), QString("loop"));
+        // An urgent request still interrupts without waiting for the desk.
+        player.select("working"); player.select("needs_input", true);
+        QCOMPARE(player.state(), QString("needs_input"));
+    }
+    void standingAndSeatedThinkingUseDifferentTransitions() {
+        pet::Player player; player.setPaused(true); player.setRandom([](int) { return 0; });
+        pet::Activity activity(player); activity.setClock([] { return qint64(0); });
+        player.select("thinking", true); finishSequence(player);
+        player.select("editing"); QCOMPARE(player.phase(), QString("end")); // Standing has no desk yet.
+        player.select("thinking", true); finishSequence(player);
+        QVERIFY(player.vary("Think/Extended/cycle"));
+        player.advance(); const int frame = player.frameIndex();
+        player.select("editing"); player.select("executing");
+        QCOMPARE(player.sequence(), QString("Think/Extended/cycle")); QCOMPARE(player.frameIndex(), frame);
+        finishSequence(player); QCOMPARE(player.sequence(), QString("WORK/Desk/thinking_to_executing"));
+        finishSequence(player); QCOMPARE(player.state(), QString("executing"));
+        // The easel has no matching seated art: use its full end/start fallback.
+        player.select("browsing"); QCOMPARE(player.phase(), QString("end"));
+        finishSequence(player); QCOMPARE(player.state(), QString("browsing")); QCOMPARE(player.phase(), QString("start"));
+        finishSequence(player); player.select("editing"); QCOMPARE(player.phase(), QString("end"));
+        // The full standing-to-thinking clip also waits until it actually reaches the desk.
+        player.select("browsing", true); finishSequence(player); player.select("thinking");
+        QCOMPARE(player.sequence(), QString("Think/Extended/from_browsing"));
+        player.select("editing"); QCOMPARE(player.sequence(), QString("Think/Extended/from_browsing"));
+        finishSequence(player); QCOMPARE(player.sequence(), QString("WORK/Desk/thinking_to_editing"));
     }
     void phasedLoopsAnnounceEachPass() {
         pet::Player player; player.setPaused(true);
@@ -1226,7 +1490,7 @@ private slots:
         pet::Player playful; playful.setPaused(true); playful.setRandom([](int) { return 0; });
         pet::Activity paced(playful); paced.setRandom([](int) { return 0; }); paced.setClock([] { return qint64(0); });
         const auto desk = script(playful);
-        QVERIFY(desk.contains("thinking loop WORK/Desk/reading_to_working"));
+        QVERIFY(desk.contains("thinking loop WORK/Desk/reading_to_thinking"));
         QVERIFY(desk.contains("reading handover WORK/Desk/reading_to_working"));
     }
     void activityStyleChangesMidDesk() {
@@ -1429,7 +1693,14 @@ private slots:
             auto at = [&](double x, double y) { return player.touchAt(QPointF(x * side / 500, y * side / 500), side); };
             QCOMPARE(at(250, 80), QString("touch_head"));
             QCOMPARE(at(170, 150), QString("pinch")); // The cheek sits inside the head and wins.
+            QCOMPARE(player.touchAt(QPointF(170.0 * side / 500, 150.0 * side / 500), side, true), QString());
             QCOMPARE(at(250, 270), QString("touch_body"));
+            // The outer head/body margins are reserved for opening sessions.
+            for (const QPoint point : {QPoint(175, 80), QPoint(250, 25), QPoint(250, 185),
+                                       QPoint(175, 270), QPoint(250, 215), QPoint(250, 335),
+                                       QPoint(195, 80), QPoint(250, 50), QPoint(250, 160),
+                                       QPoint(195, 270), QPoint(250, 230), QPoint(250, 315)})
+                QCOMPARE(at(point.x(), point.y()), QString());
             QCOMPARE(at(250, 460), QString()); QCOMPARE(at(20, 20), QString()); // Feet and empty margins.
         }
         // A held touch keeps playing while sessions move on, then ends and shows the latest request.
@@ -1559,20 +1830,120 @@ private slots:
         playOut(player);
         QSignalSpy sessions(&window, &pet::PetWindow::sessionsRequested);
         const QPoint head(window.width() / 2, window.width() * 80 / 500);
-        // A short press is still a click.
-        QTest::mousePress(&window, Qt::LeftButton, {}, head); QTest::mouseRelease(&window, Qt::LeftButton, {}, head, 50);
+        const QPoint sessionPoint(window.width() / 2, window.width() * 400 / 500);
+        QPoint pressPoint = sessionPoint;
+        // Outside touch regions, a short press opens sessions.
+        QTest::mousePress(&window, Qt::LeftButton, {}, sessionPoint); QTest::mouseRelease(&window, Qt::LeftButton, {}, sessionPoint, 50);
         QTRY_COMPARE(sessions.size(), 1); QCOMPARE(player.state(), QString("idle"));
+        // Pointer jitter must neither move the pet nor turn a session click into a drag.
+        const QPoint origin = window.pos();
+        const auto movePointer = [&](QPoint offset) {
+            const QPoint local = pressPoint + offset;
+            QMouseEvent move(QEvent::MouseMove, QPointF(local), QPointF(window.mapToGlobal(local)),
+                             Qt::NoButton, Qt::LeftButton, Qt::NoModifier);
+            QApplication::sendEvent(&window, &move);
+        };
+        QTest::mousePress(&window, Qt::LeftButton, {}, sessionPoint);
+        movePointer(QPoint(3, 2));
+        QCOMPARE(window.pos(), origin); QVERIFY(!player.isDragging());
+        QTest::mouseRelease(&window, Qt::LeftButton, {}, sessionPoint + QPoint(3, 2));
+        QTRY_COMPARE(sessions.size(), 2); QCOMPARE(player.state(), QString("idle"));
         // Held still, it pets; let go, it finishes and is not a click.
+        pressPoint = head;
         QTest::mousePress(&window, Qt::LeftButton, {}, head);
-        QTRY_COMPARE_WITH_TIMEOUT(player.state(), QString("touch_head"), 2000);
+        movePointer(QPoint(3, 2));
+        QTRY_COMPARE_WITH_TIMEOUT(player.state(), QString("touch_head"), 450);
+        QCOMPARE(window.pos(), origin);
         QTest::mouseRelease(&window, Qt::LeftButton, {}, head);
         QTRY_VERIFY(!player.held()); QCOMPARE(player.phase(), QString("end"));
-        QTest::qWait(300); QCOMPARE(sessions.size(), 1);
+        QTest::qWait(300); QCOMPARE(sessions.size(), 2);
         finishSequence(player); QCOMPARE(player.state(), QString("idle"));
+        // Once the drag threshold is crossed, returning to the start cannot become a click.
+        QTest::mousePress(&window, Qt::LeftButton, {}, head);
+        movePointer(QPoint(pet::touch::dragDistance, 0));
+        QVERIFY(!player.isDragging()); // Movement before the hold deadline is still a click candidate.
+        QTest::qWait(pet::touch::dragHoldMs + 10);
+        movePointer(QPoint(pet::touch::dragDistance - 1, 0));
+        QVERIFY(!player.isDragging());
+        movePointer(QPoint(pet::touch::dragDistance, 0));
+        QVERIFY(player.isDragging());
+        movePointer(origin - window.pos());
+        QTest::mouseRelease(&window, Qt::LeftButton, {}, head);
+        QTest::qWait(300); QCOMPARE(sessions.size(), 2);
+        playOut(player);
         // Off the artwork, or with touch off, holding does nothing.
         window.setTouchEnabled(false);
         QTest::mousePress(&window, Qt::LeftButton, {}, head); QTest::qWait(700);
         QCOMPARE(player.state(), QString("idle")); QTest::mouseRelease(&window, Qt::LeftButton, {}, head);
+        QTRY_COMPARE(sessions.size(), 3); // No drag or petting started, so releasing is a click.
+        QTest::mousePress(&window, Qt::LeftButton, {}, head);
+        movePointer(QPoint(30, 0));
+        QVERIFY(!player.isDragging());
+        QTest::mouseRelease(&window, Qt::LeftButton, {}, head + QPoint(30, 0));
+        QTRY_COMPARE(sessions.size(), 4); // A fast moving press also opens sessions.
+    }
+    void tapTouchRegions() {
+        pet::PetWindow window(nullptr, {}, false); window.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&window));
+        auto &player = window.player(); player.setPaused(true);
+        window.ambient().setLevel(pet::AmbientLevel::Off); playOut(player);
+        QSignalSpy sessions(&window, &pet::PetWindow::sessionsRequested);
+        const QVector<QPair<QPoint, QString>> regions{
+            {{250, 80}, "touch_head"}, {{250, 270}, "touch_body"}
+        };
+        for (const auto &region : regions) {
+            const QPoint point = region.first * window.width() / 500;
+            QCOMPARE(player.touchAt(point, window.width()), region.second);
+            QTest::mouseClick(&window, Qt::LeftButton, {}, point);
+            QCOMPARE(player.state(), region.second); QVERIFY(player.held());
+            QCOMPARE(player.phase(), QString("start"));
+            // A session changing during the tap resumes after a complete reaction.
+            player.select("reading");
+            finishSequence(player); QCOMPARE(player.phase(), QString("loop")); QVERIFY(player.held());
+            finishSequence(player); QCOMPARE(player.phase(), QString("end")); QVERIFY(!player.held());
+            finishSequence(player); QCOMPARE(player.state(), QString("reading"));
+            player.select("idle", true);
+        }
+        QTest::qWait(200); QCOMPARE(sessions.size(), 0);
+        // A new press cancels a previous tap, and disabling touch cancels its hold too.
+        const QPoint head(window.width() / 2, window.width() * 80 / 500);
+        QTest::mouseClick(&window, Qt::LeftButton, {}, head);
+        QVERIFY(player.held());
+        QTest::mousePress(&window, Qt::LeftButton, {}, head);
+        QVERIFY(!player.held());
+        QTest::qWait(pet::touch::dragHoldMs + 10);
+        QMouseEvent move(QEvent::MouseMove, QPointF(head + QPoint(20, 0)),
+                         QPointF(window.mapToGlobal(head + QPoint(20, 0))),
+                         Qt::NoButton, Qt::LeftButton, Qt::NoModifier);
+        QApplication::sendEvent(&window, &move);
+        QVERIFY(player.isDragging());
+        finishSequence(player); finishSequence(player); QVERIFY(player.isDragging());
+        QTest::mouseRelease(&window, Qt::LeftButton, {}, head);
+        playOut(player);
+        QTest::mouseClick(&window, Qt::LeftButton, {}, head);
+        QVERIFY(player.held());
+        window.setTouchEnabled(false); QVERIFY(!player.held());
+        QTest::qWait(200); QCOMPARE(sessions.size(), 0);
+    }
+    void holdToPinch() {
+        pet::PetWindow window(nullptr, {}, false); window.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&window));
+        auto &player = window.player(); player.setPaused(true);
+        window.ambient().setLevel(pet::AmbientLevel::Off); playOut(player);
+        QSignalSpy sessions(&window, &pet::PetWindow::sessionsRequested);
+        const QPoint cheek = QPoint(175, 150) * window.width() / 500;
+        QTest::mouseClick(&window, Qt::LeftButton, {}, cheek);
+        QVERIFY(!player.held()); QCOMPARE(player.state(), QString("idle"));
+        QTRY_COMPARE(sessions.size(), 1);
+        QTest::mousePress(&window, Qt::LeftButton, {}, cheek);
+        QVERIFY(!player.held());
+        QTRY_COMPARE_WITH_TIMEOUT(player.state(), QString("pinch"), 450);
+        QVERIFY(player.held());
+        finishSequence(player); finishSequence(player); QVERIFY(player.held());
+        QTest::mouseRelease(&window, Qt::LeftButton, {}, cheek);
+        QVERIFY(!player.held()); QCOMPARE(player.phase(), QString("end"));
+        finishSequence(player); QCOMPARE(player.state(), QString("idle"));
+        QTest::qWait(200); QCOMPARE(sessions.size(), 1);
     }
     void touchPatience() {
         using pet::touch::Patience;
@@ -1645,7 +2016,10 @@ private slots:
         QSignalSpy quitting(&window, &pet::PetWindow::quitRequested);
         const QPoint head(window.width() / 2, window.width() * 80 / 500);
         QTest::mousePress(&window, Qt::LeftButton, {}, head);
-        if (drag) QTest::mouseMove(&window, head + QPoint(30, 0));
+        if (drag) {
+            QTest::qWait(pet::touch::dragHoldMs + 10);
+            QTest::mouseMove(&window, head + QPoint(30, 0));
+        }
         QTRY_COMPARE_WITH_TIMEOUT(player.state(), drag ? QString("dragging") : QString("touch_head"), 2000);
         const auto limit = drag ? pet::touch::Patience::dragLimitMs : pet::touch::Patience::petLimitMs;
         QElapsedTimer elapsed; elapsed.start();
@@ -1692,6 +2066,11 @@ private slots:
                                {"fall", QJsonObject{{"left", "held"}}},
                                {"edge", QJsonObject{{"right", QJsonObject{{"state", "held"}, {"at", 250}}}}}};
         QVERIFY(loads(base)); QVERIFY(loads(with(good))); QVERIFY(loads(with({{"scale", 500}})));
+        auto holdOnly = region("held", {10, 10, 100, 100}); holdOnly["tap"] = false;
+        auto holdCatalog = good; holdCatalog["regions"] = QJsonArray{holdOnly};
+        QVERIFY(loads(with(holdCatalog)));
+        holdOnly["tap"] = "false"; holdCatalog["regions"] = QJsonArray{holdOnly};
+        QVERIFY(!loads(with(holdCatalog)));
         auto broken = [&](const QString &key, const QJsonValue &value) { auto touch = good; touch[key] = value; return with(touch); };
         QVERIFY(!loads(broken("scale", 0)));
         QVERIFY(!loads(broken("regions", QJsonArray{region("brief", {10, 10, 100, 100})}))); // Ends by itself.
@@ -2868,10 +3247,11 @@ private slots:
         QVERIFY(monitor.bubble().isVisible());
         QVERIFY(!monitor.focusSession(monitor.queue().current()->session)); // Unfindable window: stays.
         QVERIFY(monitor.bubble().isVisible());
-        // A plain click on the pet opens the session list; most urgent first.
+        // A click outside touch regions opens the session list; most urgent first.
         QSignalSpy clicks(&window, &pet::PetWindow::sessionsRequested);
-        QTest::mousePress(&window, Qt::LeftButton, {}, window.rect().center());
-        QTest::mouseRelease(&window, Qt::LeftButton, {}, window.rect().center());
+        const QPoint sessionPoint(window.width() / 2, window.width() * 400 / 500);
+        QTest::mousePress(&window, Qt::LeftButton, {}, sessionPoint);
+        QTest::mouseRelease(&window, Qt::LeftButton, {}, sessionPoint);
         QTRY_COMPARE(clicks.size(), 1);
         QVERIFY(monitor.sessionList().isVisible());
         QCOMPARE(monitor.sessionList().rowCount(), 3);

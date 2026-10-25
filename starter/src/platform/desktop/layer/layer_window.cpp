@@ -1,8 +1,11 @@
 #include "platform/contracts/native_window.h"
 #include <QGuiApplication>
 #include <QWindow>
+#include <QObject>
 #ifdef AGENT_PET_HAVE_WAYLAND
 #include <LayerShellQt/Window>
+#include <QtGui/qguiapplication_platform.h>
+#include <wayland-client.h>
 #endif
 
 namespace pet::platform {
@@ -32,10 +35,39 @@ void layerPlace(QWindow *window, QPoint offset) {
     if (!window || !layerShellActive()) return;
     LayerShellQt::Window::get(window)->setMargins(QMargins(offset.x(), offset.y(), 0, 0));
 }
+void layerSync(QObject *context, std::function<void()> ready) {
+#if QT_CONFIG(wayland)
+    auto *native = qGuiApp->nativeInterface<QNativeInterface::QWaylandApplication>();
+    if (layerShellActive() && native && native->display()) {
+        // Owned by the caller's context, so closing a window cancels its outstanding callback.
+        struct Sync : QObject {
+            wl_callback *callback = nullptr;
+            std::function<void()> ready;
+            explicit Sync(QObject *parent) : QObject(parent) {}
+            ~Sync() override { if (callback) wl_callback_destroy(callback); }
+            static void done(void *data, wl_callback *, uint32_t) {
+                auto *sync = static_cast<Sync *>(data);
+                // Drain already queued input before allowing the next move.
+                QMetaObject::invokeMethod(sync->parent(), std::move(sync->ready), Qt::QueuedConnection);
+                delete sync;
+            }
+        };
+        auto *sync = new Sync(context);
+        sync->ready = std::move(ready);
+        sync->callback = wl_display_sync(native->display());
+        static const wl_callback_listener listener{Sync::done};
+        wl_callback_add_listener(sync->callback, &listener, sync);
+        wl_display_flush(native->display());
+        return;
+    }
+#endif
+    ready();
+}
 #else
 bool layerShellActive() { return false; }
 void layerAttach(QWindow *, bool, bool) {}
 void layerSetScreen(QWindow *, QScreen *) {}
 void layerPlace(QWindow *, QPoint) {}
+void layerSync(QObject *, std::function<void()> ready) { ready(); }
 #endif
 }
