@@ -99,6 +99,7 @@ PetWindow::PetWindow(QWidget *parent, const QString &path, bool persist)
     ambient_.setMoveGate([this](const Move &move) { return canWander(move); });
     eggs_.setReminderSchedule(preferences.reminderSchedule);
     eggs_.setEnabled(preferences.easterEggs); eggs_.setBirthday(preferences.birthday);
+    bedtimeAnimations_ = preferences.bedtimeAnimations;
     wellness_.setEyeMinutes(preferences.eyeMinutes); wellness_.setWaterMinutes(preferences.waterMinutes);
     wellness_.setMovementMinutes(preferences.movementMinutes);
     ambient_.setEasterEggs(&eggs_);
@@ -109,6 +110,11 @@ PetWindow::PetWindow(QWidget *parent, const QString &path, bool persist)
     pet_ = preferences.pet;
     plugins_ = preferences.plugins;
     connect(&player_, &Player::changed, this, qOverload<>(&PetWindow::update));
+    connect(&player_, &Player::looped, this, [this](const QString &state) {
+        if (tapTouch_.isEmpty() || state != tapTouch_) return;
+        tapTouch_.clear();
+        player_.release();
+    });
     // Shutdown always ends: its animation finished, failed or ran out of time, or nobody could see it.
     connect(&stage_, &Stage::finished, this, [] { qApp->quit(); });
     // Monitoring stops when quitting starts, so this keeps the runtime's clock going for the shutdown's bound.
@@ -189,10 +195,11 @@ PetWindow::PetWindow(QWidget *parent, const QString &path, bool persist)
         samples_.append({pressTimer_.elapsed(), position}); // The last ones tell how fast it was let go.
         if (samples_.size() > 16) samples_.removeFirst();
         if (!(native.has_value() ? *native : bool(QApplication::mouseButtons() & Qt::LeftButton))) endDrag(true);
-        // Lift the pet only once it moves, so a click opens the session list without the drop animation.
-        else if (!player_.isDragging() && position != pressPosition_) player_.beginDrag();
         // Held still past a click, a press pets whatever it landed on until let go.
-        else if (!player_.held() && !pressTouch_.isEmpty() && pressTimer_.elapsed() >= touch::holdMs) player_.hold(pressTouch_);
+        else if (!dragStarted_ && !player_.held() && !pressTouch_.isEmpty() && pressTimer_.elapsed() >= touch::holdMs) {
+            petStarted_ = true;
+            player_.hold(pressTouch_);
+        }
         if (patience_.petting(touchEnabled_ && dragging_ && player_.held()
                              && !pressTouch_.isEmpty() && player_.state() == pressTouch_, touchClock_.elapsed()))
             beginQuit(Pet::tr("Too much petting! I need a break. Bye!"));
@@ -331,12 +338,23 @@ void PetWindow::relocate(QPoint where) {
     overlay::place(this, where, true);
     if (!platform::layerShellActive() || !windowHandle()) return;
     if (frames_ != windowHandle()) { frames_ = windowHandle(); frames_->installEventFilter(this); }
-    awaitingFrame_ = true; frameClock_.start();
+    awaitingFrame_ = true; frameSyncPending_ = false; ++frameGeneration_;
     windowHandle()->requestUpdate();
 }
 bool PetWindow::eventFilter(QObject *watched, QEvent *event) {
     if (auto *widget = qobject_cast<QWidget *>(watched); widget && packDrop(widget, event)) return true;
-    if (event->type() == QEvent::UpdateRequest && watched == frames_) awaitingFrame_ = false;
+    if (event->type() == QEvent::UpdateRequest && watched == frames_ && awaitingFrame_ && !frameSyncPending_) {
+        frameSyncPending_ = true;
+        const auto generation = frameGeneration_;
+        // The event filter runs before Qt paints/commits the surface. Send the barrier afterwards.
+        QTimer::singleShot(0, this, [this, generation] {
+            if (generation != frameGeneration_) return;
+            platform::layerSync(this, [this, generation] {
+                if (generation != frameGeneration_) return;
+                awaitingFrame_ = false; frameSyncPending_ = false;
+            });
+        });
+    }
     return QWidget::eventFilter(watched, event);
 }
 void PetWindow::watchScreen(QScreen *screen) {
@@ -453,6 +471,11 @@ void PetWindow::setActivityStyle(int style) {
     activity_.setStyle(ActivityStyle(style));
     if (ready_) saveTimer_.start();
 }
+void PetWindow::setBedtimeAnimations(bool enabled) {
+    if (bedtimeAnimations_ == enabled) return;
+    bedtimeAnimations_ = enabled;
+    saveTimer_.start();
+}
 void PetWindow::setMoodLevel(int level) {
     level = qBound(0, level, 2);
     if (level == moodLevel()) return;
@@ -462,7 +485,7 @@ void PetWindow::setMoodLevel(int level) {
 void PetWindow::setTouchEnabled(bool enabled) {
     if (enabled == touchEnabled_) return;
     touchEnabled_ = enabled;
-    if (!enabled) patience_.reset();
+    if (!enabled) { endDrag(); patience_.reset(); }
     if (ready_) saveTimer_.start();
 }
 void PetWindow::setWanderEnabled(bool enabled) {
@@ -662,6 +685,7 @@ bool PetWindow::writePreferences(const std::function<void(Preferences &)> &chang
     preferences.muted = muted_; preferences.sound = sound_; preferences.bubbles = bubbles_;
     preferences.ambient = ambientLevel(); preferences.activity = activityStyle(); preferences.mood = moodLevel(); preferences.turns = mood_.turns();
     preferences.touch = touchEnabled_; preferences.wander = wanderEnabled_; preferences.easterEggs = easterEggsEnabled(); preferences.birthday = birthday();
+    preferences.bedtimeAnimations = bedtimeAnimations_;
     preferences.eyeMinutes = wellness_.eyeMinutes(); preferences.waterMinutes = wellness_.waterMinutes();
     preferences.movementMinutes = wellness_.movementMinutes();
     preferences.reminderSchedule = eggs_.reminderSchedule();
@@ -727,39 +751,63 @@ void PetWindow::closeEvent(QCloseEvent *event) { event->ignore(); requestQuit();
 void PetWindow::contextMenuEvent(QContextMenuEvent *event) { menu_.popup(event->globalPos()); }
 void PetWindow::mousePressEvent(QMouseEvent *event) {
     if (event->button() != Qt::LeftButton || quitting_) return;
+    if (!tapTouch_.isEmpty()) endDrag();
     if (flight_) land(); // Caught in mid-air.
     slide_.stop(); // Caught on its way to the edge.
     dragging_ = true;
-    pressPosition_ = nativePos(); pressTimer_.start(); samples_.clear();
+    dragStarted_ = false; petStarted_ = false; fallbackDrag_ = false;
+    pressPointer_ = event->globalPosition().toPoint(); pressTimer_.start(); samples_.clear();
     // A pet hiding at an edge is only partly there; it can be dragged back out, not petted.
     pressTouch_ = touchEnabled_ && !hiding() ? player_.touchAt(event->position(), width()) : QString();
-    dragOffset_ = event->globalPosition().toPoint() - pos();
-    // A layer surface cannot be moved by the compositor: the pet follows the pointer itself.
-    fallbackDrag_ = platform::layerShellActive() || !windowHandle()->startSystemMove();
+    pressTap_ = touchEnabled_ && !hiding() ? player_.touchAt(event->position(), width(), true) : QString();
+    dragOffset_ = event->globalPosition().toPoint() - nativePos();
     dragTimer_.start();
 }
 void PetWindow::mouseMoveEvent(QMouseEvent *event) {
-    if (dragging_ && fallbackDrag_ && (event->buttons() & Qt::LeftButton)) {
-        if (awaitingFrame_ && frameClock_.isValid() && frameClock_.elapsed() < 50) return; // Its coordinates are for where the pet was.
+    if (!dragging_ || !(event->buttons() & Qt::LeftButton)) return;
+    if (!dragStarted_) {
+        const auto delta = event->globalPosition().toPoint() - pressPointer_;
+        if (pressTimer_.elapsed() <= touch::dragHoldMs) return;
+        const int threshold = touch::dragDistance;
+        if (QPointF::dotProduct(delta, delta) < threshold * threshold) return;
+        dragStarted_ = true;
+        samples_.clear();
+        samples_.append({pressTimer_.elapsed(), nativePos()});
         player_.beginDrag();
-        relocate(event->globalPosition().toPoint() - dragOffset_);
+        // Ask the compositor to move only after an intentional drag. Layer surfaces follow the pointer.
+        fallbackDrag_ = platform::layerShellActive() || !windowHandle()->startSystemMove();
+    }
+    if (fallbackDrag_) {
+        if (awaitingFrame_) return; // These coordinates still refer to the previous surface position.
+        const auto target = event->globalPosition().toPoint() - dragOffset_;
+        if (target != pos()) relocate(target);
     }
 }
 void PetWindow::endDrag(bool released) {
     if (flight_) land(); // Hiding, quitting or click-through: put it down where it is.
+    if (!tapTouch_.isEmpty()) { tapTouch_.clear(); player_.release(); }
     if (!dragging_) return;
-    dragging_ = false; fallbackDrag_ = false; dragTimer_.stop(); pressTouch_.clear();
+    const bool wasDrag = dragStarted_;
+    const bool wasPet = petStarted_;
+    const auto touched = touchEnabled_ ? pressTap_ : QString();
+    pressTap_.clear();
+    dragging_ = false; dragStarted_ = false; petStarted_ = false; fallbackDrag_ = false; dragTimer_.stop(); pressTouch_.clear();
     patience_.petting(false, touchClock_.elapsed());
     patience_.dragging(false, touchClock_.elapsed());
-    // Every press starts a move, so a short press that left the pet in place is a click.
-    const bool click = released && nativePos() == pressPosition_ && pressTimer_.isValid() && pressTimer_.elapsed() < touch::holdMs;
-    if (released && !click) letGo(touch::velocity(samples_));
+    // A short press reacts where it landed; outside touch regions it opens sessions.
+    const bool click = released && !wasDrag && !wasPet;
+    if (released && wasDrag) letGo(touch::velocity(samples_));
+    else if (click && !touched.isEmpty()) {
+        tapTouch_ = touched;
+        player_.hold(tapTouch_);
+        constrainPosition();
+    }
     else { player_.release(); constrainPosition(); }
     samples_.clear();
     emit moved(); // Popups skipped the drag; put them beside the pet now.
     // Wait for the window manager to release its move grab: a popup opened while it
     // holds the pointer cannot take its own grab and closes at once.
-    if (click) QTimer::singleShot(150, this, &PetWindow::sessionsRequested);
+    if (click && touched.isEmpty()) QTimer::singleShot(150, this, &PetWindow::sessionsRequested);
 }
 void PetWindow::letGo(QPointF velocity) {
     if (quitting_) return;
@@ -945,6 +993,13 @@ void PetWindow::showSettings() {
                          "it never delays alerts."));
     layout->addRow(tr("&Active animation"), activity);
     connect(activity, &QComboBox::currentIndexChanged, this, &PetWindow::setActivityStyle);
+    auto *bedtime = new QCheckBox(tr("Follow bedtime animations"), dialog);
+    bedtime->setObjectName("bedtimeAnimations"); bedtime->setAccessibleName(tr("Follow bedtime animations"));
+    bedtime->setChecked(bedtimeAnimations_);
+    bedtime->setToolTip(tr("From the Sleep reminder time until 06:00, use tired working and completion animations\n"
+                          "when available, and sleep while idle. Independent of reminder notifications and mood."));
+    layout->addRow(bedtime);
+    connect(bedtime, &QCheckBox::toggled, this, &PetWindow::setBedtimeAnimations);
     auto *wander = new QCheckBox(tr("Walk, crawl and climb along the screen after a while"), dialog);
     wander->setChecked(wanderEnabled_); wander->setAccessibleName(tr("Wandering"));
     wander->setToolTip(tr("After about four quiet minutes the idle pet sometimes walks or crawls along the screen, and\n"

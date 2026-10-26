@@ -213,10 +213,13 @@ a break, and every hundredth finished turn gets a bigger celebration. Settings �
 
 ## Touch
 
-A quick click still opens the running-sessions list. Hold the pet still for half a
-second instead and it reacts to where you hold it: a head pat, a poke in the tummy, or
-a pinched cheek. It keeps reacting until you let go. Moving while holding turns it into
-an ordinary drag. Let go of a drag while still moving fast and the pet is thrown: it
+A tap on the head pets it; a tap on the tummy pokes it. Hold the cheek for 300 ms to pinch it;
+a quick tap on the cheek opens sessions.
+Each tap plays a short reaction and then resumes the current session animation.
+Click elsewhere on the pet to open the running-sessions list; small pointer movements are allowed.
+Hold a touch region for 300 ms to keep reacting until you let go. Holding for more than 50 ms and
+moving at least 8 logical pixels from the press turns it into an ordinary drag.
+Let go of a drag while still moving fast and the pet is thrown: it
 tumbles to the bottom of the screen, lands and gets back up. Push it past the left or
 right edge of your screen while it idles and it hides there, peeking out from behind
 the edge. Agent activity brings it back out, and so does dragging it away. Settings →
@@ -452,7 +455,7 @@ window is already active; and Settings → Show bubbles chooses between requests
 only, requests and errors (default), or finished turns too. The pet animates
 every event regardless.
 
-Click the pet (or right-click → Running sessions…) for a small list of observed
+Click outside the pet's touch regions (or right-click → Running sessions…) for a small list of observed
 sessions, most urgent first: project, status (Needs approval, Working,
 Thinking, Idle · 3 min…), provider, short ID and host. Subagents fold into
 their parent. Click a row to go to that session.

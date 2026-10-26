@@ -6,9 +6,9 @@
   "source_commit": "6358445aa54587f9cd524264eaf17ef97bc826a8",
   "source_root": "VPet-Simulator.Windows/mod/0000_core/pet/vup",
   "bundled_catalog": "assets/vpet/animations.json",
-  "missing_sequence_count": 391,
-  "missing_frame_count": 3851,
-  "missing_size_bytes": 527279768,
+  "missing_sequence_count": 387,
+  "missing_frame_count": 3795,
+  "missing_size_bytes": 519136946,
   "sequences": [
     {
       "path": "Default/Happy/2",
@@ -638,15 +638,6 @@
       "frame_count": 30,
       "total_duration_ms": 3750,
       "size_bytes": 4193417,
-      "timing_valid": true
-    },
-    {
-      "path": "LevelUP/PoorCondition",
-      "category": "LevelUP",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/LevelUP/PoorCondition",
-      "frame_count": 27,
-      "total_duration_ms": 3625,
-      "size_bytes": 4516254,
       "timing_valid": true
     },
     {
@@ -3428,33 +3419,6 @@
       "frame_count": 9,
       "total_duration_ms": 1125,
       "size_bytes": 1405448,
-      "timing_valid": true
-    },
-    {
-      "path": "WORK/WorkONE/PoorCondition/A",
-      "category": "WORK",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/WORK/WorkONE/PoorCondition/A",
-      "frame_count": 10,
-      "total_duration_ms": 1250,
-      "size_bytes": 1156373,
-      "timing_valid": true
-    },
-    {
-      "path": "WORK/WorkONE/PoorCondition/B",
-      "category": "WORK",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/WORK/WorkONE/PoorCondition/B",
-      "frame_count": 10,
-      "total_duration_ms": 1625,
-      "size_bytes": 1070225,
-      "timing_valid": true
-    },
-    {
-      "path": "WORK/WorkONE/PoorCondition/c",
-      "category": "WORK",
-      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/WORK/WorkONE/PoorCondition/c",
-      "frame_count": 9,
-      "total_duration_ms": 1125,
-      "size_bytes": 1399970,
       "timing_valid": true
     },
     {

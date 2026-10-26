@@ -3,8 +3,8 @@
   "upstream": "https://github.com/LorisYounger/VPet",
   "source_commit": "6358445aa54587f9cd524264eaf17ef97bc826a8",
   "source_note": "Selected unmodified files from local checkout; per-file hashes identify copied bytes, including any local changes.",
-  "file_count": 1748,
-  "total_bytes": 262764913,
+  "file_count": 1804,
+  "total_bytes": 270907735,
   "files": [
     {
       "path": "assets/vpet/vup/Default/Nomal/1/_000_250.png",
@@ -8745,6 +8745,286 @@
       "path": "assets/vpet/vup/Shutdown/2/Nomal/_032_125.png",
       "bytes": 215,
       "sha256": "3f99bc09b118bed51a6aba740e32efe3d56cb49cdd42a6992dba9702a01883b1"
+    },
+    {
+      "path": "assets/vpet/vup/WORK/WorkONE/PoorCondition/A/_000_125.png",
+      "bytes": 119075,
+      "sha256": "e51ee37600077881a3cf038dc4a3d2c1fbac933c9143ea557af8f258051ef620"
+    },
+    {
+      "path": "assets/vpet/vup/WORK/WorkONE/PoorCondition/A/_001_125.png",
+      "bytes": 111318,
+      "sha256": "71772dad565dedb2d334f83e4cfbd144d5b93ca9b7041b46483a5522d77989fc"
+    },
+    {
+      "path": "assets/vpet/vup/WORK/WorkONE/PoorCondition/A/_002_125.png",
+      "bytes": 114789,
+      "sha256": "e93bd4101ada90926c5aa281520efb664b4ce771346ed405c5d3eed23cf7442c"
+    },
+    {
+      "path": "assets/vpet/vup/WORK/WorkONE/PoorCondition/A/_003_125.png",
+      "bytes": 139006,
+      "sha256": "3a93db6016800e43f77574df10a7a9ea5b5253c8a41abbb9dc5500ffa6ced38b"
+    },
+    {
+      "path": "assets/vpet/vup/WORK/WorkONE/PoorCondition/A/_004_125.png",
+      "bytes": 136281,
+      "sha256": "cc3c677df586dc1ac05fec7438dd2a51f7489ace7933246f4eb642b3d4984f65"
+    },
+    {
+      "path": "assets/vpet/vup/WORK/WorkONE/PoorCondition/A/_005_125.png",
+      "bytes": 115318,
+      "sha256": "63e84254074c87217f5cd1346c7a07e3336b3e5183105d2776be05383bdf7462"
+    },
+    {
+      "path": "assets/vpet/vup/WORK/WorkONE/PoorCondition/A/_006_125.png",
+      "bytes": 114655,
+      "sha256": "d6f9af77236513844e0ba058f60433d4157c774d44cfbe50e41f81cf0c1e0413"
+    },
+    {
+      "path": "assets/vpet/vup/WORK/WorkONE/PoorCondition/A/_007_125.png",
+      "bytes": 104914,
+      "sha256": "d0a04ce33a7a982644c7415c9a516fcb2466b6c7eaa251f201d4d861b93df283"
+    },
+    {
+      "path": "assets/vpet/vup/WORK/WorkONE/PoorCondition/A/_008_125.png",
+      "bytes": 97762,
+      "sha256": "597e50ec317cb81e2077ed416e30796c2adb6fe057a467fd71ce81343ec97a24"
+    },
+    {
+      "path": "assets/vpet/vup/WORK/WorkONE/PoorCondition/A/_009_125.png",
+      "bytes": 103255,
+      "sha256": "75a452876a69b21cbf0fb0a10a2f2288b229fb44b61911f81251422595ac7213"
+    },
+    {
+      "path": "assets/vpet/vup/WORK/WorkONE/PoorCondition/B/_000_125.png",
+      "bytes": 105475,
+      "sha256": "03b53c7c024e45339761a5d2cb3213403d0af7f0acbbfbcfabc7b9c0192b46b8"
+    },
+    {
+      "path": "assets/vpet/vup/WORK/WorkONE/PoorCondition/B/_001_125.png",
+      "bytes": 107551,
+      "sha256": "d8f323406b038cbee52437d311eabccd111069affd6e8a74beb786307b9cbae7"
+    },
+    {
+      "path": "assets/vpet/vup/WORK/WorkONE/PoorCondition/B/_002_125.png",
+      "bytes": 108067,
+      "sha256": "07eb17f7e12a118d3bbb13a37c80dd62b0a8f9606f9c504f5522992194068ce4"
+    },
+    {
+      "path": "assets/vpet/vup/WORK/WorkONE/PoorCondition/B/_003_125.png",
+      "bytes": 107551,
+      "sha256": "d8f323406b038cbee52437d311eabccd111069affd6e8a74beb786307b9cbae7"
+    },
+    {
+      "path": "assets/vpet/vup/WORK/WorkONE/PoorCondition/B/_004_125.png",
+      "bytes": 108067,
+      "sha256": "07eb17f7e12a118d3bbb13a37c80dd62b0a8f9606f9c504f5522992194068ce4"
+    },
+    {
+      "path": "assets/vpet/vup/WORK/WorkONE/PoorCondition/B/_005_375.png",
+      "bytes": 107551,
+      "sha256": "d8f323406b038cbee52437d311eabccd111069affd6e8a74beb786307b9cbae7"
+    },
+    {
+      "path": "assets/vpet/vup/WORK/WorkONE/PoorCondition/B/_006_250.png",
+      "bytes": 102278,
+      "sha256": "7d5edc87d12f25bf32bbcad3aefc9129618626ee086fe49d0d6eb83242c9d946"
+    },
+    {
+      "path": "assets/vpet/vup/WORK/WorkONE/PoorCondition/B/_007_125.png",
+      "bytes": 108067,
+      "sha256": "07eb17f7e12a118d3bbb13a37c80dd62b0a8f9606f9c504f5522992194068ce4"
+    },
+    {
+      "path": "assets/vpet/vup/WORK/WorkONE/PoorCondition/B/_008_125.png",
+      "bytes": 107551,
+      "sha256": "d8f323406b038cbee52437d311eabccd111069affd6e8a74beb786307b9cbae7"
+    },
+    {
+      "path": "assets/vpet/vup/WORK/WorkONE/PoorCondition/B/_009_125.png",
+      "bytes": 108067,
+      "sha256": "07eb17f7e12a118d3bbb13a37c80dd62b0a8f9606f9c504f5522992194068ce4"
+    },
+    {
+      "path": "assets/vpet/vup/WORK/WorkONE/PoorCondition/c/c_000_125.png",
+      "bytes": 97762,
+      "sha256": "597e50ec317cb81e2077ed416e30796c2adb6fe057a467fd71ce81343ec97a24"
+    },
+    {
+      "path": "assets/vpet/vup/WORK/WorkONE/PoorCondition/c/c_001_125.png",
+      "bytes": 103255,
+      "sha256": "75a452876a69b21cbf0fb0a10a2f2288b229fb44b61911f81251422595ac7213"
+    },
+    {
+      "path": "assets/vpet/vup/WORK/WorkONE/PoorCondition/c/c_002_125.png",
+      "bytes": 73717,
+      "sha256": "22b72edcec938f16ccf4cb3f9de9ad542809759f5d361fa08a416b615113cacd"
+    },
+    {
+      "path": "assets/vpet/vup/WORK/WorkONE/PoorCondition/c/c_003_125.png",
+      "bytes": 119348,
+      "sha256": "c48c1e44e610931f964fccf54aa6597f76d3f7e335ffff496bf3c40d35892be6"
+    },
+    {
+      "path": "assets/vpet/vup/WORK/WorkONE/PoorCondition/c/c_004_125.png",
+      "bytes": 125780,
+      "sha256": "348e2558b49c39e877eef12e48ff7ab6a51be8a5ebc2a60d8231bfff721ff22e"
+    },
+    {
+      "path": "assets/vpet/vup/WORK/WorkONE/PoorCondition/c/c_005_125.png",
+      "bytes": 182248,
+      "sha256": "272a4171f163e115d3032ca109822d8a6c49f88617883f943c8c212e9c9873ed"
+    },
+    {
+      "path": "assets/vpet/vup/WORK/WorkONE/PoorCondition/c/c_006_125.png",
+      "bytes": 213981,
+      "sha256": "18f7bb4c1d27c1844b4d4610d9ced8a6f6eeb3aec9ac3c78d83eb1f640d9fcd7"
+    },
+    {
+      "path": "assets/vpet/vup/WORK/WorkONE/PoorCondition/c/c_007_125.png",
+      "bytes": 243225,
+      "sha256": "fa0c756737352510d645530eaf14506e051dc0f9c84ea9e5e5100b72729ac433"
+    },
+    {
+      "path": "assets/vpet/vup/WORK/WorkONE/PoorCondition/c/c_008_125.png",
+      "bytes": 240654,
+      "sha256": "7d9e2fb5da6bb85ed341fb99864e2bd7a49fd53f053950426b0d04cc0ae55912"
+    },
+    {
+      "path": "assets/vpet/vup/LevelUP/PoorCondition/\u4e0d\u5f00\u5fc3\u5347\u7ea7_000_125.png",
+      "bytes": 172184,
+      "sha256": "0224738879e54c69b1e22668283f81ba1d022ef6b099a64c5ef36e65b0b223b5"
+    },
+    {
+      "path": "assets/vpet/vup/LevelUP/PoorCondition/\u4e0d\u5f00\u5fc3\u5347\u7ea7_001_125.png",
+      "bytes": 175763,
+      "sha256": "b51fab928f7ff71a6b0d0bd62cf57b6101c03a4483217269e1fad7e3790260f7"
+    },
+    {
+      "path": "assets/vpet/vup/LevelUP/PoorCondition/\u4e0d\u5f00\u5fc3\u5347\u7ea7_002_125.png",
+      "bytes": 185812,
+      "sha256": "2d70ce60f22dd690692aa2ec138eb0dd1b3ee2e1afe24449e1e4e3bb480e79ff"
+    },
+    {
+      "path": "assets/vpet/vup/LevelUP/PoorCondition/\u4e0d\u5f00\u5fc3\u5347\u7ea7_003_125.png",
+      "bytes": 194569,
+      "sha256": "8e3ada5a3d45018a477256478335a507b5bbd40e8fc0196584eea404a61ebd8b"
+    },
+    {
+      "path": "assets/vpet/vup/LevelUP/PoorCondition/\u4e0d\u5f00\u5fc3\u5347\u7ea7_004_125.png",
+      "bytes": 187276,
+      "sha256": "04e09aa95b6be00b50605a35da43582447eab5f1d43497b5252a58e8934308ae"
+    },
+    {
+      "path": "assets/vpet/vup/LevelUP/PoorCondition/\u4e0d\u5f00\u5fc3\u5347\u7ea7_005_125.png",
+      "bytes": 179215,
+      "sha256": "71fcc28e48c7649d2495c95e9e3549bb2c35b92c3a7c233d5e1f82f900e00d97"
+    },
+    {
+      "path": "assets/vpet/vup/LevelUP/PoorCondition/\u4e0d\u5f00\u5fc3\u5347\u7ea7_006_125.png",
+      "bytes": 174111,
+      "sha256": "f6bd6ee13be42bedb980cbe8c741bcfd7c8a098da8d35931dbcfba6660a1d65c"
+    },
+    {
+      "path": "assets/vpet/vup/LevelUP/PoorCondition/\u4e0d\u5f00\u5fc3\u5347\u7ea7_007_125.png",
+      "bytes": 175199,
+      "sha256": "d5a6f04eea49718323937fbe7ff7795361fe6174c4acad8b3a7a5ae960fc49f0"
+    },
+    {
+      "path": "assets/vpet/vup/LevelUP/PoorCondition/\u4e0d\u5f00\u5fc3\u5347\u7ea7_008_125.png",
+      "bytes": 187276,
+      "sha256": "04e09aa95b6be00b50605a35da43582447eab5f1d43497b5252a58e8934308ae"
+    },
+    {
+      "path": "assets/vpet/vup/LevelUP/PoorCondition/\u4e0d\u5f00\u5fc3\u5347\u7ea7_009_125.png",
+      "bytes": 179215,
+      "sha256": "71fcc28e48c7649d2495c95e9e3549bb2c35b92c3a7c233d5e1f82f900e00d97"
+    },
+    {
+      "path": "assets/vpet/vup/LevelUP/PoorCondition/\u4e0d\u5f00\u5fc3\u5347\u7ea7_010_125.png",
+      "bytes": 174111,
+      "sha256": "f6bd6ee13be42bedb980cbe8c741bcfd7c8a098da8d35931dbcfba6660a1d65c"
+    },
+    {
+      "path": "assets/vpet/vup/LevelUP/PoorCondition/\u4e0d\u5f00\u5fc3\u5347\u7ea7_011_125.png",
+      "bytes": 157390,
+      "sha256": "79d1a1fb1e3a3452d6f881d69ce6b265e52f03b5f9e5751ec6dd075928704ed2"
+    },
+    {
+      "path": "assets/vpet/vup/LevelUP/PoorCondition/\u4e0d\u5f00\u5fc3\u5347\u7ea7_012_125.png",
+      "bytes": 160619,
+      "sha256": "3f554dc2c409d2abcd902be85ac63d658ff37643d3c7be04976de933b80f524e"
+    },
+    {
+      "path": "assets/vpet/vup/LevelUP/PoorCondition/\u4e0d\u5f00\u5fc3\u5347\u7ea7_013_125.png",
+      "bytes": 172014,
+      "sha256": "fa4361d18d6c5113f7b8797241c9d9d4e471b1209641fbf5f47645c3e5864eec"
+    },
+    {
+      "path": "assets/vpet/vup/LevelUP/PoorCondition/\u4e0d\u5f00\u5fc3\u5347\u7ea7_014_125.png",
+      "bytes": 170300,
+      "sha256": "ee05ea2eca669bf74fbea2b48a378e135e4f5ff1c871520b8050729d42d777fd"
+    },
+    {
+      "path": "assets/vpet/vup/LevelUP/PoorCondition/\u4e0d\u5f00\u5fc3\u5347\u7ea7_015_125.png",
+      "bytes": 168193,
+      "sha256": "00b644587b290430100b6e636a29fb17e35ad865715e1f4381fcc9bad6d91611"
+    },
+    {
+      "path": "assets/vpet/vup/LevelUP/PoorCondition/\u4e0d\u5f00\u5fc3\u5347\u7ea7_016_125.png",
+      "bytes": 172599,
+      "sha256": "b325ad278cf0b3263643b62c56cbbe017ff9b36c02fdcaa9b9978f36e1bde5f7"
+    },
+    {
+      "path": "assets/vpet/vup/LevelUP/PoorCondition/\u4e0d\u5f00\u5fc3\u5347\u7ea7_017_125.png",
+      "bytes": 163054,
+      "sha256": "d4c2f7ae88b1b42272b1aa3741feb0bb45d4b6fabe9a30966730d3f18677fcce"
+    },
+    {
+      "path": "assets/vpet/vup/LevelUP/PoorCondition/\u4e0d\u5f00\u5fc3\u5347\u7ea7_018_125.png",
+      "bytes": 155620,
+      "sha256": "a1d1740646109c6c8043af53a72ee9bcbdb0925cd73e420117d2e070abc883de"
+    },
+    {
+      "path": "assets/vpet/vup/LevelUP/PoorCondition/\u4e0d\u5f00\u5fc3\u5347\u7ea7_019_125.png",
+      "bytes": 164478,
+      "sha256": "7640e70ad826babe06f8c8fa13f173a3013193535be6b5cb1112f9438ec215f1"
+    },
+    {
+      "path": "assets/vpet/vup/LevelUP/PoorCondition/\u4e0d\u5f00\u5fc3\u5347\u7ea7_020_125.png",
+      "bytes": 148891,
+      "sha256": "3337f7d0f0471dcc79a5fdb4fe1465660c9bd5162a28a4f00a278b01cc474dd4"
+    },
+    {
+      "path": "assets/vpet/vup/LevelUP/PoorCondition/\u4e0d\u5f00\u5fc3\u5347\u7ea7_021_375.png",
+      "bytes": 147578,
+      "sha256": "7f676f67bb43bd9353097de1f8b54d61b036a3b8393ffb16eeebf6eea7c418b9"
+    },
+    {
+      "path": "assets/vpet/vup/LevelUP/PoorCondition/\u4e0d\u5f00\u5fc3\u5347\u7ea7_022_125.png",
+      "bytes": 154357,
+      "sha256": "ba0d735b3869d8511e05bf5e0d3076520c7c9cfff24b8af57cfaacad579f729d"
+    },
+    {
+      "path": "assets/vpet/vup/LevelUP/PoorCondition/\u4e0d\u5f00\u5fc3\u5347\u7ea7_023_125.png",
+      "bytes": 170580,
+      "sha256": "7a6f2ff9f69f5cb7a4dbb5f9d5b16bb709b287ec03469edc339927402fcf84ae"
+    },
+    {
+      "path": "assets/vpet/vup/LevelUP/PoorCondition/\u4e0d\u5f00\u5fc3\u5347\u7ea7_024_125.png",
+      "bytes": 155078,
+      "sha256": "410907069af5a1dfd3526f77c2e5cb7fe1e159c346546d494c2329621f4f7762"
+    },
+    {
+      "path": "assets/vpet/vup/LevelUP/PoorCondition/\u4e0d\u5f00\u5fc3\u5347\u7ea7_025_125.png",
+      "bytes": 137617,
+      "sha256": "81a9e307147dcfcb9becdb484660043f3d47b6845676c79044ee70d771db1ec6"
+    },
+    {
+      "path": "assets/vpet/vup/LevelUP/PoorCondition/\u4e0d\u5f00\u5fc3\u5347\u7ea7_026_125.png",
+      "bytes": 133155,
+      "sha256": "ded9898717090c4eddc26d6503f955df3f57b10fe085ae09276925943381208d"
     }
   ]
 }

@@ -100,13 +100,13 @@ When an agent asks for approval or input, or a tool fails, a short note appears 
 
 ### All your sessions in one list
 
-Click the pet to see every running session, most urgent first. Click one to jump to it.
+Click outside the pet's head and tummy to see every running session, most urgent first. Click one to jump to it.
 
 <img src="docs/media/session-list.png" width="420" alt="List of four sessions: needs approval, working, thinking and idle">
 
 ### Play with it
 
-Drag it anywhere and it dangles from your cursor. Hold still on its head or tummy and it enjoys being petted. Let go mid-swing and it tumbles down, then gets back up. Push it past the side of the screen and it hides there, peeking out until your agents get busy again.
+Drag it anywhere and it dangles from your cursor. Tap its head for a pat or its tummy for a poke; hold still to keep petting it, or hold its cheek to pinch it. Let go mid-swing and it tumbles down, then gets back up. Push it past the side of the screen and it hides there, peeking out until your agents get busy again.
 
 Just don't overdo it: throw it around too much, pet it nonstop or hold on to it too long, and it gets grumpy and leaves.
 
@@ -200,6 +200,7 @@ Right-click the pet (or its tray / menu bar icon) for everything: your sessions,
 - make it calmer or livelier (when idle and while working), and switch off wandering, moods, touch or surprises;
 - turn on [plugin packs](starter/docs/plugins.md) that add animations to your pet, and that can react when your scripts or CI send it [a custom event](starter/docs/events.md#custom-events);
 - set or turn off the eye, water and movement-break reminders, configure lunch (default noon, eligible until 13:15), Monday, go-home and bedtime reminders, and enter your birthday;
+- follow bedtime animations: VPet works tired, acknowledges completion with a yawn, and sleeps when idle from your bedtime until 06:00. Toggle it in **Settings → Pet**, independently of reminders and mood;
 - connect Claude Code and Codex with one click, and have it start with your agents or at login;
 - choose how updates are installed.
 

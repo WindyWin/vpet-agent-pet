@@ -231,9 +231,30 @@ The `cues` section maps both kinds:
 }
 ```
 
-Everything else in the catalog is optional: variants, mood art, ambient fidgets, touch, moves and
+Everything else in the catalog is optional: variants, mood art, bedtime art, ambient fidgets, touch, moves and
 activity decoration. VPet's catalog and ADRs 0011–0021 show what each does; [ADR 0029](adr/0029-cues.md)
 records the cue design.
+
+An activity's optional `continuity` object describes poses that share a desk:
+`sources` lists seated sequences; `landings` maps entrances and performances to
+the seated loop they finish in. The player waits for those clips before swapping
+props and keeps the latest queued request. `overrides` maps a source sequence to
+its destination-state/swap-sequence map (for example, a pen spin that already
+removed a monitor). `exit` supplies the departure from a seated pose when the
+state's ordinary exit is standing. References must name bundled sequences;
+landing loops and override sources must be in `sources`. Without this object,
+existing `handover`, `linger` and sustained resumes keep their legacy behavior.
+See [VPet's coverage and frame audit](vpet-desk-continuity.md).
+
+`bedtime` maps states to weighted choices using the same `sequences`/`weight` format
+as mood art. Each choice must retain that state's phase count. From the configured
+bedtime until 06:00, it takes precedence over mood without changing the pet's mood;
+states without a mapping keep their ordinary art. See [ADR 0055](adr/0055-bedtime-animations.md).
+
+Each `touch.regions` entry may set `"tap": false` to require a held press for its
+reaction (VPet uses this for cheek pinching). The default is `true`. The first
+matching region wins for both gestures; tapping a region with `tap: false` opens
+sessions without falling through to an overlapping region.
 
 The catalog's `schema_version` is 2. `python3 scripts/migrate_catalog.py <animations.json>…` brings a
 schema 1 catalog up to date: it moves its `reactions` into `cues` under the new names.

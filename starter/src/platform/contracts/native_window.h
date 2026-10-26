@@ -2,7 +2,9 @@
 #include <QPoint>
 #include <QtGlobal>
 #include <optional>
+#include <functional>
 
+class QObject;
 class QScreen;
 class QWindow;
 
@@ -30,4 +32,7 @@ void layerAttach(QWindow *window, bool aboveWindows, bool takesKeyboard);
 void layerSetScreen(QWindow *window, QScreen *screen);
 // Where the surface sits, in pixels from its screen's top left. May be negative or past the edge.
 void layerPlace(QWindow *window, QPoint offset);
+// Complete asynchronously after the compositor has processed preceding layer requests.
+// The callback is cancelled when context is destroyed. Other backends complete immediately.
+void layerSync(QObject *context, std::function<void()> ready);
 }

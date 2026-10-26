@@ -41,8 +41,13 @@ popup placement and mouse coordinates depend on. `PetWindow::relocate()` replace
   on-demand for the pet (its shortcuts) and none for bubbles.
 - No compositor move exists, so the pet drags itself (the existing fallback drag). Pointer
   events sent before the compositor applies a new margin carry coordinates for the old place
-  and made the drag run away, so after each move the pet ignores pointer motion until a
-  frame (`requestUpdate`) comes back, for at most 50 ms.
+  and made the drag run away. After each move the pet ignores pointer motion until Qt
+  has handled its update request and a Wayland `wl_display.sync` barrier acknowledges
+  the preceding requests. The barrier is queued after paint/commit; an update request
+  alone runs before Qt paints and does not acknowledge compositor placement. There is
+  no elapsed-time bypass that could accept stale coordinates. An unchanged target
+  sends no further move. Each placement has a generation, so an old acknowledgement
+  cannot unlock a later placement or a recreated surface.
 - A pet window made before the surface exists can end up without its alpha channel (drawn
   on black); `overlay::prepare` recreates it once when the format lacks alpha.
 - Wandering, throws and edge hiding are enabled under layer-shell.
@@ -60,6 +65,17 @@ list. Cross-screen drag recreates the surface when the window centre crosses; wh
 drag carries on seamlessly depends on the compositor.
 
 ## Validation
+
+2026-10-22: replaced the update-request-only drag gate and its 50 ms bypass with an
+asynchronous compositor barrier. The pending callback belongs to the pet window and
+is cancelled on destruction. This follows the ordering guarantee of
+[`wl_display.sync`](https://wayland.freedesktop.org/docs/html/apa.html#protocol-spec-wl_display-request-sync).
+Dragging still requires a hold longer than 50 ms and travel of at least 8 logical
+pixels; petting still requires a 300 ms hold. Built the app and prototype tests with
+Qt 6.11.2; `holdToPet`, `touchRegionsAndHolds`, `windowTouchReactions` and
+`oneShotsAndDragResume` passed offscreen (6 results including setup/cleanup).
+Restarted the local app for a manual check; native drag smoothness still needs the
+user's confirmation.
 
 2026-10-16, Arch Linux, KDE Plasma 6 Wayland, Qt 6.11.2, LayerShellQt 6.7.5: the pet started
 natively, was transparent, 160 px, in the right place on the laptop output; its alert bubble

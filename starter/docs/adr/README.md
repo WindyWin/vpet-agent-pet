@@ -61,6 +61,7 @@ the order the decisions were made. For a map of the code, start with the
 | [0052](0052-tool-aware-animations.md) | Tool-aware activity animations | 2026-10-17 |
 | [0053](0053-turn-choreography.md) | Turn choreography: a getting-ready beat | 2026-10-17 |
 | [0054](0054-command-aware-activity.md) | Command-aware activity for shell tools | 2026-10-20 |
+| [0055](0055-bedtime-animations.md) | Tired working, sleepy completion and overnight rest | 2026-10-25 |
 
 ## Writing a record
 

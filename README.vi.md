@@ -101,13 +101,13 @@ Khi agent cần phê duyệt, cần bạn nhập thông tin hoặc gặp lỗi c
 
 ### Tất cả phiên trong một danh sách
 
-Nhấp vào thú cưng để xem các phiên đang chạy, sắp xếp theo mức độ cần chú ý. Nhấp vào một phiên để chuyển đến phiên đó.
+Nhấp vào vùng ngoài đầu và bụng của thú cưng để xem các phiên đang chạy, sắp xếp theo mức độ cần chú ý. Nhấp vào một phiên để chuyển đến phiên đó.
 
 <img src="docs/media/session-list.png" width="420" alt="Danh sách bốn phiên: cần phê duyệt, đang làm việc, đang suy nghĩ và rảnh">
 
 ### Chơi cùng thú cưng
 
-Kéo thú cưng đến bất kỳ đâu, nó sẽ đung đưa theo con trỏ. Nhấn giữ chuột trái trên đầu hoặc bụng và giữ yên để vuốt ve. Thả giữa lúc đang đung đưa, nó sẽ ngã xuống rồi đứng dậy. Đẩy ra mép màn hình, nó sẽ trốn ở đó và ló đầu ra cho đến khi agent bận rộn trở lại.
+Kéo thú cưng đến bất kỳ đâu, nó sẽ đung đưa theo con trỏ. Chạm đầu để vuốt ve, chạm bụng để chọc nhẹ; nhấn giữ để tương tác liên tục hoặc giữ vùng má để bẹo má. Thả giữa lúc đang đung đưa, nó sẽ ngã xuống rồi đứng dậy. Đẩy ra mép màn hình, nó sẽ trốn ở đó và ló đầu ra cho đến khi agent bận rộn trở lại.
 
 Đừng quá tay: tung nhiều quá, vuốt ve liên tục hoặc giữ quá lâu thì nó sẽ giận và bỏ đi.
 
@@ -201,6 +201,7 @@ Nhấp chuột phải vào thú cưng (hoặc biểu tượng ở khay hệ th�
 - chọn mức độ sinh động khi rảnh và khi làm việc, hoặc tắt đi dạo, tâm trạng, tương tác và bất ngờ;
 - bật [gói plugin](starter/docs/plugins.md) để thêm hoạt ảnh cho thú cưng, và để chúng phản ứng khi script hoặc CI của bạn gửi [một sự kiện tùy chỉnh](starter/docs/events.md#custom-events);
 - chỉnh hoặc tắt lời nhắc nghỉ mắt, uống nước và nghỉ vận động; đặt giờ nhắc ăn trưa (mặc định 12:00, có thể nhắc đến 13:15), nhắc thứ Hai, về nhà và đi ngủ; nhập ngày sinh nhật;
+- đổi hoạt ảnh theo giờ đi ngủ: VPet làm việc với vẻ buồn ngủ, ngáp khi hoàn thành và ngủ khi rảnh từ giờ đi ngủ đến 06:00. Bật hoặc tắt trong **Cài đặt → Thú cưng**, độc lập với lời nhắc và tâm trạng;
 - kết nối Claude Code và Codex bằng một cú nhấp, tự khởi động cùng agent hoặc khi đăng nhập;
 - chọn cách cài đặt bản cập nhật.
 
