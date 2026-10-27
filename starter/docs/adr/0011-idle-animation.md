@@ -39,6 +39,27 @@ are injectable, which is how the tests script every draw.
 
 ## Consequences
 
+### Ordered VPet routine — 2026-10-26
+
+VPet now opts into `ambient.routine`, repeating this selected performance:
+main idle ×6 → aside → idle variant 3 ×6 → yawn → main idle ×6 →
+boredom → main idle ×6 → squat → idle variant 2 ×6 → meow.
+Each phased fidget plays start, one middle loop, and end. These are exact normal-art
+choices from the approved HTML preview; mood and bedtime artwork still take precedence.
+
+The routine replaces random fidget timing, rarity and idle-time tiers for this pet,
+including random wandering and seasonal fidgets. Subtle and Lively both follow the
+selected six-loop pacing. Ambient Off disables it. Real activity, touch or drag
+resets the routine; fidgets still yield immediately through the behavior runtime.
+The continuous quiet clock still triggers a nap after ten minutes. Hidden/paused
+playback does not advance its loop count. Pets without a routine keep their previous
+weighted idle choices and random ambient scheduling.
+
+The optional catalog field is an alternating, even-length list of idle and fidget
+steps, starting with idle. Each step has `state`, `sequences` (an exact existing
+normal choice), and `repeat` (1–100). Idle repeats whole loops; a phased fidget
+repeats its middle phase, while a one-shot must use 1. No artwork imports are needed.
+
 - Catalogs without the new sections load as before.
 - Fidgets are ordinary states, so the preview and state menu can play them, and real
   activity always replaces them at once.

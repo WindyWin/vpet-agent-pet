@@ -16,7 +16,38 @@ void Ambient::setLevel(AmbientLevel level) {
     if (level == level_) return;
     level_ = level;
     player_.setVariants(level != AmbientLevel::Off);
-    if (idleSince_ >= 0 && level_ != AmbientLevel::Off) nextDue_ = clock_() + gapMs(); // A new pace starts from now.
+    resetRoutine(true);
+    if (idleSince_ >= 0 && level_ != AmbientLevel::Off && !routineEnabled()) nextDue_ = clock_() + gapMs(); // A new pace starts from now.
+}
+void Ambient::setStage(Stage *stage) {
+    stage_ = stage;
+    resetRoutine(true);
+    if (routineEnabled() && player_.state() == "idle" && idleSince_ < 0) idleSince_ = clock_();
+}
+void Ambient::resetRoutine(bool refreshIdle) {
+    routineIndex_ = routineLoops_ = 0;
+    player_.setIdleStep(routineEnabled() && player_.state() == "idle" ? player_.idleRoutine().first() : IdleStep{}, refreshIdle);
+}
+void Ambient::routineLoop() {
+    const auto &routine = player_.idleRoutine();
+    // Entering idle after a level change may have started in the middle of a pass.
+    player_.setIdleStep(routine[routineIndex_], true);
+    if (++routineLoops_ < routine[routineIndex_].repeat) return;
+    const int previous = routineIndex_;
+    routineIndex_ = (routineIndex_ + 1) % routine.size();
+    const auto &step = routine[routineIndex_];
+    if (const auto *move = player_.move(step.state); move && !(moveGate_ && moveGate_(*move))) {
+        routineIndex_ = (routineIndex_ + 1) % routine.size();
+        routineLoops_ = 0;
+        player_.setIdleStep(routine[routineIndex_], true);
+        return;
+    }
+    player_.setIdleStep(step);
+    using namespace behavior;
+    if (stage_->runtime().submit({"ambient", "fidget", step.state, Policy::Ambient, Lifetime::OneShot, 0, {}, step.state}) != Submission::Admitted) {
+        routineIndex_ = previous;
+        player_.setIdleStep(routine[previous], true);
+    } else routineLoops_ = 0;
 }
 void Ambient::setClock(std::function<qint64()> milliseconds) {
     if (milliseconds) clock_ = std::move(milliseconds);
@@ -27,15 +58,22 @@ qint64 Ambient::gapMs() {
 }
 void Ambient::entered(const QString &state) {
     if (state == "idle") {
+        if (routineEnabled()) {
+            if (player_.idleRoutine()[routineIndex_].state != "idle")
+                routineIndex_ = (routineIndex_ + 1) % player_.idleRoutine().size();
+            routineLoops_ = 0;
+            player_.setIdleStep(player_.idleRoutine()[routineIndex_]);
+        }
         // Idle after a fidget keeps the clock, so the tiers and the nap still count up.
         fidgeting_ = asleep_ = false; special_.clear();
         if (idleSince_ < 0) idleSince_ = clock_();
-        if (level_ != AmbientLevel::Off) nextDue_ = clock_() + gapMs();
+        if (level_ != AmbientLevel::Off && !routineEnabled()) nextDue_ = clock_() + gapMs();
     } else if (player_.isFidget(state) || (!special_.isEmpty() && state == special_)) {
         fidgeting_ = true; asleep_ = false;
     } else {
         // Anything else is real activity, or a nap this class chose to start.
         idleSince_ = -1; fidgeting_ = false; special_.clear();
+        resetRoutine();
         asleep_ = napping_ && state == player_.stateFor("nap");
     }
 }
@@ -52,6 +90,7 @@ void Ambient::looped(const QString &state) {
         napping_ = false;
         return;
     }
+    if (routineEnabled()) { routineLoop(); return; }
     if (now < nextDue_) return;
     const auto special = eggs_ ? eggs_->fidget() : QString();
     const auto fidget = special.isEmpty() ? pick(idle) : special;

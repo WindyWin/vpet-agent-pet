@@ -18,6 +18,8 @@ struct Animation { QVector<Choice> choices; QString mode; QString after; int loo
 // An ambient one-shot that may play while the pet idles. `minIdleS` gates it behind idle time;
 // a rare fidget is drawn separately, with a small fixed chance.
 struct Fidget { QString state; int weight = 1; int minIdleS = 0; bool rare = false; };
+// A deterministic ambient performance. Idle repeats whole loops; phased fidgets repeat their middle.
+struct IdleStep { QString state; QStringList sequences; int repeat = 1; };
 // One state a reaction pool may play, such as a way to celebrate a finished turn.
 struct Reaction { QString state; int weight = 1; };
 // A state drawn by weight from a reaction pool; a pool of one draws no number. Empty for an empty pool.
@@ -97,6 +99,7 @@ struct Catalog {
     QMap<QString, QVector<Frame>> sequences; // Frame paths are resolved against the root it was loaded from.
     QMap<QString, Animation> animations;
     QVector<Fidget> fidgets;
+    QVector<IdleStep> idleRoutine;
     QMap<QString, QMap<QString, QVector<Choice>>> moods; // mood -> state -> choices
     QMap<QString, QVector<Choice>> bedtime; // Optional nighttime art, independent of mood.
     QMap<QString, QString> cueStates; // The catalog's own state for a state cue, where it maps one.

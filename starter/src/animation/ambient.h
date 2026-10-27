@@ -8,7 +8,7 @@ namespace pet {
 class Stage;
 enum class AmbientLevel { Off = 0, Subtle = 1, Lively = 2 };
 
-// Plays a random fidget now and then while the pet idles, and lets it doze off after a long quiet
+// Plays the catalog's ordered routine, or random fidgets when none is supplied, and dozes after a long quiet
 // spell. It runs on the player's idle loop, so a paused or hidden pet does nothing, and any other
 // state ends the idle clock. Fidgets and their tiers come from the catalog's "ambient" section.
 class Ambient : public QObject {
@@ -31,7 +31,7 @@ public:
     void setEasterEggs(EasterEggs *eggs) { eggs_ = eggs; }
     // Fidgets and naps are submitted to the behavior runtime, which plays them only while nothing else is
     // going on. Unset, none play.
-    void setStage(Stage *stage) { stage_ = stage; }
+    void setStage(Stage *stage);
     // A fidget that walks, crawls or climbs moves the window, so the window decides whether one can
     // start now; it is left out of the draw otherwise. Without a gate, moves never play.
     void setMoveGate(std::function<bool(const Move &)> gate) { moveGate_ = std::move(gate); }
@@ -42,6 +42,10 @@ private:
     void looped(const QString &state);
     qint64 gapMs();
     QString pick(qint64 idleMs);
+    bool routineEnabled() const { return stage_ && level_ != AmbientLevel::Off && !player_.idleRoutine().isEmpty(); }
+    void resetRoutine(bool refreshIdle = false);
+    void routineLoop();
+    int routineIndex_ = 0, routineLoops_ = 0;
     Player &player_;
     EasterEggs *eggs_ = nullptr;
     Stage *stage_ = nullptr;

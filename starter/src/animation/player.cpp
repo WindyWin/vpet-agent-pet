@@ -290,6 +290,8 @@ QStringList Player::choose(const QString &state) {
     if (bedtime_)
         if (const auto found = catalog_.bedtime.constFind(state); found != catalog_.bedtime.constEnd()) art = &*found;
     const auto &choices = *art;
+    if (variants_ && idleStep_.state == state && art == &catalog_.animations[state].choices)
+        return idleStep_.sequences;
     if (!variants_ || choices.size() == 1) return choices.first().sequences;
     int total = 0;
     for (const auto &choice : choices) total += choice.weight;
@@ -299,6 +301,18 @@ QStringList Player::choose(const QString &state) {
         roll -= choice.weight;
     }
     return choices.first().sequences;
+}
+void Player::setIdleStep(const IdleStep &step, bool refreshIdle) {
+    if (idleStep_.state == step.state && idleStep_.sequences == step.sequences && idleStep_.repeat == step.repeat) return;
+    const bool wasActive = !idleStep_.state.isEmpty();
+    idleStep_ = step;
+    if (state_ == step.state || (wasActive && step.state.isEmpty() && state_ == "idle")) {
+        chosen_ = choose(state_);
+        if (refreshIdle && state_ == "idle" && index_ == 0) {
+            sequence_ = chosen_.value(0);
+            display();
+        }
+    }
 }
 void Player::enter(const QString &state, int phase, const QString &sequence) {
     const auto from = state_;
@@ -364,7 +378,8 @@ void Player::advance() {
             return;
         }
         if (phase_ == 0) { enterSequence(1, std::exchange(welcome_, {})); return; }
-        if (phase_ == 1 && animation.loops > 0 && ++loopCount_ >= animation.loops) { enterSequence(2); return; }
+        const int loops = idleStep_.state == state_ && variants_ ? idleStep_.repeat : animation.loops;
+        if (phase_ == 1 && loops > 0 && ++loopCount_ >= loops) { enterSequence(2); return; }
         if (phase_ == 2) {
             const auto finished = state_;
             auto target = pending_.isEmpty() ? QString("idle") : pending_;

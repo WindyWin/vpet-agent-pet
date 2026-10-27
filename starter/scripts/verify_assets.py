@@ -284,6 +284,24 @@ def check_catalog(animations, errors):
     if ambient.get('fidgets') and all(fidget.get('rare') for fidget in ambient['fidgets']):
         errors.append('Ambient needs at least one non-rare fidget')
 
+    if 'routine' in ambient:
+        routine = ambient['routine']
+        if not isinstance(routine, list) or not routine or len(routine) > 100 or len(routine) % 2:
+            errors.append('Ambient routine must alternate idle and fidget steps')
+        else:
+            for index, step in enumerate(routine):
+                if not isinstance(step, dict):
+                    errors.append('Invalid ambient routine step')
+                    continue
+                state, paths, repeat = step.get('state'), step.get('sequences'), step.get('repeat')
+                choices = [animations['states'].get(state)] + [v.get('sequences') for v in animations.get('variants', {}).get(state, [])]
+                mode = animations.get('playback', {}).get(state, {}).get('mode')
+                if ((state == 'idle') != (index % 2 == 0) or (state != 'idle' and state not in seen)
+                        or paths not in choices or not isinstance(paths, list) or not paths
+                        or not count(repeat) or repeat > 100
+                        or (state == 'idle' and mode != 'loop') or (mode == 'once' and repeat != 1)):
+                    errors.append(f'Invalid ambient routine step: {state}')
+
     # Touch reactions are held until released: phased states whose loop has no count. Hit boxes and
     # edge lines are in the artwork's own square space of `scale` units.
     def held(state):

@@ -104,11 +104,6 @@
       "Say/Shining/B_1",
       "Say/Shining/C"
     ],
-    "cheer_shy": [
-      "Say/Shy/A",
-      "Say/Shy/B",
-      "Say/Shy/C"
-    ],
     "snack_hungry": [
       "Switch/Hunger/Nomal"
     ],
@@ -2380,95 +2375,6 @@
         }
       ],
       "duration_ms": 500
-    },
-    {
-      "state": "cheer_shy",
-      "path": "Say/Shy/A",
-      "frames": [
-        {
-          "path": "assets/vpet/vup/Say/Shy/A/_000_125.png",
-          "duration_ms": 125
-        },
-        {
-          "path": "assets/vpet/vup/Say/Shy/A/_001_125.png",
-          "duration_ms": 125
-        },
-        {
-          "path": "assets/vpet/vup/Say/Shy/A/_002_125.png",
-          "duration_ms": 125
-        },
-        {
-          "path": "assets/vpet/vup/Say/Shy/A/_003_125.png",
-          "duration_ms": 125
-        },
-        {
-          "path": "assets/vpet/vup/Say/Shy/A/_004_125.png",
-          "duration_ms": 125
-        }
-      ],
-      "duration_ms": 625
-    },
-    {
-      "state": "cheer_shy",
-      "path": "Say/Shy/B",
-      "frames": [
-        {
-          "path": "assets/vpet/vup/Say/Shy/B/_000_125.png",
-          "duration_ms": 125
-        },
-        {
-          "path": "assets/vpet/vup/Say/Shy/B/_001_125.png",
-          "duration_ms": 125
-        },
-        {
-          "path": "assets/vpet/vup/Say/Shy/B/_002_125.png",
-          "duration_ms": 125
-        },
-        {
-          "path": "assets/vpet/vup/Say/Shy/B/_003_125.png",
-          "duration_ms": 125
-        },
-        {
-          "path": "assets/vpet/vup/Say/Shy/B/_004_125.png",
-          "duration_ms": 125
-        }
-      ],
-      "duration_ms": 625
-    },
-    {
-      "state": "cheer_shy",
-      "path": "Say/Shy/C",
-      "frames": [
-        {
-          "path": "assets/vpet/vup/Say/Shy/C/_000_125.png",
-          "duration_ms": 125
-        },
-        {
-          "path": "assets/vpet/vup/Say/Shy/C/_001_125.png",
-          "duration_ms": 125
-        },
-        {
-          "path": "assets/vpet/vup/Say/Shy/C/_002_125.png",
-          "duration_ms": 125
-        },
-        {
-          "path": "assets/vpet/vup/Say/Shy/C/_003_125.png",
-          "duration_ms": 125
-        },
-        {
-          "path": "assets/vpet/vup/Say/Shy/C/_004_125.png",
-          "duration_ms": 125
-        },
-        {
-          "path": "assets/vpet/vup/Say/Shy/C/_005_125.png",
-          "duration_ms": 125
-        },
-        {
-          "path": "assets/vpet/vup/Say/Shy/C/_006_125.png",
-          "duration_ms": 125
-        }
-      ],
-      "duration_ms": 875
     },
     {
       "state": "snack_hungry",
@@ -7889,163 +7795,127 @@
           "duration_ms": 125
         },
         {
-          "path": "assets/vpet/vup/Say/Self/A/\u6307\u7740\u81ea\u5df1\u8bf4\u8bdd_000_125.png",
+          "path": "assets/vpet/vup/Think/Nomal/A/_000_125.png",
           "duration_ms": 125
         },
         {
-          "path": "assets/vpet/vup/Say/Self/A/\u6307\u7740\u81ea\u5df1\u8bf4\u8bdd_001_125.png",
+          "path": "assets/vpet/vup/Think/Nomal/A/_001_125.png",
           "duration_ms": 125
         },
         {
-          "path": "assets/vpet/vup/Say/Self/A/\u6307\u7740\u81ea\u5df1\u8bf4\u8bdd_002_125.png",
+          "path": "assets/vpet/vup/Think/Nomal/B_2/_000_125.png",
           "duration_ms": 125
         },
         {
-          "path": "assets/vpet/vup/Say/Self/A/\u6307\u7740\u81ea\u5df1\u8bf4\u8bdd_003_125.png",
+          "path": "assets/vpet/vup/Think/Nomal/B_2/_001_125.png",
           "duration_ms": 125
         },
         {
-          "path": "assets/vpet/vup/Say/Self/A/\u6307\u7740\u81ea\u5df1\u8bf4\u8bdd_004_125.png",
+          "path": "assets/vpet/vup/Think/Nomal/B_2/_002_125.png",
           "duration_ms": 125
         },
         {
-          "path": "assets/vpet/vup/Say/Self/A/\u6307\u7740\u81ea\u5df1\u8bf4\u8bdd_005_500.png",
-          "duration_ms": 500
-        },
-        {
-          "path": "assets/vpet/vup/Say/Self/B_1/\u65f6\u95f4\u8f74_000_125.png",
+          "path": "assets/vpet/vup/Think/Nomal/B_2/_003_125.png",
           "duration_ms": 125
         },
         {
-          "path": "assets/vpet/vup/Say/Self/B_1/\u65f6\u95f4\u8f74_001_125.png",
+          "path": "assets/vpet/vup/Think/Nomal/B_2/_004_125.png",
           "duration_ms": 125
         },
         {
-          "path": "assets/vpet/vup/Say/Self/B_1/\u65f6\u95f4\u8f74_002_125.png",
+          "path": "assets/vpet/vup/Think/Nomal/B_2/_005_125.png",
           "duration_ms": 125
         },
         {
-          "path": "assets/vpet/vup/Say/Self/B_1/\u65f6\u95f4\u8f74_003_125.png",
+          "path": "assets/vpet/vup/Think/Nomal/B_2/_006_125.png",
           "duration_ms": 125
         },
         {
-          "path": "assets/vpet/vup/Say/Self/B_1/\u65f6\u95f4\u8f74_004_125.png",
+          "path": "assets/vpet/vup/Think/Nomal/B_2/_007_125.png",
           "duration_ms": 125
         },
         {
-          "path": "assets/vpet/vup/Say/Self/B_1/\u65f6\u95f4\u8f74_005_125.png",
+          "path": "assets/vpet/vup/Think/Nomal/B_2/_008_125.png",
           "duration_ms": 125
         },
         {
-          "path": "assets/vpet/vup/Say/Self/B_1/\u65f6\u95f4\u8f74_006_125.png",
+          "path": "assets/vpet/vup/Think/Nomal/B_3/_000_125.png",
           "duration_ms": 125
         },
         {
-          "path": "assets/vpet/vup/Say/Self/B_1/\u65f6\u95f4\u8f74_007_125.png",
+          "path": "assets/vpet/vup/Think/Nomal/B_3/_001_125.png",
           "duration_ms": 125
         },
         {
-          "path": "assets/vpet/vup/Say/Self/B_1/\u65f6\u95f4\u8f74_008_125.png",
+          "path": "assets/vpet/vup/Think/Nomal/B_3/_002_125.png",
           "duration_ms": 125
         },
         {
-          "path": "assets/vpet/vup/Say/Self/B_1/\u65f6\u95f4\u8f74_009_125.png",
+          "path": "assets/vpet/vup/Think/Nomal/B_3/_003_125.png",
           "duration_ms": 125
         },
         {
-          "path": "assets/vpet/vup/Say/Self/B_1/\u65f6\u95f4\u8f74_010_125.png",
+          "path": "assets/vpet/vup/Think/Nomal/B_3/_004_125.png",
           "duration_ms": 125
         },
         {
-          "path": "assets/vpet/vup/Say/Self/B_1/\u65f6\u95f4\u8f74_011_125.png",
+          "path": "assets/vpet/vup/Think/Nomal/B_3/_005_125.png",
           "duration_ms": 125
         },
         {
-          "path": "assets/vpet/vup/Say/Self/B_1/\u65f6\u95f4\u8f74_012_125.png",
+          "path": "assets/vpet/vup/Think/Nomal/B_3/_006_125.png",
           "duration_ms": 125
         },
         {
-          "path": "assets/vpet/vup/Say/Self/B_1/\u65f6\u95f4\u8f74_013_125.png",
+          "path": "assets/vpet/vup/Think/Nomal/B_3/_007_125.png",
           "duration_ms": 125
         },
         {
-          "path": "assets/vpet/vup/Say/Self/B_1/\u65f6\u95f4\u8f74_014_125.png",
+          "path": "assets/vpet/vup/Think/Nomal/B_3/_008_125.png",
           "duration_ms": 125
         },
         {
-          "path": "assets/vpet/vup/Say/Self/B_2/\u65f6\u95f4\u8f742_000_125.png",
+          "path": "assets/vpet/vup/Think/Nomal/B_4/_000_125.png",
           "duration_ms": 125
         },
         {
-          "path": "assets/vpet/vup/Say/Self/B_2/\u65f6\u95f4\u8f742_001_125.png",
+          "path": "assets/vpet/vup/Think/Nomal/B_4/_001_125.png",
           "duration_ms": 125
         },
         {
-          "path": "assets/vpet/vup/Say/Self/B_2/\u65f6\u95f4\u8f742_002_125.png",
+          "path": "assets/vpet/vup/Think/Nomal/B_4/_002_125.png",
           "duration_ms": 125
         },
         {
-          "path": "assets/vpet/vup/Say/Self/B_2/\u65f6\u95f4\u8f742_003_125.png",
+          "path": "assets/vpet/vup/Think/Nomal/B_4/_003_125.png",
           "duration_ms": 125
         },
         {
-          "path": "assets/vpet/vup/Say/Self/B_2/\u65f6\u95f4\u8f742_004_125.png",
+          "path": "assets/vpet/vup/Think/Nomal/B_4/_004_125.png",
           "duration_ms": 125
         },
         {
-          "path": "assets/vpet/vup/Say/Self/B_2/\u65f6\u95f4\u8f742_005_125.png",
+          "path": "assets/vpet/vup/Think/Nomal/B_4/_005_125.png",
           "duration_ms": 125
         },
         {
-          "path": "assets/vpet/vup/Say/Self/B_2/\u65f6\u95f4\u8f742_006_125.png",
+          "path": "assets/vpet/vup/Think/Nomal/B_4/_006_125.png",
           "duration_ms": 125
         },
         {
-          "path": "assets/vpet/vup/Say/Self/B_2/\u65f6\u95f4\u8f742_007_125.png",
+          "path": "assets/vpet/vup/Think/Nomal/B_4/_007_125.png",
           "duration_ms": 125
         },
         {
-          "path": "assets/vpet/vup/Say/Self/B_2/\u65f6\u95f4\u8f742_008_125.png",
+          "path": "assets/vpet/vup/Think/Nomal/B_4/_008_125.png",
           "duration_ms": 125
         },
         {
-          "path": "assets/vpet/vup/Say/Self/B_2/\u65f6\u95f4\u8f742_009_125.png",
+          "path": "assets/vpet/vup/Think/Nomal/C/_000_125.png",
           "duration_ms": 125
         },
         {
-          "path": "assets/vpet/vup/Say/Self/B_2/\u65f6\u95f4\u8f742_010_125.png",
-          "duration_ms": 125
-        },
-        {
-          "path": "assets/vpet/vup/Say/Self/B_2/\u65f6\u95f4\u8f742_011_125.png",
-          "duration_ms": 125
-        },
-        {
-          "path": "assets/vpet/vup/Say/Self/B_2/\u65f6\u95f4\u8f742_012_125.png",
-          "duration_ms": 125
-        },
-        {
-          "path": "assets/vpet/vup/Say/Self/B_2/\u65f6\u95f4\u8f742_013_125.png",
-          "duration_ms": 125
-        },
-        {
-          "path": "assets/vpet/vup/Say/Self/B_2/\u65f6\u95f4\u8f742_014_125.png",
-          "duration_ms": 125
-        },
-        {
-          "path": "assets/vpet/vup/Say/Self/C/1.png_000_125.png",
-          "duration_ms": 125
-        },
-        {
-          "path": "assets/vpet/vup/Say/Self/C/2.png_001_125.png",
-          "duration_ms": 125
-        },
-        {
-          "path": "assets/vpet/vup/Say/Self/C/3.png_002_125.png",
-          "duration_ms": 125
-        },
-        {
-          "path": "assets/vpet/vup/Say/Self/C/4.png_003_125.png",
+          "path": "assets/vpet/vup/Think/Nomal/C/_001_125.png",
           "duration_ms": 125
         },
         {
@@ -8249,7 +8119,7 @@
           "duration_ms": 125
         }
       ],
-      "duration_ms": 11875
+      "duration_ms": 10375
     },
     {
       "state": "thinking",
@@ -12591,11 +12461,6 @@
       "after": "idle",
       "loops": 2
     },
-    "cheer_shy": {
-      "mode": "phased",
-      "after": "idle",
-      "loops": 2
-    },
     "snack_hungry": {
       "mode": "once",
       "after": "idle"
@@ -12911,10 +12776,6 @@
         "weight": 1
       },
       {
-        "state": "cheer_shy",
-        "weight": 1
-      },
-      {
         "state": "cheer_paws_2",
         "weight": 1
       },
@@ -13031,10 +12892,6 @@
     ],
     "reminder-done": [
       {
-        "state": "cheer_shy",
-        "weight": 1
-      },
-      {
         "state": "cheer_shining",
         "weight": 1
       },
@@ -13148,6 +13005,84 @@
         "state": "climb_down_right",
         "weight": 1,
         "min_idle_s": 240
+      }
+    ],
+    "routine": [
+      {
+        "state": "idle",
+        "sequences": [
+          "Default/Nomal/1"
+        ],
+        "repeat": 6
+      },
+      {
+        "state": "fidget_aside",
+        "sequences": [
+          "IDEL/aside/Nomal/A",
+          "IDEL/aside/Nomal/B",
+          "IDEL/aside/Nomal/C"
+        ],
+        "repeat": 1
+      },
+      {
+        "state": "idle",
+        "sequences": [
+          "Default/Nomal/3"
+        ],
+        "repeat": 6
+      },
+      {
+        "state": "fidget_yawn",
+        "sequences": [
+          "IDEL/yawning/Nomal"
+        ],
+        "repeat": 1
+      },
+      {
+        "state": "idle",
+        "sequences": [
+          "Default/Nomal/1"
+        ],
+        "repeat": 6
+      },
+      {
+        "state": "fidget_boring",
+        "sequences": [
+          "IDEL/Boring/A_Nomal",
+          "IDEL/Boring/B_Nomal",
+          "IDEL/Boring/C_Nomal"
+        ],
+        "repeat": 1
+      },
+      {
+        "state": "idle",
+        "sequences": [
+          "Default/Nomal/1"
+        ],
+        "repeat": 6
+      },
+      {
+        "state": "fidget_squat",
+        "sequences": [
+          "IDEL/Squat/A_Nomal",
+          "IDEL/Squat/B_Nomal/1",
+          "IDEL/Squat/C_Nomal"
+        ],
+        "repeat": 1
+      },
+      {
+        "state": "idle",
+        "sequences": [
+          "Default/Nomal/2"
+        ],
+        "repeat": 6
+      },
+      {
+        "state": "fidget_meow",
+        "sequences": [
+          "IDEL/Meow/Nomal/1"
+        ],
+        "repeat": 1
       }
     ]
   },

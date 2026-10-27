@@ -235,6 +235,23 @@ Everything else in the catalog is optional: variants, mood art, bedtime art, amb
 activity decoration. VPet's catalog and ADRs 0011–0021 show what each does; [ADR 0029](adr/0029-cues.md)
 records the cue design.
 
+`ambient.routine` optionally replaces random idle variations and fidgets with an
+ordered cycle. It alternates idle and fidget steps, starting with idle; every step
+contains `state`, `sequences` naming an existing normal choice, and `repeat` (1–100).
+Idle repeats its whole sequence; phased fidgets repeat their middle phase; one-shots
+must use 1. For example, idle ×6 followed by a glance:
+
+```json
+"routine": [
+  {"state": "idle", "sequences": ["Default/Nomal/1"], "repeat": 6},
+  {"state": "fidget_aside", "sequences": ["IDEL/aside/Nomal/A", "IDEL/aside/Nomal/B", "IDEL/aside/Nomal/C"], "repeat": 1}
+]
+```
+
+Both Subtle and Lively follow this cycle; Off disables it. Activity restarts the
+cycle. Mood/bedtime art and the ambient sleep threshold still apply. Omit `routine`
+to retain random timing, weighted fidgets, rarity, idle-time tiers and wandering.
+
 An activity's optional `continuity` object describes poses that share a desk:
 `sources` lists seated sequences; `landings` maps entrances and performances to
 the seated loop they finish in. The player waits for those clips before swapping

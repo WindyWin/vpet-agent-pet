@@ -21,7 +21,7 @@ state, never the state itself, and a state without an entry plays as before.
 - `sustained`: an optional `sequence` started after `after_ms` (1–60000) in the
   same uninterrupted state. Subtle and Playful switch at the next loop boundary;
   Classic ignores it. VPet uses 3000 ms and `Think/Extended/cycle`, combining
-  self-talk, then desk pen-spinning with their authored entry
+  continued pondering (`Think/Nomal/A`, `B_2`, `B_3`, `B_4`, `C`), then desk pen-spinning with their authored entry
   and exit movements. An optional `loop` repeats after this opening sequence;
   without it the opening sequence repeats as before. Optional `resume` maps
   activity source states to transitions into this tail loop after a tool call.

@@ -52,7 +52,7 @@ active time with time passed in, and `Monitor` drives it:
 | --- | --- | --- |
 | `eye_break` | `fidget_yawn` | `IDEL/yawning`: eyes closed, a long stretch |
 | `water` | `reminder_drink` | `Reminders/drink`: a glass held and sipped, shared with the snack |
-| `reminder_done` | `cheer_shy` | `Say/Shy` |
+| `reminder-done` | `cheer_shining`, `turn_finished`, `dance`, `love_520`, `milestone` | Existing completion and celebration motions; shy cheer removed on 2026-10-26 |
 
 The yawn stands in for an eye rub. The archive's `Drink` set is a layered food animation (cup drawn between a back and a
 front layer), which the player does not compose, so no new art was imported.

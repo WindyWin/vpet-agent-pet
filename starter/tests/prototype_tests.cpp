@@ -637,7 +637,9 @@ private slots:
         playOut(player); QCOMPARE(player.state(), QString("idle"));
     }
     void ambientFidgetsFollowTheIdleClock() {
-        pet::Player player; player.setPaused(true); player.setRandom([](int) { return 0; });
+        // Catalogs without an ordered routine retain the random scheduling contract.
+        auto catalog = pet::PetLibrary::shared().catalog(); catalog.idleRoutine.clear();
+        pet::Player player(nullptr, catalog); player.setPaused(true); player.setRandom([](int) { return 0; });
         pet::Stage stage(player); pet::Ambient ambient(player); ambient.setStage(&stage);
         QCOMPARE(ambient.level(), pet::AmbientLevel::Subtle);
         QCOMPARE(pet::Ambient::gapSeconds(pet::AmbientLevel::Subtle), (QPair<int, int>{45, 90}));
@@ -709,7 +711,8 @@ private slots:
         draws.values = {0}; QVERIFY(monitor.apply(event("interrupt"), now + seq)); // The aggregate is idle again.
         playOut(player); QCOMPARE(player.state(), QString("idle"));
         // A fidget survives the monitor's periodic update, which would otherwise restore plain idle.
-        clock += 45000; draws.values = {5, 0}; finishSequence(player);
+        clock += 45000; draws.values = {5, 0};
+        for (int i = 0; i < 6; ++i) finishSequence(player);
         QCOMPARE(player.state(), QString("fidget_aside"));
         monitor.update(now + seq + 1); QCOMPARE(player.state(), QString("fidget_aside"));
         // So does a nap, until something real happens; then it wakes through its end.
@@ -721,6 +724,89 @@ private slots:
         draws.values = {0}; // The beat passes through idle, where the ambient may reach for a fidget; the turn denies it.
         finishSequence(player); QCOMPARE(player.requestedState(), QString("thinking")); // Then the work settles in.
         QCOMPARE(draws.unexpected, 0);
+    }
+    void orderedIdleRoutineMatchesSelectedPerformance() {
+        pet::Player player; player.setPaused(true);
+        // Even a random source that always chooses the last variant cannot change the routine.
+        player.setRandom([](int bound) { return bound - 1; });
+        pet::Stage stage(player); pet::Ambient ambient(player); ambient.setStage(&stage);
+        qint64 now = 0; ambient.setClock([&] { return now; });
+        player.select("thinking", true); player.select("idle", true);
+        const QStringList idle{"Default/Nomal/1", "Default/Nomal/3", "Default/Nomal/1", "Default/Nomal/1", "Default/Nomal/2"};
+        const QStringList fidgets{"fidget_aside", "fidget_yawn", "fidget_boring", "fidget_squat", "fidget_meow"};
+        const QStringList starts{"IDEL/aside/Nomal/A", "IDEL/yawning/Nomal", "IDEL/Boring/A_Nomal", "IDEL/Squat/A_Nomal", "IDEL/Meow/Nomal/1"};
+        const QStringList middles{"IDEL/aside/Nomal/B", {}, "IDEL/Boring/B_Nomal", "IDEL/Squat/B_Nomal/1", {}};
+        for (int cycle = 0; cycle < 2; ++cycle) {
+            for (int step = 0; step < idle.size(); ++step) {
+                for (int loop = 0; loop < 6; ++loop) {
+                    QCOMPARE(player.state(), QString("idle")); QCOMPARE(player.sequence(), idle[step]);
+                    finishSequence(player);
+                }
+                QCOMPARE(player.state(), fidgets[step]); QCOMPARE(player.sequence(), starts[step]);
+                QVERIFY(ambient.resting());
+                if (!middles[step].isEmpty()) {
+                    finishSequence(player); QCOMPARE(player.phase(), QString("loop")); QCOMPARE(player.sequence(), middles[step]);
+                    finishSequence(player); QCOMPARE(player.phase(), QString("end"));
+                }
+                playOut(player); QCOMPARE(player.state(), QString("idle"));
+            }
+        }
+        // Work and drag immediately replace fidgets and restart the routine at its first idle.
+        for (int i = 0; i < 6; ++i) finishSequence(player);
+        QCOMPARE(player.state(), QString("fidget_aside"));
+        player.select("thinking"); QCOMPARE(player.state(), QString("thinking"));
+        player.select("idle", true); QCOMPARE(player.sequence(), idle.first());
+        for (int i = 0; i < 6; ++i) finishSequence(player);
+        player.beginDrag(); player.endDrag(); playOut(player); QCOMPARE(player.sequence(), idle.first());
+        // Off keeps the base loop and does not advance the routine; enabling starts it afresh.
+        ambient.setLevel(pet::AmbientLevel::Off);
+        for (int i = 0; i < 20; ++i) { finishSequence(player); QCOMPARE(player.state(), QString("idle")); QCOMPARE(player.sequence(), idle.first()); }
+        ambient.setLevel(pet::AmbientLevel::Lively);
+        for (int i = 0; i < 5; ++i) finishSequence(player);
+        QCOMPARE(player.state(), QString("idle")); finishSequence(player); QCOMPARE(player.state(), QString("fidget_aside"));
+        playOut(player); now = 600000; finishSequence(player); QCOMPARE(player.state(), QString("sleeping"));
+    }
+    void orderedIdleRoutineKeepsMoodAndBedtimeArt() {
+        pet::Player player; player.setPaused(true); player.setRandom([](int) { return 0; });
+        pet::Stage stage(player); pet::Ambient ambient(player); ambient.setStage(&stage);
+        player.setMood("happy"); player.select("thinking", true); player.select("idle", true);
+        QCOMPARE(player.sequence(), QString("Default/Happy/1"));
+        for (int i = 0; i < 6; ++i) finishSequence(player);
+        QCOMPARE(player.state(), QString("fidget_aside"));
+        QCOMPARE(player.sequence(), QString("IDEL/aside/Happy/A"));
+        playOut(player); QCOMPARE(player.sequence(), QString("Default/Happy/1"));
+        player.setMood({}); finishSequence(player); QCOMPARE(player.sequence(), QString("Default/Nomal/3"));
+        player.setBedtime(true); player.select("working", true);
+        QCOMPARE(player.sequence(), QString("WORK/WorkONE/PoorCondition/A"));
+        player.select("idle", true); QCOMPARE(player.sequence(), QString("Default/Nomal/1"));
+        for (int i = 0; i < 6; ++i) finishSequence(player);
+        QCOMPARE(player.state(), QString("fidget_aside"));
+    }
+    void ambientRoutineValidation() {
+        QTemporaryDir directory;
+        auto document = fixture(directory.path());
+        auto playback = document["playback"].toObject();
+        playback["working"] = QJsonObject{{"mode", "once"}, {"after", "idle"}};
+        document["playback"] = playback;
+        document["ambient"] = QJsonObject{
+            {"fidgets", QJsonArray{QJsonObject{{"state", "working"}, {"weight", 1}}}},
+            {"routine", QJsonArray{QJsonObject{{"state", "idle"}, {"sequences", QJsonArray{"idle"}}, {"repeat", 6}},
+                                  QJsonObject{{"state", "working"}, {"sequences", QJsonArray{"work"}}, {"repeat", 1}}}}};
+        writeCatalog(directory.path(), document);
+        QString error;
+        const auto source = pet::Catalog::read(directory.path(), "vpet", &error);
+        QVERIFY2(source.valid(), qPrintable(error));
+        QVERIFY(pet::Catalog::build(source, &error).valid());
+        auto rejects = [&](QJsonArray routine) {
+            auto modified = source; auto ambient = modified.document["ambient"].toObject();
+            ambient["routine"] = routine; modified.document["ambient"] = ambient;
+            return !pet::Catalog::build(modified, &error).valid();
+        };
+        const auto routine = source.document["ambient"].toObject()["routine"].toArray();
+        QVERIFY(rejects({}));
+        auto bad = routine; auto first = bad[0].toObject(); first["repeat"] = 0; bad[0] = first; QVERIFY(rejects(bad));
+        bad = routine; first = bad[0].toObject(); first["sequences"] = QJsonArray{"missing"}; bad[0] = first; QVERIFY(rejects(bad));
+        bad = routine; bad[1] = routine[0]; QVERIFY(rejects(bad));
     }
     void ambientPreference() {
         QTemporaryDir directory; const auto path = directory.path() + "/preferences.json";
@@ -1366,7 +1452,7 @@ private slots:
             now += 1; finishSequence(player);
             QCOMPARE(player.sequence(), QString("Think/Extended/cycle"));
             QCOMPARE(player.requestedState(), QString("thinking"));
-            // Decode the whole composed performance, including self-talk and entering the desk.
+            // Decode the whole composed performance, including continued pondering and entering the desk.
             for (int i = 0, count = player.frameCount(); i < count; ++i) {
                 QVERIFY2(!player.pixmap().isNull(), qPrintable(player.error()));
                 player.advance();
@@ -1601,9 +1687,9 @@ private slots:
         pet::Player player; player.setPaused(true);
         pet::Mood mood(player); Draws draws; mood.setRandom(draws.random()); qint64 now = 1000000;
         QSignalSpy counted(&mood, &pet::Mood::counted);
-        // "turn_finished" weighs 2; the two cheers and two cat-paw gestures weigh 1 each.
+        // "turn_finished" weighs 2; shining and the two cat-paw gestures weigh 1 each.
         const QList<QPair<int, QString>> expected{{0, "turn_finished"}, {1, "turn_finished"}, {2, "cheer_shining"},
-                                                {3, "cheer_shy"}, {4, "cheer_paws_2"}, {5, "cheer_paws_3"}};
+                                                {3, "cheer_paws_2"}, {4, "cheer_paws_3"}};
         for (const auto &[draw, state] : expected) {
             draws.values = {draw}; const auto celebration = mood.celebrate();
             QCOMPARE(celebration.state, state); QCOMPARE(celebration.cue, QString("celebrate"));
@@ -2132,7 +2218,8 @@ private slots:
         QCOMPARE(step(walk, 250, 0, 100), QPointF());
     }
     void movesAreFidgetsTheWindowAllows() {
-        pet::Player player; player.setPaused(true); player.setRandom([](int) { return 0; });
+        auto catalog = pet::PetLibrary::shared().catalog(); catalog.idleRoutine.clear();
+        pet::Player player(nullptr, catalog); player.setPaused(true); player.setRandom([](int) { return 0; });
         // Ending a move early plays its end on the spot, then idle.
         player.select("walk_left", true); QCOMPARE(player.phase(), QString("start"));
         player.finish(); QCOMPARE(player.phase(), QString("end")); QCOMPARE(player.sequence(), QString("MOVE/walk.left/C_Nomal"));
@@ -2415,7 +2502,8 @@ private slots:
         QCOMPARE(heard, (QStringList{"quit admitted", "quit started", "quit completed"}));
     }
     void easterEggFidgets() {
-        pet::Player player; player.setPaused(true); player.setRandom([](int) { return 0; });
+        auto catalog = pet::PetLibrary::shared().catalog(); catalog.idleRoutine.clear();
+        pet::Player player(nullptr, catalog); player.setPaused(true); player.setRandom([](int) { return 0; });
         pet::Ambient ambient(player); pet::EasterEggs eggs(player); ambient.setEasterEggs(&eggs);
         pet::Stage stage(player); ambient.setStage(&stage); eggs.setStage(&stage);
         Draws draws, eggDraws; qint64 now = 1000000;

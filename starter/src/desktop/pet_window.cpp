@@ -977,9 +977,16 @@ void PetWindow::showSettings() {
     });
     auto *ambient = new QComboBox(dialog);
     ambient->addItems({tr("Off (no fidgets or alternate idle loops)"), tr("Subtle (a fidget about once a minute)"), tr("Lively (a fidget every 15–25 seconds)")});
+    if (!player_.idleRoutine().isEmpty()) {
+        ambient->setItemText(1, tr("Subtle (pet's ordered idle routine)"));
+        ambient->setItemText(2, tr("Lively (pet's ordered idle routine)"));
+    }
     ambient->setCurrentIndex(ambientLevel()); ambient->setAccessibleName(tr("Idle animation"));
     ambient->setToolTip(tr("What the pet does on its own while no agent needs it: fidgets, alternate idle loops, wandering,\n"
                         "and dozing off after about ten quiet minutes. Any agent activity ends it at once."));
+    if (!player_.idleRoutine().isEmpty())
+        ambient->setToolTip(tr("This pet follows its ordered idle routine at the same pace in Subtle and Lively.\n"
+                              "It sleeps after about ten quiet minutes. Agent activity restarts the routine."));
     layout->addRow(tr("&Idle animation"), ambient);
     connect(ambient, &QComboBox::currentIndexChanged, this, &PetWindow::setAmbientLevel);
     auto *activity = new QComboBox(dialog);

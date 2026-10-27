@@ -59,6 +59,7 @@ public:
     bool variants() const { return variants_; }
     void setRandom(Random random) { random_ = random ? std::move(random) : systemRandom(); }
     const QVector<Fidget> &fidgets() const { return catalog_.fidgets; }
+    const QVector<IdleStep> &idleRoutine() const { return catalog_.idleRoutine; }
     bool isFidget(const QString &state) const { return catalog_.fidgetStates.contains(state); }
     int sleepAfterS() const { return catalog_.sleepAfterS; } // Idle time before drifting to sleep; 0 when unset.
     // The catalog's mood art ("happy" or "poor") replaces a state's choices while that mood is set; an
@@ -114,6 +115,10 @@ signals:
     // new state or vary the pass.
     void looped(const QString &state);
 private:
+    friend class Ambient;
+    // Ambient pins a validated choice for the next performance. An idle loop can change at its boundary.
+    void setIdleStep(const IdleStep &step = {}, bool refreshIdle = false);
+    IdleStep idleStep_;
     // Plays `catalog`, or shows `error` (the "Artwork unavailable" placeholder) when it is empty.
     void open(const Catalog &catalog, const QString &error);
     enum class Decoration { None, LingerIn, Linger, LingerOut, Handover };

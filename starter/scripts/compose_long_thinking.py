@@ -14,7 +14,7 @@ from add_sequences import frames_of, load, save
 ROOT = Path(__file__).resolve().parents[1]
 PARTS = [
     'Think/Nomal/C',
-    'Say/Self/A', 'Say/Self/B_1', 'Say/Self/B_2', 'Say/Self/C',
+    'Think/Nomal/A', 'Think/Nomal/B_2', 'Think/Nomal/B_3', 'Think/Nomal/B_4', 'Think/Nomal/C',
     'WORK/WorkONE/A_Nomal', 'WORK/WorkONE/B/Nomal/2',
 ]
 

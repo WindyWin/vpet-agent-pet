@@ -1523,6 +1523,20 @@ Nhấp chuột phải để mở menu</translation>
         <translation>Nhẹ nhàng (khoảng một động tác nhỏ mỗi phút)</translation>
     </message>
     <message>
+        <source>Subtle (pet's ordered idle routine)</source>
+        <translation>Nhẹ nhàng (chuỗi hoạt ảnh khi rảnh của thú cưng)</translation>
+    </message>
+    <message>
+        <source>Lively (pet's ordered idle routine)</source>
+        <translation>Sinh động (chuỗi hoạt ảnh khi rảnh của thú cưng)</translation>
+    </message>
+    <message>
+        <source>This pet follows its ordered idle routine at the same pace in Subtle and Lively.
+It sleeps after about ten quiet minutes. Agent activity restarts the routine.</source>
+        <translation>Thú cưng này phát chuỗi hoạt ảnh khi rảnh với cùng nhịp độ ở chế độ Nhẹ nhàng và Sinh động.
+Thú cưng ngủ sau khoảng mười phút yên tĩnh. Khi tác nhân hoạt động, chuỗi sẽ bắt đầu lại.</translation>
+    </message>
+    <message>
         <source>Lively (a fidget every 15–25 seconds)</source>
         <translation>Sinh động (một động tác nhỏ mỗi 15–25 giây)</translation>
     </message>

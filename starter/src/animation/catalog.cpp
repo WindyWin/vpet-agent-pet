@@ -274,6 +274,30 @@ Catalog Catalog::build(const CatalogSource &source, QString *error) {
         catalog.fidgets.append(fidget);
         catalog.fidgetStates.insert(fidget.state);
     }
+    if (ambient.contains("routine")) {
+        const auto routine = ambient["routine"].toArray();
+        if (!ambient["routine"].isArray() || routine.isEmpty() || routine.size() > 100)
+            return invalid("Invalid ambient routine.");
+        for (const auto &value : routine) {
+            const auto step = value.toObject();
+            IdleStep parsed{step["state"].toString(), {}, step["repeat"].toInt(0)};
+            for (const auto &sequence : step["sequences"].toArray()) parsed.sequences.append(sequence.toString());
+            const auto animation = catalog.animations.constFind(parsed.state);
+            if (animation == catalog.animations.constEnd() || parsed.repeat < 1 || parsed.repeat > 100
+                || (parsed.state != "idle" && !catalog.fidgetStates.contains(parsed.state))
+                || (parsed.state == "idle" && animation->mode != "loop")
+                || (animation->mode == "once" && parsed.repeat != 1)
+                || std::none_of(animation->choices.begin(), animation->choices.end(),
+                                [&parsed](const Choice &choice) { return choice.sequences == parsed.sequences; }))
+                return invalid("Invalid ambient routine step: " + parsed.state);
+            catalog.idleRoutine.append(parsed);
+        }
+        if (catalog.idleRoutine.first().state != "idle" || catalog.idleRoutine.size() % 2 != 0)
+            return invalid("Ambient routine must alternate idle and fidget steps.");
+        for (int i = 0; i < catalog.idleRoutine.size(); ++i)
+            if ((catalog.idleRoutine[i].state == "idle") != (i % 2 == 0))
+                return invalid("Ambient routine must alternate idle and fidget steps.");
+    }
     // Touch reactions are held while the user (or a fall) keeps them, so each holds a loop phase that
     // only a release ends. Every part is optional; a catalog without the section has no reactions.
     if (document.contains("touch")) {

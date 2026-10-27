@@ -6,9 +6,9 @@
   "source_commit": "6358445aa54587f9cd524264eaf17ef97bc826a8",
   "source_root": "VPet-Simulator.Windows/mod/0000_core/pet/vup",
   "bundled_catalog": "assets/vpet/animations.json",
-  "missing_sequence_count": 387,
-  "missing_frame_count": 3795,
-  "missing_size_bytes": 519136946,
+  "missing_sequence_count": 394,
+  "missing_frame_count": 3852,
+  "missing_size_bytes": 528879365,
   "sequences": [
     {
       "path": "Default/Happy/2",
@@ -1577,12 +1577,48 @@
       "timing_valid": true
     },
     {
+      "path": "Say/Self/A",
+      "category": "Say",
+      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Say/Self/A",
+      "frame_count": 6,
+      "total_duration_ms": 1125,
+      "size_bytes": 1012092,
+      "timing_valid": true
+    },
+    {
+      "path": "Say/Self/B_1",
+      "category": "Say",
+      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Say/Self/B_1",
+      "frame_count": 15,
+      "total_duration_ms": 1875,
+      "size_bytes": 2694816,
+      "timing_valid": true
+    },
+    {
+      "path": "Say/Self/B_2",
+      "category": "Say",
+      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Say/Self/B_2",
+      "frame_count": 15,
+      "total_duration_ms": 1875,
+      "size_bytes": 2685312,
+      "timing_valid": true
+    },
+    {
       "path": "Say/Self/B_3",
       "category": "Say",
       "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Say/Self/B_3",
       "frame_count": 14,
       "total_duration_ms": 1875,
       "size_bytes": 2445038,
+      "timing_valid": true
+    },
+    {
+      "path": "Say/Self/C",
+      "category": "Say",
+      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Say/Self/C",
+      "frame_count": 4,
+      "total_duration_ms": 500,
+      "size_bytes": 654765,
       "timing_valid": true
     },
     {
@@ -1604,6 +1640,24 @@
       "timing_valid": true
     },
     {
+      "path": "Say/Shy/A",
+      "category": "Say",
+      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Say/Shy/A",
+      "frame_count": 5,
+      "total_duration_ms": 625,
+      "size_bytes": 793864,
+      "timing_valid": true
+    },
+    {
+      "path": "Say/Shy/B",
+      "category": "Say",
+      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Say/Shy/B",
+      "frame_count": 5,
+      "total_duration_ms": 625,
+      "size_bytes": 791539,
+      "timing_valid": true
+    },
+    {
       "path": "Say/Shy/B_2",
       "category": "Say",
       "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Say/Shy/B_2",
@@ -1619,6 +1673,15 @@
       "frame_count": 5,
       "total_duration_ms": 625,
       "size_bytes": 787068,
+      "timing_valid": true
+    },
+    {
+      "path": "Say/Shy/C",
+      "category": "Say",
+      "source_path": "VPet-Simulator.Windows/mod/0000_core/pet/vup/Say/Shy/C",
+      "frame_count": 7,
+      "total_duration_ms": 875,
+      "size_bytes": 1110031,
       "timing_valid": true
     },
     {
