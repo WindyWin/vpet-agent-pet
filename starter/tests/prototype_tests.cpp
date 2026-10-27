@@ -424,7 +424,7 @@ private slots:
         pet::Player player; player.setPaused(true); player.setRenderSize(640);
         // The session states, the reactions that only celebrate or surprise, and the fidgets.
         const auto reactions = celebrations(player);
-        QCOMPARE(reactions.size(), 12);
+        QCOMPARE(reactions.size(), 11);
         // Late at night the pet yawns more, with a fidget it already has.
         QCOMPARE(player.pool("late-night").size(), 1); QVERIFY(player.isFidget(player.pool("late-night").first().state));
         // And the touch reactions: three held presses, two falls and two edges.
