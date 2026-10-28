@@ -1,7 +1,9 @@
 #include "source_browser.h"
+#include "pack_preview.h"
 #include "packs/installer.h"
 #include "packs/updater.h"
 #include <QCheckBox>
+#include <QCryptographicHash>
 #include "animation/pet_library.h"
 #include "version.h"
 #include <QComboBox>
@@ -20,7 +22,11 @@
 #include <QPointer>
 #include <QProgressBar>
 #include <QPushButton>
+#include <QSaveFile>
+#include <QScrollBar>
+#include <QStyle>
 #include <QVBoxLayout>
+#include <utility>
 
 namespace pet {
 namespace {
@@ -43,6 +49,7 @@ QLabel *label(QWidget *parent) { auto *l = new QLabel(parent); l->setTextFormat(
 SourceBrowser::SourceBrowser(QWidget *parent, const QString &sourceFolder) : QDialog(parent),
     store_(sourceFolder.isEmpty() ? packs::dataFolder() + "/sources" : sourceFolder),
     transfer_(&network_, this), previewTransfer_(&network_, this) {
+    previewFolder_ = (sourceFolder.isEmpty() ? packs::dataFolder() + "/sources" : sourceFolder) + "/previews";
     setAttribute(Qt::WA_DeleteOnClose); setWindowTitle(tr("Pack sources")); resize(760, 650);
     auto *layout = new QVBoxLayout(this); auto *row = new QHBoxLayout;
     sources_ = new QComboBox(this); sources_->setAccessibleName(tr("Source")); row->addWidget(sources_, 1);
@@ -61,8 +68,11 @@ SourceBrowser::SourceBrowser(QWidget *parent, const QString &sourceFolder) : QDi
         }
         QString error; if (!updater->setAutomatic(source, value, error)) { loadCatalog(); status_->setText(error); }
     });
-    list_ = new QListWidget(this); list_->setAccessibleName(tr("Available packs")); layout->addWidget(list_, 1);
-    auto *info = new QHBoxLayout; preview_ = label(this); preview_->setFixedSize(128, 128); info->addWidget(preview_);
+    list_ = new QListWidget(this); list_->setAccessibleName(tr("Available packs")); list_->setIconSize({64, 64}); layout->addWidget(list_, 1);
+    list_->viewport()->installEventFilter(this);
+    connect(list_->verticalScrollBar(), &QScrollBar::valueChanged, this, [this] { queuePreview(); });
+    auto *info = new QHBoxLayout; preview_ = label(this); preview_->setObjectName("packPreview"); preview_->setAlignment(Qt::AlignCenter);
+    preview_->setAccessibleName(tr("Pack preview")); preview_->setFixedSize(128, 128); info->addWidget(preview_);
     details_ = new QPlainTextEdit(this); details_->setReadOnly(true); details_->setAccessibleName(tr("Pack details")); details_->setMaximumHeight(220); info->addWidget(details_, 1); layout->addLayout(info);
     row = new QHBoxLayout; install_ = new QPushButton(tr("Install…"), this); row->addWidget(install_);
     remove_ = new QPushButton(tr("Remove pack…"), this); row->addWidget(remove_);
@@ -107,13 +117,29 @@ SourceBrowser::SourceBrowser(QWidget *parent, const QString &sourceFolder) : QDi
         status_->setText(tr("Downloaded %1 MiB").arg(double(bytes) / (1024 * 1024), 0, 'f', 1));
     });
     connect(&previewTransfer_, &packs::Download::completed, this, [this](const QString &path) {
-        QImageReader reader(path); const auto size = reader.size();
-        if (reader.format() != "png" || size.isEmpty() || size.width() > 512 || size.height() > 512) { preview_->setText(tr("Preview unavailable")); return; }
-        const auto image = reader.read();
-        if (image.isNull()) preview_->setText(tr("Preview unavailable"));
-        else preview_->setPixmap(QPixmap::fromImage(image).scaled(128, 128, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+        const auto url = std::exchange(previewUrl_, {});
+        if (url.isEmpty() || closing_) return;
+        const auto image = packPreview(path);
+        if (image.isNull()) failedPreviews_.insert(url);
+        else {
+            applyPreview(url, image);
+            QSaveFile cache(previewPath(url));
+            if (QDir().mkpath(previewFolder_) && cache.open(QIODevice::WriteOnly) && image.save(&cache, "PNG")) cache.commit();
+        }
+        const auto row = list_->currentRow();
+        if (image.isNull() && row >= 0 && row < entries_.size() && entries_[row].preview.toString() == url)
+            preview_->setText(tr("Preview unavailable"));
+        QTimer::singleShot(0, this, &SourceBrowser::queuePreview);
     });
-    connect(&previewTransfer_, &packs::Download::failed, this, [this] { preview_->setText(tr("Preview unavailable")); });
+    connect(&previewTransfer_, &packs::Download::failed, this, [this] {
+        const auto url = std::exchange(previewUrl_, {});
+        if (!url.isEmpty()) {
+            failedPreviews_.insert(url);
+            const auto row = list_->currentRow();
+            if (row >= 0 && row < entries_.size() && entries_[row].preview.toString() == url) preview_->setText(tr("Preview unavailable"));
+        }
+        QTimer::singleShot(0, this, &SourceBrowser::queuePreview);
+    });
     if (auto *updater = packs::Updater::active()) {
         background_->setText(updater->message()); cancel_->setEnabled(updater->busy());
         connect(updater, &packs::Updater::changed, this, [this, updater] {
@@ -143,6 +169,7 @@ void SourceBrowser::changeEvent(QEvent *event) {
     add_->setText(tr("Add source…")); removeSource_->setText(tr("Remove source"));
     refresh_->setText(tr("Refresh")); list_->setAccessibleName(tr("Available packs"));
     details_->setAccessibleName(tr("Pack details")); remove_->setText(tr("Remove pack…"));
+    preview_->setAccessibleName(tr("Pack preview"));
     direct_->setText(tr("Install from URL…")); cancel_->setText(tr("Cancel download")); close_->setText(tr("Close"));
     notice_->setText(tr("Catalogs are cached for offline browsing. Refresh contacts the selected source; selecting a pack loads its preview. Third-party sources are unverified. Installing a plugin does not enable it or connect an external integration."));
     for (int i = 0; i < sources_->count(); ++i) {
@@ -152,6 +179,40 @@ void SourceBrowser::changeEvent(QEvent *event) {
     const auto row = list_->currentRow();
     if (!working_) { loadCatalog(); list_->setCurrentRow(row); }
     else select();
+}
+bool SourceBrowser::eventFilter(QObject *object, QEvent *event) {
+    if (object == list_->viewport() && (event->type() == QEvent::Show || event->type() == QEvent::Resize))
+        QTimer::singleShot(0, this, &SourceBrowser::queuePreview);
+    return QDialog::eventFilter(object, event);
+}
+QString SourceBrowser::previewPath(const QString &url) const {
+    return previewFolder_ + '/' + QCryptographicHash::hash(url.toUtf8(), QCryptographicHash::Sha256).toHex() + ".png";
+}
+void SourceBrowser::applyPreview(const QString &url, const QPixmap &image) {
+    previews_.insert(url, image);
+    for (int i = 0; i < entries_.size() && i < list_->count(); ++i) {
+        if (entries_[i].preview.toString() != url) continue;
+        list_->item(i)->setIcon(QIcon(image));
+        if (list_->currentRow() == i) { preview_->clear(); preview_->setPixmap(image); }
+    }
+}
+void SourceBrowser::queuePreview() {
+    if (closing_ || working_ || suppressPreview_ || previewTransfer_.busy() || !isVisible()) return;
+    QList<int> rows;
+    const auto selected = list_->currentRow(); if (selected >= 0) rows << selected;
+    for (int row = 0; row < list_->count(); ++row)
+        if (row != selected && list_->visualItemRect(list_->item(row)).intersects(list_->viewport()->rect())) rows << row;
+    for (const auto row : rows) {
+        if (row >= entries_.size()) continue;
+        const auto &entry = entries_[row]; const auto url = entry.preview.toString();
+        if (previews_.contains(url)) { applyPreview(url, previews_.value(url)); continue; }
+        const auto cached = packPreview(previewPath(url));
+        if (!cached.isNull()) { applyPreview(url, cached); continue; }
+        if (failedPreviews_.contains(url)) continue;
+        previewUrl_ = url;
+        if (row == selected) preview_->setText(tr("Loading preview…"));
+        previewTransfer_.start(entry.preview, 4 * 1024 * 1024); return;
+    }
 }
 void SourceBrowser::reject() {
     closing_ = true; transfer_.cancel(); previewTransfer_.cancel(); QDialog::reject();
@@ -169,6 +230,7 @@ void SourceBrowser::loadSources(const QString &selected) {
     if (!error.isEmpty()) status_->setText(error);
 }
 void SourceBrowser::loadCatalog() {
+    previewUrl_.clear(); previewTransfer_.cancel();
     automatic_->blockSignals(true);
     auto *updater = packs::Updater::active(); automatic_->setEnabled(updater && !working_);
     automatic_->setChecked(updater && updater->automatic(sources_->currentData().toString())); automatic_->blockSignals(false);
@@ -178,17 +240,20 @@ void SourceBrowser::loadCatalog() {
         const auto m = installed(e); QString state = tr("Not installed");
         if (!m.isEmpty()) state = packs::newerPackVersion(e.metadata["version"].toString(), m["version"].toString()) ? tr("Update available") : tr("Installed");
         if (pending(e)) state = tr("Restart required");
-        list_->addItem(e.metadata["name"].toString() + " — " + e.metadata["version"].toString() + " — " + state);
+        auto *item = new QListWidgetItem(e.metadata["name"].toString() + " — " + e.metadata["version"].toString() + " — " + state, list_);
+        item->setSizeHint({0, 76});
+        item->setIcon(previews_.contains(e.preview.toString()) ? QIcon(previews_.value(e.preview.toString())) : style()->standardIcon(QStyle::SP_FileIcon));
     }
     status_->setText(error.isEmpty() ? tr("Showing the last valid catalog. Refresh to check for new packs.") : error);
     select();
+    QTimer::singleShot(0, this, &SourceBrowser::queuePreview);
 }
 void SourceBrowser::select() {
     if (closing_) return;
-    previewTransfer_.cancel(); preview_->clear(); details_->clear();
+    preview_->clear(); details_->clear();
     const auto i = list_->currentRow(); const bool selected = i >= 0 && i < entries_.size();
     install_->setText(tr("Install…")); install_->setEnabled(false); remove_->setEnabled(false); removeSource_->setEnabled(!working_ && sources_->currentData().toString() != packs::officialSource());
-    if (!selected) return;
+    if (!selected) { preview_->setText(tr("Select a pack to preview")); return; }
     const auto &e = entries_[i]; const auto reason = compatible(e); const auto m = installed(e);
     const auto oldVersion = m["version"].toString(); const bool update = !m.isEmpty() && packs::newerPackVersion(e.metadata["version"].toString(), oldVersion);
     install_->setText(update ? tr("Update…") : tr("Install…"));
@@ -201,7 +266,12 @@ void SourceBrowser::select() {
         + (!m.isEmpty() ? '\n' + tr("Installed source: %1").arg(origin.isEmpty() ? tr("No source — manual updates only") : origin["source"].toString()) : QString())
         + (e.setup.isEmpty() ? QString() : '\n' + tr("Setup required: %1").arg(e.setup))
         + (e.metadata["kind"] == "plugin" ? '\n' + tr("Target pet: %1").arg(e.metadata["pet"].toString()) : QString()));
-    if (!working_ && !suppressPreview_) previewTransfer_.start(e.preview, 4 * 1024 * 1024);
+    const auto url = e.preview.toString();
+    if (previews_.contains(url)) applyPreview(url, previews_.value(url));
+    else if (const auto cached = packPreview(previewPath(url)); !cached.isNull()) applyPreview(url, cached);
+    else preview_->setText(failedPreviews_.contains(url) ? tr("Preview unavailable") : tr("Loading preview…"));
+    if (previewTransfer_.busy() && previewUrl_ != url) { previewUrl_.clear(); previewTransfer_.cancel(); }
+    if (!working_ && !suppressPreview_) QTimer::singleShot(0, this, &SourceBrowser::queuePreview);
 }
 void SourceBrowser::busy(bool value) {
     working_ = value; automatic_->setEnabled(!value && packs::Updater::active()); sources_->setEnabled(!value); list_->setEnabled(!value); add_->setEnabled(!value);
@@ -209,6 +279,7 @@ void SourceBrowser::busy(bool value) {
     progress_->setVisible(value); select();
 }
 void SourceBrowser::refresh() {
+    failedPreviews_.clear();
     source_ = sources_->currentData().toString(); mode_ = "index"; busy(true);
     transfer_.start(QUrl(source_), packs::MaxIndex);
 }
@@ -242,6 +313,10 @@ void SourceBrowser::received(const QString &path) {
     const auto m = candidate->metadata;
     auto *consent = new QDialog(this); consent->setWindowTitle(tr("Review pack terms")); consent->resize(580, 520);
     auto *layout = new QVBoxLayout(consent); auto *summary = label(consent);
+    if (const auto image = packFolderPreview(candidate->folder); !image.isNull()) {
+        auto *art = new QLabel(consent); art->setObjectName("packImportPreview"); art->setAccessibleName(tr("Pack preview"));
+        art->setPixmap(image); art->setAlignment(Qt::AlignCenter); layout->addWidget(art);
+    }
     summary->setText(tr("%1 by %2\nVersion: %3 · Licence: %4\nCompatible with this app.\nInstalled version: %5\nPlugins remain disabled unless already enabled. External integrations require separate setup.")
         .arg(m["name"].toString(), m["author"].toString(), m["version"].toString(), m["license"].toString(), candidate->oldVersion.isEmpty() ? tr("Not installed") : candidate->oldVersion) + '\n' + tr("Source: %1").arg(source_)); layout->addWidget(summary);
     auto *terms = new QPlainTextEdit(candidate->terms, consent); terms->setReadOnly(true); layout->addWidget(terms);

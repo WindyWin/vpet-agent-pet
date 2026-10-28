@@ -4,6 +4,8 @@
 #include "animation/player.h"
 #include "animation/stage.h"
 #include "desktop/pet_picker.h"
+#include "desktop/pack_controls.h"
+#include "desktop/pack_preview.h"
 #include "desktop/source_browser.h"
 #include "desktop/vpet_import.h"
 #include <QLineEdit>
@@ -924,6 +926,61 @@ private slots:
             if (button->text() == "Install…" || button->text() == "Cancel download" || button->text() == "Remove source")
                 QVERIFY(!button->isEnabled());
         browser->reject(); QTRY_VERIFY(browser.isNull());
+    }
+    void sourceBrowserUsesCachedThumbnailsAndSelectedPreview() {
+        QTemporaryDir directory;
+        pet::packs::SourceStore store(directory.path()); QString error;
+        const QJsonObject entry{{"kind", "pet"}, {"id", "example-cat"}, {"version", "1.0.0"},
+            {"name", "Example cat"}, {"author", "Artist"}, {"license", "CC0-1.0"}, {"schema", 2},
+            {"minAppVersion", "0.17.0"}, {"description", "Example"},
+            {"download", "https://example.invalid/cat.agentpet"}, {"preview", "https://example.invalid/cat.png"},
+            {"bytes", 100}, {"sha256", QString(64, 'a')}};
+        QVERIFY(store.cache(pet::packs::officialSource(), QJsonDocument(QJsonObject{
+            {"schema_version", 1}, {"packs", QJsonArray{entry}}}).toJson(), error));
+        const auto folder = directory.path() + "/previews"; QVERIFY(QDir().mkpath(folder));
+        const auto cached = folder + '/' + sha256(entry["preview"].toString().toUtf8()) + ".png";
+        QImage art(32, 24, QImage::Format_ARGB32); art.fill(Qt::red); QVERIFY(art.save(cached));
+        // Reopening the browser exercises the disk cache without a refresh or a live server.
+        for (int attempt = 0; attempt < 2; ++attempt) {
+            QPointer<pet::SourceBrowser> browser = new pet::SourceBrowser(nullptr, directory.path());
+            browser->show();
+            auto *list = browser->findChild<QListWidget *>(); QVERIFY(list); QCOMPARE(list->currentRow(), -1);
+            QTRY_COMPARE(list->item(0)->icon().pixmap(64, 64).toImage().pixelColor(32, 24), QColor(Qt::red));
+            list->setCurrentRow(0);
+            auto *preview = browser->findChild<QLabel *>("packPreview"); QVERIFY(preview);
+            QVERIFY(!preview->pixmap().isNull());
+            QCOMPARE(preview->pixmap().toImage().pixelColor(64, 48), QColor(Qt::red));
+            browser->reject(); QTRY_VERIFY(browser.isNull());
+        }
+    }
+    void packPreviewRejectsInvalidAndOversizedImages() {
+        QTemporaryDir directory; const auto path = directory.path() + "/preview.png";
+        QImage art(512, 512, QImage::Format_ARGB32); art.fill(Qt::blue); QVERIFY(art.save(path));
+        QVERIFY(!pet::packPreview(path).isNull());
+        QImage large(513, 24, QImage::Format_ARGB32); large.fill(Qt::red); QVERIFY(large.save(path));
+        QVERIFY(pet::packPreview(path).isNull());
+        QFile file(path); QVERIFY(file.open(QIODevice::WriteOnly)); file.write("not an image"); file.close();
+        QVERIFY(pet::packPreview(path).isNull());
+        QVERIFY(file.open(QIODevice::WriteOnly)); QVERIFY(file.resize(4 * 1024 * 1024 + 1)); file.close();
+        QVERIFY(pet::packPreview(path).isNull());
+    }
+    void packImportShowsDeclaredPreviewBeforeAcceptingTerms() {
+        QTemporaryDir directory; copyLocalPet(directory.path());
+        const auto folder = directory.path() + "/local-cat";
+        QVERIFY(QFile::rename(folder + "/preview.png", folder + "/thumbnail.png"));
+        auto metadata = QJsonDocument::fromJson(contents(folder + "/pet.json")).object();
+        metadata["preview"] = "thumbnail.png";
+        QFile file(folder + "/pet.json"); QVERIFY(file.open(QIODevice::WriteOnly));
+        file.write(QJsonDocument(metadata).toJson()); file.close();
+        auto candidate = std::make_unique<pet::packs::Candidate>(); candidate->folder = folder;
+        candidate->metadata = QJsonDocument::fromJson(contents(folder + "/pack.json")).object();
+        candidate->terms = "Fixture artwork terms";
+        QWidget owner; pet::reviewPack(&owner, "example.agentpet", std::move(candidate));
+        QPointer<QDialog> dialog = owner.findChild<QDialog *>(); QVERIFY(dialog);
+        auto *preview = dialog->findChild<QLabel *>("packImportPreview"); QVERIFY(preview);
+        QVERIFY(!preview->pixmap().isNull());
+        QCOMPARE(dialog->findChild<QPlainTextEdit *>()->toPlainText(), QString("Fixture artwork terms"));
+        dialog->reject(); QTRY_VERIFY(dialog.isNull());
     }
     void vpetImportOpensAndCloses() {
         QWidget owner;

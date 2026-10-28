@@ -1,4 +1,5 @@
 #include "pack_controls.h"
+#include "pack_preview.h"
 #include "vpet_import.h"
 #include <QJsonDocument>
 #include <QPointer>
@@ -36,6 +37,11 @@ void importPack(QWidget *parent, const QString &path) {
 void reviewPack(QWidget *parent, const QString &path, std::unique_ptr<packs::Candidate> candidate, const QJsonObject &report) {
     auto *dialog = new QDialog(parent); dialog->setAttribute(Qt::WA_DeleteOnClose); dialog->setWindowTitle(QCoreApplication::translate("PackControls", "Import pack")); dialog->resize(560, 520);
     auto *layout = new QVBoxLayout(dialog); const auto m = candidate->metadata;
+    if (const auto image = packFolderPreview(candidate->folder); !image.isNull()) {
+        auto *preview = new QLabel(dialog); preview->setObjectName("packImportPreview");
+        preview->setAccessibleName(QCoreApplication::translate("PackControls", "Pack preview"));
+        preview->setPixmap(image); preview->setAlignment(Qt::AlignCenter); layout->addWidget(preview);
+    }
     auto *label = new QLabel(QCoreApplication::translate("PackControls", "Unverified local content: %1\n%2 by %3\nVersion: %4\nLicence: %5\nSource: %6")
         .arg(path, m.value("name").toString(), m.value("author").toString(), m.value("version").toString(), m.value("license").toString(), m.value("source").toString()), dialog);
     label->setTextFormat(Qt::PlainText); label->setWordWrap(true); layout->addWidget(label);
@@ -95,7 +101,7 @@ QWidget *packControls(QWidget *parent, const QString &kind, std::function<void(c
         return origin.isEmpty() ? QCoreApplication::translate("PackControls", " — No source (manual updates only)")
             : QCoreApplication::translate("PackControls", " — Installed from a source");
     };
-    if (kind == "pet") { for (const auto &p : library.pets()) if (!p.folder.isEmpty()) choices->addItem(p.name + " (" + p.id + ')' + sourceLabel(p.id), p.id); }
+    if (kind == "pet") { for (const auto &p : library.pets()) if (!p.folder.isEmpty()) choices->addItem(QIcon(packPreview(p.preview)), p.name + " (" + p.id + ')' + sourceLabel(p.id), p.id); }
     else { for (const auto &p : library.plugins()) choices->addItem(p.name + " (" + p.id + ')' + sourceLabel(p.id), p.id); }
     auto *remove = new QPushButton(QCoreApplication::translate("PackControls", "Remove installed pack…"), widget); remove->setEnabled(choices->count()); layout->addWidget(remove);
     QObject::connect(remove, &QPushButton::clicked, widget, [widget, choices, remove, kind, removed] {

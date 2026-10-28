@@ -532,6 +532,10 @@ Phiên: %3</translation>
 <context>
     <name>PackControls</name>
     <message>
+        <source>Pack preview</source>
+        <translation>Ảnh xem trước gói</translation>
+    </message>
+    <message>
         <source>Pack installation</source>
         <translation>Cài đặt gói</translation>
     </message>
@@ -2223,6 +2227,18 @@ Trong lúc câu hỏi chờ thú cưng, terminal không hiện hộp thoại; sa
 </context>
 <context>
     <name>pet::SourceBrowser</name>
+    <message>
+        <source>Pack preview</source>
+        <translation>Ảnh xem trước gói</translation>
+    </message>
+    <message>
+        <source>Loading preview…</source>
+        <translation>Đang tải ảnh xem trước…</translation>
+    </message>
+    <message>
+        <source>Select a pack to preview</source>
+        <translation>Chọn gói để xem trước</translation>
+    </message>
     <message>
         <source>Pack sources</source>
         <translation>Nguồn gói</translation>
