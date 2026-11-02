@@ -62,6 +62,7 @@ the order the decisions were made. For a map of the code, start with the
 | [0053](0053-turn-choreography.md) | Turn choreography: a getting-ready beat | 2026-10-17 |
 | [0054](0054-command-aware-activity.md) | Command-aware activity for shell tools | 2026-10-20 |
 | [0055](0055-bedtime-animations.md) | Tired working, sleepy completion and overnight rest | 2026-10-25 |
+| [0056](0056-installation-repair.md) | Repair an installed version with a fresh verified package | 2026-10-27 |
 
 ## Writing a record
 

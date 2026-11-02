@@ -52,20 +52,27 @@ bool Flight::step(qint64 ms) {
     if (landed_) return false;
     ms = qBound(qint64(0), ms, qint64(100)); // A stalled event loop must not teleport the pet.
     elapsed_ += ms;
-    const double seconds = ms / 1000.0;
-    velocity_.ry() += gravity * seconds;
-    position_ += velocity_ * seconds;
     const double left = area_.left(), right = area_.right() + 1 - size_.width();
     const double top = area_.top(), bottom = area_.bottom() + 1 - size_.height();
-    if (position_.x() < left || position_.x() > right) {
-        position_.rx() = qBound(left, position_.x(), qMax(left, right));
-        velocity_.rx() *= -0.5;
+    // Integrate gravity analytically, with short collision steps. A late repaint follows
+    // the same arc instead of gaining extra gravity or losing a whole tick at a wall.
+    while (ms > 0 && !landed_) {
+        const auto tick = qMin(ms, qint64(4));
+        ms -= tick;
+        const double seconds = tick / 1000.0;
+        position_ += velocity_ * seconds + QPointF(0, 0.5 * gravity * seconds * seconds);
+        velocity_.ry() += gravity * seconds;
+        if (position_.x() < left || position_.x() > right) {
+            position_.rx() = qBound(left, position_.x(), qMax(left, right));
+            velocity_.rx() *= -0.5;
+        }
+        if (position_.y() < top) { position_.ry() = top; velocity_.ry() = 0; }
+        if (position_.y() >= bottom) {
+            position_.ry() = qMax(top, bottom);
+            landed_ = true;
+        }
     }
-    if (position_.y() < top) { position_.ry() = top; velocity_.ry() = 0; }
-    if (position_.y() >= bottom || elapsed_ >= maxMs) {
-        position_.ry() = qMin(position_.y(), qMax(top, bottom));
-        landed_ = true;
-    }
+    if (elapsed_ >= maxMs) landed_ = true;
     return !landed_;
 }
 }

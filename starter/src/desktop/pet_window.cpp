@@ -202,11 +202,12 @@ PetWindow::PetWindow(QWidget *parent, const QString &path, bool persist)
         }
         if (patience_.petting(touchEnabled_ && dragging_ && player_.held()
                              && !pressTouch_.isEmpty() && player_.state() == pressTouch_, touchClock_.elapsed()))
-            beginQuit(Pet::tr("Too much petting! I need a break. Bye!"));
+            beginQuit(Pet::tr("Easy, bro! Too much petting. I need a break. Bye!"));
         if (patience_.dragging(touchEnabled_ && dragging_ && player_.isDragging(), touchClock_.elapsed()))
-            beginQuit(Pet::tr("Put me down! I'm leaving!"));
+            beginQuit(Pet::tr("Put me down, bro! I'm out!"));
     });
     flightTimer_.setInterval(16);
+    flightTimer_.setTimerType(Qt::PreciseTimer);
     connect(&flightTimer_, &QTimer::timeout, this, [this] {
         if (!flight_) { flightTimer_.stop(); return; }
         const bool airborne = flight_->step(flightClock_.restart());
@@ -790,6 +791,9 @@ void PetWindow::endDrag(bool released) {
     const bool wasDrag = dragStarted_;
     const bool wasPet = petStarted_;
     const auto touched = touchEnabled_ ? pressTap_ : QString();
+    // A release can arrive between polls. Include its actual position/time so a quick flick
+    // is not lost, and a pause before release cannot reuse an old movement sample.
+    if (released && wasDrag) samples_.append({pressTimer_.elapsed(), nativePos()});
     pressTap_.clear();
     dragging_ = false; dragStarted_ = false; petStarted_ = false; fallbackDrag_ = false; dragTimer_.stop(); pressTouch_.clear();
     patience_.petting(false, touchClock_.elapsed());
@@ -814,7 +818,7 @@ void PetWindow::letGo(QPointF velocity) {
     const auto &touch = player_.touch();
     const auto fall = velocity.x() < 0 ? touch.fallLeft : touch.fallRight;
     if (touchEnabled_ && !quitting_ && !fall.isEmpty() && qHypot(velocity.x(), velocity.y()) >= touch::throwSpeed) {
-        if (patience_.thrown(touchClock_.elapsed())) { beginQuit(Pet::tr("Stop throwing me! I'm leaving!")); return; }
+        if (patience_.thrown(touchClock_.elapsed())) { beginQuit(Pet::tr("I've been falling for thirty minutes")); return; }
         // The fall replaces the drag as what is held, so session changes still wait for the landing.
         const QRect window(nativePos(), size());
         player_.hold(fall);

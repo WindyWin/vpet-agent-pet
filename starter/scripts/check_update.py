@@ -101,6 +101,19 @@ exit 1
     assert settings.read_text() == '{"preserve":"settings"}'
     assert not Path(str(app) + ".update-transaction.json").exists()
     assert not list(root.glob("installed pet.update-*"))
+    # Repair the same installed version from a fresh full archive. Replace corrupted
+    # files and remove leftovers while retaining the receipt and user settings.
+    executable.write_bytes(b"damaged installed executable")
+    (app / "obsolete-file").write_text("left over from an older installation")
+    path, digest = package(good)
+    result = apply(path, digest)
+    assert result.returncode == 0, result
+    assert executable.read_bytes() == good
+    assert not (app / "obsolete-file").exists()
+    assert "version=agent-pet 99.1.0" in (app / ".agent-pet-install").read_text()
+    assert "file=/unchanged/desktop\nlink=/unchanged/bin" in (app / ".agent-pet-install").read_text()
+    assert settings.read_text() == '{"preserve":"settings"}'
+    assert not Path(str(app) + ".update-transaction.json").exists()
     if args.full_only:
         print("Previous updater: full-package checksums, path safety, rollback and replacement passed")
         sys.exit(0)

@@ -155,11 +155,15 @@ Catalog Catalog::build(const CatalogSource &source, QString *error) {
         // itself after that many passes of its loop phase.
         primary.weight = policy.contains("weight") ? policy["weight"].toInt(0) : 1;
         animation.loops = policy["loops"].toInt(0);
+        animation.finishStart = policy["finish_start"].toBool(false);
+        animation.finishLoop = policy["finish_loop"].toBool(false);
         if ((animation.mode != "phased" && animation.mode != "loop" && animation.mode != "once")
             || primary.sequences.size() != (animation.mode == "phased" ? 3 : 1)
             || !QStringList{"idle", "previous", "stop"}.contains(animation.after)
             || primary.weight < 1 || primary.weight > maxWeight
-            || (policy.contains("loops") && (animation.mode != "phased" || animation.loops < 1 || animation.loops > 100)))
+            || (policy.contains("loops") && (animation.mode != "phased" || animation.loops < 1 || animation.loops > 100))
+            || (policy.contains("finish_start") && (!policy["finish_start"].isBool() || animation.mode != "phased"))
+            || (policy.contains("finish_loop") && (!policy["finish_loop"].isBool() || animation.mode != "phased")))
             return invalid("Invalid playback policy for " + it.key());
         animation.choices.append(primary);
         catalog.animations.insert(it.key(), animation);

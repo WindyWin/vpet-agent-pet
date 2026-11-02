@@ -197,6 +197,19 @@ whose state cues cannot all play does not start; Agent Pet logs why and shows VP
 A phased state has three sequences (start, loop, end) and no `loops` count: it ends when the app moves
 on. Art without separate start and end can list the same sequence three times. Cues may share a state.
 
+An authored entrance can opt into `"finish_start": true` in its phased playback policy. Normal changes
+then finish the current entrance before playing its end, keeping only the latest request. Returning
+to the current state during that entrance cancels the queued exit. Urgent changes and handling still
+interrupt immediately. A released held state also finishes its entrance when opted in; keep these
+entrances short so a drop stays responsive. After handling, the player reuses the interrupted phased
+state's chosen variant when its requested state, mood and bedtime art still match.
+
+For short cyclic actions, `"finish_loop": true` similarly finishes the current loop pass before a
+normal exit. This lets an authored recovery begin on the clip's exact last pose, including after a
+throw lands. A withdrawn request cancels the queued exit; urgent changes still cut. Use it only for
+short loops, since the remaining loop duration becomes part of the response time. The frames and
+their timings are unchanged; the player does not restart the loop to finish it.
+
 The tool classes and the turn beats are a vocabulary the app may grow. A cue may name a `fallback`: when
 the pet has no state for it, it plays that cue's state instead (the tool cues fall back to `working`, and
 `turn-start` to `start`), so a pet that ignores a cue still starts. Map it to your own art with the `cues`

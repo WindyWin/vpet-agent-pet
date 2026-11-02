@@ -3,7 +3,10 @@
 Open **Settings → Pet** (or **Plugins**) → **Browse pack sources…**. The official
 [gallery](https://github.com/WindyWin/agent-pet-gallery) is configured by default.
 Choose **Refresh** to load its current release catalog, then select a pack for its
-preview, author, licence, compatibility, and any integration setup notes.
+preview, author, licence, compatibility, and any integration setup notes. Visible
+rows load thumbnails without downloading the pack. Valid PNG previews are cached
+under `<data>/sources/previews/` for offline browsing; selecting a row shows its
+larger preview. Importing a local archive also shows its preview before accepting terms.
 
 **Install…** or **Update…** downloads the selected version. The app checks its exact
 byte count and SHA-256, validates the archive using the local import pipeline, and

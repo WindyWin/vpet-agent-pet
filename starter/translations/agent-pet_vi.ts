@@ -532,6 +532,10 @@ Phiên: %3</translation>
 <context>
     <name>PackControls</name>
     <message>
+        <source>Pack preview</source>
+        <translation>Ảnh xem trước gói</translation>
+    </message>
+    <message>
         <source>Pack installation</source>
         <translation>Cài đặt gói</translation>
     </message>
@@ -686,60 +690,60 @@ Nguồn: %6</translation>
 <context>
     <name>Pet</name>
     <message>
-        <source>Monday again... I&apos;m so tired. Let&apos;s take it slow today.</source>
-        <translation>Lại thứ Hai rồi... Em uể oải quá. Hôm nay mình cứ từ từ thôi nha.</translation>
+        <source>Monday again, bro… I&apos;m wiped. Let&apos;s take it slow today.</source>
+        <translation>Lại thứ Hai… chán thật. Hôm nay sống chậm thôi.</translation>
     </message>
     <message>
-        <source>It&apos;s %1. Time to step away, take a break, and enjoy some lunch! 🍱</source>
-        <translation>%1 rồi đó bạn! Rời màn hình đi ăn trưa thôi! 🍱</translation>
+        <source>It&apos;s %1. Step away and grab some lunch, bro! 🍱</source>
+        <translation>%1 rồi. Buông chuột, kiếm gì ăn đi! 🍱</translation>
     </message>
     <message>
-        <source>It&apos;s %1. Time to wrap up and get ready to head home!</source>
-        <translation>%1 rồi, mình dọn dẹp rồi về nhà thôi bạn ơi!</translation>
+        <source>It&apos;s %1. Wrap it up and head home, bro!</source>
+        <translation>%1 rồi. Dọn lẹ rồi về!</translation>
     </message>
     <message>
-        <source>It&apos;s %1. Time to put everything down and go to sleep!</source>
-        <translation>%1 rồi đó. Gác hết lại đi ngủ thôi bạn!</translation>
+        <source>It&apos;s %1. Put it all down and sleep, bro!</source>
+        <translation>%1 rồi. Tắt máy, đi ngủ!</translation>
     </message>
     <message>
-        <source>It&apos;s getting late. Maybe finish up and get some sleep?</source>
-        <translation>Khuya lắm rồi. Bạn làm nốt rồi đi ngủ nha?</translation>
+        <source>It&apos;s late, bro. Wrap it up and get some sleep?</source>
+        <translation>Khuya rồi đấy. Làm nốt rồi ngủ đi, nghe chưa?</translation>
     </message>
     <message>
         <source>Start break</source>
         <translation>Bắt đầu nghỉ</translation>
     </message>
     <message>
-        <source>Move or stretch with me…</source>
-        <translation>Cùng em vươn vai giãn cơ nha…</translation>
+        <source>Move with me, bro. Stretch it out…</source>
+        <translation>Dậy đi, vươn vai cái coi…</translation>
     </message>
     <message>
-        <source>Eyes on something far away…</source>
-        <translation>Nhìn ra xa một chút nào…</translation>
+        <source>Eyes off the screen, bro. Look far away…</source>
+        <translation>Bỏ màn hình ra, nhìn đâu xa xa ấy…</translation>
     </message>
     <message>
-        <source>Nice! Your eyes got a rest.</source>
-        <translation>Tốt lắm! Mắt bạn được nghỉ rồi nè.</translation>
+        <source>Nice, bro. Your eyes needed that.</source>
+        <translation>Chuẩn đấy, mắt cần nghỉ thật rồi.</translation>
     </message>
     <message>
-        <source>Nice! Thanks for moving with me.</source>
-        <translation>Tuyệt! Cảm ơn bạn đã tập cùng em nha.</translation>
+        <source>That&apos;s my bro! Thanks for moving with me.</source>
+        <translation>Biết điều đấy. Cảm ơn đã vận động cùng tôi.</translation>
     </message>
     <message>
         <source>Today&apos;s recap</source>
         <translation>Tổng kết hôm nay</translation>
     </message>
     <message>
-        <source>Look at something far away</source>
-        <translation>Nhìn ra xa một chút nha bạn</translation>
+        <source>Time to rest your eyes, bro</source>
+        <translation>Mắt mỏi rồi đấy, nghỉ tí đi</translation>
     </message>
     <message>
-        <source>Time for some water 💧</source>
-        <translation>Uống chút nước nào bạn ơi 💧</translation>
+        <source>Water break, bro 💧</source>
+        <translation>Uống miếng nước đi, khô cả cổ rồi kìa 💧</translation>
     </message>
     <message>
-        <source>Take a movement break with me</source>
-        <translation>Đứng dậy vận động với em chút nha</translation>
+        <source>Get up and move with me, bro</source>
+        <translation>Đứng dậy vận động coi, ngồi lì cả buổi rồi</translation>
     </message>
     <message>
         <source>1 turn</source>
@@ -824,16 +828,16 @@ Nguồn: %6</translation>
         <translation>%1, thời gian chờ lâu nhất: %2</translation>
     </message>
     <message>
-        <source>Too much petting! I need a break. Bye!</source>
-        <translation>Vuốt nhiều quá rồi! Em phải nghỉ đây. Chào bạn nha!</translation>
+        <source>Easy, bro! Too much petting. I need a break. Bye!</source>
+        <translation>Vuốt cc gì lắm thế</translation>
     </message>
     <message>
-        <source>Put me down! I&apos;m leaving!</source>
-        <translation>Thả em xuống! Em đi luôn đó!</translation>
+        <source>Put me down, bro! I&apos;m out!</source>
+        <translation>Thả bố mài ra !!</translation>
     </message>
     <message>
-        <source>Stop throwing me! I&apos;m leaving!</source>
-        <translation>Đừng quăng em nữa! Em giận đi đây!</translation>
+        <source>I&apos;ve been falling for thirty minutes</source>
+        <translation>I&apos;ve been falling for thirty minutes</translation>
     </message>
 </context>
 <context>
@@ -1523,11 +1527,11 @@ Nhấp chuột phải để mở menu</translation>
         <translation>Nhẹ nhàng (khoảng một động tác nhỏ mỗi phút)</translation>
     </message>
     <message>
-        <source>Subtle (pet's ordered idle routine)</source>
+        <source>Subtle (pet&apos;s ordered idle routine)</source>
         <translation>Nhẹ nhàng (chuỗi hoạt ảnh khi rảnh của thú cưng)</translation>
     </message>
     <message>
-        <source>Lively (pet's ordered idle routine)</source>
+        <source>Lively (pet&apos;s ordered idle routine)</source>
         <translation>Sinh động (chuỗi hoạt ảnh khi rảnh của thú cưng)</translation>
     </message>
     <message>
@@ -2224,6 +2228,18 @@ Trong lúc câu hỏi chờ thú cưng, terminal không hiện hộp thoại; sa
 <context>
     <name>pet::SourceBrowser</name>
     <message>
+        <source>Pack preview</source>
+        <translation>Ảnh xem trước gói</translation>
+    </message>
+    <message>
+        <source>Loading preview…</source>
+        <translation>Đang tải ảnh xem trước…</translation>
+    </message>
+    <message>
+        <source>Select a pack to preview</source>
+        <translation>Chọn gói để xem trước</translation>
+    </message>
+    <message>
         <source>Pack sources</source>
         <translation>Nguồn gói</translation>
     </message>
@@ -2652,6 +2668,34 @@ Tiện ích sẽ tắt trừ khi đã được bật trước đó. Tích hợp 
         <translation>Quá trình tải đã dừng hoặc gặp lỗi. Bạn có thể thử lại.</translation>
     </message>
     <message>
+        <source>Repair is ready. Restart to replace installed files and restore running sessions.</source>
+        <translation>Đã sẵn sàng sửa chữa. Khởi động lại để thay thế các tệp đã cài đặt và khôi phục các phiên đang chạy.</translation>
+    </message>
+    <message>
+        <source>Repair ready…</source>
+        <translation>Sẵn sàng sửa chữa…</translation>
+    </message>
+    <message>
+        <source>Could not prepare repair. Check your connection and try again.</source>
+        <translation>Không thể chuẩn bị sửa chữa. Kiểm tra kết nối và thử lại.</translation>
+    </message>
+    <message>
+        <source>Repair requires a verified release package for the installed version.</source>
+        <translation>Cần có gói phát hành đã xác minh của phiên bản đang cài đặt để sửa chữa.</translation>
+    </message>
+    <message>
+        <source>Preparing installation repair…</source>
+        <translation>Đang chuẩn bị sửa chữa bản cài đặt…</translation>
+    </message>
+    <message>
+        <source>Downloading repair package… %1%</source>
+        <translation>Đang tải gói sửa chữa… %1%</translation>
+    </message>
+    <message>
+        <source>Downloaded files are missing or damaged. Download again before restarting.</source>
+        <translation>Các tệp đã tải xuống bị thiếu hoặc hỏng. Hãy tải lại trước khi khởi động lại.</translation>
+    </message>
+    <message>
         <source>Could not start the update installer.</source>
         <translation>Không khởi chạy được trình cài đặt cập nhật.</translation>
     </message>
@@ -2704,6 +2748,14 @@ Tiện ích sẽ tắt trừ khi đã được bật trước đó. Tích hợp 
         <translation>Tải bản cập nhật</translation>
     </message>
     <message>
+        <source>Repair installation</source>
+        <translation>Sửa chữa bản cài đặt</translation>
+    </message>
+    <message>
+        <source>Download a fresh copy of this version to replace missing or damaged files. Settings and saved sessions are preserved.</source>
+        <translation>Tải bản sao mới của phiên bản này để thay thế các tệp bị thiếu hoặc hỏng. Cài đặt và các phiên đã lưu được giữ nguyên.</translation>
+    </message>
+    <message>
         <source>Restart and update</source>
         <translation>Khởi động lại và cập nhật</translation>
     </message>
@@ -2724,8 +2776,20 @@ Tiện ích sẽ tắt trừ khi đã được bật trước đó. Tích hợp 
         <translation>Chưa kiểm tra lần nào</translation>
     </message>
     <message>
+        <source>Restart and repair</source>
+        <translation>Khởi động lại và sửa chữa</translation>
+    </message>
+    <message>
+        <source>Discard repair</source>
+        <translation>Hủy bản sửa chữa</translation>
+    </message>
+    <message>
         <source>This version will be skipped. Check now to see it again.</source>
         <translation>Phiên bản này sẽ được bỏ qua. Nhấp Kiểm tra ngay để xem lại.</translation>
+    </message>
+    <message>
+        <source>Repair discarded.</source>
+        <translation>Đã hủy bản sửa chữa.</translation>
     </message>
 </context>
 </TS>

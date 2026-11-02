@@ -148,6 +148,9 @@ private:
     bool bedtime_ = false, bedtimeArt_ = false; // Requested schedule and the art chosen on entry.
     bool sustainedEnabled_ = false, sustainedActive_ = false;
     QStringList chosen_;
+    QString resumeChoiceState_, resumeChoiceMood_;
+    QStringList resumeChoice_;
+    bool resumeChoiceBedtime_ = false;
     Random random_ = systemRandom();
     QCache<QString, QPixmap> cache_{cacheLimitKiB};
     QPixmap pixmap_;

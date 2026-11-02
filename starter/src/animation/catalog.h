@@ -14,7 +14,11 @@ struct Frame { QString path; int durationMs; QString root; };
 // One way to play a state: a sequence per phase. The catalog's own entry is the first choice;
 // "variants" add more, and one is drawn by weight each time the state is entered.
 struct Choice { QStringList sequences; int weight = 1; };
-struct Animation { QVector<Choice> choices; QString mode; QString after; int loops = 0; };
+struct Animation {
+    QVector<Choice> choices; QString mode; QString after; int loops = 0;
+    bool finishStart = false; // Authored entrances must reach their pose before a normal exit.
+    bool finishLoop = false; // Short cyclic actions reach their authored exit pose before leaving.
+};
 // An ambient one-shot that may play while the pet idles. `minIdleS` gates it behind idle time;
 // a rare fidget is drawn separately, with a small fixed chance.
 struct Fidget { QString state; int weight = 1; int minIdleS = 0; bool rare = false; };

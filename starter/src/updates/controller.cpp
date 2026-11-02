@@ -85,6 +85,8 @@ bool prepareStartup(const QStringList &args) {
     }
     const auto state = readObject(dataDirectory() + "/state.json");
     const auto pending = readObject(dataDirectory() + "/pending.json");
+    // Repairs always wait for an explicit restart, regardless of automatic update preferences.
+    if (pending["repair"].toBool()) return false;
     // Agent-triggered startup carries a session event: deliver it immediately.
     if (state["format"].toInt() != 1 || state["mode"].toInt() < 2 || args.contains("--autostarted") || pending.isEmpty()) return false;
     if (!newer(pending["version"].toString(), AGENT_PET_VERSION)) { QFile::remove(dataDirectory() + "/pending.json"); return false; }
@@ -109,12 +111,14 @@ Controller::Controller(QObject *parent, QNetworkAccessManager *transport, QStrin
         release_ = cached; message_ = tr("Version %1 is available.").arg(cached.version);
     }
     const auto pending = readObject(directory_ + "/pending.json");
-    if (newer(pending["version"].toString(), AGENT_PET_VERSION)) {
+    repair_ = pending["repair"].toBool() && pending["version"].toString() == AGENT_PET_VERSION;
+    if (repair_ || newer(pending["version"].toString(), AGENT_PET_VERSION)) {
         release_.version = pending["version"].toString();
         if (pending["kind"].toString() != "components") release_.digest = pending["digest"].toString();
         release_.page = QUrl("https://github.com/WindyWin/vpet-agent-pet/releases/tag/v" + release_.version);
         ready_ = pendingReady(directory_, prefix_, pending);
-        if (ready_) message_ = tr("Update %1 is ready to install.").arg(release_.version);
+        if (ready_) message_ = repair_ ? tr("Repair is ready. Restart to replace installed files and restore running sessions.")
+                                     : tr("Update %1 is ready to install.").arg(release_.version);
     }
     QFile result(directory_ + "/result.txt");
     if (result.open(QIODevice::ReadOnly)) message_ = QString::fromUtf8(result.read(4096)) + "\n" + message_;
@@ -124,8 +128,9 @@ bool Controller::save() {
     message_ = tr("Cannot save update settings. Check permissions and disk space."); emit changed(); return false;
 }
 void Controller::status(QString text) { message_ = std::move(text); emit changed(); }
-bool Controller::waiting() const { return !release_.version.isEmpty() && state_["skipped"].toString() != release_.version; }
+bool Controller::waiting() const { return !repair_ && !release_.version.isEmpty() && state_["skipped"].toString() != release_.version; }
 QString Controller::indicator() const {
+    if (repair_ && ready_) return tr("Repair ready…");
     if (!waiting()) return tr("Updates…");
     //: %1 = version
     return ready_ ? tr("Update ready — %1…").arg(release_.version) : tr("Update available — %1…").arg(release_.version);
@@ -139,7 +144,8 @@ void Controller::start() {
     connect(retry, &QTimer::timeout, this, [this] { autoInstall(); }); retry->start();
 }
 void Controller::check(bool manual) {
-    if (reply_ || downloading_ || !writable_) return;
+    if (reply_ || downloading_ || (repair_ && ready_) || !writable_) return;
+    repair_ = false;
     const auto now = QDateTime::currentSecsSinceEpoch();
     const auto last = state_["attempt"].toInteger();
     if (!manual && (!state_["enabled"].toBool(true) || (last <= now && now - last < 86400))) return;
@@ -185,8 +191,41 @@ void Controller::cancel() {
     ++scan_; scanning_ = false; downloading_ = false; percent_ = -1;
     status(tr("Download stopped or failed. You can retry."));
 }
+void Controller::repair() {
+    if (reply_ || downloading_ || (repair_ && ready_) || prefix_.isEmpty() || !writable_) return;
+    // Resolve the installed version, even when a newer release exists or was skipped.
+    QNetworkRequest request(QUrl("https://api.github.com/repos/WindyWin/vpet-agent-pet/releases/tags/v" AGENT_PET_VERSION));
+    request.setRawHeader("Accept", "application/vnd.github+json");
+    request.setRawHeader("User-Agent", "Agent-Pet/" AGENT_PET_VERSION);
+    request.setTransferTimeout(20000);
+    request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::SameOriginRedirectPolicy);
+    auto *reply = network_->get(request); reply_ = reply; reply->setReadBufferSize(1024 * 1024);
+    QTimer::singleShot(30000, reply, [reply] { if (!reply->isFinished()) reply->abort(); });
+    auto bytes = std::make_shared<QByteArray>();
+    connect(reply, &QNetworkReply::readyRead, this, [reply, bytes] {
+        bytes->append(reply->readAll()); if (bytes->size() > 1024 * 1024) reply->abort();
+    });
+    connect(reply, &QNetworkReply::finished, this, [this, reply, bytes] {
+        reply_ = nullptr; reply->deleteLater();
+        if (reply->error() != QNetworkReply::NoError || reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() != 200) {
+            status(tr("Could not prepare repair. Check your connection and try again.")); return;
+        }
+        Release target; QString error;
+        if (!parseRelease(QJsonDocument::fromJson(*bytes).object(), pet::platform::updateArchitecture(), target, error)) {
+            status(error); return;
+        }
+        if (target.version != AGENT_PET_VERSION || target.digest.isEmpty()) {
+            status(tr("Repair requires a verified release package for the installed version.")); return;
+        }
+        repair_ = true; ready_ = false; release_ = target;
+        QFile::remove(directory_ + "/pending.json");
+        // Replacing the complete package also removes obsolete files and avoids reusing damaged files.
+        downloadFull(target);
+    });
+    status(tr("Preparing installation repair…"));
+}
 void Controller::download() {
-    if (reply_ || downloading_ || ready_ || prefix_.isEmpty() || release_.digest.isEmpty() || release_.download.isEmpty()) return;
+    if (repair_ || reply_ || downloading_ || ready_ || prefix_.isEmpty() || release_.digest.isEmpty() || release_.download.isEmpty()) return;
     QFile::remove(directory_ + "/pending.json");
     const Release target = release_;
     beginProgress(0, 0, false); // The manifest is tiny and its size is not part of the total.
@@ -244,16 +283,22 @@ void Controller::downloadComponent(const Release &target, const QList<Component>
 }
 void Controller::finishDownload(const Release &target, bool components) {
     auto pending = target.json();
+    if (repair_) pending["repair"] = true;
     if (components) { pending["kind"] = "components"; pending["digest"] = target.componentsDigest; }
     downloading_ = false; percent_ = -1;
     if (!writeObject(directory_ + "/pending.json", pending)) { status(tr("Cannot save the pending update.")); return; }
-    ready_ = true; status(tr("Update %1 is ready. The pet will restart and restore running sessions.").arg(target.version));
+    ready_ = true; status(repair_ ? tr("Repair is ready. Restart to replace installed files and restore running sessions.")
+                                 : tr("Update %1 is ready. The pet will restart and restore running sessions.").arg(target.version));
     autoInstall();
 }
 void Controller::beginProgress(qint64 total, int files, bool full) {
     done_ = 0; total_ = total; files_ = files; file_ = files > 0 ? 1 : 0; full_ = full; percent_ = -1;
 }
 void Controller::reportProgress(qint64 current) {
+    if (repair_) {
+        percent_ = total_ > 0 ? int(std::min(done_ + current, total_) * 100 / total_) : -1;
+        status(tr("Downloading repair package… %1%").arg(std::max(0, percent_))); return;
+    }
     if (total_ <= 0) { percent_ = -1; status(tr("Downloading update…")); return; }
     percent_ = int(std::min(done_ + current, total_) * 100 / total_);
     if (files_ > 1) {
@@ -305,19 +350,22 @@ void Controller::fetch(const Release &target, const QString &path, std::function
 void Controller::install() { installReady(false); }
 void Controller::installReady(bool automatic) {
     if (!ready_ || prefix_.isEmpty() || reply_ || downloading_) return;
+    const auto pending = readObject(directory_ + "/pending.json");
+    if (!pendingReady(directory_, prefix_, pending)) {
+        ready_ = false; status(tr("Downloaded files are missing or damaged. Download again before restarting.")); return;
+    }
     if (prepareRestart && !prepareRestart()) { status(tr("Could not save running sessions. Free disk space or check permissions, then retry the update.")); return; }
     if (automatic) {
         state_["autoInstalled"] = release_.version;
         if (!save()) { state_.remove("autoInstalled"); return; }
     }
-    const auto pending = readObject(directory_ + "/pending.json");
     QStringList args{applyCommand(pending), prefix_, pendingFile(directory_, pending), pending["digest"].toString(), release_.version,
                      QString::number(QCoreApplication::applicationPid())};
     if (!QProcess::startDetached(helper(prefix_), args)) { status(tr("Could not start the update installer.")); return; }
     emit restartRequested();
 }
 void Controller::autoInstall() {
-    if (state_["mode"].toInt() != 3 || !ready_ || reply_ || downloading_ || prefix_.isEmpty()) return;
+    if (repair_ || state_["mode"].toInt() != 3 || !ready_ || reply_ || downloading_ || prefix_.isEmpty()) return;
     const QString version = release_.version;
     // One attempt per version: a rolled-back update must not restart the pet in a loop.
     if (state_["skipped"].toString() == version || state_["autoInstalled"].toString() == version) return;
@@ -353,6 +401,9 @@ QWidget *Controller::settings(QWidget *parent) {
     auto *checkButton = new QPushButton(tr("Check now"), box); layout->addWidget(checkButton);
     auto *notes = new QPushButton(tr("View release / manual download"), box); layout->addWidget(notes);
     auto *downloadButton = new QPushButton(tr("Download update"), box); layout->addWidget(downloadButton);
+    auto *repairButton = new QPushButton(tr("Repair installation"), box); layout->addWidget(repairButton);
+    auto *repairHint = new QLabel(tr("Download a fresh copy of this version to replace missing or damaged files. Settings and saved sessions are preserved."), box);
+    repairHint->setWordWrap(true); layout->addWidget(repairHint);
     auto *installButton = new QPushButton(tr("Restart and update"), box); layout->addWidget(installButton);
     auto *skip = new QPushButton(tr("Skip this version"), box); layout->addWidget(skip);
     auto *cancelButton = new QPushButton(tr("Cancel download / check"), box); layout->addWidget(cancelButton);
@@ -361,9 +412,12 @@ QWidget *Controller::settings(QWidget *parent) {
         last->setText(checked ? tr("Last checked: %1").arg(QDateTime::fromSecsSinceEpoch(checked).toLocalTime().toString("yyyy-MM-dd hh:mm")) : tr("Not checked yet"));
         message->setText(message_);
         bar->setVisible(downloading_); bar->setRange(0, percent_ < 0 ? 0 : 100); if (percent_ >= 0) bar->setValue(percent_); // 0-0 = busy
-        checkButton->setEnabled(!reply_ && !downloading_ && writable_);
+        checkButton->setEnabled(!reply_ && !downloading_ && !(repair_ && ready_) && writable_);
+        repairButton->setEnabled(!reply_ && !downloading_ && !(repair_ && ready_) && !prefix_.isEmpty() && writable_);
+        installButton->setText(repair_ ? tr("Restart and repair") : tr("Restart and update"));
+        skip->setText(repair_ ? tr("Discard repair") : tr("Skip this version"));
         notes->setEnabled(!release_.page.isEmpty());
-        downloadButton->setEnabled(!reply_ && !downloading_ && !ready_ && !prefix_.isEmpty() && !release_.digest.isEmpty() && !release_.download.isEmpty());
+        downloadButton->setEnabled(!repair_ && !reply_ && !downloading_ && !ready_ && !prefix_.isEmpty() && !release_.digest.isEmpty() && !release_.download.isEmpty());
         installButton->setEnabled(ready_ && !reply_ && !downloading_ && !prefix_.isEmpty()); skip->setEnabled(!release_.version.isEmpty() && !reply_ && !downloading_);
         cancelButton->setEnabled(reply_ || scanning_);
     };
@@ -373,13 +427,17 @@ QWidget *Controller::settings(QWidget *parent) {
     connect(checkButton, &QPushButton::clicked, this, [this] { check(true); });
     connect(notes, &QPushButton::clicked, this, [this] { QDesktopServices::openUrl(release_.page); });
     connect(downloadButton, &QPushButton::clicked, this, &Controller::download);
+    connect(repairButton, &QPushButton::clicked, this, &Controller::repair);
     connect(installButton, &QPushButton::clicked, this, &Controller::install);
     connect(cancelButton, &QPushButton::clicked, this, &Controller::cancel);
-    connect(skip, &QPushButton::clicked, this, [this] { state_["skipped"] = release_.version; save(); ready_ = false;
+    connect(skip, &QPushButton::clicked, this, [this] {
+        if (!repair_) { state_["skipped"] = release_.version; save(); }
+        const bool discardedRepair = repair_; repair_ = false; ready_ = false;
+        if (discardedRepair) release_ = {};
         QFile::remove(directory_ + "/pending.json"); QFile::remove(directory_ + packageName());
         QFile::remove(directory_ + "/components.json");
         pruneComponents(directory_);
-        status(tr("This version will be skipped. Check now to see it again.")); });
+        status(discardedRepair ? tr("Repair discarded.") : tr("This version will be skipped. Check now to see it again.")); });
     return box;
 }
 }

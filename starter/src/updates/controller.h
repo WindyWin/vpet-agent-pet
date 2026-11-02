@@ -25,6 +25,8 @@ public:
     bool automaticChecksEnabled() const { return writable_ && state_["enabled"].toBool(true); }
     void check(bool manual = false);
     void download();
+    // Downloads a fresh verified package for the installed version; restart is explicit.
+    void repair();
     void install();
     // Installs a downloaded update in fully automatic mode after checkpointing monitored sessions.
     void autoInstall();
@@ -64,6 +66,7 @@ private:
     int file_ = 0, files_ = 0, percent_ = -1;
     bool full_ = false, scanning_ = false;
     int scan_ = 0; // Bumped by each scan and by cancelling one.
+    bool repair_ = false;
     bool ready_ = false, writable_ = true, downloading_ = false;
 };
 }

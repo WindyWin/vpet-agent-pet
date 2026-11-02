@@ -33,7 +33,7 @@ private slots:
         QVERIFY(pet::i18n::install(Language::Vietnamese));
         QCOMPARE(pet::i18n::installed(), Language::Vietnamese);
         QCOMPARE(Alerts::tr("Needs approval"), QString("Cần phê duyệt"));
-        QCOMPARE(Pet::tr("Time for some water 💧"), QString("Uống chút nước nào bạn ơi 💧"));
+        QCOMPARE(Pet::tr("Water break, bro 💧"), QString("Uống miếng nước đi, khô cả cổ rồi kìa 💧"));
         QCOMPARE(QCoreApplication::translate("pet::PetWindow", "Settings…"), QString("Cài đặt…"));
         QVERIFY(pet::i18n::install(Language::Vietnamese)); // Again: no change.
         QVERIFY(pet::i18n::install(Language::English));

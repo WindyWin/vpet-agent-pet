@@ -407,6 +407,15 @@ While an update downloads, the Updates window shows one progress bar for the who
 (with “file 2 of 5” when it comes in several parts) instead of restarting at 0% for each file.
 See [update behavior and recovery](docs/install.md#update-notifications-and-automatic-updates).
 
+Choose **Repair installation** to download a fresh, SHA-256-verified package of
+this installed version, then **Restart and repair** to replace missing or damaged
+package files. Linux also removes obsolete files from the installation. Settings,
+hooks and saved sessions are preserved.
+Repair waits for your restart even with automatic updates enabled. Managed Linux
+and Windows release installations support repair; source builds and macOS use
+manual reinstallation. The installed version must still have a verified release
+package available online.
+
 ## Local events
 
 The pet now accepts normalized local events, tracks concurrent sessions and

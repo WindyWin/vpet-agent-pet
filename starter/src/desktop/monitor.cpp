@@ -55,7 +55,7 @@ Monitor::Monitor(PetWindow &window, std::shared_ptr<hosts::FocusService> focus)
         refreshAlerts();
     });
 }
-QString Monitor::bedtimeNote() { return Pet::tr("It's getting late. Maybe finish up and get some sleep?"); }
+QString Monitor::bedtimeNote() { return Pet::tr("It's late, bro. Wrap it up and get some sleep?"); }
 // Session states are cues (src/animation/cues.json): each aggregate state asks the pet to show the cue of that name.
 // These are the Urgent class: they interrupt whatever the pet is doing and keep reminders and surprises away.
 static bool urgent(const QString &cue) { return cue == "attention" || cue == "exhausted" || cue == "error"; }
@@ -378,8 +378,8 @@ void Monitor::rest() {
     if (locked && locked()) { dropReminder(); return; }
     if (!active_ || window_.petHidden() || --restLeft_ < 0) { stopRest(); return; }
     if (restLeft_ > 0) {
-        const auto text = restKind_ == "movement" ? Pet::tr("Move or stretch with me…")
-                                                   : Pet::tr("Eyes on something far away…");
+        const auto text = restKind_ == "movement" ? Pet::tr("Move with me, bro. Stretch it out…")
+                                                   : Pet::tr("Eyes off the screen, bro. Look far away…");
         note_.say(text, window_.figure(), window_.screenAreas(), {}, 1500);
         return;
     }
@@ -387,7 +387,7 @@ void Monitor::rest() {
     stopRest();
     if (movement) window_.wellness().given("movement", now_);
     window_.eggs().surprise("reminder-done", true);
-    say(movement ? Pet::tr("Nice! Thanks for moving with me.") : Pet::tr("Nice! Your eyes got a rest."), {}, 4000);
+    say(movement ? Pet::tr("That's my bro! Thanks for moving with me.") : Pet::tr("Nice, bro. Your eyes needed that."), {}, 4000);
 }
 void Monitor::showRecap() {
     if (!active_) return;

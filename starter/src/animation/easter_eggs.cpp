@@ -85,10 +85,10 @@ QStringList EasterEggs::remindersAt(const QDateTime &local, const ReminderSchedu
     return due;
 }
 QString EasterEggs::reminderNote(const QString &reminder, QTime now) {
-    if (reminder == "monday") return Pet::tr("Monday again... I'm so tired. Let's take it slow today.");
-    if (reminder == "lunch") return Pet::tr("It's %1. Time to step away, take a break, and enjoy some lunch! 🍱").arg(now.toString("HH:mm"));
-    if (reminder == "leave-work") return Pet::tr("It's %1. Time to wrap up and get ready to head home!").arg(now.toString("HH:mm"));
-    if (reminder == "sleep") return Pet::tr("It's %1. Time to put everything down and go to sleep!").arg(now.toString("HH:mm"));
+    if (reminder == "monday") return Pet::tr("Monday again, bro… I'm wiped. Let's take it slow today.");
+    if (reminder == "lunch") return Pet::tr("It's %1. Step away and grab some lunch, bro! 🍱").arg(now.toString("HH:mm"));
+    if (reminder == "leave-work") return Pet::tr("It's %1. Wrap it up and head home, bro!").arg(now.toString("HH:mm"));
+    if (reminder == "sleep") return Pet::tr("It's %1. Put it all down and sleep, bro!").arg(now.toString("HH:mm"));
     return {};
 }
 QStringList EasterEggs::dueReminders() const {

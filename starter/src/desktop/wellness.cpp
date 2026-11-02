@@ -17,9 +17,9 @@ bool Wellness::quietAt(const QDateTime &local) {
     return hour >= quietFrom || hour < quietUntil;
 }
 QString Wellness::note(const QString &reminder) {
-    if (reminder == "eyes") return Pet::tr("Look at something far away");
-    if (reminder == "water") return Pet::tr("Time for some water 💧");
-    if (reminder == "movement") return Pet::tr("Take a movement break with me");
+    if (reminder == "eyes") return Pet::tr("Time to rest your eyes, bro");
+    if (reminder == "water") return Pet::tr("Water break, bro 💧");
+    if (reminder == "movement") return Pet::tr("Get up and move with me, bro");
     return {};
 }
 void Wellness::activity(qint64 now, bool user) {

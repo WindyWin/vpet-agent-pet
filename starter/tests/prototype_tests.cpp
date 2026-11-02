@@ -1796,6 +1796,110 @@ private slots:
         QVERIFY(!loads(reactions({reaction("working", 0)}, reacting)));
         QVERIFY(!loads(reactions({reaction("working")}, base))); // A loop never ends by itself.
     }
+    void authoredEntranceFinishesBeforeExit() {
+        QTemporaryDir root;
+        auto document = fixture(root.path());
+        auto sequences = document["sequences"].toArray();
+        auto entry = sequences.last().toObject();
+        entry["path"] = "entry";
+        const auto frame = entry["frames"].toArray().first();
+        entry["frames"] = QJsonArray{frame, frame, frame}; entry["duration_ms"] = 75;
+        sequences.append(entry); document["sequences"] = sequences;
+        auto states = document["states"].toObject(); states["working"] = QJsonArray{"entry", "work", "idle"};
+        document["states"] = states;
+        auto playback = document["playback"].toObject();
+        auto policy = QJsonObject{{"mode", "phased"}, {"after", "idle"}, {"finish_start", true}};
+        playback["working"] = policy; document["playback"] = playback;
+        writeCatalog(root.path(), document);
+        pet::Player player(nullptr, root.path()); player.setPaused(true);
+        QVERIFY2(player.valid(), qPrintable(player.error()));
+        player.select("working"); player.select("idle");
+        QCOMPARE(player.phase(), QString("start")); QCOMPARE(player.frameIndex(), 0);
+        player.advance(); player.advance(); QCOMPARE(player.phase(), QString("start"));
+        player.advance(); QCOMPARE(player.phase(), QString("end"));
+        finishSequence(player); QCOMPARE(player.state(), QString("idle"));
+        // A withdrawn request keeps the entrance and continues its loop.
+        player.select("working"); player.select("idle"); player.select("working");
+        finishSequence(player); QCOMPARE(player.phase(), QString("loop"));
+        // Urgent cues and direct handling can still interrupt immediately.
+        player.select("idle", true); player.select("working"); player.select("idle", true);
+        QCOMPARE(player.state(), QString("idle"));
+        player.hold("working"); player.release(); QCOMPARE(player.phase(), QString("start"));
+        finishSequence(player); QCOMPARE(player.phase(), QString("end"));
+        finishSequence(player); QCOMPARE(player.state(), QString("idle"));
+        // The opt-in is a boolean for phased states, never a silently accepted string.
+        policy["finish_start"] = "yes"; playback["working"] = policy; document["playback"] = playback;
+        writeCatalog(root.path(), document);
+        QString error; QVERIFY(!pet::Catalog::load(root.path(), "vpet", &error).valid());
+        policy["finish_start"] = true; policy["mode"] = "loop";
+        playback["working"] = policy; document["playback"] = playback;
+        states["working"] = QJsonArray{"work"}; document["states"] = states;
+        writeCatalog(root.path(), document); QVERIFY(!pet::Catalog::load(root.path(), "vpet", &error).valid());
+    }
+    void shortLoopReachesItsExitPose() {
+        QTemporaryDir root;
+        auto document = fixture(root.path());
+        auto sequences = document["sequences"].toArray();
+        auto loop = sequences.last().toObject(); loop["path"] = "spin";
+        const auto frame = loop["frames"].toArray().first();
+        loop["frames"] = QJsonArray{frame, frame, frame}; loop["duration_ms"] = 75;
+        sequences.append(loop); document["sequences"] = sequences;
+        auto states = document["states"].toObject(); states["working"] = QJsonArray{"work", "spin", "idle"};
+        document["states"] = states;
+        auto playback = document["playback"].toObject();
+        QJsonObject policy{{"mode", "phased"}, {"after", "idle"}, {"finish_loop", true}};
+        playback["working"] = policy; document["playback"] = playback;
+        writeCatalog(root.path(), document);
+        pet::Player player(nullptr, root.path()); player.setPaused(true);
+        QVERIFY2(player.valid(), qPrintable(player.error()));
+        player.hold("working"); finishSequence(player); player.advance();
+        player.release(); // Physical landing: finish the current spin without restarting it.
+        QCOMPARE(player.sequence(), QString("spin")); QCOMPARE(player.frameIndex(), 1);
+        player.advance(); QCOMPARE(player.frameIndex(), 2);
+        player.advance(); QCOMPARE(player.phase(), QString("end"));
+        finishSequence(player); QCOMPARE(player.state(), QString("idle"));
+        player.select("working"); finishSequence(player); player.advance();
+        player.select("idle"); player.select("working");
+        finishSequence(player); QCOMPARE(player.phase(), QString("loop"));
+        player.select("idle", true); QCOMPARE(player.state(), QString("idle"));
+        policy["finish_loop"] = "yes"; playback["working"] = policy; document["playback"] = playback;
+        writeCatalog(root.path(), document); QString error;
+        QVERIFY(!pet::Catalog::load(root.path(), "vpet", &error).valid());
+        policy["finish_loop"] = true; policy["mode"] = "loop";
+        playback["working"] = policy; document["playback"] = playback;
+        states["working"] = QJsonArray{"spin"}; document["states"] = states;
+        writeCatalog(root.path(), document); QVERIFY(!pet::Catalog::load(root.path(), "vpet", &error).valid());
+    }
+    void handlingResumesSameVariant() {
+        QTemporaryDir root;
+        auto document = fixture(root.path());
+        auto states = document["states"].toObject();
+        states["working"] = QJsonArray{"work", "work", "work"};
+        states["dragging"] = QJsonArray{"work", "work", "work"}; document["states"] = states;
+        auto playback = document["playback"].toObject();
+        playback["working"] = playback["dragging"] = QJsonObject{{"mode", "phased"}, {"after", "idle"}};
+        document["playback"] = playback;
+        document["variants"] = QJsonObject{{"working", QJsonArray{QJsonObject{
+            {"weight", 1}, {"sequences", QJsonArray{"idle", "idle", "idle"}}}}}};
+        writeCatalog(root.path(), document);
+        pet::Player player(nullptr, root.path()); player.setPaused(true);
+        Draws draws{{1}}; player.setRandom(draws.random()); player.select("working");
+        QCOMPARE(player.sequence(), QString("idle")); finishSequence(player);
+        player.beginDrag(); player.hold("dragging"); player.endDrag(); finishSequence(player);
+        QCOMPARE(player.state(), QString("working")); QCOMPARE(player.sequence(), QString("idle"));
+        QCOMPARE(draws.unexpected, 0); QVERIFY(draws.values.isEmpty());
+        // A newer request while held supersedes the saved performance.
+        player.beginDrag(); player.select("idle"); player.endDrag(); finishSequence(player);
+        QCOMPARE(player.state(), QString("idle"));
+        // A later normal entry draws again instead of reviving an old choice.
+        draws.values = {0}; player.select("working"); QCOMPARE(player.sequence(), QString("work"));
+        QCOMPARE(draws.unexpected, 0); QVERIFY(draws.values.isEmpty());
+        player.select("idle", true); draws.values = {1}; player.select("working");
+        QCOMPARE(player.sequence(), QString("idle"));
+        player.beginDrag(); player.setVariants(false); player.endDrag(); finishSequence(player);
+        QCOMPARE(player.sequence(), QString("work")); // Turning variants off while held still takes effect.
+        QCOMPARE(draws.unexpected, 0);
+    }
     void touchRegionsAndHolds() {
         pet::Player player; player.setPaused(true);
         // Hit boxes are in the artwork's 500-unit space and follow the pet's size.
@@ -1856,8 +1960,11 @@ private slots:
         QCOMPARE(hidePosition(Edge::Right, QRect(1800, 100, 240, 240), two, 281, 500), QPoint(2000 - 135, 100));
         // A thrown pet falls onto the bottom of its screen, bouncing off the sides on the way.
         Flight drop({100, 0}, {-2000, -500}, QRect(0, 0, 1000, 800), {240, 240});
-        int steps = 0; bool bounced = false;
-        while (drop.step(16)) { ++steps; bounced = bounced || drop.position().x() == 0; QVERIFY(drop.position().y() >= 0); }
+        int steps = 0; bool bounced = false; int lastX = drop.position().x();
+        while (drop.step(16)) {
+            ++steps; bounced = bounced || drop.position().x() > lastX; lastX = drop.position().x();
+            QVERIFY(drop.position().y() >= 0);
+        }
         QVERIFY(drop.landed()); QVERIFY(bounced); QCOMPARE(drop.position().y(), 560); QVERIFY(steps < 100);
         QVERIFY(drop.position().x() >= 0); QVERIFY(!drop.step(16));
         // On the floor already it lands at once; one that cannot move still ends in time.
@@ -1865,6 +1972,12 @@ private slots:
         Flight stuck({300, 0}, {0, 0}, QRect(0, 0, 1000, 100000), {240, 240});
         int ticks = 0; while (stuck.step(100)) ++ticks;
         QCOMPARE(ticks, int(Flight::maxMs / 100) - 1);
+        // The same elapsed time gives the same arc at different repaint rates.
+        Flight smooth({300, 100}, {500, -200}, QRect(0, 0, 2000, 2000), {240, 240});
+        Flight delayed({300, 100}, {500, -200}, QRect(0, 0, 2000, 2000), {240, 240});
+        for (int i = 0; i < 10; ++i) QVERIFY(smooth.step(16));
+        QVERIFY(delayed.step(100)); QVERIFY(delayed.step(60));
+        QCOMPARE(smooth.position(), delayed.position()); QCOMPARE(smooth.position(), QPoint(380, 99));
     }
     void nativePixelsMapToLogical() {
         // XWayland at 1.75: Qt keeps each screen's origin and scales the rest, so the X server's
@@ -2094,7 +2207,7 @@ private slots:
         QVERIFY(!window.flying()); QVERIFY(!player.held());
         QCOMPARE(player.state(), QString("angry"));
         auto *note = window.findChild<pet::NoteBubble*>(); QVERIFY(note); QVERIFY(note->isVisible());
-        QCOMPARE(note->text(), QString("Stop throwing me! I'm leaving!"));
+        QCOMPARE(note->text(), QString("I've been falling for thirty minutes"));
         window.recover(); window.letGo({1200, 0});
         QCOMPARE(player.state(), QString("angry"));
         finishSequence(player);
@@ -2137,8 +2250,8 @@ private slots:
         QVERIFY(elapsed.elapsed() >= limit - 150); // Dragging must not use the shorter petting deadline.
         QCOMPARE(player.state(), QString("angry"));
         auto *note = window.findChild<pet::NoteBubble*>(); QVERIFY(note); QVERIFY(note->isVisible());
-        QCOMPARE(note->text(), drag ? QString("Put me down! I'm leaving!")
-                                   : QString("Too much petting! I need a break. Bye!"));
+        QCOMPARE(note->text(), drag ? QString("Put me down, bro! I'm out!")
+                                   : QString("Easy, bro! Too much petting. I need a break. Bye!"));
         QCOMPARE(quitting.size(), 1); QVERIFY(!player.held());
         QTest::mouseRelease(&window, Qt::LeftButton, {}, head);
         QCOMPARE(player.state(), QString("angry"));
@@ -2935,8 +3048,8 @@ private slots:
         QVERIFY(pet::Wellness::quietAt(QDateTime(QDate(2026, 10, 7), QTime(5, 59))));
         QVERIFY(!pet::Wellness::quietAt(QDateTime(QDate(2026, 10, 7), QTime(6, 0))));
         QVERIFY(!pet::Wellness::quietAt(QDateTime(QDate(2026, 10, 7), QTime(21, 59))));
-        QCOMPARE(pet::Wellness::note("eyes"), QString("Look at something far away"));
-        QCOMPARE(pet::Wellness::note("water"), QString("Time for some water 💧"));
+        QCOMPARE(pet::Wellness::note("eyes"), QString("Time to rest your eyes, bro"));
+        QCOMPARE(pet::Wellness::note("water"), QString("Water break, bro 💧"));
         QCOMPARE(pet::Wellness::note("snack"), QString());
         // Agent events alone start nothing, and keep a stretch going only while the user was seen within
         // five minutes, as behind a locked screen.
@@ -3119,13 +3232,13 @@ private slots:
             // A language change says it again in the new language rather than dropping it.
             const auto english = qScopeGuard([] { pet::i18n::install(pet::i18n::Language::English); });
             QVERIFY(pet::i18n::install(pet::i18n::Language::Vietnamese));
-            QTRY_COMPARE(monitor.note().text(), QString("Nhìn ra xa một chút nha bạn"));
+            QTRY_COMPARE(monitor.note().text(), QString("Mắt mỏi rồi đấy, nghỉ tí đi"));
             QVERIFY(monitor.note().isVisible()); QCOMPARE(monitor.reminder(), QString("eyes"));
         }
         QTRY_COMPARE(monitor.note().text(), pet::Wellness::note("eyes")); QCOMPARE(monitor.reminder(), QString("eyes"));
         // Clicking it starts a twenty-second countdown, then the pet cheers.
         emit monitor.note().clicked(); QCOMPARE(monitor.restLeft(), 20); QVERIFY(monitor.note().isVisible());
-        QCOMPARE(monitor.note().text(), QString("Eyes on something far away…")); QCOMPARE(monitor.reminder(), QString());
+        QCOMPARE(monitor.note().text(), QString("Eyes off the screen, bro. Look far away…")); QCOMPARE(monitor.reminder(), QString());
         playOut(player);
         QTRY_COMPARE_WITH_TIMEOUT(monitor.restLeft(), 0, 2500);
         QVERIFY(poolContains(player, "reminder-done", player.requestedState())); playOut(player);
@@ -3202,7 +3315,7 @@ private slots:
         QCOMPARE(wellness.movementActiveMs(start + 30 * minute), qint64(0));
         wellness.setMovementMinutes(25); QCOMPARE(wellness.movementMinutes(), 30);
         wellness.reset(); QVERIFY(wellness.due(start + 31 * minute).isEmpty());
-        QCOMPARE(pet::Wellness::note("movement"), QString("Take a movement break with me"));
+        QCOMPARE(pet::Wellness::note("movement"), QString("Get up and move with me, bro"));
     }
     void breakBuddyReminderCanBeDelayedStartedAndSkipped() {
         pet::PetWindow window(nullptr, {}, false); window.show();
@@ -3253,7 +3366,7 @@ private slots:
         monitor.setRestTickMs(1);
         emit window.movementBreakRequested(); QCOMPARE(monitor.restLeft(), 60);
         QTRY_COMPARE_WITH_TIMEOUT(monitor.restLeft(), 0, 2500);
-        QCOMPARE(monitor.note().text(), QString("Nice! Thanks for moving with me."));
+        QCOMPARE(monitor.note().text(), QString("That's my bro! Thanks for moving with me."));
         QVERIFY(poolContains(player, "reminder-done", player.requestedState()));
         playOut(player); monitor.note().hide(); monitor.setRestTickMs(100000);
         emit window.movementBreakRequested(); QCOMPARE(monitor.restLeft(), 60);

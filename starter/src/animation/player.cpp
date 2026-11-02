@@ -91,13 +91,19 @@ bool Player::select(const QString &state, bool interrupt) {
         return true;
     }
     if (state == state_ && pending_.isEmpty() && !stopped_) return true;
+    const auto &currentAnimation = catalog_.animations.value(state_);
+    const bool finishPhase = (phase_ == 0 && currentAnimation.finishStart) || (phase_ == 1 && currentAnimation.finishLoop);
+    if (!interrupt && state == state_ && finishPhase && !stopped_) {
+        pending_.clear(); // The request returned before the authored phase finished.
+        return true;
+    }
     // A fidget is decoration: anything else replaces it at once instead of waiting out its exit.
     if (isFidget(state_)) interrupt = true;
     // Update a queued transition without restarting the outgoing exit sequence.
     if (!interrupt && catalog_.animations.value(state_).mode == "phased" && !stopped_) {
         if (decorate(state)) return true;
         pending_ = state;
-        if (phase_ != 2) beginEnd();
+        if (phase_ != 2 && !finishPhase) beginEnd();
         return true;
     }
     const auto resume = resumeTarget();
@@ -263,7 +269,15 @@ bool Player::vary(const QString &sequence) {
 void Player::hold(const QString &state) {
     if (!catalog_.animations.contains(state) || (held_ && state == state_)) return;
     const bool was = held_;
-    if (!held_) holdResume_ = resumeTarget();
+    if (!held_) {
+        holdResume_ = resumeTarget();
+        // Handling interrupts the performance, but returning to it should use the same props.
+        resumeChoiceState_.clear(); resumeChoice_.clear();
+        if (holdResume_ == state_ && catalog_.animations.value(state_).mode == "phased") {
+            resumeChoiceState_ = state_; resumeChoice_ = chosen_;
+            resumeChoiceMood_ = mood_; resumeChoiceBedtime_ = bedtimeArt_;
+        }
+    }
     pending_.clear();
     held_ = true;
     // Before the entry, which ends whatever showed: nothing waiting may start in its place while held.
@@ -321,8 +335,13 @@ void Player::enter(const QString &state, int phase, const QString &sequence) {
     seated_ = !sequence.isEmpty() && atDesk;
     state_ = state;
     stopped_ = false;
-    chosen_ = choose(state);
     bedtimeArt_ = bedtime_ && hasBedtime(state);
+    const bool restoreChoice = variants_ && !held_ && state == resumeChoiceState_ && mood_ == resumeChoiceMood_
+        && bedtimeArt_ == resumeChoiceBedtime_;
+    chosen_ = restoreChoice ? resumeChoice_ : choose(state);
+    if (!held_) {
+        resumeChoiceState_.clear(); resumeChoice_.clear();
+    }
     loopCount_ = 0;
     decoration_ = Decoration::None;
     welcome_.clear();
@@ -377,7 +396,12 @@ void Player::advance() {
             else if (newPass) emit looped(state_);
             return;
         }
-        if (phase_ == 0) { enterSequence(1, std::exchange(welcome_, {})); return; }
+        if (phase_ == 0) {
+            if (animation.finishStart && !pending_.isEmpty()) beginEnd();
+            else enterSequence(1, std::exchange(welcome_, {}));
+            return;
+        }
+        if (phase_ == 1 && animation.finishLoop && !pending_.isEmpty()) { beginEnd(); return; }
         const int loops = idleStep_.state == state_ && variants_ ? idleStep_.repeat : animation.loops;
         if (phase_ == 1 && loops > 0 && ++loopCount_ >= loops) { enterSequence(2); return; }
         if (phase_ == 2) {

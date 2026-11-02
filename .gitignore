@@ -8,3 +8,16 @@ __pycache__/
 
 # Downloaded third-party artwork collected for local evaluation.
 pet-sources/
+
+# Local authoring tools, review artifacts and auxiliary checkouts.
+/tools/
+/.worktrees/
+/.claude/skills/pet-transitions/
+/starter/scripts/preview_idle.*
+/starter/scripts/preview_animation_alternatives.*
+
+# Locally built packs and downloaded application packages.
+/*.agentpet
+/*.agentpet.sha256
+/doro-*.zip
+/agent-pet-*-linux-*.tar.gz

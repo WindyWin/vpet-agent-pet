@@ -1,4 +1,5 @@
 #include "updates/release.h"
+#include "version.h"
 #include "updates/installer.h"
 #include "updates/controller.h"
 #include "updates/components.h"
@@ -89,11 +90,12 @@ static void installFiles(const QString &prefix, const QJsonObject &manifest) {
 class Network : public QNetworkAccessManager {
 public:
     int requests = 0; bool fail = false; QByteArray package = "package", download = "package";
+    QJsonObject metadata;
     QByteArray manifest; QStringList urls, fullUrls; QString failSuffix;
 protected:
     QNetworkReply *createRequest(Operation, const QNetworkRequest &request, QIODevice *) override {
         ++requests; urls.append(request.url().fileName()); fullUrls.append(request.url().toString());
-        auto release = releaseObject(package);
+        auto release = metadata.isEmpty() ? releaseObject(package) : metadata;
         if (!manifest.isEmpty()) release = withComponents(release, manifest);
         const auto bytes = request.url().host() == "api.github.com" ? QJsonDocument(release).toJson()
             : request.url().fileName().endsWith("-components.json") ? manifest : download;
@@ -112,6 +114,108 @@ static void follow(Controller &controller, QWidget *settings, Shown &shown) {
 class UpdateTests : public QObject {
     Q_OBJECT
 private slots:
+    void repairCurrentVersionRequiresExplicitRestart() {
+        QTemporaryDir dir, installed; Network network;
+        network.metadata = QJsonDocument::fromJson(QJsonDocument(releaseObject()).toJson().replace("99.1.0", AGENT_PET_VERSION)).object();
+        write(dir.filePath("state.json"), QJsonDocument(QJsonObject{{"format", 1}, {"mode", 3}, {"enabled", true},
+            {"skipped", AGENT_PET_VERSION}}).toJson());
+        // Both a damaged installed file and a stale cache must be replaced by a fresh full download.
+        write(installed.filePath("damaged"), "corrupt");
+        write(dir.filePath("package.tar.gz"), "corrupt");
+        Controller controller(nullptr, &network, installed.path(), dir.path());
+        int checkpoints = 0; controller.prepareRestart = [&] { ++checkpoints; return false; };
+        controller.repair();
+        QTRY_VERIFY(controller.indicator().contains("Repair ready"));
+        QCOMPARE(network.requests, 2);
+        QVERIFY(network.fullUrls.first().endsWith("/releases/tags/v" AGENT_PET_VERSION));
+        QVERIFY(network.fullUrls.last().contains("/v" AGENT_PET_VERSION "/"));
+        QFile pending(dir.filePath("pending.json")); QVERIFY(pending.open(QIODevice::ReadOnly));
+        const auto object = QJsonDocument::fromJson(pending.readAll()).object();
+        QCOMPARE(object["version"].toString(), QString(AGENT_PET_VERSION)); QVERIFY(object["repair"].toBool());
+        controller.autoInstall(); QCOMPARE(checkpoints, 0);
+        Controller reloaded(nullptr, &network, installed.path(), dir.path());
+        QVERIFY(reloaded.indicator().contains("Repair ready"));
+        reloaded.prepareRestart = [&] { ++checkpoints; return false; };
+        reloaded.autoInstall(); QCOMPARE(checkpoints, 0);
+        reloaded.install(); QCOMPARE(checkpoints, 1); // Explicit install checkpoints sessions.
+        write(dir.filePath("package.tar.gz"), "corrupt");
+        reloaded.install(); QCOMPARE(checkpoints, 1); // Revalidate before stopping the running pet.
+        QVERIFY(!reloaded.indicator().contains("ready"));
+        std::unique_ptr<QWidget> settings(controller.settings(nullptr));
+        for (auto *button : settings->findChildren<QPushButton *>())
+            if (button->text() == "Discard repair") button->click();
+        QVERIFY(!QFile::exists(dir.filePath("pending.json")));
+        QCOMPARE(readState(dir)["skipped"].toString(), QString(AGENT_PET_VERSION));
+    }
+    void repairRejectsInvalidDownloadsAndCanRetry() {
+        QTemporaryDir dir, installed; Network network;
+        Controller controller(nullptr, &network, installed.path(), dir.path());
+        // A different version returned by the tag endpoint must never be installed as a repair.
+        controller.repair(); QTRY_COMPARE(network.requests, 1); QTest::qWait(10);
+        QVERIFY(!QFile::exists(dir.filePath("pending.json")));
+        network.metadata = QJsonDocument::fromJson(QJsonDocument(releaseObject()).toJson().replace("99.1.0", AGENT_PET_VERSION)).object();
+        network.download = "corrupt";
+        controller.repair(); QTRY_COMPARE(network.requests, 3); QTest::qWait(10);
+        QVERIFY(!QFile::exists(dir.filePath("pending.json")));
+        network.download = "package";
+        controller.repair(); QTRY_VERIFY(controller.indicator().contains("Repair ready"));
+        QCOMPARE(network.requests, 5);
+    }
+    void repairCanReplacePendingUpgrade() {
+        QTemporaryDir dir, installed; Network network;
+        write(dir.filePath("state.json"), QJsonDocument(QJsonObject{{"format", 1}, {"mode", 1}, {"enabled", true}}).toJson());
+        Controller controller(nullptr, &network, installed.path(), dir.path());
+        controller.check(true); QTRY_VERIFY(controller.indicator().contains("Update ready"));
+        network.metadata = QJsonDocument::fromJson(QJsonDocument(releaseObject()).toJson().replace("99.1.0", AGENT_PET_VERSION)).object();
+        controller.repair(); QTRY_VERIFY(controller.indicator().contains("Repair ready"));
+        QCOMPARE(network.requests, 4);
+        QVERIFY(!controller.waiting());
+        controller.check(true); QCOMPARE(network.requests, 4); // A check must not replace a staged repair.
+    }
+    void repairMetadataFailureCanRetry() {
+        QTemporaryDir dir, installed; Network network;
+        Controller controller(nullptr, &network, installed.path(), dir.path());
+        std::unique_ptr<QWidget> settings(controller.settings(nullptr));
+        const auto hasMessage = [&](const QString &text) {
+            for (auto *label : settings->findChildren<QLabel *>()) if (label->text().contains(text)) return true;
+            return false;
+        };
+        network.fail = true; controller.repair();
+        QTRY_VERIFY(hasMessage("Could not prepare repair"));
+        QVERIFY(!QFile::exists(dir.filePath("pending.json")));
+        network.fail = false;
+        network.metadata = QJsonDocument::fromJson(QJsonDocument(releaseObject()).toJson().replace("99.1.0", AGENT_PET_VERSION)).object();
+        const auto verified = network.metadata;
+        auto assets = network.metadata["assets"].toArray();
+        auto asset = assets[0].toObject(); asset.remove("digest"); assets[0] = asset;
+        network.metadata["assets"] = assets;
+        controller.repair(); QTRY_VERIFY(hasMessage("Repair requires a verified release"));
+        QCOMPARE(network.requests, 2); // An unverified package is never downloaded.
+        network.metadata = verified;
+        controller.repair();
+        for (auto *button : settings->findChildren<QPushButton *>())
+            if (button->text().startsWith("Cancel")) button->click();
+        QTest::qWait(10); QCOMPARE(network.requests, 3); // Cancel metadata without a fallback.
+        QVERIFY(!QFile::exists(dir.filePath("pending.json")));
+        controller.repair(); QTRY_VERIFY(controller.indicator().contains("Repair ready"));
+    }
+    void repairCancellationAndUnmanagedCopy() {
+        QTemporaryDir dir, installed; Network network;
+        Controller unmanaged(nullptr, &network, {}, dir.path());
+        unmanaged.repair(); QCOMPARE(network.requests, 0);
+        network.metadata = QJsonDocument::fromJson(QJsonDocument(releaseObject()).toJson().replace("99.1.0", AGENT_PET_VERSION)).object();
+        Controller controller(nullptr, &network, installed.path(), dir.path());
+        std::unique_ptr<QWidget> settings(controller.settings(nullptr));
+        // Cancel the package request, after metadata has resolved.
+        connect(&controller, &Controller::changed, settings.get(), [&] {
+            if (network.requests != 2) return;
+            for (auto *button : settings->findChildren<QPushButton *>())
+                if (button->text().startsWith("Cancel")) button->click();
+        });
+        controller.repair(); QTRY_COMPARE(network.requests, 2); QTest::qWait(10);
+        QVERIFY(!QFile::exists(dir.filePath("pending.json")));
+        QVERIFY(!QFile::exists(dir.filePath("package.tar.gz")));
+    }
     void versions() {
         QVERIFY(newer("0.10.0", "0.9.9")); QVERIFY(!newer("0.6.0", "0.6.0"));
         QVERIFY(!newer("0.5.9", "0.6.0")); QVERIFY(!newer("1.0.0-beta", "0.6.0"));

@@ -259,6 +259,23 @@ that digest and supplies SHA-256 hashes for component archives and installed fil
 This trusts the repository's release
 account and HTTPS metadata, without a separate publisher signing key.
 
+### Repair an existing installation
+
+For an installation that has accumulated missing, damaged, or inconsistent package
+files, choose **Settings → Updates → Repair installation**. Agent Pet downloads a
+fresh full package for the running version and verifies its SHA-256 digest. Choose
+**Restart and repair** when ready; settings, integrations, startup preferences and
+saved sessions are preserved. Automatic update preferences never trigger a repair
+restart. A pending repair survives closing the app; **Discard repair** removes it.
+The download can be cancelled and retried.
+
+Repair requires a managed Linux release installation or Windows Setup installation,
+a working app/updater and an online verified release package for that exact version.
+Linux stages a clean directory, removes obsolete files and retains startup rollback.
+Windows reruns Setup to replace packaged files; its existing installer cleanup and
+failure behavior apply. For an app that cannot start, rerun the release installer
+manually. Repair does not defragment the disk or modify user-installed packs.
+
 ## Uninstall
 
 ```bash
