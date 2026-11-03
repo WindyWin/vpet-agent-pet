@@ -17,20 +17,26 @@ It sits on your screen, thinks when your agent thinks, gets busy when it runs to
 
 - **Know at a glance** what every agent session is doing.
 - **Never miss a request**: a small note pops up when an agent waits for you, and one click takes you to the right terminal.
+- **Answer in place** (off by default): reply to an agent from a small chat beside the pet; see [agent conversations](starter/docs/interactions.md).
 - **A pet as well as a status light**: drag it, pet it, throw it, watch it wander and nap.
 - **Looks after you**: reminders to rest your eyes, drink water and eat lunch, a Break Buddy that exercises with you, and a recap of your day.
-- **Private**: it only learns *what kind* of thing is happening, never your prompts, code or commands.
+- **Private by default**: status tracking only learns *what kind* of thing is happening, never your prompts, code or commands; agent conversations is opt-in.
 
 Works on **Linux** x86_64 (X11, or Wayland desktops with XWayland such as GNOME and KDE), **macOS 11+** (Apple silicon and Intel), and **Windows 10 version 1809+ / Windows 11** (x64).
 
 ## Import your own pet or plugin
 
 Use **Settings → Pet / Plugins → Import…**, or drop a `.agentpet` file onto the pet
-or Settings. Review and accept its terms, then restart. You can also use
-`agent-pet import <file.agentpet>` or `agent-pet remove <pet|plugin> <id>` without a
-display. Settings includes removal; replacements retain the previous pack if validation
-fails. See [pet authoring](starter/docs/pets.md#importing-and-removing-packs) and
-[plugin packs](starter/docs/plugins.md#importing-a-agentpet-file).
+or Settings. Archives show a preview before you accept their terms; restart applies
+the import. You can also use `agent-pet import <file.agentpet>` or
+`agent-pet remove <pet|plugin> <id>` without a display. Settings includes removal;
+replacements retain the previous pack if validation fails.
+
+**Settings → Pet / Plugins → Browse pack sources…** lists the official gallery, with
+previews before **Install…** or **Update…**. See
+[pet authoring](starter/docs/pets.md#importing-and-removing-packs),
+[plugin packs](starter/docs/plugins.md#importing-a-agentpet-file) and
+[pack sources](starter/docs/pack-sources.md).
 
 ## Get started
 
@@ -68,6 +74,8 @@ Need more detail, or something isn't working? See the [install guide](starter/do
 
 Run as many sessions as you like. The pet always shows the one that matters most right now: a request waiting for you beats an error, which beats a finished turn, and so on.
 
+When a Claude Code turn stops because the usage limit or credits run out, the pet takes to bed with a thermometer and a cough, and a note says **Usage limit reached** or **Out of credits** until that session works again.
+
 <table>
   <tr>
     <td align="center"><img src="docs/media/thinking.gif" width="140" alt="Thinking"><br>Thinking</td>
@@ -102,6 +110,8 @@ When an agent asks for approval or input, or a tool fails, a short note appears 
 
 Click outside the pet's head and tummy to see every running session, most urgent first. Click one to jump to it.
 
+The popup ends with **Plan limits**, the account usage and reset time for Claude Code and Codex; see [plan limits](starter/README.md#plan-limits).
+
 <img src="docs/media/session-list.png" width="420" alt="List of four sessions: needs approval, working, thinking and idle">
 
 ### Play with it
@@ -126,7 +136,7 @@ Just don't overdo it: throw it around too much, pet it nonstop or hold on to it 
 
 ### A life of its own
 
-When nothing needs it, the pet yawns, looks around and every so often goes for a walk, crawls along the screen or climbs up its edge. It also has moods: a good run of finished work makes it happy, lots of errors make it droopy, and after a long busy stretch it gets hungry, a hint that you could use a break too.
+When nothing needs it, the pet works through a routine: a few idle loops, then a glance, a yawn, a bored look, a little squat or a meow. Every so often it also walks, crawls along the screen or climbs the screen edge. It also has moods: a good run of finished work makes it happy, lots of errors make it droopy, and after a long busy stretch it gets hungry, a hint that you could use a break too.
 
 VPet randomly celebrates a finished turn with a wave, shining cheer, shy reaction, or one of two happy cat-paw gestures. The wave has twice the chance of each other reaction; special occasions and earned treats can bring a different celebration.
 
@@ -197,12 +207,12 @@ Right-click → **Today's recap** for a one-line summary like *"Today: 38 turns 
 Right-click the pet (or its tray / menu bar icon) for everything: your sessions, today's recap, a movement break, mute, always on top, Settings and Quit. In **Settings** you can:
 
 - change its size, choose which notes pop up and pick its character (other pets download when chosen);
-- make it calmer or livelier (when idle and while working), and switch off wandering, moods, touch or surprises;
+- make it calmer or livelier while working, turn its ordered idle routine off, and switch off wandering, moods, touch or surprises;
 - turn on [plugin packs](starter/docs/plugins.md) that add animations to your pet, and that can react when your scripts or CI send it [a custom event](starter/docs/events.md#custom-events);
 - set or turn off the eye, water and movement-break reminders, configure lunch (default noon, eligible until 13:15), Monday, go-home and bedtime reminders, and enter your birthday;
 - follow bedtime animations: VPet works tired, acknowledges completion with a yawn, and sleeps when idle from your bedtime until 06:00. Toggle it in **Settings → Pet**, independently of reminders and mood;
-- connect Claude Code and Codex with one click, and have it start with your agents or at login;
-- choose how updates are installed.
+- turn on agent conversations, connect Claude Code, Codex, OpenCode or Antigravity with one click, and have it start with your agents or at login;
+- choose how updates are installed, and repair a damaged installation.
 
 The interface supports **English and Vietnamese**. It follows your system language by default; choose **Settings → General → Language** to switch immediately.
 
@@ -223,11 +233,14 @@ On Windows, release builds installed through Setup support automatic updates in 
 
 On macOS and portable Windows copies, the pet announces new releases for manual installation: replace the macOS app or run the newer Windows setup program. See the [update guide](starter/docs/install.md#update-notifications-and-automatic-updates) for update modes and recovery.
 
+**Settings → Updates → Repair installation** downloads a fresh verified package of the running version and replaces missing or damaged files; see [repair](starter/docs/install.md#repair-an-existing-installation).
+
 ## Your privacy
 
 - Everything stays on your computer. The pet only hears from your agents through a private local channel.
-- It learns *what kind* of thing is happening (thinking, working, waiting, finished), never your prompts, code, file contents or commands. For risky commands it gets only a simple "this looks dangerous" yes or no.
-- The only things it saves are your settings and the recap's daily counts (with project folder names), kept for two weeks.
+- It learns *what kind* of thing is happening (thinking, working, waiting, finished), never your prompts, code, file contents or commands. For risky commands it gets only a simple "this looks dangerous" yes or no. The one exception is agent conversations, which is off by default.
+- When you turn on agent conversations, messages you exchange with an agent stay on this computer and are not stored.
+- The only things it saves are your settings, downloaded packs and the recap's daily counts (with project folder names), kept for two weeks.
 - Connecting it adds its own small entries to Claude Code's or Codex's hook settings and leaves everything else there untouched. Uninstalling removes only those entries.
 
 ## Good to know
@@ -247,8 +260,8 @@ Open an issue from the [template chooser](https://github.com/WindyWin/vpet-agent
 
 ### Architecture at a glance
 
-End-to-end target architecture. **Dashed boxes are planned**; the remaining pieces
-exist today. Arrows show runtime flow, not build order.
+End-to-end architecture. Issue numbers mark the work that introduced each layer.
+Arrows show runtime flow, not build order.
 
 ```mermaid
 flowchart TB
@@ -278,8 +291,6 @@ flowchart TB
   downloads["#62 Part 2<br/>Verified pet downloads"] --> packs
   settings["Settings / preferences"] -. configure .-> life
   settings -. select pet / plugins .-> packs
-
-  classDef planned fill:#fff4d6,stroke:#9a6700,stroke-dasharray:5 5,color:#24292f
 ```
 
 Session priority belongs to `Sessions`; #67 chooses among behavior intents; #64
@@ -287,52 +298,13 @@ chooses how the pet expresses the winning cue. Alerts keep their own delivery pa
 Movement and native window operations stay in `PetWindow` and platform services.
 See the [code map](starter/docs/architecture.md#code-map) for source paths and decisions.
 
-### Roadmap mapped to the architecture
-
-Open work, reconciled with the merged code on 2026-10-08 (#62, #64, #67 and #43 phases 1–3 landed; issue state not re-checked on GitHub). The packs phases (#92–#100) are tracked in the epic
-[#91](https://github.com/WindyWin/vpet-agent-pet/issues/91). Each issue owns its detailed
-acceptance checklist; check a row here when that phase lands and update the chart
-when a planned layer becomes implemented.
-
-```mermaid
-flowchart LR
-  packs["#62 Part 1 · pet packs"] --> cues["#64 · cue mapping"]
-  cues --> runtime["#67 · arbitration"]
-  runtime --> rules["#43 · custom events / rules"]
-  packs --> fragments["#43 · catalog fragments"]
-  fragments --> rules
-  packs --> downloads["#62 Part 2 · downloads"]
-```
-
-| Done | Architecture area | Task / issue | Depends on |
-| --- | --- | --- | --- |
-| ☑ | PetLibrary / Catalog | [#62 Part 1 — selectable pet packs](https://github.com/WindyWin/vpet-agent-pet/issues/62) | Standalone foundation |
-| ☑ | Cue mapping | [#64 — semantic cues and per-pet mapping](https://github.com/WindyWin/vpet-agent-pet/issues/64) | #62 Part 1 |
-| ☑ | Behavior runtime | [#67 — intent arbitration and lifecycle](https://github.com/WindyWin/vpet-agent-pet/issues/67) | #64 |
-| ☑ | Plugin catalog | [#43 Phase 1 — catalog fragments and plugin settings](https://github.com/WindyWin/vpet-agent-pet/issues/43) | #62 Part 1 |
-| ☑ | Plugin events | [#43 Phase 2 — custom events and plugin event rules](https://github.com/WindyWin/vpet-agent-pet/issues/43) | Catalog fragments, #64 and #67 |
-| ☑ | Built-in triggers → rules | [#43 Phase 3 — move the hard-coded triggers onto the rule table](https://github.com/WindyWin/vpet-agent-pet/issues/43) | Plugin events |
-| ☑ | Pet distribution | [#62 Part 2 — verified on-demand downloads](https://github.com/WindyWin/vpet-agent-pet/issues/62) | #62 Part 1 |
-| ☐ | Provider adapters | [#36 — third agent client](https://github.com/WindyWin/vpet-agent-pet/issues/36) | Existing event contract |
-| ☐ | Alerts / settings | [#34 — snooze / focus mode](https://github.com/WindyWin/vpet-agent-pet/issues/34) | Existing alert delivery |
-| ☐ | Alerts / attention | [#35 — escalating approval nudges](https://github.com/WindyWin/vpet-agent-pet/issues/35) | Existing attention tracking |
-| ☐ | Mood / interaction | [#37 — earned treats to feed the pet](https://github.com/WindyWin/vpet-agent-pet/issues/37) | Existing mood counters; coordinate reactions with #67 |
-| ☐ | Packs / ADR | [#92 Phase 0 — ADR 0041: pack format, storage, ids, trust, limits](https://github.com/WindyWin/vpet-agent-pet/issues/92) | — |
-| ☐ | PetLibrary | [#93 Phase 1 — load complete pets from a per-user folder](https://github.com/WindyWin/vpet-agent-pet/issues/93) | Phase 0 (#92) |
-| ☐ | Pack import | [#94 Phase 2 — import `.agentpet` files for pets and plugins (Settings, drag-and-drop, CLI), plus `pack.py`](https://github.com/WindyWin/vpet-agent-pet/issues/94) | Phase 1 (#93) |
-| ☐ | Pack tooling | [#95 Phase 3 — VPet workshop mod converter (Python), using VPet's catalog as the template](https://github.com/WindyWin/vpet-agent-pet/issues/95) | Phase 2 (#94) |
-| ☐ | Pet distribution | [#96 Phase 4 — move Fat Cat, Whale Girl, Kuro, Yun and Bocchi to a gallery repo; delete `PetDownloader` and the `pets` release](https://github.com/WindyWin/vpet-agent-pet/issues/96) | Phase 2 (#94) |
-| ☐ | Pack sources | [#97 Phase 5 — official and third-party sources, with Install from URL](https://github.com/WindyWin/vpet-agent-pet/issues/97) | Phase 2 (#94); Phase 4 (#96) for official content |
-| ☐ | Pack updates | [#98 Phase 6 — automatic pack updates, opt-in](https://github.com/WindyWin/vpet-agent-pet/issues/98) | Phase 5 (#97) |
-| ☐ | Pack import | [#99 Phase 7 — VPet mod import inside the app, plus detection of locally installed Steam workshop mods](https://github.com/WindyWin/vpet-agent-pet/issues/99) | Phase 3 (#95) |
-| ☐ | Releases / updates | [#100 Phase 8 — stop re-uploading identical release assets](https://github.com/WindyWin/vpet-agent-pet/issues/100) | — |
-
 ### Build and contribution guides
 
 The app lives in [`starter/`](starter/README.md): building from source, running tests, command-line options, sending demo events and packaging. Further reading:
 
 - [Architecture overview](starter/docs/architecture.md) and [design decision records](starter/docs/adr/README.md)
 - [Event protocol](starter/docs/events.md) and [Claude Code / Codex integrations](starter/docs/integrations.md)
+- [Open issues](https://github.com/WindyWin/vpet-agent-pet/issues) for bugs, feature requests and planned work
 - [CI commit rules](starter/README.md#ci-commit-rules)
 
 This repository root also keeps the original VPet artwork archive (about 5,500 frames, 735 MiB) as a source bundle for adding new animations. The app itself doesn't need it. Check it with `python3 scripts/assets.py verify`, or list every sequence with `python3 scripts/assets.py catalog`.
@@ -343,6 +315,6 @@ Character artwork by the **VUP-Simulator team**, from [LorisYounger/VPet](https:
 
 Agent Pet's own code is licensed under [Apache-2.0](starter/LICENSE). That license doesn't cover the artwork.
 
-VPet is the only bundled pet. Install additional `.agentpet` packs from the [gallery](https://github.com/WindyWin/agent-pet-gallery/releases) through Settings → Pet → Import.
+VPet is the only bundled pet. Browse the [gallery](https://github.com/WindyWin/agent-pet-gallery/releases) from **Settings → Pet → Browse pack sources…**, or import an `.agentpet` file.
 
 Pack catalogs: [browse, install and publish sources](starter/docs/pack-sources.md).

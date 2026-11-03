@@ -17,21 +17,27 @@ Thú cưng luôn ở bên bạn trên màn hình: suy nghĩ cùng agent, bận r
 
 - **Nhìn là biết trạng thái**: theo dõi được các phiên agent đang làm gì.
 - **Không bỏ lỡ yêu cầu**: khi agent chờ bạn sẽ có thông báo nhỏ, nhấp một cái là đến đúng terminal.
+- **Trả lời ngay tại chỗ** (mặc định tắt): trả lời agent trong khung chat nhỏ cạnh thú cưng; xem [trò chuyện với agent](starter/docs/interactions.md).
 - **Chơi cùng thú cưng**: kéo, vuốt ve, tung lên, ngắm nó đi dạo và ngủ.
 - **Nhắc bạn chăm sóc bản thân**: nghỉ mắt, uống nước, ăn trưa, vận động cùng Break Buddy và xem lại hoạt động trong ngày.
-- **Riêng tư**: chỉ nhận biết *loại hoạt động*, không đọc prompt, mã nguồn hay câu lệnh của bạn.
+- **Riêng tư theo mặc định**: phần theo dõi trạng thái chỉ nhận biết *loại hoạt động*, không đọc prompt, mã nguồn hay câu lệnh của bạn; trò chuyện với agent là tính năng tùy chọn.
 
 Hỗ trợ **Linux** x86_64 (X11 hoặc desktop Wayland có XWayland như GNOME và KDE), **macOS 11+** (Apple silicon và Intel), và **Windows 10 phiên bản 1809 trở lên / Windows 11** (x64).
 
 ## Nhập thú cưng hoặc plugin của bạn
 
 Trong **Cài đặt → Thú cưng / Plugin**, chọn **Nhập…** hoặc kéo tệp `.agentpet` vào
-thú cưng hay cửa sổ Cài đặt. Đọc và chấp nhận điều khoản, rồi khởi động lại ứng dụng.
-Có thể dùng `agent-pet import <file.agentpet>` hoặc
+thú cưng hay cửa sổ Cài đặt. Gói hiện bản xem trước trước khi bạn chấp nhận điều khoản;
+khởi động lại để áp dụng. Có thể dùng
+`agent-pet import <file.agentpet>` hoặc
 `agent-pet remove <pet|plugin> <id>` mà không cần giao diện. Cài đặt cũng có nút gỡ
-gói; nếu kiểm tra gói thay thế thất bại, gói cũ được giữ nguyên. Xem
-[hướng dẫn tạo thú cưng](starter/docs/pets.md#importing-and-removing-packs) và
-[gói plugin](starter/docs/plugins.md#importing-a-agentpet-file).
+gói; nếu kiểm tra gói thay thế thất bại, gói cũ được giữ nguyên.
+
+**Cài đặt → Thú cưng / Plugin → Duyệt nguồn gói…** mở thư viện chính thức, có bản
+xem trước trước khi bấm **Cài đặt…** (Install…) hoặc **Cập nhật…** (Update…). Xem
+[hướng dẫn tạo thú cưng](starter/docs/pets.md#importing-and-removing-packs),
+[gói plugin](starter/docs/plugins.md#importing-a-agentpet-file) và
+[nguồn gói](starter/docs/pack-sources.vi.md).
 
 ## Bắt đầu
 
@@ -69,6 +75,8 @@ Cần hướng dẫn kỹ hơn hoặc gặp vấn đề? Xem [hướng dẫn cà
 
 Bạn có thể chạy nhiều phiên cùng lúc. Thú cưng luôn hiển thị phiên cần chú ý nhất: yêu cầu đang chờ bạn được ưu tiên hơn lỗi, lỗi được ưu tiên hơn lượt vừa hoàn thành, v.v.
 
+Khi một lượt Claude Code dừng vì chạm giới hạn sử dụng hoặc hết tín dụng, thú cưng lên giường với nhiệt kế và cơn ho, kèm ghi chú **Đã đạt giới hạn sử dụng** hoặc **Đã hết tín dụng** cho đến khi phiên đó hoạt động lại.
+
 <table>
   <tr>
     <td align="center"><img src="docs/media/thinking.gif" width="140" alt="Đang suy nghĩ"><br>Đang suy nghĩ</td>
@@ -103,6 +111,8 @@ Khi agent cần phê duyệt, cần bạn nhập thông tin hoặc gặp lỗi c
 
 Nhấp vào vùng ngoài đầu và bụng của thú cưng để xem các phiên đang chạy, sắp xếp theo mức độ cần chú ý. Nhấp vào một phiên để chuyển đến phiên đó.
 
+Cuối cửa sổ đó có **Giới hạn gói** (Plan limits): mức dùng và giờ đặt lại của tài khoản Claude Code và Codex; xem [giới hạn gói](starter/README.md#plan-limits).
+
 <img src="docs/media/session-list.png" width="420" alt="Danh sách bốn phiên: cần phê duyệt, đang làm việc, đang suy nghĩ và rảnh">
 
 ### Chơi cùng thú cưng
@@ -127,7 +137,7 @@ Kéo thú cưng đến bất kỳ đâu, nó sẽ đung đưa theo con trỏ. Ch
 
 ### Có nhịp sống riêng
 
-Khi không có việc cần chú ý, thú cưng ngáp, nhìn quanh, thỉnh thoảng đi dạo, bò trên màn hình hoặc leo mép màn hình. Nó cũng có tâm trạng: nhiều lượt hoàn thành khiến nó vui, nhiều lỗi khiến nó buồn, còn làm việc liên tục quá lâu thì nó đói, cũng là lời nhắc bạn nên nghỉ một chút.
+Khi không có việc cần chú ý, thú cưng lặp lại một chuỗi động tác: vài vòng rảnh, rồi liếc nhìn, ngáp, vẻ chán, ngồi xổm hoặc kêu meo. Thỉnh thoảng nó cũng đi dạo, bò trên màn hình hoặc leo mép màn hình. Nó cũng có tâm trạng: nhiều lượt hoàn thành khiến nó vui, nhiều lỗi khiến nó buồn, còn làm việc liên tục quá lâu thì nó đói, cũng là lời nhắc bạn nên nghỉ một chút.
 
 Khi một lượt hoàn thành, VPet chọn ngẫu nhiên cách ăn mừng: vẫy tay, reo vui lấp lánh, cười ngượng hoặc một trong hai động tác chân mèo vui vẻ. Vẫy tay có xác suất gấp đôi từng phản ứng còn lại; dịp đặc biệt và phần thưởng tích lũy có thể mang đến cách ăn mừng khác.
 
@@ -198,12 +208,12 @@ Nhấp chuột phải → **Tổng kết hôm nay** (Today's recap) để xem t�
 Nhấp chuột phải vào thú cưng (hoặc biểu tượng ở khay hệ thống / thanh menu) để xem danh sách phiên và tổng kết ngày, bắt đầu nghỉ vận động, tắt thông báo, giữ thú cưng luôn ở trên cùng, mở **Cài đặt** (Settings) hoặc **Thoát** (Quit). Trong **Cài đặt**, bạn có thể:
 
 - đổi kích thước, chọn những thông báo được hiển thị và chọn nhân vật (thú cưng khác được tải về khi chọn);
-- chọn mức độ sinh động khi rảnh và khi làm việc, hoặc tắt đi dạo, tâm trạng, tương tác và bất ngờ;
+- chọn mức độ sinh động khi làm việc, tắt chuỗi hoạt ảnh khi rảnh, hoặc tắt đi dạo, tâm trạng, tương tác và bất ngờ;
 - bật [gói plugin](starter/docs/plugins.md) để thêm hoạt ảnh cho thú cưng, và để chúng phản ứng khi script hoặc CI của bạn gửi [một sự kiện tùy chỉnh](starter/docs/events.md#custom-events);
 - chỉnh hoặc tắt lời nhắc nghỉ mắt, uống nước và nghỉ vận động; đặt giờ nhắc ăn trưa (mặc định 12:00, có thể nhắc đến 13:15), nhắc thứ Hai, về nhà và đi ngủ; nhập ngày sinh nhật;
 - đổi hoạt ảnh theo giờ đi ngủ: VPet làm việc với vẻ buồn ngủ, ngáp khi hoàn thành và ngủ khi rảnh từ giờ đi ngủ đến 06:00. Bật hoặc tắt trong **Cài đặt → Thú cưng**, độc lập với lời nhắc và tâm trạng;
-- kết nối Claude Code và Codex bằng một cú nhấp, tự khởi động cùng agent hoặc khi đăng nhập;
-- chọn cách cài đặt bản cập nhật.
+- bật trò chuyện với agent, kết nối Claude Code, Codex, OpenCode hoặc Antigravity bằng một cú nhấp, tự khởi động cùng agent hoặc khi đăng nhập;
+- chọn cách cài đặt bản cập nhật và sửa chữa bản cài đặt bị hỏng.
 
 Giao diện hỗ trợ **tiếng Anh và tiếng Việt**. Mặc định, ứng dụng dùng ngôn ngữ hệ thống; vào **Cài đặt → Chung → Ngôn ngữ** (Settings → General → Language) để đổi ngôn ngữ ngay.
 
@@ -224,11 +234,14 @@ Trên Windows, phiên bản được cài bằng bộ cài hỗ trợ tự độ
 
 Trên macOS và bản Windows portable, thú cưng thông báo khi có phiên bản mới để bạn cài thủ công: thay ứng dụng trên macOS hoặc chạy bộ cài Windows mới hơn. Xem [hướng dẫn cập nhật](starter/docs/install.md#update-notifications-and-automatic-updates) để biết các chế độ cập nhật và cách khôi phục.
 
+**Cài đặt → Cập nhật → Sửa chữa bản cài đặt** (Repair installation) tải lại gói đã kiểm tra của đúng phiên bản đang chạy và thay các tệp bị thiếu hoặc hỏng; xem [hướng dẫn sửa chữa](starter/docs/install.md#repair-an-existing-installation).
+
 ## Quyền riêng tư
 
 - Mọi dữ liệu hoạt động đều nằm trên máy bạn. Thú cưng chỉ nhận sự kiện từ agent qua một kênh cục bộ riêng.
-- Nó chỉ biết *loại hoạt động* (suy nghĩ, làm việc, chờ, hoàn thành), không nhận prompt, mã nguồn, nội dung tệp hay câu lệnh. Với lệnh nguy hiểm, nó chỉ nhận một giá trị có/không cho biết “lệnh này có vẻ nguy hiểm”.
-- Dữ liệu lưu lại chỉ gồm cài đặt và số liệu tổng kết mỗi ngày (có tên thư mục dự án), giữ trong hai tuần.
+- Nó chỉ biết *loại hoạt động* (suy nghĩ, làm việc, chờ, hoàn thành), không nhận prompt, mã nguồn, nội dung tệp hay câu lệnh. Với lệnh nguy hiểm, nó chỉ nhận một giá trị có/không cho biết “lệnh này có vẻ nguy hiểm”. Ngoại lệ là trò chuyện với agent, mặc định tắt.
+- Khi bật trò chuyện với agent, tin nhắn giữa bạn và agent chỉ đi qua thú cưng trên máy này và không được lưu.
+- Dữ liệu lưu lại chỉ gồm cài đặt, gói đã tải và số liệu tổng kết mỗi ngày (có tên thư mục dự án); số liệu này giữ trong hai tuần.
 - Khi kết nối, ứng dụng thêm các mục hook riêng vào cài đặt Claude Code hoặc Codex và giữ nguyên các mục khác. Gỡ cài đặt chỉ xóa những mục của Agent Pet.
 
 ## Lưu ý khi sử dụng
@@ -244,7 +257,7 @@ Trên macOS và bản Windows portable, thú cưng thông báo khi có phiên b�
 
 ### Tổng quan kiến trúc
 
-Kiến trúc mục tiêu từ đầu vào đến hiển thị. **Các ô nét đứt là phần dự kiến**; những phần còn lại đã có. Mũi tên thể hiện luồng chạy, không phải thứ tự biên dịch.
+Kiến trúc đầu-cuối. Số issue cho biết mỗi lớp đến từ phần việc nào. Mũi tên thể hiện luồng chạy, không phải thứ tự biên dịch.
 
 ```mermaid
 flowchart TB
@@ -274,39 +287,9 @@ flowchart TB
   downloads["#62 Phần 2<br/>Tải thú cưng có kiểm tra tính toàn vẹn"] --> packs
   settings["Cài đặt / tùy chọn"] -. cấu hình .-> life
   settings -. chọn thú cưng / plugin .-> packs
-
-  classDef planned fill:#fff4d6,stroke:#9a6700,stroke-dasharray:5 5,color:#24292f
 ```
 
 `Sessions` xác định thứ tự ưu tiên giữa các phiên; #67 chọn ý định hành vi; #64 quyết định cách thú cưng thể hiện tín hiệu đã chọn. Thông báo được xử lý theo luồng riêng. Việc di chuyển và thao tác với cửa sổ hệ điều hành vẫn do `PetWindow` và các dịch vụ nền tảng đảm nhiệm. Xem [bản đồ mã nguồn](starter/docs/architecture.md#code-map) để tìm các tệp liên quan và các quyết định thiết kế.
-
-### Lộ trình theo kiến trúc
-
-Các công việc còn mở, đã đối chiếu với mã nguồn đã hợp nhất ngày 2026-10-08 (#62, #64, #67 và giai đoạn 1–3 của #43 đã hoàn thành; chưa kiểm tra lại trạng thái issue trên GitHub). Mỗi issue chứa danh sách tiêu chí nghiệm thu chi tiết; đánh dấu dòng tương ứng khi giai đoạn hoàn thành và cập nhật sơ đồ khi một lớp dự kiến đã được triển khai.
-
-```mermaid
-flowchart LR
-  packs["#62 Phần 1 · gói thú cưng"] --> cues["#64 · ánh xạ tín hiệu"]
-  cues --> runtime["#67 · phân xử hành vi"]
-  runtime --> rules["#43 · sự kiện / quy tắc tùy chỉnh"]
-  packs --> fragments["#43 · phần bổ sung catalog"]
-  fragments --> rules
-  packs --> downloads["#62 Phần 2 · tải gói"]
-```
-
-| Hoàn thành | Phần kiến trúc | Công việc / issue | Phụ thuộc |
-| --- | --- | --- | --- |
-| ☑ | PetLibrary / Catalog | [#62 Phần 1 — chọn gói thú cưng](https://github.com/WindyWin/vpet-agent-pet/issues/62) | Nền tảng độc lập |
-| ☑ | Ánh xạ tín hiệu | [#64 — tín hiệu ngữ nghĩa và ánh xạ riêng cho từng thú cưng](https://github.com/WindyWin/vpet-agent-pet/issues/64) | #62 Phần 1 |
-| ☑ | Bộ điều phối hành vi | [#67 — phân xử ý định và vòng đời](https://github.com/WindyWin/vpet-agent-pet/issues/67) | #64 |
-| ☑ | Catalog plugin | [#43 Giai đoạn 1 — phần bổ sung catalog và cài đặt plugin](https://github.com/WindyWin/vpet-agent-pet/issues/43) | #62 Phần 1 |
-| ☑ | Sự kiện plugin | [#43 Giai đoạn 2 — sự kiện tùy chỉnh và quy tắc sự kiện của plugin](https://github.com/WindyWin/vpet-agent-pet/issues/43) | Phần bổ sung catalog, #64 và #67 |
-| ☑ | Điều kiện kích hoạt có sẵn → quy tắc | [#43 Giai đoạn 3 — chuyển các điều kiện kích hoạt viết cứng sang bảng quy tắc](https://github.com/WindyWin/vpet-agent-pet/issues/43) | Sự kiện plugin |
-| ☑ | Phân phối thú cưng | [#62 Phần 2 — tải theo yêu cầu có kiểm tra tính toàn vẹn](https://github.com/WindyWin/vpet-agent-pet/issues/62) | #62 Phần 1 |
-| ☐ | Adapter provider | [#36 — client agent thứ ba](https://github.com/WindyWin/vpet-agent-pet/issues/36) | Hợp đồng sự kiện hiện có |
-| ☐ | Thông báo / cài đặt | [#34 — tạm hoãn / chế độ tập trung](https://github.com/WindyWin/vpet-agent-pet/issues/34) | Luồng thông báo hiện có |
-| ☐ | Thông báo / yêu cầu chú ý | [#35 — tăng mức nhắc phê duyệt](https://github.com/WindyWin/vpet-agent-pet/issues/35) | Theo dõi yêu cầu chú ý hiện có |
-| ☐ | Tâm trạng / tương tác | [#37 — kiếm phần thưởng để cho thú cưng ăn](https://github.com/WindyWin/vpet-agent-pet/issues/37) | Bộ đếm tâm trạng hiện có; phối hợp phản ứng với #67 |
 
 ### Biên dịch và đóng góp
 
@@ -314,6 +297,7 @@ Mã ứng dụng nằm trong [`starter/`](starter/README.md): hướng dẫn bi�
 
 - [Tổng quan kiến trúc](starter/docs/architecture.md) và [các quyết định thiết kế](starter/docs/adr/README.md)
 - [Giao thức sự kiện](starter/docs/events.md) và [tích hợp Claude Code / Codex](starter/docs/integrations.md)
+- [Issue đang mở](https://github.com/WindyWin/vpet-agent-pet/issues) cho lỗi, yêu cầu tính năng và công việc dự kiến
 - [Quy tắc commit cho CI](starter/README.md#ci-commit-rules): dùng `docs: ...` hoặc `docs(scope): ...` khi toàn bộ thay đổi chỉ là tài liệu. Commit cuối được push lên `main` có tiền tố `docs` sẽ bỏ qua các job build/test/package; GitHub vẫn có thể hiển thị workflow với các job bị bỏ qua. Tag phiên bản và chạy workflow thủ công vẫn build.
 
 Thư mục gốc còn giữ bộ hình ảnh VPet nguyên bản (khoảng 5.500 khung hình, 735 MiB), để bổ sung hoạt ảnh. Ứng dụng không cần bộ này để chạy. Kiểm tra bằng `python3 scripts/assets.py verify`, hoặc liệt kê các chuỗi bằng `python3 scripts/assets.py catalog`.
@@ -324,19 +308,6 @@ Hình ảnh nhân vật do **đội ngũ VUP-Simulator** thực hiện, từ [Lo
 
 Mã nguồn riêng của Agent Pet được cấp phép theo [Apache-2.0](starter/LICENSE). Giấy phép đó không áp dụng cho hình ảnh nhân vật.
 
-## Cài thú cưng từ thư mục cục bộ
-
-Trong Cài đặt → Thú cưng, chọn **Mở thư mục thú cưng**, rồi chép một bộ thú cưng
-đầy đủ vào `packs/pets/<id>/`. Khởi động lại để làm mới danh sách thú cưng,
-rồi mở Cài đặt, chọn ô **Cục bộ** và khởi động lại;
-`--pet <id>` cũng dùng được với thú cưng cục bộ. Siêu dữ liệu hiển thị không hợp lệ
-sẽ có lý do và không thể được chọn; toàn bộ hình ảnh được kiểm tra khi khởi chạy
-thú cưng. Nếu bộ đã chọn bị xóa hoặc không còn hợp lệ, ứng dụng dùng
-VPet cho lần chạy đó và giữ lựa chọn đã lưu. Mục Giới thiệu cho phép đọc điều khoản
-hình ảnh của từng thú cưng đã cài. Cập nhật ứng dụng và dọn bộ nhớ tải xuống không
-xóa các thư mục này. Xem [hướng dẫn cài đặt](starter/docs/pets.md#installing-a-local-pet)
-để biết cấu trúc và giới hạn. Nhập tệp ZIP sẽ được bổ sung ở giai đoạn sau; duyệt nguồn đã có sẵn trong Cài đặt.
-
-Ứng dụng chỉ tích hợp VPet. Tải gói `.agentpet` từ [thư viện thú cưng](https://github.com/WindyWin/agent-pet-gallery/releases), rồi nhập gói trong Cài đặt → Thú cưng.
+Ứng dụng chỉ đóng gói sẵn VPet. Duyệt [thư viện thú cưng](https://github.com/WindyWin/agent-pet-gallery/releases) trong **Cài đặt → Thú cưng → Duyệt nguồn gói…** (Browse pack sources…), hoặc nhập tệp `.agentpet`.
 
 Danh mục gói: [duyệt, cài đặt và xuất bản nguồn](starter/docs/pack-sources.vi.md).
