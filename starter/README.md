@@ -354,7 +354,7 @@ native Wayland is for builds against the system Qt (see
 VPet is the only bundled pet. Additional pets are distributed as `.agentpet` packs in the [gallery](https://github.com/WindyWin/agent-pet-gallery/releases) and installed through Settings → Pet → Import. The app is built for more. A pet is a folder of frames, a catalog, a
 preview and its own art terms under `assets/`, and a rebuild picks up every such folder with no code
 changes. Once two or more pets are installed, Settings → Pet → **Character** shows a tile per pet. The
-chosen pet appears the next time Agent Pet starts, and only its artwork is loaded. `--pet <id>` runs
+chosen pet is saved and Agent Pet restarts itself a moment later to show it (running sessions are kept), and only its artwork is loaded. `--pet <id>` runs
 another installed pet once without saving the choice. A pet that cannot load is skipped and VPet runs
 instead. Import additional `.agentpet` packs from the gallery through Settings → Pet → Import, review
 their artwork terms, then restart Agent Pet to use them. The app tells a pet what is happening through named cues (a session needs you, a turn finished,

@@ -10,6 +10,7 @@
 #include <QRegularExpression>
 #include <QSaveFile>
 #include <QStandardPaths>
+#include <QThread>
 #include <cmath>
 
 namespace pet {
@@ -41,10 +42,18 @@ PreferencesStore::PreferencesStore(QString path) : path_(std::move(path)) {
 }
 Preferences PreferencesStore::load() {
     Preferences result;
+    // Each load judges the file afresh. A failure here (on Windows often a sharing violation from a scanner or a
+    // concurrent `agent-pet autostart`) must not leave the store read-only for the rest of the run.
+    writable_ = true; error_.clear();
     QFile file(path_);
     if (!file.exists()) return result;
     QJsonParseError parse;
-    if (!file.open(QIODevice::ReadOnly) || file.size() > 4096) {
+    bool opened = file.open(QIODevice::ReadOnly);
+    for (int attempt = 0; !opened && attempt < 4; ++attempt) {
+        QThread::msleep(25);
+        opened = file.open(QIODevice::ReadOnly);
+    }
+    if (!opened || file.size() > 4096) {
         writable_ = false; error_ = Settings::tr("Cannot read preferences; existing file preserved."); return result;
     }
     const auto document = QJsonDocument::fromJson(file.readAll(), &parse);
@@ -133,8 +142,6 @@ bool PreferencesStore::save(const Preferences &preferences) {
     if (!QDir().mkpath(QFileInfo(path_).absolutePath())) {
         error_ = Settings::tr("Cannot create preferences directory."); return false;
     }
-    QSaveFile file(path_);
-    if (!file.open(QIODevice::WriteOnly)) { error_ = file.errorString(); return false; }
     QJsonObject object{{"version", 1}, {"size", preferences.size}, {"on_top", preferences.onTop},
                        {"muted", preferences.muted}, {"sound", preferences.sound}, {"bubbles", preferences.bubbles}, {"ambient", preferences.ambient}, {"activity", preferences.activity},
                        {"mood", preferences.mood}, {"turns", preferences.turns}, {"touch", preferences.touch},
@@ -157,7 +164,14 @@ bool PreferencesStore::save(const Preferences &preferences) {
     if (Preferences::validBirthday(preferences.birthday)) object["birthday"] = preferences.birthday;
     if (preferences.hasPosition) { object["x"] = preferences.position.x(); object["y"] = preferences.position.y(); }
     const auto bytes = QJsonDocument(object).toJson();
-    if (file.write(bytes) != bytes.size() || !file.commit()) { error_ = file.errorString(); return false; }
-    error_.clear(); return true;
+    // The replace can fail briefly on Windows while another process has the file open; retry before giving up.
+    for (int attempt = 0; attempt < 5; ++attempt) {
+        if (attempt) QThread::msleep(40);
+        QSaveFile file(path_);
+        if (!file.open(QIODevice::WriteOnly)) { error_ = file.errorString(); continue; }
+        if (file.write(bytes) != bytes.size() || !file.commit()) { error_ = file.errorString(); continue; }
+        error_.clear(); return true;
+    }
+    return false;
 }
 }

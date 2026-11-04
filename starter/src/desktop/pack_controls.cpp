@@ -1,4 +1,5 @@
 #include "pack_controls.h"
+#include "desktop/restart.h"
 #include "pack_preview.h"
 #include "vpet_import.h"
 #include <QJsonDocument>
@@ -23,6 +24,14 @@
 #include <QTimer>
 
 namespace pet {
+// Packs are applied while starting, so a change restarts the pet by itself when it can.
+static QString queuedMessage() {
+    if (restart::available()) {
+        restart::request(2500);
+        return QCoreApplication::translate("PackControls", "Pack change queued. Agent Pet will restart to apply it.");
+    }
+    return QCoreApplication::translate("PackControls", "Pack change queued. Restart Agent Pet to apply it.");
+}
 namespace {
 void message(QWidget *parent, const QString &text) {
     auto *box = new QMessageBox(QMessageBox::Information, QCoreApplication::translate("PackControls", "Pack installation"), text, QMessageBox::Ok, parent);
@@ -63,7 +72,7 @@ void reviewPack(QWidget *parent, const QString &path, std::unique_ptr<packs::Can
     QObject::connect(dialog, &QDialog::accepted, dialog, [shared, owner = QPointer<QWidget>(parent)] {
         QString error;
         if (!packs::install(*shared, error)) { if (owner) message(owner, error); }
-        else if (owner) message(owner, QCoreApplication::translate("PackControls", "Pack change queued. Restart Agent Pet to apply it."));
+        else if (owner) message(owner, queuedMessage());
     });
     dialog->open();
 }
@@ -111,7 +120,7 @@ QWidget *packControls(QWidget *parent, const QString &kind, std::function<void(c
         if (confirm.exec() != QMessageBox::Yes) return;
         QString error; if (!packs::remove(kind, id, error)) { message(widget, error); return; }
         removed(kind, id); choices->removeItem(choices->currentIndex()); remove->setEnabled(choices->count());
-        message(widget, QCoreApplication::translate("PackControls", "Pack change queued. Restart Agent Pet to apply it."));
+        message(widget, queuedMessage());
     });
     return widget;
 }

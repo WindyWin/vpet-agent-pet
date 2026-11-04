@@ -11,7 +11,7 @@ larger preview. Importing a local archive also shows its preview before acceptin
 **Install…** or **Update…** downloads the selected version. The app checks its exact
 byte count and SHA-256, validates the archive using the local import pipeline, and
 checks its identity and metadata against the catalog. Review the complete terms
-and choose **Accept terms and install**. Restart Agent Pet to apply the queued
+and choose **Accept terms and install**. Agent Pet then restarts itself to apply the queued
 change. An installed version is preserved if download, validation or consent fails.
 **Cancel download** or closing the browser discards the temporary download.
 

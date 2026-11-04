@@ -63,6 +63,7 @@ the order the decisions were made. For a map of the code, start with the
 | [0054](0054-command-aware-activity.md) | Command-aware activity for shell tools | 2026-10-20 |
 | [0055](0055-bedtime-animations.md) | Tired working, sleepy completion and overnight rest | 2026-10-25 |
 | [0056](0056-installation-repair.md) | Repair an installed version with a fresh verified package | 2026-10-27 |
+| [0057](0057-automatic-restart-and-preference-saves.md) | Restart automatically for startup-only changes; reliable preference saves | 2026-11-04 |
 
 ## Writing a record
 

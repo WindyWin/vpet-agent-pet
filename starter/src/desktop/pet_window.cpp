@@ -4,6 +4,7 @@
 #include "pack_controls.h"
 #include "animation/pet_library.h"
 #include "desktop/pet_picker.h"
+#include "desktop/restart.h"
 #include "desktop/plugin_list.h"
 #include "platform/contracts/native_window.h"
 #include "desktop/overlay.h"
@@ -660,10 +661,29 @@ void PetWindow::migrateLegacyPet() {
     notice->setAttribute(Qt::WA_DeleteOnClose);
     notice->open();
 }
-void PetWindow::setPet(const QString &id) {
-    if (!Preferences::validPet(id)) return;
+bool PetWindow::setPet(const QString &id) {
+    if (!Preferences::validPet(id)) return false;
+    const auto before = pet_;
     pet_ = id;
-    writePreferences([id](Preferences &preferences) { preferences.pet = id; });
+    if (writePreferences([id](Preferences &preferences) { preferences.pet = id; })) return true;
+    pet_ = before; // Not saved, so a restart would show the old pet: do not pretend otherwise.
+    return false;
+}
+void PetWindow::choosePet(const QString &id) {
+    if (!setPet(id)) {
+        warn(this, tr("Cannot save the pet choice"),
+             tr("Agent Pet could not write its settings file, so the pet was not changed. Check that the file is not locked "
+                "or read-only, then try again."));
+        return;
+    }
+    // Choosing the pet that already runs cancels a restart a moment ago asked for.
+    if (id == PetLibrary::shared().active()) restart::cancel();
+    else restart::request();
+}
+void PetWindow::requestRestart() {
+    if (quitting_) return;
+    restarting_ = true;
+    requestQuit();
 }
 void PetWindow::setPlugins(const QStringList &ids) {
     plugins_.clear();
@@ -966,7 +986,7 @@ void PetWindow::showSettings() {
     if (const auto pets = PetLibrary::shared().pets(); pets.size() > 1 || pet_ != PetLibrary::shared().active()) {
         auto *picker = new PetPicker(pets, pet_, PetLibrary::shared().active(), dialog);
         layout->addRow(tr("&Character"), picker);
-        connect(picker, &PetPicker::chosen, this, &PetWindow::setPet);
+        connect(picker, &PetPicker::chosen, this, &PetWindow::choosePet);
     }
     layout->addRow(packControls(dialog, "pet", [this](const QString &kind, const QString &id) {
         packRemoved(kind, id);
@@ -1092,7 +1112,10 @@ void PetWindow::showSettings() {
     layout->addRow(packControls(dialog, "plugin", [this](const QString &kind, const QString &id) {
         packRemoved(kind, id);
     }));
-    connect(pluginList, &PluginList::changed, this, &PetWindow::setPlugins);
+    connect(pluginList, &PluginList::changed, this, [this](const QStringList &ids) {
+        setPlugins(ids);
+        restart::request(); // Plugin packs merge in as the pet activates, so a change shows after a restart.
+    });
     layout = page(tr("Startup and agents"));
     layout->addRow(startupSettings(dialog));
     layout->addRow(integrationSettings(dialog));

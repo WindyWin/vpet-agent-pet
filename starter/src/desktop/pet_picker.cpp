@@ -1,4 +1,5 @@
 #include "pet_picker.h"
+#include "desktop/restart.h"
 #include <QButtonGroup>
 #include <QHBoxLayout>
 #include <QLabel>
@@ -62,7 +63,10 @@ void PetPicker::showNote() {
     if (!unavailable_.isEmpty()) { note_->setText(unavailable_); note_->show(); return; }
     const auto *pet = find(selected_);
     note_->setVisible(selected_ != running_ && pet);
-    if (pet) note_->setText(tr("%1 will appear the next time Agent Pet starts.").arg(pet->name));
+    if (!pet) return;
+    // With a handler installed, the pet relaunches itself a moment after the last choice.
+    note_->setText(restart::available() ? tr("Restarting Agent Pet to show %1…").arg(pet->name)
+                                        : tr("%1 will appear the next time Agent Pet starts.").arg(pet->name));
 }
 const PetInfo *PetPicker::find(const QString &id) const {
     const auto pet = std::find_if(pets_.begin(), pets_.end(), [&](const PetInfo &pet) { return pet.id == id; });

@@ -106,9 +106,12 @@ public:
     // bubbles relabel themselves and an open settings dialog reopens on the same tab.
     void setLanguage(const QString &language);
     QString language() const { return language_; }
-    // The pet shown from the next start, by id; persisted. The running pet never changes.
+    // The pet shown from the next start, by id; persisted. The running pet never changes. False when the choice
+    // could not be saved, in which case it is not kept.
     void migrateLegacyPet();
-    void setPet(const QString &id);
+    bool setPet(const QString &id);
+    // A choice made in Settings: saved, then the pet restarts by itself to show it (restart.h).
+    void choosePet(const QString &id);
     QString pet() const { return pet_; }
     // The plugin packs loaded from the next start, by id; persisted. The running pet keeps what it loaded.
     void setPlugins(const QStringList &ids);
@@ -119,6 +122,9 @@ public:
     void setUpdates(updates::Controller *controller);
     void showPreview();
     void requestQuit();
+    // Quits so that main relaunches the pet; sessions and settings are already saved.
+    void requestRestart();
+    bool restarting() const { return restarting_; }
     void constrainPosition();
     bool savePreferences();
     // Unresolved observed requests; independent of whether their alerts were dismissed.
@@ -260,7 +266,7 @@ private:
     bool snoozeShown_ = false, fallbackDrag_ = false, dragging_ = false, clickThrough_ = false, touchEnabled_ = true, wanderEnabled_ = true, recapEnabled_ = true;
     bool agentConversations_ = false, hideMessagePreviews_ = false;
     bool bedtimeAnimations_ = true;
-    bool persist_ = true, ready_ = false, quitting_ = false, muted_ = false, sound_ = false, autostart_ = false;
+    bool persist_ = true, ready_ = false, quitting_ = false, restarting_ = false, muted_ = false, sound_ = false, autostart_ = false;
     int attention_ = 0, bubbles_ = Preferences::RequestsAndErrors;
     QPoint pressPointer_;
     QElapsedTimer pressTimer_, flightClock_, walkClock_;

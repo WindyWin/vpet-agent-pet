@@ -7,8 +7,8 @@ class QButtonGroup;
 class QLabel;
 
 namespace pet {
-// Settings' Character row: a checkable preview tile per pet. A choice applies on the next start, so the
-// picker takes the saved choice and running pet and notes the restart while they differ.
+// Settings' Character row: a checkable preview tile per pet. A choice applies on the next start, which the
+// pet triggers itself (restart.h), so the picker takes the saved choice and running pet and notes the restart while they differ.
 // Hidden with fewer than two pets unless the saved selection is unavailable.
 class PetPicker : public QWidget {
     Q_OBJECT
