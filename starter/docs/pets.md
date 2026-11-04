@@ -2,8 +2,8 @@
 
 A pet is a folder under `assets/` with its own frames, catalog, preview and art terms. A rebuild picks up
 every folder that has a `pet.json`; no C++ or CMake changes are needed. Once two or more pets are
-known, Settings → Pet shows a **Character** row with a tile per pet, and the chosen pet appears the
-next time Agent Pet starts. VPet ships with the app; additional pets are imported
+known, Settings → Pet shows a **Character** row with a tile per pet, and the chosen pet appears after
+Agent Pet restarts itself, a moment after the choice. VPet ships with the app; additional pets are imported
 from `.agentpet` archives in the [gallery](https://github.com/WindyWin/agent-pet-gallery/releases).
 `agent-pet --pet <id>` runs an installed pet once without saving the choice.
 Only the running pet's artwork is loaded.

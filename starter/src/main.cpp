@@ -21,12 +21,14 @@
 #include "providers/integrations.h"
 #include "i18n/language.h"
 #include "settings/preferences.h"
+#include "desktop/restart.h"
 #include "version.h"
 #include <QApplication>
 #include <QCommandLineParser>
 #include <QDateTime>
 #include <QDebug>
 #include <QElapsedTimer>
+#include <QScopeGuard>
 #include <QThread>
 #include <QTimer>
 #include <exception>
@@ -117,6 +119,8 @@ int main(int argc, char **argv) {
     // The launch event is validated like any datagram; an invalid one is dropped.
     const auto launchData = parser.value("launch-event").toUtf8();
     pet::Event launchEvent; QString launchError;
+    int exitCode = 0;
+    bool relaunch = false; // Set when a change that applies only at startup asked for a restart (desktop/restart.h).
     const bool hasLaunchEvent = parser.isSet("launch-event") && pet::Event::parse(launchData, launchEvent, launchError);
     try {
         // Take the single-instance lock before any window or tray icon appears.
@@ -235,6 +239,17 @@ int main(int argc, char **argv) {
             QObject::connect(updates.get(), &pet::updates::Controller::changed, packUpdates.get(), &pet::packs::Updater::policyChanged);
             packUpdates->start();
         }
+        // A chosen pet, an installed pack or a plugin change is read only at startup: relaunch by ourselves a moment
+        // after the last change instead of asking the user to. Sessions are saved first and restored by the new run.
+        QTimer restartTimer;
+        restartTimer.setSingleShot(true);
+        const auto clearRestart = qScopeGuard([] { pet::restart::setHandler({}); });
+        if (updates) {
+            QObject::connect(&restartTimer, &QTimer::timeout, &window, [&] { monitor.checkpointSessions(); window.requestRestart(); });
+            pet::restart::setHandler([&restartTimer](int delayMs) {
+                if (delayMs < 0) restartTimer.stop(); else restartTimer.start(delayMs);
+            });
+        }
         window.show();
         const QString health = parser.value("update-health");
         if (QRegularExpression("^[0-9a-f-]{36}$").match(health).hasMatch()) {
@@ -264,9 +279,14 @@ int main(int argc, char **argv) {
                 else window.requestQuit();
             });
         }
-        return app.exec();
+        exitCode = app.exec();
+        relaunch = window.restarting();
     } catch (const std::exception &error) {
         qCritical() << error.what();
         return 1;
     }
+    // After the block above, so the single-instance receiver and the pack lock are released: the new run can take them.
+    if (relaunch && !pet::launchDetached(QCoreApplication::applicationFilePath(), {}))
+        qWarning() << "Could not restart Agent Pet; start it again by hand.";
+    return exitCode;
 }

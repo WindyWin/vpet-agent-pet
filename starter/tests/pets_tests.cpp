@@ -4,6 +4,7 @@
 #include "animation/player.h"
 #include "animation/stage.h"
 #include "desktop/pet_picker.h"
+#include "desktop/restart.h"
 #include "desktop/pack_controls.h"
 #include "desktop/pack_preview.h"
 #include "desktop/source_browser.h"
@@ -759,6 +760,37 @@ private slots:
         QCOMPARE(pet::PreferencesStore(path).load().pet, QString("mini"));
         pet::PetWindow again(nullptr, path);
         QCOMPARE(again.pet(), QString("mini"));
+    }
+    void storeRecoversAfterAFailedLoad() {
+        // A load that fails (on Windows often a sharing violation) must not leave the store unable to save for good.
+        QTemporaryDir directory; const auto path = directory.path() + "/preferences.json";
+        pet::PreferencesStore store(path);
+        pet::Preferences preferences; preferences.pet = "mini";
+        QVERIFY(store.save(preferences));
+        QFile file(path); QVERIFY(file.open(QIODevice::WriteOnly | QIODevice::Truncate)); file.write("{not json"); file.close();
+        store.load();
+        QVERIFY(!store.save(preferences)); // A damaged file is preserved, not overwritten.
+        QVERIFY(file.remove()); // The file is repaired (here: gone); the next load judges it afresh.
+        store.load();
+        QVERIFY(store.save(preferences));
+        QCOMPARE(pet::PreferencesStore(path).load().pet, QString("mini"));
+    }
+    void choosingAPetRestartsTheApp() {
+        QTemporaryDir directory; const auto path = directory.path() + "/preferences.json";
+        QVector<int> requests;
+        pet::restart::setHandler([&requests](int delay) { requests.append(delay); });
+        {
+            pet::PetWindow window(nullptr, path);
+            window.choosePet("mini");
+            QCOMPARE(window.pet(), QString("mini"));
+            QCOMPARE(requests.size(), 1);
+            QVERIFY(requests.last() > 0); // A countdown, so several quick choices restart once.
+            window.choosePet(pet::PetLibrary::shared().active()); // Back to the running pet: nothing to restart for.
+            QCOMPARE(requests.last(), -1);
+            QCOMPARE(pet::PreferencesStore(path).load().pet, pet::PetLibrary::shared().active());
+        }
+        pet::restart::setHandler({});
+        QVERIFY(!pet::restart::available());
     }
     void pickerChoosesForTheNextStart() {
         // Previews that do not exist: a tile still shows the pet's name and works.

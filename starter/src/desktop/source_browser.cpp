@@ -1,4 +1,5 @@
 #include "source_browser.h"
+#include "desktop/restart.h"
 #include "pack_preview.h"
 #include "packs/installer.h"
 #include "packs/updater.h"
@@ -30,6 +31,14 @@
 
 namespace pet {
 namespace {
+// Packs are applied while starting, so a change restarts the pet by itself when it can.
+QString queuedMessage() {
+    if (restart::available()) {
+        restart::request(2500);
+        return SourceBrowser::tr("Pack change queued. Agent Pet will restart to apply it.");
+    }
+    return SourceBrowser::tr("Pack change queued. Restart Agent Pet to apply it.");
+}
 QJsonObject installed(const packs::Entry &e) {
     const auto kind = e.metadata["kind"].toString(), id = e.metadata["id"].toString();
     QFile file(packs::dataFolder() + (kind == "pet" ? "/packs/pets/" : "/plugins/") + id + "/pack.json");
@@ -108,7 +117,7 @@ SourceBrowser::SourceBrowser(QWidget *parent, const QString &sourceFolder) : QDi
         QString error;
         if (!packs::remove(e.metadata["kind"].toString(), e.metadata["id"].toString(), error)) status_->setText(error);
         else { emit packRemoved(e.metadata["kind"].toString(), e.metadata["id"].toString());
-            loadCatalog(); status_->setText(tr("Pack change queued. Restart Agent Pet to apply it.")); }
+            loadCatalog(); status_->setText(queuedMessage()); }
     });
     connect(&transfer_, &packs::Download::completed, this, &SourceBrowser::received);
     connect(&transfer_, &packs::Download::failed, this, [this](const QString &error) { busy(false); status_->setText(error + '\n' + tr("Cached catalogs and installed packs are unchanged.")); });
@@ -332,7 +341,7 @@ void SourceBrowser::received(const QString &path) {
             if (!store_.urls(sourceError).contains(source_) || !sourceError.isEmpty() || revision_ != packs::sourceRevision(source_)) { busy(false); status_->setText(tr("Source is unavailable.")); return; }
             candidate->origin = packs::installationOrigin(*candidate, source_, downloading_.digest);
         }
-        if (packs::install(*candidate, error)) error = tr("Pack change queued. Restart Agent Pet to apply it.");
+        if (packs::install(*candidate, error)) error = queuedMessage();
     } else error = tr("Installation cancelled. Installed packs are unchanged.");
     busy(false); loadCatalog(); status_->setText(error);
 }

@@ -116,7 +116,7 @@ target_include_directories(pet_sources PUBLIC src PRIVATE "${CMAKE_CURRENT_BINAR
 target_link_libraries(pet_sources PUBLIC Qt6::Network pet_animation)
 qt_add_library(pet_ui STATIC
     src/desktop/pet_window.cpp src/desktop/pack_controls.cpp src/desktop/vpet_import.cpp src/desktop/source_browser.cpp src/desktop/overlay.cpp
-    src/desktop/pet_picker.cpp src/desktop/plugin_list.cpp
+    src/desktop/pet_picker.cpp src/desktop/plugin_list.cpp src/desktop/restart.cpp
     src/desktop/touch.cpp src/desktop/wander.cpp src/desktop/wellness.cpp src/desktop/snooze.cpp src/desktop/alert_bubble.cpp src/desktop/monitor.cpp
     src/desktop/session_list.cpp src/desktop/quota_panel.cpp src/quota/service.cpp src/updates/controller.cpp
     src/desktop/conversation_text.cpp src/desktop/conversation_bubbles.cpp src/desktop/conversation_panel.cpp src/desktop/conversations.cpp)

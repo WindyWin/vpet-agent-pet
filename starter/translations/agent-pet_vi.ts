@@ -568,6 +568,10 @@ Nguồn: %6</translation>
         <translation>Thay đổi gói đã được xếp hàng. Khởi động lại Agent Pet để áp dụng.</translation>
     </message>
     <message>
+        <source>Pack change queued. Agent Pet will restart to apply it.</source>
+        <translation>Đã xếp hàng thay đổi gói. Agent Pet sẽ tự khởi động lại để áp dụng.</translation>
+    </message>
+    <message>
         <source>Browse pack sources…</source>
         <translation>Duyệt nguồn gói…</translation>
     </message>
@@ -1248,6 +1252,10 @@ Nguồn: %6</translation>
         <translation>Thú cưng chưa được cài đặt.</translation>
     </message>
     <message>
+        <source>Restarting Agent Pet to show %1…</source>
+        <translation>Đang khởi động lại Agent Pet để hiện %1…</translation>
+    </message>
+    <message>
         <source>Local</source>
         <translation>Cục bộ</translation>
     </message>
@@ -1543,6 +1551,14 @@ Thú cưng ngủ sau khoảng mười phút yên tĩnh. Khi tác nhân hoạt đ
     <message>
         <source>Lively (a fidget every 15–25 seconds)</source>
         <translation>Sinh động (một động tác nhỏ mỗi 15–25 giây)</translation>
+    </message>
+    <message>
+        <source>Cannot save the pet choice</source>
+        <translation>Không thể lưu lựa chọn thú cưng</translation>
+    </message>
+    <message>
+        <source>Agent Pet could not write its settings file, so the pet was not changed. Check that the file is not locked or read-only, then try again.</source>
+        <translation>Agent Pet không ghi được tệp cài đặt nên chưa đổi thú cưng. Hãy kiểm tra tệp không bị khóa hoặc chỉ đọc, rồi thử lại.</translation>
     </message>
     <message>
         <source>Idle animation</source>
@@ -2346,6 +2362,10 @@ Trong lúc câu hỏi chờ thú cưng, terminal không hiện hộp thoại; sa
     <message>
         <source>Official gallery</source>
         <translation>Thư viện chính thức</translation>
+    </message>
+    <message>
+        <source>Pack change queued. Agent Pet will restart to apply it.</source>
+        <translation>Đã xếp hàng thay đổi gói. Agent Pet sẽ tự khởi động lại để áp dụng.</translation>
     </message>
     <message>
         <source>Automatically update installed packs from this source</source>
