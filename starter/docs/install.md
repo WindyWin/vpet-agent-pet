@@ -316,6 +316,7 @@ survives upgrades. The command-line interface and the installer are always in En
 | "Another Agent Pet monitor is running" | Only one pet listens for events per user. Quit the other one from its menu. |
 | `GLIBC_2.xx not found` | The distribution is older than the glibc 2.35 baseline. |
 | No transparency (black box around the pet) | The desktop has no compositor. Enable compositing in your window manager. |
+| *Open* on a herdr session says several sessions could be this one, or its pane runs something else | Codex runs hooks from a shared daemon that carries the environment of whichever pane started it, so Agent Pet asks `herdr agent list` which pane runs the session when you click it. It opens a pane only when herdr names the session itself (`agent_session`) or exactly one Codex agent runs in the session's folder; it never picks the focused pane or the daemon's pane instead. Close the extra session in that folder, or open the pane from herdr. |
 | Moved the install folder | Run `agent-pet integration enable` again from the new location so the hooks point at it. |
 
 The installed version is shown by `agent-pet --version` and in **About**.

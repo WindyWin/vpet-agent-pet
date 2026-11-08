@@ -13,7 +13,7 @@ Monitor::Monitor(PetWindow &window, std::shared_ptr<hosts::FocusService> focus)
     : window_(window), focus_(std::move(focus)), recapStore_(window.recapPath()), recap_(recapStore_.load()) {
     if (focus_) {
         hostActive = [this](const Session &s) { return focus_->active(s.host, s.project); };
-        bringForward = [this](const Session &s) { return focus_->focus(s.host, s.project, s.provider); };
+        bringForward = [this](const Session &s) { return focus_->focus(s.host, s.project, s.provider, s.id); };
     }
     pointer = [] { return QCursor::pos(); };
     lastPointer_ = pointer();
@@ -460,6 +460,16 @@ void Monitor::toggleSessions() {
 static QString focusFailure(const Session &session, const hosts::FocusResult &result) {
     using platform::Outcome;
     if (session.host.isNull()) return Monitor::tr("This session started before Agent Pet could see its terminal. Its next event will fix that.");
+    using hosts::Resolution;
+    switch (result.resolution) {
+    case Resolution::Ambiguous:
+        return Monitor::tr("Several sessions in this project could be this one, so Agent Pet did not guess which pane to open.");
+    case Resolution::Stale:
+        return Monitor::tr("This session's pane now runs something else or has closed, so Agent Pet did not open another one in its place.");
+    case Resolution::Unavailable:
+        return Monitor::tr("Could not ask the terminal multiplexer which pane runs this session, so nothing was opened.");
+    default: break;
+    }
     QStringList text;
     if (result.activation == Outcome::Unsupported) text << Monitor::tr("This desktop session does not let Agent Pet raise windows.");
     else if (result.activation == Outcome::Skipped) text << Monitor::tr("Could not select this session's tab or pane. Check that its terminal is attached.");

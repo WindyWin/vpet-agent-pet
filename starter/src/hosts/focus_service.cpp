@@ -23,12 +23,19 @@ static int severity(Outcome outcome) {
     default: return 0;
     }
 }
-FocusResult FocusService::focus(HostContext host, const QString &project, const QString &provider) {
+FocusResult FocusService::focus(HostContext host, const QString &project, const QString &provider, const QString &session) {
     FocusResult result;
     if (host.isNull()) { result.activation = Outcome::MissingTarget; return result; }
-    if (host.adapter == terminal::id && !provider.isEmpty())
-        for (const auto &locator : locators_)
-            if (const auto located = locator->locate(host, provider, project); !located.isNull()) { host = located; break; }
+    const FocusSubject subject{provider, project, session};
+    for (const auto &locator : locators_) {
+        const auto located = locator->locate(host, subject);
+        if (located.resolution == Resolution::Captured) continue;
+        result.resolution = located.resolution;
+        if (located.resolution == Resolution::Resolved) host = located.host;
+        break;
+    }
+    // Nothing is selected or raised for a host known to be wrong, ambiguous or unverifiable.
+    if (!proceeds(result.resolution)) { result.selection = result.activation = Outcome::Skipped; return result; }
     if (!registry_.find(host.adapter)) { result.selection = result.activation = Outcome::Unsupported; return result; }
     auto *activation = find(host.adapter);
     if (!activation) result.selection = Outcome::Unsupported;
