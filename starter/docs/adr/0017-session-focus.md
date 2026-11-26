@@ -53,22 +53,68 @@ boolean did.
 | --- | --- | --- | --- | --- |
 | Konsole | D-Bus `setCurrentSession` | Raises anyway | Its hints | Yes |
 | tmux | `select-window`, `select-pane` | Stops (also when `tmux` is missing) | Attached clients' ancestors, then its own process hints, as one request | Never: `Unknown` |
-| herdr | `herdr tab focus`, `herdr agent focus` | Stops | Each live UI client of the same API socket, after selecting the Konsole tab it runs in; then its own hints | Never: `Unknown` |
+| herdr | `herdr agent list` (verify, below), `herdr tab focus`, `herdr agent focus` | Stops | Each live UI client of the same API socket, after selecting the Konsole tab it runs in; then its own hints | Never: `Unknown` |
 | VS Code, terminal | None | — | Its hints | Yes |
 
 **Hooks that run outside the terminal.** Codex runs hooks from a shared
-`codex app-server` daemon whose parent is `systemd --user`, not the pane. The hook
-sees no `herdr` ancestor, so it reports a bare `terminal` host, and the daemon's
-inherited `HERDR_PANE_ID` names whichever pane first started it, so it is never
-trusted. The hook must stay fast and never block, so it does not look further. At
-Open time, a `terminal` host whose session has a provider goes through the
-`FocusService` locators: the herdr locator runs `herdr agent list` and takes the
-agent whose `agent` equals the provider and whose `cwd` equals the session's
-project. With several matches it takes the focused one; if that is still ambiguous
-(or the lookup fails) it keeps the captured host and guesses nothing. The result is
-an ordinary herdr host, so selection and client raising work as above, and the
-captured pids stay as hints. Resolution is read-only and never sent over the wire,
-so v1 fields are unchanged.
+`codex app-server` daemon. Its parent may be `systemd --user` (the hook sees no
+`herdr` ancestor and reports a bare `terminal`) or the pane that started it (the
+hook sees a `herdr` ancestor and the daemon's inherited `HERDR_TAB_ID`/`HERDR_PANE_ID`
+and reports *that* pane, which may belong to another project: issue #151). Neither
+the environment nor an ancestor named `herdr` proves which pane runs the session,
+and the hook must stay fast, so it does not look further and v1 fields are
+unchanged. Instead, every Open asks the locators first, with the provider, the
+project and the provider's own session ID (`FocusSubject`), and the answer is a
+`Resolution`:
+
+| Resolution | Meaning | Then |
+| --- | --- | --- |
+| `Captured` | No locator applies, or one could not check a capture it trusts | The captured host is selected and raised as before |
+| `Resolved` | A locator verified the captured pane or found the current one | That host is selected and raised |
+| `Unavailable` | The host could not be asked, and the capture cannot be trusted alone | Nothing is selected or raised |
+| `Stale` | The captured pane is gone or shows another session, and no other pane fits | Nothing is selected or raised |
+| `Ambiguous` | Several panes fit, or several claim the same session | Nothing is selected or raised |
+
+The herdr locator applies to `terminal` and `herdr` hosts of a session with a
+provider. It runs `herdr agent list` against the captured target's own API socket
+(named sessions and other servers are never confused with the pet's default), or
+the pet's default socket for a bare terminal, and decides in this order:
+
+1. **Native session.** An agent whose `agent_session` (a string, or an object
+   with `id`/`session_id`) equals the session ID, for the same provider, is
+   authoritative: one is `Resolved`, two are duplicate registrations and
+   `Ambiguous`. Herdr 0.9.5 reports it for some agents only, so it is not required.
+2. **Trusted capture.** Providers whose hooks run inside the pane (every one but
+   Codex) captured a truthful pane. It is `Resolved` with its tab
+   refreshed from the list (the pane may have moved), unless herdr shows another
+   `agent_session` there now (`Stale`, then step 3). An unlisted pane, or a failed
+   lookup, keeps the capture (`Captured`): herdr lists only agents it detects.
+3. **Candidates.** Otherwise the candidates are the agents of that provider whose
+   `cwd` is the session's project and that name no other session. One is
+   `Resolved`; several are `Ambiguous`. The focused pane no longer breaks a tie:
+   an unfocused session is as likely to be the one clicked. For a shared-daemon
+   provider (`codex`, the `sharedDaemonProviders` argument) the captured pane is
+   just one of these candidates, and missing from the list or showing another
+   project it is `Stale`; a failed lookup is `Unavailable`.
+4. A bare terminal that herdr does not run, or cannot be asked about, stays
+   `Captured`, so plain-terminal Codex sessions are raised from their hints as before.
+
+A `Resolved` host keeps the captured process hints only when the hook ran in that
+very pane (trusted capture); otherwise they lead to the terminal that started the
+daemon and are dropped, so only the live UI clients of the pane's socket are raised.
+Resolution is read-only, runs on every Open (so restored sessions and legacy
+records with inherited targets are revalidated against the live server rather
+than trusted because the daemon survived), and is never sent over the wire. Failure
+tooltips name the resolution (several candidates, stale pane, multiplexer
+unreachable) instead of a generic failure.
+
+Not covered yet (follow-ups to #151): Codex does not tell the hook which
+interactive client a turn belongs to, so several Codex sessions in one folder
+without `agent_session` remain `Ambiguous` until herdr or Codex supplies that
+relationship (explicit per-client registration is the upstream prerequisite).
+Several UI clients attached to one herdr server are still tried in process order.
+Open is synchronous on the UI thread, bounded by the 1.5 s command timeout, so
+overlapping requests cannot interleave.
 
 A malformed target is `MissingTarget`: nothing is selected or run, and the window is
 still raised from the remaining hints, as before. Commands are argument arrays run
@@ -147,3 +193,23 @@ inherited terminal variables into the registry, `hook` again matched main's buil
 nine environments, run beneath processes named `konsole`, `tmux`, `herdr` and `code`
 or none. Not checked here: KWin on Plasma 6 (X11 and
 Wayland), a live Konsole D-Bus tab switch, herdr, and CI on Qt 6.5.3.
+
+### Shared-daemon pane identity (issue #151) — 2026-11-08
+
+Locators now run for captured `herdr` hosts as well as bare terminals and return a
+`Resolution`; `FocusService` stops before any side effect unless it is `Captured`
+or `Resolved`. `Monitor` passes the provider session ID. The `focus` suite's
+`herdrLocatesAgentBehindSharedDaemon` was rewritten: the reported case (an
+inherited Project B pane for a Project A Codex session) selects the one Project A
+agent and drops the daemon's hints; with two Project A agents it is `Ambiguous`
+and nothing is selected or raised, whichever is focused; a native `agent_session`
+picks an unfocused pane and excludes agents naming other sessions; duplicate
+`agent_session` claims are `Ambiguous`; a closed or reassigned inherited pane is
+`Stale`; an unreachable herdr is `Unavailable` for Codex and `Captured` for Claude;
+a trusted Claude pane is kept among same-project Claude panes with its tab
+refreshed, queried on its own named socket, and is `Stale` once another session is
+named there. All other suites passed in a cloud Ubuntu 24.04 container built
+against conda-forge Qt 6.8.4 (`pack-updates` fails there on main too, since it runs
+as root). Not checked here: a real Herdr 0.9.5 with a shared Codex daemon (herdr is
+not installable in the container, and its socket API documentation was
+unreachable, so the `agent_session` shape is read leniently), KDE Wayland.

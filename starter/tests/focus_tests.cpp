@@ -250,15 +250,20 @@ private slots:
         QCOMPARE(log, (QStringList{"herdr agent", "x11:700", "kwin:700"}));
     }
     void herdrLocatesAgentBehindSharedDaemon() {
-        // Codex runs hooks from a daemon outside the pane, so the hook only saw a bare terminal.
-        // The pane is found by provider and project among herdr's agents.
-        auto agents = [](QList<std::tuple<QString, QString, QString, bool>> list) {
+        // Codex runs hooks from a daemon outside the pane, so the hook saw a bare terminal or the pane that
+        // started the daemon. The pane is found among herdr's agents; focus never breaks a tie.
+        struct A { QString agent, cwd, pane; bool focused = false; QString session = {}; QString tab = {}; };
+        auto agents = [](QList<A> list) {
             QJsonArray array;
-            for (const auto &[agent, cwd, pane, focused] : list)
-                array.append(QJsonObject{{"agent", agent}, {"cwd", cwd}, {"pane_id", pane}, {"tab_id", pane.section(':', 0, 0) + ":t1"},
-                                         {"focused", focused}});
+            for (const auto &a : list) {
+                QJsonObject o{{"agent", a.agent}, {"cwd", a.cwd}, {"pane_id", a.pane},
+                              {"tab_id", a.tab.isEmpty() ? a.pane.section(':', 0, 0) + ":t1" : a.tab}, {"focused", a.focused}};
+                if (!a.session.isEmpty()) o["agent_session"] = a.session;
+                array.append(o);
+            }
             return QJsonDocument(QJsonObject{{"result", QJsonObject{{"agents", array}, {"type", "agent_list"}}}}).toJson(QJsonDocument::Compact);
         };
+        using pet::hosts::Resolution;
         const HostContext daemon{"terminal", {900, 1}, {}, {}};
         const auto setup = [&](Fixture &f, const std::shared_ptr<Runner> &runner) {
             f.service.addActivation(pet::hosts::herdr::activation(runner, std::make_shared<Processes>()));
@@ -266,40 +271,112 @@ private slots:
         };
         {   // The Claude pane in the same directory is not the Codex session.
             const auto runner = std::make_shared<Runner>();
-            runner->clients = agents({{"claude", "/work/web", "w1:pA", false}, {"codex", "/work/web", "w1:p8", false},
-                                      {"codex", "/work/api", "w1:p5", false}});
+            runner->clients = agents({{"claude", "/work/web", "w1:pA"}, {"codex", "/work/web", "w1:p8"}, {"codex", "/work/api", "w1:p5"}});
             Fixture f(Outcome::TargetNotFound, Outcome::Confirmed); setup(f, runner);
-            QVERIFY(f.service.focus(daemon, "/work/web", "codex").raised());
+            const auto result = f.service.focus(daemon, "/work/web", "codex", "s-1");
+            QVERIFY(result.raised()); QCOMPARE(result.resolution, Resolution::Resolved);
             QCOMPARE(runner->commands.size(), 3);
             QCOMPARE(runner->commands[0].arguments, (QStringList{"agent", "list"}));
             QCOMPARE(runner->commands[1].arguments, (QStringList{"tab", "focus", "w1:t1"}));
             QCOMPARE(runner->commands[2].arguments, (QStringList{"agent", "focus", "w1:p8"}));
             QCOMPARE(runner->commands[2].environment.value("HERDR_SOCKET_PATH"), QString("/run/h.sock"));
+            // The daemon's own ancestry leads to the terminal that started it: never raised for this pane.
+            QVERIFY(f.first->requests.last().pids.isEmpty());
         }
-        {   // Two candidates: the focused one wins; with none focused nothing is guessed.
+        {   // Several in the project: the focused one is not assumed to be this session.
             const auto runner = std::make_shared<Runner>();
-            runner->clients = agents({{"codex", "/work/web", "w1:p3", false}, {"codex", "/work/web", "w1:p8", true}});
+            runner->clients = agents({{"codex", "/work/web", "w1:p3"}, {"codex", "/work/web", "w1:p8", true}});
             Fixture f(Outcome::TargetNotFound, Outcome::Confirmed); setup(f, runner);
-            f.service.focus(daemon, "/work/web", "codex");
-            QCOMPARE(runner->commands.last().arguments, (QStringList{"agent", "focus", "w1:p8"}));
-            runner->clients = agents({{"codex", "/work/web", "w1:p3", false}, {"codex", "/work/web", "w1:p8", false}});
-            runner->commands.clear();
-            QVERIFY(f.service.focus(daemon, "/work/web", "codex").raised()); // Still raised from its hints.
-            QCOMPARE(runner->commands.size(), 1);                              // Only the lookup.
+            const auto result = f.service.focus(daemon, "/work/web", "codex", "s-1");
+            QCOMPARE(result.resolution, Resolution::Ambiguous); QVERIFY(!result.raised());
+            QCOMPARE(result.selection, Outcome::Skipped);
+            QCOMPARE(runner->commands.size(), 1); QVERIFY(f.first->requests.isEmpty()); // Only the lookup; nothing raised.
         }
-        {   // Nothing to look up: another host, no provider, a failed lookup or no match.
+        {   // A session herdr names natively wins, focused or not; an agent naming another session is not a candidate.
+            const auto runner = std::make_shared<Runner>();
+            runner->clients = agents({{"codex", "/work/web", "w1:p3", true, "s-other"}, {"codex", "/work/web", "w1:p8", false, "s-1"},
+                                      {"codex", "/work/web", "w1:p9"}});
+            Fixture f(Outcome::TargetNotFound, Outcome::Confirmed); setup(f, runner);
+            QCOMPARE(f.service.focus(daemon, "/work/web", "codex", "s-1").resolution, Resolution::Resolved);
+            QCOMPARE(runner->commands.last().arguments, (QStringList{"agent", "focus", "w1:p8"}));
+            // Without its own reference, the one unnamed agent is the only candidate.
+            runner->commands.clear();
+            QCOMPARE(f.service.focus(daemon, "/work/web", "codex", "s-2").resolution, Resolution::Resolved);
+            QCOMPARE(runner->commands.last().arguments, (QStringList{"agent", "focus", "w1:p9"}));
+            // Two panes claiming one session are duplicate registrations: nothing is guessed.
+            runner->clients = agents({{"codex", "/work/web", "w1:p3", false, "s-1"}, {"codex", "/work/web", "w1:p8", false, "s-1"}});
+            runner->commands.clear();
+            QCOMPARE(f.service.focus(daemon, "/work/web", "codex", "s-1").resolution, Resolution::Ambiguous);
+            QCOMPARE(runner->commands.size(), 1);
+        }
+        {   // The reported case: the daemon inherited Project B's pane; the session runs in Project A.
+            const auto runner = std::make_shared<Runner>();
+            runner->clients = agents({{"codex", "/work/api", "w2:pB"}, {"codex", "/work/web", "w1:p8"}});
+            Fixture f(Outcome::TargetNotFound, Outcome::Confirmed); setup(f, runner);
+            const HostContext inherited{"herdr", {900, 1}, {"x11", "55"}, "w2:t4|w2:pB|/run/h.sock"};
+            auto result = f.service.focus(inherited, "/work/web", "codex", "s-1");
+            QCOMPARE(result.resolution, Resolution::Resolved); QVERIFY(result.raised());
+            QCOMPARE(runner->commands[1].arguments, (QStringList{"tab", "focus", "w1:t1"}));
+            QCOMPARE(runner->commands[2].arguments, (QStringList{"agent", "focus", "w1:p8"}));
+            QVERIFY(f.first->requests.last().pids.isEmpty()); QVERIFY(f.first->requests.last().window.isNull());
+            // Several Project A sessions: neither Project B nor a guess.
+            runner->clients = agents({{"codex", "/work/api", "w2:pB", true}, {"codex", "/work/web", "w1:p8"}, {"codex", "/work/web", "w1:p9"}});
+            runner->commands.clear(); f.first->requests.clear();
+            result = f.service.focus(inherited, "/work/web", "codex", "s-1");
+            QCOMPARE(result.resolution, Resolution::Ambiguous); QCOMPARE(runner->commands.size(), 1); QVERIFY(f.first->requests.isEmpty());
+            // No Project A session left: the inherited pane is stale, and nothing else is opened.
+            runner->clients = agents({{"codex", "/work/api", "w2:pB"}});
+            runner->commands.clear();
+            result = f.service.focus(inherited, "/work/web", "codex", "s-1");
+            QCOMPARE(result.resolution, Resolution::Stale); QCOMPARE(runner->commands.size(), 1); QVERIFY(f.first->requests.isEmpty());
+            // A closed (or never listed) pane is stale too, for a provider whose capture is not trusted.
+            runner->clients = agents({});
+            runner->commands.clear();
+            QCOMPARE(f.service.focus(inherited, "/work/web", "codex", "s-1").resolution, Resolution::Stale);
+            // Herdr unreachable: an untrusted pane is not selected on its word alone.
+            runner->outcomes["agent"] = Outcome::Failed; runner->commands.clear();
+            result = f.service.focus(inherited, "/work/web", "codex", "s-1");
+            QCOMPARE(result.resolution, Resolution::Unavailable); QCOMPARE(runner->commands.size(), 1); QVERIFY(f.first->requests.isEmpty());
+        }
+        {   // Claude runs hooks in its pane, so its capture is trusted: kept among same-project panes, its tab refreshed.
+            const auto runner = std::make_shared<Runner>();
+            runner->clients = agents({{"claude", "/work/web", "w1:p3", true}, {"claude", "/work/web", "w1:p8", false, {}, "w3:t9"}});
+            Fixture f(Outcome::TargetNotFound, Outcome::Confirmed); setup(f, runner);
+            const HostContext pane{"herdr", {700}, {}, "w1:t1|w1:p8|/run/named.sock"};
+            auto result = f.service.focus(pane, "/work/web", "claude", "c-1");
+            QCOMPARE(result.resolution, Resolution::Resolved);
+            QCOMPARE(runner->commands[0].environment.value("HERDR_SOCKET_PATH"), QString("/run/named.sock")); // Its own server.
+            QCOMPARE(runner->commands[1].arguments, (QStringList{"tab", "focus", "w3:t9"}));
+            QCOMPARE(runner->commands[2].arguments, (QStringList{"agent", "focus", "w1:p8"}));
+            QCOMPARE(f.first->requests.last().pids, QVector<qint64>{700});
+            // Unlisted, or herdr unreachable: the captured pane is used as before.
+            runner->clients = agents({}); runner->commands.clear();
+            QCOMPARE(f.service.focus(pane, "/work/web", "claude", "c-1").resolution, Resolution::Captured);
+            QCOMPARE(runner->commands.last().arguments, (QStringList{"agent", "focus", "w1:p8"}));
+            runner->outcomes["agent"] = Outcome::Failed; runner->commands.clear();
+            QCOMPARE(f.service.focus(pane, "/work/web", "claude", "c-1").resolution, Resolution::Captured);
+            QCOMPARE(runner->commands.size(), 3); // The failed lookup, the tab, then the failed pane focus.
+            // The pane now names another session: it is stale, and the one other candidate is this session.
+            runner->outcomes.clear(); runner->commands.clear();
+            runner->clients = agents({{"claude", "/work/web", "w1:p3", true}, {"claude", "/work/web", "w1:p8", false, "c-2"}});
+            QCOMPARE(f.service.focus(pane, "/work/web", "claude", "c-1").resolution, Resolution::Resolved); // p3 is the only candidate.
+            QCOMPARE(runner->commands.last().arguments, (QStringList{"agent", "focus", "w1:p3"}));
+        }
+        {   // Nothing to look up: another host or no provider. A bare terminal herdr does not run, or cannot ask, stays.
             const auto runner = std::make_shared<Runner>();
             runner->clients = agents({{"codex", "/work/web", "w1:p8", true}});
             Fixture f(Outcome::TargetNotFound, Outcome::Confirmed); setup(f, runner);
-            f.service.focus({"herdr", {900}, {}, "|w1:p8|"}, "/work/web", "codex");
-            QCOMPARE(runner->commands.size(), 1); QCOMPARE(runner->commands[0].arguments.value(0), QString("agent")); // Its own focus only.
+            QCOMPARE(f.service.focus(daemon, "/work/web", {}).resolution, Resolution::Captured);
+            QCOMPARE(f.service.focus({"tmux", {900}, {}, "/s|%1"}, "/work/web", "codex").resolution, Resolution::Captured);
+            QVERIFY(runner->commands.isEmpty());
             runner->commands.clear();
-            f.service.focus(daemon, "/work/web", {});
-            f.service.focus(daemon, "/elsewhere", "codex");
-            QCOMPARE(runner->commands.size(), 1); // Only the second lookup; no pane matches.
+            auto result = f.service.focus(daemon, "/elsewhere", "codex", "s-1");
+            QCOMPARE(result.resolution, Resolution::Captured); QVERIFY(result.raised());
+            QCOMPARE(runner->commands.size(), 1); // Only the lookup; no pane matches.
             runner->commands.clear(); runner->outcomes["agent"] = Outcome::Failed;
-            QVERIFY(f.service.focus(daemon, "/work/web", "codex").raised());
-            QCOMPARE(runner->commands.size(), 1);
+            result = f.service.focus(daemon, "/work/web", "codex", "s-1");
+            QCOMPARE(result.resolution, Resolution::Captured); QVERIFY(result.raised());
+            QCOMPARE(f.first->requests.last().pids, daemon.pids);
         }
     }
     void herdrClientCaptureUsesNames() {

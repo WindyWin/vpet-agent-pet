@@ -1189,6 +1189,18 @@ Nguồn: %6</translation>
         <source>Could not focus this session&apos;s window. Check that its terminal is attached.</source>
         <translation>Không thể đưa cửa sổ của phiên này lên trước. Hãy kiểm tra xem terminal của phiên còn được kết nối hay không.</translation>
     </message>
+    <message>
+        <source>Several sessions in this project could be this one, so Agent Pet did not guess which pane to open.</source>
+        <translation>Có nhiều phiên trong dự án này có thể là phiên này, nên Agent Pet không đoán khung terminal cần mở.</translation>
+    </message>
+    <message>
+        <source>This session&apos;s pane now runs something else or has closed, so Agent Pet did not open another one in its place.</source>
+        <translation>Khung terminal của phiên này giờ đang chạy thứ khác hoặc đã đóng, nên Agent Pet không mở khung khác thay thế.</translation>
+    </message>
+    <message>
+        <source>Could not ask the terminal multiplexer which pane runs this session, so nothing was opened.</source>
+        <translation>Không thể hỏi trình ghép terminal xem khung nào đang chạy phiên này, nên không có gì được mở.</translation>
+    </message>
 </context>
 <context>
     <name>pet::NoteBubble</name>

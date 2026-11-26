@@ -13,11 +13,19 @@ QVector<platform::Command> selectCommands(const Target &target);
 // API socket used by a local herdr UI invocation; empty for other commands and remotes.
 QString clientSocket(const QProcessEnvironment &environment, const QStringList &arguments);
 Capture capture();
-// Finds a Codex-style session's pane when its hook ran outside the terminal: the
-// agent of that provider whose cwd is the project, taking the focused one if several
-// match and nothing if still ambiguous. Keeps the captured hints. `socket` is the
-// API socket to ask; empty means herdr's default.
-std::unique_ptr<Locator> locator(std::shared_ptr<platform::CommandRunner> commands, QString socket);
+// Verifies or finds a session's pane at Open time from `herdr agent list`:
+//   - an agent whose `agent_session` is the session is authoritative;
+//   - a captured pane is kept when herdr shows it running this provider in this
+//     project (its tab refreshed), and is stale when it shows another session there;
+//   - otherwise the one agent of that provider whose cwd is the project, never the
+//     focused one of several: several are Ambiguous.
+// Providers in `sharedDaemonProviders` run hooks from a daemon that inherits the
+// environment of whichever pane started it, so their captured pane is only one
+// candidate among the others, and its process hints are dropped. `socket` is the
+// API socket to ask for a bare terminal (a captured pane asks its own); empty
+// means herdr's default.
+std::unique_ptr<Locator> locator(std::shared_ptr<platform::CommandRunner> commands, QString socket,
+                                 QStringList sharedDaemonProviders = {"codex"});
 // Selects the tab and pane through the herdr CLI. Pane ancestors lead to the
 // detached server, so live UI clients of the same socket are raised first, each
 // after selecting the Konsole tab it runs in, before the session's own hints.
